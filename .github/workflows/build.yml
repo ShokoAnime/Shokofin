@@ -27,4 +27,5 @@ jobs:
       - run: dotnet publish -c Release ShokoJellyfin/ShokoJellyfin.csproj
       - uses: actions/upload-artifact@v2
         with:
+          name: ShokoJellyfin
           path: ShokoJellyfin/bin/Release/netstandard2.1/ShokoJellyfin.dll
