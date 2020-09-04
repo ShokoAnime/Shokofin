@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Shoko</title>
+</head>
+<body>
+<div data-role="page" class="page type-interior pluginConfigurationPage shokoConfigPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+    <div data-role="content">
+        <div class="content-primary">
+            <form class="shokoConfigForm">
+                <div class="inputContainer">
+                    <input is="emby-input" type="text" id="Host" required label="Host" />
+                    <div class="fieldDescription">This is the IP address of the server where Shoko is running.</div>
+                </div>
+                <div class="inputContainer">
+                    <input is="emby-input" type="text" id="Port" required label="Port" />
+                    <div class="fieldDescription">This is the port on which Shoko is running.</div>
+                </div>
+                <div class="inputContainer">
+                    <input is="emby-input" type="text" id="Username" required label="Username" />
+                </div>
+                <div class="inputContainer">
+                    <input is="emby-input" type="text" id="Password" label="Password" />
+                </div>
+                <div class="inputContainer">
+                    <input is="emby-input" type="text" id="ApiKey" label="API Key" />
+                    <div class="fieldDescription">This field is auto-generated using the credentials. Only set this manually if that doesn't work!</div>
+                </div>
+                <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="UseShokoThumbnails" />
+                    <span>Use thumbnails from Shoko</span>
+                </label>
+                <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="HideArtStyleTags" />
+                    <span>Hide art style related tags</span>
+                </label>
+                <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="HideSourceTags" />
+                    <span>Hide source related tags</span>
+                </label>
+                <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="HideMiscTags" />
+                    <span>Hide misc info tags that may be useful</span>
+                </label>
+                <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="HidePlotTags" />
+                    <span>Hide potentially plot-spoiling tags</span>
+                </label>
+                <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="HideAniDbTags" />
+                    <span>Hide any miscellaneous tags</span>
+                </label>
+                <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="SynopsisCleanLinks" />
+                    <span>Synopsis: Remove links</span>
+                </label>
+                <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="SynopsisCleanMiscLines" />
+                    <span>Synopsis: Remove the line if it starts with ('* ' / '-- ' / '~ ')</span>
+                </label>
+                <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="SynopsisRemoveSummary" />
+                    <span>Synopsis: Remove anything after Source, Note or Summary</span>
+                </label>
+                <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="SynopsisCleanMultiEmptyLines" />
+                    <span>Synopsis: Collapse excessive empty lines</span>
+                </label>
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                        <span>Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var PluginConfig = {
+            pluginId: "5216ccbf-d24a-4eb3-8a7e-7da4230b7052"
+        };
+        
+        document.querySelector('.shokoConfigPage')
+                .addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(PluginConfig.pluginId).then(function (config) {
+                        document.querySelector('#Host').value = config.Host;
+                        document.querySelector('#Port').value = config.Port;
+                        document.querySelector('#Username').value = config.Username;
+                        document.querySelector('#Password').value = config.Password;
+                        document.querySelector('#ApiKey').value = config.ApiKey;
+                        document.querySelector('#UseShokoThumbnails').checked = config.UseShokoThumbnails;
+                        document.querySelector('#HideArtStyleTags').checked = config.HideArtStyleTags;
+                        document.querySelector('#HideSourceTags').checked = config.HideSourceTags;
+                        document.querySelector('#HideMiscTags').checked = config.HideMiscTags;
+                        document.querySelector('#HidePlotTags').checked = config.HidePlotTags;
+                        document.querySelector('#HideAniDbTags').checked = config.HideAniDbTags;
+                        document.querySelector('#SynopsisCleanLinks').checked = config.SynopsisCleanLinks;
+                        document.querySelector('#SynopsisCleanMiscLines').checked = config.SynopsisCleanMiscLines;
+                        document.querySelector('#SynopsisRemoveSummary').checked = config.SynopsisRemoveSummary;
+                        document.querySelector('#SynopsisCleanMultiEmptyLines').checked = config.SynopsisCleanMultiEmptyLines;                        
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+                
+        document.querySelector('.shokoConfigForm')
+                .addEventListener('submit', function (e) {
+                    Dashboard.showLoadingMsg();
+    
+                    ApiClient.getPluginConfiguration(PluginConfig.pluginId).then(function (config) {
+                        config.Host = document.querySelector('#Host').value;
+                        config.Port = document.querySelector('#Port').value;
+                        config.Username = document.querySelector('#Username').value;
+                        config.Password = document.querySelector('#Password').value;
+                        config.ApiKey = document.querySelector('#ApiKey').value;
+                        config.UseShokoThumbnails = document.querySelector('#UseShokoThumbnails').checked;
+                        config.HideArtStyleTags = document.querySelector('#HideArtStyleTags').checked;
+                        config.HideSourceTags = document.querySelector('#HideSourceTags').checked;
+                        config.HideMiscTags = document.querySelector('#HideMiscTags').checked;
+                        config.HidePlotTags = document.querySelector('#HidePlotTags').checked;
+                        config.HideAniDbTags = document.querySelector('#HideAniDbTags').checked;
+                        config.SynopsisCleanLinks = document.querySelector('#SynopsisCleanLinks').checked;
+                        config.SynopsisCleanMiscLines = document.querySelector('#SynopsisCleanMiscLines').checked;
+                        config.SynopsisRemoveSummary = document.querySelector('#SynopsisRemoveSummary').checked;
+                        config.SynopsisCleanMultiEmptyLines = document.querySelector('#SynopsisCleanMultiEmptyLines').checked;                        
+                        ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
+                    });
+                    
+                    e.preventDefault();
+                    return false;
+                });
+        </script>
+</div>
+</body>
+</html>
