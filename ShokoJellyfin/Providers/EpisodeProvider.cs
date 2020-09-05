@@ -59,7 +59,7 @@ namespace ShokoJellyfin.Providers
                 Name = episodeInfo.Titles.Find(title => title.Language.Equals("EN"))?.Name,
                 PremiereDate = episodeInfo.AirDate,
                 Overview = Helper.SummarySanitizer(episodeInfo.Description),
-                CommunityRating = (float)((episodeInfo.Rating.Value * 10) / episodeInfo.Rating.MaxValue),
+                CommunityRating = (float)((episodeInfo.Rating.Value * 10) / episodeInfo.Rating.MaxValue)
             };
             result.Item.SetProviderId("Shoko", episodeId);
             result.Item.SetProviderId("AniDB", episodeIDs.AniDB.ToString());
