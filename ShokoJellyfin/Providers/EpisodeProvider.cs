@@ -55,7 +55,7 @@ namespace ShokoJellyfin.Providers
             result.Item = new Episode
             {
                 IndexNumber = episodeInfo.EpisodeNumber,
-                ParentIndexNumber = GetSeasonNumber(episodeInfo.Type),
+                ParentIndexNumber = await GetSeasonNumber(episodeId, episodeInfo.Type),
                 Name = episodeInfo.Titles.Find(title => title.Language.Equals("EN"))?.Name,
                 PremiereDate = episodeInfo.AirDate,
                 Overview = Helper.SummarySanitizer(episodeInfo.Description),
@@ -84,21 +84,37 @@ namespace ShokoJellyfin.Providers
             return _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
         }
 
-        private int GetSeasonNumber(EpisodeType type)
+        private async Task<int> GetSeasonNumber(string episodeId, EpisodeType type)
         {
+            var seasonNumber = 0;
+            
             switch (type)
             {
                 case EpisodeType.Episode:
-                    return 1;
+                    seasonNumber = 1;
+                    break;
                 case EpisodeType.Credits:
-                    return 100;
+                    seasonNumber = 100;
+                    break;
                 case EpisodeType.Special:
-                    return 0;
+                    seasonNumber = 0;
+                    break;
                 case EpisodeType.Trailer:
-                    return 99;
+                    seasonNumber = 99;
+                    break;
                 default:
-                    return 98;
+                    seasonNumber = 98;
+                    break;
             }
+
+            if (Plugin.Instance.Configuration.UseTvDbSeasonOrdering && seasonNumber < 98)
+            {
+                var tvdbEpisodeInfo = await ShokoAPI.GetEpisodeTvDb(episodeId);
+                var tvdbSeason = tvdbEpisodeInfo.FirstOrDefault()?.Season;
+                return tvdbSeason ?? seasonNumber;
+            }
+
+            return seasonNumber;
         }
     }
 }
