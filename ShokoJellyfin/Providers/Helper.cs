@@ -10,16 +10,6 @@ namespace ShokoJellyfin.Providers
         {
             return image != null ? $"http://{Plugin.Instance.Configuration.Host}:{Plugin.Instance.Configuration.Port}/api/v3/Image/{image.Source}/{image.Type}/{image.ID}" : null;
         }
-        
-        public static string ReplaceInvalidPathCharacters(string path)
-        {
-            string str = path.Replace("*", "★").Replace("|", "¦").Replace("\\", "⧹").Replace("/", "⁄").Replace(":", "։").Replace("\"", "″").Replace(">", "›").Replace("<", "‹").Replace("?", "？").Replace("...", "…");
-            if (str.StartsWith(".", StringComparison.Ordinal))
-                str = "․" + str.Substring(1, str.Length - 1);
-            if (str.EndsWith(".", StringComparison.Ordinal))
-                str = str.Substring(0, str.Length - 1) + "․";
-            return str.Trim();
-        }
 
         public static string SummarySanitizer(string summary) // Based on ShokoMetadata which is based on HAMA's
         {
