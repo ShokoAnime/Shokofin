@@ -28,7 +28,8 @@ namespace ShokoJellyfin.Providers
         {
             var list = new List<RemoteImageInfo>();
 
-            if (item is Episode && !Plugin.Instance.Configuration.UseShokoThumbnails) return list;
+            // Doesn't seem like Jellyfin can generate thumbs by itself. Keep this option always enabled for now.
+            // if (item is Episode && !Plugin.Instance.Configuration.UseShokoThumbnails) return list;
 
             var id = item.GetProviderId("Shoko");
 

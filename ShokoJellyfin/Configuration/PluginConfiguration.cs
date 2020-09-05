@@ -16,7 +16,7 @@ namespace ShokoJellyfin.Configuration
         
         public bool UseTvDbSeasonOrdering { get; set; }
         
-        public bool UseShokoThumbnails { get; set; }
+        // public bool UseShokoThumbnails { get; set; }
         
         public bool HideArtStyleTags { get; set; }
         
@@ -44,7 +44,7 @@ namespace ShokoJellyfin.Configuration
             Password = "";
             ApiKey = "";
             UseTvDbSeasonOrdering = false;
-            UseShokoThumbnails = true;
+            // UseShokoThumbnails = true;
             HideArtStyleTags = false;
             HideSourceTags = false;
             HideMiscTags = false;
