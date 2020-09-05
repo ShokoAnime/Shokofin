@@ -32,6 +32,11 @@ namespace ShokoJellyfin.Providers
 
             var id = item.GetProviderId("Shoko");
 
+            if (item is Season)
+            {
+                id = item.GetParent().GetProviderId("Shoko");
+            }
+
             if (string.IsNullOrEmpty(id))
             {
                 _logger.LogInformation($"Shoko Scanner... Images not found ({item.Name})");
@@ -55,7 +60,7 @@ namespace ShokoJellyfin.Providers
                 }
             }
 
-            if (item is Series)
+            if (item is Series || item is Season)
             {
                 var images = await API.ShokoAPI.GetSeriesImages(id);
                 
@@ -112,7 +117,7 @@ namespace ShokoJellyfin.Providers
         
         public bool Supports(BaseItem item)
         {
-            return item is Series || item is Episode;
+            return item is Series || item is Season || item is Episode;
         }
         
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
