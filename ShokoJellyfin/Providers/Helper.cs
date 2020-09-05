@@ -1,4 +1,3 @@
-using System;
 using System.Text.RegularExpressions;
 using ShokoJellyfin.Providers.API.Models;
 
@@ -16,16 +15,16 @@ namespace ShokoJellyfin.Providers
             var config = Plugin.Instance.Configuration;
             
             if (config.SynopsisCleanLinks)
-                Regex.Replace(summary, @"https?:\/\/\w+.\w+(?:\/?\w+)? \[([^\]]+)\]", "");
+                summary = Regex.Replace(summary, @"https?:\/\/\w+.\w+(?:\/?\w+)? \[([^\]]+)\]", "");
             
             if (config.SynopsisCleanMiscLines)
-                Regex.Replace(summary, @"^(\*|--|~) .*", "", RegexOptions.Multiline);
+                summary = Regex.Replace(summary, @"^(\*|--|~) .*", "", RegexOptions.Multiline);
             
             if (config.SynopsisRemoveSummary)
-                Regex.Replace(summary, @"\n(Source|Note|Summary):.*", "", RegexOptions.Singleline);
+                summary = Regex.Replace(summary, @"\n(Source|Note|Summary):.*", "", RegexOptions.Singleline);
             
             if (config.SynopsisCleanMultiEmptyLines)
-                Regex.Replace(summary, @"\n\n+", "", RegexOptions.Singleline);
+                summary = Regex.Replace(summary, @"\n\n+", "", RegexOptions.Singleline); 
 
             return summary;
         }
