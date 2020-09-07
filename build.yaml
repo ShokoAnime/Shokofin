@@ -1,0 +1,13 @@
+name: "ShokoJellyfin"
+guid: "5216ccbf-d24a-4eb3-8a7e-7da4230b7052"
+targetAbi: "10.7.0.0"
+owner: "shoko"
+overview: "Manage your anime from Jellyfin using metadata from Shoko"
+description: >
+  This plugin gets metadata for all your anime from your Shoko Server.
+  The official Anime and TvDB plugins can be used to fill the missing data.
+category: "Metadata"
+artifacts:
+- "ShokoJellyfin.dll"
+changelog: >
+  NA
