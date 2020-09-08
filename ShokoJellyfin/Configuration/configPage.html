@@ -28,6 +28,10 @@
                     <div class="fieldDescription">This field is auto-generated using the credentials. Only set this manually if that doesn't work!</div>
                 </div>
                 <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="UpdateWatchedStatus" />
+                    <span>Update watched status on Shoko (Scrobble)</span>
+                </label>
+                <label class="checkboxContainer">
                     <input is="emby-checkbox" type="checkbox" id="UseTvDbSeasonOrdering" />
                     <span>Use season ordering from TvDB. Also makes the shows merge-friendly.</span>
                 </label>
@@ -93,6 +97,7 @@
                         document.querySelector('#Username').value = config.Username;
                         document.querySelector('#Password').value = config.Password;
                         document.querySelector('#ApiKey').value = config.ApiKey;
+                        document.querySelector('#UpdateWatchedStatus').checked = config.UpdateWatchedStatus;
                         document.querySelector('#UseTvDbSeasonOrdering').checked = config.UseTvDbSeasonOrdering;
                         // document.querySelector('#UseShokoThumbnails').checked = config.UseShokoThumbnails;
                         document.querySelector('#HideArtStyleTags').checked = config.HideArtStyleTags;
@@ -118,6 +123,7 @@
                         config.Username = document.querySelector('#Username').value;
                         config.Password = document.querySelector('#Password').value;
                         config.ApiKey = document.querySelector('#ApiKey').value;
+                        config.UpdateWatchedStatus = document.querySelector('#UpdateWatchedStatus').checked;
                         config.UseTvDbSeasonOrdering = document.querySelector('#UseTvDbSeasonOrdering').checked; 
                         // config.UseShokoThumbnails = document.querySelector('#UseShokoThumbnails').checked;
                         config.HideArtStyleTags = document.querySelector('#HideArtStyleTags').checked;

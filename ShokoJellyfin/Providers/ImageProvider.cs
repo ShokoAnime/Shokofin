@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -28,46 +29,30 @@ namespace ShokoJellyfin.Providers
         {
             var list = new List<RemoteImageInfo>();
 
-            // Doesn't seem like Jellyfin can generate thumbs by itself. Keep this option always enabled for now.
-            // if (item is Episode && !Plugin.Instance.Configuration.UseShokoThumbnails) return list;
-
-            var id = item.GetProviderId("Shoko");
-
-            if (item is Season)
+            try
             {
-                id = item.GetParent().GetProviderId("Shoko");
-            }
+                // Doesn't seem like Jellyfin can generate thumbs by itself. Keep this option always enabled for now.
+                // if (item is Episode && !Plugin.Instance.Configuration.UseShokoThumbnails) return list;
 
-            if (string.IsNullOrEmpty(id))
-            {
-                _logger.LogInformation($"Shoko Scanner... Images not found ({item.Name})");
-                return list;
-            }
-            
-            _logger.LogInformation($"Shoko Scanner... Getting images ({item.Name} - {id})");
+                var id = item.GetProviderId("Shoko");
 
-            if (item is Episode)
-            {
-                var tvdbEpisodeInfo = (await API.ShokoAPI.GetEpisodeTvDb(id)).FirstOrDefault();
-                var imageUrl = Helper.GetImageUrl(tvdbEpisodeInfo?.Thumbnail);
-                if (!string.IsNullOrEmpty(imageUrl))
+                if (item is Season)
                 {
-                    list.Add(new RemoteImageInfo
-                    {
-                        ProviderName = Name,
-                        Type = ImageType.Primary,
-                        Url = imageUrl
-                    });
+                    id = item.GetParent().GetProviderId("Shoko");
                 }
-            }
 
-            if (item is Series || item is Season)
-            {
-                var images = await API.ShokoAPI.GetSeriesImages(id);
-                
-                foreach (var image in images.Posters)
+                if (string.IsNullOrEmpty(id))
                 {
-                    var imageUrl = Helper.GetImageUrl(image);
+                    _logger.LogInformation($"Shoko Scanner... Images not found ({item.Name})");
+                    return list;
+                }
+                
+                _logger.LogInformation($"Shoko Scanner... Getting images ({item.Name} - {id})");
+
+                if (item is Episode)
+                {
+                    var tvdbEpisodeInfo = (await API.ShokoAPI.GetEpisodeTvDb(id)).FirstOrDefault();
+                    var imageUrl = Helper.GetImageUrl(tvdbEpisodeInfo?.Thumbnail);
                     if (!string.IsNullOrEmpty(imageUrl))
                     {
                         list.Add(new RemoteImageInfo
@@ -78,37 +63,61 @@ namespace ShokoJellyfin.Providers
                         });
                     }
                 }
-                
-                foreach (var image in images.Fanarts)
-                {
-                    var imageUrl = Helper.GetImageUrl(image);
-                    if (!string.IsNullOrEmpty(imageUrl))
-                    {
-                        list.Add(new RemoteImageInfo
-                        {
-                            ProviderName = Name,
-                            Type = ImageType.Backdrop,
-                            Url = imageUrl
-                        });
-                    }
-                }
-                
-                foreach (var image in images.Banners)
-                {
-                    var imageUrl = Helper.GetImageUrl(image);
-                    if (!string.IsNullOrEmpty(imageUrl))
-                    {
-                        list.Add(new RemoteImageInfo
-                        {
-                            ProviderName = Name,
-                            Type = ImageType.Banner,
-                            Url = imageUrl
-                        });
-                    }
-                }
-            }
 
-            return list;
+                if (item is Series || item is Season)
+                {
+                    var images = await API.ShokoAPI.GetSeriesImages(id);
+                    
+                    foreach (var image in images.Posters)
+                    {
+                        var imageUrl = Helper.GetImageUrl(image);
+                        if (!string.IsNullOrEmpty(imageUrl))
+                        {
+                            list.Add(new RemoteImageInfo
+                            {
+                                ProviderName = Name,
+                                Type = ImageType.Primary,
+                                Url = imageUrl
+                            });
+                        }
+                    }
+                    
+                    foreach (var image in images.Fanarts)
+                    {
+                        var imageUrl = Helper.GetImageUrl(image);
+                        if (!string.IsNullOrEmpty(imageUrl))
+                        {
+                            list.Add(new RemoteImageInfo
+                            {
+                                ProviderName = Name,
+                                Type = ImageType.Backdrop,
+                                Url = imageUrl
+                            });
+                        }
+                    }
+                    
+                    foreach (var image in images.Banners)
+                    {
+                        var imageUrl = Helper.GetImageUrl(image);
+                        if (!string.IsNullOrEmpty(imageUrl))
+                        {
+                            list.Add(new RemoteImageInfo
+                            {
+                                ProviderName = Name,
+                                Type = ImageType.Banner,
+                                Url = imageUrl
+                            });
+                        }
+                    }
+                }
+
+                return list;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.StackTrace);
+                return list;
+            }
         }
 
         public IEnumerable<ImageType> GetSupportedImages(BaseItem item)

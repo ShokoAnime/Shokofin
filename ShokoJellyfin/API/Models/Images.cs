@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ShokoJellyfin.Providers.API.Models
+namespace ShokoJellyfin.API.Models
 {
     public class Images
     {

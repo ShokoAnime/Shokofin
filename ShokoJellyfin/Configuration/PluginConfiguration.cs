@@ -14,6 +14,8 @@ namespace ShokoJellyfin.Configuration
         
         public string ApiKey { get; set; }
         
+        public bool UpdateWatchedStatus { get; set; }
+        
         public bool UseTvDbSeasonOrdering { get; set; }
         
         // public bool UseShokoThumbnails { get; set; }
@@ -43,6 +45,7 @@ namespace ShokoJellyfin.Configuration
             Username = "Default";
             Password = "";
             ApiKey = "";
+            UpdateWatchedStatus = false;
             UseTvDbSeasonOrdering = false;
             // UseShokoThumbnails = true;
             HideArtStyleTags = false;

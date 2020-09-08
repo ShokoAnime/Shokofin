@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,7 +11,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
-using ShokoJellyfin.Providers.API;
+using ShokoJellyfin.API;
 
 namespace ShokoJellyfin.Providers
 {
@@ -29,59 +30,67 @@ namespace ShokoJellyfin.Providers
 
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
-            var result = new MetadataResult<Series>();
-
-            var dirname = Path.DirectorySeparatorChar + info.Path.Split(Path.DirectorySeparatorChar).Last();
-            
-            _logger.LogInformation($"Shoko Scanner... Getting series ID ({dirname})");
-            
-            var apiResponse = await ShokoAPI.GetSeriesPathEndsWith(dirname);
-            var seriesIDs = apiResponse.FirstOrDefault()?.IDs;
-            var seriesId = seriesIDs?.ID.ToString();
-            
-            if (string.IsNullOrEmpty(seriesId))
+            try
             {
-                _logger.LogInformation("Shoko Scanner... Series not found!");
+                var result = new MetadataResult<Series>();
+
+                var dirname = Path.DirectorySeparatorChar + info.Path.Split(Path.DirectorySeparatorChar).Last();
+                
+                _logger.LogInformation($"Shoko Scanner... Getting series ID ({dirname})");
+                
+                var apiResponse = await ShokoAPI.GetSeriesPathEndsWith(dirname);
+                var seriesIDs = apiResponse.FirstOrDefault()?.IDs;
+                var seriesId = seriesIDs?.ID.ToString();
+                
+                if (string.IsNullOrEmpty(seriesId))
+                {
+                    _logger.LogInformation("Shoko Scanner... Series not found!");
+                    return result;
+                }
+                
+                _logger.LogInformation($"Shoko Scanner... Getting series metadata ({dirname} - {seriesId})");
+
+                var seriesInfo = await ShokoAPI.GetSeries(seriesId);
+                var aniDbSeriesInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
+                var tags = await ShokoAPI.GetSeriesTags(seriesId, GetFlagFilter());
+                
+                result.Item = new Series
+                {
+                    Name = seriesInfo.Name,
+                    Overview = Helper.SummarySanitizer(aniDbSeriesInfo.Description),
+                    PremiereDate = aniDbSeriesInfo.AirDate,
+                    EndDate = aniDbSeriesInfo.EndDate,
+                    ProductionYear = aniDbSeriesInfo.AirDate?.Year,
+                    Status = aniDbSeriesInfo.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
+                    Tags = tags?.Select(tag => tag.Name).ToArray() ?? new string[0],
+                    CommunityRating = (float)((aniDbSeriesInfo.Rating.Value * 10) / aniDbSeriesInfo.Rating.MaxValue)
+                };
+                result.Item.SetProviderId("Shoko", seriesId);
+                result.Item.SetProviderId("AniDB", seriesIDs.AniDB.ToString());
+                var tvdbId = seriesIDs.TvDB?.FirstOrDefault();
+                if (tvdbId != 0) result.Item.SetProviderId("Tvdb", tvdbId.ToString());
+                result.HasMetadata = true;
+                
+                result.ResetPeople();
+                var roles = await ShokoAPI.GetSeriesCast(seriesId);
+                foreach (var role in roles)
+                {
+                    result.AddPerson(new PersonInfo
+                    {
+                        Type = PersonType.Actor,
+                        Name = role.Staff.Name,
+                        Role = role.Character.Name,
+                        ImageUrl = Helper.GetImageUrl(role.Staff.Image)
+                    });
+                }
+                
                 return result;
             }
-            
-            _logger.LogInformation($"Shoko Scanner... Getting series metadata ({dirname} - {seriesId})");
-
-            var seriesInfo = await ShokoAPI.GetSeries(seriesId);
-            var aniDbSeriesInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
-            var tags = await ShokoAPI.GetSeriesTags(seriesId, GetFlagFilter());
-            
-            result.Item = new Series
+            catch (Exception e)
             {
-                Name = seriesInfo.Name,
-                Overview = Helper.SummarySanitizer(aniDbSeriesInfo.Description),
-                PremiereDate = aniDbSeriesInfo.AirDate,
-                EndDate = aniDbSeriesInfo.EndDate,
-                ProductionYear = aniDbSeriesInfo.AirDate?.Year,
-                Status = aniDbSeriesInfo.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                Tags = tags?.Select(tag => tag.Name).ToArray() ?? new string[0],
-                CommunityRating = (float)((aniDbSeriesInfo.Rating.Value * 10) / aniDbSeriesInfo.Rating.MaxValue)
-            };
-            result.Item.SetProviderId("Shoko", seriesId);
-            result.Item.SetProviderId("AniDB", seriesIDs.AniDB.ToString());
-            var tvdbId = seriesIDs.TvDB?.FirstOrDefault();
-            if (tvdbId != 0) result.Item.SetProviderId("Tvdb", tvdbId.ToString());
-            result.HasMetadata = true;
-            
-            result.ResetPeople();
-            var roles = await ShokoAPI.GetSeriesCast(seriesId);
-            foreach (var role in roles)
-            {
-                result.AddPerson(new PersonInfo
-                {
-                    Type = PersonType.Actor,
-                    Name = role.Staff.Name,
-                    Role = role.Character.Name,
-                    ImageUrl = Helper.GetImageUrl(role.Staff.Image)
-                });
+                _logger.LogError(e.StackTrace);
+                return new MetadataResult<Series>();
             }
-            
-            return result;
         }
         
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)

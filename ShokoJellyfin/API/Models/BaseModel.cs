@@ -1,4 +1,4 @@
-namespace ShokoJellyfin.Providers.API.Models
+namespace ShokoJellyfin.API.Models
 {
     public abstract class BaseModel
     {

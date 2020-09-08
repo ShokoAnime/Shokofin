@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using ShokoJellyfin.Providers.API.Models;
+using ShokoJellyfin.API.Models;
 
 namespace ShokoJellyfin.Providers
 {
