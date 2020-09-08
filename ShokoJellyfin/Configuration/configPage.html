@@ -35,10 +35,10 @@
                     <input is="emby-checkbox" type="checkbox" id="UseTvDbSeasonOrdering" />
                     <span>Use season ordering from TvDB. Also makes the shows merge-friendly.</span>
                 </label>
-<!--                <label class="checkboxContainer">-->
-<!--                    <input is="emby-checkbox" type="checkbox" id="UseShokoThumbnails" />-->
-<!--                    <span>Use thumbnails from Shoko</span>-->
-<!--                </label>-->
+                <label class="checkboxContainer">
+                    <input is="emby-checkbox" type="checkbox" id="UseShokoThumbnails" />
+                    <span>Use thumbnails from Shoko</span>
+                </label>
                 <label class="checkboxContainer">
                     <input is="emby-checkbox" type="checkbox" id="HideArtStyleTags" />
                     <span>Hide art style related tags</span>
@@ -99,7 +99,7 @@
                         document.querySelector('#ApiKey').value = config.ApiKey;
                         document.querySelector('#UpdateWatchedStatus').checked = config.UpdateWatchedStatus;
                         document.querySelector('#UseTvDbSeasonOrdering').checked = config.UseTvDbSeasonOrdering;
-                        // document.querySelector('#UseShokoThumbnails').checked = config.UseShokoThumbnails;
+                        document.querySelector('#UseShokoThumbnails').checked = config.UseShokoThumbnails;
                         document.querySelector('#HideArtStyleTags').checked = config.HideArtStyleTags;
                         document.querySelector('#HideSourceTags').checked = config.HideSourceTags;
                         document.querySelector('#HideMiscTags').checked = config.HideMiscTags;
@@ -125,7 +125,7 @@
                         config.ApiKey = document.querySelector('#ApiKey').value;
                         config.UpdateWatchedStatus = document.querySelector('#UpdateWatchedStatus').checked;
                         config.UseTvDbSeasonOrdering = document.querySelector('#UseTvDbSeasonOrdering').checked; 
-                        // config.UseShokoThumbnails = document.querySelector('#UseShokoThumbnails').checked;
+                        config.UseShokoThumbnails = document.querySelector('#UseShokoThumbnails').checked;
                         config.HideArtStyleTags = document.querySelector('#HideArtStyleTags').checked;
                         config.HideSourceTags = document.querySelector('#HideSourceTags').checked;
                         config.HideMiscTags = document.querySelector('#HideMiscTags').checked;
