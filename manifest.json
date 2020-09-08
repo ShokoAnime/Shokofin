@@ -8,6 +8,14 @@
         "category": "Metadata",
         "versions": [
             {
+                "version": "1.1.0",
+                "changelog": "NA",
+                "targetAbi": "10.7.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/ShokoJellyfin/releases/download/1.1.0/shokojellyfin_1.1.0.zip",
+                "checksum": "610e540182066278d816e06e8f1a01ee",
+                "timestamp": "2020-09-08T22:17:26Z"
+            },
+            {
                 "version": "1.0.0",
                 "changelog": "NA",
                 "targetAbi": "10.7.0.0",
