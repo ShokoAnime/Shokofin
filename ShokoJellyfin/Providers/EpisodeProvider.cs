@@ -46,7 +46,7 @@ namespace ShokoJellyfin.Providers
                 var episodeIDs = allIds?.EpisodeIDs?.FirstOrDefault();
                 var episodeId = episodeIDs?.ID.ToString();
 
-                if (string.IsNullOrEmpty(episodeId))
+                if (string.IsNullOrEmpty(seriesId) || string.IsNullOrEmpty(episodeId))
                 {
                     _logger.LogInformation($"Shoko Scanner... Episode not found! ({filename})");
                     return result;
