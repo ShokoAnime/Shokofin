@@ -67,7 +67,7 @@ namespace ShokoJellyfin.Providers
             switch (displayTitleType)
             {
                 case DisplayTitleType.Default:
-                    // Fallback to prefered series title, but choose the episode title based on this order.
+                    // Fallback to preferred series title, but choose the episode title based on this order.
                     // The "main" title on AniDB is _most_ of the time in english, but we also fallback to romaji (japanese) or pinyin (chinese) in case it is not provided.
                     return GetTitle(null, episodeTitles, seriesTitle, "en", "x-jat", "x-zht");
                 case DisplayTitleType.Origin:
