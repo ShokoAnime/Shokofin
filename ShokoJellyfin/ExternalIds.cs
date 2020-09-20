@@ -41,4 +41,22 @@ namespace ShokoJellyfin
         public string UrlFormatString
             => null;
     }
+
+    public class ShokoFileExternalId : IExternalId
+    {
+        public bool Supports(IHasProviderIds item)
+            => item is Episode || item is Movie;
+
+        public string ProviderName
+            => "Shoko File";
+
+        public string Key
+            => "Shoko File";
+
+        public ExternalIdMediaType? Type
+            => null;
+
+        public string UrlFormatString
+            => null;
+    }
 }

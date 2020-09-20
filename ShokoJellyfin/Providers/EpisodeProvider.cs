@@ -41,12 +41,14 @@ namespace ShokoJellyfin.Providers
                 _logger.LogInformation($"Shoko Scanner... Getting episode ID ({filename})");
 
                 var apiResponse = await ShokoAPI.GetFilePathEndsWith(filename);
-                var allIds = apiResponse.FirstOrDefault()?.SeriesIDs.FirstOrDefault();
-                var seriesId = allIds?.SeriesID.ID.ToString();
-                var episodeIDs = allIds?.EpisodeIDs?.FirstOrDefault();
+                var file = apiResponse.FirstOrDefault();
+                var fileId = file?.ID.ToString();
+                var series = file?.SeriesIDs.FirstOrDefault();
+                var seriesId = series?.SeriesID.ID.ToString();
+                var episodeIDs = series?.EpisodeIDs?.FirstOrDefault();
                 var episodeId = episodeIDs?.ID.ToString();
 
-                if (string.IsNullOrEmpty(seriesId) || string.IsNullOrEmpty(episodeId))
+                if (string.IsNullOrEmpty(fileId) || string.IsNullOrEmpty(seriesId) || string.IsNullOrEmpty(episodeId))
                 {
                     _logger.LogInformation($"Shoko Scanner... Episode not found! ({filename})");
                     return result;
@@ -69,12 +71,13 @@ namespace ShokoJellyfin.Providers
                     CommunityRating = (float) ((episodeInfo.Rating.Value * 10) / episodeInfo.Rating.MaxValue)
                 };
                 result.Item.SetProviderId("Shoko Episode", episodeId);
+                result.Item.SetProviderId("Shoko File", fileId);
                 result.Item.SetProviderId("AniDB", episodeIDs.AniDB.ToString());
                 var tvdbId = episodeIDs.TvDB?.FirstOrDefault();
                 if (tvdbId != 0) result.Item.SetProviderId("Tvdb", tvdbId.ToString());
                 result.HasMetadata = true;
 
-                var episodeNumberEnd = episodeInfo.EpisodeNumber + allIds?.EpisodeIDs.Count() - 1;
+                var episodeNumberEnd = episodeInfo.EpisodeNumber + series?.EpisodeIDs.Count() - 1;
                 if (episodeInfo.EpisodeNumber != episodeNumberEnd) result.Item.IndexNumberEnd = episodeNumberEnd;
 
                 return result;
