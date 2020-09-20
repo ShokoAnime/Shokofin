@@ -53,10 +53,12 @@ namespace ShokoJellyfin.Providers
                 var seriesInfo = await ShokoAPI.GetSeries(seriesId);
                 var aniDbSeriesInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
                 var tags = await ShokoAPI.GetSeriesTags(seriesId, GetFlagFilter());
+                var ( displayTitle, alternateTitle ) = Helper.GetSeriesTitles(aniDbSeriesInfo.Titles, aniDbSeriesInfo.Title, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
                 
                 result.Item = new Series
                 {
-                    Name = seriesInfo.Name,
+                    Name = displayTitle,
+                    OriginalTitle = alternateTitle,
                     Overview = Helper.SummarySanitizer(aniDbSeriesInfo.Description),
                     PremiereDate = aniDbSeriesInfo.AirDate,
                     EndDate = aniDbSeriesInfo.EndDate,
