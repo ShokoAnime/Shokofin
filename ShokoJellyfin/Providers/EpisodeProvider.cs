@@ -41,11 +41,12 @@ namespace ShokoJellyfin.Providers
                 _logger.LogInformation($"Shoko Scanner... Getting episode ID ({filename})");
 
                 var apiResponse = await ShokoAPI.GetFilePathEndsWith(filename);
-                var allIds = apiResponse.FirstOrDefault()?.SeriesIDs.FirstOrDefault()?.EpisodeIDs;
-                var episodeIDs = allIds?.FirstOrDefault();
+                var allIds = apiResponse.FirstOrDefault()?.SeriesIDs.FirstOrDefault();
+                var seriesId = allIds?.SeriesID.ID.ToString();
+                var episodeIDs = allIds?.EpisodeIDs?.FirstOrDefault();
                 var episodeId = episodeIDs?.ID.ToString();
 
-                if (string.IsNullOrEmpty(episodeId))
+                if (string.IsNullOrEmpty(seriesId) || string.IsNullOrEmpty(episodeId))
                 {
                     _logger.LogInformation($"Shoko Scanner... Episode not found! ({filename})");
                     return result;
@@ -53,24 +54,27 @@ namespace ShokoJellyfin.Providers
 
                 _logger.LogInformation($"Shoko Scanner... Getting episode metadata ({filename} - {episodeId})");
 
+                var seriesInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
                 var episodeInfo = await ShokoAPI.GetEpisodeAniDb(episodeId);
+                var ( displayTitle, alternateTitle ) = Helper.GetEpisodeTitles(seriesInfo.Titles, episodeInfo.Titles, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
 
                 result.Item = new Episode
                 {
                     IndexNumber = episodeInfo.EpisodeNumber,
                     ParentIndexNumber = await GetSeasonNumber(episodeId, episodeInfo.Type),
-                    Name = episodeInfo.Titles.Find(title => title.Language.Equals("EN"))?.Name,
+                    Name = displayTitle,
+                    OriginalTitle = alternateTitle,
                     PremiereDate = episodeInfo.AirDate,
                     Overview = Helper.SummarySanitizer(episodeInfo.Description),
                     CommunityRating = (float) ((episodeInfo.Rating.Value * 10) / episodeInfo.Rating.MaxValue)
                 };
-                result.Item.SetProviderId("Shoko", episodeId);
+                result.Item.SetProviderId("Shoko Episode", episodeId);
                 result.Item.SetProviderId("AniDB", episodeIDs.AniDB.ToString());
                 var tvdbId = episodeIDs.TvDB?.FirstOrDefault();
                 if (tvdbId != 0) result.Item.SetProviderId("Tvdb", tvdbId.ToString());
                 result.HasMetadata = true;
 
-                var episodeNumberEnd = episodeInfo.EpisodeNumber + allIds.Count() - 1;
+                var episodeNumberEnd = episodeInfo.EpisodeNumber + allIds?.EpisodeIDs.Count() - 1;
                 if (episodeInfo.EpisodeNumber != episodeNumberEnd) result.Item.IndexNumberEnd = episodeNumberEnd;
 
                 return result;
