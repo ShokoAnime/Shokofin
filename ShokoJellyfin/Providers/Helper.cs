@@ -50,7 +50,7 @@ namespace ShokoJellyfin.Providers
             var seriesTitles = (List<Title>)rSeriesTitles;
             var episodeTitles = (List<Title>)rEpisodeTitles;
             var originLanguage = GuessOriginLanguage(seriesTitles);
-            var displayLanguage = GuessDisplayLanguage(metadataLanguage);
+            var displayLanguage = metadataLanguage?.ToLower() ?? "en";
             return ( GetFullTitle(seriesTitles, episodeTitles, seriesTitle, displayTitleType, displayLanguage, originLanguage), GetFullTitle(seriesTitles, episodeTitles, seriesTitle, alternateTitleType, displayLanguage, originLanguage) );
         }
 
@@ -145,17 +145,6 @@ namespace ShokoJellyfin.Providers
                     return new string[] { langCode };
             }
 
-        }
-
-        private static string GuessDisplayLanguage(string metadataLanguage)
-        {
-            switch (metadataLanguage)
-            {
-                // TODO: Add more cases, or provide a converter function to country-code.
-                case null:
-                default:
-                    return "en";
-            }
         }
     }
 }
