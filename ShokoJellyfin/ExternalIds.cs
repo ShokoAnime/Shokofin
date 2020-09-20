@@ -6,24 +6,6 @@ using MediaBrowser.Model.Providers;
 
 namespace ShokoJellyfin
 {
-    public class AniDbExternalId : IExternalId
-    {
-        public bool Supports(IHasProviderIds item)
-            => item is Series || item is Episode || item is Movie || item is BoxSet;
-
-        public string ProviderName
-            => "AniDB";
-
-        public string Key
-            => "AniDB";
-
-        public ExternalIdMediaType? Type
-            => null;
-
-        public string UrlFormatString
-            => null;
-    }
-
     public class ShokoSeriesExternalId : IExternalId
     {
         public bool Supports(IHasProviderIds item)
