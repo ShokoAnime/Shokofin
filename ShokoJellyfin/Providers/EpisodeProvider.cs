@@ -68,7 +68,6 @@ namespace ShokoJellyfin.Providers
                     Overview = Helper.SummarySanitizer(episodeInfo.Description),
                     CommunityRating = (float) ((episodeInfo.Rating.Value * 10) / episodeInfo.Rating.MaxValue)
                 };
-                result.Item.SetProviderId("Shoko Series", seriesId);
                 result.Item.SetProviderId("Shoko Episode", episodeId);
                 result.Item.SetProviderId("AniDB", episodeIDs.AniDB.ToString());
                 var tvdbId = episodeIDs.TvDB?.FirstOrDefault();

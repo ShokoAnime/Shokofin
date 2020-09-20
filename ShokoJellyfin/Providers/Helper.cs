@@ -67,8 +67,8 @@ namespace ShokoJellyfin.Providers
             switch (displayTitleType)
             {
                 case DisplayTitleType.Default:
-                    // Fallback to preffered series title, but choose the episode title based on this order.
-                    // The "main" title on AniDB is _most_ of the time in english, but we also fallback to romanji (japanese) or pinyin (chinese) in case it is not provided in.
+                    // Fallback to prefered series title, but choose the episode title based on this order.
+                    // The "main" title on AniDB is _most_ of the time in english, but we also fallback to romaji (japanese) or pinyin (chinese) in case it is not provided.
                     return GetTitle(null, episodeTitles, seriesTitle, "en", "x-jat", "x-zht");
                 case DisplayTitleType.Origin:
                     return GetTitle(seriesTitles, episodeTitles, seriesTitle, originLanguages);
@@ -91,7 +91,7 @@ namespace ShokoJellyfin.Providers
                 title.Append(mainTitle);
                 if (episodeTitles != null) {
                     var episodeTitle = GetTitleByLanguages(episodeTitles, languageCandidates);
-                    // We could not find the complete title, and no mixed languages (outside the spesified ones), so abort here.
+                    // We could not create the complete title, and no mixed languages allowed (outside the specified one(s)), so abort here.
                     if (episodeTitle == null)
                     {
                         // Some movies provide only an english title, so we fallback to english.

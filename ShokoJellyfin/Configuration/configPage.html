@@ -27,25 +27,25 @@
                     <input is="emby-input" type="text" id="ApiKey" label="API Key" />
                     <div class="fieldDescription">This field is auto-generated using the credentials. Only set this manually if that doesn't work!</div>
                 </div>
-                <div class="selectContainer">
+                <div class="selectContainer selectContainer-withDescription">
                     <label class="selectLabel" for="TitleMainType">Main Title Language</label>
                     <select is="emby-select" id="TitleMainType" name="TitleMainType" class="emby-select-withcolor emby-select">
                         <option value="Default">Default</option>
-                        <option value="Localized">Use preffered metadata language</option>
+                        <option value="Localized">Use prefered metadata language</option>
                         <option value="Origin">Language in country of origin</option>
                     </select>
                     <div class="fieldDescription">Titles will fallback to Default if not found for the target language.</div>
                 </div>
-                <div class="selectContainer">
+                <div class="selectContainer selectContainer-withDescription">
                     <label class="selectLabel" for="TitleAlternateType">Alternate Title Language</label>
                     <select is="emby-select" id="TitleAlternateType" name="TitleAlternateType" class="emby-select-withcolor emby-select">
                         <option value="Default">Default</option>
-                        <option value="Localized">Use preffered metadata language</option>
+                        <option value="Localized">Use prefered metadata language</option>
                         <option value="Origin">Language in country of origin</option>
                     </select>
                     <div class="fieldDescription">Titles >will fallback to Default if not found for the target language.</div>
                 </div>
-                <label class="checkboxContainer">
+                <label class="checkboxContainer checkboxContainer-withDescription">
                     <input is="emby-checkbox" type="checkbox" id="TitleUseAlternate" />
                     <span>Include an alternate title</span>
                     <div class="fieldDescription">Will populate the &#34;Original Title&#34; field with the alternate title.</div>
