@@ -1,4 +1,5 @@
-# ShokoJellyfin
+# Shokofin
+
 Repo for the Jellyfin Plugin
 
 ## Build Process
@@ -12,4 +13,4 @@ Repo for the Jellyfin Plugin
 ```sh
 dotnet publish --configuration Release --output bin
 ```
-4. Copy the resulting file `bin/ShokoJellyfin.dll` to the `plugins` folder under the Jellyfin program data directory or inside the portable install directory
+4. Copy the resulting file `bin/Shokofin.dll` to the `plugins` folder under the Jellyfin program data directory or inside the portable install directory

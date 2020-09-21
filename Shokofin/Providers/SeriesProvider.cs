@@ -11,9 +11,9 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
-using ShokoJellyfin.API;
+using Shokofin.API;
 
-namespace ShokoJellyfin.Providers
+namespace Shokofin.Providers
 {
     public class SeriesProvider : IHasOrder, IRemoteMetadataProvider<Series, SeriesInfo>
     {

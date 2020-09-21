@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using ShokoJellyfin.API.Models;
-using Title = ShokoJellyfin.API.Models.Title;
-using DisplayTitleType = ShokoJellyfin.Configuration.PluginConfiguration.DisplayTitleType;
+using Shokofin.API.Models;
+using Title = Shokofin.API.Models.Title;
+using DisplayTitleType = Shokofin.Configuration.PluginConfiguration.DisplayTitleType;
 
-namespace ShokoJellyfin.Providers
+namespace Shokofin.Providers
 {
     public class Helper
     {

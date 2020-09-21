@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShokoJellyfin", "ShokoJellyfin\ShokoJellyfin.csproj", "{1DD876AE-9E68-4867-BDF6-B9050E63E936}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shokofin", "Shokofin\Shokofin.csproj", "{1DD876AE-9E68-4867-BDF6-B9050E63E936}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

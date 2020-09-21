@@ -1,4 +1,4 @@
-name: "ShokoJellyfin"
+name: "Shokofin"
 guid: "5216ccbf-d24a-4eb3-8a7e-7da4230b7052"
 targetAbi: "10.7.0.0"
 owner: "shoko"
@@ -8,6 +8,6 @@ description: >
   The official Anime and TvDB plugins can be used to fill the missing data.
 category: "Metadata"
 artifacts:
-- "ShokoJellyfin.dll"
+- "Shokofin.dll"
 changelog: >
   NA

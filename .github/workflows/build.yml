@@ -23,9 +23,9 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ matrix.dotnet }}
-      - run: dotnet restore ShokoJellyfin/ShokoJellyfin.csproj -s https://api.nuget.org/v3/index.json -s https://pkgs.dev.azure.com/jellyfin-project/jellyfin/_packaging/unstable/nuget/v3/index.json
-      - run: dotnet publish -c Release ShokoJellyfin/ShokoJellyfin.csproj
+      - run: dotnet restore Shokofin/Shokofin.csproj -s https://api.nuget.org/v3/index.json -s https://pkgs.dev.azure.com/jellyfin-project/jellyfin/_packaging/unstable/nuget/v3/index.json
+      - run: dotnet publish -c Release Shokofin/Shokofin.csproj
       - uses: actions/upload-artifact@v2
         with:
-          name: ShokoJellyfin
-          path: ShokoJellyfin/bin/Release/netstandard2.1/ShokoJellyfin.dll
+          name: Shokofin
+          path: Shokofin/bin/Release/netstandard2.1/Shokofin.dll
