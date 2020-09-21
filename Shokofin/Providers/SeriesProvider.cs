@@ -35,26 +35,27 @@ namespace Shokofin.Providers
                 var result = new MetadataResult<Series>();
 
                 var dirname = Path.DirectorySeparatorChar + info.Path.Split(Path.DirectorySeparatorChar).Last();
-                
+
                 _logger.LogInformation($"Shoko Scanner... Getting series ID ({dirname})");
-                
+
                 var apiResponse = await ShokoAPI.GetSeriesPathEndsWith(dirname);
                 var seriesIDs = apiResponse.FirstOrDefault()?.IDs;
                 var seriesId = seriesIDs?.ID.ToString();
-                
+
                 if (string.IsNullOrEmpty(seriesId))
                 {
                     _logger.LogInformation("Shoko Scanner... Series not found!");
                     return result;
                 }
-                
+
                 _logger.LogInformation($"Shoko Scanner... Getting series metadata ({dirname} - {seriesId})");
 
                 var seriesInfo = await ShokoAPI.GetSeries(seriesId);
                 var aniDbSeriesInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
-                var tags = await ShokoAPI.GetSeriesTags(seriesId, GetFlagFilter());
+
+                var tags = await ShokoAPI.GetSeriesTags(seriesId, Helper.GetFlagFilter());
                 var ( displayTitle, alternateTitle ) = Helper.GetSeriesTitles(aniDbSeriesInfo.Titles, seriesInfo.Name, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
-                
+
                 result.Item = new Series
                 {
                     Name = displayTitle,
@@ -72,7 +73,7 @@ namespace Shokofin.Providers
                 var tvdbId = seriesIDs.TvDB?.FirstOrDefault();
                 if (tvdbId != 0) result.Item.SetProviderId("Tvdb", tvdbId.ToString());
                 result.HasMetadata = true;
-                
+
                 result.ResetPeople();
                 var roles = await ShokoAPI.GetSeriesCast(seriesId);
                 foreach (var role in roles)
@@ -85,7 +86,7 @@ namespace Shokofin.Providers
                         ImageUrl = Helper.GetImageUrl(role.Staff.Image)
                     });
                 }
-                
+
                 return result;
             }
             catch (Exception e)
@@ -94,7 +95,7 @@ namespace Shokofin.Providers
                 return new MetadataResult<Series>();
             }
         }
-        
+
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Shoko Scanner... Searching Series ({searchInfo.Name})");
@@ -114,28 +115,14 @@ namespace Shokofin.Providers
                 parsedSeries.SetProviderId("Shoko", series.IDs.ID.ToString());
                 results.Add(parsedSeries);
             }
-            
+
             return results;
         }
-        
-        
+
+
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
-        }
-
-        private int GetFlagFilter()
-        {
-            var config = Plugin.Instance.Configuration;
-            var filter = 0;
-
-            if (config.HideAniDbTags) filter = 1;
-            if (config.HideArtStyleTags) filter |= (filter << 1);
-            if (config.HideSourceTags) filter |= (filter << 2);
-            if (config.HideMiscTags) filter |= (filter << 3);
-            if (config.HidePlotTags) filter |= (filter << 4);
-
-            return filter;
         }
     }
 }

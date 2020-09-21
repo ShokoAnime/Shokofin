@@ -15,21 +15,35 @@ namespace Shokofin.Providers
             return image != null ? $"http://{Plugin.Instance.Configuration.Host}:{Plugin.Instance.Configuration.Port}/api/v3/Image/{image.Source}/{image.Type}/{image.ID}" : null;
         }
 
+        public static int GetFlagFilter()
+        {
+            var config = Plugin.Instance.Configuration;
+            var filter = 0;
+
+            if (config.HideAniDbTags) filter = 1;
+            if (config.HideArtStyleTags) filter |= (filter << 1);
+            if (config.HideSourceTags) filter |= (filter << 2);
+            if (config.HideMiscTags) filter |= (filter << 3);
+            if (config.HidePlotTags) filter |= (filter << 4);
+
+            return filter;
+        }
+
         public static string SummarySanitizer(string summary) // Based on ShokoMetadata which is based on HAMA's
         {
             var config = Plugin.Instance.Configuration;
-            
+
             if (config.SynopsisCleanLinks)
                 summary = Regex.Replace(summary, @"https?:\/\/\w+.\w+(?:\/?\w+)? \[([^\]]+)\]", match => match.Groups[1].Value);
             
             if (config.SynopsisCleanMiscLines)
                 summary = Regex.Replace(summary, @"^(\*|--|~) .*", "", RegexOptions.Multiline);
-            
+
             if (config.SynopsisRemoveSummary)
                 summary = Regex.Replace(summary, @"\n(Source|Note|Summary):.*", "", RegexOptions.Singleline);
-            
+
             if (config.SynopsisCleanMultiEmptyLines)
-                summary = Regex.Replace(summary, @"\n\n+", "", RegexOptions.Singleline); 
+                summary = Regex.Replace(summary, @"\n\n+", "", RegexOptions.Singleline);
 
             return summary;
         }
