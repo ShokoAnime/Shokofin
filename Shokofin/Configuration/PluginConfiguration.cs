@@ -1,6 +1,6 @@
 using MediaBrowser.Model.Plugins;
 
-namespace ShokoJellyfin.Configuration
+namespace Shokofin.Configuration
 {
     public class PluginConfiguration : BasePluginConfiguration
     {

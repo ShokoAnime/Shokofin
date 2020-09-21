@@ -4,9 +4,9 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using ShokoJellyfin.Configuration;
+using Shokofin.Configuration;
 
-namespace ShokoJellyfin
+namespace Shokofin
 {
     public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {

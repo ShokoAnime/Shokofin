@@ -5,9 +5,9 @@ using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
-using ShokoJellyfin.API;
+using Shokofin.API;
 
-namespace ShokoJellyfin
+namespace Shokofin
 {
     public class Scrobbler : IServerEntryPoint
     {

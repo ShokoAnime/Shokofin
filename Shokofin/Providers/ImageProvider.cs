@@ -11,7 +11,7 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 
-namespace ShokoJellyfin.Providers
+namespace Shokofin.Providers
 {
     public class ImageProvider : IRemoteImageProvider
     {

@@ -6,10 +6,10 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using ShokoJellyfin.API.Models;
-using File = ShokoJellyfin.API.Models.File;
+using Shokofin.API.Models;
+using File = Shokofin.API.Models.File;
 
-namespace ShokoJellyfin.API
+namespace Shokofin.API
 {
     internal class ShokoAPI
     {

@@ -4,7 +4,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 
-namespace ShokoJellyfin
+namespace Shokofin
 {
     public class ShokoSeriesExternalId : IExternalId
     {

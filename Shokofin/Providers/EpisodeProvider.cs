@@ -10,10 +10,10 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
-using ShokoJellyfin.API;
-using EpisodeType = ShokoJellyfin.API.Models.Episode.EpisodeType;
+using Shokofin.API;
+using EpisodeType = Shokofin.API.Models.Episode.EpisodeType;
 
-namespace ShokoJellyfin.Providers
+namespace Shokofin.Providers
 {
     public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
     {

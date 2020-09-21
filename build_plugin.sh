@@ -36,7 +36,7 @@ MY=$(dirname $(realpath -s "${0}"))
 JPRM="jprm"
 
 DEFAULT_REPO_DIR="./manifest.json"
-DEFAULT_REPO_URL="https://github.com/ShokoAnime/ShokoJellyfin/releases/download"
+DEFAULT_REPO_URL="https://github.com/ShokoAnime/Shokofin/releases/download"
 
 PLUGIN=.
 
@@ -53,6 +53,6 @@ zipfile=$($JPRM --verbosity=debug plugin build "${PLUGIN}" --output="${ARTIFACT_
     $JPRM repo add --url=${JELLYFIN_REPO_URL} "${JELLYFIN_REPO}" "${zipfile}"
 }
 
-sed -i "s/shokojellyfin\//${VERSION}\//" "${JELLYFIN_REPO}"
+sed -i "s/shokofin\//${VERSION}\//" "${JELLYFIN_REPO}"
 
 exit $?
