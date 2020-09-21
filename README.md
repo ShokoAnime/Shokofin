@@ -14,7 +14,7 @@ TBD
 
 1. Download the `shokofin_*.zip` file from the latest release from GitHub [here](https://github.com/Shoko/Shokofin/releases/latest).
 
-2. Extract the contained `Shokofin.dll` and copy it to the `plugins` folder under the Jellyfin program data directory or inside the portable install directory.
+2. Extract the contained `Shokofin.dll` and `meta.json`, place both the files in a folder named `Shokofin` and copy this folder to the `plugins` folder under the Jellyfin program data directory or inside the portable install directory.
 
 ### Build Process
 
