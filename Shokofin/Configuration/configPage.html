@@ -45,11 +45,13 @@
                     </select>
                     <div class="fieldDescription">Titles will fallback to Default if not found for the target language.</div>
                 </div>
-                <label class="checkboxContainer checkboxContainer-withDescription">
-                    <input is="emby-checkbox" type="checkbox" id="TitleUseAlternate" />
-                    <span>Include an alternate title</span>
-                    <div class="fieldDescription">Will populate the &#34;Original Title&#34; field with the alternate title.</div>
-                </label>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label>
+                        <input is="emby-checkbox" type="checkbox" id="TitleUseAlternate" />
+                        <span>Include an alternate title</span>
+                    </label>
+                    <div class="fieldDescription checkboxFieldDescription">Will populate the &#34;Original Title&#34; field with the alternate title.</div>
+                </div>
                 <label class="checkboxContainer">
                     <input is="emby-checkbox" type="checkbox" id="UpdateWatchedStatus" />
                     <span>Update watched status on Shoko (Scrobble)</span>
