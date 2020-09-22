@@ -53,7 +53,7 @@ namespace Shokofin.Providers
                 var seriesInfo = await ShokoAPI.GetSeries(seriesId);
                 var aniDbSeriesInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
                 var tags = await ShokoAPI.GetSeriesTags(seriesId, GetFlagFilter());
-                var ( displayTitle, alternateTitle ) = Helper.GetSeriesTitles(aniDbSeriesInfo.Titles, aniDbSeriesInfo.Title, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
+                var ( displayTitle, alternateTitle ) = Helper.GetSeriesTitles(aniDbSeriesInfo.Titles, seriesInfo.Name, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
                 
                 result.Item = new Series
                 {
