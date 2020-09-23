@@ -20,7 +20,7 @@ namespace Shokofin.Providers
             var config = Plugin.Instance.Configuration;
             
             if (config.SynopsisCleanLinks)
-                summary = Regex.Replace(summary, @"https?:\/\/\w+.\w+(?:\/?\w+)? \[([^\]]+)\]", "");
+                summary = Regex.Replace(summary, @"https?:\/\/\w+.\w+(?:\/?\w+)? \[([^\]]+)\]", match => match.Groups[1].Value);
             
             if (config.SynopsisCleanMiscLines)
                 summary = Regex.Replace(summary, @"^(\*|--|~) .*", "", RegexOptions.Multiline);
