@@ -1,5 +1,7 @@
 # Shokofin
 
+**Warning**: This plugin currently requires an unstable version of Jellyfin (`v10.7.0`) installed.
+
 A plugin to integrate your Shoko database with the Jellyfin media server.
 
 ## Install
