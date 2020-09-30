@@ -78,7 +78,7 @@ namespace Shokofin.Providers
 
                 result.Item = new Movie
                 {
-                    IndexNumber = Helper.GetIndexNumber(series, episodeAniDB),
+                    IndexNumber = Helper.GetAbsoluteIndexNumber(series, episodeAniDB),
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
                     PremiereDate = episodeAniDB.AirDate,

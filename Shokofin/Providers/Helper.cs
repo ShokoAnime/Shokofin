@@ -17,12 +17,10 @@ namespace Shokofin.Providers
         }
 
         /// <summary>
-        /// 
+        /// Get absolute index number for an episode in a series.
         /// </summary>
-        /// <param name="series"></param>
-        /// <param name="episode"></param>
-        /// <returns></returns>
-        public static int GetIndexNumber(Series series, Episode.AniDB episode)
+        /// <returns>Absolute index.</returns>
+        public static int GetAbsoluteIndexNumber(Series series, Episode.AniDB episode)
         {
             int offset = 0;
             switch (episode.Type)
