@@ -57,8 +57,9 @@ namespace Shokofin.Providers
                 _logger.LogInformation($"Shoko Scanner... Getting episode metadata ({filename} - {episodeId})");
 
                 var seriesInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
+                var episode = await ShokoAPI.GetEpisode(episodeId);
                 var episodeInfo = await ShokoAPI.GetEpisodeAniDb(episodeId);
-                var ( displayTitle, alternateTitle ) = Helper.GetEpisodeTitles(seriesInfo.Titles, episodeInfo.Titles, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
+                var ( displayTitle, alternateTitle ) = Helper.GetEpisodeTitles(seriesInfo.Titles, episodeInfo.Titles, episode.Name, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
 
                 result.Item = new Episode
                 {

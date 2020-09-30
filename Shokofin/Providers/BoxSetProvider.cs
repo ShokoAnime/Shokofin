@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
@@ -15,24 +15,24 @@ using Shokofin.API;
 
 namespace Shokofin.Providers
 {
-    public class SeriesProvider : IHasOrder, IRemoteMetadataProvider<Series, SeriesInfo>
+    public class BoxSetProvider : IHasOrder, IRemoteMetadataProvider<BoxSet, BoxSetInfo>
     {
         public string Name => "Shoko";
         public int Order => 1;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ILogger<SeriesProvider> _logger;
+        private readonly ILogger<BoxSetProvider> _logger;
 
-        public SeriesProvider(IHttpClientFactory httpClientFactory, ILogger<SeriesProvider> logger)
+        public BoxSetProvider(IHttpClientFactory httpClientFactory, ILogger<BoxSetProvider> logger)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
         }
 
-        public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
+        public async Task<MetadataResult<BoxSet>> GetMetadata(BoxSetInfo info, CancellationToken cancellationToken)
         {
             try
             {
-                var result = new MetadataResult<Series>();
+                var result = new MetadataResult<BoxSet>();
 
                 var dirname = Path.DirectorySeparatorChar + info.Path.Split(Path.DirectorySeparatorChar).Last();
 
@@ -44,61 +44,53 @@ namespace Shokofin.Providers
 
                 if (string.IsNullOrEmpty(seriesId))
                 {
-                    _logger.LogInformation("Shoko Scanner... Series not found!");
+                    _logger.LogInformation("Shoko Scanner... BoxSet not found!");
+                    return result;
+                }
+                _logger.LogInformation($"Shoko Scanner... Getting series metadata ({dirname} - {seriesId})");
+
+                var aniDbInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
+                if (aniDbInfo.SeriesType != "0" /* Movie */)
+                {
+                    _logger.LogInformation("Shoko Scanner... series was not a movie! Skipping.");
                     return result;
                 }
 
-                _logger.LogInformation($"Shoko Scanner... Getting series metadata ({dirname} - {seriesId})");
-
                 var seriesInfo = await ShokoAPI.GetSeries(seriesId);
-                var aniDbSeriesInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
-
+                if (seriesInfo.Sizes.Total.Episodes <= 1)
+                {
+                    _logger.LogInformation("Shoko Scanner... series did not contain multiple movies! Skipping.");
+                    return result;
+                }
                 var tags = await ShokoAPI.GetSeriesTags(seriesId, Helper.GetTagFilter());
-                var ( displayTitle, alternateTitle ) = Helper.GetSeriesTitles(aniDbSeriesInfo.Titles, seriesInfo.Name, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
 
-                result.Item = new Series
+                var ( displayTitle, alternateTitle ) = Helper.GetSeriesTitles(aniDbInfo.Titles, aniDbInfo.Title, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
+                result.Item = new BoxSet
                 {
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
-                    Overview = Helper.SummarySanitizer(aniDbSeriesInfo.Description),
-                    PremiereDate = aniDbSeriesInfo.AirDate,
-                    EndDate = aniDbSeriesInfo.EndDate,
-                    ProductionYear = aniDbSeriesInfo.AirDate?.Year,
-                    Status = aniDbSeriesInfo.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
+                    Overview = Helper.SummarySanitizer(aniDbInfo.Description),
+                    PremiereDate = aniDbInfo.AirDate,
+                    EndDate = aniDbInfo.EndDate,
+                    ProductionYear = aniDbInfo.AirDate?.Year,
                     Tags = tags?.Select(tag => tag.Name).ToArray() ?? new string[0],
-                    CommunityRating = (float)((aniDbSeriesInfo.Rating.Value * 10) / aniDbSeriesInfo.Rating.MaxValue)
+                    CommunityRating = (float)((aniDbInfo.Rating.Value * 10) / aniDbInfo.Rating.MaxValue)
                 };
                 result.Item.SetProviderId("Shoko Series", seriesId);
-                result.Item.SetProviderId("AniDB", seriesIDs.AniDB.ToString());
-                var tvdbId = seriesIDs.TvDB?.FirstOrDefault();
-                if (tvdbId != 0) result.Item.SetProviderId("Tvdb", tvdbId.ToString());
                 result.HasMetadata = true;
-
-                result.ResetPeople();
-                var roles = await ShokoAPI.GetSeriesCast(seriesId);
-                foreach (var role in roles)
-                {
-                    result.AddPerson(new PersonInfo
-                    {
-                        Type = PersonType.Actor,
-                        Name = role.Staff.Name,
-                        Role = role.Character.Name,
-                        ImageUrl = Helper.GetImageUrl(role.Staff.Image)
-                    });
-                }
 
                 return result;
             }
             catch (Exception e)
             {
                 _logger.LogError(e.StackTrace);
-                return new MetadataResult<Series>();
+                return new MetadataResult<BoxSet>();
             }
         }
 
-        public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
+        public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(BoxSetInfo searchInfo, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Shoko Scanner... Searching Series ({searchInfo.Name})");
+            _logger.LogInformation($"Shoko Scanner... Searching BoxSet ({searchInfo.Name})");
             var searchResults = await ShokoAPI.SeriesSearch(searchInfo.Name);
             var results = new List<RemoteSearchResult>();
 
@@ -106,14 +98,14 @@ namespace Shokofin.Providers
             {
                 var imageUrl = Helper.GetImageUrl(series.Images.Posters.FirstOrDefault());
                 _logger.LogInformation(imageUrl);
-                var parsedSeries = new RemoteSearchResult
+                var parsedBoxSet = new RemoteSearchResult
                 {
                     Name = series.Name,
                     SearchProviderName = Name,
                     ImageUrl = imageUrl
                 };
-                parsedSeries.SetProviderId("Shoko", series.IDs.ID.ToString());
-                results.Add(parsedSeries);
+                parsedBoxSet.SetProviderId("Shoko", series.IDs.ID.ToString());
+                results.Add(parsedBoxSet);
             }
 
             return results;
