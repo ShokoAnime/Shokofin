@@ -52,14 +52,20 @@ namespace Shokofin.Providers
             {
                 case EpisodeType.Episode:
                     return null;
+                case EpisodeType.Credits:
+                    return ExtraType.ThemeVideo;
                 case EpisodeType.Trailer:
                     return ExtraType.Trailer;
                 case EpisodeType.Special: {
-                    var enTitle = Helper.GetTitleByLanguages(episode.Titles, "en");
-                    if (enTitle != null && (enTitle.Contains("intro") || enTitle.Contains("outro"))) {
-                        return ExtraType.DeletedScene;
-                    }
-                    return ExtraType.Scene;
+                    var title = Helper.GetTitleByLanguages(episode.Titles, "en") ?? "";
+                    // Interview
+                    if (title.Contains("interview", System.StringComparison.OrdinalIgnoreCase))
+                        return ExtraType.Interview;
+                    // Cinema intro/outro
+                    if (title.StartsWith("cinema ", System.StringComparison.OrdinalIgnoreCase) &&
+                    (title.Contains("intro", System.StringComparison.OrdinalIgnoreCase) || title.Contains("outro", System.StringComparison.OrdinalIgnoreCase)))
+                        return ExtraType.Clip;
+                    return null;
                 }
                 default:
                     return null;
