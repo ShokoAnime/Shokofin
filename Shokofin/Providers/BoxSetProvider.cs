@@ -62,7 +62,7 @@ namespace Shokofin.Providers
                     _logger.LogInformation("Shoko Scanner... series did not contain multiple movies! Skipping.");
                     return result;
                 }
-                var tags = await ShokoAPI.GetSeriesTags(seriesId, GetFlagFilter());
+                var tags = await ShokoAPI.GetSeriesTags(seriesId, Helper.GetTagFilter());
 
                 var ( displayTitle, alternateTitle ) = Helper.GetSeriesTitles(aniDbInfo.Titles, aniDbInfo.Title, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
                 result.Item = new BoxSet
@@ -115,20 +115,6 @@ namespace Shokofin.Providers
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
-        }
-
-        private int GetFlagFilter()
-        {
-            var config = Plugin.Instance.Configuration;
-            var filter = 0;
-
-            if (config.HideAniDbTags) filter = 1;
-            if (config.HideArtStyleTags) filter |= (filter << 1);
-            if (config.HideSourceTags) filter |= (filter << 2);
-            if (config.HideMiscTags) filter |= (filter << 3);
-            if (config.HidePlotTags) filter |= (filter << 4);
-
-            return filter;
         }
     }
 }

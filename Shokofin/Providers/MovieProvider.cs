@@ -73,7 +73,7 @@ namespace Shokofin.Providers
 
                 var tags = await ShokoAPI.GetSeriesTags(seriesId, Helper.GetTagFilter());
                 var ( displayTitle, alternateTitle ) = Helper.GetMovieTitles(seriesAniDB.Titles, episodeAniDB.Titles, series.Name, episode.Name, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
-                float comRat = isMultiEntry ? (float)((episodeAniDB.Rating.Value * 10) / episodeAniDB.Rating.MaxValue) : (float)((seriesAniDB.Rating.Value * 10) / seriesAniDB.Rating.MaxValue);
+                float rating = isMultiEntry ? (float)((episodeAniDB.Rating.Value * 10) / episodeAniDB.Rating.MaxValue) : (float)((seriesAniDB.Rating.Value * 10) / seriesAniDB.Rating.MaxValue);
                 ExtraType? extraType = Helper.GetExtraType(episodeAniDB);
 
                 result.Item = new Movie
@@ -81,13 +81,13 @@ namespace Shokofin.Providers
                     IndexNumber = Helper.GetIndexNumber(series, episodeAniDB),
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
-                    PremiereDate = isMultiEntry ? episodeAniDB.AirDate : seriesAniDB.AirDate,
+                    PremiereDate = episodeAniDB.AirDate,
                     // Use the file description if collection contains more than one movie, otherwise use the collection description.
-                    Overview = Helper.SummarySanitizer((isMultiEntry ? episodeAniDB.Description : seriesAniDB.Description) ?? ""),
-                    ProductionYear = isMultiEntry ? episodeAniDB.AirDate?.Year : seriesAniDB.AirDate?.Year,
+                    Overview = Helper.SummarySanitizer((isMultiEntry ? episodeAniDB.Description ?? seriesAniDB.Description : seriesAniDB.Description) ?? ""),
+                    ProductionYear = episodeAniDB.AirDate?.Year,
                     ExtraType = extraType,                    
                     Tags = tags?.Select(tag => tag.Name).ToArray() ?? new string[0],
-                    CommunityRating = comRat,
+                    CommunityRating = rating,
                 };
                 result.Item.SetProviderId("Shoko File", fileId);
                 result.Item.SetProviderId("Shoko Series", seriesId);

@@ -3,10 +3,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Shokofin.API.Models;
-using Title = Shokofin.API.Models.Title;
 using DisplayLanguageType = Shokofin.Configuration.PluginConfiguration.DisplayLanguageType;
 using EpisodeType = Shokofin.API.Models.Episode.EpisodeType;
-using Models = Shokofin.API.Models;
 using MediaBrowser.Model.Entities;
 
 namespace Shokofin.Providers
@@ -18,18 +16,13 @@ namespace Shokofin.Providers
             return image != null ? $"http://{Plugin.Instance.Configuration.Host}:{Plugin.Instance.Configuration.Port}/api/v3/Image/{image.Source}/{image.Type}/{image.ID}" : null;
         }
 
-        public static (int, int) GetNumbers(Models.Series series, Models.Episode.AniDB episode)
-        {
-            return (GetIndexNumber(series, episode), GetMaxNumber(series));
-        }
-
         /// <summary>
         /// 
         /// </summary>
         /// <param name="series"></param>
         /// <param name="episode"></param>
         /// <returns></returns>
-        public static int GetIndexNumber(Models.Series series, Models.Episode.AniDB episode)
+        public static int GetIndexNumber(Series series, Episode.AniDB episode)
         {
             int offset = 0;
             switch (episode.Type)
@@ -55,13 +48,7 @@ namespace Shokofin.Providers
             return offset + episode.EpisodeNumber;
         }
 
-        public static int GetMaxNumber(Models.Series series)
-        {
-            var dict = series.Sizes.Total;
-            return dict.Episodes + dict?.Specials ?? 0 + dict?.Credits ?? 0 + dict?.Others ?? 0 + dict?.Parodies ?? 0 + dict?.Trailers ?? 0;
-        }
-
-        public static ExtraType? GetExtraType(Models.Episode.AniDB episode)
+        public static ExtraType? GetExtraType(Episode.AniDB episode)
         {
             switch (episode.Type)
             {
