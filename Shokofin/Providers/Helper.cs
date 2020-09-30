@@ -4,7 +4,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Shokofin.API.Models;
 using Title = Shokofin.API.Models.Title;
-using DisplayTitleType = Shokofin.Configuration.PluginConfiguration.DisplayTitleType;
+using DisplayLanguageType = Shokofin.Configuration.PluginConfiguration.DisplayLanguageType;
+using EpisodeType = Shokofin.API.Models.Episode.EpisodeType;
+using Models = Shokofin.API.Models;
+using MediaBrowser.Model.Entities;
 
 namespace Shokofin.Providers
 {
@@ -13,6 +16,69 @@ namespace Shokofin.Providers
         public static string GetImageUrl(Image image)
         {
             return image != null ? $"http://{Plugin.Instance.Configuration.Host}:{Plugin.Instance.Configuration.Port}/api/v3/Image/{image.Source}/{image.Type}/{image.ID}" : null;
+        }
+
+        public static (int, int) GetNumbers(Models.Series series, Models.Episode.AniDB episode)
+        {
+            return (GetIndexNumber(series, episode), GetMaxNumber(series));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="series"></param>
+        /// <param name="episode"></param>
+        /// <returns></returns>
+        public static int GetIndexNumber(Models.Series series, Models.Episode.AniDB episode)
+        {
+            int offset = 0;
+            switch (episode.Type)
+            {
+                case EpisodeType.Episode:
+                    break;
+                case EpisodeType.Special:
+                    offset += series.Sizes.Total.Episodes;
+                    break; // goto case EpisodeType.Episode;
+                case EpisodeType.Credits:
+                    offset += series.Sizes.Total?.Specials ?? 0;
+                    goto case EpisodeType.Special;
+                case EpisodeType.Other:
+                    offset += series.Sizes.Total?.Credits ?? 0;
+                    goto case EpisodeType.Credits;
+                case EpisodeType.Parody:
+                    offset += series.Sizes.Total?.Others ?? 0;
+                    goto case EpisodeType.Other;
+                case EpisodeType.Trailer:
+                    offset += series.Sizes.Total?.Parodies ?? 0;
+                    goto case EpisodeType.Parody;
+            }
+            return offset + episode.EpisodeNumber;
+        }
+
+        public static int GetMaxNumber(Models.Series series)
+        {
+            var dict = series.Sizes.Total;
+            return dict.Episodes + dict?.Specials ?? 0 + dict?.Credits ?? 0 + dict?.Others ?? 0 + dict?.Parodies ?? 0 + dict?.Trailers ?? 0;
+        }
+
+        public static ExtraType? GetExtraType(Models.Episode.AniDB episode)
+        {
+            switch (episode.Type)
+            {
+                case EpisodeType.Episode:
+                    return null;
+                case EpisodeType.Trailer:
+                    return ExtraType.Trailer;
+                case EpisodeType.Special: {
+                    var enTitle = Helper.GetTitleByLanguages(episode.Titles, "en");
+                    if (enTitle != null && (enTitle.Contains("intro") || enTitle.Contains("outro"))) {
+                        return ExtraType.DeletedScene;
+                    }
+                    return ExtraType.Scene;
+                }
+                default:
+                    return null;
+            }
         }
 
         public static int GetFlagFilter()
@@ -48,16 +114,22 @@ namespace Shokofin.Providers
             return summary;
         }
 
-        // Produce titles for episodes if the series-fallback-title is not provided.
-        public static ( string, string ) GetEpisodeTitles(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, DisplayTitleType displayTitleType, DisplayTitleType alternateTitleType, string metadataLanguage)
-            => GetFullTitles(seriesTitles, episodeTitles, null, displayTitleType, alternateTitleType, metadataLanguage);
+        public enum TitleType {
+            MainTitle = 1,
+            SubTitle,
+            FullTitle,
+        }
 
-        // Produce titles for series if episode titles are omitted.
-        public static ( string, string ) GetSeriesTitles(IEnumerable<Title> seriesTitles, string seriesTitle, DisplayTitleType displayTitleType, DisplayTitleType alternateTitleType, string metadataLanguage)
-            => GetFullTitles(seriesTitles, null, seriesTitle, displayTitleType, alternateTitleType, metadataLanguage);
+        public static ( string, string ) GetEpisodeTitles(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string episodeTitle, DisplayLanguageType mainLanguage, DisplayLanguageType alternateLanguage, string metadataLanguage)
+            => GetTitles(seriesTitles, episodeTitles, null, episodeTitle, mainLanguage, alternateLanguage, TitleType.SubTitle, metadataLanguage);
 
-        // Produce combined/full titles if both episode titles and a fallback title is provided.
-        public static ( string, string ) GetFullTitles(IEnumerable<Title> rSeriesTitles, IEnumerable<Title> rEpisodeTitles, string seriesTitle, DisplayTitleType displayTitleType, DisplayTitleType alternateTitleType, string metadataLanguage)
+        public static ( string, string ) GetSeriesTitles(IEnumerable<Title> seriesTitles, string seriesTitle, DisplayLanguageType mainLanguage, DisplayLanguageType alternateLanguage, string metadataLanguage)
+            => GetTitles(seriesTitles, null, seriesTitle, null, mainLanguage, alternateLanguage, TitleType.MainTitle, metadataLanguage);
+
+        public static ( string, string ) GetMovieTitles(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, DisplayLanguageType mainLanguage, DisplayLanguageType alternateLanguage, string metadataLanguage)
+            => GetTitles(seriesTitles, episodeTitles, seriesTitle, episodeTitle, mainLanguage, alternateLanguage, TitleType.FullTitle, metadataLanguage);
+
+        public static ( string, string ) GetTitles(IEnumerable<Title> rSeriesTitles, IEnumerable<Title> rEpisodeTitles, string seriesTitle, string episodeTitle, DisplayLanguageType mainLanguage, DisplayLanguageType alternateLanguage, TitleType outputType, string metadataLanguage)
         {
             // Don't process anything if the series titles are not provided.
             if (rSeriesTitles == null) return ( null, null );
@@ -65,64 +137,61 @@ namespace Shokofin.Providers
             var episodeTitles = (List<Title>)rEpisodeTitles;
             var originLanguage = GuessOriginLanguage(seriesTitles);
             var displayLanguage = metadataLanguage?.ToLower() ?? "en";
-            return ( GetFullTitle(seriesTitles, episodeTitles, seriesTitle, displayTitleType, displayLanguage, originLanguage), GetFullTitle(seriesTitles, episodeTitles, seriesTitle, alternateTitleType, displayLanguage, originLanguage) );
+            return ( GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, mainLanguage, outputType, displayLanguage, originLanguage), GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, alternateLanguage, outputType, displayLanguage, originLanguage) );
         }
 
-        private static string GetEpisodeTitle(IEnumerable<Title> episodeTitle, DisplayTitleType displayTitleType, string displayLanguage, params string[] originLanguages)
-            => GetFullTitle(null, episodeTitle, null, displayTitleType, displayLanguage, originLanguages);
-
-        private static string GetSeriesTitle(IEnumerable<Title> seriesTitles, string seriesTitle, DisplayTitleType displayTitleType, string displayLanguage, params string[] originLanguages)
-            => GetFullTitle(seriesTitles, null, seriesTitle, displayTitleType, displayLanguage, originLanguages);
-
-        private static string GetFullTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, DisplayTitleType displayTitleType, string displayLanguage, params string[] originLanguages)
+        public static string GetTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, DisplayLanguageType languageType, TitleType outputType, string displayLanguage, params string[] originLanguages)
         {
-            // We need one of them, or it won't work as intended.
-            if (seriesTitle == null && episodeTitles == null) return null;
-            switch (displayTitleType)
+            switch (languageType)
             {
-                case DisplayTitleType.Default:
-                    // Fallback to preferred series title, but choose the episode title based on this order.
-                    // The "main" title on AniDB is _most_ of the time in english, but we also fallback to romaji (japanese) or pinyin (chinese) in case it is not provided.
-                    return GetTitle(null, episodeTitles, seriesTitle, "en", "x-jat", "x-zht");
-                case DisplayTitleType.Origin:
-                    return GetTitle(seriesTitles, episodeTitles, seriesTitle, originLanguages);
-                case DisplayTitleType.Localized:
-                    var title = GetTitle(seriesTitles, episodeTitles, seriesTitle, displayLanguage);
+                // Let Shoko decide the title.
+                case DisplayLanguageType.Default:
+                    return __GetTitle(null, null, seriesTitle, episodeTitle, outputType);
+                // Display in metadata-preferred language, or fallback to default.
+                case DisplayLanguageType.MetadataPreferred:
+                    var title = __GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, outputType, displayLanguage);
                     if (string.IsNullOrEmpty(title))
-                        goto case DisplayTitleType.Default;
+                        goto case DisplayLanguageType.Default;
                     return title;
+                // Display in origin language without fallback.
+                case DisplayLanguageType.Origin:
+                    return __GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, outputType, originLanguages);
                 default:
                     return null;
             }
         }
 
-        private static string GetTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, params string[] languageCandidates)
+        internal static string __GetTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, TitleType outputType, params string[] languageCandidates)
         {
-            if (seriesTitles != null || seriesTitle != null)
+            // Lazy init string builder when/if we need it.
+            StringBuilder titleBuilder = null;
+            switch (outputType)
             {
-                StringBuilder title = new StringBuilder();
-                string mainTitle = GetTitleByTypeAndLanguage(seriesTitles, "official", languageCandidates) ?? seriesTitle;
-                title.Append(mainTitle);
-                if (episodeTitles != null) {
-                    var episodeTitle = GetTitleByLanguages(episodeTitles, languageCandidates);
-                    // We could not create the complete title, and no mixed languages allowed (outside the specified one(s)), so abort here.
-                    if (episodeTitle == null)
-                    {
-                        // Some movies provide only an english title, so we fallback to english.
-                        episodeTitle = GetTitleByLanguages(episodeTitles, "en");
-                        if (episodeTitle == null)
-                            return null;
-                    }
-                    if (!string.IsNullOrWhiteSpace(episodeTitle) && episodeTitle != "Complete Movie")
-                        title.Append($": {episodeTitle}");
+                case TitleType.MainTitle:
+                case TitleType.FullTitle: {
+                    string title = (GetTitleByTypeAndLanguage(seriesTitles, "official", languageCandidates) ?? seriesTitle)?.Trim();
+                    // Return series title.
+                    if (outputType == TitleType.MainTitle)
+                        return title;
+                    titleBuilder = new StringBuilder(title);
+                    goto case TitleType.SubTitle;
                 }
-                return title.ToString();
+                case TitleType.SubTitle: {
+                    string title = (GetTitleByLanguages(episodeTitles, languageCandidates) ?? episodeTitle)?.Trim();
+                    // Return episode title.
+                    if (outputType == TitleType.SubTitle)
+                        return title;
+                    // Ignore sub-title of movie if it strictly equals the text below.
+                    if (title != "Complete Movie")
+                        titleBuilder?.Append($": {title}");
+                    return titleBuilder?.ToString() ?? "";
+                }
+                default:
+                    return null;
             }
-            // Will fallback to null if episode titles are null.
-            return GetTitleByLanguages(episodeTitles, languageCandidates);
         }
 
-        private static string GetTitleByTypeAndLanguage(IEnumerable<Title> titles, string type, params string[] langs)
+        public static string GetTitleByTypeAndLanguage(IEnumerable<Title> titles, string type, params string[] langs)
         {
             if (titles != null) foreach (string lang in langs)
             {
@@ -132,11 +201,11 @@ namespace Shokofin.Providers
             return null;
         }
 
-        private static string GetTitleByLanguages(IEnumerable<Title> titles, params string[] langs)
+        public static string GetTitleByLanguages(IEnumerable<Title> titles, params string[] langs)
         {
             if (titles != null) foreach (string lang in langs)
             {
-                string title = titles.FirstOrDefault(s => s.Language.ToLower() == lang)?.Name;
+                string title = titles.FirstOrDefault(s => lang.Equals(s.Language, System.StringComparison.OrdinalIgnoreCase))?.Name;
                 if (title != null) return title;
             }
             return null;

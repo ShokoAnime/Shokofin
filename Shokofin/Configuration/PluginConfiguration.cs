@@ -38,17 +38,17 @@ namespace Shokofin.Configuration
 
         public bool SynopsisCleanMultiEmptyLines { get; set; }
 
-        public enum DisplayTitleType {
+        public enum DisplayLanguageType {
             Default,
-            Localized,
+            MetadataPreferred,
             Origin,
         }
 
         public bool TitleUseAlternate { get; set; }
 
-        public DisplayTitleType TitleMainType { get; set; }
+        public DisplayLanguageType TitleMainType { get; set; }
 
-        public DisplayTitleType TitleAlternateType { get; set; }
+        public DisplayLanguageType TitleAlternateType { get; set; }
 
         public PluginConfiguration()
         {
@@ -70,8 +70,8 @@ namespace Shokofin.Configuration
             SynopsisRemoveSummary = true;
             SynopsisCleanMultiEmptyLines = true;
             TitleUseAlternate = true;
-            TitleMainType = DisplayTitleType.Default;
-            TitleAlternateType = DisplayTitleType.Origin;
+            TitleMainType = DisplayLanguageType.Default;
+            TitleAlternateType = DisplayLanguageType.Origin;
         }
     }
 }

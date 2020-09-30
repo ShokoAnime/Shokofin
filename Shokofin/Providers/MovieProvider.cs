@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities;
@@ -13,7 +12,6 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
-using EpisodeType = Shokofin.API.Models.Episode.EpisodeType;
 
 namespace Shokofin.Providers
 {
@@ -44,10 +42,12 @@ namespace Shokofin.Providers
                 _logger.LogInformation($"Shoko Scanner... Getting movie ID ({filename})");
 
                 var apiResponse = await ShokoAPI.GetFilePathEndsWith(filename);
-                var allIds = apiResponse.FirstOrDefault()?.SeriesIDs.FirstOrDefault();
-                var episodeIds = allIds?.EpisodeIDs?.FirstOrDefault();
-                string seriesId = allIds?.SeriesID.ID.ToString();
-                string episodeId = episodeIds?.ID.ToString();
+                var file = apiResponse?.FirstOrDefault();
+                var fileId = file?.ID.ToString();
+                var seriesIds = file?.SeriesIDs.FirstOrDefault();
+                var seriesId = seriesIds?.SeriesID.ID.ToString();
+                var episodeIds = seriesIds?.EpisodeIDs?.FirstOrDefault();
+                var episodeId = episodeIds?.ID.ToString();
 
                 if (string.IsNullOrEmpty(episodeId) || string.IsNullOrEmpty(seriesId))
                 {
@@ -60,8 +60,10 @@ namespace Shokofin.Providers
                 var seriesAniDB = await ShokoAPI.GetSeriesAniDb(seriesId);
                 var series = await ShokoAPI.GetSeries(seriesId);
                 var episodeAniDB = await ShokoAPI.GetEpisodeAniDb(episodeId);
+                var episode = await ShokoAPI.GetEpisode(episodeId);
                 bool isMultiEntry = series.Sizes.Total.Episodes > 1;
-                int tvdbId = (isMultiEntry ? episodeIds.TvDB?.FirstOrDefault() : allIds?.SeriesID.TvDB?.FirstOrDefault()) ?? 0;
+                int aniDBId = (isMultiEntry ? episodeIds?.AniDB : seriesIds?.SeriesID.AniDB) ?? 0;
+                int tvdbId = (isMultiEntry ? episodeIds?.TvDB?.FirstOrDefault() : seriesIds?.SeriesID.TvDB?.FirstOrDefault()) ?? 0;
 
                 if (seriesAniDB?.SeriesType != "0")
                 {
@@ -69,28 +71,28 @@ namespace Shokofin.Providers
                     return result;
                 }
 
-                var ( displayTitle, alternateTitle ) = Helper.GetFullTitles(seriesAniDB.Titles, episodeAniDB.Titles, seriesAniDB.Title, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
                 var tags = await ShokoAPI.GetSeriesTags(seriesId, Helper.GetFlagFilter());
-                // Use the file description if collection contains more than one movie, otherwise use the collection description.
-                string description = (isMultiEntry ? episodeAniDB.Description : seriesAniDB.Description) ?? "";
+                var ( displayTitle, alternateTitle ) = Helper.GetMovieTitles(seriesAniDB.Titles, episodeAniDB.Titles, series.Name, episode.Name, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
                 float comRat = isMultiEntry ? (float)((episodeAniDB.Rating.Value * 10) / episodeAniDB.Rating.MaxValue) : (float)((seriesAniDB.Rating.Value * 10) / seriesAniDB.Rating.MaxValue);
-                ExtraType? extraType = GetExtraType(episodeAniDB.Type);
+                ExtraType? extraType = Helper.GetExtraType(episodeAniDB);
 
                 result.Item = new Movie
                 {
-                    IndexNumber = episodeAniDB.EpisodeNumber,
+                    IndexNumber = Helper.GetIndexNumber(series, episodeAniDB),
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
                     PremiereDate = isMultiEntry ? episodeAniDB.AirDate : seriesAniDB.AirDate,
-                    Overview = Helper.SummarySanitizer(description),
+                    // Use the file description if collection contains more than one movie, otherwise use the collection description.
+                    Overview = Helper.SummarySanitizer((isMultiEntry ? episodeAniDB.Description : seriesAniDB.Description) ?? ""),
                     ProductionYear = isMultiEntry ? episodeAniDB.AirDate?.Year : seriesAniDB.AirDate?.Year,
-                    ExtraType = extraType,
+                    ExtraType = extraType,                    
                     Tags = tags?.Select(tag => tag.Name).ToArray() ?? new string[0],
                     CommunityRating = comRat,
                 };
+                result.Item.SetProviderId("Shoko File", fileId);
                 result.Item.SetProviderId("Shoko Series", seriesId);
                 result.Item.SetProviderId("Shoko Episode", episodeId);
-                result.Item.SetProviderId("AniDB", allIds?.SeriesID.AniDB.ToString());
+                if (aniDBId != 0) result.Item.SetProviderId("AniDB", aniDBId.ToString());
                 if (tvdbId != 0) result.Item.SetProviderId("Tvdb", tvdbId.ToString());
                 result.HasMetadata = true;
 
@@ -117,20 +119,6 @@ namespace Shokofin.Providers
             }
         }
 
-        private ExtraType? GetExtraType(EpisodeType type)
-        {
-            switch (type)
-            {
-                case EpisodeType.Episode:
-                    return null;
-                case EpisodeType.Trailer:
-                    return ExtraType.Trailer;
-                case EpisodeType.Special:
-                    return ExtraType.Scene;
-                default:
-                    return ExtraType.Unknown;
-            }
-        }
 
         public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MovieInfo searchInfo, CancellationToken cancellationToken)
         {
