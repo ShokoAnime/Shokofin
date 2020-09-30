@@ -71,7 +71,7 @@ namespace Shokofin.Providers
                     return result;
                 }
 
-                var tags = await ShokoAPI.GetSeriesTags(seriesId, Helper.GetFlagFilter());
+                var tags = await ShokoAPI.GetSeriesTags(seriesId, Helper.GetTagFilter());
                 var ( displayTitle, alternateTitle ) = Helper.GetMovieTitles(seriesAniDB.Titles, episodeAniDB.Titles, series.Name, episode.Name, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
                 float comRat = isMultiEntry ? (float)((episodeAniDB.Rating.Value * 10) / episodeAniDB.Rating.MaxValue) : (float)((seriesAniDB.Rating.Value * 10) / seriesAniDB.Rating.MaxValue);
                 ExtraType? extraType = Helper.GetExtraType(episodeAniDB);

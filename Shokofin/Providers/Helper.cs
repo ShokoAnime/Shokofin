@@ -81,7 +81,7 @@ namespace Shokofin.Providers
             }
         }
 
-        public static int GetFlagFilter()
+        public static int GetTagFilter()
         {
             var config = Plugin.Instance.Configuration;
             var filter = 0;
