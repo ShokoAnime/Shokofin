@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +8,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
-using Shokofin.API;
+using Shokofin.Utils;
 
 namespace Shokofin.Providers
 {
@@ -31,52 +29,48 @@ namespace Shokofin.Providers
             try
             {
                 var result = new MetadataResult<Episode>();
-                
-                // TO-DO Check if it can be written in a better way. Parent directory + File Name
-                var filename = Path.Join(
-                    Path.GetDirectoryName(info.Path)?.Split(Path.DirectorySeparatorChar).LastOrDefault(),
-                    Path.GetFileName(info.Path));
 
-                _logger.LogInformation($"Getting episode ID ({filename})");
+                var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == OrderingUtil.SeriesGroupType.ShokoGroup;
+                var (id, file, episode, series, group) = await DataUtil.GetFileInfoByPath(info.Path, includeGroup);
 
-                var apiResponse = await ShokoAPI.GetFilePathEndsWith(filename);
-                var file = apiResponse.FirstOrDefault();
-                var fileId = file?.ID.ToString();
-                var series = file?.SeriesIDs.FirstOrDefault();
-                var seriesId = series?.SeriesID.ID.ToString();
-                var episodeIDs = series?.EpisodeIDs?.FirstOrDefault();
-                var episodeId = episodeIDs?.ID.ToString();
-
-                if (string.IsNullOrEmpty(fileId) || string.IsNullOrEmpty(seriesId) || string.IsNullOrEmpty(episodeId))
+                if (file == null) // if file is null then series and episode is also null.
                 {
-                    _logger.LogInformation($"Episode not found! ({filename})");
+                    _logger.LogWarning($"Unable to find file info for path {id}");
                     return result;
                 }
+                _logger.LogInformation($"Found file info for path {id}");
 
-                _logger.LogInformation($"Getting episode metadata ({filename} - {episodeId})");
+                var extraType = OrderingUtil.GetExtraType(episode.AniDB);
+                if (extraType != null)
+                {
+                    _logger.LogDebug($"Not a normal or special episode, skipping path {id}");
+                    result.HasMetadata = false;
+                    return result;
+                }
+                _logger.LogInformation($"Getting episode metadata ({info.Path} - {episode.ID})");
 
-                var seriesInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
-                var episode = await ShokoAPI.GetEpisode(episodeId);
-                var episodeInfo = await ShokoAPI.GetEpisodeAniDb(episodeId);
-                var ( displayTitle, alternateTitle ) = Helper.GetEpisodeTitles(seriesInfo.Titles, episodeInfo.Titles, episode.Name, Plugin.Instance.Configuration.TitleMainType, Plugin.Instance.Configuration.TitleAlternateType, info.MetadataLanguage);
+                var ( displayTitle, alternateTitle ) = TextUtil.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, episode.Shoko.Name, info.MetadataLanguage);
+                int aniDBId = episode.AniDB.ID;
+                int tvdbId = episode?.TvDB?.ID ?? 0;
 
                 result.Item = new Episode
                 {
-                    IndexNumber = episodeInfo.EpisodeNumber,
-                    ParentIndexNumber = await GetSeasonNumber(episodeId, episodeInfo.Type),
+                    IndexNumber = OrderingUtil.GetIndexNumber(series, episode),
+                    ParentIndexNumber = OrderingUtil.GetSeasonNumber(group, series, episode),
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
-                    PremiereDate = episodeInfo.AirDate,
-                    Overview = Helper.SummarySanitizer(episodeInfo.Description),
-                    CommunityRating = (float) ((episodeInfo.Rating.Value * 10) / episodeInfo.Rating.MaxValue)
+                    PremiereDate = episode.AniDB.AirDate,
+                    Overview = TextUtil.SummarySanitizer(episode.AniDB.Description),
+                    CommunityRating = (float) ((episode.AniDB.Rating.Value * 10) / episode.AniDB.Rating.MaxValue)
                 };
-                result.Item.SetProviderId("Shoko Episode", episodeId);
-                result.Item.SetProviderId("Shoko File", fileId);
-                result.Item.SetProviderId("AniDB", episodeIDs.AniDB.ToString());
+                result.Item.SetProviderId("Shoko Episode", episode.ID);
+                result.Item.SetProviderId("Shoko File", file.ID);
+                result.Item.SetProviderId("AniDB", aniDBId.ToString());
+                if (tvdbId != 0) result.Item.SetProviderId("Tvdb", tvdbId.ToString());
                 result.HasMetadata = true;
 
-                var episodeNumberEnd = episodeInfo.EpisodeNumber + series?.EpisodeIDs.Count() - 1;
-                if (episodeInfo.EpisodeNumber != episodeNumberEnd) result.Item.IndexNumberEnd = episodeNumberEnd;
+                var episodeNumberEnd = episode.AniDB.EpisodeNumber + episode.OtherEpisodesCount;
+                if (episode.AniDB.EpisodeNumber != episodeNumberEnd) result.Item.IndexNumberEnd = episodeNumberEnd;
 
                 return result;
             }
@@ -92,43 +86,10 @@ namespace Shokofin.Providers
             // Isn't called from anywhere. If it is called, I don't know from where.
             throw new NotImplementedException();
         }
-        
+
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
-        }
-
-        private async Task<int> GetSeasonNumber(string episodeId, string type)
-        {
-            var seasonNumber = 0;
-            
-            switch (type)
-            {
-                case "Normal":
-                    seasonNumber = 1;
-                    break;
-                case "ThemeSong":
-                    seasonNumber = 100;
-                    break;
-                case "Special":
-                    seasonNumber = 0;
-                    break;
-                case "Trailer":
-                    seasonNumber = 99;
-                    break;
-                default:
-                    seasonNumber = 98;
-                    break;
-            }
-
-            if (Plugin.Instance.Configuration.UseTvDbSeasonOrdering && seasonNumber < 98)
-            {
-                var tvdbEpisodeInfo = await ShokoAPI.GetEpisodeTvDb(episodeId);
-                var tvdbSeason = tvdbEpisodeInfo.FirstOrDefault()?.Season;
-                return tvdbSeason ?? seasonNumber;
-            }
-
-            return seasonNumber;
         }
     }
 }

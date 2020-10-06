@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +10,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
+using Shokofin.Utils;
 
 namespace Shokofin.Providers
 {
@@ -31,31 +31,41 @@ namespace Shokofin.Providers
             var list = new List<RemoteImageInfo>();
             try
             {
-                string episodeId = null;
-                string seriesId = null;
+                DataUtil.EpisodeInfo episode = null;
+                DataUtil.SeriesInfo series = null;
                 if (item is Episode)
                 {
-                    episodeId = item.GetProviderId("Shoko Episode");
+                    episode = await DataUtil.GetEpisodeInfo(item.GetProviderId("Shoko Episode"));
                 }
-                else if (item is Series || item is BoxSet || item is Movie)
+                else if (item is Series)
                 {
-                    seriesId = item.GetProviderId("Shoko Series");
+                    var groupId = item.GetProviderId("Shoko Group");
+                    if (string.IsNullOrEmpty(groupId))
+                    {
+                        series = await DataUtil.GetSeriesInfo(item.GetProviderId("Shoko Series"));
+                    }
+                    else {
+                        series = (await DataUtil.GetGroupInfo(groupId))?.DefaultSeries;
+                    }
+                }
+                else if (item is BoxSet || item is Movie)
+                {
+                    series = await DataUtil.GetSeriesInfo(item.GetProviderId("Shoko Series"));
                 }
                 else if (item is Season)
                 {
-                    seriesId = item.GetParent()?.GetProviderId("Shoko Series");
+                    series = await DataUtil.GetSeriesInfoFromGroup(item.GetParent()?.GetProviderId("Shoko Group"), item.IndexNumber ?? 1);
                 }
-                if (episodeId != null)
+                if (episode != null)
                 {
-                    _logger.LogInformation($"Getting episode images ({episodeId} - {item.Name})");
-
-                    var tvdbEpisodeInfo = (await API.ShokoAPI.GetEpisodeTvDb(episodeId)).FirstOrDefault();
-                    AddImage(ref list, ImageType.Primary, tvdbEpisodeInfo?.Thumbnail);
+                    _logger.LogInformation($"Getting episode images ({episode.ID} - {item.Name})");
+                    AddImage(ref list, ImageType.Primary, episode?.TvDB?.Thumbnail);
                 }
-                if (seriesId != null)
+                if (series != null)
                 {
-                    _logger.LogInformation($"Getting series images ({seriesId} - {item.Name})");
-                    var images = await API.ShokoAPI.GetSeriesImages(seriesId);
+                    _logger.LogInformation($"Getting series images ({series.ID} - {item.Name})");
+                    var images = series.Shoko.Images;
+                    AddImage(ref list, ImageType.Primary, series.AniDB.Poster);
                     foreach (var image in images?.Posters)
                         AddImage(ref list, ImageType.Primary, image);
                     foreach (var image in images?.Fanarts)
@@ -76,16 +86,9 @@ namespace Shokofin.Providers
 
         private void AddImage(ref List<RemoteImageInfo> list, ImageType imageType, API.Models.Image image)
         {
-            var imageUrl = Helper.GetImageUrl(image);
-            if (!string.IsNullOrEmpty(imageUrl))
-            {
-                list.Add(new RemoteImageInfo
-                {
-                    ProviderName = Name,
-                    Type = imageType,
-                    Url = imageUrl
-                });
-            }
+            var imageInfo = DataUtil.GetImage(image, imageType);
+            if (imageInfo != null)
+                list.Add(imageInfo);
         }
 
         public IEnumerable<ImageType> GetSupportedImages(BaseItem item)

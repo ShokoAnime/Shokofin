@@ -1,4 +1,7 @@
 using MediaBrowser.Model.Plugins;
+using DisplayLanguageType = Shokofin.Utils.TextUtil.DisplayLanguageType;
+using SeriesGroupType = Shokofin.Utils.OrderingUtil.SeriesGroupType;
+using SeasonOrderType = Shokofin.Utils.OrderingUtil.SeasonOrderType;
 
 namespace Shokofin.Configuration
 {
@@ -15,10 +18,6 @@ namespace Shokofin.Configuration
         public string ApiKey { get; set; }
 
         public bool UpdateWatchedStatus { get; set; }
-
-        public bool UseTvDbSeasonOrdering { get; set; }
-
-        public bool UseShokoThumbnails { get; set; }
 
         public bool HideArtStyleTags { get; set; }
 
@@ -38,13 +37,9 @@ namespace Shokofin.Configuration
 
         public bool SynopsisCleanMultiEmptyLines { get; set; }
 
-        public enum DisplayLanguageType {
-            Default,
-            MetadataPreferred,
-            Origin,
-        }
+        public SeriesGroupType SeriesGrouping { get; set; }
 
-        public bool TitleUseAlternate { get; set; }
+        public SeasonOrderType SeasonOrdering { get; set; }
 
         public DisplayLanguageType TitleMainType { get; set; }
 
@@ -58,8 +53,6 @@ namespace Shokofin.Configuration
             Password = "";
             ApiKey = "";
             UpdateWatchedStatus = false;
-            UseTvDbSeasonOrdering = false;
-            UseShokoThumbnails = true;
             HideArtStyleTags = false;
             HideSourceTags = false;
             HideMiscTags = false;
@@ -69,9 +62,10 @@ namespace Shokofin.Configuration
             SynopsisCleanMiscLines = true;
             SynopsisRemoveSummary = true;
             SynopsisCleanMultiEmptyLines = true;
-            TitleUseAlternate = true;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
+            SeriesGrouping = SeriesGroupType.Default;
+            SeasonOrdering = SeasonOrderType.ReleaseDate;
         }
     }
 }
