@@ -38,7 +38,7 @@ namespace Shokofin
 
             if (e.Item is Episode episode && e.PlayedToCompletion)
             {
-                var episodeId = episode.GetProviderId("Shoko");
+                var episodeId = episode.GetProviderId("Shoko Episode");
                 
                 _logger.LogInformation("Shoko Scrobbler... Item is played. Marking as watched on Shoko");
                 _logger.LogInformation($"{episode.SeriesName} - {episode.Name} ({episodeId})");
