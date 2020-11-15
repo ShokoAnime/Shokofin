@@ -287,13 +287,14 @@ namespace Shokofin.Utils
             var orderingType = Plugin.Instance.Configuration.SeasonOrdering;
             switch (orderingType)
             {
+                case OrderingUtil.SeasonOrderType.Default:
+                    break;
                 case OrderingUtil.SeasonOrderType.ReleaseDate:
                     seriesList.OrderBy(s => s?.AniDB?.AirDate ?? System.DateTime.MaxValue);
                     break;
+                // Should not be selectable unless a user fidles with DevTools in the browser to select the option.
                 case OrderingUtil.SeasonOrderType.Chronological:
-                    await DefaultSeriesRelationSorter.MapRelations(groupId);
-                    seriesList.Sort(DefaultSeriesRelationSorter);
-                    break;
+                    throw new System.Exception("Not implemented yet");
             }
             // Select the targeted id if a group spesify a default series.
             if (targetId != 0)
@@ -305,6 +306,8 @@ namespace Shokofin.Utils
                 case OrderingUtil.SeasonOrderType.ReleaseDate:
                     foundIndex = 0;
                     break;
+                // We don't know how Shoko may have sorted it, so just find the earliest series
+                case OrderingUtil.SeasonOrderType.Default:
                 // We can't be sure that the the series in the list was _released_ chronologically, so find the earliest series, and use that as a base.
                 case OrderingUtil.SeasonOrderType.Chronological: {
                     var earliestSeries = seriesList.Aggregate((cur, nxt) => (cur == null || (nxt?.AniDB.AirDate ?? System.DateTime.MaxValue) < (cur.AniDB.AirDate ?? System.DateTime.MaxValue)) ? nxt : cur);
@@ -324,41 +327,6 @@ namespace Shokofin.Utils
                 DefaultSeries = seriesList[foundIndex],
                 DefaultSeriesIndex = foundIndex,
             };
-        }
-
-        private static SeriesRelationSorter DefaultSeriesRelationSorter = new SeriesRelationSorter();
-
-        private class SeriesRelationSorter : IComparer<SeriesInfo>
-        {
-            private readonly Dictionary<int, Dictionary<int, int>> _relationMap;
-            public SeriesRelationSorter()
-            {
-                _relationMap = new Dictionary<int, Dictionary<int, int>>();
-            }
-
-            public async Task MapRelations(string groupId) {
-                _relationMap.Clear();
-                var relations = await ShokoAPI.GetRelationsInGroup(groupId);
-                foreach (var relation in relations)
-                {
-                    MapRelation(relation.FromID, relation.ToID, relation.Type, false);
-                    MapRelation(relation.ToID, relation.FromID, relation.Type, true);
-                }
-            }
-
-            private void MapRelation(int fromId, int toId, Relation.RelationType relation, bool isReverseRelation)
-            {
-                if (!_relationMap.ContainsKey(fromId)) {
-                    _relationMap[fromId] = new Dictionary<int, int>();
-                }
-                var fromMap = _relationMap[fromId];
-            }
-
-            public int Compare(SeriesInfo x, SeriesInfo y)
-            {
-                // TODO: Sort based on 1) relation between series and 2) relase year if both series have equal relations to anchestors/decendants
-                return 0;
-            }
         }
 
         #endregion

@@ -168,12 +168,6 @@ namespace Shokofin.API
             return responseStream != null ? await JsonSerializer.DeserializeAsync<Group>(responseStream) : null;
         }
 
-        public static async Task<List<Relation>> GetRelationsInGroup(string id)
-        {
-            var responseStream = await CallApi($"/api/v3/Filter/0/Group/{id}/Relations");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<List<Relation>>(responseStream) : null;
-        }
-
         public static async Task<bool> MarkEpisodeWatched(string id)
         {
             var responseStream = await CallApi($"/api/v3/Episode/{id}/watched/true", "POST");

@@ -65,7 +65,7 @@ namespace Shokofin.Configuration
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
             SeriesGrouping = SeriesGroupType.Default;
-            SeasonOrdering = SeasonOrderType.ReleaseDate;
+            SeasonOrdering = SeasonOrderType.Default;
         }
     }
 }
