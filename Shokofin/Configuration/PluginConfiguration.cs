@@ -9,8 +9,6 @@ namespace Shokofin.Configuration
     {
         public string Host { get; set; }
 
-        public string Port { get; set; }
-
         public string Username { get; set; }
 
         public string Password { get; set; }
@@ -47,8 +45,7 @@ namespace Shokofin.Configuration
 
         public PluginConfiguration()
         {
-            Host = "127.0.0.1";
-            Port = "8111";
+            Host = "http://127.0.0.1:8111";
             Username = "Default";
             Password = "";
             ApiKey = "";

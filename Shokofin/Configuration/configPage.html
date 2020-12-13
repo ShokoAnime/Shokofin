@@ -17,11 +17,7 @@
                         <h3>Connection Options</h3>
                         <div class="inputContainer">
                             <input is="emby-input" type="text" id="Host" required label="Host" />
-                            <div class="fieldDescription">This is the IP address of the server where Shoko is running.</div>
-                        </div>
-                        <div class="inputContainer">
-                            <input is="emby-input" type="text" id="Port" required label="Port" />
-                            <div class="fieldDescription">This is the port on which Shoko is running.</div>
+                            <div class="fieldDescription">This is the URL leading to where Shoko is running.</div>
                         </div>
                         <div class="inputContainer">
                             <input is="emby-input" type="text" id="Username" required label="Username" />
@@ -132,7 +128,6 @@
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(PluginConfig.pluginId).then(function (config) {
                         document.querySelector('#Host').value = config.Host;
-                        document.querySelector('#Port').value = config.Port;
                         document.querySelector('#Username').value = config.Username;
                         document.querySelector('#Password').value = config.Password;
                         document.querySelector('#ApiKey').value = config.ApiKey;
@@ -175,7 +170,6 @@
 
                     ApiClient.getPluginConfiguration(PluginConfig.pluginId).then(function (config) {
                         config.Host = document.querySelector('#Host').value;
-                        config.Port = document.querySelector('#Port').value;
                         config.Username = document.querySelector('#Username').value;
                         config.Password = document.querySelector('#Password').value;
                         config.ApiKey = document.querySelector('#ApiKey').value;

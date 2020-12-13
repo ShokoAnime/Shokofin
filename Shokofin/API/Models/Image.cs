@@ -14,5 +14,9 @@ namespace Shokofin.API.Models
         
         public bool Disabled { get; set; }
         
+        public string ToURLString()
+        {
+            return $"{Plugin.Instance.Configuration.Host}/api/v3/Image/{Source}/{Type}/{ID}";
+        }
     }
 }

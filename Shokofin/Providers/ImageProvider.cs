@@ -19,7 +19,7 @@ namespace Shokofin.Providers
         public string Name => "Shoko";
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<ImageProvider> _logger;
-        
+
         public ImageProvider(IHttpClientFactory httpClientFactory, ILogger<ImageProvider> logger)
         {
             _httpClientFactory = httpClientFactory;
@@ -86,21 +86,34 @@ namespace Shokofin.Providers
 
         private void AddImage(ref List<RemoteImageInfo> list, ImageType imageType, API.Models.Image image)
         {
-            var imageInfo = DataUtil.GetImage(image, imageType);
+            var imageInfo = GetImage(image, imageType);
             if (imageInfo != null)
                 list.Add(imageInfo);
+        }
+
+        private RemoteImageInfo GetImage(API.Models.Image image, ImageType imageType)
+        {
+            var imageUrl = image?.ToURLString();
+            if (string.IsNullOrEmpty(imageUrl) || image.RelativeFilepath.Equals("/"))
+                return null;
+            return new RemoteImageInfo
+            {
+                ProviderName = "Shoko",
+                Type = imageType,
+                Url = imageUrl
+            };
         }
 
         public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
         {
             return new[] { ImageType.Primary, ImageType.Backdrop, ImageType.Banner };
         }
-        
+
         public bool Supports(BaseItem item)
         {
             return item is Series || item is Season || item is Episode || item is Movie || item is BoxSet;
         }
-        
+
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);

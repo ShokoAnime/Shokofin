@@ -27,7 +27,7 @@ namespace Shokofin.API
 
             try
             {
-                var apiBaseUrl = $"http://{Plugin.Instance.Configuration.Host}:{Plugin.Instance.Configuration.Port}";
+                var apiBaseUrl = Plugin.Instance.Configuration.Host;
                 switch (requestType)
                 {
                     case "POST":
@@ -63,8 +63,7 @@ namespace Shokofin.API
                 {"pass", Plugin.Instance.Configuration.Password},
                 {"device", "Shoko Jellyfin Plugin"}
             });
-            
-            var apiBaseUrl = $"http://{Plugin.Instance.Configuration.Host}:{Plugin.Instance.Configuration.Port}";
+            var apiBaseUrl = Plugin.Instance.Configuration.Host;
             var response = await _httpClient.PostAsync($"{apiBaseUrl}/api/auth", new StringContent(postData, Encoding.UTF8, "application/json"));
             if (response.StatusCode == HttpStatusCode.OK)
                 return await JsonSerializer.DeserializeAsync<ApiKey>(response.Content.ReadAsStreamAsync().Result);
