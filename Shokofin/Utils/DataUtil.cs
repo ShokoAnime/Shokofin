@@ -6,15 +6,18 @@ using System.Threading.Tasks;
 using Shokofin.API;
 using Shokofin.API.Models;
 using Path = System.IO.Path;
+using FileSystemMetadata = MediaBrowser.Model.IO.FileSystemMetadata;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Shokofin.Utils
 {
     public class DataUtil
     {
-        public static float GetRating(Rating rating)
-        {
-            return rating == null ? 0 : (float) ((rating.Value * 10) / rating.MaxValue);
-        }
+        private static IMemoryCache _cache = new MemoryCache(new MemoryCacheOptions() {
+            ExpirationScanFrequency = new System.TimeSpan(0, 3, 0),
+        });
+
+        private static System.TimeSpan DefaultTimeSpan = new System.TimeSpan(0, 5, 0);
 
         public static async Task<IEnumerable<PersonInfo>> GetPeople(string seriesId)
         {
@@ -52,6 +55,11 @@ namespace Shokofin.Utils
             var file = result?.FirstOrDefault();
             if (file == null)
                 return (id, null, null, null, null);
+            var fileInfo = new FileInfo
+            {
+                ID = file.ID.ToString(),
+                Shoko = file,
+            };
 
             var series = file?.SeriesIDs.FirstOrDefault();
             var seriesId = series?.SeriesID.ID.ToString();
@@ -76,12 +84,6 @@ namespace Shokofin.Utils
                 if (groupInfo == null)
                     return (id, null, null, null, null);
             }
-
-            var fileInfo = new FileInfo
-            {
-                ID = file.ID.ToString(),
-                Shoko = file,
-            };
 
             return (id, fileInfo, episodeInfo, seriesInfo, groupInfo);
         }
@@ -127,6 +129,10 @@ namespace Shokofin.Utils
 
         public static async Task<EpisodeInfo> GetEpisodeInfo(string episodeId, int otherEpisodesCount = 0)
         {
+            if (string.IsNullOrEmpty(episodeId))
+                return null;
+            if (_cache.TryGetValue<EpisodeInfo>($"episode:{otherEpisodesCount.ToString()}:{episodeId}", out var info))
+                return info;
             var episode = await ShokoAPI.GetEpisode(episodeId);
             return await CreateEpisodeInfo(episode, episodeId, otherEpisodesCount);
         }
@@ -137,14 +143,20 @@ namespace Shokofin.Utils
                 return null;
             if (string.IsNullOrEmpty(episodeId))
                 episodeId = episode.IDs.ID.ToString();
-            return new EpisodeInfo
+            var cacheKey = $"episode:{otherEpisodesCount.ToString()}:{episodeId}";
+            EpisodeInfo info = null;
+            if (_cache.TryGetValue<EpisodeInfo>(cacheKey, out info))
+                return info;
+            info = new EpisodeInfo
             {
                 ID = episodeId,
-                Shoko = await ShokoAPI.GetEpisode(episodeId),
-                AniDB = await ShokoAPI.GetEpisodeAniDb(episodeId),
-                TvDB = (await ShokoAPI.GetEpisodeTvDb(episodeId))?.FirstOrDefault(),
+                Shoko = (await ShokoAPI.GetEpisode(episodeId)),
+                AniDB = (await ShokoAPI.GetEpisodeAniDb(episodeId)),
+                TvDB = ((await ShokoAPI.GetEpisodeTvDb(episodeId))?.FirstOrDefault()),
                 OtherEpisodesCount = otherEpisodesCount,
             };
+            _cache.Set<EpisodeInfo>(cacheKey, info, DefaultTimeSpan);
+            return info;
         }
 
         #endregion
@@ -186,6 +198,10 @@ namespace Shokofin.Utils
 
         public static async Task<SeriesInfo> GetSeriesInfo(string seriesId)
         {
+            if (string.IsNullOrEmpty(seriesId))
+                return null;
+            if (_cache.TryGetValue<SeriesInfo>( $"series:{seriesId}", out var info))
+                return info;
             var series = await ShokoAPI.GetSeries(seriesId);
             return await CreateSeriesInfo(series, seriesId);
         }
@@ -196,13 +212,20 @@ namespace Shokofin.Utils
                 return null;
             if (string.IsNullOrEmpty(seriesId))
                 seriesId = series.IDs.ID.ToString();
-            return new SeriesInfo
+            SeriesInfo info = null;
+            var cacheKey = $"series:{seriesId}";
+            if (_cache.TryGetValue<SeriesInfo>(cacheKey, out info))
+                return info;
+
+            info = new SeriesInfo
             {
                 ID = seriesId,
                 Shoko = series,
-                AniDB = await ShokoAPI.GetSeriesAniDb(seriesId),
+                AniDB = (await ShokoAPI.GetSeriesAniDb(seriesId)),
                 TvDBID = series.IDs.TvDB.Count > 0 ? series.IDs.TvDB.FirstOrDefault().ToString() : null,
             };
+            _cache.Set<SeriesInfo>(cacheKey, info, DefaultTimeSpan);
+            return info;
         }
 
         #endregion
@@ -236,7 +259,8 @@ namespace Shokofin.Utils
         {
             if (string.IsNullOrEmpty(groupId))
                 return null;
-
+            if (_cache.TryGetValue<GroupInfo>($"group:{groupId}", out var info))
+                return info;
             var group = await ShokoAPI.GetGroup(groupId);
             return await CreateGroupInfo(group, groupId);
         }
@@ -244,7 +268,16 @@ namespace Shokofin.Utils
         public static async Task<GroupInfo> GetGroupInfoForSeries(string seriesId)
         {
             var group = await ShokoAPI.GetGroupFromSeries(seriesId);
-            return await CreateGroupInfo(group);
+            if (group == null)
+                return null;
+            var groupId = group.IDs.ID.ToString();
+            GroupInfo info = null;
+            var cacheKey = $"group-by-series:{seriesId}";
+            if (_cache.TryGetValue<GroupInfo>(cacheKey, out info))
+                return info;
+            info = await GetGroupInfo(groupId);
+            _cache.Set<GroupInfo>(cacheKey, info, DefaultTimeSpan);
+            return info;
         }
 
         private static async Task<GroupInfo> CreateGroupInfo(Group group, string groupId = null)
@@ -254,6 +287,11 @@ namespace Shokofin.Utils
 
             if (string.IsNullOrEmpty(groupId))
                 groupId = group.IDs.ID.ToString();
+
+            var cacheKey = $"group:{groupId}";
+            GroupInfo info = null;
+            if (_cache.TryGetValue<GroupInfo>(cacheKey, out info))
+                return info;
 
             var seriesList = await ShokoAPI.GetSeriesInGroup(groupId)
                 .ContinueWith(async task => await Task.WhenAll(task.Result.Select(s => CreateSeriesInfo(s)))).Unwrap()
@@ -299,14 +337,15 @@ namespace Shokofin.Utils
             // Return if we can't get a base point for seasons.
             if (foundIndex == -1)
                 return null;
-
-            return new GroupInfo
+            info = new GroupInfo
             {
                 ID = groupId,
                 SeriesList = seriesList,
                 DefaultSeries = seriesList[foundIndex],
                 DefaultSeriesIndex = foundIndex,
             };
+            _cache.Set<GroupInfo>(cacheKey, info, DefaultTimeSpan);
+            return info;
         }
 
         #endregion
