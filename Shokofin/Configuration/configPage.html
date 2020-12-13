@@ -70,9 +70,8 @@
                         <div class="selectContainer">
                             <label class="selectLabel" for="SeriesGrouping">Series grouping</label>
                             <select is="emby-select" id="SeriesGrouping" name="SeriesGrouping" class="emby-select-withcolor emby-select">
-                                <option value="Default" selected>No series grouping</option>
-                                <option value="TvDB">No series grouping, but make series merge-friendly with TvDB
-                                </option>
+                                <option value="Default" selected>Do not group series</option>
+                                <option value="MergeFriendly">Make series merge-friendly with TvDB/TMDB</option>
                                 <option value="ShokoGroup">Group series based on Shoko's group feature</option>
                             </select>
                         </div>
@@ -87,6 +86,26 @@
                         <label id="MarkSpecialsWhenGroupedItem" class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
                             <span>Mark special episodes with <stong>SP</stong> and the special number in the seasons they belong to</span>
+                        </label>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="BoxSetGrouping">Box-set grouping</label>
+                            <select is="emby-select" id="BoxSetGrouping" name="BoxSetGrouping" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Do not group movies</option>
+                                <option value="ShokoSeries">Group movies within Shoko's series only</option>
+                                <option value="ShokoGroup">Group movies in Shoko's groups and series</option>
+                            </select>
+                        </div>
+                        <div id="MovieOrderingItem" class="selectContainer">
+                            <label class="selectLabel" for="MovieOrdering">Movie ordering</label>
+                            <select is="emby-select" id="MovieOrdering" name="MovieOrdering" class="emby-select-withcolor emby-select">
+                                <option value="Default">Let Shoko decide</option>
+                                <option value="ReleaseDate">By release date</option>
+                                <!--<option value="Chronological">Chronological order</option>-->
+                            </select>
+                        </div>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="SeperateLibraries" />
+                            <span>Disallow overlap of Movies and Series libraries</span>
                         </label>
                         <label class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="UpdateWatchedStatus" />
@@ -149,7 +168,10 @@
                         document.querySelector('#TitleAlternateType').value = config.TitleAlternateType;
                         document.querySelector('#SeriesGrouping').value = config.SeriesGrouping;
                         document.querySelector('#SeasonOrdering').value = config.SeasonOrdering;
+                        document.querySelector('#BoxSetGrouping').value = config.BoxSetGrouping;
+                        document.querySelector('#MovieOrdering').value = config.MovieOrdering;
                         document.querySelector('#MarkSpecialsWhenGrouped').checked = config.MarkSpecialsWhenGrouped;
+                        document.querySelector('#SeperateLibraries').checked = config.SeperateLibraries;
                         if (config.SeriesGrouping === "ShokoGroup") {
                             document.querySelector('#SeasonOrderingItem').removeAttribute("hidden");
                             document.querySelector('#MarkSpecialsWhenGroupedItem').removeAttribute("hidden");
@@ -157,6 +179,12 @@
                         else {
                             document.querySelector('#SeasonOrderingItem').setAttribute("hidden", "");
                             document.querySelector('#MarkSpecialsWhenGroupedItem').setAttribute("hidden", "");
+                        }
+                        if (config.BoxSetGrouping === "ShokoGroup") {
+                            document.querySelector('#MovieOrderingItem').removeAttribute("hidden");
+                        }
+                        else {
+                            document.querySelector('#MovieOrderingItem').setAttribute("hidden", "");
                         }
                         Dashboard.hideLoadingMsg();
                     });
@@ -170,6 +198,15 @@
                     else {
                         document.querySelector('#SeasonOrderingItem').setAttribute("hidden", "");
                         document.querySelector('#MarkSpecialsWhenGroupedItem').setAttribute("hidden", "");
+                    }
+                });
+            document.querySelector('#BoxSetGrouping')
+                .addEventListener('input', function () {
+                    if (document.querySelector('#BoxSetGrouping').value === "ShokoGroup") {
+                        document.querySelector('#MovieOrderingItem').removeAttribute("hidden");
+                    }
+                    else {
+                        document.querySelector('#MovieOrderingItem').setAttribute("hidden", "");
                     }
                 });
 
@@ -196,7 +233,10 @@
                         config.TitleAlternateType = document.querySelector('#TitleAlternateType').value;
                         config.SeriesGrouping = document.querySelector('#SeriesGrouping').value;
                         config.SeasonOrdering = document.querySelector('#SeasonOrdering').value;
+                        config.BoxSetGrouping = document.querySelector('#BoxSetGrouping').value;
+                        config.MovieOrdering = document.querySelector('#MovieOrdering').value;
                         config.MarkSpecialsWhenGrouped = document.querySelector('#MarkSpecialsWhenGrouped').checked;
+                        config.SeperateLibraries = document.querySelector('#SeperateLibraries').checked;
                         ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
                     });
                     e.preventDefault();

@@ -1,7 +1,7 @@
 using MediaBrowser.Model.Plugins;
 using DisplayLanguageType = Shokofin.Utils.TextUtil.DisplayLanguageType;
-using SeriesGroupType = Shokofin.Utils.OrderingUtil.SeriesGroupType;
-using SeasonOrderType = Shokofin.Utils.OrderingUtil.SeasonOrderType;
+using SeriesAndBoxSetGroupType = Shokofin.Utils.OrderingUtil.SeriesOrBoxSetGroupType;
+using SeasonAndMovieOrderType = Shokofin.Utils.OrderingUtil.SeasonAndMovieOrderType;
 
 namespace Shokofin.Configuration
 {
@@ -35,11 +35,17 @@ namespace Shokofin.Configuration
 
         public bool SynopsisCleanMultiEmptyLines { get; set; }
 
-        public SeriesGroupType SeriesGrouping { get; set; }
+        public SeriesAndBoxSetGroupType SeriesGrouping { get; set; }
 
-        public SeasonOrderType SeasonOrdering { get; set; }
+        public SeasonAndMovieOrderType SeasonOrdering { get; set; }
 
         public bool MarkSpecialsWhenGrouped { get; set; }
+
+        public SeriesAndBoxSetGroupType BoxSetGrouping { get; set; }
+
+        public SeasonAndMovieOrderType MovieOrdering { get; set; }
+
+        public bool SeperateLibraries { get; set; }
 
         public DisplayLanguageType TitleMainType { get; set; }
 
@@ -63,9 +69,12 @@ namespace Shokofin.Configuration
             SynopsisCleanMultiEmptyLines = true;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
-            SeriesGrouping = SeriesGroupType.Default;
-            SeasonOrdering = SeasonOrderType.Default;
+            SeriesGrouping = SeriesAndBoxSetGroupType.Default;
+            SeasonOrdering = SeasonAndMovieOrderType.Default;
             MarkSpecialsWhenGrouped = true;
+            BoxSetGrouping = SeriesAndBoxSetGroupType.Default;
+            MovieOrdering = SeasonAndMovieOrderType.Default;
+            SeperateLibraries = false;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -10,20 +11,25 @@ using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.Utils;
 
+using IResolverIgnoreRule = MediaBrowser.Controller.Resolvers.IResolverIgnoreRule;
+using ILibraryManager = MediaBrowser.Controller.Library.ILibraryManager;
+
 namespace Shokofin.Providers
 {
-    public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>
+    public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IResolverIgnoreRule
     {
         public string Name => "Shoko";
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<MovieProvider> _logger;
 
-        public MovieProvider(IHttpClientFactory httpClientFactory, ILogger<MovieProvider> logger)
-        {
-            _httpClientFactory = httpClientFactory;
-            _logger = logger;
-        }
+        private readonly ILibraryManager _library;
 
+        public MovieProvider(IHttpClientFactory httpClientFactory, ILogger<MovieProvider> logger, ILibraryManager library)
+        {
+            _logger = logger;
+            _httpClientFactory = httpClientFactory;
+            _library = library;
+        }
 
         public async Task<MetadataResult<Movie>> GetMetadata(MovieInfo info, CancellationToken cancellationToken)
         {
@@ -31,7 +37,8 @@ namespace Shokofin.Providers
             {
                 var result = new MetadataResult<Movie>();
 
-                var (id, file, episode, series, _group) = await DataUtil.GetFileInfoByPath(info.Path);
+                var includeGroup = Plugin.Instance.Configuration.BoxSetGrouping == OrderingUtil.SeriesOrBoxSetGroupType.ShokoGroup;
+                var (id, file, episode, series, group) = await DataUtil.GetFileInfoByPath(info.Path, includeGroup, true);
 
                 if (file == null) // if file is null then series and episode is also null.
                 {
@@ -49,35 +56,29 @@ namespace Shokofin.Providers
                     return result;
                 }
 
-                var extraType = OrderingUtil.GetExtraType(episode.AniDB);
-                if (extraType != null)
-                {
-                    _logger.LogWarning($"File found, but not a movie! Skipping path {id}");
-                    return result;
-                }
-
                 var tags = await DataUtil.GetTags(series.ID);
                 var ( displayTitle, alternateTitle ) = TextUtil.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, series.Shoko.Name, episode.Shoko.Name, info.MetadataLanguage);
-                var rating = DataUtil.GetRating(isMultiEntry ? episode.AniDB.Rating : series.AniDB.Rating);
+                var rating = isMultiEntry ? episode.AniDB.Rating.ToFloat(10) : series.AniDB.Rating.ToFloat(10);
 
                 result.Item = new Movie
                 {
-                    IndexNumber = OrderingUtil.GetIndexNumber(series, episode),
+                    IndexNumber = OrderingUtil.GetMovieIndexNumber(group, series, episode),
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
                     PremiereDate = episode.AniDB.AirDate,
                     // Use the file description if collection contains more than one movie, otherwise use the collection description.
                     Overview = TextUtil.SummarySanitizer((isMultiEntry ? episode.AniDB.Description ?? series.AniDB.Description : series.AniDB.Description) ?? ""),
                     ProductionYear = episode.AniDB.AirDate?.Year,
-                    ExtraType = extraType,
                     Tags = tags,
                     CommunityRating = rating,
                 };
                 result.Item.SetProviderId("Shoko File", file.ID);
                 result.Item.SetProviderId("Shoko Series", series.ID);
                 result.Item.SetProviderId("Shoko Episode", episode.ID);
-                if (aniDBId != 0) result.Item.SetProviderId("AniDB", aniDBId.ToString());
-                if (!string.IsNullOrEmpty(tvdbId)) result.Item.SetProviderId("Tvdb", tvdbId);
+                if (aniDBId != 0)
+                    result.Item.SetProviderId("AniDB", aniDBId.ToString());
+                if (!string.IsNullOrEmpty(tvdbId))
+                    result.Item.SetProviderId("Tvdb", tvdbId);
                 result.HasMetadata = true;
 
                 result.ResetPeople();
@@ -103,6 +104,42 @@ namespace Shokofin.Providers
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+        }
+
+        public bool ShouldIgnore(MediaBrowser.Model.IO.FileSystemMetadata fileInfo, BaseItem parent)
+        {
+            // Skip this handler if one of these requirements are met
+            if (fileInfo == null || parent == null || fileInfo.IsDirectory || !fileInfo.Exists)
+                return false;
+            var libType = _library.GetInheritedContentType(parent);
+            if (libType != "movies") {
+                return false;
+            }
+            try {
+                var (id, file, episode, series, _group) = DataUtil.GetFileInfoByPath(fileInfo);
+                if (file == null)
+                {
+                    _logger.LogWarning($"Shoko Scanner... Unable to find series info for path {id}");
+                    return false;
+                }
+                _logger.LogInformation($"Shoko Filter... Found series info for path {id}");
+                if (series.AniDB.Type != "Movie") {
+                    return true;
+                }
+                var extraType = OrderingUtil.GetExtraType(episode.AniDB);
+                if (extraType != null) {
+                    _logger.LogInformation($"Shoko Filter... File was not a 'normal' episode for path, skipping! {id}");
+                    return true;
+                }
+                // Ignore everything except movies
+                return false;
+            }
+            catch (System.Exception e)
+            {
+                if (!(e is System.Net.Http.HttpRequestException && e.Message.Contains("Connection refused")))
+                    _logger.LogError(e, "Threw unexpectedly");
+                return false;
+            }
         }
     }
 }

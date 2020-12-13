@@ -31,7 +31,7 @@ namespace Shokofin.Providers
                 {
                     default:
                         return GetDefaultMetadata(info, cancellationToken);
-                    case OrderingUtil.SeriesGroupType.ShokoGroup:
+                    case OrderingUtil.SeriesOrBoxSetGroupType.ShokoGroup:
                         return await GetShokoGroupedMetadata(info, cancellationToken);
                 }
             }
@@ -91,7 +91,7 @@ namespace Shokofin.Providers
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
                 Tags = tags,
-                CommunityRating = DataUtil.GetRating(series.AniDB.Rating),
+                CommunityRating = series.AniDB.Rating?.ToFloat(10),
             };
 
             result.HasMetadata = true;

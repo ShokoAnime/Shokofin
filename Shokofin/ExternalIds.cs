@@ -9,7 +9,7 @@ namespace Shokofin
     public class ShokoGroupExternalId : IExternalId
     {
         public bool Supports(IHasProviderIds item)
-            => item is Series;
+            => item is Series || item is BoxSet;
 
         public string ProviderName
             => "Shoko Group";

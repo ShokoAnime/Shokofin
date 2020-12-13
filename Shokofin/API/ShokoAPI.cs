@@ -77,6 +77,12 @@ namespace Shokofin.API
             return responseStream != null ? await JsonSerializer.DeserializeAsync<Episode>(responseStream) : null;
         }
 
+        public static async Task<List<Episode>> GetEpisodesFromSeries(string seriesId)
+        {
+            var responseStream = await CallApi($"/api/v3/Series/{seriesId}/Episode");
+            return responseStream != null ? await JsonSerializer.DeserializeAsync<List<Episode>>(responseStream) : null;
+        }
+
         public static async Task<List<Episode>> GetEpisodeFromFile(string id)
         {
             var responseStream = await CallApi($"/api/v3/File/{id}/Episode");
