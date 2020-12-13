@@ -122,7 +122,7 @@ namespace Shokofin.Utils
                     if (outputType == DisplyTitleType.SubTitle)
                         return title;
                     // Ignore sub-title of movie if it strictly equals the text below.
-                    if (title != "Complete Movie")
+                    if (title != "Complete Movie" && !string.IsNullOrEmpty(title?.Trim()))
                         titleBuilder?.Append($": {title}");
                     return titleBuilder?.ToString() ?? "";
                 }
