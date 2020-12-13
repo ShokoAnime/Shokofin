@@ -84,6 +84,10 @@
                                 <!--<option value="Chronological">Chronological order</option>-->
                             </select>
                         </div>
+                        <label id="MarkSpecialsWhenGroupedItem" class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
+                            <span>Mark special episodes with <stong>SP</stong> and the special number in the seasons they belong to</span>
+                        </label>
                         <label class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="UpdateWatchedStatus" />
                             <span>Update watched status on Shoko (Scrobble)</span>
@@ -145,11 +149,14 @@
                         document.querySelector('#TitleAlternateType').value = config.TitleAlternateType;
                         document.querySelector('#SeriesGrouping').value = config.SeriesGrouping;
                         document.querySelector('#SeasonOrdering').value = config.SeasonOrdering;
+                        document.querySelector('#MarkSpecialsWhenGrouped').checked = config.MarkSpecialsWhenGrouped;
                         if (config.SeriesGrouping === "ShokoGroup") {
                             document.querySelector('#SeasonOrderingItem').removeAttribute("hidden");
+                            document.querySelector('#MarkSpecialsWhenGroupedItem').removeAttribute("hidden");
                         }
                         else {
                             document.querySelector('#SeasonOrderingItem').setAttribute("hidden", "");
+                            document.querySelector('#MarkSpecialsWhenGroupedItem').setAttribute("hidden", "");
                         }
                         Dashboard.hideLoadingMsg();
                     });
@@ -158,9 +165,11 @@
                 .addEventListener('input', function () {
                     if (document.querySelector('#SeriesGrouping').value === "ShokoGroup") {
                         document.querySelector('#SeasonOrderingItem').removeAttribute("hidden");
+                        document.querySelector('#MarkSpecialsWhenGroupedItem').removeAttribute("hidden");
                     }
                     else {
                         document.querySelector('#SeasonOrderingItem').setAttribute("hidden", "");
+                        document.querySelector('#MarkSpecialsWhenGroupedItem').setAttribute("hidden", "");
                     }
                 });
 
@@ -187,6 +196,7 @@
                         config.TitleAlternateType = document.querySelector('#TitleAlternateType').value;
                         config.SeriesGrouping = document.querySelector('#SeriesGrouping').value;
                         config.SeasonOrdering = document.querySelector('#SeasonOrdering').value;
+                        config.MarkSpecialsWhenGrouped = document.querySelector('#MarkSpecialsWhenGrouped').checked;
                         ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
                     });
                     e.preventDefault();

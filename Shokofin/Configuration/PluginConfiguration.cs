@@ -39,6 +39,8 @@ namespace Shokofin.Configuration
 
         public SeasonOrderType SeasonOrdering { get; set; }
 
+        public bool MarkSpecialsWhenGrouped { get; set; }
+
         public DisplayLanguageType TitleMainType { get; set; }
 
         public DisplayLanguageType TitleAlternateType { get; set; }
@@ -63,6 +65,7 @@ namespace Shokofin.Configuration
             TitleAlternateType = DisplayLanguageType.Origin;
             SeriesGrouping = SeriesGroupType.Default;
             SeasonOrdering = SeasonOrderType.Default;
+            MarkSpecialsWhenGrouped = true;
         }
     }
 }

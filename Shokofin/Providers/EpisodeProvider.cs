@@ -52,7 +52,10 @@ namespace Shokofin.Providers
                 var ( displayTitle, alternateTitle ) = TextUtil.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, episode.Shoko.Name, info.MetadataLanguage);
                 int aniDBId = episode.AniDB.ID;
                 int tvdbId = episode?.TvDB?.ID ?? 0;
-
+                if (group != null && episode.AniDB.Type != EpisodeType.Episode && Plugin.Instance.Configuration.MarkSpecialsWhenGrouped) {
+                    displayTitle = $"SP {episode.AniDB.EpisodeNumber} {displayTitle}";
+                    alternateTitle = $"SP {episode.AniDB.EpisodeNumber} {alternateTitle}";
+                }
                 result.Item = new Episode
                 {
                     IndexNumber = OrderingUtil.GetIndexNumber(series, episode),
