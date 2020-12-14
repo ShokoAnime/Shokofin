@@ -33,7 +33,7 @@
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="TitleMainType">Main Title</label>
                             <select is="emby-select" id="TitleMainType" name="TitleMainType" class="emby-select-withcolor emby-select">
-                                <option value="Default">Default</option>
+                                <option value="Default">Let Shoko decide</option>
                                 <option value="MetadataPreferred">Preferred metadata language</option>
                                 <option value="Origin">Language in country of origin</option>
                             </select>
@@ -42,7 +42,7 @@
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="TitleAlternateType">Alternate Title</label>
                             <select is="emby-select" id="TitleAlternateType" name="TitleAlternateType" class="emby-select-withcolor emby-select">
-                                <option value="Default">Default</option>
+                                <option value="Default">Let Shoko decide</option>
                                 <option value="MetadataPreferred">Preferred metadata language</option>
                                 <option value="Origin">Language in country of origin</option>
                                 <option value="Ignore">Do not use alternate titles</option>
@@ -74,6 +74,7 @@
                                 <option value="MergeFriendly">Make series merge-friendly with TvDB/TMDB</option>
                                 <option value="ShokoGroup">Group series based on Shoko's group feature</option>
                             </select>
+                            <div id="SG_ShokoGroup_Warning" class="fieldDescription"><strong>Warning:</strong> Series merging must be enabled in the <strong>library settings</strong> when using this option.</div>
                         </div>
                         <div id="SeasonOrderingItem" class="selectContainer">
                             <label class="selectLabel" for="SeasonOrdering">Season ordering</label>
@@ -90,7 +91,7 @@
                         <div class="selectContainer">
                             <label class="selectLabel" for="BoxSetGrouping">Box-set grouping</label>
                             <select is="emby-select" id="BoxSetGrouping" name="BoxSetGrouping" class="emby-select-withcolor emby-select">
-                                <option value="Default" selected>Do not group movies</option>
+                                <option value="Default" selected>Do not group movies into box-sets</option>
                                 <option value="ShokoSeries">Group movies within Shoko's series only</option>
                                 <option value="ShokoGroup">Group movies in Shoko's groups and series</option>
                             </select>
@@ -105,7 +106,7 @@
                         </div>
                         <label class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="SeperateLibraries" />
-                            <span>Disallow overlap of Movies and Series libraries</span>
+                            <span>Disallow overlap of Movies and Series library types</span>
                         </label>
                         <label class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="UpdateWatchedStatus" />
@@ -173,10 +174,12 @@
                         document.querySelector('#MarkSpecialsWhenGrouped').checked = config.MarkSpecialsWhenGrouped;
                         document.querySelector('#SeperateLibraries').checked = config.SeperateLibraries;
                         if (config.SeriesGrouping === "ShokoGroup") {
+                            document.querySelector('#SG_ShokoGroup_Warning').removeAttribute("hidden");
                             document.querySelector('#SeasonOrderingItem').removeAttribute("hidden");
                             document.querySelector('#MarkSpecialsWhenGroupedItem').removeAttribute("hidden");
                         }
                         else {
+                            document.querySelector('#SG_ShokoGroup_Warning').setAttribute("hidden", "");
                             document.querySelector('#SeasonOrderingItem').setAttribute("hidden", "");
                             document.querySelector('#MarkSpecialsWhenGroupedItem').setAttribute("hidden", "");
                         }
@@ -192,10 +195,12 @@
             document.querySelector('#SeriesGrouping')
                 .addEventListener('input', function () {
                     if (document.querySelector('#SeriesGrouping').value === "ShokoGroup") {
+                        document.querySelector('#SG_ShokoGroup_Warning').removeAttribute("hidden");
                         document.querySelector('#SeasonOrderingItem').removeAttribute("hidden");
                         document.querySelector('#MarkSpecialsWhenGroupedItem').removeAttribute("hidden");
                     }
                     else {
+                        document.querySelector('#SG_ShokoGroup_Warning').setAttribute("hidden", "");
                         document.querySelector('#SeasonOrderingItem').setAttribute("hidden", "");
                         document.querySelector('#MarkSpecialsWhenGroupedItem').setAttribute("hidden", "");
                     }
