@@ -50,6 +50,7 @@ namespace Shokofin.Providers
             result.Item = new Season
             {
                 Name = seasonName,
+                IndexNumber = info.IndexNumber,
                 SortName = seasonName,
                 ForcedSortName = seasonName
             };
