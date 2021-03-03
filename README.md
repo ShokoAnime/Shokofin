@@ -27,7 +27,7 @@ TBD
 3. Build plugin with following command.
 
 ```sh
-$ dotnet restore Shokofin/Shokofin.csproj -s https://api.nuget.org/v3/index.json -s https://pkgs.dev.azure.com/jellyfin-project/jellyfin/_packaging/unstable/nuget/v3/index.json
+$ dotnet restore Shokofin/Shokofin.csproj
 $ dotnet publish -c Release Shokofin/Shokofin.csproj
 ```
 
