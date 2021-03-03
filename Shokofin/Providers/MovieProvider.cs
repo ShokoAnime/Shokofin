@@ -65,7 +65,7 @@ namespace Shokofin.Providers
                 int aniDBId = (isMultiEntry ? episodeIds?.AniDB : seriesIds?.SeriesID.AniDB) ?? 0;
                 int tvdbId = (isMultiEntry ? episodeIds?.TvDB?.FirstOrDefault() : seriesIds?.SeriesID.TvDB?.FirstOrDefault()) ?? 0;
 
-                if (seriesAniDB?.SeriesType != "0")
+                if (seriesAniDB?.Type != "Movie")
                 {
                     _logger.LogInformation($"Shoko Scanner... File found, but not a movie! Skipping.");
                     return result;

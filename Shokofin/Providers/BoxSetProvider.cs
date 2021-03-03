@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -50,7 +49,7 @@ namespace Shokofin.Providers
                 _logger.LogInformation($"Shoko Scanner... Getting series metadata ({dirname} - {seriesId})");
 
                 var aniDbInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
-                if (aniDbInfo.SeriesType != "0" /* Movie */)
+                if (aniDbInfo.Type != "Movie")
                 {
                     _logger.LogInformation("Shoko Scanner... series was not a movie! Skipping.");
                     return result;

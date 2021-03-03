@@ -11,7 +11,6 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
-using EpisodeType = Shokofin.API.Models.Episode.EpisodeType;
 
 namespace Shokofin.Providers
 {
@@ -101,22 +100,22 @@ namespace Shokofin.Providers
             return _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
         }
 
-        private async Task<int> GetSeasonNumber(string episodeId, EpisodeType type)
+        private async Task<int> GetSeasonNumber(string episodeId, string type)
         {
             var seasonNumber = 0;
             
             switch (type)
             {
-                case EpisodeType.Episode:
+                case "Normal":
                     seasonNumber = 1;
                     break;
-                case EpisodeType.Credits:
+                case "ThemeSong":
                     seasonNumber = 100;
                     break;
-                case EpisodeType.Special:
+                case "Special":
                     seasonNumber = 0;
                     break;
-                case EpisodeType.Trailer:
+                case "Trailer":
                     seasonNumber = 99;
                     break;
                 default:

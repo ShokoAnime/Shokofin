@@ -4,7 +4,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Shokofin.API.Models;
 using DisplayLanguageType = Shokofin.Configuration.PluginConfiguration.DisplayLanguageType;
-using EpisodeType = Shokofin.API.Models.Episode.EpisodeType;
 using MediaBrowser.Model.Entities;
 
 namespace Shokofin.Providers
@@ -25,23 +24,23 @@ namespace Shokofin.Providers
             int offset = 0;
             switch (episode.Type)
             {
-                case EpisodeType.Episode:
+                case "Normal":
                     break;
-                case EpisodeType.Special:
+                case "Special":
                     offset += series.Sizes.Total.Episodes;
-                    break; // goto case EpisodeType.Episode;
-                case EpisodeType.Credits:
+                    break; // goto case "Normal";
+                case "ThemeSong":
                     offset += series.Sizes.Total?.Specials ?? 0;
-                    goto case EpisodeType.Special;
-                case EpisodeType.Other:
+                    goto case "ThemeSong";
+                case "Unknown":
                     offset += series.Sizes.Total?.Credits ?? 0;
-                    goto case EpisodeType.Credits;
-                case EpisodeType.Parody:
+                    goto case "ThemeSong";
+                case "Parody":
                     offset += series.Sizes.Total?.Others ?? 0;
-                    goto case EpisodeType.Other;
-                case EpisodeType.Trailer:
+                    goto case "Unknown";
+                case "Trailer":
                     offset += series.Sizes.Total?.Parodies ?? 0;
-                    goto case EpisodeType.Parody;
+                    goto case "Parody";
             }
             return offset + episode.EpisodeNumber;
         }
@@ -50,13 +49,13 @@ namespace Shokofin.Providers
         {
             switch (episode.Type)
             {
-                case EpisodeType.Episode:
+                case "Normal":
                     return null;
-                case EpisodeType.Credits:
+                case "ThemeSong":
                     return ExtraType.ThemeVideo;
-                case EpisodeType.Trailer:
+                case "Trailer":
                     return ExtraType.Trailer;
-                case EpisodeType.Special: {
+                case "Special": {
                     var title = Helper.GetTitleByLanguages(episode.Titles, "en") ?? "";
                     // Interview
                     if (title.Contains("interview", System.StringComparison.OrdinalIgnoreCase))

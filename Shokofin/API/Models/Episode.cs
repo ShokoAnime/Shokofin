@@ -8,22 +8,12 @@ namespace Shokofin.API.Models
         public EpisodeIDs IDs { get; set; }
         
         public DateTime? Watched { get; set; }
-        
-        public enum EpisodeType
-        {
-            Episode = 1,
-            Credits = 2,
-            Special = 3,
-            Trailer = 4,
-            Parody = 5,
-            Other = 6
-        }
 
         public class AniDB
         {
             public int ID { get; set; }
             
-            public EpisodeType Type { get; set; }
+            public string Type { get; set; }
             
             public int EpisodeNumber { get; set; }
             
