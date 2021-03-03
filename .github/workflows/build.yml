@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         # rid: ['win-x64', 'linux-x64']
-        dotnet: [ '3.1.x' ]
+        dotnet: [ '5.0.x' ]
         
     name: build
 
@@ -23,9 +23,9 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ matrix.dotnet }}
-      - run: dotnet restore Shokofin/Shokofin.csproj -s https://api.nuget.org/v3/index.json -s https://pkgs.dev.azure.com/jellyfin-project/jellyfin/_packaging/unstable/nuget/v3/index.json
+      - run: dotnet restore Shokofin/Shokofin.csproj
       - run: dotnet publish -c Release Shokofin/Shokofin.csproj
       - uses: actions/upload-artifact@v2
         with:
           name: Shokofin
-          path: Shokofin/bin/Release/netstandard2.1/Shokofin.dll
+          path: Shokofin/bin/Release/net5.0/Shokofin.dll

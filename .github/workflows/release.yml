@@ -19,9 +19,9 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 3.1.x
+          dotnet-version: 5.0.x
       - name: Restore nuget packages
-        run: dotnet restore Shokofin/Shokofin.csproj -s https://api.nuget.org/v3/index.json -s https://pkgs.dev.azure.com/jellyfin-project/jellyfin/_packaging/unstable/nuget/v3/index.json
+        run: dotnet restore Shokofin/Shokofin.csproj
       - name: Setup python
         uses: actions/setup-python@v2
         with:
