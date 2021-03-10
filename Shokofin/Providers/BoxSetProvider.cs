@@ -15,6 +15,7 @@ using Shokofin.Utils;
 
 using IResolverIgnoreRule = MediaBrowser.Controller.Resolvers.IResolverIgnoreRule;
 using ILibraryManager = MediaBrowser.Controller.Library.ILibraryManager;
+using SeriesType = Shokofin.API.Models.SeriesType;
 
 namespace Shokofin.Providers
 {
@@ -42,7 +43,7 @@ namespace Shokofin.Providers
                 {
                     default:
                         return await GetDefaultMetadata(info, cancellationToken);
-                    case OrderingUtil.SeriesOrBoxSetGroupType.ShokoGroup:
+                    case Ordering.SeriesOrBoxSetGroupType.ShokoGroup:
                         return await GetShokoGroupedMetadata(info, cancellationToken);
                 }
             }
@@ -56,7 +57,7 @@ namespace Shokofin.Providers
         public async Task<MetadataResult<BoxSet>> GetDefaultMetadata(BoxSetInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<BoxSet>();
-            var (id, series) = await DataUtil.GetSeriesInfoByPath(info.Path);
+            var series = await DataFetcher.GetSeriesInfoByPath(info.Path);
 
             if (series == null)
             {
@@ -67,26 +68,26 @@ namespace Shokofin.Providers
             int aniDBId = series.AniDB.ID;
             var tvdbId = series?.TvDBID;
 
-            if (series.AniDB.Type != "Movie")
+            if (series.AniDB.Type != SeriesType.Movie)
             {
-                _logger.LogWarning($"Shoko Scanner... File found, but not a movie! Skipping.");
+                _logger.LogWarning($"Shoko Scanner... File found, but not a movie! Skipping path {info.Path}");
                 return result;
             }
 
             if (series.Shoko.Sizes.Total.Episodes <= 1)
             {
-                _logger.LogWarning("Shoko Scanner... series did not contain multiple movies! Skipping.");
+                _logger.LogWarning($"Shoko Scanner... series did not contain multiple movies! Skipping path {info.Path}");
                 return result;
             }
 
-            var ( displayTitle, alternateTitle ) = TextUtil.GetSeriesTitles(series.AniDB.Titles, series.AniDB.Title, info.MetadataLanguage);
-            var tags = await DataUtil.GetTags(series.ID);
+            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.AniDB.Title, info.MetadataLanguage);
+            var tags = await DataFetcher.GetTags(series.ID);
 
             result.Item = new BoxSet
             {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
-                Overview = TextUtil.SummarySanitizer(series.AniDB.Description),
+                Overview = Text.SummarySanitizer(series.AniDB.Description),
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
@@ -102,30 +103,30 @@ namespace Shokofin.Providers
         private async Task<MetadataResult<BoxSet>> GetShokoGroupedMetadata(BoxSetInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<BoxSet>();
-            var (id, group) = await DataUtil.GetGroupInfoByPath(info.Path, true);
+            var group = await DataFetcher.GetGroupInfoByPath(info.Path, true);
             if (group == null)
             {
-                _logger.LogWarning($"Shoko Scanner... Unable to find box-set info for path {id}");
+                _logger.LogWarning($"Shoko Scanner... Unable to find box-set info for path {info.Path}");
                 return result;
             }
 
             var series = group.DefaultSeries;
             var tvdbId = series?.TvDBID;
 
-            if (series.AniDB.Type != "Movie")
+            if (series.AniDB.Type != API.Models.SeriesType.Movie)
             {
                 _logger.LogWarning($"Shoko Scanner... File found, but not a movie! Skipping.");
                 return result;
             }
 
-            var tags = await DataUtil.GetTags(series.ID);
-            var ( displayTitle, alternateTitle ) = TextUtil.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
+            var tags = await DataFetcher.GetTags(series.ID);
+            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
 
             result.Item = new BoxSet
             {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
-                Overview = TextUtil.SummarySanitizer(series.AniDB.Description),
+                Overview = Text.SummarySanitizer(series.AniDB.Description),
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
@@ -140,12 +141,11 @@ namespace Shokofin.Providers
             result.HasMetadata = true;
 
             result.ResetPeople();
-            foreach (var person in await DataUtil.GetPeople(series.ID))
+            foreach (var person in await DataFetcher.GetPeople(series.ID))
                 result.AddPerson(person);
 
             return result;
         }
-
 
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(BoxSetInfo searchInfo, CancellationToken cancellationToken)
         {
@@ -189,15 +189,16 @@ namespace Shokofin.Providers
                 return false;
             }
             try {
-                var (id, series) = DataUtil.GetSeriesInfoByPathSync(fileInfo);
+                var path = System.IO.Path.Join(fileInfo.DirectoryName, fileInfo.FullName);
+                var series = DataFetcher.GetSeriesInfoByPathSync(path);
                 if (series == null)
                 {
-                    _logger.LogWarning($"Shoko Scanner... Unable to find series info for path {id}");
+                    _logger.LogWarning($"Shoko Scanner... Unable to find series info for path {path}");
                     return false;
                 }
-                _logger.LogInformation($"Shoko Filter... Found series info for path {id}");
+                _logger.LogInformation($"Shoko Filter... Found series info for path {path}");
                 // Ignore series if we want to sperate our libraries
-                if (Plugin.Instance.Configuration.SeperateLibraries && series.AniDB.Type != "Movie")
+                if (Plugin.Instance.Configuration.SeperateLibraries && series.AniDB.Type != SeriesType.Movie)
                     return true;
                 return false;
             }

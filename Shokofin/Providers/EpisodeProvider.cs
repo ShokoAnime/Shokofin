@@ -9,10 +9,13 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
+using Shokofin.API;
 using Shokofin.Utils;
 
+using Path = System.IO.Path;
 using IResolverIgnoreRule = MediaBrowser.Controller.Resolvers.IResolverIgnoreRule;
 using ILibraryManager = MediaBrowser.Controller.Library.ILibraryManager;
+using EpisodeType = Shokofin.API.Models.EpisodeType;
 
 namespace Shokofin.Providers
 {
@@ -39,31 +42,31 @@ namespace Shokofin.Providers
             {
                 var result = new MetadataResult<Episode>();
 
-                var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == OrderingUtil.SeriesOrBoxSetGroupType.ShokoGroup;
-                var (id, file, episode, series, group) = await DataUtil.GetFileInfoByPath(info.Path, includeGroup);
+                var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == Ordering.SeriesOrBoxSetGroupType.ShokoGroup;
+                var (file, episode, series, group) = await DataFetcher.GetFileInfoByPath(info.Path, includeGroup);
 
                 if (file == null) // if file is null then series and episode is also null.
                 {
-                    _logger.LogWarning($"Unable to find file info for path {id}");
+                    _logger.LogWarning($"Shoko Scanner... Unable to find file info for path {info.Path}");
                     return result;
                 }
-                _logger.LogInformation($"Found file info for path {id}");
+                _logger.LogInformation($"Shoko Scanner... Found file info for path {info.Path}");
 
-                var ( displayTitle, alternateTitle ) = TextUtil.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, episode.Shoko.Name, info.MetadataLanguage);
+                var ( displayTitle, alternateTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, episode.Shoko.Name, info.MetadataLanguage);
                 int aniDBId = episode.AniDB.ID;
                 int tvdbId = episode?.TvDB?.ID ?? 0;
-                if (group != null && episode.AniDB.Type != "Normal" && Plugin.Instance.Configuration.MarkSpecialsWhenGrouped) {
+                if (group != null && episode.AniDB.Type != EpisodeType.Normal && Plugin.Instance.Configuration.MarkSpecialsWhenGrouped) {
                     displayTitle = $"SP {episode.AniDB.EpisodeNumber} {displayTitle}";
                     alternateTitle = $"SP {episode.AniDB.EpisodeNumber} {alternateTitle}";
                 }
                 result.Item = new Episode
                 {
-                    IndexNumber = OrderingUtil.GetIndexNumber(series, episode),
-                    ParentIndexNumber = OrderingUtil.GetSeasonNumber(group, series, episode),
+                    IndexNumber = Ordering.GetIndexNumber(series, episode),
+                    ParentIndexNumber = Ordering.GetSeasonNumber(group, series, episode),
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
                     PremiereDate = episode.AniDB.AirDate,
-                    Overview = TextUtil.SummarySanitizer(episode.AniDB.Description),
+                    Overview = Text.SummarySanitizer(episode.AniDB.Description),
                     CommunityRating = (float) ((episode.AniDB.Rating.Value * 10) / episode.AniDB.Rating.MaxValue)
                 };
                 result.Item.SetProviderId("Shoko Episode", episode.ID);
@@ -105,15 +108,17 @@ namespace Shokofin.Providers
                 return false;
             }
             try {
-                var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == OrderingUtil.SeriesOrBoxSetGroupType.ShokoGroup;
-                var (id, file, episode, series, group) = DataUtil.GetFileInfoByPath(fileInfo, includeGroup);
+                var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == Ordering.SeriesOrBoxSetGroupType.ShokoGroup;
+                // TODO: Check if it can be written in a better way. Parent directory + File Name
+                var id = Path.Join(fileInfo.DirectoryName, fileInfo.FullName);
+                var (file, episode, series, group) = DataFetcher.GetFileInfoByPathSync(id, includeGroup);
                 if (file == null) // if file is null then series and episode is also null.
                 {
                     _logger.LogWarning($"Shoko Filter... Unable to find file info for path {id}");
                     return true;
                 }
                 _logger.LogInformation($"Shoko Filter... Found file info for path {id}");
-                var extraType = OrderingUtil.GetExtraType(episode.AniDB);
+                var extraType = Ordering.GetExtraType(episode.AniDB);
                 if (extraType != null)
                 {
                     _logger.LogDebug($"Shoko Filter... Not a normal or special episode, skipping path {id}");

@@ -1,9 +1,11 @@
-using MediaBrowser.Model.Entities;
 using Shokofin.API.Models;
+using Shokofin.API.Info;
+
+using ExtraType = MediaBrowser.Model.Entities.ExtraType;
 
 namespace Shokofin.Utils
 {
-    public class OrderingUtil
+    public class Ordering
     {
 
         /// <summary>
@@ -52,7 +54,7 @@ namespace Shokofin.Utils
         /// Get index number for a movie in a box-set.
         /// </summary>
         /// <returns>Absoute index.</returns>
-        public static int GetMovieIndexNumber(DataUtil.GroupInfo group, DataUtil.SeriesInfo series, DataUtil.EpisodeInfo episode)
+        public static int GetMovieIndexNumber(GroupInfo group, SeriesInfo series, EpisodeInfo episode)
         {
             switch (Plugin.Instance.Configuration.BoxSetGrouping)
             {
@@ -64,12 +66,12 @@ namespace Shokofin.Utils
                 case SeriesOrBoxSetGroupType.ShokoGroup:
                 {
                     int offset = 0;
-                    foreach (DataUtil.SeriesInfo s in group.SeriesList)
+                    foreach (SeriesInfo s in group.SeriesList)
                     {
                         var sizes = s.Shoko.Sizes.Total;
                         if (s != series)
                         {
-                            if (episode.AniDB.Type == "Special")
+                            if (episode.AniDB.Type == EpisodeType.Special)
                             {
                                 var index = series.FilteredSpecialEpisodesList.FindIndex(e => string.Equals(e.ID, episode.ID));
                                 if (index == -1)
@@ -78,21 +80,21 @@ namespace Shokofin.Utils
                             }
                             switch (episode.AniDB.Type)
                             {
-                                case "Normal":
+                                case EpisodeType.Normal:
                                     // offset += 0;
                                     break;
-                                case "Parody":
+                                case EpisodeType.Parody:
                                     offset += sizes?.Episodes ?? 0;
-                                    goto case "Normal";
-                                case "Other":
+                                    goto case EpisodeType.Normal;
+                                case EpisodeType.Other:
                                     offset += sizes?.Parodies ?? 0;
-                                    goto case "Parody";
+                                    goto case EpisodeType.Parody;
                             }
                             return offset + episode.AniDB.EpisodeNumber;
                         }
                         else
                         {
-                            if (episode.AniDB.Type == "Special") {
+                            if (episode.AniDB.Type == EpisodeType.Special) {
                                 offset -= series.FilteredSpecialEpisodesList.Count;
                             }
                             offset += (sizes?.Episodes ?? 0) + (sizes?.Parodies ?? 0) + (sizes?.Others ?? 0);
@@ -108,7 +110,7 @@ namespace Shokofin.Utils
         /// Get index number for an episode in a series.
         /// </summary>
         /// <returns>Absolute index.</returns>
-        public static int GetIndexNumber(DataUtil.SeriesInfo series, DataUtil.EpisodeInfo episode)
+        public static int GetIndexNumber(SeriesInfo series, EpisodeInfo episode)
         {
             switch (Plugin.Instance.Configuration.SeriesGrouping)
             {
@@ -124,7 +126,7 @@ namespace Shokofin.Utils
                 }
                 case SeriesOrBoxSetGroupType.ShokoGroup:
                 {
-                    if (episode.AniDB.Type == "Special")
+                    if (episode.AniDB.Type == EpisodeType.Special)
                     {
                         var index = series.FilteredSpecialEpisodesList.FindIndex(e => string.Equals(e.ID, episode.ID));
                         if (index == -1)
@@ -135,17 +137,15 @@ namespace Shokofin.Utils
                     var sizes = series.Shoko.Sizes.Total;
                     switch (episode.AniDB.Type)
                     {
-                        case "Normal":
+                        case EpisodeType.Normal:
+                            // offset += 0;
                             break;
-                        case "Special":
+                        case EpisodeType.Parody:
                             offset += sizes?.Episodes ?? 0;
-                            break; // goto case "Normal";
-                        case "Other":
-                            offset += sizes?.Specials ?? 0;
-                            goto case "Special";
-                        case "Parody":
-                            offset += sizes?.Others ?? 0;
-                            goto case "Other";
+                            goto case EpisodeType.Normal;
+                        case EpisodeType.Other:
+                            offset += sizes?.Parodies ?? 0;
+                            goto case EpisodeType.Parody;
                     }
                     return offset + episode.AniDB.EpisodeNumber;
                 }
@@ -159,7 +159,7 @@ namespace Shokofin.Utils
         /// <param name="series"></param>
         /// <param name="episode"></param>
         /// <returns></returns>
-        public static int GetSeasonNumber(DataUtil.GroupInfo group, DataUtil.SeriesInfo series, DataUtil.EpisodeInfo episode)
+        public static int GetSeasonNumber(GroupInfo group, SeriesInfo series, EpisodeInfo episode)
         {
             switch (Plugin.Instance.Configuration.SeriesGrouping)
             {
@@ -167,9 +167,9 @@ namespace Shokofin.Utils
                 case SeriesOrBoxSetGroupType.Default:
                     switch (episode.AniDB.Type)
                     {
-                        case "Normal":
+                        case EpisodeType.Normal:
                             return 1;
-                        case "Special":
+                        case EpisodeType.Special:
                             return 0;
                         default:
                             return 98;
@@ -197,15 +197,17 @@ namespace Shokofin.Utils
         {
             switch (episode.Type)
             {
-                case "Normal":
-                case "Other":
+                case EpisodeType.Normal:
+                case EpisodeType.Other:
                     return null;
-                case "ThemeSong":
+                case EpisodeType.ThemeSong:
+                case EpisodeType.OpeningSong:
+                case EpisodeType.EndingSong:
                     return ExtraType.ThemeVideo;
-                case "Trailer":
+                case EpisodeType.Trailer:
                     return ExtraType.Trailer;
-                case "Special": {
-                    var title = TextUtil.GetTitleByLanguages(episode.Titles, "en") ?? "";
+                case EpisodeType.Special: {
+                    var title = Text.GetTitleByLanguages(episode.Titles, "en") ?? "";
                     // Interview
                     if (title.Contains("interview", System.StringComparison.OrdinalIgnoreCase))
                         return ExtraType.Interview;

@@ -1,23 +1,25 @@
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Model.Entities;
+using Microsoft.Extensions.Caching.Memory;
+using Shokofin.API.Info;
+using Shokofin.API.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Shokofin.API;
-using Shokofin.API.Models;
-using Path = System.IO.Path;
-using FileSystemMetadata = MediaBrowser.Model.IO.FileSystemMetadata;
-using Microsoft.Extensions.Caching.Memory;
 
-namespace Shokofin.Utils
+using Path = System.IO.Path;
+
+namespace Shokofin.API
 {
-    public class DataUtil
+    public class DataFetcher
     {
-        private static IMemoryCache _cache = new MemoryCache(new MemoryCacheOptions() {
+        private static readonly IMemoryCache _cache = new MemoryCache(new MemoryCacheOptions() {
             ExpirationScanFrequency = new System.TimeSpan(0, 3, 0),
         });
 
-        private static System.TimeSpan DefaultTimeSpan = new System.TimeSpan(0, 5, 0);
+        private static readonly System.TimeSpan DefaultTimeSpan = new System.TimeSpan(0, 5, 0);
+
+        #region People
 
         public static async Task<IEnumerable<PersonInfo>> GetPeople(string seriesId)
         {
@@ -36,21 +38,41 @@ namespace Shokofin.Utils
             return list;
         }
 
+        #endregion
+        #region Tags
+
+        public static async Task<string[]> GetTags(string seriesId)
+        {
+            return (await ShokoAPI.GetSeriesTags(seriesId, DataFetcher.GetTagFilter()))?.Select(tag => tag.Name).ToArray() ?? new string[0];
+        }
+
+        /// <summary>
+        /// Get the tag filter
+        /// </summary>
+        /// <returns></returns>
+        private static int GetTagFilter()
+        {
+            var config = Plugin.Instance.Configuration;
+            var filter = 0;
+
+            if (config.HideAniDbTags) filter = 1;
+            if (config.HideArtStyleTags) filter |= (filter << 1);
+            if (config.HideSourceTags) filter |= (filter << 2);
+            if (config.HideMiscTags) filter |= (filter << 3);
+            if (config.HidePlotTags) filter |= (filter << 4);
+
+            return filter;
+        }
+
+        #endregion
         #region File Info
 
-        public class FileInfo
+        public static (FileInfo, EpisodeInfo, SeriesInfo, GroupInfo) GetFileInfoByPathSync(string path, bool includeGroup = true, bool onlyMovies = false)
         {
-            public string ID;
-            public File Shoko;
-            public int EpisodesCount;
+            return GetFileInfoByPath(path, includeGroup, onlyMovies).GetAwaiter().GetResult();
         }
 
-        public static (string, FileInfo, EpisodeInfo, SeriesInfo, GroupInfo) GetFileInfoByPath(FileSystemMetadata metadata, bool includeGroup = true, bool onlyMovies = false)
-        {
-            return GetFileInfoByPath(Path.Join(metadata.DirectoryName, metadata.FullName), includeGroup, onlyMovies).GetAwaiter().GetResult();
-        }
-
-        public static async Task<(string, FileInfo, EpisodeInfo, SeriesInfo, GroupInfo)> GetFileInfoByPath(string path, bool includeGroup = true, bool onlyMovies = false)
+        public static async Task<(FileInfo, EpisodeInfo, SeriesInfo, GroupInfo)> GetFileInfoByPath(string path, bool includeGroup = true, bool onlyMovies = false)
         {
             // TODO: Check if it can be written in a better way. Parent directory + File Name
             var id = Path.Join(
@@ -60,50 +82,66 @@ namespace Shokofin.Utils
 
             var file = result?.FirstOrDefault();
             if (file == null)
-                return (id, null, null, null, null);
-            var series = file?.SeriesIDs.FirstOrDefault();
-            var fileInfo = new FileInfo
-            {
-                ID = file.ID.ToString(),
-                Shoko = file,
-                EpisodesCount = series?.EpisodeIDs?.Count ?? 0,
-            };
+                return (null, null, null, null);
 
+            var series = file?.SeriesIDs.FirstOrDefault();
             var seriesId = series?.SeriesID.ID.ToString();
             var episodes = series?.EpisodeIDs?.FirstOrDefault();
             var episodeId = episodes?.ID.ToString();
             if (string.IsNullOrEmpty(seriesId) || string.IsNullOrEmpty(episodeId))
-                return (id, null, null, null, null);
+                return (null, null, null, null);
 
             GroupInfo groupInfo = null;
             if (includeGroup)
             {
                 groupInfo =  await GetGroupInfoForSeries(seriesId, onlyMovies);
                 if (groupInfo == null)
-                    return (id, null, null, null, null);
+                    return (null, null, null, null);
             }
 
             var seriesInfo = await GetSeriesInfo(seriesId);
             if (seriesInfo == null)
-                return (id, null, null, null, null);
+                return (null, null, null, null);
 
             var episodeInfo = await GetEpisodeInfo(episodeId);
             if (episodeInfo == null)
-                return (id, null, null, null, null);
+                return (null, null, null, null);
 
-            return (id, fileInfo, episodeInfo, seriesInfo, groupInfo);
+            var fileInfo = CreateFileInfo(file, file.ID.ToString(), series?.EpisodeIDs?.Count ?? 0);
+
+            return (fileInfo, episodeInfo, seriesInfo, groupInfo);
+        }
+
+        public async Task<FileInfo> GetFileInfo(string fileId)
+        {
+            var file = await ShokoAPI.GetFile(fileId);
+            if (file == null)
+                return null;
+            return CreateFileInfo(file);
+        }
+
+        private static FileInfo CreateFileInfo(File file, string fileId = null, int episodeCount = 0)
+        {
+            if (file == null)
+                return null;
+            if (string.IsNullOrEmpty(fileId))
+                fileId = file.ID.ToString();
+            var cacheKey = $"file:{fileId}:{episodeCount}";
+            FileInfo info = null;
+            if (_cache.TryGetValue<FileInfo>(cacheKey, out info))
+                return info;
+            info = new FileInfo
+            {
+                ID = fileId,
+                Shoko = file,
+
+            };
+            _cache.Set<FileInfo>(cacheKey, info, DefaultTimeSpan);
+            return info;
         }
 
         #endregion
         #region Episode Info
-
-        public class EpisodeInfo
-        {
-            public string ID;
-            public Episode Shoko;
-            public Episode.AniDB AniDB;
-            public Episode.TvDB TvDB;
-        }
 
         public static async Task<EpisodeInfo> GetEpisodeInfo(string episodeId)
         {
@@ -115,7 +153,7 @@ namespace Shokofin.Utils
             return await CreateEpisodeInfo(episode, episodeId);
         }
 
-        public static async Task<EpisodeInfo> CreateEpisodeInfo(Episode episode, string episodeId = null)
+        private static async Task<EpisodeInfo> CreateEpisodeInfo(Episode episode, string episodeId = null)
         {
             if (episode == null)
                 return null;
@@ -138,39 +176,21 @@ namespace Shokofin.Utils
 
         #endregion
         #region Series Info
-
-        public class SeriesInfo
+        public static SeriesInfo GetSeriesInfoByPathSync(string path)
         {
-            public string ID;
-            public Series Shoko;
-            public Series.AniDB AniDB;
-            public string TvDBID;
-            /// <summary>
-            /// All episodes (of all type) that belong to this series.
-            /// </summary>
-            public List<EpisodeInfo> EpisodeList;
-            /// <summary>
-            /// A pre-filtered list of special episodes without an ExtraType
-            /// attached.
-            /// </summary>
-            public List<EpisodeInfo> FilteredSpecialEpisodesList;
+            return GetSeriesInfoByPath(path).GetAwaiter().GetResult();
         }
 
-        public static (string, SeriesInfo) GetSeriesInfoByPathSync(FileSystemMetadata metadata)
-        {
-            return GetSeriesInfoByPath(metadata.FullName).GetAwaiter().GetResult();
-        }
-
-        public static async Task<(string, SeriesInfo)> GetSeriesInfoByPath(string path)
+        public static async Task<SeriesInfo> GetSeriesInfoByPath(string path)
         {
             var id = Path.DirectorySeparatorChar + path.Split(Path.DirectorySeparatorChar).Last();
             var result = await ShokoAPI.GetSeriesPathEndsWith(id);
 
             var seriesId = result?.FirstOrDefault()?.IDs?.ID.ToString();
             if (string.IsNullOrEmpty(seriesId))
-                return (id, null);
+                return null;
 
-            return (id, await GetSeriesInfo(seriesId));
+            return await GetSeriesInfo(seriesId);
         }
 
         public static async Task<SeriesInfo> GetSeriesInfoFromGroup(string groupId, int seasonNumber)
@@ -214,7 +234,7 @@ namespace Shokofin.Utils
             var episodeList = await ShokoAPI.GetEpisodesFromSeries(seriesId)
                 .ContinueWith(async task => await Task.WhenAll(task.Result.Select(e => CreateEpisodeInfo(e)))).Unwrap()
                 .ContinueWith(l => l.Result.Where(s => s != null).ToList());
-            var filteredSpecialEpisodesList = episodeList.Where(e => e.AniDB.Type == "Special" && OrderingUtil.GetExtraType(e.AniDB) != null).ToList();
+            var filteredSpecialEpisodesList = episodeList.Where(e => e.AniDB.Type == EpisodeType.Special && Shokofin.Utils.Ordering.GetExtraType(e.AniDB) != null).ToList();
             info = new SeriesInfo
             {
                 ID = seriesId,
@@ -231,28 +251,25 @@ namespace Shokofin.Utils
         #endregion
         #region Group Info
 
-        public class GroupInfo
+        public static GroupInfo GetGroupInfoByPathSync(string path, bool onlyMovies = false)
         {
-            public string ID;
-            public List<SeriesInfo> SeriesList;
-            public SeriesInfo DefaultSeries;
-            public int DefaultSeriesIndex;
+            return GetGroupInfoByPath(path, onlyMovies).GetAwaiter().GetResult();
         }
 
-        public static async Task<(string, GroupInfo)> GetGroupInfoByPath(string path, bool onlyMovies = false)
+        public static async Task<GroupInfo> GetGroupInfoByPath(string path, bool onlyMovies = false)
         {
             var id = Path.DirectorySeparatorChar + path.Split(Path.DirectorySeparatorChar).Last();
             var result = await ShokoAPI.GetSeriesPathEndsWith(id);
 
             var seriesId = result?.FirstOrDefault()?.IDs?.ID.ToString();
             if (string.IsNullOrEmpty(seriesId))
-                return (id, null);
+                return null;
 
             var groupInfo = await GetGroupInfoForSeries(seriesId, onlyMovies);
             if (groupInfo == null)
-                return (id, null);
+                return null;
 
-            return (id, groupInfo);
+            return groupInfo;
         }
 
         public static async Task<GroupInfo> GetGroupInfo(string groupId, bool onlyMovies = false)
@@ -298,7 +315,7 @@ namespace Shokofin.Utils
                 .ContinueWith(async task => await Task.WhenAll(task.Result.Select(s => CreateSeriesInfo(s)))).Unwrap()
                 .ContinueWith(l => l.Result.Where(s => s != null).ToList());
             if (onlyMovies && seriesList != null && seriesList.Count > 0)
-                seriesList = seriesList.Where(s => s.AniDB.Type == "Movie").ToList();
+                seriesList = seriesList.Where(s => s.AniDB.Type == SeriesType.Movie).ToList();
             if (seriesList == null || seriesList.Count == 0)
                 return null;
             // Map
@@ -308,13 +325,13 @@ namespace Shokofin.Utils
             var orderingType = onlyMovies ? Plugin.Instance.Configuration.MovieOrdering : Plugin.Instance.Configuration.SeasonOrdering;
             switch (orderingType)
             {
-                case OrderingUtil.SeasonAndMovieOrderType.Default:
+                case Shokofin.Utils.Ordering.SeasonAndMovieOrderType.Default:
                     break;
-                case OrderingUtil.SeasonAndMovieOrderType.ReleaseDate:
+                case Shokofin.Utils.Ordering.SeasonAndMovieOrderType.ReleaseDate:
                     seriesList = seriesList.OrderBy(s => s?.AniDB?.AirDate ?? System.DateTime.MaxValue).ToList();
                     break;
                 // Should not be selectable unless a user fidles with DevTools in the browser to select the option.
-                case OrderingUtil.SeasonAndMovieOrderType.Chronological:
+                case Shokofin.Utils.Ordering.SeasonAndMovieOrderType.Chronological:
                     throw new System.Exception("Not implemented yet");
             }
             // Select the targeted id if a group spesify a default series.
@@ -324,13 +341,13 @@ namespace Shokofin.Utils
             else switch (orderingType)
             {
                 // The list is already sorted by release date, so just return the first index.
-                case OrderingUtil.SeasonAndMovieOrderType.ReleaseDate:
+                case Shokofin.Utils.Ordering.SeasonAndMovieOrderType.ReleaseDate:
                     foundIndex = 0;
                     break;
                 // We don't know how Shoko may have sorted it, so just find the earliest series
-                case OrderingUtil.SeasonAndMovieOrderType.Default:
+                case Shokofin.Utils.Ordering.SeasonAndMovieOrderType.Default:
                 // We can't be sure that the the series in the list was _released_ chronologically, so find the earliest series, and use that as a base.
-                case OrderingUtil.SeasonAndMovieOrderType.Chronological: {
+                case Shokofin.Utils.Ordering.SeasonAndMovieOrderType.Chronological: {
                     var earliestSeries = seriesList.Aggregate((cur, nxt) => (cur == null || (nxt?.AniDB.AirDate ?? System.DateTime.MaxValue) < (cur.AniDB.AirDate ?? System.DateTime.MaxValue)) ? nxt : cur);
                     foundIndex = seriesList.FindIndex(s => s == earliestSeries);
                     break;
@@ -344,6 +361,7 @@ namespace Shokofin.Utils
             info = new GroupInfo
             {
                 ID = groupId,
+                Shoko = group,
                 SeriesList = seriesList,
                 DefaultSeries = seriesList[foundIndex],
                 DefaultSeriesIndex = foundIndex,
@@ -353,28 +371,5 @@ namespace Shokofin.Utils
         }
 
         #endregion
-
-        public static async Task<string[]> GetTags(string seriesId)
-        {
-            return (await ShokoAPI.GetSeriesTags(seriesId, DataUtil.GetTagFilter()))?.Select(tag => tag.Name).ToArray() ?? new string[0];
-        }
-
-        /// <summary>
-        /// Get the tag filter
-        /// </summary>
-        /// <returns></returns>
-        private static int GetTagFilter()
-        {
-            var config = Plugin.Instance.Configuration;
-            var filter = 0;
-
-            if (config.HideAniDbTags) filter = 1;
-            if (config.HideArtStyleTags) filter |= (filter << 1);
-            if (config.HideSourceTags) filter |= (filter << 2);
-            if (config.HideMiscTags) filter |= (filter << 3);
-            if (config.HidePlotTags) filter |= (filter << 4);
-
-            return filter;
-        }
     }
 }

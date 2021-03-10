@@ -6,7 +6,7 @@ using Shokofin.API.Models;
 
 namespace Shokofin.Utils
 {
-    public class TextUtil
+    public class Text
     {
         public enum DisplayLanguageType {
             Default = 1,

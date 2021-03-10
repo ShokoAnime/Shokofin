@@ -11,6 +11,9 @@ using File = Shokofin.API.Models.File;
 
 namespace Shokofin.API
 {
+    /// <summary>
+    /// All API calls to Shoko needs to go through this gateway.
+    /// </summary>
     internal class ShokoAPI
     {
         private static readonly HttpClient _httpClient;
@@ -94,7 +97,7 @@ namespace Shokofin.API
             var responseStream = await CallApi($"/api/v3/Episode/{id}/AniDB");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<Episode.AniDB>(responseStream) : null;
         }
-        
+
         public static async Task<IEnumerable<Episode.TvDB>> GetEpisodeTvDb(string id)
         {
             var responseStream = await CallApi($"/api/v3/Episode/{id}/TvDB");
@@ -106,13 +109,13 @@ namespace Shokofin.API
             var responseStream = await CallApi($"/api/v3/File/{id}");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<File>(responseStream) : null;
         }
-        
+
         public static async Task<IEnumerable<File.FileDetailed>> GetFileByPath(string filename)
         {
             var responseStream = await CallApi($"/api/v3/File/PathEndsWith/{Uri.EscapeDataString(filename)}");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<File.FileDetailed>>(responseStream) : null;
         }
-        
+
         public static async Task<Series> GetSeries(string id)
         {
             var responseStream = await CallApi($"/api/v3/Series/{id}");
@@ -130,19 +133,19 @@ namespace Shokofin.API
             var responseStream = await CallApi($"/api/v3/Filter/0/Group/{id}/Series");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<List<Series>>(responseStream) : null;
         }
-        
+
         public static async Task<Series.AniDB> GetSeriesAniDb(string id)
         {
             var responseStream = await CallApi($"/api/v3/Series/{id}/AniDB");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<Series.AniDB>(responseStream) : null;
         }
-        
+
         public static async Task<IEnumerable<Role>> GetSeriesCast(string id)
         {
             var responseStream = await CallApi($"/api/v3/Series/{id}/Cast");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Role>>(responseStream) : null;
         }
-        
+
         public static async Task<Images> GetSeriesImages(string id)
         {
             var responseStream = await CallApi($"/api/v3/Series/{id}/Images");
@@ -154,19 +157,19 @@ namespace Shokofin.API
             var responseStream = await CallApi($"/api/v3/Series/PathEndsWith/{Uri.EscapeDataString(dirname)}");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Series>>(responseStream) : null;
         }
-        
+
         public static async Task<IEnumerable<Tag>> GetSeriesTags(string id, int filter = 0)
         {
             var responseStream = await CallApi($"/api/v3/Series/{id}/Tags/{filter}");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Tag>>(responseStream) : null;
         }
-        
+
         public static async Task<Group> GetGroup(string id)
         {
             var responseStream = await CallApi($"/api/v3/Group/{id}");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<Group>(responseStream) : null;
         }
-        
+
         public static async Task<Group> GetGroupFromSeries(string id)
         {
             var responseStream = await CallApi($"/api/v3/Series/{id}/Group");

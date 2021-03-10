@@ -7,6 +7,7 @@ using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
+using Shokofin.API;
 using Shokofin.Utils;
 
 namespace Shokofin.Providers
@@ -31,7 +32,7 @@ namespace Shokofin.Providers
                 {
                     default:
                         return GetDefaultMetadata(info, cancellationToken);
-                    case OrderingUtil.SeriesOrBoxSetGroupType.ShokoGroup:
+                    case Ordering.SeriesOrBoxSetGroupType.ShokoGroup:
                         return await GetShokoGroupedMetadata(info, cancellationToken);
                 }
             }
@@ -55,10 +56,10 @@ namespace Shokofin.Providers
                 ForcedSortName = seasonName
             };
             result.HasMetadata = true;
-            
+
             return result;
         }
-        
+
         private async Task<MetadataResult<Season>> GetShokoGroupedMetadata(SeasonInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Season>();
@@ -71,7 +72,7 @@ namespace Shokofin.Providers
 
             var groupId = info.SeriesProviderIds["Shoko Group"];
             var seasonNumber = info.IndexNumber ?? 1;
-            var series = await DataUtil.GetSeriesInfoFromGroup(groupId, seasonNumber);
+            var series = await DataFetcher.GetSeriesInfoFromGroup(groupId, seasonNumber);
             if (series == null)
             {
                 _logger.LogWarning($"Shoko Scanner... Unable to find series info for G{groupId}:S{seasonNumber}");
@@ -79,15 +80,15 @@ namespace Shokofin.Providers
             }
             _logger.LogInformation($"Shoko Scanner... Found series info for G{groupId}:S{seasonNumber}");
 
-            var tags = await DataUtil.GetTags(series.ID);
-            var ( displayTitle, alternateTitle ) = TextUtil.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
+            var tags = await DataFetcher.GetTags(series.ID);
+            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
 
             result.Item = new Season
             {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
                 IndexNumber = seasonNumber,
-                Overview = TextUtil.SummarySanitizer(series.AniDB.Description),
+                Overview = Text.SummarySanitizer(series.AniDB.Description),
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
@@ -98,7 +99,7 @@ namespace Shokofin.Providers
             result.HasMetadata = true;
 
             result.ResetPeople();
-            foreach (var person in await DataUtil.GetPeople(series.ID))
+            foreach (var person in await DataFetcher.GetPeople(series.ID))
                 result.AddPerson(person);
 
             return result;
@@ -109,7 +110,7 @@ namespace Shokofin.Providers
             // Isn't called from anywhere. If it is called, I don't know from where.
             throw new NotImplementedException();
         }
-        
+
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
             return _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);

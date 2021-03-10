@@ -15,6 +15,7 @@ using Shokofin.Utils;
 
 using IResolverIgnoreRule = MediaBrowser.Controller.Resolvers.IResolverIgnoreRule;
 using ILibraryManager = MediaBrowser.Controller.Library.ILibraryManager;
+using SeriesType = Shokofin.API.Models.SeriesType;
 
 namespace Shokofin.Providers
 {
@@ -45,7 +46,7 @@ namespace Shokofin.Providers
                 {
                     default:
                         return await GetDefaultMetadata(info, cancellationToken);
-                    case OrderingUtil.SeriesOrBoxSetGroupType.ShokoGroup:
+                    case Ordering.SeriesOrBoxSetGroupType.ShokoGroup:
                         return await GetShokoGroupedMetadata(info, cancellationToken);
                 }
             }
@@ -59,20 +60,20 @@ namespace Shokofin.Providers
         private async Task<MetadataResult<Series>> GetDefaultMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
-            var (id, series) = await DataUtil.GetSeriesInfoByPath(info.Path);
+            var series = await DataFetcher.GetSeriesInfoByPath(info.Path);
             if (series == null)
             {
-                _logger.LogWarning($"Unable to find series info for path {id}");
+                _logger.LogWarning($"Unable to find series info for path {info.Path}");
                 return result;
             }
-            _logger.LogInformation($"Found series info for path {id}");
+            _logger.LogInformation($"Found series info for path {info.Path}");
 
-            var tags = await DataUtil.GetTags(series.ID);
-            var ( displayTitle, alternateTitle ) = TextUtil.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
+            var tags = await DataFetcher.GetTags(series.ID);
+            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
 
-            if (Plugin.Instance.Configuration.SeperateLibraries && series.AniDB.Type == "Movie")
+            if (Plugin.Instance.Configuration.SeperateLibraries && series.AniDB.Type == SeriesType.Movie)
             {
-                _logger.LogWarning($"Shoko Scanner... Separate libraries are on, skipping {id}");
+                _logger.LogWarning($"Separate libraries are on, skipping {info.Path}");
                 return result;
             }
 
@@ -80,7 +81,7 @@ namespace Shokofin.Providers
             {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
-                Overview = TextUtil.SummarySanitizer(series.AniDB.Description),
+                Overview = Text.SummarySanitizer(series.AniDB.Description),
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
@@ -95,7 +96,7 @@ namespace Shokofin.Providers
             result.HasMetadata = true;
 
             result.ResetPeople();
-            foreach (var person in await DataUtil.GetPeople(series.ID))
+            foreach (var person in await DataFetcher.GetPeople(series.ID))
                 result.AddPerson(person);
 
             return result;
@@ -104,29 +105,29 @@ namespace Shokofin.Providers
         private async Task<MetadataResult<Series>> GetShokoGroupedMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
-            var (id, group) = await DataUtil.GetGroupInfoByPath(info.Path);
+            var group = await DataFetcher.GetGroupInfoByPath(info.Path);
             if (group == null)
             {
-                _logger.LogWarning($"Unable to find series info for path {id}");
+                _logger.LogWarning($"Unable to find series info for path {info.Path}");
                 return result;
             }
-            _logger.LogInformation($"Found series info for path {id}");
+            _logger.LogInformation($"Found series info for path {info.Path}");
 
             var series = group.DefaultSeries;
-            if (Plugin.Instance.Configuration.SeperateLibraries && series.AniDB.Type == "Movie")
+            if (Plugin.Instance.Configuration.SeperateLibraries && series.AniDB.Type == SeriesType.Movie)
             {
-                _logger.LogWarning($"Shoko Scanner... Separate libraries are on, skipping {id}");
+                _logger.LogWarning($"Separate libraries are on, skipping {info.Path}");
                 return result;
             }
 
-            var tags = await DataUtil.GetTags(series.ID);
-            var ( displayTitle, alternateTitle ) = TextUtil.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
+            var tags = await DataFetcher.GetTags(series.ID);
+            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
 
             result.Item = new Series
             {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
-                Overview = TextUtil.SummarySanitizer(series.AniDB.Description),
+                Overview = Text.SummarySanitizer(series.AniDB.Description),
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
@@ -143,7 +144,7 @@ namespace Shokofin.Providers
             result.HasMetadata = true;
 
             result.ResetPeople();
-            foreach (var person in await DataUtil.GetPeople(series.ID))
+            foreach (var person in await DataFetcher.GetPeople(series.ID))
                 result.AddPerson(person);
 
             return result;
@@ -168,13 +169,12 @@ namespace Shokofin.Providers
                     SearchProviderName = Name,
                     ImageUrl = imageUrl
                 };
-                parsedSeries.SetProviderId("Shoko", series.IDs.ID.ToString());
+                parsedSeries.SetProviderId("Shoko Series", series.IDs.ID.ToString());
                 results.Add(parsedSeries);
             }
 
             return results;
         }
-
 
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
@@ -191,15 +191,16 @@ namespace Shokofin.Providers
                 return false;
             }
             try {
-                var (id, series) = DataUtil.GetSeriesInfoByPathSync(fileInfo);
+                var path = System.IO.Path.Join(fileInfo.DirectoryName, fileInfo.FullName);
+                var series = DataFetcher.GetSeriesInfoByPathSync(path);
                 if (series == null)
                 {
-                    _logger.LogWarning($"Shoko Scanner... Unable to find series info for path {id}");
+                    _logger.LogWarning($"Unable to find series info for path {path}");
                     return false;
                 }
-                _logger.LogInformation($"Shoko Filter... Found series info for path {id}");
+                _logger.LogInformation($"Shoko Filter... Found series info for path {path}");
                 // Ignore movies if we want to sperate our libraries
-                if (Plugin.Instance.Configuration.SeperateLibraries && series.AniDB.Type == "Movie")
+                if (Plugin.Instance.Configuration.SeperateLibraries && series.AniDB.Type == SeriesType.Movie)
                     return true;
                 return false;
             }

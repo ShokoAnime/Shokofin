@@ -1,7 +1,7 @@
 using MediaBrowser.Model.Plugins;
-using DisplayLanguageType = Shokofin.Utils.TextUtil.DisplayLanguageType;
-using SeriesAndBoxSetGroupType = Shokofin.Utils.OrderingUtil.SeriesOrBoxSetGroupType;
-using SeasonAndMovieOrderType = Shokofin.Utils.OrderingUtil.SeasonAndMovieOrderType;
+using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
+using SeriesAndBoxSetGroupType = Shokofin.Utils.Ordering.SeriesOrBoxSetGroupType;
+using SeasonAndMovieOrderType = Shokofin.Utils.Ordering.SeasonAndMovieOrderType;
 
 namespace Shokofin.Configuration
 {
