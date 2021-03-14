@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Shokofin.API.Models
 {
@@ -13,6 +14,7 @@ namespace Shokofin.API.Models
         {
             public int ID { get; set; }
 
+            [JsonConverter(typeof(JsonStringEnumConverter))]
             public EpisodeType Type { get; set; }
 
             public int EpisodeNumber { get; set; }
