@@ -122,7 +122,7 @@ namespace Shokofin.API
 
         public static async Task<IEnumerable<Series>> GetSeriesPathEndsWith(string dirname)
         {
-            var responseStream = await CallApi($"/api/v3/Series/PathEndsWith/{dirname}");
+            var responseStream = await CallApi($"/api/v3/Series/PathEndsWith/{Uri.EscapeDataString(dirname)}");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Series>>(responseStream) : null;
         }
         
