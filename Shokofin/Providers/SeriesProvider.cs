@@ -100,6 +100,9 @@ namespace Shokofin.Providers
         {
             _logger.LogInformation($"Shoko Scanner... Searching Series ({searchInfo.Name})");
             var searchResults = await ShokoAPI.SeriesSearch(searchInfo.Name);
+
+            if (searchResults.Count() == 0) searchResults = await ShokoAPI.SeriesStartsWith(searchInfo.Name);
+            
             var results = new List<RemoteSearchResult>();
 
             foreach (var series in searchResults)

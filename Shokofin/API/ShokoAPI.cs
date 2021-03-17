@@ -143,5 +143,11 @@ namespace Shokofin.API
             var responseStream = await CallApi($"/api/v3/Series/Search/{Uri.EscapeDataString(query)}");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<SeriesSearchResult>>(responseStream) : null;
         }
+
+        public static async Task<IEnumerable<SeriesSearchResult>> SeriesStartsWith(string query)
+        {
+            var responseStream = await CallApi($"/api/v3/Series/StartsWith/{Uri.EscapeDataString(query)}");
+            return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<SeriesSearchResult>>(responseStream) : null;
+        }
     }
 }
