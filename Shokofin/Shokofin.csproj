@@ -5,10 +5,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Jellyfin.Common" Version="10.7.0-rc4" />
-      <PackageReference Include="Jellyfin.Controller" Version="10.7.0-rc4" />
-      <PackageReference Include="Jellyfin.Data" Version="10.7.0-rc4" />
-      <PackageReference Include="Jellyfin.Model" Version="10.7.0-rc4" />
+      <PackageReference Include="Jellyfin.Common" Version="10.7.0" />
+      <PackageReference Include="Jellyfin.Controller" Version="10.7.0" />
+      <PackageReference Include="Jellyfin.Data" Version="10.7.0" />
+      <PackageReference Include="Jellyfin.Model" Version="10.7.0" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
     </ItemGroup>
 
