@@ -84,7 +84,7 @@ namespace Shokofin.Providers
             }
             catch (Exception e)
             {
-                _logger.LogError(e.StackTrace);
+                _logger.LogError($"{e.Message}{Environment.NewLine}{e.StackTrace}");
                 return new MetadataResult<Episode>();
             }
         }
