@@ -12,8 +12,8 @@ There are multiple ways to install this plugin, but the recomended way is to use
 
 1. Go to Dashboard -> Plugins -> Repositories
 2. Add new repository with the following details
-  * Repository Name: `Shokofin`
-  * Repository URL: `https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/manifest.json`
+   * Repository Name: `Shokofin`
+   * Repository URL: `https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/manifest.json`
 3. Go to the catalog in the plugins page
 4. Find and install Shokofin from the Metadata section
 
