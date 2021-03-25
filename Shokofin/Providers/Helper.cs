@@ -12,7 +12,8 @@ namespace Shokofin.Providers
     {
         public static string GetImageUrl(Image image)
         {
-            return !image.RelativeFilepath.Equals("/") ? $"http://{Plugin.Instance.Configuration.Host}:{Plugin.Instance.Configuration.Port}/api/v3/Image/{image.Source}/{image.Type}/{image.ID}" : null;
+            if (image == null || !image.RelativeFilepath.Equals("/")) return null; // No image found
+            return $"http://{Plugin.Instance.Configuration.Host}:{Plugin.Instance.Configuration.Port}/api/v3/Image/{image.Source}/{image.Type}/{image.ID}";
         }
 
         /// <summary>
