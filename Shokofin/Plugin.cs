@@ -10,7 +10,7 @@ namespace Shokofin
 {
     public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
-        public override string Name => "Shoko";
+        public override string Name => "Shokofin";
         
         public override Guid Id => Guid.Parse("5216ccbf-d24a-4eb3-8a7e-7da4230b7052");
         
