@@ -70,8 +70,6 @@ namespace Shokofin.Providers
                 };
                 result.Item.SetProviderId("Shoko Series", seriesId);
                 result.Item.SetProviderId("AniDB", seriesIDs.AniDB.ToString());
-                var tvdbId = seriesIDs.TvDB?.FirstOrDefault();
-                if (tvdbId != 0) result.Item.SetProviderId("Tvdb", tvdbId.ToString());
                 result.HasMetadata = true;
 
                 result.ResetPeople();

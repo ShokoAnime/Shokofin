@@ -63,7 +63,6 @@ namespace Shokofin.Providers
                 var episode = await ShokoAPI.GetEpisode(episodeId);
                 bool isMultiEntry = series.Sizes.Total.Episodes > 1;
                 int aniDBId = (isMultiEntry ? episodeIds?.AniDB : seriesIds?.SeriesID.AniDB) ?? 0;
-                int tvdbId = (isMultiEntry ? episodeIds?.TvDB?.FirstOrDefault() : seriesIds?.SeriesID.TvDB?.FirstOrDefault()) ?? 0;
 
                 if (seriesAniDB?.Type != "Movie")
                 {
@@ -93,7 +92,6 @@ namespace Shokofin.Providers
                 result.Item.SetProviderId("Shoko Series", seriesId);
                 result.Item.SetProviderId("Shoko Episode", episodeId);
                 if (aniDBId != 0) result.Item.SetProviderId("AniDB", aniDBId.ToString());
-                if (tvdbId != 0) result.Item.SetProviderId("Tvdb", tvdbId.ToString());
                 result.HasMetadata = true;
 
                 result.ResetPeople();

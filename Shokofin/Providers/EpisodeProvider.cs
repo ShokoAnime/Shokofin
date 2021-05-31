@@ -73,8 +73,6 @@ namespace Shokofin.Providers
                 result.Item.SetProviderId("Shoko Episode", episodeId);
                 result.Item.SetProviderId("Shoko File", fileId);
                 result.Item.SetProviderId("AniDB", episodeIDs.AniDB.ToString());
-                var tvdbId = episodeIDs.TvDB?.FirstOrDefault();
-                if (tvdbId != 0) result.Item.SetProviderId("Tvdb", tvdbId.ToString());
                 result.HasMetadata = true;
 
                 var episodeNumberEnd = episodeInfo.EpisodeNumber + series?.EpisodeIDs.Count() - 1;
