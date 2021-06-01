@@ -41,7 +41,7 @@ namespace Shokofin
                 var episodeId = episode.GetProviderId("Shoko Episode");
                 
                 _logger.LogInformation("Shoko Scrobbler... Item is played. Marking as watched on Shoko");
-                _logger.LogInformation($"{episode.SeriesName} - {episode.Name} ({episodeId})");
+                _logger.LogInformation($"{episode.SeriesName} S{episode.Season.IndexNumber}E{episode.IndexNumber} - {episode.Name} ({episodeId})");
 
                 var result = await ShokoAPI.MarkEpisodeWatched(episodeId);
                 if (result)
