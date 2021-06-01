@@ -37,7 +37,7 @@ namespace Shokofin.Providers
                     Path.GetDirectoryName(info.Path)?.Split(Path.DirectorySeparatorChar).LastOrDefault(),
                     Path.GetFileName(info.Path));
 
-                _logger.LogInformation($"Shoko Scanner... Getting episode ID ({filename})");
+                _logger.LogInformation($"Getting episode ID ({filename})");
 
                 var apiResponse = await ShokoAPI.GetFilePathEndsWith(filename);
                 var file = apiResponse.FirstOrDefault();
@@ -49,11 +49,11 @@ namespace Shokofin.Providers
 
                 if (string.IsNullOrEmpty(fileId) || string.IsNullOrEmpty(seriesId) || string.IsNullOrEmpty(episodeId))
                 {
-                    _logger.LogInformation($"Shoko Scanner... Episode not found! ({filename})");
+                    _logger.LogInformation($"Episode not found! ({filename})");
                     return result;
                 }
 
-                _logger.LogInformation($"Shoko Scanner... Getting episode metadata ({filename} - {episodeId})");
+                _logger.LogInformation($"Getting episode metadata ({filename} - {episodeId})");
 
                 var seriesInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
                 var episode = await ShokoAPI.GetEpisode(episodeId);

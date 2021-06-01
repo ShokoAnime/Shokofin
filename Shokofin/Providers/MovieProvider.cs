@@ -39,7 +39,7 @@ namespace Shokofin.Providers
                         Path.GetDirectoryName(info.Path)?.Split(Path.DirectorySeparatorChar).LastOrDefault(),
                         Path.GetFileName(info.Path));
 
-                _logger.LogInformation($"Shoko Scanner... Getting movie ID ({filename})");
+                _logger.LogInformation($"Getting movie ID ({filename})");
 
                 var apiResponse = await ShokoAPI.GetFilePathEndsWith(filename);
                 var file = apiResponse?.FirstOrDefault();
@@ -51,11 +51,11 @@ namespace Shokofin.Providers
 
                 if (string.IsNullOrEmpty(episodeId) || string.IsNullOrEmpty(seriesId))
                 {
-                    _logger.LogInformation($"Shoko Scanner... File not found! ({filename})");
+                    _logger.LogInformation($"File not found! ({filename})");
                     return result;
                 }
 
-                _logger.LogInformation($"Shoko Scanner... Getting movie metadata ({filename} - {episodeId})");
+                _logger.LogInformation($"Getting movie metadata ({filename} - {episodeId})");
 
                 var seriesAniDB = await ShokoAPI.GetSeriesAniDb(seriesId);
                 var series = await ShokoAPI.GetSeries(seriesId);
@@ -66,7 +66,7 @@ namespace Shokofin.Providers
 
                 if (seriesAniDB?.Type != "Movie")
                 {
-                    _logger.LogInformation($"Shoko Scanner... File found, but not a movie! Skipping.");
+                    _logger.LogInformation($"File found, but not a movie! Skipping.");
                     return result;
                 }
 

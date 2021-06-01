@@ -35,7 +35,7 @@ namespace Shokofin.Providers
 
                 var dirname = Path.DirectorySeparatorChar + info.Path.Split(Path.DirectorySeparatorChar).Last();
 
-                _logger.LogInformation($"Shoko Scanner... Getting series ID ({dirname})");
+                _logger.LogInformation($"Getting series ID ({dirname})");
 
                 var apiResponse = await ShokoAPI.GetSeriesPathEndsWith(dirname);
                 var seriesIDs = apiResponse.FirstOrDefault()?.IDs;
@@ -43,22 +43,22 @@ namespace Shokofin.Providers
 
                 if (string.IsNullOrEmpty(seriesId))
                 {
-                    _logger.LogInformation("Shoko Scanner... BoxSet not found!");
+                    _logger.LogInformation("BoxSet not found!");
                     return result;
                 }
-                _logger.LogInformation($"Shoko Scanner... Getting series metadata ({dirname} - {seriesId})");
+                _logger.LogInformation($"Getting series metadata ({dirname} - {seriesId})");
 
                 var aniDbInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
                 if (aniDbInfo.Type != "Movie")
                 {
-                    _logger.LogInformation("Shoko Scanner... series was not a movie! Skipping.");
+                    _logger.LogInformation("series was not a movie! Skipping.");
                     return result;
                 }
 
                 var seriesInfo = await ShokoAPI.GetSeries(seriesId);
                 if (seriesInfo.Sizes.Total.Episodes <= 1)
                 {
-                    _logger.LogInformation("Shoko Scanner... series did not contain multiple movies! Skipping.");
+                    _logger.LogInformation("series did not contain multiple movies! Skipping.");
                     return result;
                 }
                 var tags = await ShokoAPI.GetSeriesTags(seriesId, Helper.GetTagFilter());
@@ -89,7 +89,7 @@ namespace Shokofin.Providers
 
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(BoxSetInfo searchInfo, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Shoko Scanner... Searching BoxSet ({searchInfo.Name})");
+            _logger.LogInformation($"Searching BoxSet ({searchInfo.Name})");
             var searchResults = await ShokoAPI.SeriesSearch(searchInfo.Name);
             
             if (searchResults.Count() == 0) searchResults = await ShokoAPI.SeriesStartsWith(searchInfo.Name);

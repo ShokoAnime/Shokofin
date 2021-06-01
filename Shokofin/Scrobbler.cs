@@ -32,13 +32,13 @@ namespace Shokofin
             
             if (e.Item == null)
             {
-                _logger.LogError("Shoko Scrobbler... Event details incomplete. Cannot process current media");
+                _logger.LogError("Event details incomplete. Cannot process current media");
                 return;
             }
 
             if (!e.Item.HasProviderId("Shoko Episode"))
             {
-                _logger.LogError("Shoko Scrobbler... Unrecognized file");
+                _logger.LogError("Unrecognized file");
                 return; // Skip if file does exist in Shoko
             }
 
@@ -46,14 +46,14 @@ namespace Shokofin
             {
                 var episodeId = episode.GetProviderId("Shoko Episode");
                 
-                _logger.LogInformation("Shoko Scrobbler... Item is played. Marking as watched on Shoko");
+                _logger.LogInformation("Item is played. Marking as watched on Shoko");
                 _logger.LogInformation($"{episode.SeriesName} S{episode.Season.IndexNumber}E{episode.IndexNumber} - {episode.Name} ({episodeId})");
 
                 var result = await ShokoAPI.MarkEpisodeWatched(episodeId);
                 if (result)
-                    _logger.LogInformation("Shoko Scrobbler... Episode marked as watched!");
+                    _logger.LogInformation("Episode marked as watched!");
                 else
-                    _logger.LogError("Shoko Scrobbler... Error marking episode as watched!");
+                    _logger.LogError("Error marking episode as watched!");
             }
         }
         

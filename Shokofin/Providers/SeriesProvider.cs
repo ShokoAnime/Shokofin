@@ -36,7 +36,7 @@ namespace Shokofin.Providers
 
                 var dirname = Path.DirectorySeparatorChar + info.Path.Split(Path.DirectorySeparatorChar).Last();
 
-                _logger.LogInformation($"Shoko Scanner... Getting series ID ({dirname})");
+                _logger.LogInformation($"Getting series ID ({dirname})");
 
                 var apiResponse = await ShokoAPI.GetSeriesPathEndsWith(dirname);
                 var seriesIDs = apiResponse.FirstOrDefault()?.IDs;
@@ -44,11 +44,11 @@ namespace Shokofin.Providers
 
                 if (string.IsNullOrEmpty(seriesId))
                 {
-                    _logger.LogInformation("Shoko Scanner... Series not found!");
+                    _logger.LogInformation("Series not found!");
                     return result;
                 }
 
-                _logger.LogInformation($"Shoko Scanner... Getting series metadata ({dirname} - {seriesId})");
+                _logger.LogInformation($"Getting series metadata ({dirname} - {seriesId})");
 
                 var seriesInfo = await ShokoAPI.GetSeries(seriesId);
                 var aniDbSeriesInfo = await ShokoAPI.GetSeriesAniDb(seriesId);
@@ -96,7 +96,7 @@ namespace Shokofin.Providers
 
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo searchInfo, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Shoko Scanner... Searching Series ({searchInfo.Name})");
+            _logger.LogInformation($"Searching Series ({searchInfo.Name})");
             var searchResults = await ShokoAPI.SeriesSearch(searchInfo.Name);
 
             if (searchResults.Count() == 0) searchResults = await ShokoAPI.SeriesStartsWith(searchInfo.Name);
