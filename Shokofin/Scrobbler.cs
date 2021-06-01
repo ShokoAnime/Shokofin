@@ -36,6 +36,12 @@ namespace Shokofin
                 return;
             }
 
+            if (!e.Item.HasProviderId("Shoko Episode"))
+            {
+                _logger.LogError("Shoko Scrobbler... Unrecognized file");
+                return; // Skip if file does exist in Shoko
+            }
+
             if (e.Item is Episode episode && e.PlayedToCompletion)
             {
                 var episodeId = episode.GetProviderId("Shoko Episode");
