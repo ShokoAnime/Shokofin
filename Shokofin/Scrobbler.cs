@@ -22,11 +22,11 @@ namespace Shokofin
         
         public Task RunAsync()
         {
-            _sessionManager.PlaybackStopped += KernelPlaybackStopped;
+            _sessionManager.PlaybackStopped += OnPlaybackStopped;
             return Task.CompletedTask;
         }
 
-        private async void KernelPlaybackStopped(object sender, PlaybackStopEventArgs e)
+        private async void OnPlaybackStopped(object sender, PlaybackStopEventArgs e)
         {
             if (!Plugin.Instance.Configuration.UpdateWatchedStatus) return;
             
@@ -53,7 +53,7 @@ namespace Shokofin
         
         public void Dispose()
         {
-            _sessionManager.PlaybackStopped -= KernelPlaybackStopped;
+            _sessionManager.PlaybackStopped -= OnPlaybackStopped;
         }
     }
 }
