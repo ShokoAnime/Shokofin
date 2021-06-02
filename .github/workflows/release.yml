@@ -29,7 +29,7 @@ jobs:
       - name: Install JPRM
         run: python -m pip install jprm
       - name: Run JPRM
-        run: bash build_plugin.sh ${GITHUB_REF#refs/*/}
+        run: python build_plugin.py --version=${GITHUB_REF#refs/*/}
       - name: Update release
         uses: svenstaro/upload-release-action@v2
         with:

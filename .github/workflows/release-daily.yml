@@ -1,0 +1,58 @@
+name: Daily Release
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build & Release Daily Version
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+      - name: Restore nuget packages
+        run: dotnet restore Shokofin/Shokofin.csproj
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install JPRM
+        run: python -m pip install jprm
+
+      - name: Get previous release version
+        id: previoustag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        with:
+          fallback: 1.0.0 # Optional fallback tag to use when no tag can be found
+
+      - name: Run JPRM
+        run: echo "NEW_VERSION=$(python build_plugin.py --version=${{ steps.previoustag.outputs.tag }} --prerelease=True)" >> $GITHUB_ENV
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./artifacts/shokofin_*.zip
+          tag_name: ${{ env.NEW_VERSION }}
+          prerelease: true
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update manifest
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          branch: master
+          commit_message: Update unstable repo manifest
+          file_pattern: manifest-unstable.json
