@@ -56,3 +56,4 @@ jobs:
           branch: master
           commit_message: Update unstable repo manifest
           file_pattern: manifest-unstable.json
+          skip_fetch: true
