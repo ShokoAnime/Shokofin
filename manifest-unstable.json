@@ -6,6 +6,15 @@
         "overview": "Manage your anime from Jellyfin using metadata from Shoko",
         "owner": "shoko",
         "category": "Metadata",
-        "versions": []
+        "versions": [
+            {
+                "version": "1.4.7.3",
+                "changelog": "NA",
+                "targetAbi": "10.7.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.4.7.3/shokofin_1.4.7.3.zip",
+                "checksum": "d505259dbce9deebe9aeea1cf15ea661",
+                "timestamp": "2021-06-02T10:00:43Z"
+            }
+        ]
     }
 ]
