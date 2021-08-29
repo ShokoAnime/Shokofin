@@ -1,12 +1,13 @@
 using MediaBrowser.Model.Plugins;
+using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
+using SeriesAndBoxSetGroupType = Shokofin.Utils.Ordering.GroupType;
+using OrderType = Shokofin.Utils.Ordering.OrderType;
 
 namespace Shokofin.Configuration
 {
     public class PluginConfiguration : BasePluginConfiguration
     {
         public string Host { get; set; }
-
-        public string Port { get; set; }
 
         public string Username { get; set; }
 
@@ -15,10 +16,6 @@ namespace Shokofin.Configuration
         public string ApiKey { get; set; }
 
         public bool UpdateWatchedStatus { get; set; }
-
-        public bool UseTvDbSeasonOrdering { get; set; }
-
-        public bool UseShokoThumbnails { get; set; }
 
         public bool HideArtStyleTags { get; set; }
 
@@ -38,28 +35,33 @@ namespace Shokofin.Configuration
 
         public bool SynopsisCleanMultiEmptyLines { get; set; }
 
-        public enum DisplayLanguageType {
-            Default,
-            MetadataPreferred,
-            Origin,
-        }
+        public bool AddAniDBId { get; set; }
 
-        public bool TitleUseAlternate { get; set; }
+        public SeriesAndBoxSetGroupType SeriesGrouping { get; set; }
+
+        public OrderType SeasonOrdering { get; set; }
+
+        public bool MarkSpecialsWhenGrouped { get; set; }
+
+        public SeriesAndBoxSetGroupType BoxSetGrouping { get; set; }
+
+        public OrderType MovieOrdering { get; set; }
+
+        public bool FilterOnLibraryTypes { get; set; }
 
         public DisplayLanguageType TitleMainType { get; set; }
 
         public DisplayLanguageType TitleAlternateType { get; set; }
 
+        public bool AddMissingEpisodeMetadata { get; set; }
+
         public PluginConfiguration()
         {
-            Host = "127.0.0.1";
-            Port = "8111";
+            Host = "http://127.0.0.1:8111";
             Username = "Default";
             Password = "";
             ApiKey = "";
             UpdateWatchedStatus = false;
-            UseTvDbSeasonOrdering = false;
-            UseShokoThumbnails = true;
             HideArtStyleTags = false;
             HideSourceTags = false;
             HideMiscTags = false;
@@ -69,9 +71,16 @@ namespace Shokofin.Configuration
             SynopsisCleanMiscLines = true;
             SynopsisRemoveSummary = true;
             SynopsisCleanMultiEmptyLines = true;
-            TitleUseAlternate = true;
+            AddAniDBId = true;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
+            SeriesGrouping = SeriesAndBoxSetGroupType.Default;
+            SeasonOrdering = OrderType.Default;
+            MarkSpecialsWhenGrouped = true;
+            BoxSetGrouping = SeriesAndBoxSetGroupType.Default;
+            MovieOrdering = OrderType.Default;
+            AddMissingEpisodeMetadata = false;
+            FilterOnLibraryTypes = false;
         }
     }
 }

@@ -11,5 +11,10 @@ namespace Shokofin.API.Models
         public int Votes { get; set; }
         
         public string Type { get; set; }
+
+        public float ToFloat(uint scale = 1)
+        {
+            return (float)((Value * scale) / MaxValue);
+        }
     }
 }

@@ -6,6 +6,24 @@ using MediaBrowser.Model.Providers;
 
 namespace Shokofin
 {
+    public class ShokoGroupExternalId : IExternalId
+    {
+        public bool Supports(IHasProviderIds item)
+            => item is Series || item is BoxSet;
+
+        public string ProviderName
+            => "Shoko Group";
+
+        public string Key
+            => "Shoko Group";
+
+        public ExternalIdMediaType? Type
+            => null;
+
+        public string UrlFormatString
+            => null;
+    }
+
     public class ShokoSeriesExternalId : IExternalId
     {
         public bool Supports(IHasProviderIds item)

@@ -8,9 +8,9 @@ namespace Shokofin.API.Models
         
         public class GroupIDs : IDs
         {
-            public int DefaultSeries { get; set; }
+            public int? DefaultSeries { get; set; }
             
-            public int ParentGroup { get; set; }
+            public int? ParentGroup { get; set; }
         }
     }
 }

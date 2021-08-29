@@ -5,126 +5,162 @@
     <title>Shoko</title>
 </head>
 <body>
-<div data-role="page" class="page type-interior pluginConfigurationPage shokoConfigPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
-    <div data-role="content">
-        <div class="content-primary">
-            <form class="shokoConfigForm">
-                <div class="inputContainer">
-                    <input is="emby-input" type="text" id="Host" required label="Host" />
-                    <div class="fieldDescription">This is the IP address of the server where Shoko is running.</div>
-                </div>
-                <div class="inputContainer">
-                    <input is="emby-input" type="text" id="Port" required label="Port" />
-                    <div class="fieldDescription">This is the port on which Shoko is running.</div>
-                </div>
-                <div class="inputContainer">
-                    <input is="emby-input" type="text" id="Username" required label="Username" />
-                </div>
-                <div class="inputContainer">
-                    <input is="emby-input" type="text" id="Password" label="Password" />
-                </div>
-                <div class="inputContainer">
-                    <input is="emby-input" type="text" id="ApiKey" label="API Key" />
-                    <div class="fieldDescription">This field is auto-generated using the credentials. Only set this manually if that doesn't work!</div>
-                </div>
-                <div class="selectContainer selectContainer-withDescription">
-                    <label class="selectLabel" for="TitleMainType">Main Title Language</label>
-                    <select is="emby-select" id="TitleMainType" name="TitleMainType" class="emby-select-withcolor emby-select">
-                        <option value="Default">Default</option>
-                        <option value="MetadataPreferred">Preferred metadata language</option>
-                        <option value="Origin">Language in country of origin</option>
-                    </select>
-                    <div class="fieldDescription">Titles will fallback to Default if not found for the target language.</div>
-                </div>
-                <div class="selectContainer selectContainer-withDescription">
-                    <label class="selectLabel" for="TitleAlternateType">Alternate Title Language</label>
-                    <select is="emby-select" id="TitleAlternateType" name="TitleAlternateType" class="emby-select-withcolor emby-select">
-                        <option value="Default">Default</option>
-                        <option value="MetadataPreferred">Preferred metadata language</option>
-                        <option value="Origin">Language in country of origin</option>
-                    </select>
-                    <div class="fieldDescription">Titles will fallback to Default if not found for the target language.</div>
-                </div>
-                <div class="checkboxContainer checkboxContainer-withDescription">
-                    <label>
-                        <input is="emby-checkbox" type="checkbox" id="TitleUseAlternate" />
-                        <span>Include an alternate title</span>
-                    </label>
-                    <div class="fieldDescription checkboxFieldDescription">Will populate the &#34;Original Title&#34; field with the alternate title.</div>
-                </div>
-                <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="UpdateWatchedStatus" />
-                    <span>Update watched status on Shoko (Scrobble)</span>
-                </label>
-                <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="UseTvDbSeasonOrdering" />
-                    <span>Use season ordering from TvDB. Also makes the shows merge-friendly.</span>
-                </label>
-                <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="UseShokoThumbnails" />
-                    <span>Use thumbnails from Shoko</span>
-                </label>
-                <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="HideArtStyleTags" />
-                    <span>Hide art style related tags</span>
-                </label>
-                <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="HideSourceTags" />
-                    <span>Hide source related tags</span>
-                </label>
-                <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="HideMiscTags" />
-                    <span>Hide misc info tags that may be useful</span>
-                </label>
-                <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="HidePlotTags" />
-                    <span>Hide potentially plot-spoiling tags</span>
-                </label>
-                <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="HideAniDbTags" />
-                    <span>Hide any miscellaneous tags</span>
-                </label>
-                <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="SynopsisCleanLinks" />
-                    <span>Synopsis: Remove links</span>
-                </label>
-                <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="SynopsisCleanMiscLines" />
-                    <span>Synopsis: Remove the line if it starts with ('* ' / '-- ' / '~ ')</span>
-                </label>
-                <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="SynopsisRemoveSummary" />
-                    <span>Synopsis: Remove anything after Source, Note or Summary</span>
-                </label>
-                <label class="checkboxContainer">
-                    <input is="emby-checkbox" type="checkbox" id="SynopsisCleanMultiEmptyLines" />
-                    <span>Synopsis: Collapse excessive empty lines</span>
-                </label>
-                <div>
-                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
-                        <span>Save</span>
-                    </button>
-                </div>
-            </form>
+    <div data-role="page" class="page type-interior pluginConfigurationPage shokoConfigPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form class="shokoConfigForm">
+                    <div class="verticalSection verticalSection-extrabottompadding">
+                        <div class="sectionTitleContainer flex align-items-center">
+                            <h2 class="sectionTitle">Shoko</h2>
+                            <a is="emby-linkbutton" rel="noopener noreferrer" class="raised button-alt headerHelpButton emby-button" target="_blank" href="https://docs.shokoanime.com/shokofin/configuration/">Help</a>
+                        </div>
+                        <h3>Connection Options</h3>
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="Host" required label="Host" />
+                            <div class="fieldDescription">This is the URL leading to where Shoko is running.</div>
+                        </div>
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="Username" required label="Username" />
+                        </div>
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="Password" label="Password" />
+                        </div>
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="ApiKey" label="API Key" />
+                            <div class="fieldDescription">This field is auto-generated using the credentials. Only set this manually if that doesn't work!</div>
+                        </div>
+                        <h3>Title Options</h3>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="TitleMainType">Main Title</label>
+                            <select is="emby-select" id="TitleMainType" name="TitleMainType" class="emby-select-withcolor emby-select">
+                                <option value="Default">Let Shoko decide</option>
+                                <option value="MetadataPreferred">Preferred metadata language</option>
+                                <option value="Origin">Language in country of origin</option>
+                            </select>
+                            <div class="fieldDescription">Titles will fallback to Default if not found for the target language.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="TitleAlternateType">Alternate Title</label>
+                            <select is="emby-select" id="TitleAlternateType" name="TitleAlternateType" class="emby-select-withcolor emby-select">
+                                <option value="Default">Let Shoko decide</option>
+                                <option value="MetadataPreferred">Preferred metadata language</option>
+                                <option value="Origin">Language in country of origin</option>
+                                <option value="Ignore">Do not use alternate titles</option>
+                            </select>
+                            <div class="fieldDescription">Titles will fallback to Default if not found for the target language.</div>
+                        </div>
+                        <h3>Synopsis Options</h3>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="SynopsisCleanLinks" />
+                            <span>Remove links</span>
+                        </label>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="SynopsisCleanMiscLines" />
+                            <span>Remove the line if it starts with ('* ' / '-- ' / '~ ')</span>
+                        </label>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="SynopsisRemoveSummary" />
+                            <span>Remove anything after Source, Note or Summary</span>
+                        </label>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="SynopsisCleanMultiEmptyLines" />
+                            <span>Collapse excessive empty lines</span>
+                        </label>
+                        <h3>Library Options</h3>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="SeriesGrouping">Series grouping</label>
+                            <select is="emby-select" id="SeriesGrouping" name="SeriesGrouping" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Do not group series</option>
+                                <option value="MergeFriendly">Make series merge-friendly with TvDB/TMDB</option>
+                                <option value="ShokoGroup">Group series based on Shoko's group feature</option>
+                            </select>
+                            <div id="SG_ShokoGroup_Warning" class="fieldDescription"><strong>Warning:</strong> Series merging must be enabled in the <strong>library settings</strong> when using this option.</div>
+                        </div>
+                        <div id="SeasonOrderingItem" class="selectContainer">
+                            <label class="selectLabel" for="SeasonOrdering">Season ordering</label>
+                            <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select">
+                                <option value="Default">Let Shoko decide</option>
+                                <option value="ReleaseDate">By release date</option>
+                                <!--<option value="Chronological">Chronological order</option>-->
+                            </select>
+                        </div>
+                        <label id="MarkSpecialsWhenGroupedItem" class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
+                            <span>Mark special episodes with <stong>SP</stong> and the special number in the seasons they belong to</span>
+                        </label>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="BoxSetGrouping">Box-set grouping</label>
+                            <select is="emby-select" id="BoxSetGrouping" name="BoxSetGrouping" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Do not group movies into box-sets</option>
+                                <option value="ShokoSeries">Group movies within Shoko's series only</option>
+                                <option value="ShokoGroup">Group movies in Shoko's groups and series</option>
+                            </select>
+                        </div>
+                        <div id="MovieOrderingItem" class="selectContainer">
+                            <label class="selectLabel" for="MovieOrdering">Movie ordering</label>
+                            <select is="emby-select" id="MovieOrdering" name="MovieOrdering" class="emby-select-withcolor emby-select">
+                                <option value="Default">Let Shoko decide</option>
+                                <option value="ReleaseDate">By release date</option>
+                                <!--<option value="Chronological">Chronological order</option>-->
+                            </select>
+                        </div>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="SeperateLibraries" />
+                            <span>Disallow overlap of Movies and Series library types</span>
+                        </label>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="UpdateWatchedStatus" />
+                            <span>Update watched status on Shoko (Scrobble)</span>
+                        </label>
+                        <h3>Provider Options</h3>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="AddAniDBId" />
+                            <span>Add AniDB Id to all entries</span>
+                        </label>
+                        <h3>Tag Options</h3>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="HideArtStyleTags" />
+                            <span>Hide art style related tags</span>
+                        </label>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="HideSourceTags" />
+                            <span>Hide source related tags</span>
+                        </label>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="HideMiscTags" />
+                            <span>Hide misc info tags that may be useful</span>
+                        </label>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="HidePlotTags" />
+                            <span>Hide potentially plot-spoiling tags</span>
+                        </label>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="HideAniDbTags" />
+                            <span>Hide any miscellaneous tags</span>
+                        </label>
+                        <div>
+                            <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                                <span>Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
-    <script type="text/javascript">
-        var PluginConfig = {
-            pluginId: "5216ccbf-d24a-4eb3-8a7e-7da4230b7052"
-        };
+        <script type="text/javascript">
+            var PluginConfig = {
+                pluginId: "5216ccbf-d24a-4eb3-8a7e-7da4230b7052"
+            };
 
-        document.querySelector('.shokoConfigPage')
+            document.querySelector('.shokoConfigPage')
                 .addEventListener('pageshow', function () {
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(PluginConfig.pluginId).then(function (config) {
                         document.querySelector('#Host').value = config.Host;
-                        document.querySelector('#Port').value = config.Port;
                         document.querySelector('#Username').value = config.Username;
                         document.querySelector('#Password').value = config.Password;
                         document.querySelector('#ApiKey').value = config.ApiKey;
                         document.querySelector('#UpdateWatchedStatus').checked = config.UpdateWatchedStatus;
-                        document.querySelector('#UseTvDbSeasonOrdering').checked = config.UseTvDbSeasonOrdering;
-                        document.querySelector('#UseShokoThumbnails').checked = config.UseShokoThumbnails;
                         document.querySelector('#HideArtStyleTags').checked = config.HideArtStyleTags;
                         document.querySelector('#HideSourceTags').checked = config.HideSourceTags;
                         document.querySelector('#HideMiscTags').checked = config.HideMiscTags;
@@ -134,26 +170,67 @@
                         document.querySelector('#SynopsisCleanMiscLines').checked = config.SynopsisCleanMiscLines;
                         document.querySelector('#SynopsisRemoveSummary').checked = config.SynopsisRemoveSummary;
                         document.querySelector('#SynopsisCleanMultiEmptyLines').checked = config.SynopsisCleanMultiEmptyLines;
-                        document.querySelector('#TitleUseAlternate').checked = config.TitleUseAlternate;
                         document.querySelector('#TitleMainType').value = config.TitleMainType;
                         document.querySelector('#TitleAlternateType').value = config.TitleAlternateType;
+                        document.querySelector('#SeriesGrouping').value = config.SeriesGrouping;
+                        document.querySelector('#SeasonOrdering').value = config.SeasonOrdering;
+                        document.querySelector('#BoxSetGrouping').value = config.BoxSetGrouping;
+                        document.querySelector('#MovieOrdering').value = config.MovieOrdering;
+                        document.querySelector('#MarkSpecialsWhenGrouped').checked = config.MarkSpecialsWhenGrouped;
+                        document.querySelector('#SeperateLibraries').checked = config.SeperateLibraries;
+                        document.querySelector('#AddAniDBId').checked = config.AddAniDBId;
+                        if (config.SeriesGrouping === "ShokoGroup") {
+                            document.querySelector('#SG_ShokoGroup_Warning').removeAttribute("hidden");
+                            document.querySelector('#SeasonOrderingItem').removeAttribute("hidden");
+                            document.querySelector('#MarkSpecialsWhenGroupedItem').removeAttribute("hidden");
+                        }
+                        else {
+                            document.querySelector('#SG_ShokoGroup_Warning').setAttribute("hidden", "");
+                            document.querySelector('#SeasonOrderingItem').setAttribute("hidden", "");
+                            document.querySelector('#MarkSpecialsWhenGroupedItem').setAttribute("hidden", "");
+                        }
+                        if (config.BoxSetGrouping === "ShokoGroup") {
+                            document.querySelector('#MovieOrderingItem').removeAttribute("hidden");
+                        }
+                        else {
+                            document.querySelector('#MovieOrderingItem').setAttribute("hidden", "");
+                        }
                         Dashboard.hideLoadingMsg();
                     });
                 });
+            document.querySelector('#SeriesGrouping')
+                .addEventListener('input', function () {
+                    if (document.querySelector('#SeriesGrouping').value === "ShokoGroup") {
+                        document.querySelector('#SG_ShokoGroup_Warning').removeAttribute("hidden");
+                        document.querySelector('#SeasonOrderingItem').removeAttribute("hidden");
+                        document.querySelector('#MarkSpecialsWhenGroupedItem').removeAttribute("hidden");
+                    }
+                    else {
+                        document.querySelector('#SG_ShokoGroup_Warning').setAttribute("hidden", "");
+                        document.querySelector('#SeasonOrderingItem').setAttribute("hidden", "");
+                        document.querySelector('#MarkSpecialsWhenGroupedItem').setAttribute("hidden", "");
+                    }
+                });
+            document.querySelector('#BoxSetGrouping')
+                .addEventListener('input', function () {
+                    if (document.querySelector('#BoxSetGrouping').value === "ShokoGroup") {
+                        document.querySelector('#MovieOrderingItem').removeAttribute("hidden");
+                    }
+                    else {
+                        document.querySelector('#MovieOrderingItem').setAttribute("hidden", "");
+                    }
+                });
 
-        document.querySelector('.shokoConfigForm')
+            document.querySelector('.shokoConfigForm')
                 .addEventListener('submit', function (e) {
                     Dashboard.showLoadingMsg();
 
                     ApiClient.getPluginConfiguration(PluginConfig.pluginId).then(function (config) {
                         config.Host = document.querySelector('#Host').value;
-                        config.Port = document.querySelector('#Port').value;
                         config.Username = document.querySelector('#Username').value;
                         config.Password = document.querySelector('#Password').value;
                         config.ApiKey = document.querySelector('#ApiKey').value;
                         config.UpdateWatchedStatus = document.querySelector('#UpdateWatchedStatus').checked;
-                        config.UseTvDbSeasonOrdering = document.querySelector('#UseTvDbSeasonOrdering').checked;
-                        config.UseShokoThumbnails = document.querySelector('#UseShokoThumbnails').checked;
                         config.HideArtStyleTags = document.querySelector('#HideArtStyleTags').checked;
                         config.HideSourceTags = document.querySelector('#HideSourceTags').checked;
                         config.HideMiscTags = document.querySelector('#HideMiscTags').checked;
@@ -163,16 +240,21 @@
                         config.SynopsisCleanMiscLines = document.querySelector('#SynopsisCleanMiscLines').checked;
                         config.SynopsisRemoveSummary = document.querySelector('#SynopsisRemoveSummary').checked;
                         config.SynopsisCleanMultiEmptyLines = document.querySelector('#SynopsisCleanMultiEmptyLines').checked;
-                        config.TitleUseAlternate = document.querySelector('#TitleUseAlternate').checked;
                         config.TitleMainType = document.querySelector('#TitleMainType').value;
                         config.TitleAlternateType = document.querySelector('#TitleAlternateType').value;
+                        config.SeriesGrouping = document.querySelector('#SeriesGrouping').value;
+                        config.SeasonOrdering = document.querySelector('#SeasonOrdering').value;
+                        config.BoxSetGrouping = document.querySelector('#BoxSetGrouping').value;
+                        config.MovieOrdering = document.querySelector('#MovieOrdering').value;
+                        config.MarkSpecialsWhenGrouped = document.querySelector('#MarkSpecialsWhenGrouped').checked;
+                        config.SeperateLibraries = document.querySelector('#SeperateLibraries').checked;
+                        config.AddAniDBId = document.querySelector('#AddAniDBId').checked;
                         ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
                     });
-
                     e.preventDefault();
                     return false;
                 });
         </script>
-</div>
+    </div>
 </body>
 </html>
