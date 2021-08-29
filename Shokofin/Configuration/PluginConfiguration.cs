@@ -74,7 +74,7 @@ namespace Shokofin.Configuration
             SynopsisRemoveSummary = true;
             SynopsisCleanMultiEmptyLines = true;
             AddAniDBId = true;
-            AddTvDBId = true;
+            AddTvDBId = false;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
             SeriesGrouping = SeriesAndBoxSetGroupType.Default;
