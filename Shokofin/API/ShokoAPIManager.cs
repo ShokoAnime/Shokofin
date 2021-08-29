@@ -406,6 +406,7 @@ namespace Shokofin.API
 
             var seriesGuid = GetSeriesGuid(seriesId);
             var aniDb = await ShokoAPI.GetSeriesAniDb(seriesId);
+            var tvDbId = series.IDs.TvDB?.FirstOrDefault();
             var episodeList = await ShokoAPI.GetEpisodesFromSeries(seriesId)
                 .ContinueWith(async task => await Task.WhenAll(task.Result.Select(e => CreateEpisodeInfo(e)))).Unwrap()
                 .ContinueWith(l => l.Result.Where(s => s != null).ToList());
@@ -415,6 +416,7 @@ namespace Shokofin.API
                 Guid = seriesGuid,
                 Shoko = series,
                 AniDB = aniDb,
+                TvDBId = tvDbId != 0 ? tvDbId.ToString() : null,
                 EpisodeList = episodeList,
                 FilteredSpecialEpisodesList = filteredSpecialEpisodesList,
             };

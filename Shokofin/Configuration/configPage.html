@@ -117,6 +117,10 @@
                             <input is="emby-checkbox" type="checkbox" id="AddAniDBId" />
                             <span>Add AniDB Id to all entries</span>
                         </label>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="AddTvDBId" />
+                            <span>Add TvDB Id when present</span>
+                        </label>
                         <h3>Tag Options</h3>
                         <label class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="HideArtStyleTags" />
@@ -179,6 +183,7 @@
                         document.querySelector('#MarkSpecialsWhenGrouped').checked = config.MarkSpecialsWhenGrouped;
                         document.querySelector('#SeperateLibraries').checked = config.SeperateLibraries;
                         document.querySelector('#AddAniDBId').checked = config.AddAniDBId;
+                        document.querySelector('#AddTvDBId').checked = config.AddTvDBId;
                         if (config.SeriesGrouping === "ShokoGroup") {
                             document.querySelector('#SG_ShokoGroup_Warning').removeAttribute("hidden");
                             document.querySelector('#SeasonOrderingItem').removeAttribute("hidden");
@@ -249,6 +254,7 @@
                         config.MarkSpecialsWhenGrouped = document.querySelector('#MarkSpecialsWhenGrouped').checked;
                         config.SeperateLibraries = document.querySelector('#SeperateLibraries').checked;
                         config.AddAniDBId = document.querySelector('#AddAniDBId').checked;
+                        config.AddTvDBId = document.querySelector('#AddTvDBId').checked;
                         ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
                     });
                     e.preventDefault();

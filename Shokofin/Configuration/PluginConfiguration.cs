@@ -37,6 +37,8 @@ namespace Shokofin.Configuration
 
         public bool AddAniDBId { get; set; }
 
+        public bool AddTvDBId { get; set; }
+
         public SeriesAndBoxSetGroupType SeriesGrouping { get; set; }
 
         public OrderType SeasonOrdering { get; set; }
@@ -72,6 +74,7 @@ namespace Shokofin.Configuration
             SynopsisRemoveSummary = true;
             SynopsisCleanMultiEmptyLines = true;
             AddAniDBId = true;
+            AddTvDBId = true;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
             SeriesGrouping = SeriesAndBoxSetGroupType.Default;

@@ -74,6 +74,8 @@ namespace Shokofin.Providers
                 result.Item.SetProviderId("Shoko File", file.Id);
                 if (config.AddAniDBId)
                     result.Item.SetProviderId("AniDB", episode.AniDB.ID.ToString());
+                if (config.AddTvDBId && episode.TvDB != null && config.SeriesGrouping != Ordering.GroupType.ShokoGroup)
+                    result.Item.SetProviderId(MetadataProvider.Tvdb, episode.TvDB.ID.ToString());
 
                 result.HasMetadata = true;
                 ApiManager.MarkEpisodeAsFound(episode.Id, series.Id);

@@ -13,6 +13,8 @@ namespace Shokofin.API.Info
 
         public Series.AniDB AniDB;
 
+        public string TvDBId;
+
         /// <summary>
         /// All episodes (of all type) that belong to this series.
         /// </summary>
