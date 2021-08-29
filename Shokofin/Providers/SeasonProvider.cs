@@ -15,30 +15,30 @@ namespace Shokofin.Providers
     public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
     {
         public string Name => "Shoko";
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ILogger<SeasonProvider> _logger;
+        private readonly IHttpClientFactory HttpClientFactory;
+        private readonly ILogger<SeasonProvider> Logger;
 
-        public SeasonProvider(IHttpClientFactory httpClientFactory, ILogger<SeasonProvider> logger)
+        private readonly ShokoAPIManager ApiManager;
+
+        public SeasonProvider(IHttpClientFactory httpClientFactory, ILogger<SeasonProvider> logger, ShokoAPIManager apiManager)
         {
-            _httpClientFactory = httpClientFactory;
-            _logger = logger;
+            HttpClientFactory = httpClientFactory;
+            Logger = logger;
+            ApiManager = apiManager;
         }
 
         public async Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
         {
-            try
-            {
-                switch (Plugin.Instance.Configuration.SeriesGrouping)
-                {
+            try {
+                switch (Plugin.Instance.Configuration.SeriesGrouping) {
                     default:
                         return GetDefaultMetadata(info, cancellationToken);
-                    case Ordering.SeriesOrBoxSetGroupType.ShokoGroup:
+                    case Ordering.GroupType.ShokoGroup:
                         return await GetShokoGroupedMetadata(info, cancellationToken);
                 }
             }
-            catch (Exception e)
-            {
-                _logger.LogError($"{e.Message}{Environment.NewLine}{e.StackTrace}");
+            catch (Exception e) {
+                Logger.LogError(e, $"Threw unexpectedly; {e.Message}");
                 return new MetadataResult<Season>();
             }
         }
@@ -48,13 +48,13 @@ namespace Shokofin.Providers
             var result = new MetadataResult<Season>();
 
             var seasonName = GetSeasonName(info.Name);
-            result.Item = new Season
-            {
+            result.Item = new Season {
                 Name = seasonName,
                 IndexNumber = info.IndexNumber,
                 SortName = seasonName,
                 ForcedSortName = seasonName
             };
+
             result.HasMetadata = true;
 
             return result;
@@ -64,42 +64,44 @@ namespace Shokofin.Providers
         {
             var result = new MetadataResult<Season>();
 
-            if (!info.SeriesProviderIds.ContainsKey("Shoko Group"))
-            {
-                _logger.LogWarning($"Shoko Scanner... Shoko Group id not stored for series");
+            if (!info.SeriesProviderIds.ContainsKey("Shoko Group")) {
+                Logger.LogWarning($"Shoko Group id not stored for series");
                 return result;
             }
 
             var groupId = info.SeriesProviderIds["Shoko Group"];
             var seasonNumber = info.IndexNumber ?? 1;
-            var series = await DataFetcher.GetSeriesInfoFromGroup(groupId, seasonNumber);
-            if (series == null)
-            {
-                _logger.LogWarning($"Shoko Scanner... Unable to find series info for G{groupId}:S{seasonNumber}");
+            var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes;
+            var series = await ApiManager.GetSeriesInfoFromGroup(groupId, seasonNumber, filterLibrary ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default);
+            if (series == null) {
+                Logger.LogWarning($"Unable to find series info for G{groupId}:S{seasonNumber}");
                 return result;
             }
-            _logger.LogInformation($"Shoko Scanner... Found series info for G{groupId}:S{seasonNumber}");
+            Logger.LogInformation($"Found series info for G{groupId}:S{seasonNumber}");
 
-            var tags = await DataFetcher.GetTags(series.ID);
+            var tags = await ApiManager.GetTags(series.Id);
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
 
-            result.Item = new Season
-            {
+            result.Item = new Season {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
                 IndexNumber = seasonNumber,
-                Overview = Text.SummarySanitizer(series.AniDB.Description),
+                Overview = Text.SanitizeTextSummary(series.AniDB.Description),
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
                 Tags = tags,
                 CommunityRating = series.AniDB.Rating?.ToFloat(10),
             };
+            result.Item.ProviderIds.Add("Shoko Series", series.Id);
+            if (Plugin.Instance.Configuration.AddAniDBId)
+                result.Item.ProviderIds.Add("AniDB", series.AniDB.ID.ToString());
 
             result.HasMetadata = true;
+            ApiManager.MarkSeriesAsFound(series.Id, groupId);
 
             result.ResetPeople();
-            foreach (var person in await DataFetcher.GetPeople(series.ID))
+            foreach (var person in await ApiManager.GetPeople(series.Id))
                 result.AddPerson(person);
 
             return result;
@@ -113,13 +115,12 @@ namespace Shokofin.Providers
 
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            return _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+            return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
         }
 
         private string GetSeasonName(string season)
         {
-            switch (season)
-            {
+            switch (season) {
                 case "Season 100":
                     return "Credits";
                 case "Season 99":

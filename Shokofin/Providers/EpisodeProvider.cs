@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -12,77 +11,81 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Utils;
 
-using Path = System.IO.Path;
-using IResolverIgnoreRule = MediaBrowser.Controller.Resolvers.IResolverIgnoreRule;
-using ILibraryManager = MediaBrowser.Controller.Library.ILibraryManager;
 using EpisodeType = Shokofin.API.Models.EpisodeType;
 
 namespace Shokofin.Providers
 {
-    public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IResolverIgnoreRule
+    public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
     {
         public string Name => "Shoko";
 
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IHttpClientFactory HttpClientFactory;
 
-        private readonly ILogger<EpisodeProvider> _logger;
+        private readonly ILogger<EpisodeProvider> Logger;
 
-        private readonly ILibraryManager _library;
 
-        public EpisodeProvider(IHttpClientFactory httpClientFactory, ILogger<EpisodeProvider> logger, ILibraryManager library)
+        private readonly ShokoAPIManager ApiManager;
+
+        public EpisodeProvider(IHttpClientFactory httpClientFactory, ILogger<EpisodeProvider> logger, ShokoAPIManager apiManager)
         {
-            _httpClientFactory = httpClientFactory;
-            _logger = logger;
-            _library = library;
+            HttpClientFactory = httpClientFactory;
+            Logger = logger;
+            ApiManager = apiManager;
         }
 
         public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
         {
-            try
-            {
+            try {
                 var result = new MetadataResult<Episode>();
+                var config = Plugin.Instance.Configuration;
+                Ordering.GroupFilterType? filterByType = config.SeriesGrouping == Ordering.GroupType.ShokoGroup ? config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default : null;
+                var (file, episode, series, group) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
 
-                var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == Ordering.SeriesOrBoxSetGroupType.ShokoGroup;
-                var (file, episode, series, group) = await DataFetcher.GetFileInfoByPath(info.Path, includeGroup);
-
-                if (file == null) // if file is null then series and episode is also null.
-                {
-                    _logger.LogWarning($"Shoko Scanner... Unable to find file info for path {info.Path}");
+                // if file is null then series and episode is also null.
+                if (file == null) {
+                    Logger.LogWarning($"Unable to find file info for path {info.Path}");
                     return result;
                 }
-                _logger.LogInformation($"Shoko Scanner... Found file info for path {info.Path}");
+                Logger.LogInformation($"Found file info for path {info.Path}");
 
-                var ( displayTitle, alternateTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, episode.Shoko.Name, info.MetadataLanguage);
-                int aniDBId = episode.AniDB.ID;
-                int tvdbId = episode?.TvDB?.ID ?? 0;
-                if (group != null && episode.AniDB.Type != EpisodeType.Normal && Plugin.Instance.Configuration.MarkSpecialsWhenGrouped) {
+                string displayTitle, alternateTitle;
+                if (series.AniDB.Type == API.Models.SeriesType.Movie)
+                    ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, series.Shoko.Name, episode.Shoko.Name, info.MetadataLanguage);
+                else
+                    ( displayTitle, alternateTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, episode.Shoko.Name, info.MetadataLanguage);
+
+                if (group != null && episode.AniDB.Type != EpisodeType.Normal && config.MarkSpecialsWhenGrouped) {
                     displayTitle = $"SP {episode.AniDB.EpisodeNumber} {displayTitle}";
                     alternateTitle = $"SP {episode.AniDB.EpisodeNumber} {alternateTitle}";
                 }
-                result.Item = new Episode
-                {
+
+                result.Item = new Episode {
                     IndexNumber = Ordering.GetIndexNumber(series, episode),
                     ParentIndexNumber = Ordering.GetSeasonNumber(group, series, episode),
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
                     PremiereDate = episode.AniDB.AirDate,
-                    Overview = Text.SummarySanitizer(episode.AniDB.Description),
+                    Overview = Text.SanitizeTextSummary(episode.AniDB.Description),
                     CommunityRating = (float) ((episode.AniDB.Rating.Value * 10) / episode.AniDB.Rating.MaxValue)
                 };
-                result.Item.SetProviderId("Shoko Episode", episode.ID);
-                result.Item.SetProviderId("Shoko File", file.ID);
-                result.Item.SetProviderId("AniDB", aniDBId.ToString());
-                if (tvdbId != 0) result.Item.SetProviderId("Tvdb", tvdbId.ToString());
-                result.HasMetadata = true;
+                // NOTE: This next line will remain here till they fix the series merging for providers outside the MetadataProvider enum.
+                result.Item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{episode.Id}");
+                result.Item.SetProviderId("Shoko Episode", episode.Id);
+                result.Item.SetProviderId("Shoko File", file.Id);
+                if (config.AddAniDBId)
+                    result.Item.SetProviderId("AniDB", episode.AniDB.ID.ToString());
 
-                var episodeNumberEnd = episode.AniDB.EpisodeNumber + file.EpisodesCount - 1;
-                if (episode.AniDB.EpisodeNumber != episodeNumberEnd) result.Item.IndexNumberEnd = episodeNumberEnd;
+                result.HasMetadata = true;
+                ApiManager.MarkEpisodeAsFound(episode.Id, series.Id);
+
+                var episodeNumberEnd = episode.AniDB.EpisodeNumber + file.EpisodesCount;
+                if (episode.AniDB.EpisodeNumber != episodeNumberEnd)
+                    result.Item.IndexNumberEnd = episodeNumberEnd;
 
                 return result;
             }
-            catch (Exception e)
-            {
-                _logger.LogError($"{e.Message}{Environment.NewLine}{e.StackTrace}");
+            catch (Exception e) {
+                Logger.LogError(e, $"Threw unexpectedly; {e.Message}");
                 return new MetadataResult<Episode>();
             }
         }
@@ -95,43 +98,7 @@ namespace Shokofin.Providers
 
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            return _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
-        }
-
-        public bool ShouldIgnore(MediaBrowser.Model.IO.FileSystemMetadata fileInfo, BaseItem parent)
-        {
-            // Skip this handler if one of these requirements are met
-            if (fileInfo == null || parent == null || fileInfo.IsDirectory || !fileInfo.Exists || !(parent is Series || parent is Season))
-                return false;
-            var libType = _library.GetInheritedContentType(parent);
-            if (libType != "tvshows") {
-                return false;
-            }
-            try {
-                var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == Ordering.SeriesOrBoxSetGroupType.ShokoGroup;
-                // TODO: Check if it can be written in a better way. Parent directory + File Name
-                var id = Path.Join(fileInfo.DirectoryName, fileInfo.FullName);
-                var (file, episode, series, group) = DataFetcher.GetFileInfoByPathSync(id, includeGroup);
-                if (file == null) // if file is null then series and episode is also null.
-                {
-                    _logger.LogWarning($"Shoko Filter... Unable to find file info for path {id}");
-                    return true;
-                }
-                _logger.LogInformation($"Shoko Filter... Found file info for path {id}");
-                var extraType = Ordering.GetExtraType(episode.AniDB);
-                if (extraType != null)
-                {
-                    _logger.LogDebug($"Shoko Filter... Not a normal or special episode, skipping path {id}");
-                    return true;
-                }
-                return false;
-            }
-            catch (System.Exception e)
-            {
-                if (!(e is System.Net.Http.HttpRequestException && e.Message.Contains("Connection refused")))
-                    _logger.LogError(e, "Threw unexpectedly");
-                return false;
-            }
+            return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
         }
     }
 }

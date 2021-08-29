@@ -1,7 +1,7 @@
 using MediaBrowser.Model.Plugins;
 using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
-using SeriesAndBoxSetGroupType = Shokofin.Utils.Ordering.SeriesOrBoxSetGroupType;
-using SeasonAndMovieOrderType = Shokofin.Utils.Ordering.SeasonAndMovieOrderType;
+using SeriesAndBoxSetGroupType = Shokofin.Utils.Ordering.GroupType;
+using OrderType = Shokofin.Utils.Ordering.OrderType;
 
 namespace Shokofin.Configuration
 {
@@ -35,21 +35,25 @@ namespace Shokofin.Configuration
 
         public bool SynopsisCleanMultiEmptyLines { get; set; }
 
+        public bool AddAniDBId { get; set; }
+
         public SeriesAndBoxSetGroupType SeriesGrouping { get; set; }
 
-        public SeasonAndMovieOrderType SeasonOrdering { get; set; }
+        public OrderType SeasonOrdering { get; set; }
 
         public bool MarkSpecialsWhenGrouped { get; set; }
 
         public SeriesAndBoxSetGroupType BoxSetGrouping { get; set; }
 
-        public SeasonAndMovieOrderType MovieOrdering { get; set; }
+        public OrderType MovieOrdering { get; set; }
 
-        public bool SeperateLibraries { get; set; }
+        public bool FilterOnLibraryTypes { get; set; }
 
         public DisplayLanguageType TitleMainType { get; set; }
 
         public DisplayLanguageType TitleAlternateType { get; set; }
+
+        public bool AddMissingEpisodeMetadata { get; set; }
 
         public PluginConfiguration()
         {
@@ -67,14 +71,16 @@ namespace Shokofin.Configuration
             SynopsisCleanMiscLines = true;
             SynopsisRemoveSummary = true;
             SynopsisCleanMultiEmptyLines = true;
+            AddAniDBId = true;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
             SeriesGrouping = SeriesAndBoxSetGroupType.Default;
-            SeasonOrdering = SeasonAndMovieOrderType.Default;
+            SeasonOrdering = OrderType.Default;
             MarkSpecialsWhenGrouped = true;
             BoxSetGrouping = SeriesAndBoxSetGroupType.Default;
-            MovieOrdering = SeasonAndMovieOrderType.Default;
-            SeperateLibraries = false;
+            MovieOrdering = OrderType.Default;
+            AddMissingEpisodeMetadata = false;
+            FilterOnLibraryTypes = false;
         }
     }
 }

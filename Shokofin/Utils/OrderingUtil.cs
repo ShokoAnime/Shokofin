@@ -1,30 +1,36 @@
-using Shokofin.API.Models;
 using Shokofin.API.Info;
-
-using ExtraType = MediaBrowser.Model.Entities.ExtraType;
+using Shokofin.API.Models;
 
 namespace Shokofin.Utils
 {
     public class Ordering
     {
+        public enum GroupFilterType {
+            Default = 0,
+            Movies = 1,
+            Others = 2,
+        }
 
         /// <summary>
         /// Group series or movie box-sets
         /// </summary>
-        public enum SeriesOrBoxSetGroupType
+        public enum GroupType
         {
             /// <summary>
             /// No grouping. All series will have their own entry.
             /// </summary>
             Default = 0,
+
             /// <summary>
             /// Don't group, but make series merge-friendly by using the season numbers from TvDB.
             /// </summary>
             MergeFriendly = 1,
+
             /// <summary>
             /// Group seris based on Shoko's default group filter.
             /// </summary>
             ShokoGroup = 2,
+
             /// <summary>
             /// Group movies based on Shoko's series.
             /// </summary>
@@ -34,16 +40,18 @@ namespace Shokofin.Utils
         /// <summary>
         /// Season or movie ordering when grouping series/box-sets using Shoko's groups.
         /// </summary>
-        public enum SeasonAndMovieOrderType
+        public enum OrderType
         {
             /// <summary>
             /// Let Shoko decide the order.
             /// </summary>
             Default = 0,
+
             /// <summary>
             /// Order seasons by release date.
             /// </summary>
             ReleaseDate = 1,
+
             /// <summary>
             /// Order seasons based on the chronological order of relations.
             /// </summary>
@@ -56,32 +64,26 @@ namespace Shokofin.Utils
         /// <returns>Absoute index.</returns>
         public static int GetMovieIndexNumber(GroupInfo group, SeriesInfo series, EpisodeInfo episode)
         {
-            switch (Plugin.Instance.Configuration.BoxSetGrouping)
-            {
+            switch (Plugin.Instance.Configuration.BoxSetGrouping) {
                 default:
-                case SeriesOrBoxSetGroupType.Default:
+                case GroupType.Default:
                     return 1;
-                case SeriesOrBoxSetGroupType.ShokoSeries:
+                case GroupType.ShokoSeries:
                     return episode.AniDB.EpisodeNumber;
-                case SeriesOrBoxSetGroupType.ShokoGroup:
-                {
+                case GroupType.ShokoGroup: {
                     int offset = 0;
-                    foreach (SeriesInfo s in group.SeriesList)
-                    {
+                    foreach (SeriesInfo s in group.SeriesList) {
                         var sizes = s.Shoko.Sizes.Total;
-                        if (s != series)
-                        {
-                            if (episode.AniDB.Type == EpisodeType.Special)
-                            {
-                                var index = series.FilteredSpecialEpisodesList.FindIndex(e => string.Equals(e.ID, episode.ID));
+                        if (s != series) {
+                            if (episode.AniDB.Type == EpisodeType.Special) {
+                                var index = series.FilteredSpecialEpisodesList.FindIndex(e => string.Equals(e.Id, episode.Id));
                                 if (index == -1)
                                     throw new System.IndexOutOfRangeException("Episode not in filtered list");
                                 return offset - (index + 1);
                             }
-                            switch (episode.AniDB.Type)
-                            {
+                            switch (episode.AniDB.Type) {
                                 case EpisodeType.Normal:
-                                    // offset += 0;
+                                    // offset += 0; // it's not needed, so it's just here as a comment instead.
                                     break;
                                 case EpisodeType.Parody:
                                     offset += sizes?.Episodes ?? 0;
@@ -92,8 +94,7 @@ namespace Shokofin.Utils
                             }
                             return offset + episode.AniDB.EpisodeNumber;
                         }
-                        else
-                        {
+                        else {
                             if (episode.AniDB.Type == EpisodeType.Special) {
                                 offset -= series.FilteredSpecialEpisodesList.Count;
                             }
@@ -115,30 +116,26 @@ namespace Shokofin.Utils
             switch (Plugin.Instance.Configuration.SeriesGrouping)
             {
                 default:
-                case SeriesOrBoxSetGroupType.Default:
+                case GroupType.Default:
                     return episode.AniDB.EpisodeNumber;
-                case SeriesOrBoxSetGroupType.MergeFriendly:
-                {
+                case GroupType.MergeFriendly: {
                     var epNum = episode?.TvDB.Number ?? 0;
                     if (epNum == 0)
-                        goto case SeriesOrBoxSetGroupType.Default;
+                        goto case GroupType.Default;
                     return epNum;
                 }
-                case SeriesOrBoxSetGroupType.ShokoGroup:
-                {
-                    if (episode.AniDB.Type == EpisodeType.Special)
-                    {
-                        var index = series.FilteredSpecialEpisodesList.FindIndex(e => string.Equals(e.ID, episode.ID));
+                case GroupType.ShokoGroup: {
+                    if (episode.AniDB.Type == EpisodeType.Special) {
+                        var index = series.FilteredSpecialEpisodesList.FindIndex(e => string.Equals(e.Id, episode.Id));
                         if (index == -1)
                             throw new System.IndexOutOfRangeException("Episode not in filtered list");
                         return -(index + 1);
                     }
                     int offset = 0;
                     var sizes = series.Shoko.Sizes.Total;
-                    switch (episode.AniDB.Type)
-                    {
+                    switch (episode.AniDB.Type) {
                         case EpisodeType.Normal:
-                            // offset += 0;
+                            // offset += 0; // it's not needed, so it's just here as a comment instead.
                             break;
                         case EpisodeType.Parody:
                             offset += sizes?.Episodes ?? 0;
@@ -161,64 +158,37 @@ namespace Shokofin.Utils
         /// <returns></returns>
         public static int GetSeasonNumber(GroupInfo group, SeriesInfo series, EpisodeInfo episode)
         {
-            switch (Plugin.Instance.Configuration.SeriesGrouping)
-            {
+            switch (Plugin.Instance.Configuration.SeriesGrouping) {
                 default:
-                case SeriesOrBoxSetGroupType.Default:
-                    switch (episode.AniDB.Type)
-                    {
+                case GroupType.Default:
+                    switch (episode.AniDB.Type) {
                         case EpisodeType.Normal:
                             return 1;
                         case EpisodeType.Special:
                             return 0;
+                        case EpisodeType.Trailer:
+                            return 99;
+                        case EpisodeType.ThemeSong:
+                            return 100;
                         default:
                             return 98;
                     }
-                case SeriesOrBoxSetGroupType.MergeFriendly: {
+                case GroupType.MergeFriendly: {
                     var seasonNumber = episode?.TvDB?.Season;
                     if (seasonNumber == null)
-                        goto case SeriesOrBoxSetGroupType.Default;
+                        goto case GroupType.Default;
                     return seasonNumber ?? 1;
                 }
-                case SeriesOrBoxSetGroupType.ShokoGroup: {
-                    var id = series.ID;
+                case GroupType.ShokoGroup: {
+                    var id = series.Id;
                     if (series == group.DefaultSeries)
                         return 1;
-                    var index = group.SeriesList.FindIndex(s => s.ID == id);
+                    var index = group.SeriesList.FindIndex(s => s.Id == id);
                     if (index == -1)
-                        goto case SeriesOrBoxSetGroupType.Default;
+                        goto case GroupType.Default;
                     var value = index - group.DefaultSeriesIndex;
                     return value < 0 ? value : value + 1;
                 }
-            }
-        }
-
-        public static ExtraType? GetExtraType(Episode.AniDB episode)
-        {
-            switch (episode.Type)
-            {
-                case EpisodeType.Normal:
-                case EpisodeType.Other:
-                    return null;
-                case EpisodeType.ThemeSong:
-                case EpisodeType.OpeningSong:
-                case EpisodeType.EndingSong:
-                    return ExtraType.ThemeVideo;
-                case EpisodeType.Trailer:
-                    return ExtraType.Trailer;
-                case EpisodeType.Special: {
-                    var title = Text.GetTitleByLanguages(episode.Titles, "en") ?? "";
-                    // Interview
-                    if (title.Contains("interview", System.StringComparison.OrdinalIgnoreCase))
-                        return ExtraType.Interview;
-                    // Cinema intro/outro
-                    if (title.StartsWith("cinema ", System.StringComparison.OrdinalIgnoreCase) &&
-                    (title.Contains("intro", System.StringComparison.OrdinalIgnoreCase) || title.Contains("outro", System.StringComparison.OrdinalIgnoreCase)))
-                        return ExtraType.Clip;
-                    return null;
-                }
-                default:
-                    return ExtraType.Unknown;
             }
         }
     }

@@ -98,35 +98,36 @@ namespace Shokofin.API.Models
         public double Distance { get; set; }
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum SeriesType
     {
         /// <summary>
         /// The series type is unknown.
         /// </summary>
-        Unknown = 0,
+        Unknown,
         /// <summary>
         /// A catch-all type for future extensions when a provider can't use a current episode type, but knows what the future type should be.
         /// </summary>
-        Other = 1,
+        Other,
         /// <summary>
         /// Standard TV series.
         /// </summary>
-        TV = 2,
+        TV,
         /// <summary>
         /// TV special.
         /// </summary>
-        TVSpecial = 3,
+        TVSpecial,
         /// <summary>
         /// Web series.
         /// </summary>
-        Web = 4,
+        Web,
         /// <summary>
         /// All movies, regardless of source (e.g. web or theater)
         /// </summary>
-        Movie = 5,
+        Movie,
         /// <summary>
         /// Original Video Animations, AKA standalone releases that don't air on TV or the web.
         /// </summary>
-        OVA = 6,
+        OVA,
     }
 }

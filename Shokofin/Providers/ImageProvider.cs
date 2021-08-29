@@ -17,53 +17,48 @@ namespace Shokofin.Providers
     public class ImageProvider : IRemoteImageProvider
     {
         public string Name => "Shoko";
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ILogger<ImageProvider> _logger;
 
-        public ImageProvider(IHttpClientFactory httpClientFactory, ILogger<ImageProvider> logger)
+        private readonly IHttpClientFactory HttpClientFactory;
+
+        private readonly ILogger<ImageProvider> Logger;
+
+        private readonly ShokoAPIManager ApiManager;
+
+        public ImageProvider(IHttpClientFactory httpClientFactory, ILogger<ImageProvider> logger, ShokoAPIManager apiManager)
         {
-            _httpClientFactory = httpClientFactory;
-            _logger = logger;
+            HttpClientFactory = httpClientFactory;
+            Logger = logger;
+            ApiManager = apiManager;
         }
 
         public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
         {
             var list = new List<RemoteImageInfo>();
-            try
-            {
+            try {
                 Shokofin.API.Info.EpisodeInfo episode = null;
                 Shokofin.API.Info.SeriesInfo series = null;
-                if (item is Episode)
-                {
-                    episode = await DataFetcher.GetEpisodeInfo(item.GetProviderId("Shoko Episode"));
+                if (item is Episode) {
+                    episode = await ApiManager.GetEpisodeInfo(item.GetProviderId("Shoko Episode"));
                 }
-                else if (item is Series)
-                {
+                else if (item is Series) {
                     var groupId = item.GetProviderId("Shoko Group");
                     if (string.IsNullOrEmpty(groupId))
-                    {
-                        series = await DataFetcher.GetSeriesInfo(item.GetProviderId("Shoko Series"));
-                    }
-                    else {
-                        series = (await DataFetcher.GetGroupInfo(groupId))?.DefaultSeries;
-                    }
+                        series = await ApiManager.GetSeriesInfo(item.GetProviderId("Shoko Series"));
+                    else
+                        series = (await ApiManager.GetGroupInfo(groupId))?.DefaultSeries;
                 }
-                else if (item is BoxSet || item is Movie)
-                {
-                    series = await DataFetcher.GetSeriesInfo(item.GetProviderId("Shoko Series"));
+                else if (item is BoxSet || item is Movie) {
+                    series = await ApiManager.GetSeriesInfo(item.GetProviderId("Shoko Series"));
                 }
-                else if (item is Season)
-                {
-                    series = await DataFetcher.GetSeriesInfoFromGroup(item.GetParent()?.GetProviderId("Shoko Group"), item.IndexNumber ?? 1);
+                else if (item is Season) {
+                    series = await ApiManager.GetSeriesInfoFromGroup(item.GetParent()?.GetProviderId("Shoko Group"), item.IndexNumber ?? 1);
                 }
-                if (episode != null)
-                {
-                    _logger.LogInformation($"Getting episode images ({episode.ID} - {item.Name})");
+                if (episode != null) {
+                    Logger.LogInformation($"Getting episode images ({episode.Id} - {item.Name})");
                     AddImage(ref list, ImageType.Primary, episode?.TvDB?.Thumbnail);
                 }
-                if (series != null)
-                {
-                    _logger.LogInformation($"Getting series images ({series.ID} - {item.Name})");
+                if (series != null) {
+                    Logger.LogInformation($"Getting series images ({series.Id} - {item.Name})");
                     var images = series.Shoko.Images;
                     AddImage(ref list, ImageType.Primary, series.AniDB.Poster);
                     foreach (var image in images?.Posters)
@@ -74,12 +69,11 @@ namespace Shokofin.Providers
                         AddImage(ref list, ImageType.Banner, image);
                 }
 
-                _logger.LogInformation($"List got {list.Count} item(s).");
+                Logger.LogInformation($"List got {list.Count} item(s).");
                 return list;
             }
-            catch (Exception e)
-            {
-                _logger.LogError($"{e.Message}{Environment.NewLine}{e.StackTrace}");
+            catch (Exception e) {
+                Logger.LogError(e, $"Threw unexpectedly; {e.Message}");
                 return list;
             }
         }
@@ -96,8 +90,7 @@ namespace Shokofin.Providers
             var imageUrl = image?.ToURLString();
             if (string.IsNullOrEmpty(imageUrl) || image.RelativeFilepath.Equals("/"))
                 return null;
-            return new RemoteImageInfo
-            {
+            return new RemoteImageInfo {
                 ProviderName = "Shoko",
                 Type = imageType,
                 Url = imageUrl
@@ -116,7 +109,7 @@ namespace Shokofin.Providers
 
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         {
-            return _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+            return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
         }
     }
 }
