@@ -29,7 +29,7 @@ namespace Shokofin
                 new PluginPageInfo
                 {
                     Name = name,
-                    EmbeddedResourcePath = $"{name}.configPage.html",
+                    EmbeddedResourcePath = $"{name}.Configuration.configPage.html",
                 }
             };
         }
