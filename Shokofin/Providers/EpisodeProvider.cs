@@ -69,7 +69,8 @@ namespace Shokofin.Providers
                     CommunityRating = (float) ((episode.AniDB.Rating.Value * 10) / episode.AniDB.Rating.MaxValue)
                 };
                 // NOTE: This next line will remain here till they fix the series merging for providers outside the MetadataProvider enum.
-                result.Item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{episode.Id}");
+                if (config.SeriesGrouping == Ordering.GroupType.ShokoGroup)
+                    result.Item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{episode.Id}");
                 result.Item.SetProviderId("Shoko Episode", episode.Id);
                 result.Item.SetProviderId("Shoko File", file.Id);
                 if (config.AddAniDBId)
