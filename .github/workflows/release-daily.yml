@@ -3,6 +3,10 @@ name: Daily Release
 on:
   push:
     branches: [ master ]
+  release:
+    types:
+      - prereleased
+    branches: master
 
 jobs:
   build:
