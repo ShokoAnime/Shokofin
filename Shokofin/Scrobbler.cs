@@ -12,14 +12,11 @@ namespace Shokofin
     {
         private readonly ISessionManager SessionManager;
 
-        private readonly ILibraryManager LibraryManager;
-
         private readonly ILogger<Scrobbler> Logger;
 
-        public Scrobbler(ISessionManager sessionManager, ILibraryManager libraryManager, ILogger<Scrobbler> logger)
+        public Scrobbler(ISessionManager sessionManager, ILogger<Scrobbler> logger)
         {
             SessionManager = sessionManager;
-            LibraryManager = libraryManager;
             Logger = logger;
         }
 
