@@ -66,7 +66,7 @@ namespace Shokofin.Providers
                     OriginalTitle = alternateTitle,
                     PremiereDate = episode.AniDB.AirDate,
                     Overview = Text.SanitizeTextSummary(episode.AniDB.Description),
-                    CommunityRating = (float) ((episode.AniDB.Rating.Value * 10) / episode.AniDB.Rating.MaxValue)
+                    CommunityRating = episode.AniDB.Rating.ToFloat(10),
                 };
                 // NOTE: This next line will remain here till they fix the series merging for providers outside the MetadataProvider enum.
                 if (config.SeriesGrouping == Ordering.GroupType.ShokoGroup)
