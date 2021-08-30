@@ -15,7 +15,7 @@ namespace Shokofin.Providers
 {
     public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>
     {
-        public string Name => "Shoko";
+        public string Name => Plugin.MetadataProviderName;
         
         private readonly IHttpClientFactory HttpClientFactory;
         

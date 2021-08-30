@@ -17,7 +17,7 @@ namespace Shokofin.Providers
 {
     public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
     {
-        public string Name => "Shoko";
+        public string Name => Plugin.MetadataProviderName;
 
         private readonly IHttpClientFactory HttpClientFactory;
 

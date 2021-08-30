@@ -16,7 +16,7 @@ namespace Shokofin.Providers
 {
     public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>
     {
-        public string Name => "Shoko";
+        public string Name => Plugin.MetadataProviderName;
 
         private readonly IHttpClientFactory HttpClientFactory;
 
