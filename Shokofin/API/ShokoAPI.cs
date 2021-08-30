@@ -33,6 +33,7 @@ namespace Shokofin.API
                 var apiBaseUrl = Plugin.Instance.Configuration.Host;
                 switch (requestType)
                 {
+                    case "PATCH":
                     case "POST":
                         var response = await _httpClient.PostAsync($"{apiBaseUrl}{url}", new StringContent(""));
                         return response.StatusCode == HttpStatusCode.OK ? response.Content.ReadAsStreamAsync().Result : null;
@@ -110,6 +111,12 @@ namespace Shokofin.API
             return responseStream != null ? await JsonSerializer.DeserializeAsync<File>(responseStream) : null;
         }
 
+        public static async Task<bool> ScrobbleFile(string id, bool watched, long? progress)
+        {
+            var responseStream = await CallApi($"/api/v3/File/{id}/Scrobble?watched={watched}&resumePosition={progress ?? 0}", "PATCH");
+            return responseStream != null;
+        }
+
         public static async Task<IEnumerable<File.FileDetailed>> GetFileByPath(string filename)
         {
             var responseStream = await CallApi($"/api/v3/File/PathEndsWith/{Uri.EscapeDataString(filename)}");
@@ -174,12 +181,6 @@ namespace Shokofin.API
         {
             var responseStream = await CallApi($"/api/v3/Series/{id}/Group");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<Group>(responseStream) : null;
-        }
-
-        public static async Task<bool> MarkEpisodeWatched(string id)
-        {
-            var responseStream = await CallApi($"/api/v3/Episode/{id}/watched/true", "POST");
-            return responseStream != null;
         }
 
         public static async Task<IEnumerable<SeriesSearchResult>> SeriesSearch(string query)

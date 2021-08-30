@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
@@ -12,11 +11,15 @@ namespace Shokofin
     public class Scrobbler : IServerEntryPoint
     {
         private readonly ISessionManager SessionManager;
+
+        private readonly ILibraryManager LibraryManager;
+
         private readonly ILogger<Scrobbler> Logger;
 
-        public Scrobbler(ISessionManager sessionManager, ILogger<Scrobbler> logger)
+        public Scrobbler(ISessionManager sessionManager, ILibraryManager libraryManager, ILogger<Scrobbler> logger)
         {
             SessionManager = sessionManager;
+            LibraryManager = libraryManager;
             Logger = logger;
         }
 
@@ -28,33 +31,26 @@ namespace Shokofin
 
         private async void OnPlaybackStopped(object sender, PlaybackStopEventArgs e)
         {
-            if (!Plugin.Instance.Configuration.UpdateWatchedStatus) return;
+            // Only sync-back if we enabled the feature in the plugin settings and an item is present
+            if (!Plugin.Instance.Configuration.UpdateWatchedStatus || e.Item == null)
+                return;
 
-            if (e.Item == null)
+            // Only known episodes and movies have a file id, so if it doesn't have one then it's either urecognized or from another library.
+            if (!e.Item.HasProviderId("Shoko File"))
             {
-                Logger.LogError("Event details incomplete. Cannot process current media");
+                Logger.LogWarning("Unable to find a Shoko File Id for item {ItemName}", e.Item.Name);
                 return;
             }
 
-            if (!e.Item.HasProviderId("Shoko Episode"))
-            {
-                Logger.LogError("Unrecognized file");
-                return; // Skip if file does exist in Shoko
-            }
-
-            if (e.Item is Episode episode && e.PlayedToCompletion)
-            {
-                var episodeId = episode.GetProviderId("Shoko Episode");
-
-                Logger.LogInformation("Item is played. Marking as watched on Shoko");
-                Logger.LogInformation($"{episode.SeriesName} S{episode.Season.IndexNumber}E{episode.IndexNumber} - {episode.Name} ({episodeId})");
-
-                var result = await ShokoAPI.MarkEpisodeWatched(episodeId);
-                if (result)
-                    Logger.LogInformation("Episode marked as watched!");
-                else
-                    Logger.LogError("Error marking episode as watched!");
-            }
+            var fileId = e.Item.GetProviderId("Shoko File");
+            var watched = e.PlayedToCompletion;
+            var resumePosition = e.PlaybackPositionTicks ?? 0;
+            Logger.LogInformation("Playback was stopped. Syncing watch state of file back to Shoko. (File={FileId},Watched={WatchState},ResumePosition={ResumePosition})", fileId, watched, resumePosition);
+            var result = await ShokoAPI.ScrobbleFile(fileId, watched, resumePosition);
+            if (result)
+                Logger.LogInformation("File marked as watched! (File={FileId})", fileId);
+            else
+                Logger.LogWarning("An error occured while syncing watch state of file back to Shoko! (File={FileId})", fileId);
         }
 
         public void Dispose()
