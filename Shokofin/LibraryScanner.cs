@@ -24,6 +24,15 @@ namespace Shokofin
             Logger = logger;
         }
 
+        public bool IsEnabledForItem(BaseItem item)
+        {
+            if (item == null)
+                return false;
+            var libraryOptions = LibraryManager.GetLibraryOptions(item);
+            return libraryOptions != null && 
+                libraryOptions.TypeOptions.Any(o => o.Type == nameof (Series) && o.MetadataFetchers.Contains(Plugin.MetadataProviderName));
+        }
+
         /// <summary>
         /// It's not really meant to be used this way, but this is our library
         /// "scanner". It scans the files and folders, and conditionally filters
@@ -41,13 +50,12 @@ namespace Shokofin
 
             try {
                 // Enable the scanner if we selected to use the Shoko provider for any metadata type on the current root folder.
-                var libraryOptions = LibraryManager.GetLibraryOptions(parent);
-                if (!libraryOptions.TypeOptions.Any(o => o.MetadataFetchers.Contains("Shoko")))
+                if (IsEnabledForItem(parent))
                     return false;
 
                 var fullPath = fileInfo.FullName;
-                var rootFolder = ApiManager.FindMediaFolder(fullPath, parent as Folder, root);
-                var partialPath = fullPath.Substring(rootFolder.Path.Length);
+                var mediaFolder = ApiManager.FindMediaFolder(fullPath, parent as Folder, root);
+                var partialPath = fullPath.Substring(mediaFolder.Path.Length);
                 if (fileInfo.IsDirectory)
                     return ScanDirectory(partialPath, fullPath, LibraryManager.GetInheritedContentType(parent));
                 else
@@ -67,10 +75,10 @@ namespace Shokofin
 
             // We warn here since we enabled the provider in our library, but we can't find a match for the given folder path.
             if (series == null) {
-                Logger.LogWarning($"Skipped unknown folder at path \"{partialPath}\"");
+                Logger.LogWarning("Skipped unknown folder at path {Path}", partialPath);
                 return false;
             }
-            Logger.LogInformation($"Found series with id \"{series.Id}\" at path \"{partialPath}\"");
+            Logger.LogInformation("Found series {SeriesName} (Series={SeriesId})", series.AniDB.Title, series.Id);
 
             // Filter library if we enabled the option.
             if (Plugin.Instance.Configuration.FilterOnLibraryTypes) switch (libraryType) {
@@ -78,7 +86,7 @@ namespace Shokofin
                     break;
                 case "tvshows":
                     if (series.AniDB.Type == SeriesType.Movie) {
-                        Logger.LogInformation($"Library seperatation is enabled, ignoring series with id \"{series.Id}\" at path \"{partialPath}\"");
+                        Logger.LogInformation("Library seperatation is enabled, ignoring series. (Series={SeriesId}", series.Id);
                         return true;
                     }
 
@@ -88,7 +96,7 @@ namespace Shokofin
                     break;
                 case "movies":
                     if (series.AniDB.Type != SeriesType.Movie) {
-                        Logger.LogInformation($"Library seperatation is enabled, ignoring series with id \"{series.Id}\" at path \"{partialPath}\"");
+                        Logger.LogInformation("Library seperatation is enabled, ignoring series. (Series={SeriesId}", series.Id);
                         return true;
                     }
 
@@ -112,14 +120,14 @@ namespace Shokofin
 
             // We warn here since we enabled the provider in our library, but we can't find a match for the given file path.
             if (file == null) {   
-                Logger.LogWarning($"Skipped unknown file at path \"{partialPath}\"");
+                Logger.LogWarning("Skipped unknown file at path {Path}", partialPath);
                 return false;
             }
-            Logger.LogInformation($"Found file \"{file.Id}\" at path \"{partialPath}\"");
+            Logger.LogInformation("Found episode {EpisodeName} (Series={SeriesId},Episode={EpisodeId},File={FileId}})", series.AniDB.Title, series.Id, episode.Id, file.Id);
 
             // We're going to post process this file later, but we don't want to include it in our library for now.
             if (episode.ExtraType != null) {
-                Logger.LogInformation($"File was assigned an extra type, so ignoring file with id \"{file.Id}\" at path \"{partialPath}\"");
+                Logger.LogInformation("Episode was assigned an extra type, ignoring episode. (Series={SeriesId},Episode={EpisodeId},File={FileId}})", series.AniDB.Title, series.Id, episode.Id, file.Id);
                 ApiManager.MarkEpisodeAsIgnored(episode.Id, series.Id, fullPath);
                 return true;
             }

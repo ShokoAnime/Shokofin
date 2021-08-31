@@ -22,7 +22,7 @@ namespace Shokofin.API
 
         private readonly ILibraryManager LibraryManager;
 
-        private static readonly List<Folder> RootFolderList = new List<Folder>();
+        private static readonly List<Folder> MediaFolderList = new List<Folder>();
 
         private static readonly Dictionary<string, string> SeriesIdToPathDictionary = new Dictionary<string, string>();
 
@@ -62,25 +62,28 @@ namespace Shokofin.API
 
         public Folder FindMediaFolder(string path, Folder parent, Folder root)
         {
-            var rootFolder = RootFolderList.Find((folder) => path.StartsWith(folder.Path));
+            var mediaFolder = MediaFolderList.Find((folder) => path.StartsWith(folder.Path));
             // Look for the root folder for the current item.
-            if (rootFolder != null) {
-                return rootFolder;
+            if (mediaFolder != null) {
+                return mediaFolder;
             }
-            rootFolder = parent;
-            while (rootFolder.Parent != root) {
-                if (rootFolder.Parent == null) {
+            mediaFolder = parent;
+            while (mediaFolder.ParentId.Equals(root.Id)) {
+                if (mediaFolder.Parent == null) {
+                    if (mediaFolder.ParentId.Equals(Guid.Empty))
                     break;
+                    mediaFolder = LibraryManager.GetItemById(mediaFolder.ParentId) as Folder;
+                    continue;
                 }
-                rootFolder = rootFolder.Parent;
+                mediaFolder = mediaFolder.Parent;
             }
-            RootFolderList.Add(rootFolder);
-            return rootFolder;
+            MediaFolderList.Add(mediaFolder);
+            return mediaFolder;
         }
 
         public string StripMediaFolder(string fullPath)
         {
-            var mediaFolder = RootFolderList.Find((folder) => fullPath.StartsWith(folder.Path));
+            var mediaFolder = MediaFolderList.Find((folder) => fullPath.StartsWith(folder.Path));
             // If no root folder was found, then we _most likely_ already stripped it out beforehand.
             if (mediaFolder == null || string.IsNullOrEmpty(mediaFolder?.Path))
                 return fullPath;
@@ -93,7 +96,7 @@ namespace Shokofin.API
         public void Clear()
         {
             DataCache.Dispose();
-            RootFolderList.Clear();
+            MediaFolderList.Clear();
             SeriesIdToPathDictionary.Clear();
             SeriesPathToIdDictionary.Clear();
             SeriesIdToEpisodeIdDictionery.Clear();
