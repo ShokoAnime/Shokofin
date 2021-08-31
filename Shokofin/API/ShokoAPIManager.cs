@@ -44,16 +44,6 @@ namespace Shokofin.API
 
         private static Dictionary<string, Guid> GroupIdToGuidDictionary = new Dictionary<string, Guid>();
 
-        private bool __isScanning = false;
-
-        public bool IsScanning { get { return __isScanning; } }
-
-        public void Scan()
-        {
-            if (!__isScanning)
-                __isScanning = true;
-        }
-
         public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ILibraryManager libraryManager)
         {
             Logger = logger;
@@ -72,7 +62,6 @@ namespace Shokofin.API
 
         public Folder FindMediaFolder(string path, Folder parent, Folder root)
         {
-            __isScanning = true;
             var rootFolder = RootFolderList.Find((folder) => path.StartsWith(folder.Path));
             // Look for the root folder for the current item.
             if (rootFolder != null) {
@@ -103,7 +92,6 @@ namespace Shokofin.API
 
         public void Clear()
         {
-            __isScanning = false;
             DataCache.Dispose();
             RootFolderList.Clear();
             SeriesIdToPathDictionary.Clear();
