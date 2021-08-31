@@ -1,3 +1,4 @@
+using System.Linq;
 using Shokofin.API.Info;
 using Shokofin.API.Models;
 
@@ -76,7 +77,7 @@ namespace Shokofin.Utils
                         var sizes = s.Shoko.Sizes.Total;
                         if (s != series) {
                             if (episode.AniDB.Type == EpisodeType.Special) {
-                                var index = series.FilteredSpecialEpisodesList.FindIndex(e => string.Equals(e.Id, episode.Id));
+                                var index = series.SpecialsList.FindIndex(e => string.Equals(e.Id, episode.Id));
                                 if (index == -1)
                                     throw new System.IndexOutOfRangeException("Episode not in filtered list");
                                 return offset - (index + 1);
@@ -96,7 +97,7 @@ namespace Shokofin.Utils
                         }
                         else {
                             if (episode.AniDB.Type == EpisodeType.Special) {
-                                offset -= series.FilteredSpecialEpisodesList.Count;
+                                offset -= series.SpecialsList.Count;
                             }
                             offset += (sizes?.Episodes ?? 0) + (sizes?.Parodies ?? 0) + (sizes?.Others ?? 0);
                         }
@@ -111,7 +112,7 @@ namespace Shokofin.Utils
         /// Get index number for an episode in a series.
         /// </summary>
         /// <returns>Absolute index.</returns>
-        public static int GetIndexNumber(SeriesInfo series, EpisodeInfo episode)
+        public static int GetEpisodeNumber(GroupInfo group, SeriesInfo series, EpisodeInfo episode)
         {
             switch (Plugin.Instance.Configuration.SeriesGrouping)
             {
@@ -119,19 +120,23 @@ namespace Shokofin.Utils
                 case GroupType.Default:
                     return episode.AniDB.EpisodeNumber;
                 case GroupType.MergeFriendly: {
-                    var epNum = episode?.TvDB.Number ?? 0;
-                    if (epNum == 0)
+                    var episodeNumber = episode?.TvDB?.Number ?? 0;
+                    if (episodeNumber == 0)
                         goto case GroupType.Default;
-                    return epNum;
+                    return episodeNumber;
                 }
                 case GroupType.ShokoGroup: {
+                    int offset = 0;
                     if (episode.AniDB.Type == EpisodeType.Special) {
-                        var index = series.FilteredSpecialEpisodesList.FindIndex(e => string.Equals(e.Id, episode.Id));
+                        var seriesIndex = group.SeriesList.FindIndex(s => string.Equals(s.Id, series.Id));
+                        if (seriesIndex == -1)
+                            throw new System.IndexOutOfRangeException("Series is not part of the provided group");
+                        var index = series.SpecialsList.FindIndex(e => string.Equals(e.Id, episode.Id));
                         if (index == -1)
                             throw new System.IndexOutOfRangeException("Episode not in filtered list");
-                        return -(index + 1);
+                        offset = group.SeriesList.GetRange(0, seriesIndex).Aggregate(0, (count, series) => count + series.SpecialsList.Count);
+                        return offset + (index + 1);
                     }
-                    int offset = 0;
                     var sizes = series.Shoko.Sizes.Total;
                     switch (episode.AniDB.Type) {
                         case EpisodeType.Normal:
@@ -143,6 +148,13 @@ namespace Shokofin.Utils
                         case EpisodeType.Other:
                             offset += sizes?.Parodies ?? 0;
                             goto case EpisodeType.Parody;
+                        // Add them to the bottom of the list if we didn't filter them out properly.
+                        case EpisodeType.OpeningSong:
+                            offset += sizes?.Others ?? 0;
+                            goto case EpisodeType.Other;
+                        case EpisodeType.Trailer:
+                            offset += sizes?.Credits ?? 0;
+                            goto case EpisodeType.OpeningSong;
                     }
                     return offset + episode.AniDB.EpisodeNumber;
                 }

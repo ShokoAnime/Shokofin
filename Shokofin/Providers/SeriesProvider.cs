@@ -52,13 +52,13 @@ namespace Shokofin.Providers
             var result = new MetadataResult<Series>();
             var series = await ApiManager.GetSeriesInfoByPath(info.Path);
             if (series == null) {
-                Logger.LogWarning($"Unable to find series info for path {info.Path}");
+                Logger.LogWarning("Unable to find group info for path {Path}", info.Path);
                 return result;
             }
-            Logger.LogInformation($"Found series info for path {info.Path}");
 
             var tags = await ApiManager.GetTags(series.Id);
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
+            Logger.LogInformation("Found series {SeriesName} (Series={SeriesId})", displayTitle, series.Id);
 
             result.Item = new Series {
                 Name = displayTitle,
@@ -93,16 +93,15 @@ namespace Shokofin.Providers
             var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes;
             var group = await ApiManager.GetGroupInfoByPath(info.Path, filterLibrary ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default);
             if (group == null) {
-                Logger.LogWarning($"Unable to find series info for path {info.Path}");
+                Logger.LogWarning("Unable to find group info for path {Path}", info.Path);
                 return result;
             }
-            Logger.LogInformation($"Found series info for path {info.Path}");
 
             var series = group.DefaultSeries;
+            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, group.Shoko.Name, info.MetadataLanguage);
+            Logger.LogInformation("Found series {SeriesName} (Series={SeriesId},Group={GroupId})", displayTitle, series.Id, group.Id);
 
             var tags = await ApiManager.GetTags(series.Id);
-            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
-
             result.Item = new Series {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
@@ -114,7 +113,7 @@ namespace Shokofin.Providers
                 Tags = tags,
                 CommunityRating = series.AniDB.Rating.ToFloat(10),
             };
-                // NOTE: This next line will remain here till they fix the series merging for providers outside the MetadataProvider enum.
+            // NOTE: This next line will remain here till they fix the series merging for providers outside the MetadataProvider enum.
             result.Item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{series.Id}");
             result.Item.SetProviderId("Shoko Series", series.Id);
             result.Item.SetProviderId("Shoko Group", group.Id);

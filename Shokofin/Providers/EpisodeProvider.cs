@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,31 +44,79 @@ namespace Shokofin.Providers
 
                 // if file is null then series and episode is also null.
                 if (file == null) {
-                    Logger.LogWarning($"Unable to find file info for path {info.Path}");
+                    Logger.LogWarning("Unable to find episode info for path {Path}", info.Path);
                     return result;
                 }
-                Logger.LogInformation($"Found file info for path {info.Path}");
 
                 string displayTitle, alternateTitle;
                 if (series.AniDB.Type == API.Models.SeriesType.Movie)
                     ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, series.Shoko.Name, episode.Shoko.Name, info.MetadataLanguage);
                 else
                     ( displayTitle, alternateTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, episode.Shoko.Name, info.MetadataLanguage);
+                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId})", displayTitle, file.Id, episode.Id);
 
-                if (group != null && episode.AniDB.Type != EpisodeType.Normal && config.MarkSpecialsWhenGrouped) {
-                    displayTitle = $"SP {episode.AniDB.EpisodeNumber} {displayTitle}";
-                    alternateTitle = $"SP {episode.AniDB.EpisodeNumber} {alternateTitle}";
+                var episodeNumber = Ordering.GetEpisodeNumber(group, series, episode);
+                var seasonNumber = Ordering.GetSeasonNumber(group, series, episode);
+
+                if (group != null && config.MarkSpecialsWhenGrouped && episode.AniDB.Type != EpisodeType.Normal) switch (episode.AniDB.Type) {
+                    case EpisodeType.Special:
+                        displayTitle = $"S{episodeNumber} {displayTitle}";
+                        alternateTitle = $"S{episodeNumber} {alternateTitle}";
+                        break;
+                    case EpisodeType.ThemeSong:
+                    case EpisodeType.EndingSong:
+                    case EpisodeType.OpeningSong:
+                        displayTitle = $"C{episodeNumber} {displayTitle}";
+                        alternateTitle = $"C{episodeNumber} {alternateTitle}";
+                        break;
+                    case EpisodeType.Trailer:
+                        displayTitle = $"T{episodeNumber} {displayTitle}";
+                        alternateTitle = $"T{episodeNumber} {alternateTitle}";
+                        break;
+                    case EpisodeType.Parody:
+                        displayTitle = $"P{episodeNumber} {displayTitle}";
+                        alternateTitle = $"P{episodeNumber} {alternateTitle}";
+                        break;
+                    case EpisodeType.Other:
+                        displayTitle = $"O{episodeNumber} {displayTitle}";
+                        alternateTitle = $"O{episodeNumber} {alternateTitle}";
+                        break;
+                    default:
+                        displayTitle = $"U{episodeNumber} {displayTitle}";
+                        alternateTitle = $"U{episodeNumber} {alternateTitle}";
+                        break;
                 }
 
-                result.Item = new Episode {
-                    IndexNumber = Ordering.GetIndexNumber(series, episode),
-                    ParentIndexNumber = Ordering.GetSeasonNumber(group, series, episode),
-                    Name = displayTitle,
-                    OriginalTitle = alternateTitle,
-                    PremiereDate = episode.AniDB.AirDate,
-                    Overview = Text.SanitizeTextSummary(episode.AniDB.Description),
-                    CommunityRating = episode.AniDB.Rating.ToFloat(10),
-                };
+                if (group != null && episode.AniDB.Type == EpisodeType.Special) {
+                    int previousEpisodeNumber;
+                    if (!series.SpesialsAnchors.TryGetValue(episode.Id, out var previousEpisode))
+                        previousEpisodeNumber = Ordering.GetEpisodeNumber(group, series, episode);
+                    else
+                        previousEpisodeNumber = series.EpisodeCount;
+                    result.Item = new Episode {
+                        IndexNumber = episodeNumber,
+                        ParentIndexNumber = 0,
+                        AirsAfterSeasonNumber = seasonNumber,
+                        AirsBeforeEpisodeNumber = previousEpisodeNumber + 1,
+                        AirsBeforeSeasonNumber = seasonNumber + 1,
+                        Name = displayTitle,
+                        OriginalTitle = alternateTitle,
+                        PremiereDate = episode.AniDB.AirDate,
+                        Overview = Text.SanitizeTextSummary(episode.AniDB.Description),
+                        CommunityRating = episode.AniDB.Rating.ToFloat(10),
+                    };
+                }
+                else {
+                    result.Item = new Episode {
+                        IndexNumber = episodeNumber,
+                        ParentIndexNumber = seasonNumber,
+                        Name = displayTitle,
+                        OriginalTitle = alternateTitle,
+                        PremiereDate = episode.AniDB.AirDate,
+                        Overview = Text.SanitizeTextSummary(episode.AniDB.Description),
+                        CommunityRating = episode.AniDB.Rating.ToFloat(10),
+                    };
+                }
                 // NOTE: This next line will remain here till they fix the series merging for providers outside the MetadataProvider enum.
                 if (config.SeriesGrouping == Ordering.GroupType.ShokoGroup)
                     result.Item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{episode.Id}");

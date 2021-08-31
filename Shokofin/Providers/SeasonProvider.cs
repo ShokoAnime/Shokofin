@@ -34,6 +34,8 @@ namespace Shokofin.Providers
                     default:
                         return GetDefaultMetadata(info, cancellationToken);
                     case Ordering.GroupType.ShokoGroup:
+                        if (info.IndexNumber.HasValue && info.IndexNumber.Value == 0)
+                            goto default;
                         return await GetShokoGroupedMetadata(info, cancellationToken);
                 }
             }
@@ -64,20 +66,19 @@ namespace Shokofin.Providers
         {
             var result = new MetadataResult<Season>();
 
-            if (!info.SeriesProviderIds.ContainsKey("Shoko Group")) {
-                Logger.LogWarning($"Shoko Group id not stored for series");
+            if (!info.SeriesProviderIds.TryGetValue("Shoko Group", out var groupId)) {
+                Logger.LogWarning($"Unable refresh item, Shoko Group Id was not stored for Series.");
                 return result;
             }
 
-            var groupId = info.SeriesProviderIds["Shoko Group"];
             var seasonNumber = info.IndexNumber ?? 1;
             var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes;
             var series = await ApiManager.GetSeriesInfoFromGroup(groupId, seasonNumber, filterLibrary ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default);
             if (series == null) {
-                Logger.LogWarning($"Unable to find series info for G{groupId}:S{seasonNumber}");
+                Logger.LogWarning("Unable to find selected series in Group (Group={GroupId})", groupId);
                 return result;
             }
-            Logger.LogInformation($"Found series info for G{groupId}:S{seasonNumber}");
+            Logger.LogInformation("Found Series {SeriesName} (Group={GroupId},Series={SeriesId})", series.Shoko.Name, groupId, series.Id);
 
             var tags = await ApiManager.GetTags(series.Id);
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
