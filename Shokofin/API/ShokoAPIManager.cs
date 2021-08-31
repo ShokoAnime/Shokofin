@@ -71,7 +71,7 @@ namespace Shokofin.API
             while (mediaFolder.ParentId.Equals(root.Id)) {
                 if (mediaFolder.Parent == null) {
                     if (mediaFolder.ParentId.Equals(Guid.Empty))
-                    break;
+                        break;
                     mediaFolder = LibraryManager.GetItemById(mediaFolder.ParentId) as Folder;
                     continue;
                 }
@@ -97,6 +97,7 @@ namespace Shokofin.API
         {
             DataCache.Dispose();
             MediaFolderList.Clear();
+            EpisodeIdToSeriesIdDictionary.Clear();
             SeriesIdToPathDictionary.Clear();
             SeriesPathToIdDictionary.Clear();
             SeriesIdToEpisodeIdDictionery.Clear();
@@ -229,6 +230,15 @@ namespace Shokofin.API
         #endregion
         #region Episode Info
 
+        public EpisodeInfo GetEpisodeInfoSync(string episodeId)
+        {
+            if (string.IsNullOrEmpty(episodeId))
+                return null;
+            if (DataCache.TryGetValue<EpisodeInfo>($"episode:{episodeId}", out var info))
+                return info;
+            return GetEpisodeInfo(episodeId).GetAwaiter().GetResult();
+        }
+
         public async Task<EpisodeInfo> GetEpisodeInfo(string episodeId)
         {
             if (string.IsNullOrEmpty(episodeId))
@@ -275,6 +285,11 @@ namespace Shokofin.API
         public bool MarkEpisodeAsFound(string episodeId, string seriesId)
         {
             return (SeriesIdToEpisodeIdDictionery.ContainsKey(seriesId) ? SeriesIdToEpisodeIdDictionery[seriesId] : (SeriesIdToEpisodeIdDictionery[seriesId] = new HashSet<string>())).Add(episodeId);
+        }
+
+        public bool IsEpisodeOnDisk(EpisodeInfo episode, SeriesInfo series)
+        {
+            return SeriesIdToEpisodeIdDictionery.ContainsKey(series.Id) && SeriesIdToEpisodeIdDictionery[series.Id].Contains(episode.Id);
         }
 
         private static ExtraType? GetExtraType(Episode.AniDB episode)
@@ -382,6 +397,37 @@ namespace Shokofin.API
             return await CreateSeriesInfo(series, seriesId);
         }
 
+        private static Dictionary<string, string> EpisodeIdToSeriesIdDictionary = new Dictionary<string, string>();
+
+        public SeriesInfo GetSeriesInfoForEpisodeSync(string episodeId)
+        {
+            if (EpisodeIdToSeriesIdDictionary.ContainsKey(episodeId)) {
+                var seriesId = EpisodeIdToSeriesIdDictionary[episodeId];
+                if (DataCache.TryGetValue<SeriesInfo>($"series:{seriesId}", out var info))
+                    return info;
+
+                return GetSeriesInfo(seriesId).GetAwaiter().GetResult();
+            }
+
+            return GetSeriesInfoForEpisode(episodeId).GetAwaiter().GetResult();
+        }
+
+        public async Task<SeriesInfo> GetSeriesInfoForEpisode(string episodeId)
+        {
+            string seriesId;
+            if (EpisodeIdToSeriesIdDictionary.ContainsKey(episodeId)) {
+                seriesId = EpisodeIdToSeriesIdDictionary[episodeId];
+            }
+            else {
+                var group = await ShokoAPI.GetGroupFromSeries(episodeId);
+                if (group == null)
+                    return null;
+                seriesId = group.IDs.ID.ToString();
+            }
+
+            return await GetSeriesInfo(seriesId);
+        }
+
         private async Task<SeriesInfo> CreateSeriesInfo(Series series, string seriesId = null)
         {
             if (series == null)
@@ -455,6 +501,11 @@ namespace Shokofin.API
             return (GroupIdToSeriesIdDictionery.ContainsKey(groupId) ? GroupIdToSeriesIdDictionery[groupId] : (GroupIdToSeriesIdDictionery[groupId] = new HashSet<string>())).Add(seriesId);
         }
 
+        public bool IsSeriesOnDisk(SeriesInfo series, GroupInfo group)
+        {
+            var groupId = group?.Id ?? "";
+            return GroupIdToSeriesIdDictionery.ContainsKey(groupId) && GroupIdToSeriesIdDictionery[groupId].Contains(series.Id);
+        }
 
         public string GetPathForSeries(string seriesId)
         {
