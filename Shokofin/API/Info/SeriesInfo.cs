@@ -7,8 +7,6 @@ namespace Shokofin.API.Info
     {
         public string Id;
 
-        public System.Guid Guid;
-
         public Series Shoko;
 
         public Series.AniDB AniDB;

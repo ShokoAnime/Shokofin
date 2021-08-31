@@ -392,7 +392,6 @@ namespace Shokofin.API
             if (DataCache.TryGetValue<SeriesInfo>(cacheKey, out info))
                 return info;
 
-            var seriesGuid = GetSeriesGuid(seriesId);
             var aniDb = await ShokoAPI.GetSeriesAniDb(seriesId);
             var tvDbId = series.IDs.TvDB?.FirstOrDefault();
             var episodeList = await ShokoAPI.GetEpisodesFromSeries(seriesId)
@@ -401,7 +400,6 @@ namespace Shokofin.API
             var filteredSpecialEpisodesList = episodeList.Where(e => e.AniDB.Type == EpisodeType.Special && e.ExtraType == null).ToList();
             info = new SeriesInfo {
                 Id = seriesId,
-                Guid = seriesGuid,
                 Shoko = series,
                 AniDB = aniDb,
                 TvDBId = tvDbId != 0 ? tvDbId.ToString() : null,
@@ -420,23 +418,6 @@ namespace Shokofin.API
             return (GroupIdToSeriesIdDictionery.ContainsKey(groupId) ? GroupIdToSeriesIdDictionery[groupId] : (GroupIdToSeriesIdDictionery[groupId] = new HashSet<string>())).Add(seriesId);
         }
 
-        private Guid GetSeriesGuid(string seriesId)
-        {
-            if (SeriesIdToGuidDictionary.ContainsKey(seriesId))
-                return SeriesIdToGuidDictionary[seriesId];
-            var itemType = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup ? nameof (MediaBrowser.Controller.Entities.TV.Season) : nameof (MediaBrowser.Controller.Entities.TV.Series);
-            var result = LibraryManager.GetItemsResult(new InternalItemsQuery {
-                HasAnyProviderId = {
-                    ["Shoko Series"] = seriesId,
-                },
-                IncludeItemTypes = new[] { itemType, nameof (MediaBrowser.Controller.Entities.Movies.BoxSet) },
-                IsVirtualItem = false,
-                IsPlaceHolder = false,
-            });
-            var seriesGuid = result?.Items.FirstOrDefault()?.Id ?? Guid.NewGuid();
-            SeriesIdToGuidDictionary[seriesId] = seriesGuid;
-            return seriesGuid;
-        }
 
         public string GetPathForSeries(string seriesId)
         {
@@ -510,7 +491,6 @@ namespace Shokofin.API
             return await GetGroupInfo(groupId, filterByType);
         }
 
-
         private async Task<GroupInfo> CreateGroupInfo(Group group, string groupId, Ordering.GroupFilterType filterByType)
         {
             if (group == null)
@@ -580,10 +560,8 @@ namespace Shokofin.API
             if (foundIndex == -1)
                 throw new System.Exception("Unable to get a base-point for seasions withing the group");
 
-            var groupGuid = GetGroupGuid(groupId);
             groupInfo = new GroupInfo {
                 Id = groupId,
-                Guid = groupGuid,
                 Shoko = group,
                 SeriesList = seriesList,
                 DefaultSeries = seriesList[foundIndex],
@@ -593,24 +571,6 @@ namespace Shokofin.API
                 SeriesIdToGroupIdDictionary[series.Id] = groupId;
             DataCache.Set<GroupInfo>(cacheKey, groupInfo, DefaultTimeSpan);
             return groupInfo;
-        }
-
-        private Guid GetGroupGuid(string groupId)
-        {
-            if (GroupIdToGuidDictionary.ContainsKey(groupId))
-                return GroupIdToGuidDictionary[groupId];
-
-            var result = LibraryManager.GetItemsResult(new InternalItemsQuery {
-                HasAnyProviderId = {
-                    ["Shoko Group"] = groupId,
-                },
-                IncludeItemTypes = new[] { nameof (MediaBrowser.Controller.Entities.TV.Series), nameof (MediaBrowser.Controller.Entities.Movies.BoxSet),  },
-                IsVirtualItem = false,
-                IsPlaceHolder = false,
-            });
-            var groupGuid = result?.Items.FirstOrDefault()?.Id ?? Guid.NewGuid();
-            GroupIdToGuidDictionary[groupId] = groupGuid;
-            return groupGuid;
         }
 
         #endregion

@@ -8,11 +8,6 @@ namespace Shokofin.API.Info
     {
         public string Id;
 
-        /// <summary>
-        /// Shared Guid for series merging.
-        /// </summary>
-        public System.Guid Guid;
-
         public Group Shoko;
 
         public List<SeriesInfo> SeriesList;
