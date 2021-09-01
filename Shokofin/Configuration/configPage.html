@@ -105,7 +105,7 @@
                             </select>
                         </div>
                         <label class="checkboxContainer">
-                            <input is="emby-checkbox" type="checkbox" id="SeperateLibraries" />
+                            <input is="emby-checkbox" type="checkbox" id="FilterOnLibraryTypes" />
                             <span>Disallow overlap of Movies and Series library types</span>
                         </label>
                         <label class="checkboxContainer">
@@ -181,7 +181,7 @@
                         document.querySelector('#BoxSetGrouping').value = config.BoxSetGrouping;
                         document.querySelector('#MovieOrdering').value = config.MovieOrdering;
                         document.querySelector('#MarkSpecialsWhenGrouped').checked = config.MarkSpecialsWhenGrouped;
-                        document.querySelector('#SeperateLibraries').checked = config.SeperateLibraries;
+                        document.querySelector('#FilterOnLibraryTypes').checked = config.FilterOnLibraryTypes;
                         document.querySelector('#AddAniDBId').checked = config.AddAniDBId;
                         document.querySelector('#AddTvDBId').checked = config.AddTvDBId;
                         if (config.SeriesGrouping === "ShokoGroup") {
@@ -252,7 +252,7 @@
                         config.BoxSetGrouping = document.querySelector('#BoxSetGrouping').value;
                         config.MovieOrdering = document.querySelector('#MovieOrdering').value;
                         config.MarkSpecialsWhenGrouped = document.querySelector('#MarkSpecialsWhenGrouped').checked;
-                        config.SeperateLibraries = document.querySelector('#SeperateLibraries').checked;
+                        config.FilterOnLibraryTypes = document.querySelector('#FilterOnLibraryTypes').checked;
                         config.AddAniDBId = document.querySelector('#AddAniDBId').checked;
                         config.AddTvDBId = document.querySelector('#AddTvDBId').checked;
                         ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
