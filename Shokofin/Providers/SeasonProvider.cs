@@ -82,11 +82,14 @@ namespace Shokofin.Providers
 
             var tags = await ApiManager.GetTags(series.Id);
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
+            var sortTitle = $"S{seasonNumber} - {series.Shoko.Name}";
 
             result.Item = new Season {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
                 IndexNumber = seasonNumber,
+                SortName = sortTitle,
+                ForcedSortName = sortTitle,
                 Overview = Text.GetDescription(series),
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
