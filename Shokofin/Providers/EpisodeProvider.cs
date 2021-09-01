@@ -53,7 +53,7 @@ namespace Shokofin.Providers
                     ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, series.Shoko.Name, episode.Shoko.Name, info.MetadataLanguage);
                 else
                     ( displayTitle, alternateTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, episode.Shoko.Name, info.MetadataLanguage);
-                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId})", displayTitle, file.Id, episode.Id);
+                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", displayTitle, file.Id, episode.Id, series.Id);
 
                 var episodeNumber = Ordering.GetEpisodeNumber(group, series, episode);
                 var seasonNumber = Ordering.GetSeasonNumber(group, series, episode);

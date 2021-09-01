@@ -78,7 +78,7 @@ namespace Shokofin
                 Logger.LogWarning("Skipped unknown folder at path {Path}", partialPath);
                 return false;
             }
-            Logger.LogInformation("Found series {SeriesName} (Series={SeriesId})", series.AniDB.Title, series.Id);
+            Logger.LogInformation("Found series {SeriesName} (Series={SeriesId})", series.Shoko.Name, series.Id);
 
             // Filter library if we enabled the option.
             if (Plugin.Instance.Configuration.FilterOnLibraryTypes) switch (libraryType) {
@@ -123,7 +123,7 @@ namespace Shokofin
                 Logger.LogWarning("Skipped unknown file at path {Path}", partialPath);
                 return false;
             }
-            Logger.LogInformation("Found episode {EpisodeName} (Series={SeriesId},Episode={EpisodeId},File={FileId}})", series.AniDB.Title, series.Id, episode.Id, file.Id);
+            Logger.LogInformation("Found episode {EpisodeName} (Series={SeriesId},Episode={EpisodeId},File={FileId}})", series.Shoko.Name, series.Id, episode.Id, file.Id);
 
             // We're going to post process this file later, but we don't want to include it in our library for now.
             if (episode.ExtraType != null) {

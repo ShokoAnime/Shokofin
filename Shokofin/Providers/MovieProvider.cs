@@ -43,14 +43,15 @@ namespace Shokofin.Providers
 
                 // if file is null then series and episode is also null.
                 if (file == null) {
-                    Logger.LogWarning($"Unable to find file info for path {info.Path}");
+                    Logger.LogWarning("Unable to find movie info for path {Path}", info.Path);
                     return result;
                 }
 
-                bool isMultiEntry = series.Shoko.Sizes.Total.Episodes > 1;
+                var ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, series.Shoko.Name, episode.Shoko.Name, info.MetadataLanguage);
+                Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", displayTitle, file.Id, episode.Id, series.Id);
 
                 var tags = await ApiManager.GetTags(series.Id);
-                var ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, series.Shoko.Name, episode.Shoko.Name, info.MetadataLanguage);
+                bool isMultiEntry = series.Shoko.Sizes.Total.Episodes > 1;
                 var rating = isMultiEntry ? episode.AniDB.Rating.ToFloat(10) : series.AniDB.Rating.ToFloat(10);
 
                 result.Item = new Movie {
