@@ -83,9 +83,7 @@ namespace Shokofin.Utils
                 default:
                 case Text.TextSourceType.Default:
                 case Text.TextSourceType.AllowOthers:
-                    if (episode.TvDB != null)
-                        goto case Text.TextSourceType.OnlyAniDb;
-                    overview = episode.TvDB.Description;
+                    overview = episode.TvDB?.Description ?? "";
                     if (string.IsNullOrEmpty(overview))
                         goto case Text.TextSourceType.OnlyAniDb;
                     break;
@@ -103,9 +101,7 @@ namespace Shokofin.Utils
                 default:
                 case Text.TextSourceType.Default:
                 case Text.TextSourceType.AllowOthers:
-                    if (series.TvDB != null)
-                        goto case Text.TextSourceType.OnlyAniDb;
-                    overview = series.TvDB.Description;
+                    overview = series.TvDB?.Description ?? "";
                     if (string.IsNullOrEmpty(overview))
                         goto case Text.TextSourceType.OnlyAniDb;
                     break;
