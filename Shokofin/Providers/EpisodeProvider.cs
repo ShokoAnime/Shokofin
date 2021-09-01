@@ -78,13 +78,13 @@ namespace Shokofin.Providers
                         displayTitle = $"P{episodeNumber} {displayTitle}";
                         alternateTitle = $"P{episodeNumber} {alternateTitle}";
                         break;
-                    case EpisodeType.Other:
-                        displayTitle = $"O{episodeNumber} {displayTitle}";
-                        alternateTitle = $"O{episodeNumber} {alternateTitle}";
-                        break;
-                    default:
+                    case EpisodeType.Unknown:
                         displayTitle = $"U{episodeNumber} {displayTitle}";
                         alternateTitle = $"U{episodeNumber} {alternateTitle}";
+                        break;
+                    default:
+                        displayTitle = $"O{episodeNumber} {displayTitle}";
+                        alternateTitle = $"O{episodeNumber} {alternateTitle}";
                         break;
                 }
 

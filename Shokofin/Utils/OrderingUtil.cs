@@ -89,9 +89,16 @@ namespace Shokofin.Utils
                                 case EpisodeType.Parody:
                                     offset += sizes?.Episodes ?? 0;
                                     goto case EpisodeType.Normal;
-                                case EpisodeType.Other:
+                                case EpisodeType.Unknown:
                                     offset += sizes?.Parodies ?? 0;
                                     goto case EpisodeType.Parody;
+                                // Add them to the bottom of the list if we didn't filter them out properly.
+                                case EpisodeType.OpeningSong:
+                                    offset += sizes?.Others ?? 0;
+                                    goto case EpisodeType.Unknown;
+                                case EpisodeType.Trailer:
+                                    offset += sizes?.Credits ?? 0;
+                                    goto case EpisodeType.OpeningSong;
                             }
                             return offset + episode.AniDB.EpisodeNumber;
                         }
@@ -145,13 +152,13 @@ namespace Shokofin.Utils
                         case EpisodeType.Parody:
                             offset += sizes?.Episodes ?? 0;
                             goto case EpisodeType.Normal;
-                        case EpisodeType.Other:
+                        case EpisodeType.Unknown:
                             offset += sizes?.Parodies ?? 0;
                             goto case EpisodeType.Parody;
                         // Add them to the bottom of the list if we didn't filter them out properly.
                         case EpisodeType.OpeningSong:
                             offset += sizes?.Others ?? 0;
-                            goto case EpisodeType.Other;
+                            goto case EpisodeType.Unknown;
                         case EpisodeType.Trailer:
                             offset += sizes?.Credits ?? 0;
                             goto case EpisodeType.OpeningSong;
@@ -178,12 +185,14 @@ namespace Shokofin.Utils
                             return 1;
                         case EpisodeType.Special:
                             return 0;
+                        case EpisodeType.Unknown:
+                            return 98;
                         case EpisodeType.Trailer:
                             return 99;
                         case EpisodeType.ThemeSong:
                             return 100;
                         default:
-                            return 98;
+                            return 97;
                     }
                 case GroupType.MergeFriendly: {
                     var seasonNumber = episode?.TvDB?.Season;

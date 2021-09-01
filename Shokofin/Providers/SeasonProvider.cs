@@ -130,6 +130,8 @@ namespace Shokofin.Providers
                 case "Season 99":
                     return "Trailers";
                 case "Season 98":
+                    return "Others";
+                case "Season 97":
                     return "Misc.";
                 default:
                     return season;
