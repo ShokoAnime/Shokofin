@@ -40,6 +40,8 @@ namespace Shokofin.Configuration
 
         public bool AddTvDBId { get; set; }
 
+        public bool PreferAniDbPoster { get; set; }
+
         public TextSourceType DescriptionSource { get; set; }
 
         public SeriesAndBoxSetGroupType SeriesGrouping { get; set; }
@@ -78,6 +80,7 @@ namespace Shokofin.Configuration
             SynopsisCleanMultiEmptyLines = true;
             AddAniDBId = true;
             AddTvDBId = false;
+            PreferAniDbPoster = true;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
             DescriptionSource = TextSourceType.Default;

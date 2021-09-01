@@ -60,9 +60,12 @@ namespace Shokofin.Providers
                 if (series != null) {
                     Logger.LogInformation($"Getting series images ({series.Id} - {item.Name})");
                     var images = series.Shoko.Images;
-                    AddImage(ref list, ImageType.Primary, series.AniDB.Poster);
+                    if (Plugin.Instance.Configuration.PreferAniDbPoster)
+                        AddImage(ref list, ImageType.Primary, series.AniDB.Poster);
                     foreach (var image in images?.Posters)
                         AddImage(ref list, ImageType.Primary, image);
+                    if (!Plugin.Instance.Configuration.PreferAniDbPoster)
+                        AddImage(ref list, ImageType.Primary, series.AniDB.Poster);
                     foreach (var image in images?.Fanarts)
                         AddImage(ref list, ImageType.Backdrop, image);
                     foreach (var image in images?.Banners)
