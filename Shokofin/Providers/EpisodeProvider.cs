@@ -57,6 +57,7 @@ namespace Shokofin.Providers
 
                 var episodeNumber = Ordering.GetEpisodeNumber(group, series, episode);
                 var seasonNumber = Ordering.GetSeasonNumber(group, series, episode);
+                var description = Text.GetDescription(episode);
 
                 if (group != null && config.MarkSpecialsWhenGrouped && episode.AniDB.Type != EpisodeType.Normal) switch (episode.AniDB.Type) {
                     case EpisodeType.Special:
@@ -102,7 +103,7 @@ namespace Shokofin.Providers
                         Name = displayTitle,
                         OriginalTitle = alternateTitle,
                         PremiereDate = episode.AniDB.AirDate,
-                        Overview = Text.SanitizeTextSummary(episode.AniDB.Description),
+                        Overview = description,
                         CommunityRating = episode.AniDB.Rating.ToFloat(10),
                     };
                 }
@@ -113,7 +114,7 @@ namespace Shokofin.Providers
                         Name = displayTitle,
                         OriginalTitle = alternateTitle,
                         PremiereDate = episode.AniDB.AirDate,
-                        Overview = Text.SanitizeTextSummary(episode.AniDB.Description),
+                        Overview = description,
                         CommunityRating = episode.AniDB.Rating.ToFloat(10),
                     };
                 }

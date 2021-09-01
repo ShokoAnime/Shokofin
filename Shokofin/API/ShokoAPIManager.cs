@@ -441,7 +441,7 @@ namespace Shokofin.API
             if (DataCache.TryGetValue<SeriesInfo>(cacheKey, out info))
                 return info;
 
-            var aniDb = await ShokoAPI.GetSeriesAniDb(seriesId);
+            var aniDb = await ShokoAPI.GetSeriesAniDB(seriesId);
             var tvDbId = series.IDs.TvDB?.FirstOrDefault();
             var episodeCount = 0;
             Dictionary<string, string> filteredSpecialsMapping = new Dictionary<string, string>();
@@ -483,6 +483,7 @@ namespace Shokofin.API
                 Shoko = series,
                 AniDB = aniDb,
                 TvDBId = tvDbId != 0 ? tvDbId.ToString() : null,
+                TvDB = tvDbId != 0 ? (await ShokoAPI.GetSeriesTvDB(seriesId)).FirstOrDefault() : null,
                 EpisodeList = episodeList,
                 EpisodeCount = episodeCount,
                 SpesialsAnchors = filteredSpecialsMapping,

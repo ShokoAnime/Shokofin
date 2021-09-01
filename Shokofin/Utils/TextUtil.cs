@@ -1,3 +1,4 @@
+using Shokofin.API.Info;
 using Shokofin.API.Models;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,26 @@ namespace Shokofin.Utils
 {
     public class Text
     {
+        /// <summary>
+        /// Where to get text the text from.
+        /// </summary>
+        public enum TextSourceType {
+            /// <summary>
+            /// Use the default.
+            /// </summary>
+            Default = 1,
+
+            /// <summary>
+            /// Only use AniDb.
+            /// </summary>
+            OnlyAniDb = 2,
+
+            /// <summary>
+            /// Allow other providers, like TvDB/TMDB.
+            /// </summary>
+            AllowOthers = 3,
+        }
+
         /// <summary>
         /// Determines the language to construct the title in.
         /// </summary>
@@ -55,12 +76,52 @@ namespace Shokofin.Utils
             FullTitle = 3,
         }
 
+        public static string GetDescription(EpisodeInfo episode)
+        {
+            string overview;
+            switch (Plugin.Instance.Configuration.DescriptionSource) {
+                default:
+                case Text.TextSourceType.Default:
+                case Text.TextSourceType.AllowOthers:
+                    if (episode.TvDB != null)
+                        goto case Text.TextSourceType.OnlyAniDb;
+                    overview = episode.TvDB.Description;
+                    if (string.IsNullOrEmpty(overview))
+                        goto case Text.TextSourceType.OnlyAniDb;
+                    break;
+                case Text.TextSourceType.OnlyAniDb:
+                    overview = Text.SanitizeTextSummary(episode.AniDB.Description);
+                    break;
+            }
+            return overview;
+        }
+
+        public static string GetDescription(SeriesInfo series)
+        {
+            string overview;
+            switch (Plugin.Instance.Configuration.DescriptionSource) {
+                default:
+                case Text.TextSourceType.Default:
+                case Text.TextSourceType.AllowOthers:
+                    if (series.TvDB != null)
+                        goto case Text.TextSourceType.OnlyAniDb;
+                    overview = series.TvDB.Description;
+                    if (string.IsNullOrEmpty(overview))
+                        goto case Text.TextSourceType.OnlyAniDb;
+                    break;
+                case Text.TextSourceType.OnlyAniDb:
+                    overview = Text.SanitizeTextSummary(series.AniDB.Description);
+                    break;
+            }
+            return overview;
+        }
+
         /// <summary>
         /// Based on ShokoMetadata's summary sanitizer which in turn is based on HAMA's summary sanitizer.
         /// </summary>
         /// <param name="summary">The raw AniDB summary</param>
         /// <returns>The sanitized AniDB summary</returns>
-        public static string SanitizeTextSummary(string summary)
+        private static string SanitizeTextSummary(string summary)
         {
             var config = Plugin.Instance.Configuration;
 

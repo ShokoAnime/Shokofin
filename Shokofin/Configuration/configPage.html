@@ -50,6 +50,14 @@
                             <div class="fieldDescription">Titles will fallback to Default if not found for the target language.</div>
                         </div>
                         <h3>Synopsis Options</h3>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="DescriptionSource">Synopsis source</label>
+                            <select is="emby-select" id="DescriptionSource" name="DescriptionSource" class="emby-select-withcolor emby-select">
+                                <option value="Default">Use default source</option>
+                                <option value="AllowOthers">Prefer TvDB/TMDB if available, otherwise use AniDb</option>
+                                <option value="OnlyAniDb">Only use AniDb</option>
+                            </select>
+                        </div>
                         <label class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="SynopsisCleanLinks" />
                             <span>Remove links</span>
@@ -176,6 +184,7 @@
                         document.querySelector('#SynopsisCleanMultiEmptyLines').checked = config.SynopsisCleanMultiEmptyLines;
                         document.querySelector('#TitleMainType').value = config.TitleMainType;
                         document.querySelector('#TitleAlternateType').value = config.TitleAlternateType;
+                        document.querySelector('#DescriptionSource').value = config.DescriptionSource;
                         document.querySelector('#SeriesGrouping').value = config.SeriesGrouping;
                         document.querySelector('#SeasonOrdering').value = config.SeasonOrdering;
                         document.querySelector('#BoxSetGrouping').value = config.BoxSetGrouping;
@@ -247,6 +256,7 @@
                         config.SynopsisCleanMultiEmptyLines = document.querySelector('#SynopsisCleanMultiEmptyLines').checked;
                         config.TitleMainType = document.querySelector('#TitleMainType').value;
                         config.TitleAlternateType = document.querySelector('#TitleAlternateType').value;
+                        config.DescriptionSource = document.querySelector('#DescriptionSource').value;
                         config.SeriesGrouping = document.querySelector('#SeriesGrouping').value;
                         config.SeasonOrdering = document.querySelector('#SeasonOrdering').value;
                         config.BoxSetGrouping = document.querySelector('#BoxSetGrouping').value;

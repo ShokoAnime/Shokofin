@@ -1,4 +1,5 @@
 using MediaBrowser.Model.Plugins;
+using TextSourceType = Shokofin.Utils.Text.TextSourceType;
 using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
 using SeriesAndBoxSetGroupType = Shokofin.Utils.Ordering.GroupType;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
@@ -39,6 +40,8 @@ namespace Shokofin.Configuration
 
         public bool AddTvDBId { get; set; }
 
+        public TextSourceType DescriptionSource { get; set; }
+
         public SeriesAndBoxSetGroupType SeriesGrouping { get; set; }
 
         public OrderType SeasonOrdering { get; set; }
@@ -77,6 +80,7 @@ namespace Shokofin.Configuration
             AddTvDBId = false;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
+            DescriptionSource = TextSourceType.Default;
             SeriesGrouping = SeriesAndBoxSetGroupType.Default;
             SeasonOrdering = OrderType.Default;
             MarkSpecialsWhenGrouped = true;

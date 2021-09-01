@@ -87,7 +87,7 @@ namespace Shokofin.Providers
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
                 IndexNumber = seasonNumber,
-                Overview = Text.SanitizeTextSummary(series.AniDB.Description),
+                Overview = Text.GetDescription(series),
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,

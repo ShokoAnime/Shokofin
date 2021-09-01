@@ -59,7 +59,7 @@ namespace Shokofin.Providers
                     OriginalTitle = alternateTitle,
                     PremiereDate = episode.AniDB.AirDate,
                     // Use the file description if collection contains more than one movie, otherwise use the collection description.
-                    Overview = Text.SanitizeTextSummary((isMultiEntry ? episode.AniDB.Description ?? series.AniDB.Description : series.AniDB.Description) ?? ""),
+                    Overview = (isMultiEntry ? Text.GetDescription(episode) : Text.GetDescription(series)),
                     ProductionYear = episode.AniDB.AirDate?.Year,
                     Tags = tags,
                     CommunityRating = rating,

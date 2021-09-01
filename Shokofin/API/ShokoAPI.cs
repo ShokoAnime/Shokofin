@@ -141,10 +141,16 @@ namespace Shokofin.API
             return responseStream != null ? await JsonSerializer.DeserializeAsync<List<Series>>(responseStream) : null;
         }
 
-        public static async Task<Series.AniDB> GetSeriesAniDb(string id)
+        public static async Task<Series.AniDB> GetSeriesAniDB(string id)
         {
             var responseStream = await CallApi($"/api/v3/Series/{id}/AniDB");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<Series.AniDB>(responseStream) : null;
+        }
+
+        public static async Task<IEnumerable<Series.TvDB>> GetSeriesTvDB(string id)
+        {
+            var responseStream = await CallApi($"/api/v3/Series/{id}/TvDB");
+            return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Series.TvDB>>(responseStream) : null;
         }
 
         public static async Task<IEnumerable<Role>> GetSeriesCast(string id)

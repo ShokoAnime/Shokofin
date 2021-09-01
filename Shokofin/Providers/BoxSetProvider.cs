@@ -70,7 +70,7 @@ namespace Shokofin.Providers
             result.Item = new BoxSet {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
-                Overview = Text.SanitizeTextSummary(series.AniDB.Description),
+                Overview = Text.GetDescription(series),
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
@@ -109,7 +109,7 @@ namespace Shokofin.Providers
             result.Item = new BoxSet {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
-                Overview = Text.SanitizeTextSummary(series.AniDB.Description),
+                Overview = Text.GetDescription(series),
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
