@@ -49,7 +49,7 @@ namespace Shokofin.Providers
         {
             var result = new MetadataResult<Season>();
 
-            var seasonName = GetSeasonName(info.Name);
+            var seasonName = GetSeasonName(info.IndexNumber, info.Name);
             result.Item = new Season {
                 Name = seasonName,
                 IndexNumber = info.IndexNumber,
@@ -122,19 +122,19 @@ namespace Shokofin.Providers
             return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
         }
 
-        private string GetSeasonName(string season)
+        private string GetSeasonName(int? seasonNumber, string seasonName)
         {
-            switch (season) {
-                case "Season 100":
+            switch (seasonNumber ?? 1) {
+                case -127:
                     return "Credits";
-                case "Season 99":
+                case -126:
                     return "Trailers";
-                case "Season 98":
+                case -125:
                     return "Others";
-                case "Season 97":
+                case -124:
                     return "Misc.";
                 default:
-                    return season;
+                    return seasonName;
             }
         }
     }
