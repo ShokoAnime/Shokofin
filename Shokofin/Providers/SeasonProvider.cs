@@ -102,7 +102,6 @@ namespace Shokofin.Providers
                 result.Item.ProviderIds.Add("AniDB", series.AniDB.ID.ToString());
 
             result.HasMetadata = true;
-            ApiManager.MarkSeriesAsFound(series.Id, groupId);
 
             result.ResetPeople();
             foreach (var person in await ApiManager.GetPeople(series.Id))

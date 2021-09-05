@@ -73,7 +73,6 @@ namespace Shokofin.Providers
                     result.Item.SetProviderId(MetadataProvider.Tvdb, episode.TvDB.ID.ToString());
                 
                 result.HasMetadata = true;
-                ApiManager.MarkSeriesAsFound(series.Id, group.Id);
 
                 result.ResetPeople();
                 foreach (var person in await ApiManager.GetPeople(series.Id))

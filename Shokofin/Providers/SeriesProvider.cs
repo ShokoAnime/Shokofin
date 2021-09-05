@@ -78,7 +78,6 @@ namespace Shokofin.Providers
                 result.Item.SetProviderId(MetadataProvider.Tvdb, series.TvDBId);
 
             result.HasMetadata = true;
-            ApiManager.MarkSeriesAsFound(series.Id);
 
             result.ResetPeople();
             foreach (var person in await ApiManager.GetPeople(series.Id))
@@ -121,7 +120,6 @@ namespace Shokofin.Providers
                 result.Item.SetProviderId("AniDB", series.AniDB.ID.ToString());
 
             result.HasMetadata = true;
-            ApiManager.MarkSeriesAsFound(series.Id, group.Id);
 
             result.ResetPeople();
             foreach (var person in await ApiManager.GetPeople(series.Id))

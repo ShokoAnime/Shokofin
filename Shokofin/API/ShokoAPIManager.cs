@@ -3,11 +3,11 @@ using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Shokofin.API.Info;
 using Shokofin.API.Models;
 using Shokofin.Utils;
@@ -24,25 +24,16 @@ namespace Shokofin.API
 
         private static readonly List<Folder> MediaFolderList = new List<Folder>();
 
-        private static readonly Dictionary<string, string> SeriesIdToPathDictionary = new Dictionary<string, string>();
+        private static readonly ConcurrentDictionary<string, string> SeriesPathToIdDictionary = new ConcurrentDictionary<string, string>();
 
-        private static readonly Dictionary<string, string> SeriesPathToIdDictionary = new Dictionary<string, string>();
+        private static ConcurrentDictionary<string, string> SeriesIdToGroupIdDictionary = new ConcurrentDictionary<string, string>();
+
+        private static ConcurrentDictionary<string, string> EpisodeIdToSeriesIdDictionary = new ConcurrentDictionary<string, string>();
 
         /// <summary>
         /// Episodes marked as ignored is skipped when adding missing episode metadata.
         /// </summary>
-        private static readonly Dictionary<string, Dictionary<string, string>> SeriesIdToEpisodeIdIgnoreDictionery = new Dictionary<string, Dictionary<string, string>>();
-
-        /// <summary>
-        /// Episodes found while scanning the library for metadata.
-        /// </summary>
-        private static readonly Dictionary<string, HashSet<string>> SeriesIdToEpisodeIdDictionery = new Dictionary<string, HashSet<string>>();
-
-        private static readonly Dictionary<string, HashSet<string>> GroupIdToSeriesIdDictionery = new Dictionary<string, HashSet<string>>();
-
-        private static Dictionary<string, Guid> SeriesIdToGuidDictionary = new Dictionary<string, Guid>();
-
-        private static Dictionary<string, Guid> GroupIdToGuidDictionary = new Dictionary<string, Guid>();
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> SeriesIdToEpisodeIdIgnoreDictionery = new ConcurrentDictionary<string, ConcurrentDictionary<string, string>>();
 
         public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ILibraryManager libraryManager)
         {
@@ -68,7 +59,7 @@ namespace Shokofin.API
                 return mediaFolder;
             }
             mediaFolder = parent;
-            while (mediaFolder.ParentId.Equals(root.Id)) {
+            while (!mediaFolder.ParentId.Equals(root.Id)) {
                 if (mediaFolder.Parent == null) {
                     if (mediaFolder.ParentId.Equals(Guid.Empty))
                         break;
@@ -99,12 +90,9 @@ namespace Shokofin.API
             DataCache.Dispose();
             MediaFolderList.Clear();
             EpisodeIdToSeriesIdDictionary.Clear();
-            SeriesIdToPathDictionary.Clear();
             SeriesPathToIdDictionary.Clear();
-            SeriesIdToEpisodeIdDictionery.Clear();
             SeriesIdToEpisodeIdIgnoreDictionery.Clear();
             SeriesIdToGroupIdDictionary.Clear();
-            GroupIdToSeriesIdDictionery.Clear();
             DataCache = (new MemoryCache((new MemoryCacheOptions() {
                 ExpirationScanFrequency = ExpirationScanFrequency,
             })));
@@ -278,22 +266,9 @@ namespace Shokofin.API
 
         public bool MarkEpisodeAsIgnored(string episodeId, string seriesId, string fullPath)
         {
-            var dictionary = (SeriesIdToEpisodeIdIgnoreDictionery.ContainsKey(seriesId) ? SeriesIdToEpisodeIdIgnoreDictionery[seriesId] : (SeriesIdToEpisodeIdIgnoreDictionery[seriesId] = new Dictionary<string, string>()));
-            if (dictionary.ContainsKey(episodeId))
+            if (!(SeriesIdToEpisodeIdIgnoreDictionery.TryGetValue(seriesId, out var dictionary) || SeriesIdToEpisodeIdIgnoreDictionery.TryAdd(seriesId, dictionary = new ConcurrentDictionary<string, string>())))
                 return false;
-
-            dictionary.Add(episodeId, fullPath);
-            return true;
-        }
-
-        public bool MarkEpisodeAsFound(string episodeId, string seriesId)
-        {
-            return (SeriesIdToEpisodeIdDictionery.ContainsKey(seriesId) ? SeriesIdToEpisodeIdDictionery[seriesId] : (SeriesIdToEpisodeIdDictionery[seriesId] = new HashSet<string>())).Add(episodeId);
-        }
-
-        public bool IsEpisodeOnDisk(EpisodeInfo episode, SeriesInfo series)
-        {
-            return SeriesIdToEpisodeIdDictionery.ContainsKey(series.Id) && SeriesIdToEpisodeIdDictionery[series.Id].Contains(episode.Id);
+            return dictionary.TryAdd(episodeId, fullPath);
         }
 
         private static ExtraType? GetExtraType(Episode.AniDB episode)
@@ -355,8 +330,6 @@ namespace Shokofin.API
                 seriesId = result?.FirstOrDefault()?.IDs?.ID.ToString();
 
                 SeriesPathToIdDictionary[partialPath] = seriesId;
-                if (!string.IsNullOrEmpty(seriesId))
-                    SeriesIdToPathDictionary[seriesId] = partialPath;
             }
 
             if (string.IsNullOrEmpty(seriesId))
@@ -401,8 +374,6 @@ namespace Shokofin.API
             var series = await ShokoAPI.GetSeries(seriesId);
             return await CreateSeriesInfo(series, seriesId);
         }
-
-        private static Dictionary<string, string> EpisodeIdToSeriesIdDictionary = new Dictionary<string, string>();
 
         public SeriesInfo GetSeriesInfoForEpisodeSync(string episodeId)
         {
@@ -464,7 +435,7 @@ namespace Shokofin.API
                 .ToList();
 
             // Iterate over the episodes once and store some values for later use.
-            for (var index = 0; index > episodeList.Count; index++) {
+            for (var index = 0; index < episodeList.Count; index++) {
                 var episode = episodeList[index];
                 EpisodeIdToSeriesIdDictionary[episode.Id] = seriesId;
                 if (episode.AniDB.Type == EpisodeType.Normal)
@@ -498,25 +469,6 @@ namespace Shokofin.API
 
             DataCache.Set<SeriesInfo>(cacheKey, info, DefaultTimeSpan);
             return info;
-        }
-
-        public bool MarkSeriesAsFound(string seriesId)
-            => MarkSeriesAsFound(seriesId, "");
-
-        public bool MarkSeriesAsFound(string seriesId, string groupId)
-        {
-            return (GroupIdToSeriesIdDictionery.ContainsKey(groupId) ? GroupIdToSeriesIdDictionery[groupId] : (GroupIdToSeriesIdDictionery[groupId] = new HashSet<string>())).Add(seriesId);
-        }
-
-        public bool IsSeriesOnDisk(SeriesInfo series, GroupInfo group)
-        {
-            var groupId = group?.Id ?? "";
-            return GroupIdToSeriesIdDictionery.ContainsKey(groupId) && GroupIdToSeriesIdDictionery[groupId].Contains(series.Id);
-        }
-
-        public string GetPathForSeries(string seriesId)
-        {
-            return SeriesIdToPathDictionary.ContainsKey(seriesId) ? SeriesIdToPathDictionary[seriesId] : null;
         }
 
         #endregion
@@ -555,8 +507,6 @@ namespace Shokofin.API
             var group = await ShokoAPI.GetGroup(groupId);
             return await CreateGroupInfo(group, groupId, filterByType);
         }
-
-        private static Dictionary<string, string> SeriesIdToGroupIdDictionary = new Dictionary<string, string>();
 
         public GroupInfo GetGroupInfoForSeriesSync(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
         {
@@ -601,9 +551,11 @@ namespace Shokofin.API
                 return groupInfo;
             Logger.LogDebug("Creating info object for group {GroupName}. (Group={GroupId})", group.Name, groupId);
 
-            var seriesList = await ShokoAPI.GetSeriesInGroup(groupId)
-                .ContinueWith(async task => await Task.WhenAll(task.Result.Select(s => CreateSeriesInfo(s)))).Unwrap()
-                .ContinueWith(l => l.Result.Where(s => s != null).ToList());
+            var seriesList = (await ShokoAPI.GetSeriesInGroup(groupId)
+                .ContinueWith(task => Task.WhenAll(task.Result.Select(s => CreateSeriesInfo(s))))
+                .Unwrap())
+                .Where(s => s != null)
+                .ToList();
             if (seriesList != null && seriesList.Count > 0)  switch (filterByType) {
                 default:
                     break;

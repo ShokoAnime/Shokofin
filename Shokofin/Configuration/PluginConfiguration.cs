@@ -60,7 +60,7 @@ namespace Shokofin.Configuration
 
         public DisplayLanguageType TitleAlternateType { get; set; }
 
-        public bool AddMissingEpisodeMetadata { get; set; }
+        public bool AddMissingMetadata { get; set; }
 
         public PluginConfiguration()
         {
@@ -89,7 +89,7 @@ namespace Shokofin.Configuration
             MarkSpecialsWhenGrouped = true;
             BoxSetGrouping = SeriesAndBoxSetGroupType.Default;
             MovieOrdering = OrderType.Default;
-            AddMissingEpisodeMetadata = false;
+            AddMissingMetadata = false;
             FilterOnLibraryTypes = false;
         }
     }

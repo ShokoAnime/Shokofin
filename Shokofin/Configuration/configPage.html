@@ -101,6 +101,10 @@
                             <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
                             <span>Excluding normal episodes, add type and number to title (e.g. "S1 title", "C1 title", "O1 title")</span>
                         </label>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="AddMissingMetadata" />
+                            <span>Add metadata for missing seasons/episodes</span>
+                        </label>
                         <div class="selectContainer">
                             <label class="selectLabel" for="BoxSetGrouping">Box-set grouping</label>
                             <select is="emby-select" id="BoxSetGrouping" name="BoxSetGrouping" class="emby-select-withcolor emby-select">
@@ -195,6 +199,7 @@
                         document.querySelector('#BoxSetGrouping').value = config.BoxSetGrouping;
                         document.querySelector('#MovieOrdering').value = config.MovieOrdering;
                         document.querySelector('#MarkSpecialsWhenGrouped').checked = config.MarkSpecialsWhenGrouped;
+                        document.querySelector('#AddMissingMetadata').checked = config.AddMissingMetadata;
                         document.querySelector('#FilterOnLibraryTypes').checked = config.FilterOnLibraryTypes;
                         document.querySelector('#AddAniDBId').checked = config.AddAniDBId;
                         document.querySelector('#AddTvDBId').checked = config.AddTvDBId;
@@ -268,6 +273,7 @@
                         config.BoxSetGrouping = document.querySelector('#BoxSetGrouping').value;
                         config.MovieOrdering = document.querySelector('#MovieOrdering').value;
                         config.MarkSpecialsWhenGrouped = document.querySelector('#MarkSpecialsWhenGrouped').checked;
+                        config.AddMissingMetadata = document.querySelector('#AddMissingMetadata').checked;
                         config.FilterOnLibraryTypes = document.querySelector('#FilterOnLibraryTypes').checked;
                         config.AddAniDBId = document.querySelector('#AddAniDBId').checked;
                         config.AddTvDBId = document.querySelector('#AddTvDBId').checked;

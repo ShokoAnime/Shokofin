@@ -25,13 +25,12 @@ namespace Shokofin
 
         public IEnumerable<PluginPageInfo> GetPages()
         {
-            var name = GetType().Namespace;
             return new[]
             {
                 new PluginPageInfo
                 {
-                    Name = name,
-                    EmbeddedResourcePath = $"{name}.Configuration.configPage.html",
+                    Name = Name,
+                    EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html",
                 }
             };
         }
