@@ -12,6 +12,8 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Utils;
 
+using Info = Shokofin.API.Info;
+using SeriesType = Shokofin.API.Models.SeriesType;
 using EpisodeType = Shokofin.API.Models.EpisodeType;
 
 namespace Shokofin.Providers
@@ -23,7 +25,6 @@ namespace Shokofin.Providers
         private readonly IHttpClientFactory HttpClientFactory;
 
         private readonly ILogger<EpisodeProvider> Logger;
-
 
         private readonly ShokoAPIManager ApiManager;
 
@@ -49,7 +50,7 @@ namespace Shokofin.Providers
                 }
 
                 string displayTitle, alternateTitle;
-                if (series.AniDB.Type == API.Models.SeriesType.Movie)
+                if (series.AniDB.Type == SeriesType.Movie && (episode.AniDB.Type == EpisodeType.Normal || episode.AniDB.Type == EpisodeType.Special))
                     ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, series.Shoko.Name, episode.Shoko.Name, info.MetadataLanguage);
                 else
                     ( displayTitle, alternateTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, episode.Shoko.Name, info.MetadataLanguage);
