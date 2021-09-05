@@ -79,7 +79,7 @@ namespace Shokofin.Utils
                             if (episode.AniDB.Type == EpisodeType.Special) {
                                 var index = series.SpecialsList.FindIndex(e => string.Equals(e.Id, episode.Id));
                                 if (index == -1)
-                                    throw new System.IndexOutOfRangeException("Episode not in filtered list");
+                                    throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
                                 return offset - (index + 1);
                             }
                             switch (episode.AniDB.Type) {
@@ -99,6 +99,9 @@ namespace Shokofin.Utils
                                 case EpisodeType.Trailer:
                                     offset += sizes?.Credits ?? 0;
                                     goto case EpisodeType.OpeningSong;
+                                default:
+                                    offset += sizes?.Trailers ?? 0;
+                                    goto case EpisodeType.Trailer;
                             }
                             return offset + episode.AniDB.EpisodeNumber;
                         }
@@ -137,10 +140,10 @@ namespace Shokofin.Utils
                     if (episode.AniDB.Type == EpisodeType.Special) {
                         var seriesIndex = group.SeriesList.FindIndex(s => string.Equals(s.Id, series.Id));
                         if (seriesIndex == -1)
-                            throw new System.IndexOutOfRangeException("Series is not part of the provided group");
+                            throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
                         var index = series.SpecialsList.FindIndex(e => string.Equals(e.Id, episode.Id));
                         if (index == -1)
-                            throw new System.IndexOutOfRangeException("Episode not in filtered list");
+                            throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
                         offset = group.SeriesList.GetRange(0, seriesIndex).Aggregate(0, (count, series) => count + series.SpecialsList.Count);
                         return offset + (index + 1);
                     }
@@ -162,6 +165,9 @@ namespace Shokofin.Utils
                         case EpisodeType.Trailer:
                             offset += sizes?.Credits ?? 0;
                             goto case EpisodeType.OpeningSong;
+                        default:
+                            offset += sizes?.Trailers ?? 0;
+                            goto case EpisodeType.Trailer;
                     }
                     return offset + episode.AniDB.EpisodeNumber;
                 }
@@ -206,7 +212,7 @@ namespace Shokofin.Utils
                         return 1;
                     var index = group.SeriesList.FindIndex(s => s.Id == id);
                     if (index == -1)
-                        goto case GroupType.Default;
+                        throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={id})");
                     var value = index - group.DefaultSeriesIndex;
                     return value < 0 ? value : value + 1;
                 }
