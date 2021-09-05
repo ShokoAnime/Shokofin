@@ -125,13 +125,13 @@ namespace Shokofin.Providers
         private string GetSeasonName(int? seasonNumber, string seasonName)
         {
             switch (seasonNumber ?? 1) {
-                case -127:
+                case -1:
                     return "Credits";
-                case -126:
+                case -2:
                     return "Trailers";
-                case -125:
+                case -3:
                     return "Others";
-                case -124:
+                case -4:
                     return "Misc.";
                 default:
                     return seasonName;
