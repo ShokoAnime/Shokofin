@@ -160,6 +160,13 @@ namespace Shokofin.Providers
             if (!series.ProviderIds.TryGetValue("Shoko Series", out var seriesId) || string.IsNullOrEmpty(seriesId))
                 return;
 
+            var deleteOptions = new DeleteOptions {
+                DeleteFileLocation = true,
+            };
+            foreach (var item in series.GetRecursiveChildren().Where(item => item.IsVirtualItem)) {
+                LibraryManager.DeleteItem(item, deleteOptions, true);
+            }
+
             var seasons = new Dictionary<int, Season>();
             var existingEpisodes = new HashSet<string>();
             foreach (var item in series.GetRecursiveChildren()) switch (item) {
@@ -243,9 +250,16 @@ namespace Shokofin.Providers
             if (!season.IndexNumber.HasValue || !(season.ProviderIds.TryGetValue("Shoko Series", out var seriesId) || season.Series.ProviderIds.TryGetValue("Shoko Series", out seriesId)) || string.IsNullOrEmpty(seriesId))
                 return;
 
+            var deleteOptions = new DeleteOptions {
+                DeleteFileLocation = true,
+            };
+            foreach (var item in season.Children.Where(item => item.IsVirtualItem)) {
+                LibraryManager.DeleteItem(item, deleteOptions, true);
+            }
+
             var seasonNumber = season.IndexNumber!.Value;
             var existingEpisodes = new HashSet<string>();
-            foreach (var item in season.Children.OfType<Episode>()) {
+            foreach (var item in season.GetEpisodes()) {
                 if (item.ProviderIds.TryGetValue("Shoko Episode", out var episodeId) && !string.IsNullOrEmpty(episodeId))
                     existingEpisodes.Add(episodeId);
             }
