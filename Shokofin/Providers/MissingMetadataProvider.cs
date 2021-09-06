@@ -162,15 +162,14 @@ namespace Shokofin.Providers
 
             var seasons = new Dictionary<int, Season>();
             var existingEpisodes = new HashSet<string>();
-            foreach (var child in series.GetRecursiveChildren()) switch (child) {
+            foreach (var item in series.GetRecursiveChildren()) switch (item) {
                 case Season season:
                     if (season.IndexNumber.HasValue)
                         seasons.TryAdd(season.IndexNumber.Value, season);
                     break;
                 case Episode episode:
-                    if (!episode.ProviderIds.TryGetValue("Shoko Episode", out var episodeId) || string.IsNullOrEmpty(episodeId))
-                        continue;
-                    existingEpisodes.Add(episodeId);
+                    if (episode.ProviderIds.TryGetValue("Shoko Episode", out var episodeId) && !string.IsNullOrEmpty(episodeId))
+                        existingEpisodes.Add(episodeId);
                     break;
             }
 
@@ -181,6 +180,20 @@ namespace Shokofin.Providers
                 // Add missing seasons
                 foreach (var pair in AddMissingSeasons(groupInfo, series, seasons)) {
                     seasons.Add(pair.Key, pair.Value);
+                }
+
+                // Handle specials when grouped.
+                if (seasons.TryGetValue(0, out var zeroSeason)) {
+                    foreach (var sI in groupInfo.SeriesList) {
+                        foreach (var episodeInfo in sI.SpecialsList) {
+                            if (existingEpisodes.Contains(episodeInfo.Id))
+                                continue;
+
+                            AddVirtualEpisode(groupInfo, sI, episodeInfo, zeroSeason);
+                        }
+                    }
+
+                    return;
                 }
 
                 // Add missing episodes
@@ -227,14 +240,15 @@ namespace Shokofin.Providers
 
         private void HandleSeason(Season season, bool deleted = false)
         {
-            if (!(season.ProviderIds.TryGetValue("Shoko Series", out var seriesId) || season.Series.ProviderIds.TryGetValue("Shoko Series", out seriesId)) || string.IsNullOrEmpty(seriesId))
+            if (!season.IndexNumber.HasValue || !(season.ProviderIds.TryGetValue("Shoko Series", out var seriesId) || season.Series.ProviderIds.TryGetValue("Shoko Series", out seriesId)) || string.IsNullOrEmpty(seriesId))
                 return;
 
             var seasonNumber = season.IndexNumber!.Value;
-            var existingEpisodes = season.Children.OfType<Episode>()
-                .Where(ep => ep.ProviderIds.TryGetValue("Shoko Episode", out var episodeId) && !string.IsNullOrEmpty(episodeId))
-                .Select(ep => ep.ProviderIds["Shoko Episode"])
-                .ToHashSet();
+            var existingEpisodes = new HashSet<string>();
+            foreach (var item in season.Children.OfType<Episode>()) {
+                if (item.ProviderIds.TryGetValue("Shoko Episode", out var episodeId) && !string.IsNullOrEmpty(episodeId))
+                    existingEpisodes.Add(episodeId);
+            }
             var series = season.Series;
             Info.GroupInfo groupInfo = null;
             Info.SeriesInfo seriesInfo = null;
@@ -244,6 +258,23 @@ namespace Shokofin.Providers
                 groupInfo = ApiManager.GetGroupInfoForSeriesSync(seriesId, filterLibrary);
                 if (groupInfo == null) {
                     Logger.LogWarning("Unable to find group info for series. (Series={SeriesId})", seriesId);
+                    return;
+                }
+
+                // Handle specials when grouped.
+                if (seasonNumber == 0) {
+                    if (deleted)
+                        season = AddVirtualSeason(0, series);
+                    
+                    foreach (var sI in groupInfo.SeriesList) {
+                        foreach (var episodeInfo in sI.SpecialsList) {
+                            if (existingEpisodes.Contains(episodeInfo.Id))
+                                continue;
+
+                            AddVirtualEpisode(groupInfo, seriesInfo, episodeInfo, season);
+                        }
+                    }
+
                     return;
                 }
 
@@ -393,7 +424,7 @@ namespace Shokofin.Providers
             var episodeId = LibraryManager.GetNewItemId(season.Series.Id + "Season " + seriesInfo.Id + " Episode " + episodeInfo.Id, typeof(Episode));
             var result = EpisodeProvider.CreateMetadata(groupInfo, seriesInfo, episodeInfo, season, episodeId);
 
-            Logger.LogInformation("Creating virtual episode {EpisodeName} S{SeasonNumber}:E{EpisodeNumber}", season.Series.Name, season.IndexNumber, result.IndexNumber);
+            Logger.LogInformation("Creating virtual episode for {SeriesName} S{SeasonNumber}:E{EpisodeNumber} (Group={GroupId},Series={SeriesId},Episode={EpisodeId}),", groupInfo?.Shoko.Name ?? seriesInfo.Shoko.Name, season.IndexNumber, result.IndexNumber, groupInfo?.Id ?? null, seriesInfo.Id, episodeInfo.Id);
 
             season.AddChild(result, CancellationToken.None);
         }

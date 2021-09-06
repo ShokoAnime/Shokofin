@@ -29,12 +29,15 @@ namespace Shokofin.Providers
 
         public async Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
         {
+            if (!info.IndexNumber.HasValue) {
+                return new MetadataResult<Season>();
+            }
             try {
                 switch (Plugin.Instance.Configuration.SeriesGrouping) {
                     default:
                         return GetDefaultMetadata(info, cancellationToken);
                     case Ordering.GroupType.ShokoGroup:
-                        if (info.IndexNumber.HasValue && info.IndexNumber.Value == 0)
+                        if (info.IndexNumber.Value == 0)
                             goto default;
                         return await GetShokoGroupedMetadata(info, cancellationToken);
                 }
@@ -49,7 +52,7 @@ namespace Shokofin.Providers
         {
             var result = new MetadataResult<Season>();
 
-            var seasonName = GetSeasonName(info.IndexNumber, info.Name);
+            var seasonName = GetSeasonName(info.IndexNumber.Value, info.Name);
             result.Item = new Season {
                 Name = seasonName,
                 IndexNumber = info.IndexNumber,
@@ -71,11 +74,11 @@ namespace Shokofin.Providers
                 return result;
             }
 
-            var seasonNumber = info.IndexNumber ?? 1;
+            var seasonNumber = info.IndexNumber.Value;
             var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes;
             var series = await ApiManager.GetSeriesInfoFromGroup(groupId, seasonNumber, filterLibrary ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default);
             if (series == null) {
-                Logger.LogWarning("Unable to find selected series in Group (Group={GroupId})", groupId);
+                Logger.LogWarning("Unable to find series for season {SeasonNumber} in Group. (Group={GroupId})", seasonNumber, groupId);
                 return result;
             }
             Logger.LogInformation("Found Series {SeriesName} (Group={GroupId},Series={SeriesId})", series.Shoko.Name, groupId, series.Id);
@@ -121,9 +124,9 @@ namespace Shokofin.Providers
             return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
         }
 
-        private string GetSeasonName(int? seasonNumber, string seasonName)
+        private string GetSeasonName(int seasonNumber, string seasonName)
         {
-            switch (seasonNumber ?? 1) {
+            switch (seasonNumber) {
                 case -1:
                     return "Credits";
                 case -2:

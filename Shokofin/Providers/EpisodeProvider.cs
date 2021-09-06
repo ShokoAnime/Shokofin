@@ -39,6 +39,10 @@ namespace Shokofin.Providers
         {
             try {
                 var result = new MetadataResult<Episode>();
+
+                // Don't provide metadata for missing episodes... for now.
+                if (info.IsMissingEpisode || info.Path == null) return result;
+
                 var config = Plugin.Instance.Configuration;
                 Ordering.GroupFilterType? filterByType = config.SeriesGrouping == Ordering.GroupType.ShokoGroup ? config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default : null;
                 var (file, episode, series, group) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
@@ -70,7 +74,7 @@ namespace Shokofin.Providers
             => CreateMetadata(group, series, episode, null, null, season, episodeId);
 
         public static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, string fileId, string metadataLanguage)
-            => CreateMetadata(group, series, episode, metadataLanguage, fileId, null, Guid.Empty);
+            => CreateMetadata(group, series, episode, fileId, metadataLanguage, null, Guid.Empty);
 
         private static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, string fileId, string metadataLanguage, Season season, System.Guid episodeId)
         {
@@ -118,23 +122,25 @@ namespace Shokofin.Providers
 
             Episode result;
             if (group != null && episode.AniDB.Type == EpisodeType.Special) {
-                int previousEpisodeNumber;
-                if (!series.SpesialsAnchors.TryGetValue(episode.Id, out var previousEpisode))
-                    previousEpisodeNumber = Ordering.GetEpisodeNumber(group, series, episode);
-                else
-                    previousEpisodeNumber = series.EpisodeCount;
+                int? previousEpisodeNumber = null;
+                if (series.SpesialsAnchors.TryGetValue(episode.Id, out var previousEpisode))
+                    previousEpisodeNumber = Ordering.GetEpisodeNumber(group, series, previousEpisode);
+                int? nextEpisodeNumber = previousEpisodeNumber.HasValue && previousEpisodeNumber.Value < series.EpisodeList.Count ? previousEpisodeNumber.Value + 1 : null;
                 if (season != null) {
                     result = new Episode {
                         Name = displayTitle,
                         OriginalTitle = alternateTitle,
-                        IndexNumber = Ordering.GetEpisodeNumber(group, series, episode),
-                        ParentIndexNumber = Ordering.GetSeasonNumber(group, series, episode),
+                        IndexNumber = episodeNumber,
+                        ParentIndexNumber = 0,
+                        AirsAfterSeasonNumber = seasonNumber,
+                        AirsBeforeEpisodeNumber = nextEpisodeNumber,
+                        AirsBeforeSeasonNumber = seasonNumber + 1,
                         Id = episodeId,
                         IsVirtualItem = true,
                         SeasonId = season.Id,
                         SeriesId = season.Series.Id,
-                        Overview = Text.GetDescription(episode),
-                        CommunityRating = episode.AniDB.Rating.ToFloat(),
+                        Overview = description,
+                        CommunityRating = episode.AniDB.Rating.ToFloat(10),
                         PremiereDate = episode.AniDB.AirDate,
                         SeriesName = season.Series.Name,
                         SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
@@ -148,7 +154,7 @@ namespace Shokofin.Providers
                         IndexNumber = episodeNumber,
                         ParentIndexNumber = 0,
                         AirsAfterSeasonNumber = seasonNumber,
-                        AirsBeforeEpisodeNumber = previousEpisodeNumber + 1,
+                        AirsBeforeEpisodeNumber = nextEpisodeNumber,
                         AirsBeforeSeasonNumber = seasonNumber + 1,
                         Name = displayTitle,
                         OriginalTitle = alternateTitle,
@@ -159,15 +165,37 @@ namespace Shokofin.Providers
                 }
             }
             else {
-                result = new Episode {
-                    IndexNumber = episodeNumber,
-                    ParentIndexNumber = seasonNumber,
-                    Name = displayTitle,
-                    OriginalTitle = alternateTitle,
-                    PremiereDate = episode.AniDB.AirDate,
-                    Overview = description,
-                    CommunityRating = episode.AniDB.Rating.ToFloat(10),
-                };
+                if (season != null) {
+                    result = new Episode {
+                        Name = displayTitle,
+                        OriginalTitle = alternateTitle,
+                        IndexNumber = episodeNumber,
+                        ParentIndexNumber = seasonNumber,
+                        Id = episodeId,
+                        IsVirtualItem = true,
+                        SeasonId = season.Id,
+                        SeriesId = season.Series.Id,
+                        Overview = description,
+                        CommunityRating = episode.AniDB.Rating.ToFloat(10),
+                        PremiereDate = episode.AniDB.AirDate,
+                        SeriesName = season.Series.Name,
+                        SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
+                        SeasonName = season.Name,
+                        DateLastSaved = DateTime.UtcNow,
+                    };
+                    result.PresentationUniqueKey = result.GetPresentationUniqueKey();
+                }
+                else {
+                    result = new Episode {
+                        Name = displayTitle,
+                        OriginalTitle = alternateTitle,
+                        IndexNumber = episodeNumber,
+                        ParentIndexNumber = seasonNumber,
+                        PremiereDate = episode.AniDB.AirDate,
+                        Overview = description,
+                        CommunityRating = episode.AniDB.Rating.ToFloat(10),
+                    };
+                }
             }
             // NOTE: This next line will remain here till they fix the series merging for providers outside the MetadataProvider enum.
             if (config.SeriesGrouping == Ordering.GroupType.ShokoGroup)
