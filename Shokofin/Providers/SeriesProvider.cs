@@ -74,7 +74,7 @@ namespace Shokofin.Providers
             result.Item.SetProviderId("Shoko Series", series.Id);
             if (Plugin.Instance.Configuration.AddAniDBId)
                 result.Item.SetProviderId("AniDB", series.AniDB.ID.ToString());
-            if (Plugin.Instance.Configuration.AddTvDBId && !string.IsNullOrEmpty(series.TvDBId))
+            if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly && !string.IsNullOrEmpty(series.TvDBId))
                 result.Item.SetProviderId(MetadataProvider.Tvdb, series.TvDBId);
 
             result.HasMetadata = true;

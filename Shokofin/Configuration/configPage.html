@@ -134,10 +134,6 @@
                             <input is="emby-checkbox" type="checkbox" id="AddAniDBId" />
                             <span>Add AniDB Id to all entries</span>
                         </label>
-                        <label class="checkboxContainer">
-                            <input is="emby-checkbox" type="checkbox" id="AddTvDBId" />
-                            <span>Add TvDB Id when present</span>
-                        </label>
                         <h3>Tag Options</h3>
                         <label class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="HideArtStyleTags" />
@@ -202,7 +198,6 @@
                         document.querySelector('#AddMissingMetadata').checked = config.AddMissingMetadata;
                         document.querySelector('#FilterOnLibraryTypes').checked = config.FilterOnLibraryTypes;
                         document.querySelector('#AddAniDBId').checked = config.AddAniDBId;
-                        document.querySelector('#AddTvDBId').checked = config.AddTvDBId;
                         document.querySelector('#PreferAniDbPoster').checked = config.PreferAniDbPoster;
                         if (config.SeriesGrouping === "ShokoGroup") {
                             document.querySelector('#SG_ShokoGroup_Warning').removeAttribute("hidden");
@@ -276,7 +271,6 @@
                         config.AddMissingMetadata = document.querySelector('#AddMissingMetadata').checked;
                         config.FilterOnLibraryTypes = document.querySelector('#FilterOnLibraryTypes').checked;
                         config.AddAniDBId = document.querySelector('#AddAniDBId').checked;
-                        config.AddTvDBId = document.querySelector('#AddTvDBId').checked;
                         config.PreferAniDbPoster = document.querySelector('#PreferAniDbPoster').checked;
                         ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
                     });

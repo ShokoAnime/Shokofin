@@ -69,7 +69,7 @@ namespace Shokofin.Providers
                 result.Item.SetProviderId("Shoko Episode", episode.Id);
                 if (config.AddAniDBId)
                     result.Item.SetProviderId("AniDB", episode.AniDB.ID.ToString());
-                if (config.AddTvDBId && episode.TvDB != null && config.BoxSetGrouping != Ordering.GroupType.ShokoGroup)
+                if (config.BoxSetGrouping == Ordering.GroupType.MergeFriendly && episode.TvDB != null && config.BoxSetGrouping != Ordering.GroupType.ShokoGroup)
                     result.Item.SetProviderId(MetadataProvider.Tvdb, episode.TvDB.ID.ToString());
                 
                 result.HasMetadata = true;

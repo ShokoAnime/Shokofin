@@ -38,8 +38,6 @@ namespace Shokofin.Configuration
 
         public bool AddAniDBId { get; set; }
 
-        public bool AddTvDBId { get; set; }
-
         public bool PreferAniDbPoster { get; set; }
 
         public TextSourceType DescriptionSource { get; set; }
@@ -79,7 +77,6 @@ namespace Shokofin.Configuration
             SynopsisRemoveSummary = true;
             SynopsisCleanMultiEmptyLines = true;
             AddAniDBId = true;
-            AddTvDBId = false;
             PreferAniDbPoster = true;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;

@@ -172,13 +172,13 @@ namespace Shokofin.Providers
             // NOTE: This next line will remain here till they fix the series merging for providers outside the MetadataProvider enum.
             if (config.SeriesGrouping == Ordering.GroupType.ShokoGroup)
                 result.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{episode.Id}");
+            else if (config.SeriesGrouping == Ordering.GroupType.MergeFriendly && episode.TvDB != null && config.SeriesGrouping != Ordering.GroupType.ShokoGroup)
+                result.SetProviderId(MetadataProvider.Tvdb, episode.TvDB.ID.ToString());
             result.SetProviderId("Shoko Episode", episode.Id);
             if (!string.IsNullOrEmpty(fileId))
                 result.SetProviderId("Shoko File", fileId);
             if (config.AddAniDBId)
                 result.SetProviderId("AniDB", episode.AniDB.ID.ToString());
-            if (config.AddTvDBId && episode.TvDB != null && config.SeriesGrouping != Ordering.GroupType.ShokoGroup)
-                result.SetProviderId(MetadataProvider.Tvdb, episode.TvDB.ID.ToString());
 
             return result;
         }
