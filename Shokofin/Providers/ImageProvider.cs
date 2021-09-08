@@ -35,44 +35,71 @@ namespace Shokofin.Providers
         {
             var list = new List<RemoteImageInfo>();
             try {
-                Shokofin.API.Info.EpisodeInfo episode = null;
-                Shokofin.API.Info.SeriesInfo series = null;
-                if (item is Episode) {
-                    episode = await ApiManager.GetEpisodeInfo(item.GetProviderId("Shoko Episode"));
+                Shokofin.API.Info.EpisodeInfo episodeInfo = null;
+                Shokofin.API.Info.SeriesInfo seriesInfo = null;
+
+                var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Utils.Ordering.GroupFilterType.Others : Utils.Ordering.GroupFilterType.Default;
+                switch (item) {
+                    case Episode: {
+                        if (item.ProviderIds.TryGetValue("Shoko Episode", out var episodeId) && !string.IsNullOrEmpty(episodeId)) {
+                            episodeInfo = await ApiManager.GetEpisodeInfo(episodeId);
+                            if (episodeInfo != null)
+                                Logger.LogInformation("Getting images for episode {EpisodeName} (Episode={EpisodeId})", episodeInfo.Shoko.Name, episodeId);
+                        }
+                        break;
+                    }
+                    case Series: {
+                        if (item.ProviderIds.TryGetValue("Shoko Group", out var groupId) && !string.IsNullOrEmpty(groupId)) {
+                            var groupInfo = await ApiManager.GetGroupInfo(groupId, filterLibrary);
+                            seriesInfo = groupInfo?.DefaultSeries;
+                            if (seriesInfo != null)
+                                Logger.LogInformation("Getting images for series {SeriesName} (Series={SeriesId},Group={GroupId})", groupInfo.Shoko.Name, seriesInfo.Id, groupId);
+                        }
+                        else if (item.ProviderIds.TryGetValue("Shoko Series", out var seriesId) && !string.IsNullOrEmpty(seriesId)) {
+                            seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
+                            if (seriesInfo != null)
+                                Logger.LogInformation("Getting images for series {SeriesName} (Series={SeriesId})", seriesInfo.Shoko.Name, seriesId);
+                        }
+                        break;
+                    }
+                    case Season season: {
+                        if (season.IndexNumber.HasValue && season.Series.ProviderIds.TryGetValue("Shoko Group", out var groupId) && !string.IsNullOrEmpty(groupId)) {
+                            var groupInfo = await ApiManager.GetGroupInfo(groupId, filterLibrary);
+                            seriesInfo = groupInfo?.GetSeriesInfoBySeasonNumber(season.IndexNumber.Value);
+                            if (seriesInfo != null)
+                                Logger.LogInformation("Getting images for season {SeasonNumber} in {SeriesName} (Series={SeriesId},Group={GroupId})", season.IndexNumber.Value, groupInfo.Shoko.Name, seriesInfo.Id, groupId);
+                        }
+                        break;
+                    }
+                    case Movie:
+                    case BoxSet: {
+                        if (item.ProviderIds.TryGetValue("Shoko Series", out var seriesId) && !string.IsNullOrEmpty(seriesId)) {
+                            seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
+                            if (seriesInfo != null)
+                                Logger.LogInformation("Getting images for movie or box-set {MovieName} (Series={SeriesId})", seriesInfo.Shoko.Name, seriesId);
+                        }
+                        break;
+                    }
                 }
-                else if (item is Series) {
-                    var groupId = item.GetProviderId("Shoko Group");
-                    if (string.IsNullOrEmpty(groupId))
-                        series = await ApiManager.GetSeriesInfo(item.GetProviderId("Shoko Series"));
-                    else
-                        series = (await ApiManager.GetGroupInfo(groupId))?.DefaultSeries;
+
+                if (episodeInfo != null) {
+                    AddImage(ref list, ImageType.Primary, episodeInfo?.TvDB?.Thumbnail);
                 }
-                else if (item is BoxSet || item is Movie) {
-                    series = await ApiManager.GetSeriesInfo(item.GetProviderId("Shoko Series"));
-                }
-                else if (item is Season) {
-                    series = await ApiManager.GetSeriesInfoFromGroup(item.GetParent()?.GetProviderId("Shoko Group"), item.IndexNumber ?? 1);
-                }
-                if (episode != null) {
-                    Logger.LogInformation($"Getting episode images ({episode.Id} - {item.Name})");
-                    AddImage(ref list, ImageType.Primary, episode?.TvDB?.Thumbnail);
-                }
-                if (series != null) {
-                    Logger.LogInformation($"Getting series images ({series.Id} - {item.Name})");
-                    var images = series.Shoko.Images;
+                if (seriesInfo != null) {
+                    var images = seriesInfo.Shoko.Images;
                     if (Plugin.Instance.Configuration.PreferAniDbPoster)
-                        AddImage(ref list, ImageType.Primary, series.AniDB.Poster);
+                        AddImage(ref list, ImageType.Primary, seriesInfo.AniDB.Poster);
                     foreach (var image in images?.Posters)
                         AddImage(ref list, ImageType.Primary, image);
                     if (!Plugin.Instance.Configuration.PreferAniDbPoster)
-                        AddImage(ref list, ImageType.Primary, series.AniDB.Poster);
+                        AddImage(ref list, ImageType.Primary, seriesInfo.AniDB.Poster);
                     foreach (var image in images?.Fanarts)
                         AddImage(ref list, ImageType.Backdrop, image);
                     foreach (var image in images?.Banners)
                         AddImage(ref list, ImageType.Banner, image);
                 }
 
-                Logger.LogInformation($"List got {list.Count} item(s).");
+                Logger.LogInformation("List got {Count} item(s). (Series={SeriesId},Episode={EpisodeId})", list.Count, seriesInfo?.Id ?? null, episodeInfo?.Id ?? null);
                 return list;
             }
             catch (Exception e) {

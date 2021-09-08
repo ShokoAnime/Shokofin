@@ -67,6 +67,7 @@ namespace Shokofin.Providers
                 };
                 result.Item.SetProviderId("Shoko File", file.Id);
                 result.Item.SetProviderId("Shoko Episode", episode.Id);
+                result.Item.SetProviderId("Shoko Series", series.Id);
                 if (config.AddAniDBId)
                     result.Item.SetProviderId("AniDB", episode.AniDB.ID.ToString());
                 if (config.BoxSetGrouping == Ordering.GroupType.MergeFriendly && episode.TvDB != null && config.BoxSetGrouping != Ordering.GroupType.ShokoGroup)

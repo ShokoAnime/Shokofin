@@ -10,6 +10,19 @@ namespace Shokofin.API.Info
 
         public Group Shoko;
 
+        public SeriesInfo GetSeriesInfoBySeasonNumber(int seasonNumber) {
+            if (seasonNumber == 0)
+                return null;
+            
+            int seriesIndex = seasonNumber > 0 ? seasonNumber - 1 : seasonNumber;
+            var index = DefaultSeriesIndex + seriesIndex;
+            var seriesInfo = SeriesList[index];
+            if (seriesInfo == null)
+                return null;
+
+            return seriesInfo;
+        }
+
         public List<SeriesInfo> SeriesList;
 
         public SeriesInfo DefaultSeries;

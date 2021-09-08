@@ -347,13 +347,7 @@ namespace Shokofin.API
             var groupInfo = await GetGroupInfo(groupId, filterByType);
             if (groupInfo == null)
                 return null;
-            int seriesIndex = seasonNumber > 0 ? seasonNumber - 1 : seasonNumber;
-            var index = groupInfo.DefaultSeriesIndex + seriesIndex;
-            var seriesInfo = groupInfo.SeriesList[index];
-            if (seriesInfo == null)
-                return null;
-
-            return seriesInfo;
+            return groupInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
         }
         public SeriesInfo GetSeriesInfoSync(string seriesId)
         {
