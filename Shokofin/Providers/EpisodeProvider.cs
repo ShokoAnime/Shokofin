@@ -39,28 +39,51 @@ namespace Shokofin.Providers
         {
             try {
                 var result = new MetadataResult<Episode>();
-
-                // Don't provide metadata for missing episodes... for now.
-                if (info.IsMissingEpisode || info.Path == null) return result;
-
                 var config = Plugin.Instance.Configuration;
                 Ordering.GroupFilterType? filterByType = config.SeriesGrouping == Ordering.GroupType.ShokoGroup ? config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default : null;
-                var (file, episode, series, group) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
 
-                // if file is null then series and episode is also null.
-                if (file == null) {
+                // Fetch the episode, series and group info (and file info, but that's not really used (yet))
+                Info.FileInfo fileInfo = null;
+                Info.EpisodeInfo episodeInfo = null;
+                Info.SeriesInfo seriesInfo = null;
+                Info.GroupInfo groupInfo = null;
+                if (info.IsMissingEpisode || info.Path == null) {
+                    // We're unable to fetch the latest metadata for the virtual episode.
+                    if (!info.ProviderIds.TryGetValue("Shoko Episode", out var episodeId))
+                        return result;
+
+                    episodeInfo = await ApiManager.GetEpisodeInfo(episodeId);
+                    if (episodeInfo == null)
+                        return result;
+
+                    seriesInfo = await ApiManager.GetSeriesInfoForEpisode(episodeId);
+                    if (seriesInfo == null)
+                        return result;
+
+                    groupInfo = filterByType.HasValue ? (await ApiManager.GetGroupInfoForSeries(seriesInfo.Id, filterByType.Value)) : null;
+                }
+                else {
+                    (fileInfo, episodeInfo, seriesInfo, groupInfo) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
+                }
+
+                // if the episode info is null then the series info and conditionally the group info is also null.
+                if (episodeInfo == null) {
                     Logger.LogWarning("Unable to find episode info for path {Path}", info.Path);
                     return result;
                 }
 
-                result.Item = CreateMetadata(group, series, episode, file.Id, info.MetadataLanguage);
-                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", result.Item.Name, file.Id, episode.Id, series.Id);
+                var fileId = fileInfo?.Id ?? null;
+                result.Item = CreateMetadata(groupInfo, seriesInfo, episodeInfo, fileId, info.MetadataLanguage);
+                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", result.Item.Name, fileId, episodeInfo.Id, seriesInfo.Id);
 
                 result.HasMetadata = true;
 
-                var episodeNumberEnd = episode.AniDB.EpisodeNumber + file.EpisodesCount;
-                if (episode.AniDB.EpisodeNumber != episodeNumberEnd)
-                    result.Item.IndexNumberEnd = episodeNumberEnd;
+                if (fileInfo != null) {
+                    var episodeNumberEnd = episodeInfo.AniDB.EpisodeNumber + fileInfo.ExtraEpisodesCount;
+                    if (episodeInfo.AniDB.EpisodeNumber != episodeNumberEnd)
+                        result.Item.IndexNumberEnd = episodeNumberEnd;
+                }
+
 
                 return result;
             }

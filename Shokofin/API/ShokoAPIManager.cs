@@ -212,7 +212,7 @@ namespace Shokofin.API
             {
                 Id = fileId,
                 Shoko = file,
-
+                ExtraEpisodesCount = episodeCount - 1,
             };
             DataCache.Set<FileInfo>(cacheKey, info, DefaultTimeSpan);
             return info;

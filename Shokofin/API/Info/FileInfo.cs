@@ -8,6 +8,6 @@ namespace Shokofin.API.Info
 
         public File Shoko;
 
-        public int EpisodesCount;
+        public int ExtraEpisodesCount;
     }
 }
