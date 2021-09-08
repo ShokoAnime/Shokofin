@@ -53,14 +53,12 @@ namespace Shokofin.Providers
             var series = await ApiManager.GetSeriesInfoByPath(info.Path);
 
             if (series == null) {
-                Logger.LogWarning($"Unable to find series info for path {info.Path}");
+                    Logger.LogWarning("Unable to find movie box-set info for path {Path}", info.Path);
                 return result;
             }
 
-            int aniDBId = series.AniDB.ID;
-
-            if (series.Shoko.Sizes.Total.Episodes <= 1) {
-                Logger.LogWarning($"series did not contain multiple movies! Skipping path {info.Path}");
+            if (series.EpisodeList.Count <= 1) {
+                Logger.LogWarning("Series did not contain multiple movies! Skipping path {Path} (Series={SeriesId})", info.Path, series.Id);
                 return result;
             }
 
@@ -93,16 +91,16 @@ namespace Shokofin.Providers
             Ordering.GroupFilterType filterByType = config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Movies : Ordering.GroupFilterType.Default;
             var group = await ApiManager.GetGroupInfoByPath(info.Path, filterByType);
             if (group == null) {
-                Logger.LogWarning($"Unable to find box-set info for path {info.Path}");
+                    Logger.LogWarning("Unable to find movie box-set info for path {Path}", info.Path);
                 return result;
             }
 
             var series = group.DefaultSeries;
-            if (series.AniDB.Type != API.Models.SeriesType.Movie) {
-                Logger.LogWarning($"File found, but not a movie! Skipping.");
+
+            if (group.SeriesList.Count <= 1 && series.EpisodeList.Count <= 1) {
+                Logger.LogWarning("Group did not contain multiple movies! Skipping path {Path} (Series={SeriesId},Group={GroupId})", info.Path, group.Id, series.Id);
                 return result;
             }
-
             var tags = await ApiManager.GetTags(series.Id);
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
 
