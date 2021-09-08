@@ -86,7 +86,7 @@ namespace Shokofin
                     break;
                 case "tvshows":
                     if (series.AniDB.Type == SeriesType.Movie) {
-                        Logger.LogInformation("Library seperatation is enabled, ignoring series. (Series={SeriesId}", series.Id);
+                        Logger.LogInformation("Library seperatation is enabled, ignoring series. (Series={SeriesId})", series.Id);
                         return true;
                     }
 
@@ -96,7 +96,7 @@ namespace Shokofin
                     break;
                 case "movies":
                     if (series.AniDB.Type != SeriesType.Movie) {
-                        Logger.LogInformation("Library seperatation is enabled, ignoring series. (Series={SeriesId}", series.Id);
+                        Logger.LogInformation("Library seperatation is enabled, ignoring series. (Series={SeriesId})", series.Id);
                         return true;
                     }
 
@@ -132,6 +132,7 @@ namespace Shokofin
                 return true;
             }
 
+            ApiManager.MarkEpisodeAsFound(episode.Id, series.Id, fullPath);
             return false;
         }
     }

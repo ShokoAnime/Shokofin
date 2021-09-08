@@ -160,13 +160,6 @@ namespace Shokofin.Providers
             if (!series.ProviderIds.TryGetValue("Shoko Series", out var seriesId) || string.IsNullOrEmpty(seriesId))
                 return;
 
-            var deleteOptions = new DeleteOptions {
-                DeleteFileLocation = true,
-            };
-            foreach (var item in series.GetRecursiveChildren().Where(item => item.IsVirtualItem)) {
-                LibraryManager.DeleteItem(item, deleteOptions, true);
-            }
-
             var seasons = new Dictionary<int, Season>();
             var existingEpisodes = new HashSet<string>();
             foreach (var item in series.GetRecursiveChildren()) switch (item) {
@@ -175,12 +168,18 @@ namespace Shokofin.Providers
                         seasons.TryAdd(season.IndexNumber.Value, season);
                     break;
                 case Episode episode:
-                    if (episode.ProviderIds.TryGetValue("Shoko Episode", out var episodeId) && !string.IsNullOrEmpty(episodeId))
+                    // Get a hash-set of existing episodes – both physical and virtual – to exclude when adding new virtual episodes.
+                    if ((
+                        // This will account for virtual episodes and existing episodes
+                        episode.ProviderIds.TryGetValue("Shoko Episode", out var episodeId) ||
+                        // This will account for new episodes that haven't received their first metadata update yet
+                        ApiManager.TryGetEpisodeIdForPath(episode.Path, out episodeId)
+                    ) && !string.IsNullOrEmpty(episodeId))
                         existingEpisodes.Add(episodeId);
                     break;
             }
 
-            // Provider metadata for a series using Shoko's Group feature
+            // Provide metadata for a series using Shoko's Group feature
             if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {
                 var groupInfo = ApiManager.GetGroupInfoForSeriesSync(seriesId, Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default);
 
@@ -250,26 +249,25 @@ namespace Shokofin.Providers
             if (!season.IndexNumber.HasValue || !(season.ProviderIds.TryGetValue("Shoko Series", out var seriesId) || season.Series.ProviderIds.TryGetValue("Shoko Series", out seriesId)) || string.IsNullOrEmpty(seriesId))
                 return;
 
-            var deleteOptions = new DeleteOptions {
-                DeleteFileLocation = true,
-            };
-            foreach (var item in season.Children.Where(item => item.IsVirtualItem)) {
-                LibraryManager.DeleteItem(item, deleteOptions, true);
-            }
-
             var seasonNumber = season.IndexNumber!.Value;
             var existingEpisodes = new HashSet<string>();
-            foreach (var item in season.GetEpisodes()) {
-                if (item.ProviderIds.TryGetValue("Shoko Episode", out var episodeId) && !string.IsNullOrEmpty(episodeId))
+            foreach (var episode in season.Children.OfType<Episode>()) {
+                // Get a hash-set of existing episodes – both physical and virtual – to exclude when adding new virtual episodes.
+                if ((
+                    // This will account for virtual episodes and existing episodes
+                    episode.ProviderIds.TryGetValue("Shoko Episode", out var episodeId) ||
+                    // This will account for new episodes that haven't received their first metadata update yet
+                    ApiManager.TryGetEpisodeIdForPath(episode.Path, out episodeId)
+                ) && !string.IsNullOrEmpty(episodeId))
                     existingEpisodes.Add(episodeId);
             }
+
             var series = season.Series;
             Info.GroupInfo groupInfo = null;
             Info.SeriesInfo seriesInfo = null;
-
+            // Provide metadata for a season using Shoko's Group feature
             if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {
-                var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
-                groupInfo = ApiManager.GetGroupInfoForSeriesSync(seriesId, filterLibrary);
+                groupInfo = ApiManager.GetGroupInfoForSeriesSync(seriesId, Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default);
                 if (groupInfo == null) {
                     Logger.LogWarning("Unable to find group info for series. (Series={SeriesId})", seriesId);
                     return;
@@ -292,9 +290,7 @@ namespace Shokofin.Providers
                     return;
                 }
 
-                int seriesIndex = seasonNumber > 0 ? seasonNumber - 1 : seasonNumber;
-                var index = groupInfo.DefaultSeriesIndex + seriesIndex;
-                seriesInfo = groupInfo.SeriesList[index];
+                seriesInfo = groupInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
                 if (seriesInfo == null) {
                     Logger.LogWarning("Unable to find series info for {SeasonNumber} in group for series. (Group={GroupId})", seasonNumber, groupInfo.Id);
                     return;
@@ -303,6 +299,7 @@ namespace Shokofin.Providers
                 if (deleted)
                     season = AddVirtualSeason(seriesInfo, seasonNumber, series);
             }
+            // Provide metadata for other seasons
             else {
                 seriesInfo = ApiManager.GetSeriesInfoSync(seriesId);
                 if (seriesInfo == null) {

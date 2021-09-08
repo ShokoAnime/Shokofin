@@ -28,12 +28,19 @@ namespace Shokofin.API
 
         private static ConcurrentDictionary<string, string> SeriesIdToGroupIdDictionary = new ConcurrentDictionary<string, string>();
 
+        private static ConcurrentDictionary<string, string> EpisodePathToEpisodeIdDirectory = new ConcurrentDictionary<string, string>();
+
         private static ConcurrentDictionary<string, string> EpisodeIdToSeriesIdDictionary = new ConcurrentDictionary<string, string>();
 
         /// <summary>
         /// Episodes marked as ignored is skipped when adding missing episode metadata.
         /// </summary>
         private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> SeriesIdToEpisodeIdIgnoreDictionery = new ConcurrentDictionary<string, ConcurrentDictionary<string, string>>();
+
+        /// <summary>
+        /// Episodes found while scanning the library for metadata.
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> SeriesIdToEpisodeIdDictionery = new ConcurrentDictionary<string, ConcurrentDictionary<string, string>>();
 
         public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ILibraryManager libraryManager)
         {
@@ -90,7 +97,9 @@ namespace Shokofin.API
             DataCache.Dispose();
             MediaFolderList.Clear();
             EpisodeIdToSeriesIdDictionary.Clear();
+            EpisodePathToEpisodeIdDirectory.Clear();
             SeriesPathToIdDictionary.Clear();
+            SeriesIdToEpisodeIdDictionery.Clear();
             SeriesIdToEpisodeIdIgnoreDictionery.Clear();
             SeriesIdToGroupIdDictionary.Clear();
             DataCache = (new MemoryCache((new MemoryCacheOptions() {
@@ -266,9 +275,32 @@ namespace Shokofin.API
 
         public bool MarkEpisodeAsIgnored(string episodeId, string seriesId, string fullPath)
         {
+            EpisodePathToEpisodeIdDirectory.TryAdd(fullPath, episodeId);
             if (!(SeriesIdToEpisodeIdIgnoreDictionery.TryGetValue(seriesId, out var dictionary) || SeriesIdToEpisodeIdIgnoreDictionery.TryAdd(seriesId, dictionary = new ConcurrentDictionary<string, string>())))
                 return false;
             return dictionary.TryAdd(episodeId, fullPath);
+        }
+
+        public bool MarkEpisodeAsFound(string episodeId, string seriesId, string fullPath)
+        {
+            EpisodePathToEpisodeIdDirectory.TryAdd(fullPath, episodeId);
+            if (!(SeriesIdToEpisodeIdIgnoreDictionery.TryGetValue(seriesId, out var dictionary) || SeriesIdToEpisodeIdIgnoreDictionery.TryAdd(seriesId, dictionary = new ConcurrentDictionary<string, string>())))
+                return false;
+            return dictionary.TryAdd(episodeId, fullPath);
+        }
+
+        public bool TryGetEpisodeIdForPath(string fullPath, out string episodeId)
+        {
+            if (string.IsNullOrEmpty(fullPath)) {
+                episodeId = null;
+                return false;
+            }
+            return EpisodePathToEpisodeIdDirectory.TryGetValue(fullPath, out episodeId);
+        }
+
+        public bool IsEpisodeOnDisk(EpisodeInfo episodeInfo, SeriesInfo seriesInfo)
+        {
+            return SeriesIdToEpisodeIdDictionery.TryGetValue(seriesInfo.Id, out var dictionary) && dictionary.ContainsKey(episodeInfo.Id);
         }
 
         private static ExtraType? GetExtraType(Episode.AniDB episode)
