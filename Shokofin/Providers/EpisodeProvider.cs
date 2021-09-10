@@ -74,7 +74,7 @@ namespace Shokofin.Providers
 
                 var fileId = fileInfo?.Id ?? null;
                 result.Item = CreateMetadata(groupInfo, seriesInfo, episodeInfo, fileId, info.MetadataLanguage);
-                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", result.Item.Name, fileId, episodeInfo.Id, seriesInfo.Id);
+                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},Group={GroupId})", result.Item.Name, fileId, episodeInfo.Id, seriesInfo.Id, groupInfo?.Id ?? null);
 
                 result.HasMetadata = true;
 
