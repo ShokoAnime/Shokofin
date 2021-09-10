@@ -289,13 +289,13 @@ namespace Shokofin.API
             return dictionary.TryAdd(episodeId, fullPath);
         }
 
-        public bool TryGetEpisodeIdForPath(string fullPath, out string episodeId)
+        public bool TryGetEpisodeIdForPath(string path, out string episodeId)
         {
-            if (string.IsNullOrEmpty(fullPath)) {
+            if (string.IsNullOrEmpty(path)) {
                 episodeId = null;
                 return false;
             }
-            return EpisodePathToEpisodeIdDirectory.TryGetValue(fullPath, out episodeId);
+            return EpisodePathToEpisodeIdDirectory.TryGetValue(path, out episodeId);
         }
 
         public bool IsEpisodeOnDisk(EpisodeInfo episodeInfo, SeriesInfo seriesInfo)
@@ -352,16 +352,16 @@ namespace Shokofin.API
             var partialPath = StripMediaFolder(path);
             Logger.LogDebug("Looking for series matching {Path}", partialPath);
             string seriesId;
-            if (SeriesPathToIdDictionary.ContainsKey(partialPath))
+            if (SeriesPathToIdDictionary.ContainsKey(path))
             {
-                seriesId = SeriesPathToIdDictionary[partialPath];
+                seriesId = SeriesPathToIdDictionary[path];
             }
             else
             {
                 var result = await ShokoAPI.GetSeriesPathEndsWith(partialPath);
                 seriesId = result?.FirstOrDefault()?.IDs?.ID.ToString();
 
-                SeriesPathToIdDictionary[partialPath] = seriesId;
+                SeriesPathToIdDictionary[path] = seriesId;
             }
 
             if (string.IsNullOrEmpty(seriesId))
@@ -428,6 +428,15 @@ namespace Shokofin.API
             }
 
             return await GetSeriesInfo(seriesId);
+        }
+
+        public bool TryGetSeriesIdForPath(string path, out string seriesId)
+        {
+            if (string.IsNullOrEmpty(path)) {
+                seriesId = null;
+                return false;
+            }
+            return SeriesPathToIdDictionary.TryGetValue(path, out seriesId);
         }
 
         private async Task<SeriesInfo> CreateSeriesInfo(Series series, string seriesId = null)
