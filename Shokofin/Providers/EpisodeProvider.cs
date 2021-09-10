@@ -115,10 +115,13 @@ namespace Shokofin.Providers
             var description = Text.GetDescription(episode);
 
             if (group != null && config.MarkSpecialsWhenGrouped && episode.AniDB.Type != EpisodeType.Normal) switch (episode.AniDB.Type) {
-                case EpisodeType.Special:
-                    displayTitle = $"S{episodeNumber} {displayTitle}";
-                    alternateTitle = $"S{episodeNumber} {alternateTitle}";
+                case EpisodeType.Special: {
+                    // We're guaranteed to find the index, because otherwise it would've thrown when getting the episode number.
+                    var index = series.SpecialsList.FindIndex(ep => ep == episode);
+                    displayTitle = $"S{index + 1} {displayTitle}";
+                    alternateTitle = $"S{index + 1} {alternateTitle}";
                     break;
+                }
                 case EpisodeType.ThemeSong:
                 case EpisodeType.EndingSong:
                 case EpisodeType.OpeningSong:
