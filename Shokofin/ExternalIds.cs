@@ -27,7 +27,7 @@ namespace Shokofin
     public class ShokoSeriesExternalId : IExternalId
     {
         public bool Supports(IHasProviderIds item)
-            => item is Series || item is Movie || item is BoxSet;
+            => item is Series || item is Season || item is Movie || item is BoxSet;
 
         public string ProviderName
             => "Shoko Series";
