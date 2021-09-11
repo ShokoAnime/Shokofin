@@ -196,7 +196,7 @@ namespace Shokofin.Providers
 
                 // Add missing seasons
                 foreach (var (seasonNumber, season) in CreateMissingSeasons(groupInfo, series, seasons)) {
-                    seasons.Add(seasonNumber, season);
+                    seasons.TryAdd(seasonNumber, season);
                 }
 
                 // Handle specials when grouped.
@@ -405,7 +405,7 @@ namespace Shokofin.Providers
                 var season = AddVirtualSeason(s, seasonNumber, series);
                 yield return (seasonNumber, season);
             }
-            if (hasSpecials)
+            if (hasSpecials && !seasons.ContainsKey(0))
                 yield return (0, AddVirtualSeason(0, series));
         }
 
