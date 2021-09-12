@@ -304,6 +304,15 @@ namespace Shokofin.API
             return EpisodePathToEpisodeIdDictionary.TryGetValue(path, out episodeId);
         }
 
+        public bool TryGetEpisodePathForId(string episodeId, out string path)
+        {
+            if (string.IsNullOrEmpty(episodeId)) {
+                path = null;
+                return false;
+            }
+            return EpisodeIdToEpisodePathDictionary.TryGetValue(episodeId, out path);
+        }
+
         private static ExtraType? GetExtraType(Episode.AniDB episode)
         {
             switch (episode.Type)
