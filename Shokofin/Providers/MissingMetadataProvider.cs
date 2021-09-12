@@ -268,7 +268,7 @@ namespace Shokofin.Providers
             if (!IsEnabledForSeries(series, out var seriesId))
                 return;
 
-            if (!ApiManager.TryLockActionForIdOFType("series", seriesId))
+            if (!ApiManager.TryLockActionForIdOFType("series", seriesId, "update"))
                 return;
 
             try {
@@ -291,7 +291,7 @@ namespace Shokofin.Providers
                     // Handle specials when grouped.
                     if (seasons.TryGetValue(0, out var zeroSeason)) {
                         var seasonId = $"{seriesId}:0";
-                        if (ApiManager.TryLockActionForIdOFType("season", seasonId)) {
+                        if (ApiManager.TryLockActionForIdOFType("season", seasonId, "update")) {
                             try {
                                 foreach (var seriesInfo in groupInfo.SeriesList) {
                                     foreach (var episodeInfo in seriesInfo.SpecialsList) {
@@ -303,7 +303,7 @@ namespace Shokofin.Providers
                                 }
                             }
                             finally {
-                                ApiManager.TryUnlockActionForIdOFType("season", seasonId);
+                                ApiManager.TryUnlockActionForIdOFType("season", seasonId, "update");
                             }
                         }
 
@@ -317,7 +317,7 @@ namespace Shokofin.Providers
                             continue;
 
                         var seasonId = $"{seriesId}:{seasonNumber}";
-                        if (ApiManager.TryLockActionForIdOFType("season", seasonId)) {
+                        if (ApiManager.TryLockActionForIdOFType("season", seasonId, "update")) {
                             try {
                                 foreach (var episodeInfo in seriesInfo.EpisodeList) {
                                     if (episodeIds.Contains(episodeInfo.Id))
@@ -327,7 +327,7 @@ namespace Shokofin.Providers
                                 }
                             }
                             finally {
-                                ApiManager.TryUnlockActionForIdOFType("season", seasonId);
+                                ApiManager.TryUnlockActionForIdOFType("season", seasonId, "update");
                             }
                         }
                     }
@@ -368,7 +368,7 @@ namespace Shokofin.Providers
                 }
             }
             finally {
-                ApiManager.TryUnlockActionForIdOFType("series", seriesId);
+                ApiManager.TryUnlockActionForIdOFType("series", seriesId, "update");
             }
         }
 
@@ -388,7 +388,7 @@ namespace Shokofin.Providers
 
             var seasonId = $"{seriesId}:{season.IndexNumber.Value}";
             try {
-                if (!ApiManager.TryLockActionForIdOFType("season", seasonId))
+                if (!ApiManager.TryLockActionForIdOFType("season", seasonId, "update"))
                     return;
 
                 var seasonNumber = season.IndexNumber!.Value;
@@ -458,7 +458,7 @@ namespace Shokofin.Providers
                 }
             }
             finally {
-                ApiManager.TryUnlockActionForIdOFType("season", seasonId);
+                ApiManager.TryUnlockActionForIdOFType("season", seasonId, "update");
             }
 
         }

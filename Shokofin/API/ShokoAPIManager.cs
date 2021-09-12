@@ -93,7 +93,7 @@ namespace Shokofin.API
         #endregion
         #region Update locks
 
-        public bool TryLockActionForIdOFType(string type, string id, string action = "default")
+        public bool TryLockActionForIdOFType(string type, string id, string action)
         {
             var key = $"{type}:{id}";
             if (!LockedIdDictionary.TryGetValue(key, out var hashSet)) {
@@ -104,7 +104,7 @@ namespace Shokofin.API
             return hashSet.Add(action);
         }
 
-        public bool TryUnlockActionForIdOFType(string type, string id, string action = "default")
+        public bool TryUnlockActionForIdOFType(string type, string id, string action)
         {
             var key = $"{type}:{id}";
             if (!LockedIdDictionary.TryGetValue(key, out var hashSet))
