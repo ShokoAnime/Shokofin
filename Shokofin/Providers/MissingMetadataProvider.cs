@@ -131,10 +131,9 @@ namespace Shokofin.Providers
             }
         }
 
-        // NOTE: Always delete stall metadata, even if we disabled the feature in the settings page.
         private void OnLibraryManagerItemUpdated(object sender, ItemChangeEventArgs itemChangeEventArgs)
         {
-            if (!IsEnabledForItem(itemChangeEventArgs.Item))
+            if (!Plugin.Instance.Configuration.AddMissingMetadata || !IsEnabledForItem(itemChangeEventArgs.Item))
                 return;
 
             switch (itemChangeEventArgs.Item) {
