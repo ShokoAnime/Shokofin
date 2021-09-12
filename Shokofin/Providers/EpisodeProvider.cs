@@ -148,19 +148,24 @@ namespace Shokofin.Providers
 
             Episode result;
             if (group != null && episode.AniDB.Type == EpisodeType.Special) {
-                int? previousEpisodeNumber = null;
-                if (series.SpesialsAnchors.TryGetValue(episode.Id, out var previousEpisode))
-                    previousEpisodeNumber = Ordering.GetEpisodeNumber(group, series, previousEpisode);
-                int? nextEpisodeNumber = previousEpisodeNumber.HasValue && previousEpisodeNumber.Value < series.EpisodeList.Count ? previousEpisodeNumber.Value + 1 : null;
+                var displayInBetween = Plugin.Instance.Configuration.DisplaySpecialsInSeason;
+                int? nextEpisodeNumber = null;
+                if (displayInBetween) {
+                    int? previousEpisodeNumber = null;
+                    if (series.SpesialsAnchors.TryGetValue(episode.Id, out var previousEpisode))
+                        previousEpisodeNumber = Ordering.GetEpisodeNumber(group, series, previousEpisode);
+                    nextEpisodeNumber = previousEpisodeNumber.HasValue && previousEpisodeNumber.Value < series.EpisodeList.Count ? previousEpisodeNumber.Value + 1 : series.EpisodeList.Count;
+                }
+
                 if (season != null) {
                     result = new Episode {
                         Name = displayTitle,
                         OriginalTitle = alternateTitle,
                         IndexNumber = episodeNumber,
                         ParentIndexNumber = 0,
-                        AirsAfterSeasonNumber = seasonNumber,
+                        AirsAfterSeasonNumber = displayInBetween ? null : seasonNumber,
                         AirsBeforeEpisodeNumber = nextEpisodeNumber,
-                        AirsBeforeSeasonNumber = seasonNumber + 1,
+                        AirsBeforeSeasonNumber = displayInBetween ? seasonNumber : null,
                         Id = episodeId,
                         IsVirtualItem = true,
                         SeasonId = season.Id,
@@ -179,9 +184,9 @@ namespace Shokofin.Providers
                     result = new Episode {
                         IndexNumber = episodeNumber,
                         ParentIndexNumber = 0,
-                        AirsAfterSeasonNumber = seasonNumber,
+                        AirsAfterSeasonNumber = displayInBetween ? null : seasonNumber,
                         AirsBeforeEpisodeNumber = nextEpisodeNumber,
-                        AirsBeforeSeasonNumber = seasonNumber + 1,
+                        AirsBeforeSeasonNumber = displayInBetween ? seasonNumber : null,
                         Name = displayTitle,
                         OriginalTitle = alternateTitle,
                         PremiereDate = episode.AniDB.AirDate,

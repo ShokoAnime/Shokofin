@@ -48,6 +48,8 @@ namespace Shokofin.Configuration
 
         public bool MarkSpecialsWhenGrouped { get; set; }
 
+        public bool DisplaySpecialsInSeason { get; set; }
+
         public SeriesAndBoxSetGroupType BoxSetGrouping { get; set; }
 
         public OrderType MovieOrdering { get; set; }
@@ -84,6 +86,7 @@ namespace Shokofin.Configuration
             SeriesGrouping = SeriesAndBoxSetGroupType.Default;
             SeasonOrdering = OrderType.Default;
             MarkSpecialsWhenGrouped = true;
+            DisplaySpecialsInSeason = false;
             BoxSetGrouping = SeriesAndBoxSetGroupType.Default;
             MovieOrdering = OrderType.Default;
             AddMissingMetadata = false;
