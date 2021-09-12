@@ -30,6 +30,13 @@ namespace Shokofin.API.Info
         public List<EpisodeInfo> EpisodeList;
 
         /// <summary>
+        /// A pre-filtered list of "extra" videos that belong to this series.
+        /// 
+        /// Ordered by AniDb air-date.
+        /// </summary>
+        public List<EpisodeInfo> ExtrasList;
+
+        /// <summary>
         /// A dictionary holding mappings for the previous normal episode for every special episode in a series.
         /// </summary>
         public Dictionary<string, EpisodeInfo> SpesialsAnchors;

@@ -464,6 +464,7 @@ namespace Shokofin.API
             Dictionary<string, EpisodeInfo> specialsAnchorDictionary = new Dictionary<string, EpisodeInfo>();
             var specialsList = new List<EpisodeInfo>();
             var episodesList = new List<EpisodeInfo>();
+            var extrasList = new List<EpisodeInfo>();
 
             // The episode list is ordered by air date
             var allEpisodesList = ShokoAPI.GetEpisodesFromSeries(seriesId, Plugin.Instance.Configuration.AddMissingMetadata)
@@ -480,7 +481,9 @@ namespace Shokofin.API
                 EpisodeIdToSeriesIdDictionary[episode.Id] = seriesId;
                 if (episode.AniDB.Type == EpisodeType.Normal)
                     episodesList.Add(episode);
-                else if (episode.AniDB.Type == EpisodeType.Special && episode.ExtraType == null) {
+                else if (episode.ExtraType != null)
+                    extrasList.Add(episode);
+                else if (episode.AniDB.Type == EpisodeType.Special) {
                     specialsList.Add(episode);
                     var previousEpisode = allEpisodesList
                         .GetRange(0, index)
@@ -503,6 +506,7 @@ namespace Shokofin.API
                 TvDB = tvDbId != 0 ? (await ShokoAPI.GetSeriesTvDB(seriesId)).FirstOrDefault() : null,
                 RawEpisodeList = allEpisodesList,
                 EpisodeList = episodesList,
+                ExtrasList = extrasList,
                 SpesialsAnchors = specialsAnchorDictionary,
                 SpecialsList = specialsList,
             };
