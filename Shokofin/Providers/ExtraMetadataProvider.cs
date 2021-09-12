@@ -20,7 +20,7 @@ using Info = Shokofin.API.Info;
 
 namespace Shokofin.Providers
 {
-    public class MissingMetadataProvider : IServerEntryPoint
+    public class ExtraMetadataProvider : IServerEntryPoint
     {
         private readonly ShokoAPIManager ApiManager;
 
@@ -30,9 +30,9 @@ namespace Shokofin.Providers
 
         private readonly ILocalizationManager LocalizationManager;
 
-        private readonly ILogger<MissingMetadataProvider> Logger;
+        private readonly ILogger<ExtraMetadataProvider> Logger;
 
-        public MissingMetadataProvider(ShokoAPIManager apiManager, ILibraryManager libraryManager, IProviderManager providerManager, ILocalizationManager localizationManager, ILogger<MissingMetadataProvider> logger)
+        public ExtraMetadataProvider(ShokoAPIManager apiManager, ILibraryManager libraryManager, IProviderManager providerManager, ILocalizationManager localizationManager, ILogger<ExtraMetadataProvider> logger)
         {
             ApiManager = apiManager;
             LibraryManager = libraryManager;
