@@ -71,11 +71,7 @@ namespace Shokofin.Providers
                 Tags = tags,
                 CommunityRating = series.AniDB.Rating.ToFloat(10),
             };
-            result.Item.SetProviderId("Shoko Series", series.Id);
-            if (Plugin.Instance.Configuration.AddAniDBId)
-                result.Item.SetProviderId("AniDB", series.AniDB.ID.ToString());
-            if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly && !string.IsNullOrEmpty(series.TvDBId))
-                result.Item.SetProviderId(MetadataProvider.Tvdb, series.TvDBId);
+            AddProviderIds(result.Item, series.Id, null, series.AniDB.ID.ToString(), Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly ? series.TvDBId : null);
 
             result.HasMetadata = true;
 
@@ -112,12 +108,7 @@ namespace Shokofin.Providers
                 Tags = tags,
                 CommunityRating = series.AniDB.Rating.ToFloat(10),
             };
-            // NOTE: This next line will remain here till they fix the series merging for providers outside the MetadataProvider enum.
-            result.Item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{series.Id}");
-            result.Item.SetProviderId("Shoko Series", series.Id);
-            result.Item.SetProviderId("Shoko Group", group.Id);
-            if (Plugin.Instance.Configuration.AddAniDBId)
-                result.Item.SetProviderId("AniDB", series.AniDB.ID.ToString());
+            AddProviderIds(result.Item, series.Id, group.Id, series.AniDB.ID.ToString(), null);
 
             result.HasMetadata = true;
 
@@ -126,6 +117,21 @@ namespace Shokofin.Providers
                 result.AddPerson(person);
 
             return result;
+        }
+
+        public static void AddProviderIds(Series series, string seriesId, string groupId = null, string aniDbId = null, string tvDbId = null)
+        {
+            // NOTE: These next two lines will remain here till _someone_ fix the series merging for providers other then TvDB and ImDB in Jellyfin.
+            if (string.IsNullOrEmpty(tvDbId))
+                series.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{seriesId}");
+
+            series.SetProviderId("Shoko Series", seriesId);
+            if (!string.IsNullOrEmpty(groupId))
+                series.SetProviderId("Shoko Group", groupId);
+            if (Plugin.Instance.Configuration.AddAniDBId && !string.IsNullOrEmpty(aniDbId))
+                series.SetProviderId("AniDB", aniDbId);
+            if (!string.IsNullOrEmpty(tvDbId))
+                series.SetProviderId(MetadataProvider.Tvdb, tvDbId);
         }
 
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo info, CancellationToken cancellationToken)

@@ -26,11 +26,11 @@ namespace Shokofin.API
 
         private static readonly ConcurrentDictionary<string, string> SeriesPathToIdDictionary = new ConcurrentDictionary<string, string>();
 
-        private static ConcurrentDictionary<string, string> SeriesIdToGroupIdDictionary = new ConcurrentDictionary<string, string>();
+        private static readonly ConcurrentDictionary<string, string> SeriesIdToGroupIdDictionary = new ConcurrentDictionary<string, string>();
 
-        private static ConcurrentDictionary<string, string> EpisodePathToEpisodeIdDirectory = new ConcurrentDictionary<string, string>();
+        private static readonly ConcurrentDictionary<string, string> EpisodePathToEpisodeIdDirectory = new ConcurrentDictionary<string, string>();
 
-        private static ConcurrentDictionary<string, string> EpisodeIdToSeriesIdDictionary = new ConcurrentDictionary<string, string>();
+        private static readonly ConcurrentDictionary<string, string> EpisodeIdToSeriesIdDictionary = new ConcurrentDictionary<string, string>();
 
         /// <summary>
         /// Episodes marked as ignored is skipped when adding missing episode metadata.
@@ -41,6 +41,8 @@ namespace Shokofin.API
         /// Episodes found while scanning the library for metadata.
         /// </summary>
         private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> SeriesIdToEpisodeIdDictionery = new ConcurrentDictionary<string, ConcurrentDictionary<string, string>>();
+
+        public static readonly ConcurrentDictionary<string, HashSet<string>> LockedIdDictionary = new ConcurrentDictionary<string, HashSet<string>>();
 
         public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ILibraryManager libraryManager)
         {
@@ -89,12 +91,35 @@ namespace Shokofin.API
         }
 
         #endregion
+        #region Update locks
+
+        public bool TryLockActionForIdOFType(string type, string id, string action = "default")
+        {
+            var key = $"{type}:{id}";
+            if (!LockedIdDictionary.TryGetValue(key, out var hashSet)) {
+                LockedIdDictionary.TryAdd(key, new HashSet<string>());
+                if (!LockedIdDictionary.TryGetValue(key, out hashSet))
+                    throw new Exception("Unable to set hash set");
+            }
+            return hashSet.Add(action);
+        }
+
+        public bool TryUnlockActionForIdOFType(string type, string id, string action = "default")
+        {
+            var key = $"{type}:{id}";
+            if (!LockedIdDictionary.TryGetValue(key, out var hashSet))
+                return false;
+            return hashSet.Remove(action);
+        }
+
+        #endregion
         #region Clear
 
         public void Clear()
         {
             Logger.LogDebug("Clearing data.");
             DataCache.Dispose();
+            LockedIdDictionary.Clear();
             MediaFolderList.Clear();
             EpisodeIdToSeriesIdDictionary.Clear();
             EpisodePathToEpisodeIdDirectory.Clear();
@@ -437,6 +462,11 @@ namespace Shokofin.API
                 return false;
             }
             return SeriesPathToIdDictionary.TryGetValue(path, out seriesId);
+        }
+
+        public bool TryGetGroupIdForSeriesId(string seriesId, out string groupId)
+        {
+            return SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out groupId);
         }
 
         private async Task<SeriesInfo> CreateSeriesInfo(Series series, string seriesId = null)
