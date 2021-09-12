@@ -123,16 +123,15 @@ namespace Shokofin
                 Logger.LogWarning("Skipped unknown file at path {Path}", partialPath);
                 return false;
             }
+
+            ApiManager.MarkEpisodeAsFound(episode.Id, fullPath);
             Logger.LogInformation("Found episode for {SeriesName} (Series={SeriesId},Episode={EpisodeId},File={FileId})", series.Shoko.Name, series.Id, episode.Id, file.Id);
 
             // We're going to post process this file later, but we don't want to include it in our library for now.
             if (episode.ExtraType != null) {
                 Logger.LogInformation("Episode was assigned an extra type, ignoring episode. (Series={SeriesId},Episode={EpisodeId},File={FileId})", series.Id, episode.Id, file.Id);
-                ApiManager.MarkEpisodeAsIgnored(episode.Id, series.Id, fullPath);
                 return true;
             }
-
-            ApiManager.MarkEpisodeAsFound(episode.Id, series.Id, fullPath);
             return false;
         }
     }
