@@ -530,6 +530,14 @@ namespace Shokofin.API
             return groupInfo;
         }
 
+        public GroupInfo GetGroupInfoSync(string groupId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+        {
+            if (!string.IsNullOrEmpty(groupId) && DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info))
+                return info;
+
+            return GetGroupInfo(groupId, filterByType).GetAwaiter().GetResult();
+        }
+
         public async Task<GroupInfo> GetGroupInfo(string groupId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
         {
             if (string.IsNullOrEmpty(groupId))
@@ -544,12 +552,11 @@ namespace Shokofin.API
 
         public GroupInfo GetGroupInfoForSeriesSync(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
         {
-            if (SeriesIdToGroupIdDictionary.ContainsKey(seriesId)) {
-                var groupId = SeriesIdToGroupIdDictionary[seriesId];
+            if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
                 if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info))
                     return info;
 
-                return GetGroupInfo(groupId, filterByType).GetAwaiter().GetResult();
+                return GetGroupInfoSync(groupId, filterByType);
             }
 
             return GetGroupInfoForSeries(seriesId, filterByType).GetAwaiter().GetResult();
@@ -557,14 +564,11 @@ namespace Shokofin.API
 
         public async Task<GroupInfo> GetGroupInfoForSeries(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
         {
-            string groupId;
-            if (SeriesIdToGroupIdDictionary.ContainsKey(seriesId)) {
-                groupId = SeriesIdToGroupIdDictionary[seriesId];
-            }
-            else {
+            if (!SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
                 var group = await ShokoAPI.GetGroupFromSeries(seriesId);
                 if (group == null)
                     return null;
+
                 groupId = group.IDs.ID.ToString();
             }
 
