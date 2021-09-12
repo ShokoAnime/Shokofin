@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
@@ -24,11 +25,14 @@ namespace Shokofin.Providers
 
         private readonly ShokoAPIManager ApiManager;
 
-        public SeriesProvider(IHttpClientFactory httpClientFactory, ILogger<SeriesProvider> logger, ShokoAPIManager apiManager)
+        private readonly IFileSystem FileSystem;
+
+        public SeriesProvider(IHttpClientFactory httpClientFactory, ILogger<SeriesProvider> logger, ShokoAPIManager apiManager, IFileSystem fileSystem)
         {
             Logger = logger;
             HttpClientFactory = httpClientFactory;
             ApiManager = apiManager;
+            FileSystem = fileSystem;
         }
 
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
@@ -52,8 +56,17 @@ namespace Shokofin.Providers
             var result = new MetadataResult<Series>();
             var series = await ApiManager.GetSeriesInfoByPath(info.Path);
             if (series == null) {
-                Logger.LogWarning("Unable to find group info for path {Path}", info.Path);
-                return result;
+                // Look for the "season" directories to probe for the series information
+                var entries = FileSystem.GetDirectories(info.Path, false);
+                foreach (var entry in entries) {
+                    series = await ApiManager.GetSeriesInfoByPath(entry.FullName);
+                    if (series != null)
+                        break;
+                }
+                if (series == null) {
+                    Logger.LogWarning("Unable to find series info for path {Path}", info.Path);
+                    return result;
+                }
             }
 
             var tags = await ApiManager.GetTags(series.Id);
@@ -85,11 +98,20 @@ namespace Shokofin.Providers
         private async Task<MetadataResult<Series>> GetShokoGroupedMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<Series>();
-            var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes;
-            var group = await ApiManager.GetGroupInfoByPath(info.Path, filterLibrary ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default);
+            var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
+            var group = await ApiManager.GetGroupInfoByPath(info.Path, filterLibrary);
             if (group == null) {
-                Logger.LogWarning("Unable to find group info for path {Path}", info.Path);
-                return result;
+                // Look for the "season" directories to probe for the group information
+                var entries = FileSystem.GetDirectories(info.Path, false);
+                foreach (var entry in entries) {
+                    group = await ApiManager.GetGroupInfoByPath(entry.FullName, filterLibrary);
+                    if (group != null)
+                        break;
+                }
+                if (group == null) {
+                    Logger.LogWarning("Unable to find group info for path {Path}", info.Path);
+                    return result;
+                }
             }
 
             var series = group.DefaultSeries;
