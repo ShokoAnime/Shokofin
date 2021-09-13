@@ -104,11 +104,17 @@ namespace Shokofin.Providers
             if (string.IsNullOrEmpty(metadataLanguage) && season != null)
                 metadataLanguage = season.GetPreferredMetadataLanguage();
             var config = Plugin.Instance.Configuration;
+            var mergeFriendly = config.SeriesGrouping == Ordering.GroupType.MergeFriendly && series.TvDB != null && episode.TvDB != null;
+
             string displayTitle, alternateTitle;
-            if (series.AniDB.Type == SeriesType.Movie && (episode.AniDB.Type == EpisodeType.Normal || episode.AniDB.Type == EpisodeType.Special))
-                ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, series.Shoko.Name, episode.Shoko.Name, metadataLanguage);
-            else
-                ( displayTitle, alternateTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, episode.Shoko.Name, metadataLanguage);
+            string defaultEpisodeTitle = mergeFriendly ? episode.TvDB.Title : episode.Shoko.Name;
+            if (series.AniDB.Type == SeriesType.Movie && (episode.AniDB.Type == EpisodeType.Normal || episode.AniDB.Type == EpisodeType.Special)) {
+                string defaultSeriesTitle = mergeFriendly ? series.TvDB.Title : series.Shoko.Name;
+                ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, defaultSeriesTitle, defaultEpisodeTitle, metadataLanguage);
+            }
+            else {
+                ( displayTitle, alternateTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, defaultEpisodeTitle, metadataLanguage);
+            }
 
             var episodeNumber = Ordering.GetEpisodeNumber(group, series, episode);
             var seasonNumber = Ordering.GetSeasonNumber(group, series, episode);
@@ -196,6 +202,45 @@ namespace Shokofin.Providers
                         PremiereDate = episode.AniDB.AirDate,
                         Overview = description,
                         CommunityRating = episode.AniDB.Rating.ToFloat(10),
+                    };
+                }
+            }
+            else if (mergeFriendly) {
+                if (season != null) {
+                    result = new Episode {
+                        Name = displayTitle,
+                        OriginalTitle = alternateTitle,
+                        IndexNumber = episodeNumber,
+                        ParentIndexNumber = seasonNumber,
+                        AirsAfterSeasonNumber = episode.TvDB.AirsAfterSeason,
+                        AirsBeforeEpisodeNumber = episode.TvDB.AirsBeforeEpisode,
+                        AirsBeforeSeasonNumber = episode.TvDB.AirsBeforeSeason,
+                        Id = episodeId,
+                        IsVirtualItem = true,
+                        SeasonId = season.Id,
+                        SeriesId = season.Series.Id,
+                        Overview = description,
+                        CommunityRating = episode.TvDB.Rating?.ToFloat(10),
+                        PremiereDate = episode.TvDB.AirDate,
+                        SeriesName = season.Series.Name,
+                        SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
+                        SeasonName = season.Name,
+                        DateLastSaved = DateTime.UtcNow,
+                    };
+                    result.PresentationUniqueKey = result.GetPresentationUniqueKey();
+                }
+                else {
+                    result = new Episode {
+                        Name = displayTitle,
+                        OriginalTitle = alternateTitle,
+                        IndexNumber = episodeNumber,
+                        ParentIndexNumber = seasonNumber,
+                        AirsAfterSeasonNumber = episode.TvDB.AirsAfterSeason,
+                        AirsBeforeEpisodeNumber = episode.TvDB.AirsBeforeEpisode,
+                        AirsBeforeSeasonNumber = episode.TvDB.AirsBeforeSeason,
+                        CommunityRating = episode.TvDB.Rating?.ToFloat(10),
+                        PremiereDate = episode.TvDB.AirDate,
+                        Overview = description,
                     };
                 }
             }
