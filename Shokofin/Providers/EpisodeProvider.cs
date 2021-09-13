@@ -154,7 +154,11 @@ namespace Shokofin.Providers
                     int? previousEpisodeNumber = null;
                     if (series.SpesialsAnchors.TryGetValue(episode.Id, out var previousEpisode))
                         previousEpisodeNumber = Ordering.GetEpisodeNumber(group, series, previousEpisode);
-                    nextEpisodeNumber = previousEpisodeNumber.HasValue && previousEpisodeNumber.Value < series.EpisodeList.Count ? previousEpisodeNumber.Value + 1 : series.EpisodeList.Count;
+                    nextEpisodeNumber = previousEpisodeNumber.HasValue && previousEpisodeNumber.Value < series.EpisodeList.Count ? previousEpisodeNumber.Value + 1 : null;
+
+                    // If the next episode was not found, then append it at the end of the season instead.
+                    if (!nextEpisodeNumber.HasValue)
+                        displayInBetween = false;
                 }
 
                 if (season != null) {
