@@ -192,13 +192,13 @@ namespace Shokofin.Utils
                         case EpisodeType.Special:
                             return 0;
                         case EpisodeType.Unknown:
-                            return -3;
+                            return 124;
                         case EpisodeType.Trailer:
-                            return -2;
+                            return 125;
                         case EpisodeType.ThemeSong:
-                            return -1;
+                            return 126;
                         default:
-                            return -4;
+                            return 127;
                     }
                 case GroupType.MergeFriendly: {
                     var seasonNumber = episode?.TvDB?.Season;
