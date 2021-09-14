@@ -128,12 +128,18 @@ namespace Shokofin.Utils
             {
                 default:
                 case GroupType.Default:
+                    if (episode.AniDB.Type == EpisodeType.Special) {
+                        var index = series.SpecialsList.FindIndex(e => string.Equals(e.Id, episode.Id));
+                        if (index == -1)
+                            throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Series={series.Id},Episode={episode.Id})");
+                        return (index + 1);
+                    }
                     return episode.AniDB.EpisodeNumber;
                 case GroupType.MergeFriendly: {
-                    var episodeNumber = episode?.TvDB?.Number ?? 0;
-                    if (episodeNumber == 0)
-                        goto case GroupType.Default;
-                    return episodeNumber;
+                    var episodeNumber = episode?.TvDB?.Number;
+                    if (episodeNumber.HasValue)
+                        return episodeNumber.Value;
+                    goto case GroupType.Default;
                 }
                 case GroupType.ShokoGroup: {
                     int offset = 0;
