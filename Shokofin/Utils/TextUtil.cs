@@ -14,19 +14,30 @@ namespace Shokofin.Utils
         /// </summary>
         public enum TextSourceType {
             /// <summary>
-            /// Use the default.
+            /// Use the default source for the current series grouping.
             /// </summary>
             Default = 1,
 
             /// <summary>
-            /// Only use AniDb.
+            /// Only use AniDb, or null if no data is available.
             /// </summary>
             OnlyAniDb = 2,
 
             /// <summary>
-            /// Allow other providers, like TvDB/TMDB.
+            /// Prefer the AniDb data, but use the other provider if there is no
+            /// AniDb data available.
             /// </summary>
-            AllowOthers = 3,
+            PreferAniDb = 3,
+
+            /// <summary>
+            /// Prefer the other provider (e.g. TvDB/TMDB)
+            /// </summary>
+            PreferOther = 4,
+
+            /// <summary>
+            /// Only use the other provider, or null if no data is available.
+            /// </summary>
+            OnlyOther = 5,
         }
 
         /// <summary>
@@ -76,37 +87,38 @@ namespace Shokofin.Utils
             FullTitle = 3,
         }
 
-        public static string GetDescription(EpisodeInfo episode)
-        {
-            string overview;
-            switch (Plugin.Instance.Configuration.DescriptionSource) {
-                default:
-                case Text.TextSourceType.Default:
-                case Text.TextSourceType.AllowOthers:
-                    overview = episode.TvDB?.Description ?? "";
-                    if (string.IsNullOrEmpty(overview))
-                        goto case Text.TextSourceType.OnlyAniDb;
-                    break;
-                case Text.TextSourceType.OnlyAniDb:
-                    overview = Text.SanitizeTextSummary(episode.AniDB.Description);
-                    break;
-            }
-            return overview;
-        }
-
         public static string GetDescription(SeriesInfo series)
+            => GetDescription(series.AniDB.Description, series.TvDB?.Description);
+
+        public static string GetDescription(EpisodeInfo episode)
+            => GetDescription(episode.AniDB.Description, episode.TvDB?.Description);
+
+        private static string GetDescription(string aniDbDescription, string otherDescription)
         {
             string overview;
             switch (Plugin.Instance.Configuration.DescriptionSource) {
                 default:
-                case Text.TextSourceType.Default:
-                case Text.TextSourceType.AllowOthers:
-                    overview = series.TvDB?.Description ?? "";
+                    switch (Plugin.Instance.Configuration.SeriesGrouping) {
+                        default:
+                            goto preferAniDb;
+                        case Ordering.GroupType.MergeFriendly:
+                            goto preferOther;
+                    }
+                case TextSourceType.PreferOther:
+                    preferOther: overview = otherDescription ?? "";
                     if (string.IsNullOrEmpty(overview))
-                        goto case Text.TextSourceType.OnlyAniDb;
+                        goto case TextSourceType.OnlyAniDb;
                     break;
-                case Text.TextSourceType.OnlyAniDb:
-                    overview = Text.SanitizeTextSummary(series.AniDB.Description);
+                case TextSourceType.PreferAniDb:
+                    preferAniDb: overview = Text.SanitizeTextSummary(aniDbDescription);
+                    if (string.IsNullOrEmpty(overview))
+                        goto case TextSourceType.OnlyAniDb;
+                    break;
+                case TextSourceType.OnlyAniDb:
+                    overview = Text.SanitizeTextSummary(aniDbDescription);
+                    break;
+                case TextSourceType.OnlyOther:
+                    overview = otherDescription ?? "";
                     break;
             }
             return overview;

@@ -10,6 +10,10 @@ namespace Shokofin.API.Info
 
         public Group Shoko;
 
+        public string[] Tags;
+
+        public string[] Genres;
+
         public SeriesInfo GetSeriesInfoBySeasonNumber(int seasonNumber) {
             if (seasonNumber == 0)
                 return null;

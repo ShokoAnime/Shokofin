@@ -13,6 +13,7 @@ using Shokofin.API.Models;
 using Shokofin.Utils;
 
 using ILibraryManager = MediaBrowser.Controller.Library.ILibraryManager;
+using CultureInfo = System.Globalization.CultureInfo;
 
 namespace Shokofin.API
 {
@@ -146,9 +147,9 @@ namespace Shokofin.API
         #endregion
         #region Tags
 
-        public async Task<string[]> GetTags(string seriesId)
+        private async Task<string[]> GetTags(string seriesId)
         {
-            return (await ShokoAPI.GetSeriesTags(seriesId, GetTagFilter()))?.Select(tag => tag.Name).ToArray() ?? new string[0];
+            return (await ShokoAPI.GetSeriesTags(seriesId, GetTagFilter()))?.Select(SelectTagName).ToArray() ?? new string[0];
         }
 
         /// <summary>
@@ -158,7 +159,7 @@ namespace Shokofin.API
         private int GetTagFilter()
         {
             var config = Plugin.Instance.Configuration;
-            var filter = 0;
+            var filter = 128; // We exclude genres by default
 
             if (config.HideAniDbTags) filter = 1;
             if (config.HideArtStyleTags) filter |= (filter << 1);
@@ -167,6 +168,20 @@ namespace Shokofin.API
             if (config.HidePlotTags) filter |= (filter << 4);
 
             return filter;
+        }
+
+        #endregion
+        #region Genres
+
+        public async Task<string[]> GetGenresForSeries(string seriesId)
+        {
+            // The following magic number is the filter value to allow only genres in the returned list.
+            return (await ShokoAPI.GetSeriesTags(seriesId, -2147483520))?.Select(SelectTagName).ToArray() ?? new string[0];
+        }
+
+        private string SelectTagName(Tag tag)
+        {
+            return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(tag.Name);
         }
 
         #endregion
@@ -327,13 +342,18 @@ namespace Shokofin.API
                 case EpisodeType.Trailer:
                     return ExtraType.Trailer;
                 case EpisodeType.Special: {
-                    var title = Text.GetTitleByLanguages(episode.Titles, "en") ?? "";
+                    var title = Text.GetTitleByLanguages(episode.Titles, "en");
+                    if (string.IsNullOrEmpty(title))
+                        return null;
                     // Interview
                     if (title.Contains("interview", System.StringComparison.OrdinalIgnoreCase))
                         return ExtraType.Interview;
                     // Cinema intro/outro
                     if (title.StartsWith("cinema ", System.StringComparison.OrdinalIgnoreCase) &&
                     (title.Contains("intro", System.StringComparison.OrdinalIgnoreCase) || title.Contains("outro", System.StringComparison.OrdinalIgnoreCase)))
+                        return ExtraType.Clip;
+                    // Music videos
+                    if (title.Contains("music video", System.StringComparison.OrdinalIgnoreCase))
                         return ExtraType.Clip;
                     return null;
                 }
@@ -470,6 +490,8 @@ namespace Shokofin.API
 
             var aniDb = await ShokoAPI.GetSeriesAniDB(seriesId);
             var tvDbId = series.IDs.TvDB?.FirstOrDefault();
+            var tags = await GetTags(seriesId);
+            var genres = await GetGenresForSeries(seriesId);
             Dictionary<string, EpisodeInfo> specialsAnchorDictionary = new Dictionary<string, EpisodeInfo>();
             var specialsList = new List<EpisodeInfo>();
             var episodesList = new List<EpisodeInfo>();
@@ -513,6 +535,8 @@ namespace Shokofin.API
                 AniDB = aniDb,
                 TvDBId = tvDbId != 0 ? tvDbId.ToString() : null,
                 TvDB = tvDbId != 0 ? (await ShokoAPI.GetSeriesTvDB(seriesId)).FirstOrDefault() : null,
+                Tags = tags,
+                Genres = genres,
                 RawEpisodeList = allEpisodesList,
                 EpisodeList = episodesList,
                 ExtrasList = extrasList,
@@ -669,6 +693,8 @@ namespace Shokofin.API
             groupInfo = new GroupInfo {
                 Id = groupId,
                 Shoko = group,
+                Tags = seriesList.SelectMany(s => s.Tags).Distinct().ToArray(),
+                Genres = seriesList.SelectMany(s => s.Genres).Distinct().ToArray(),
                 SeriesList = seriesList,
                 DefaultSeries = seriesList[foundIndex],
                 DefaultSeriesIndex = foundIndex,

@@ -63,7 +63,6 @@ namespace Shokofin.Providers
             }
 
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.AniDB.Title, info.MetadataLanguage);
-            var tags = await ApiManager.GetTags(series.Id);
 
             result.Item = new BoxSet {
                 Name = displayTitle,
@@ -72,7 +71,7 @@ namespace Shokofin.Providers
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
-                Tags = tags,
+                Tags = series.Tags,
                 CommunityRating = series.AniDB.Rating.ToFloat(10),
             };
             result.Item.SetProviderId("Shoko Series", series.Id);
@@ -101,7 +100,6 @@ namespace Shokofin.Providers
                 Logger.LogWarning("Group did not contain multiple movies! Skipping path {Path} (Series={SeriesId},Group={GroupId})", info.Path, group.Id, series.Id);
                 return result;
             }
-            var tags = await ApiManager.GetTags(series.Id);
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
 
             result.Item = new BoxSet {
@@ -111,7 +109,7 @@ namespace Shokofin.Providers
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
-                Tags = tags,
+                Tags = group.Tags,
                 CommunityRating = (float)((series.AniDB.Rating.Value * 10) / series.AniDB.Rating.MaxValue)
             };
             result.Item.SetProviderId("Shoko Series", series.Id);

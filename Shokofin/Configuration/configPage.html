@@ -53,9 +53,11 @@
                         <div class="selectContainer">
                             <label class="selectLabel" for="DescriptionSource">Synopsis source</label>
                             <select is="emby-select" id="DescriptionSource" name="DescriptionSource" class="emby-select-withcolor emby-select">
-                                <option value="Default">Use default source</option>
-                                <option value="AllowOthers">Prefer TvDB/TMDB if available, otherwise use AniDb</option>
-                                <option value="OnlyAniDb">Only use AniDb</option>
+                                <option value="Default">Use default for Series Grouping</option>
+                                <option value="OnlyAniDb">Only use AniDB</option>
+                                <option value="PreferAniDb">Prefer AniDB if available, otherwise use TvDB/TMDB</option>
+                                <option value="OnlyOther">Only use TvDB/TMDB</option>
+                                <option value="PreferOther">Prefer TvDB/TMDB if available, otherwise use AniDB</option>
                             </select>
                         </div>
                         <label class="checkboxContainer">
@@ -108,6 +110,10 @@
                         <label class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="AddMissingMetadata" />
                             <span>Add metadata for missing seasons/episodes</span>
+                        </label>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="AddExtraVideos" />
+                            <span>Add trailers, theme videos, and other extras</span>
                         </label>
                         <div class="selectContainer">
                             <label class="selectLabel" for="BoxSetGrouping">Box-set grouping</label>
@@ -201,6 +207,7 @@
                         document.querySelector('#MarkSpecialsWhenGrouped').checked = config.MarkSpecialsWhenGrouped;
                         document.querySelector('#DisplaySpecialsInSeason').checked = config.DisplaySpecialsInSeason;
                         document.querySelector('#AddMissingMetadata').checked = config.AddMissingMetadata;
+                        document.querySelector('#AddExtraVideos').checked = config.AddExtraVideos;
                         document.querySelector('#FilterOnLibraryTypes').checked = config.FilterOnLibraryTypes;
                         document.querySelector('#AddAniDBId').checked = config.AddAniDBId;
                         document.querySelector('#PreferAniDbPoster').checked = config.PreferAniDbPoster;
@@ -279,6 +286,7 @@
                         config.MarkSpecialsWhenGrouped = document.querySelector('#MarkSpecialsWhenGrouped').checked;
                         config.DisplaySpecialsInSeason = document.querySelector('#DisplaySpecialsInSeason').checked;
                         config.AddMissingMetadata = document.querySelector('#AddMissingMetadata').checked;
+                        config.AddExtraVideos = document.querySelector('#AddExtraVideos').checked;
                         config.FilterOnLibraryTypes = document.querySelector('#FilterOnLibraryTypes').checked;
                         config.AddAniDBId = document.querySelector('#AddAniDBId').checked;
                         config.PreferAniDbPoster = document.querySelector('#PreferAniDbPoster').checked;

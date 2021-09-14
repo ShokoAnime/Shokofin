@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,7 +22,6 @@ namespace Shokofin.Providers
         
         private readonly ILogger<MovieProvider> Logger;
 
-        
         private readonly ShokoAPIManager ApiManager;
 
         public MovieProvider(IHttpClientFactory httpClientFactory, ILogger<MovieProvider> logger, ShokoAPIManager apiManager)
@@ -50,7 +50,6 @@ namespace Shokofin.Providers
                 var ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, series.Shoko.Name, episode.Shoko.Name, info.MetadataLanguage);
                 Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", displayTitle, file.Id, episode.Id, series.Id);
 
-                var tags = await ApiManager.GetTags(series.Id);
                 bool isMultiEntry = series.Shoko.Sizes.Total.Episodes > 1;
                 var rating = isMultiEntry ? episode.AniDB.Rating.ToFloat(10) : series.AniDB.Rating.ToFloat(10);
 
@@ -62,7 +61,8 @@ namespace Shokofin.Providers
                     // Use the file description if collection contains more than one movie, otherwise use the collection description.
                     Overview = (isMultiEntry ? Text.GetDescription(episode) : Text.GetDescription(series)),
                     ProductionYear = episode.AniDB.AirDate?.Year,
-                    Tags = tags,
+                    Tags = series.Tags.ToArray(),
+                    Genres = series.Genres.ToArray(),
                     CommunityRating = rating,
                 };
                 result.Item.SetProviderId("Shoko File", file.Id);

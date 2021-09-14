@@ -69,22 +69,41 @@ namespace Shokofin.Providers
                 }
             }
 
-            var tags = await ApiManager.GetTags(series.Id);
-            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
+            var mergeFriendly = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly && series.TvDB != null;
+
+            var defaultSeriesTitle = mergeFriendly ? series.TvDB.Title : series.Shoko.Name;
+            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, defaultSeriesTitle, info.MetadataLanguage);
             Logger.LogInformation("Found series {SeriesName} (Series={SeriesId})", displayTitle, series.Id);
 
-            result.Item = new Series {
-                Name = displayTitle,
-                OriginalTitle = alternateTitle,
-                Overview = Text.GetDescription(series),
-                PremiereDate = series.AniDB.AirDate,
-                EndDate = series.AniDB.EndDate,
-                ProductionYear = series.AniDB.AirDate?.Year,
-                Status = series.AniDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                Tags = tags,
-                CommunityRating = series.AniDB.Rating.ToFloat(10),
-            };
-            AddProviderIds(result.Item, series.Id, null, series.AniDB.ID.ToString(), Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly ? series.TvDBId : null);
+            if (mergeFriendly) {
+                result.Item = new Series {
+                    Name = displayTitle,
+                    OriginalTitle = alternateTitle,
+                    Overview = Text.GetDescription(series),
+                    PremiereDate = series.TvDB.AirDate,
+                    EndDate = series.TvDB.EndDate,
+                    ProductionYear = series.TvDB.AirDate?.Year,
+                    Status = series.TvDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
+                    Tags = series.Tags,
+                    Genres = series.Genres.ToArray(),
+                    CommunityRating = series.TvDB.Rating?.ToFloat(10),
+                };
+            }
+            else {
+                result.Item = new Series {
+                    Name = displayTitle,
+                    OriginalTitle = alternateTitle,
+                    Overview = Text.GetDescription(series),
+                    PremiereDate = series.AniDB.AirDate,
+                    EndDate = series.AniDB.EndDate,
+                    ProductionYear = series.AniDB.AirDate?.Year,
+                    Status = series.AniDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
+                    Tags = series.Tags,
+                    Genres = series.Genres.ToArray(),
+                    CommunityRating = series.AniDB.Rating.ToFloat(10),
+                };
+            }
+            AddProviderIds(result.Item, series.Id, null, series.AniDB.ID.ToString(), mergeFriendly ? series.TvDBId : null);
 
             result.HasMetadata = true;
 
@@ -118,7 +137,6 @@ namespace Shokofin.Providers
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, group.Shoko.Name, info.MetadataLanguage);
             Logger.LogInformation("Found series {SeriesName} (Series={SeriesId},Group={GroupId})", displayTitle, series.Id, group.Id);
 
-            var tags = await ApiManager.GetTags(series.Id);
             result.Item = new Series {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
@@ -127,10 +145,11 @@ namespace Shokofin.Providers
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
                 Status = series.AniDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                Tags = tags,
+                Tags = group.Tags,
+                Genres = group.Genres.ToArray(),
                 CommunityRating = series.AniDB.Rating.ToFloat(10),
             };
-            AddProviderIds(result.Item, series.Id, group.Id, series.AniDB.ID.ToString(), null);
+            AddProviderIds(result.Item, series.Id, group.Id, series.AniDB.ID.ToString());
 
             result.HasMetadata = true;
 

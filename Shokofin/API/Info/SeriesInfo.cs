@@ -15,6 +15,10 @@ namespace Shokofin.API.Info
 
         public Series.TvDB TvDB;
 
+        public string[] Tags;
+
+        public string[] Genres;
+
         /// <summary>
         /// All episodes (of all type) that belong to this series.
         /// 

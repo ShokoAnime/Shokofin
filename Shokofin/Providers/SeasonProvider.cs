@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -84,7 +85,6 @@ namespace Shokofin.Providers
             }
             Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Group={GroupId},Series={SeriesId})", seasonNumber, group.Shoko.Name, groupId, series.Id);
 
-            var tags = await ApiManager.GetTags(series.Id);
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
             var sortTitle = $"I{seasonNumber} - {series.Shoko.Name}";
 
@@ -98,7 +98,8 @@ namespace Shokofin.Providers
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
-                Tags = tags,
+                Tags = series.Tags.ToArray(),
+                Genres = series.Genres.ToArray(),
                 CommunityRating = series.AniDB.Rating?.ToFloat(10),
             };
             result.Item.ProviderIds.Add("Shoko Series", series.Id);

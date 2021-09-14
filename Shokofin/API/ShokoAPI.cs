@@ -173,7 +173,7 @@ namespace Shokofin.API
 
         public static async Task<IEnumerable<Tag>> GetSeriesTags(string id, int filter = 0)
         {
-            var responseStream = await CallApi($"/api/v3/Series/{id}/Tags/{filter}");
+            var responseStream = await CallApi($"/api/v3/Series/{id}/Tags/{filter}?excludeDescriptions=true");
             return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Tag>>(responseStream) : null;
         }
 
