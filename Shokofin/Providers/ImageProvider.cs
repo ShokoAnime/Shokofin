@@ -63,11 +63,11 @@ namespace Shokofin.Providers
                         break;
                     }
                     case Season season: {
-                        if (season.IndexNumber.HasValue && season.Series.ProviderIds.TryGetValue("Shoko Group", out var groupId) && !string.IsNullOrEmpty(groupId)) {
-                            var groupInfo = await ApiManager.GetGroupInfo(groupId, filterLibrary);
+                        if (season.IndexNumber.HasValue && season.Series.ProviderIds.TryGetValue("Shoko Series", out var seriesId) && !string.IsNullOrEmpty(seriesId)) {
+                            var groupInfo = await ApiManager.GetGroupInfoForSeries(seriesId, filterLibrary);
                             seriesInfo = groupInfo?.GetSeriesInfoBySeasonNumber(season.IndexNumber.Value);
                             if (seriesInfo != null)
-                                Logger.LogInformation("Getting images for season {SeasonNumber} in {SeriesName} (Series={SeriesId},Group={GroupId})", season.IndexNumber.Value, groupInfo.Shoko.Name, seriesInfo.Id, groupId);
+                                Logger.LogInformation("Getting images for season {SeasonNumber} in {SeriesName} (Series={SeriesId},Group={GroupId})", season.IndexNumber.Value, groupInfo.Shoko.Name, seriesInfo.Id, groupInfo.Id);
                         }
                         break;
                     }

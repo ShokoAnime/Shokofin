@@ -332,7 +332,7 @@ namespace Shokofin.Providers
 
                         // Add missing seasons
                         var allKnownSeasonNumbers = episodeInfoToSeasonNumberDirectory.Values.Distinct().ToList();
-                        foreach (var (seasonNumber, season) in CreateMissingSeasons(series, seasons, allKnownSeasonNumbers))
+                        foreach (var (seasonNumber, season) in CreateMissingSeasons(seriesInfo, series, seasons, allKnownSeasonNumbers))
                             seasons.Add(seasonNumber, season);
 
                         // Add missing episodes
@@ -506,11 +506,12 @@ namespace Shokofin.Providers
             return (seasons, episodes);
         }
 
-        private IEnumerable<(int, Season)> CreateMissingSeasons(Series series, Dictionary<int, Season> existingSeasons, List<int> allSeasonNumbers)
+        private IEnumerable<(int, Season)> CreateMissingSeasons(Info.SeriesInfo seriesInfo, Series series, Dictionary<int, Season> existingSeasons, List<int> allSeasonNumbers)
         {
             var missingSeasonNumbers = allSeasonNumbers.Except(existingSeasons.Keys).ToList();
+            var mergeFriendly = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly && seriesInfo.TvDB != null;
             foreach (var seasonNumber in missingSeasonNumbers) {
-                var season = AddVirtualSeason(seasonNumber, series);
+                var season = seasonNumber == 1 && !mergeFriendly ? AddVirtualSeason(seriesInfo, 1, series) : AddVirtualSeason(seasonNumber, series);
                 if (season == null)
                     continue;
                 yield return (seasonNumber, season);
@@ -532,8 +533,11 @@ namespace Shokofin.Providers
                     continue;
                 yield return (seasonNumber, season);
             }
-            if (hasSpecials && !seasons.ContainsKey(0))
-                yield return (0, AddVirtualSeason(0, series));
+            if (hasSpecials && !seasons.ContainsKey(0)) {
+                var season = AddVirtualSeason(0, series);
+                if (season != null)
+                    yield return (0, season);
+            }
         }
 
         private Season AddVirtualSeason(int seasonNumber, Series series)
