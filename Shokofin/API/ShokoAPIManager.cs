@@ -465,7 +465,7 @@ namespace Shokofin.API
             var altEpisodesList = new List<EpisodeInfo>();
 
             // The episode list is ordered by air date
-            var allEpisodesList = ShokoAPI.GetEpisodesFromSeries(seriesId, Plugin.Instance.Configuration.AddMissingMetadata)
+            var allEpisodesList = ShokoAPI.GetEpisodesFromSeries(seriesId)
                 .ContinueWith(task => Task.WhenAll(task.Result.Select(e => CreateEpisodeInfo(e))))
                 .Unwrap()
                 .GetAwaiter()

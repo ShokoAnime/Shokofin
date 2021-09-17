@@ -107,14 +107,6 @@
                             <input is="emby-checkbox" type="checkbox" id="DisplaySpecialsInSeason" />
                             <span>Display specials in-between normal episodes</span>
                         </label>
-                        <label class="checkboxContainer">
-                            <input is="emby-checkbox" type="checkbox" id="AddMissingMetadata" />
-                            <span>Add metadata for missing seasons/episodes</span>
-                        </label>
-                        <label class="checkboxContainer">
-                            <input is="emby-checkbox" type="checkbox" id="AddExtraVideos" />
-                            <span>Add trailers, theme videos, and other extras</span>
-                        </label>
                         <div class="selectContainer">
                             <label class="selectLabel" for="BoxSetGrouping">Box-set grouping</label>
                             <select is="emby-select" id="BoxSetGrouping" name="BoxSetGrouping" class="emby-select-withcolor emby-select">
@@ -206,8 +198,6 @@
                         document.querySelector('#MovieOrdering').value = config.MovieOrdering;
                         document.querySelector('#MarkSpecialsWhenGrouped').checked = config.MarkSpecialsWhenGrouped;
                         document.querySelector('#DisplaySpecialsInSeason').checked = config.DisplaySpecialsInSeason;
-                        document.querySelector('#AddMissingMetadata').checked = config.AddMissingMetadata;
-                        document.querySelector('#AddExtraVideos').checked = config.AddExtraVideos;
                         document.querySelector('#FilterOnLibraryTypes').checked = config.FilterOnLibraryTypes;
                         document.querySelector('#AddAniDBId').checked = config.AddAniDBId;
                         document.querySelector('#PreferAniDbPoster').checked = config.PreferAniDbPoster;
@@ -285,8 +275,6 @@
                         config.MovieOrdering = document.querySelector('#MovieOrdering').value;
                         config.MarkSpecialsWhenGrouped = document.querySelector('#MarkSpecialsWhenGrouped').checked;
                         config.DisplaySpecialsInSeason = document.querySelector('#DisplaySpecialsInSeason').checked;
-                        config.AddMissingMetadata = document.querySelector('#AddMissingMetadata').checked;
-                        config.AddExtraVideos = document.querySelector('#AddExtraVideos').checked;
                         config.FilterOnLibraryTypes = document.querySelector('#FilterOnLibraryTypes').checked;
                         config.AddAniDBId = document.querySelector('#AddAniDBId').checked;
                         config.PreferAniDbPoster = document.querySelector('#PreferAniDbPoster').checked;

@@ -57,32 +57,8 @@ namespace Shokofin.Providers
             LibraryManager.ItemRemoved -= OnLibraryManagerItemRemoved;
         }
 
-        public bool IsEnabledForItem(BaseItem item)
-        {
-            if (item == null)
-                return false;
-
-            BaseItem seriesOrItem = item switch
-            {
-                Episode e => e.Series,
-                Series s => s,
-                Season s => s.Series,
-                _ => item,
-            };
-
-            if (seriesOrItem == null)
-                return false;
-
-            var libraryOptions = LibraryManager.GetLibraryOptions(seriesOrItem);
-            return libraryOptions != null && libraryOptions.TypeOptions.Any(o => o.Type == nameof (Series) && o.MetadataFetchers.Contains(Plugin.MetadataProviderName));
-        }
-
         private void OnLibraryManagerItemAdded(object sender, ItemChangeEventArgs itemChangeEventArgs)
         {
-            // No action needed if either 1) the setting is turned of, 2) the provider is not enabled for the item
-            if (!Plugin.Instance.Configuration.AddMissingMetadata || !IsEnabledForItem(itemChangeEventArgs.Item))
-                return;
-
             switch (itemChangeEventArgs.Item) {
                 case Series series: {
                     // Abort if we're unable to get the shoko episode id
@@ -139,17 +115,13 @@ namespace Shokofin.Providers
 
         private void OnLibraryManagerItemUpdated(object sender, ItemChangeEventArgs itemChangeEventArgs)
         {
-            if (!Plugin.Instance.Configuration.AddMissingMetadata || !IsEnabledForItem(itemChangeEventArgs.Item))
-                return;
-
             switch (itemChangeEventArgs.Item) {
                 case Series series: {
                     // Abort if we're unable to get the shoko episode id
                     if (!IsEnabledForSeries(series, out var seriesId))
                         return;
 
-                    if (Plugin.Instance.Configuration.AddMissingMetadata)
-                        RemoveDuplicateEpisodes(series, seriesId);
+                    RemoveDuplicateEpisodes(series, seriesId);
 
                     UpdateSeries(series, seriesId);
                     return;
@@ -163,8 +135,7 @@ namespace Shokofin.Providers
                     if (!IsEnabledForSeason(season, out var seriesId))
                         return;
 
-                    if (Plugin.Instance.Configuration.AddMissingMetadata)
-                        RemoveDuplicateEpisodes(season, seriesId);
+                    RemoveDuplicateEpisodes(season, seriesId);
 
                     if (!(itemChangeEventArgs.Parent is Series series))
                         return;
@@ -173,9 +144,6 @@ namespace Shokofin.Providers
                     return;
                 }
                 case Episode episode: {
-                    if (!Plugin.Instance.Configuration.AddMissingMetadata)
-                        return;
-
                     // Abort if we're unable to get the shoko episode id
                     if (!IsEnabledForEpisode(episode, out var episodeId))
                         return;
@@ -272,68 +240,65 @@ namespace Shokofin.Providers
                         Logger.LogWarning("Unable to find group info for series. (Series={SeriesID})", seriesId);
                         return;
                     }
+
                     // Get the existing seasons and episode ids
                     var (seasons, episodeIds) = GetExistingSeasonsAndEpisodeIds(series);
 
-                    if (Plugin.Instance.Configuration.AddMissingMetadata) {
-                        // Add missing seasons
-                        foreach (var (seasonNumber, season) in CreateMissingSeasons(groupInfo, series, seasons))
-                            seasons.TryAdd(seasonNumber, season);
+                    // Add missing seasons
+                    foreach (var (seasonNumber, season) in CreateMissingSeasons(groupInfo, series, seasons))
+                        seasons.TryAdd(seasonNumber, season);
 
-                        // Handle specials when grouped.
-                        if (seasons.TryGetValue(0, out var zeroSeason)) {
-                            var seasonId = $"{seriesId}:0";
-                            if (ApiManager.TryLockActionForIdOFType("season", seasonId, "update")) {
-                                try {
-                                    foreach (var seriesInfo in groupInfo.SeriesList) {
-                                        foreach (var episodeInfo in seriesInfo.SpecialsList) {
-                                            if (episodeIds.Contains(episodeInfo.Id))
-                                                continue;
-
-                                            AddVirtualEpisode(groupInfo, seriesInfo, episodeInfo, zeroSeason);
-                                        }
-                                    }
-                                }
-                                finally {
-                                    ApiManager.TryUnlockActionForIdOFType("season", seasonId, "update");
-                                }
-                            }
-                        }
-
-                        // Add missing episodes
-                        foreach (var pair in groupInfo.SeasonOrderDictionary) {
-                            var seasonNumber= pair.Key;
-                            if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
-                                continue;
-
-                            var seriesInfo = pair.Value;
-                            var seasonId = $"{seriesId}:{seasonNumber}";
-                            if (ApiManager.TryLockActionForIdOFType("season", seasonId, "update")) {
-                                try {
-                                    foreach (var episodeInfo in seriesInfo.EpisodeList) {
+                    // Handle specials when grouped.
+                    if (seasons.TryGetValue(0, out var zeroSeason)) {
+                        var seasonId = $"{seriesId}:0";
+                        if (ApiManager.TryLockActionForIdOFType("season", seasonId, "update")) {
+                            try {
+                                foreach (var seriesInfo in groupInfo.SeriesList) {
+                                    foreach (var episodeInfo in seriesInfo.SpecialsList) {
                                         if (episodeIds.Contains(episodeInfo.Id))
                                             continue;
 
-                                        AddVirtualEpisode(groupInfo, seriesInfo, episodeInfo, season);
+                                        AddVirtualEpisode(groupInfo, seriesInfo, episodeInfo, zeroSeason);
                                     }
                                 }
-                                finally {
-                                    ApiManager.TryUnlockActionForIdOFType("season", seasonId, "update");
+                            }
+                            finally {
+                                ApiManager.TryUnlockActionForIdOFType("season", seasonId, "update");
+                            }
+                        }
+                    }
+
+                    // Add missing episodes
+                    foreach (var pair in groupInfo.SeasonOrderDictionary) {
+                        var seasonNumber= pair.Key;
+                        if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
+                            continue;
+
+                        var seriesInfo = pair.Value;
+                        var seasonId = $"{seriesId}:{seasonNumber}";
+                        if (ApiManager.TryLockActionForIdOFType("season", seasonId, "update")) {
+                            try {
+                                foreach (var episodeInfo in seriesInfo.EpisodeList) {
+                                    if (episodeIds.Contains(episodeInfo.Id))
+                                        continue;
+
+                                    AddVirtualEpisode(groupInfo, seriesInfo, episodeInfo, season);
                                 }
+                            }
+                            finally {
+                                ApiManager.TryUnlockActionForIdOFType("season", seasonId, "update");
                             }
                         }
                     }
 
                     // We add the extras to the season if we're using Shoko Groups.
-                    if (Plugin.Instance.Configuration.AddExtraVideos) {
-                        AddExtras(series, groupInfo.DefaultSeries);
+                    AddExtras(series, groupInfo.DefaultSeries);
 
-                        foreach (var pair in groupInfo.SeasonOrderDictionary) {
-                            if (!seasons.TryGetValue(pair.Key, out var season) || season == null)
-                                continue;
+                    foreach (var pair in groupInfo.SeasonOrderDictionary) {
+                        if (!seasons.TryGetValue(pair.Key, out var season) || season == null)
+                            continue;
 
-                            AddExtras(season, pair.Value);
-                        }
+                        AddExtras(season, pair.Value);
                     }
                 }
                 // Provide metadata for other series
@@ -344,38 +309,34 @@ namespace Shokofin.Providers
                         return;
                     }
 
-                    if (Plugin.Instance.Configuration.AddMissingMetadata) {
-                        // Get the existing seasons and episode ids
-                        var (seasons, episodeIds) = GetExistingSeasonsAndEpisodeIds(series);
+                    // Get the existing seasons and episode ids
+                    var (seasons, episodeIds) = GetExistingSeasonsAndEpisodeIds(series);
 
-                        // Compute the season numbers for each episode in the series in advance, since we need to filter out the missing seasons
-                        var episodeInfoToSeasonNumberDirectory = seriesInfo.RawEpisodeList.ToDictionary(e => e, e => Ordering.GetSeasonNumber(null, seriesInfo, e));
+                    // Compute the season numbers for each episode in the series in advance, since we need to filter out the missing seasons
+                    var episodeInfoToSeasonNumberDirectory = seriesInfo.RawEpisodeList.ToDictionary(e => e, e => Ordering.GetSeasonNumber(null, seriesInfo, e));
 
-                        // Add missing seasons
-                        var allKnownSeasonNumbers = episodeInfoToSeasonNumberDirectory.Values.Distinct().ToList();
-                        foreach (var (seasonNumber, season) in CreateMissingSeasons(seriesInfo, series, seasons, allKnownSeasonNumbers))
-                            seasons.Add(seasonNumber, season);
+                    // Add missing seasons
+                    var allKnownSeasonNumbers = episodeInfoToSeasonNumberDirectory.Values.Distinct().ToList();
+                    foreach (var (seasonNumber, season) in CreateMissingSeasons(seriesInfo, series, seasons, allKnownSeasonNumbers))
+                        seasons.Add(seasonNumber, season);
 
-                        // Add missing episodes
-                        foreach (var episodeInfo in seriesInfo.RawEpisodeList) {
-                            if (episodeInfo.ExtraType != null)
-                                continue;
+                    // Add missing episodes
+                    foreach (var episodeInfo in seriesInfo.RawEpisodeList) {
+                        if (episodeInfo.ExtraType != null)
+                            continue;
 
-                            if (episodeIds.Contains(episodeInfo.Id))
-                                continue;
+                        if (episodeIds.Contains(episodeInfo.Id))
+                            continue;
 
-                            var seasonNumber = episodeInfoToSeasonNumberDirectory[episodeInfo];
-                            if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
-                                continue;
+                        var seasonNumber = episodeInfoToSeasonNumberDirectory[episodeInfo];
+                        if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
+                            continue;
 
-                            AddVirtualEpisode(null, seriesInfo, episodeInfo, season);
-                        }
+                        AddVirtualEpisode(null, seriesInfo, episodeInfo, season);
                     }
 
                     // We add the extras to the series if not.
-                    if (Plugin.Instance.Configuration.AddExtraVideos) {
-                        AddExtras(series, seriesInfo);
-                    }
+                    AddExtras(series, seriesInfo);
                 }
             }
             finally {
@@ -400,7 +361,6 @@ namespace Shokofin.Providers
                     return;
 
                 var seasonNumber = season.IndexNumber!.Value;
-                var addMissing = Plugin.Instance.Configuration.AddMissingMetadata;
                 var seriesGrouping = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
                 Info.GroupInfo groupInfo = null;
                 Info.SeriesInfo seriesInfo = null;
@@ -412,14 +372,13 @@ namespace Shokofin.Providers
                         return;
                     }
 
-
                     seriesInfo = groupInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
                     if (seriesInfo == null) {
                         Logger.LogWarning("Unable to find series info for {SeasonNumber} in group for series. (Group={GroupId})", seasonNumber, groupInfo.Id);
                         return;
                     }
 
-                    if (addMissing && deleted) {
+                    if (deleted) {
                         var alternateEpisodes = seasonNumber != groupInfo.SeasonNumberBaseDictionary[seriesInfo];
                         season = seasonNumber == 0 ? AddVirtualSeason(0, series) : AddVirtualSeason(seriesInfo, alternateEpisodes, seasonNumber, series);
                     }
@@ -432,41 +391,38 @@ namespace Shokofin.Providers
                         return;
                     }
 
-                    if (addMissing && deleted)
+                    if (deleted)
                         season = AddVirtualSeason(seasonNumber, series);
                 }
 
-                if (addMissing) {
-                    // Get a hash-set of existing episodes – both physical and virtual – to exclude when adding new virtual episodes.
-                    var existingEpisodes = new HashSet<string>();
-                    foreach (var episode in season.Children.OfType<Episode>())
-                        if (IsEnabledForEpisode(episode, out var episodeId))
-                            existingEpisodes.Add(episodeId);
+                // Get a hash-set of existing episodes – both physical and virtual – to exclude when adding new virtual episodes.
+                var existingEpisodes = new HashSet<string>();
+                foreach (var episode in season.Children.OfType<Episode>())
+                    if (IsEnabledForEpisode(episode, out var episodeId))
+                        existingEpisodes.Add(episodeId);
 
-                    // Handle specials when grouped.
-                    if (seasonNumber == 0) {
-                        if (seriesGrouping) {
-                            foreach (var sI in groupInfo.SeriesList) {
-                                foreach (var episodeInfo in sI.SpecialsList) {
-                                    if (existingEpisodes.Contains(episodeInfo.Id))
-                                        continue;
-
-                                    AddVirtualEpisode(groupInfo, seriesInfo, episodeInfo, season);
-                                }
-                            }
-                        }
-                        else {
-                            foreach (var episodeInfo in seriesInfo.SpecialsList) {
+                // Handle specials when grouped.
+                if (seasonNumber == 0) {
+                    if (seriesGrouping) {
+                        foreach (var sI in groupInfo.SeriesList) {
+                            foreach (var episodeInfo in sI.SpecialsList) {
                                 if (existingEpisodes.Contains(episodeInfo.Id))
                                     continue;
 
                                 AddVirtualEpisode(groupInfo, seriesInfo, episodeInfo, season);
                             }
                         }
-
-                        return;
                     }
+                    else {
+                        foreach (var episodeInfo in seriesInfo.SpecialsList) {
+                            if (existingEpisodes.Contains(episodeInfo.Id))
+                                continue;
 
+                            AddVirtualEpisode(groupInfo, seriesInfo, episodeInfo, season);
+                        }
+                    }
+                }
+                else {
                     foreach (var episodeInfo in seriesInfo.EpisodeList) {
                         var episodeParentIndex = Ordering.GetSeasonNumber(groupInfo, seriesInfo, episodeInfo);
                         if (episodeParentIndex != seasonNumber)
@@ -477,10 +433,11 @@ namespace Shokofin.Providers
 
                         AddVirtualEpisode(groupInfo, seriesInfo, episodeInfo, season);
                     }
+
                 }
 
                 // We add the extras to the season if we're using Shoko Groups.
-                if (Plugin.Instance.Configuration.AddExtraVideos && seriesGrouping) {
+                if (seriesGrouping) {
                     AddExtras(season, seriesInfo);
                 }
             }
@@ -570,6 +527,15 @@ namespace Shokofin.Providers
                 SeriesPresentationUniqueKey = seriesPresentationUniqueKey,
                 DtoOptions = new DtoOptions(true),
             }, true);
+
+            if (searchList.Count > 1) {
+                var deleteOptions = new DeleteOptions {
+                    DeleteFileLocation = false,
+                };
+                foreach (var item in searchList.Skip(1))
+                    LibraryManager.DeleteItem(item, deleteOptions);
+                Logger.LogDebug("Removing duplicatees for Season {SeasonName} for Series {SeriesName}.", searchList[0].Name, seriesName);
+            }
 
             if (searchList.Count > 0) {
                 Logger.LogDebug("Season {SeasonName} for Series {SeriesName} was created in another concurrent thread, skipping.", searchList[0].Name, seriesName);
@@ -664,19 +630,35 @@ namespace Shokofin.Providers
             return season;
         }
 
-        private void AddVirtualEpisode(Info.GroupInfo groupInfo, Info.SeriesInfo seriesInfo, Info.EpisodeInfo episodeInfo, MediaBrowser.Controller.Entities.TV.Season season)
+        private bool EpisodeExists(string episodeId, string seriesId, string groupId)
         {
-            var groupId = groupInfo?.Id ?? null;
             var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
                 IncludeItemTypes = new [] { nameof (Episode) },
-                HasAnyProviderId = { ["Shoko Episode"] = episodeInfo.Id },
+                HasAnyProviderId = { ["Shoko Episode"] = episodeId },
                 DtoOptions = new DtoOptions(true)
             }, true);
 
-            if (searchList.Count > 0) {
-                Logger.LogDebug("A virtual or physical episode entry already exists. Ignoreing. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", episodeInfo.Id, seriesInfo.Id, groupId);
-                return;
+            if (searchList.Count > 1) {
+                var deleteOptions = new DeleteOptions {
+                    DeleteFileLocation = false,
+                };
+                foreach (var item in searchList.Skip(1))
+                    LibraryManager.DeleteItem(item, deleteOptions);
+                Logger.LogDebug("Removing duplicatees for Episode {EpisodeName}.", searchList[0].Name);
             }
+
+            if (searchList.Count > 0) {
+                Logger.LogDebug("A virtual or physical episode entry already exists for Episode {EpisodeName}. Ignoreing. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", searchList[0].Name, episodeId, seriesId, groupId);
+                return true;
+            }
+            return false;
+        }
+
+        private void AddVirtualEpisode(Info.GroupInfo groupInfo, Info.SeriesInfo seriesInfo, Info.EpisodeInfo episodeInfo, MediaBrowser.Controller.Entities.TV.Season season)
+        {
+            var groupId = groupInfo?.Id ?? null;
+            if (EpisodeExists(episodeInfo.Id, seriesInfo.Id, groupId))
+                return;
 
             var episodeId = LibraryManager.GetNewItemId(season.Series.Id + "Season " + seriesInfo.Id + " Episode " + episodeInfo.Id, typeof(Episode));
             var result = EpisodeProvider.CreateMetadata(groupInfo, seriesInfo, episodeInfo, season, episodeId);

@@ -60,10 +60,6 @@ namespace Shokofin.Configuration
 
         public DisplayLanguageType TitleAlternateType { get; set; }
 
-        public bool AddMissingMetadata { get; set; }
-
-        public bool AddExtraVideos { get; set; }
-
         public PluginConfiguration()
         {
             Host = "http://127.0.0.1:8111";
@@ -91,8 +87,6 @@ namespace Shokofin.Configuration
             DisplaySpecialsInSeason = false;
             BoxSetGrouping = SeriesAndBoxSetGroupType.Default;
             MovieOrdering = OrderType.Default;
-            AddMissingMetadata = false;
-            AddExtraVideos = false;
             FilterOnLibraryTypes = false;
         }
     }
