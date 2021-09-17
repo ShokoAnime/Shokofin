@@ -84,8 +84,9 @@ namespace Shokofin.Providers
                     EndDate = series.TvDB.EndDate,
                     ProductionYear = series.TvDB.AirDate?.Year,
                     Status = series.TvDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                    Tags = series.Tags,
+                    Tags = series.Tags.ToArray(),
                     Genres = series.Genres.ToArray(),
+                    Studios = series.Studios.ToArray(),
                     CommunityRating = series.TvDB.Rating?.ToFloat(10),
                 };
             }
@@ -98,8 +99,9 @@ namespace Shokofin.Providers
                     EndDate = series.AniDB.EndDate,
                     ProductionYear = series.AniDB.AirDate?.Year,
                     Status = series.AniDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                    Tags = series.Tags,
+                    Tags = series.Tags.ToArray(),
                     Genres = series.Genres.ToArray(),
+                    Studios = series.Studios.ToArray(),
                     CommunityRating = series.AniDB.Rating.ToFloat(10),
                 };
             }
@@ -145,8 +147,9 @@ namespace Shokofin.Providers
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
                 Status = series.AniDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                Tags = group.Tags,
+                Tags = group.Tags.ToArray(),
                 Genres = group.Genres.ToArray(),
+                Studios = group.Studios.ToArray(),
                 CommunityRating = series.AniDB.Rating.ToFloat(10),
             };
             AddProviderIds(result.Item, series.Id, group.Id, series.AniDB.ID.ToString());

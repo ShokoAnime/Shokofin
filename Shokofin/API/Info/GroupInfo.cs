@@ -14,6 +14,8 @@ namespace Shokofin.API.Info
 
         public string[] Genres;
 
+        public string[] Studios;
+
         public SeriesInfo GetSeriesInfoBySeasonNumber(int seasonNumber) {
             if (seasonNumber == 0)
                 return null;

@@ -71,7 +71,7 @@ namespace Shokofin.Providers
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
-                Tags = series.Tags,
+                Tags = series.Tags.ToArray(),
                 CommunityRating = series.AniDB.Rating.ToFloat(10),
             };
             result.Item.SetProviderId("Shoko Series", series.Id);
@@ -109,7 +109,7 @@ namespace Shokofin.Providers
                 PremiereDate = series.AniDB.AirDate,
                 EndDate = series.AniDB.EndDate,
                 ProductionYear = series.AniDB.AirDate?.Year,
-                Tags = group.Tags,
+                Tags = group.Tags.ToArray(),
                 CommunityRating = (float)((series.AniDB.Rating.Value * 10) / series.AniDB.Rating.MaxValue)
             };
             result.Item.SetProviderId("Shoko Series", series.Id);

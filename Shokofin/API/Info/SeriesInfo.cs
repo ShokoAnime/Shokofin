@@ -19,6 +19,8 @@ namespace Shokofin.API.Info
 
         public string[] Genres;
 
+        public string[] Studios;
+
         /// <summary>
         /// All episodes (of all type) that belong to this series.
         /// 

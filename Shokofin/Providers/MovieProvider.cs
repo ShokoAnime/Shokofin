@@ -17,9 +17,9 @@ namespace Shokofin.Providers
     public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>
     {
         public string Name => Plugin.MetadataProviderName;
-        
+
         private readonly IHttpClientFactory HttpClientFactory;
-        
+
         private readonly ILogger<MovieProvider> Logger;
 
         private readonly ShokoAPIManager ApiManager;
@@ -63,6 +63,7 @@ namespace Shokofin.Providers
                     ProductionYear = episode.AniDB.AirDate?.Year,
                     Tags = series.Tags.ToArray(),
                     Genres = series.Genres.ToArray(),
+                    Studios = series.Studios.ToArray(),
                     CommunityRating = rating,
                 };
                 result.Item.SetProviderId("Shoko File", file.Id);
@@ -72,7 +73,7 @@ namespace Shokofin.Providers
                     result.Item.SetProviderId("AniDB", episode.AniDB.ID.ToString());
                 if (config.BoxSetGrouping == Ordering.GroupType.MergeFriendly && episode.TvDB != null && config.BoxSetGrouping != Ordering.GroupType.ShokoGroup)
                     result.Item.SetProviderId(MetadataProvider.Tvdb, episode.TvDB.ID.ToString());
-                
+
                 result.HasMetadata = true;
 
                 result.ResetPeople();

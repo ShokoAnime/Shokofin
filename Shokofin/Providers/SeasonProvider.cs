@@ -115,6 +115,7 @@ namespace Shokofin.Providers
                 ProductionYear = series.AniDB.AirDate?.Year,
                 Tags = series.Tags.ToArray(),
                 Genres = series.Genres.ToArray(),
+                Studios = series.Studios.ToArray(),
                 CommunityRating = series.AniDB.Rating?.ToFloat(10),
             };
             result.Item.ProviderIds.Add("Shoko Series", series.Id);
