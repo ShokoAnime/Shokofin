@@ -17,19 +17,17 @@ namespace Shokofin.API.Info
         public string[] Studios;
 
         public SeriesInfo GetSeriesInfoBySeasonNumber(int seasonNumber) {
-            if (seasonNumber == 0)
-                return null;
-            
-            int seriesIndex = seasonNumber > 0 ? seasonNumber - 1 : seasonNumber;
-            var index = DefaultSeriesIndex + seriesIndex;
-            var seriesInfo = SeriesList[index];
-            if (seriesInfo == null)
+            if (seasonNumber == 0 || !(SeasonOrderDictionary.TryGetValue(seasonNumber, out var seriesInfo) && seriesInfo != null))
                 return null;
 
             return seriesInfo;
         }
 
         public List<SeriesInfo> SeriesList;
+
+        public Dictionary<int, SeriesInfo> SeasonOrderDictionary;
+
+        public Dictionary<SeriesInfo, int> SeasonNumberBaseDictionary;
 
         public SeriesInfo DefaultSeries;
 

@@ -120,7 +120,10 @@ namespace Shokofin.Providers
             var seasonNumber = Ordering.GetSeasonNumber(group, series, episode);
             var description = Text.GetDescription(episode);
 
-            if (group != null && config.MarkSpecialsWhenGrouped && episode.AniDB.Type != EpisodeType.Normal) switch (episode.AniDB.Type) {
+            if (group != null && config.MarkSpecialsWhenGrouped) switch (episode.AniDB.Type) {
+                case EpisodeType.Unknown:
+                case EpisodeType.Normal:
+                    break;
                 case EpisodeType.Special: {
                     // We're guaranteed to find the index, because otherwise it would've thrown when getting the episode number.
                     var index = series.SpecialsList.FindIndex(ep => ep == episode);
@@ -131,24 +134,20 @@ namespace Shokofin.Providers
                 case EpisodeType.ThemeSong:
                 case EpisodeType.EndingSong:
                 case EpisodeType.OpeningSong:
-                    displayTitle = $"C{episodeNumber} {displayTitle}";
-                    alternateTitle = $"C{episodeNumber} {alternateTitle}";
+                    displayTitle = $"C{episode.AniDB.EpisodeNumber} {displayTitle}";
+                    alternateTitle = $"C{episode.AniDB.EpisodeNumber} {alternateTitle}";
                     break;
                 case EpisodeType.Trailer:
-                    displayTitle = $"T{episodeNumber} {displayTitle}";
-                    alternateTitle = $"T{episodeNumber} {alternateTitle}";
+                    displayTitle = $"T{episode.AniDB.EpisodeNumber} {displayTitle}";
+                    alternateTitle = $"T{episode.AniDB.EpisodeNumber} {alternateTitle}";
                     break;
                 case EpisodeType.Parody:
-                    displayTitle = $"P{episodeNumber} {displayTitle}";
-                    alternateTitle = $"P{episodeNumber} {alternateTitle}";
-                    break;
-                case EpisodeType.Unknown:
-                    displayTitle = $"U{episodeNumber} {displayTitle}";
-                    alternateTitle = $"U{episodeNumber} {alternateTitle}";
+                    displayTitle = $"P{episode.AniDB.EpisodeNumber} {displayTitle}";
+                    alternateTitle = $"P{episode.AniDB.EpisodeNumber} {alternateTitle}";
                     break;
                 default:
-                    displayTitle = $"O{episodeNumber} {displayTitle}";
-                    alternateTitle = $"O{episodeNumber} {alternateTitle}";
+                    displayTitle = $"U{episode.AniDB.EpisodeNumber} {displayTitle}";
+                    alternateTitle = $"U{episode.AniDB.EpisodeNumber} {alternateTitle}";
                     break;
             }
 

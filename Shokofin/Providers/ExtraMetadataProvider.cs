@@ -278,12 +278,12 @@ namespace Shokofin.Providers
                         }
 
                         // Add missing episodes
-                        foreach (var (seriesInfo, index) in groupInfo.SeriesList.Select((s, i) => (s, i))) {
-                            var value = index - groupInfo.DefaultSeriesIndex;
-                            var seasonNumber = value < 0 ? value : value + 1;
+                        foreach (var pair in groupInfo.SeasonOrderDictionary) {
+                            var seasonNumber= pair.Key;
                             if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
                                 continue;
 
+                            var seriesInfo = pair.Value;
                             var seasonId = $"{seriesId}:{seasonNumber}";
                             if (ApiManager.TryLockActionForIdOFType("season", seasonId, "update")) {
                                 try {
@@ -305,13 +305,11 @@ namespace Shokofin.Providers
                     if (Plugin.Instance.Configuration.AddExtraVideos) {
                         AddExtras(series, groupInfo.DefaultSeries);
 
-                        foreach (var (seriesInfo, index) in groupInfo.SeriesList.Select((s, i) => (s, i))) {
-                            var value = index - groupInfo.DefaultSeriesIndex;
-                            var seasonNumber = value < 0 ? value : value + 1;
-                            if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
+                        foreach (var pair in groupInfo.SeasonOrderDictionary) {
+                            if (!seasons.TryGetValue(pair.Key, out var season) || season == null)
                                 continue;
 
-                            AddExtras(season, seriesInfo);
+                            AddExtras(season, pair.Value);
                         }
                     }
                 }
@@ -398,8 +396,10 @@ namespace Shokofin.Providers
                         return;
                     }
 
-                    if (addMissing && deleted)
-                        season = seasonNumber == 0 ? AddVirtualSeason(0, series) : AddVirtualSeason(seriesInfo, seasonNumber, series);
+                    if (addMissing && deleted) {
+                        var alternateEpisodes = seasonNumber != groupInfo.SeasonNumberBaseDictionary[seriesInfo];
+                        season = seasonNumber == 0 ? AddVirtualSeason(0, series) : AddVirtualSeason(seriesInfo, alternateEpisodes, seasonNumber, series);
+                    }
                 }
                 // Provide metadata for other seasons
                 else {
@@ -511,7 +511,7 @@ namespace Shokofin.Providers
             var missingSeasonNumbers = allSeasonNumbers.Except(existingSeasons.Keys).ToList();
             var mergeFriendly = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly && seriesInfo.TvDB != null;
             foreach (var seasonNumber in missingSeasonNumbers) {
-                var season = seasonNumber == 1 && !mergeFriendly ? AddVirtualSeason(seriesInfo, 1, series) : AddVirtualSeason(seasonNumber, series);
+                var season = seasonNumber == 1 && !mergeFriendly ? AddVirtualSeason(seriesInfo, false, 1, series) : AddVirtualSeason(seasonNumber, series);
                 if (season == null)
                     continue;
                 yield return (seasonNumber, season);
@@ -521,17 +521,16 @@ namespace Shokofin.Providers
         private IEnumerable<(int, Season)> CreateMissingSeasons(Info.GroupInfo groupInfo, Series series, Dictionary<int, Season> seasons)
         {
             bool hasSpecials = false;
-            foreach (var (s, index) in groupInfo.SeriesList.Select((a, b) => (a, b))) {
-                var value = index - groupInfo.DefaultSeriesIndex;
-                var seasonNumber = value < 0 ? value : value + 1;
-                if (seasons.ContainsKey(seasonNumber))
+            foreach (var pair in groupInfo.SeasonOrderDictionary) {
+                if (seasons.ContainsKey(pair.Key))
                     continue;
-                if (s.SpecialsList.Count > 0)
+                if (pair.Value.SpecialsList.Count > 0)
                     hasSpecials = true;
-                var season = AddVirtualSeason(s, seasonNumber, series);
+                var alternateEpisodes = pair.Key != groupInfo.SeasonNumberBaseDictionary[pair.Value];
+                var season = AddVirtualSeason(pair.Value, alternateEpisodes, pair.Key, series);
                 if (season == null)
                     continue;
-                yield return (seasonNumber, season);
+                yield return (pair.Key, season);
             }
             if (hasSpecials && !seasons.ContainsKey(0)) {
                 var season = AddVirtualSeason(0, series);
@@ -540,9 +539,8 @@ namespace Shokofin.Providers
             }
         }
 
-        private Season AddVirtualSeason(int seasonNumber, Series series)
+        private bool SeasonExists(string seriesPresentationUniqueKey, string seriesName, int seasonNumber)
         {
-            var seriesPresentationUniqueKey = series.GetPresentationUniqueKey();
             var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
                 IncludeItemTypes = new [] { nameof (Season) },
                 IndexNumber = seasonNumber,
@@ -551,9 +549,18 @@ namespace Shokofin.Providers
             }, true);
 
             if (searchList.Count > 0) {
-                Logger.LogDebug("Season {SeasonName} for Series {SeriesName} was created in another concurrent thread, skipping.", searchList[0].Name, series.Name);
-                return null;
+                Logger.LogDebug("Season {SeasonName} for Series {SeriesName} was created in another concurrent thread, skipping.", searchList[0].Name, seriesName);
+                return true;
             }
+
+            return false;
+        }
+
+        private Season AddVirtualSeason(int seasonNumber, Series series)
+        {
+            var seriesPresentationUniqueKey = series.GetPresentationUniqueKey();
+            if (SeasonExists(seriesPresentationUniqueKey, series.Name, seasonNumber))
+                return null;
 
             string seasonName;
             if (seasonNumber == 0)
@@ -571,7 +578,7 @@ namespace Shokofin.Providers
                 SortName = seasonName,
                 ForcedSortName = seasonName,
                 Id = LibraryManager.GetNewItemId(
-                    series.Id + seasonNumber.ToString(CultureInfo.InvariantCulture) + seasonName,
+                    series.Id + "Season " + seasonNumber.ToString(CultureInfo.InvariantCulture),
                     typeof(Season)),
                 IsVirtualItem = true,
                 SeriesId = series.Id,
@@ -586,23 +593,19 @@ namespace Shokofin.Providers
             return season;
         }
 
-        private Season AddVirtualSeason(Info.SeriesInfo seriesInfo, int seasonNumber, Series series)
+        private Season AddVirtualSeason(Info.SeriesInfo seriesInfo, bool alternateEpisodes, int seasonNumber, Series series)
         {
             var seriesPresentationUniqueKey = series.GetPresentationUniqueKey();
-            var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
-                IncludeItemTypes = new [] { nameof (Season) },
-                HasAnyProviderId = { ["Shoko Series"] = seriesInfo.Id },
-                SeriesPresentationUniqueKey = seriesPresentationUniqueKey,
-                DtoOptions = new DtoOptions(true),
-            }, true);
-
-            if (searchList.Count > 0) {
-                Logger.LogDebug("Season {SeasonName} for Series {SeriesName} was created in another concurrent thread, skipping.", searchList[0].Name, series.Name);
+            if (SeasonExists(seriesPresentationUniqueKey, series.Name, seasonNumber))
                 return null;
-            }
 
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(seriesInfo.AniDB.Titles, seriesInfo.Shoko.Name, series.GetPreferredMetadataLanguage());
             var sortTitle = $"S{seasonNumber} - {seriesInfo.Shoko.Name}";
+
+            if (alternateEpisodes) {
+                displayTitle += " (Other Episodes)";
+                alternateTitle += " (Other Episodes)";
+            }
 
             Logger.LogInformation("Adding virtual season {SeasonName} entry for {SeriesName}", displayTitle, series.Name);
             var season = new Season {
@@ -612,7 +615,7 @@ namespace Shokofin.Providers
                 SortName = sortTitle,
                 ForcedSortName = sortTitle,
                 Id = LibraryManager.GetNewItemId(
-                    series.Id + "Season " + seriesInfo.Id.ToString(CultureInfo.InvariantCulture),
+                    series.Id + "Season " + seasonNumber.ToString(CultureInfo.InvariantCulture),
                     typeof(Season)),
                 IsVirtualItem = true,
                 Overview = Text.GetDescription(seriesInfo),

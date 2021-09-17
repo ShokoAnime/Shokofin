@@ -96,7 +96,7 @@ namespace Shokofin.Providers
 
             var series = group.DefaultSeries;
 
-            if (group.SeriesList.Count <= 1 && series.EpisodeList.Count <= 1) {
+            if (group.SeriesList.Count <= 1 && series.EpisodeList.Count <= 1 && series.AlternateEpisodesList.Count == 0) {
                 Logger.LogWarning("Group did not contain multiple movies! Skipping path {Path} (Series={SeriesId},Group={GroupId})", info.Path, group.Id, series.Id);
                 return result;
             }

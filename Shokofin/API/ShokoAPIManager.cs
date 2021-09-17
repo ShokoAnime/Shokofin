@@ -295,7 +295,7 @@ namespace Shokofin.API
             info = new EpisodeInfo
             {
                 Id = episodeId,
-                ExtraType = GetExtraType(aniDB),
+                ExtraType = Ordering.GetExtraType(aniDB),
                 Shoko = (await ShokoAPI.GetEpisode(episodeId)),
                 AniDB = aniDB,
                 TvDB = ((await ShokoAPI.GetEpisodeTvDb(episodeId))?.FirstOrDefault()),
@@ -326,40 +326,6 @@ namespace Shokofin.API
                 return false;
             }
             return EpisodeIdToEpisodePathDictionary.TryGetValue(episodeId, out path);
-        }
-
-        private static ExtraType? GetExtraType(Episode.AniDB episode)
-        {
-            switch (episode.Type)
-            {
-                case EpisodeType.Normal:
-                case EpisodeType.Other:
-                    return null;
-                case EpisodeType.ThemeSong:
-                case EpisodeType.OpeningSong:
-                case EpisodeType.EndingSong:
-                    return ExtraType.ThemeVideo;
-                case EpisodeType.Trailer:
-                    return ExtraType.Trailer;
-                case EpisodeType.Special: {
-                    var title = Text.GetTitleByLanguages(episode.Titles, "en");
-                    if (string.IsNullOrEmpty(title))
-                        return null;
-                    // Interview
-                    if (title.Contains("interview", System.StringComparison.OrdinalIgnoreCase))
-                        return ExtraType.Interview;
-                    // Cinema intro/outro
-                    if (title.StartsWith("cinema ", System.StringComparison.OrdinalIgnoreCase) &&
-                    (title.Contains("intro", System.StringComparison.OrdinalIgnoreCase) || title.Contains("outro", System.StringComparison.OrdinalIgnoreCase)))
-                        return ExtraType.Clip;
-                    // Music videos
-                    if (title.Contains("music video", System.StringComparison.OrdinalIgnoreCase))
-                        return ExtraType.Clip;
-                    return null;
-                }
-                default:
-                    return ExtraType.Unknown;
-            }
         }
 
         #endregion
@@ -496,6 +462,7 @@ namespace Shokofin.API
             var specialsList = new List<EpisodeInfo>();
             var episodesList = new List<EpisodeInfo>();
             var extrasList = new List<EpisodeInfo>();
+            var altEpisodesList = new List<EpisodeInfo>();
 
             // The episode list is ordered by air date
             var allEpisodesList = ShokoAPI.GetEpisodesFromSeries(seriesId, Plugin.Instance.Configuration.AddMissingMetadata)
@@ -512,6 +479,8 @@ namespace Shokofin.API
                 EpisodeIdToSeriesIdDictionary[episode.Id] = seriesId;
                 if (episode.AniDB.Type == EpisodeType.Normal)
                     episodesList.Add(episode);
+                else if (episode.AniDB.Type == EpisodeType.Unknown)
+                    altEpisodesList.Add(episode);
                 else if (episode.ExtraType != null)
                     extrasList.Add(episode);
                 else if (episode.AniDB.Type == EpisodeType.Special) {
@@ -540,6 +509,7 @@ namespace Shokofin.API
                 Studios = new string[0],
                 RawEpisodeList = allEpisodesList,
                 EpisodeList = episodesList,
+                AlternateEpisodesList = altEpisodesList,
                 ExtrasList = extrasList,
                 SpesialsAnchors = specialsAnchorDictionary,
                 SpecialsList = specialsList,
@@ -691,6 +661,30 @@ namespace Shokofin.API
             if (foundIndex == -1)
                 throw new System.Exception("Unable to get a base-point for seasions withing the group");
 
+            var seasonOrderDictionary = new Dictionary<int, SeriesInfo>();
+            var seasonNumberBaseDictionary = new Dictionary<SeriesInfo, int>();
+            var positiveSeasonNumber = 1;
+            var negativeSeasonNumber = -1;
+            foreach (var (seriesInfo, index) in seriesList.Select((s, i) => (s, i))) {
+                int seasonNumber;
+                var includeAlternateSeason = seriesInfo.AlternateEpisodesList.Count > 0;
+
+                // Series before the default series get a negative season number
+                if (index < foundIndex) {
+                    seasonNumber = negativeSeasonNumber;
+                    negativeSeasonNumber -= includeAlternateSeason ? 2 : 1;
+                }
+                else {
+                    seasonNumber = positiveSeasonNumber;
+                    positiveSeasonNumber += includeAlternateSeason ? 2 : 1;
+                }
+
+                seasonNumberBaseDictionary.Add(seriesInfo, seasonNumber);
+                seasonOrderDictionary.Add(seasonNumber, seriesInfo);
+                if (includeAlternateSeason)
+                    seasonOrderDictionary.Add(index < foundIndex ? seasonNumber - 1 : seasonNumber + 1, seriesInfo);
+            }
+
             groupInfo = new GroupInfo {
                 Id = groupId,
                 Shoko = group,
@@ -698,6 +692,8 @@ namespace Shokofin.API
                 Genres = seriesList.SelectMany(s => s.Genres).Distinct().ToArray(),
                 Studios = seriesList.SelectMany(s => s.Studios).Distinct().ToArray(),
                 SeriesList = seriesList,
+                SeasonNumberBaseDictionary = seasonNumberBaseDictionary,
+                SeasonOrderDictionary = seasonOrderDictionary,
                 DefaultSeries = seriesList[foundIndex],
                 DefaultSeriesIndex = foundIndex,
             };

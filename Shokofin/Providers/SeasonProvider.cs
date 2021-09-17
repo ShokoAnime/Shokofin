@@ -80,6 +80,7 @@ namespace Shokofin.Providers
             }
 
             var seasonNumber = info.IndexNumber.Value;
+            var alternateEpisodes = false;
             API.Info.SeriesInfo series;
             if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {
                 var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
@@ -89,6 +90,10 @@ namespace Shokofin.Providers
                     Logger.LogWarning("Unable to find info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, series.Id);
                     return result;
                 }
+
+                if (seasonNumber != group.SeasonNumberBaseDictionary[series])
+                    alternateEpisodes = true;
+
                 Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Group={GroupId},Series={SeriesId})", seasonNumber, group.Shoko.Name, group.Id, series.Id);
             }
             else {
@@ -102,6 +107,11 @@ namespace Shokofin.Providers
 
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
             var sortTitle = $"I{seasonNumber} - {series.Shoko.Name}";
+
+            if (alternateEpisodes) {
+                displayTitle += " (Other Episodes)";
+                alternateTitle += " (Other Episodes)";
+            }
 
             result.Item = new Season {
                 Name = displayTitle,

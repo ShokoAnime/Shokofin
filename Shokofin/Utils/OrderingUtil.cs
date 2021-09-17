@@ -2,6 +2,8 @@ using System.Linq;
 using Shokofin.API.Info;
 using Shokofin.API.Models;
 
+using ExtraType = MediaBrowser.Model.Entities.ExtraType;
+
 namespace Shokofin.Utils
 {
     public class Ordering
@@ -86,16 +88,19 @@ namespace Shokofin.Utils
                                 case EpisodeType.Normal:
                                     // offset += 0; // it's not needed, so it's just here as a comment instead.
                                     break;
-                                case EpisodeType.Parody:
+                                case EpisodeType.Special:
                                     offset += sizes?.Episodes ?? 0;
                                     goto case EpisodeType.Normal;
                                 case EpisodeType.Unknown:
-                                    offset += sizes?.Parodies ?? 0;
-                                    goto case EpisodeType.Parody;
+                                    offset += sizes?.Specials ?? 0;
+                                    goto case EpisodeType.Special;
                                 // Add them to the bottom of the list if we didn't filter them out properly.
-                                case EpisodeType.OpeningSong:
+                                case EpisodeType.Parody:
                                     offset += sizes?.Others ?? 0;
                                     goto case EpisodeType.Unknown;
+                                case EpisodeType.OpeningSong:
+                                    offset += sizes?.Parodies ?? 0;
+                                    goto case EpisodeType.Parody;
                                 case EpisodeType.Trailer:
                                     offset += sizes?.Credits ?? 0;
                                     goto case EpisodeType.OpeningSong;
@@ -155,16 +160,14 @@ namespace Shokofin.Utils
                     }
                     var sizes = series.Shoko.Sizes.Total;
                     switch (episode.AniDB.Type) {
+                        case EpisodeType.Unknown:
                         case EpisodeType.Normal:
                             // offset += 0; // it's not needed, so it's just here as a comment instead.
                             break;
+                        // Add them to the bottom of the list if we didn't filter them out properly.
                         case EpisodeType.Parody:
                             offset += sizes?.Episodes ?? 0;
                             goto case EpisodeType.Normal;
-                        case EpisodeType.Unknown:
-                            offset += sizes?.Parodies ?? 0;
-                            goto case EpisodeType.Parody;
-                        // Add them to the bottom of the list if we didn't filter them out properly.
                         case EpisodeType.OpeningSong:
                             offset += sizes?.Others ?? 0;
                             goto case EpisodeType.Unknown;
@@ -208,20 +211,62 @@ namespace Shokofin.Utils
                     }
                 case GroupType.MergeFriendly: {
                     var seasonNumber = episode?.TvDB?.Season;
-                    if (seasonNumber == null)
+                    if (!seasonNumber.HasValue)
                         goto case GroupType.Default;
-                    return seasonNumber ?? 1;
+                    return seasonNumber.Value;
                 }
                 case GroupType.ShokoGroup: {
                     var id = series.Id;
                     if (series == group.DefaultSeries)
                         return 1;
-                    var index = group.SeriesList.FindIndex(s => s.Id == id);
-                    if (index == -1)
+                    if (!group.SeasonNumberBaseDictionary.TryGetValue(series, out var seasonNumber))
                         throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={id})");
-                    var value = index - group.DefaultSeriesIndex;
-                    return value < 0 ? value : value + 1;
+                    
+                    // Alternate Season List
+                    if (series.AlternateEpisodesList.Count > 0 && episode.AniDB.Type == EpisodeType.Unknown)
+                        return seasonNumber > 0 ? seasonNumber + 1 : seasonNumber - 1;
+
+                    return seasonNumber;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Get the extra type for an episode.
+        /// </summary>
+        /// <param name="episode"></param>
+        /// <returns></returns>
+        public static ExtraType? GetExtraType(Episode.AniDB episode)
+        {
+            switch (episode.Type)
+            {
+                case EpisodeType.Normal:
+                case EpisodeType.Unknown:
+                    return null;
+                case EpisodeType.ThemeSong:
+                case EpisodeType.OpeningSong:
+                case EpisodeType.EndingSong:
+                    return ExtraType.ThemeVideo;
+                case EpisodeType.Trailer:
+                    return ExtraType.Trailer;
+                case EpisodeType.Special: {
+                    var title = Text.GetTitleByLanguages(episode.Titles, "en");
+                    if (string.IsNullOrEmpty(title))
+                        return null;
+                    // Interview
+                    if (title.Contains("interview", System.StringComparison.OrdinalIgnoreCase))
+                        return ExtraType.Interview;
+                    // Cinema intro/outro
+                    if (title.StartsWith("cinema ", System.StringComparison.OrdinalIgnoreCase) &&
+                    (title.Contains("intro", System.StringComparison.OrdinalIgnoreCase) || title.Contains("outro", System.StringComparison.OrdinalIgnoreCase)))
+                        return ExtraType.Clip;
+                    // Music videos
+                    if (title.Contains("music video", System.StringComparison.OrdinalIgnoreCase))
+                        return ExtraType.Clip;
+                    return null;
+                }
+                default:
+                    return ExtraType.Unknown;
             }
         }
     }
