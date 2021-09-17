@@ -17,12 +17,7 @@ namespace Shokofin.Tasks
 
         public async Task Run(IProgress<double> progress, CancellationToken token)
         {
-            try {
-                await ApiManager.PostProcess(progress, token);
-            }
-            finally {
-                ApiManager.Clear();
-            }
+            await ApiManager.PostProcess(progress, token).ConfigureAwait(false);
         }
     }
 }
