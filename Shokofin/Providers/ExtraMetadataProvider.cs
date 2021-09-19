@@ -128,26 +128,7 @@ namespace Shokofin.Providers
                         return;
 
                     try {
-                        var query = new InternalItemsQuery {
-                            IsVirtualItem = true,
-                            HasAnyProviderId = { ["Shoko Episode"] = episodeId },
-                            IncludeItemTypes = new [] { nameof (Episode) },
-                            GroupByPresentationUniqueKey = false,
-                            DtoOptions = new DtoOptions(true),
-                        };
-
-                        var existingVirtualItems = LibraryManager.GetItemList(query);
-                        var deleteOptions = new DeleteOptions {
-                            DeleteFileLocation = true,
-                        };
-
-                        // Remove the old virtual episode that matches the newly created item
-                        foreach (var item in existingVirtualItems) {
-                            if (episode.IsVirtualItem && System.Guid.Equals(item.Id, episode.Id))
-                                continue;
-
-                            LibraryManager.DeleteItem(item, deleteOptions);
-                        }
+                        RemoveDuplicateEpisodes(episode, episodeId);
                     }
                     finally {
                         ApiManager.TryUnlockActionForIdOFType("episode", episodeId, "update");
@@ -749,7 +730,7 @@ namespace Shokofin.Providers
         private void RemoveDuplicateEpisodes(Episode episode, string episodeId)
         {
             var query = new InternalItemsQuery {
-                        IsVirtualItem = true,
+                IsVirtualItem = true,
                 ExcludeItemIds = new [] { episode.Id },
                 HasAnyProviderId = { ["Shoko Episode"] = episodeId },
                 IncludeItemTypes = new [] { nameof (Episode) },
@@ -760,7 +741,7 @@ namespace Shokofin.Providers
             var existingVirtualItems = LibraryManager.GetItemList(query);
 
             var deleteOptions = new DeleteOptions {
-                DeleteFileLocation = true,
+                DeleteFileLocation = false,
             };
 
             // Remove the virtual season/episode that matches the newly updated item
