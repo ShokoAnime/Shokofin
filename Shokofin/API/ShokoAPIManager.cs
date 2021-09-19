@@ -27,6 +27,8 @@ namespace Shokofin.API
 
         private static readonly ConcurrentDictionary<string, string> SeriesPathToIdDictionary = new ConcurrentDictionary<string, string>();
 
+        private static readonly ConcurrentDictionary<string, string> SeriesIdToPathDictionary = new ConcurrentDictionary<string, string>();
+
         private static readonly ConcurrentDictionary<string, string> SeriesIdToGroupIdDictionary = new ConcurrentDictionary<string, string>();
 
         private static readonly ConcurrentDictionary<string, string> EpisodePathToEpisodeIdDictionary = new ConcurrentDictionary<string, string>();
@@ -76,7 +78,7 @@ namespace Shokofin.API
 
         public string StripMediaFolder(string fullPath)
         {
-            var mediaFolder = MediaFolderList.Find((folder) => fullPath.StartsWith(folder.Path));
+            var mediaFolder = MediaFolderList.FirstOrDefault((folder) => fullPath.StartsWith(folder.Path));
             // If no root folder was found, then we _most likely_ already stripped it out beforehand.
             if (mediaFolder == null || string.IsNullOrEmpty(mediaFolder?.Path))
                 return fullPath;
@@ -100,11 +102,19 @@ namespace Shokofin.API
         public bool TryUnlockActionForIdOFType(string type, string id, string action)
         {
             var key = $"{type}:{id}";
-            if (!LockedIdDictionary.TryGetValue(key, out var hashSet))
-                return false;
-            return hashSet.Remove(action);
+            if (LockedIdDictionary.TryGetValue(key, out var hashSet))
+                return hashSet.Remove(action);
+            return false;
         }
 
+
+        public bool IsActionForIdOfTypeLocked(string type, string id, string action)
+        {
+            var key = $"{type}:{id}";
+            if (LockedIdDictionary.TryGetValue(key, out var hashSet))
+                return hashSet.Contains(action);
+            return false;
+        }
         #endregion
         #region Clear
 
@@ -118,6 +128,7 @@ namespace Shokofin.API
             EpisodePathToEpisodeIdDictionary.Clear();
             EpisodeIdToEpisodePathDictionary.Clear();
             SeriesPathToIdDictionary.Clear();
+            SeriesIdToPathDictionary.Clear();
             SeriesIdToGroupIdDictionary.Clear();
             DataCache = (new MemoryCache((new MemoryCacheOptions() {
                 ExpirationScanFrequency = ExpirationScanFrequency,
@@ -222,7 +233,7 @@ namespace Shokofin.API
             if (file == null)
                 return (null, null, null, null);
 
-            var series = file?.SeriesIDs.FirstOrDefault();
+            var series = file?.SeriesIDs?.FirstOrDefault();
             var seriesId = series?.SeriesID.ID.ToString();
             var episodes = series?.EpisodeIDs?.FirstOrDefault();
             var episodeId = episodes?.ID.ToString();
@@ -230,8 +241,8 @@ namespace Shokofin.API
                 return (null, null, null, null);
 
             GroupInfo groupInfo = null;
-            if (filterGroupByType != null) {
-                groupInfo =  await GetGroupInfoForSeries(seriesId, (Ordering.GroupFilterType)filterGroupByType);
+            if (filterGroupByType.HasValue) {
+                groupInfo =  await GetGroupInfoForSeries(seriesId, filterGroupByType.Value);
                 if (groupInfo == null)
                     return (null, null, null, null);
             }
@@ -348,6 +359,11 @@ namespace Shokofin.API
             return EpisodeIdToEpisodePathDictionary.TryGetValue(episodeId, out path);
         }
 
+        public bool TryGetSeriesIdForEpisodeId(string episodeId, out string seriesId)
+        {
+            return EpisodeIdToSeriesIdDictionary.TryGetValue(episodeId, out seriesId);
+        }
+
         #endregion
         #region Series Info
 
@@ -378,6 +394,7 @@ namespace Shokofin.API
                 seriesId = result?.FirstOrDefault()?.IDs?.ID.ToString();
 
                 SeriesPathToIdDictionary[path] = seriesId;
+                SeriesIdToPathDictionary.TryAdd(seriesId, path);
             }
 
             if (string.IsNullOrEmpty(seriesId))
@@ -453,6 +470,15 @@ namespace Shokofin.API
                 return false;
             }
             return SeriesPathToIdDictionary.TryGetValue(path, out seriesId);
+        }
+
+        public bool TryGetSeriesPathForId(string seriesId, out string path)
+        {
+            if (string.IsNullOrEmpty(seriesId)) {
+                path = null;
+                return false;
+            }
+            return SeriesIdToPathDictionary.TryGetValue(seriesId, out path);
         }
 
         public bool TryGetGroupIdForSeriesId(string seriesId, out string groupId)

@@ -11,6 +11,7 @@ namespace Shokofin
         public void RegisterServices(IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<Shokofin.API.ShokoAPIManager>();
+            serviceCollection.AddSingleton<IIdLookup, IdLookup>();
         }
     }
 }

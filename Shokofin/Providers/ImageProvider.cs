@@ -24,88 +24,111 @@ namespace Shokofin.Providers
 
         private readonly ShokoAPIManager ApiManager;
 
-        public ImageProvider(IHttpClientFactory httpClientFactory, ILogger<ImageProvider> logger, ShokoAPIManager apiManager)
+        private readonly IIdLookup Lookup;
+
+        public ImageProvider(IHttpClientFactory httpClientFactory, ILogger<ImageProvider> logger, ShokoAPIManager apiManager, IIdLookup lookup)
         {
             HttpClientFactory = httpClientFactory;
             Logger = logger;
             ApiManager = apiManager;
+            Lookup = lookup;
         }
 
         public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
         {
             var list = new List<RemoteImageInfo>();
             try {
-                Shokofin.API.Info.EpisodeInfo episodeInfo = null;
-                Shokofin.API.Info.SeriesInfo seriesInfo = null;
 
                 var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Utils.Ordering.GroupFilterType.Others : Utils.Ordering.GroupFilterType.Default;
                 switch (item) {
-                    case Episode: {
-                        if (item.ProviderIds.TryGetValue("Shoko Episode", out var episodeId) && !string.IsNullOrEmpty(episodeId)) {
-                            episodeInfo = await ApiManager.GetEpisodeInfo(episodeId);
-                            if (episodeInfo != null)
-                                Logger.LogInformation("Getting images for episode {EpisodeName} (Episode={EpisodeId})", episodeInfo.Shoko.Name, episodeId);
+                    case Episode episode: {
+                        if (Lookup.TryGetEpisodeIdForEpisode(episode, out var episodeId)) {
+                            var episodeInfo = await ApiManager.GetEpisodeInfo(episodeId);
+                            if (episodeInfo != null) {
+                                AddImagesForEpisode(ref list, episodeInfo);
+                                Logger.LogInformation("Getting {Count} images for episode {EpisodeName} (Episode={EpisodeId})", list.Count, episodeInfo.Shoko.Name, episodeId);
+                            }
                         }
                         break;
                     }
-                    case Series: {
-                        if (item.ProviderIds.TryGetValue("Shoko Group", out var groupId) && !string.IsNullOrEmpty(groupId)) {
-                            var groupInfo = await ApiManager.GetGroupInfo(groupId, filterLibrary);
-                            seriesInfo = groupInfo?.DefaultSeries;
-                            if (seriesInfo != null)
-                                Logger.LogInformation("Getting images for series {SeriesName} (Series={SeriesId},Group={GroupId})", groupInfo.Shoko.Name, seriesInfo.Id, groupId);
-                        }
-                        else if (item.ProviderIds.TryGetValue("Shoko Series", out var seriesId) && !string.IsNullOrEmpty(seriesId)) {
-                            seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
-                            if (seriesInfo != null)
-                                Logger.LogInformation("Getting images for series {SeriesName} (Series={SeriesId})", seriesInfo.Shoko.Name, seriesId);
+                    case Series series: {
+                        if (Lookup.TryGetSeriesIdForSeries(series, out var seriesId)) {
+                            if (Plugin.Instance.Configuration.SeriesGrouping == Utils.Ordering.GroupType.ShokoGroup) {
+                                var groupInfo = await ApiManager.GetGroupInfoForSeries(seriesId, filterLibrary);
+                                var seriesInfo = groupInfo?.DefaultSeries;
+                                if (seriesInfo != null) {
+                                    AddImagesForSeries(ref list, seriesInfo);
+                                    Logger.LogInformation("Getting {Count} images for series {SeriesName} (Series={SeriesId},Group={GroupId})", list.Count, groupInfo.Shoko.Name, seriesInfo.Id, groupInfo.Id);
+                                }
+                            }
+                            else {
+                                var seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
+                                if (seriesInfo != null) {
+                                    AddImagesForSeries(ref list, seriesInfo);
+                                    Logger.LogInformation("Getting {Count} images for series {SeriesName} (Series={SeriesId})", list.Count, seriesInfo.Shoko.Name, seriesId);
+                                }
+                            }
                         }
                         break;
                     }
                     case Season season: {
-                        if (season.IndexNumber.HasValue && season.Series.ProviderIds.TryGetValue("Shoko Series", out var seriesId) && !string.IsNullOrEmpty(seriesId)) {
+                        if (Lookup.TryGetSeriesIdForSeason(season, out var seriesId)) {
                             var groupInfo = await ApiManager.GetGroupInfoForSeries(seriesId, filterLibrary);
-                            seriesInfo = groupInfo?.GetSeriesInfoBySeasonNumber(season.IndexNumber.Value);
-                            if (seriesInfo != null)
-                                Logger.LogInformation("Getting images for season {SeasonNumber} in {SeriesName} (Series={SeriesId},Group={GroupId})", season.IndexNumber.Value, groupInfo.Shoko.Name, seriesInfo.Id, groupInfo.Id);
+                            var seriesInfo = groupInfo?.GetSeriesInfoBySeasonNumber(season.IndexNumber.Value);
+                            if (seriesInfo != null) {
+                                AddImagesForSeries(ref list, seriesInfo);
+                                Logger.LogInformation("Getting {Count} images for season {SeasonNumber} in {SeriesName} (Series={SeriesId},Group={GroupId})", list.Count, season.IndexNumber.Value, groupInfo.Shoko.Name, seriesInfo.Id, groupInfo.Id);
+                            }
                         }
                         break;
                     }
-                    case Movie:
-                    case BoxSet: {
-                        if (item.ProviderIds.TryGetValue("Shoko Series", out var seriesId) && !string.IsNullOrEmpty(seriesId)) {
-                            seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
-                            if (seriesInfo != null)
-                                Logger.LogInformation("Getting images for movie or box-set {MovieName} (Series={SeriesId})", seriesInfo.Shoko.Name, seriesId);
+                    case Movie movie: {
+                        if (Lookup.TryGetSeriesIdForMovie(movie, out var seriesId)) {
+                            var seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
+                            if (seriesInfo != null) {
+                                AddImagesForSeries(ref list, seriesInfo);
+                                Logger.LogInformation("Getting {Count} images for movie {MovieName} (Series={SeriesId})", list.Count, movie.Name, seriesId);
+                            }
+                        }
+                        break;
+                    }
+                    case BoxSet boxSet: {
+                        if (Lookup.TryGetSeriesIdForBoxSet(boxSet, out var seriesId)) {
+                            var seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
+                            if (seriesInfo != null) {
+                                AddImagesForSeries(ref list, seriesInfo);
+                                Logger.LogInformation("Getting {Count} images for box-set {BoxSetName} (Series={SeriesId})", list.Count, boxSet.Name, seriesId);
+                            }
                         }
                         break;
                     }
                 }
-
-                if (episodeInfo != null) {
-                    AddImage(ref list, ImageType.Primary, episodeInfo?.TvDB?.Thumbnail);
-                }
-                if (seriesInfo != null) {
-                    var images = seriesInfo.Shoko.Images;
-                    if (Plugin.Instance.Configuration.PreferAniDbPoster)
-                        AddImage(ref list, ImageType.Primary, seriesInfo.AniDB.Poster);
-                    foreach (var image in images?.Posters)
-                        AddImage(ref list, ImageType.Primary, image);
-                    if (!Plugin.Instance.Configuration.PreferAniDbPoster)
-                        AddImage(ref list, ImageType.Primary, seriesInfo.AniDB.Poster);
-                    foreach (var image in images?.Fanarts)
-                        AddImage(ref list, ImageType.Backdrop, image);
-                    foreach (var image in images?.Banners)
-                        AddImage(ref list, ImageType.Banner, image);
-                }
-
-                Logger.LogInformation("List got {Count} item(s). (Series={SeriesId},Episode={EpisodeId})", list.Count, seriesInfo?.Id ?? null, episodeInfo?.Id ?? null);
                 return list;
             }
             catch (Exception e) {
                 Logger.LogError(e, $"Threw unexpectedly; {e.Message}");
                 return list;
             }
+        }
+
+        private void AddImagesForEpisode(ref List<RemoteImageInfo> list, API.Info.EpisodeInfo episodeInfo)
+        {
+            AddImage(ref list, ImageType.Primary, episodeInfo?.TvDB?.Thumbnail);
+        }
+
+        private void AddImagesForSeries(ref List<RemoteImageInfo> list, API.Info.SeriesInfo seriesInfo)
+        {
+            var images = seriesInfo.Shoko.Images;
+            if (Plugin.Instance.Configuration.PreferAniDbPoster)
+                AddImage(ref list, ImageType.Primary, seriesInfo.AniDB.Poster);
+            foreach (var image in images?.Posters)
+                AddImage(ref list, ImageType.Primary, image);
+            if (!Plugin.Instance.Configuration.PreferAniDbPoster)
+                AddImage(ref list, ImageType.Primary, seriesInfo.AniDB.Poster);
+            foreach (var image in images?.Fanarts)
+                AddImage(ref list, ImageType.Backdrop, image);
+            foreach (var image in images?.Banners)
+                AddImage(ref list, ImageType.Banner, image);
         }
 
         private void AddImage(ref List<RemoteImageInfo> list, ImageType imageType, API.Models.Image image)

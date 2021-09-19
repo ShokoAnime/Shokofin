@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Models;
 using Shokofin.Utils;
-using System.Linq;
 
 namespace Shokofin
 {
@@ -13,24 +12,18 @@ namespace Shokofin
     {
         private readonly ShokoAPIManager ApiManager;
 
+        private readonly IIdLookup Lookup;
+
         private readonly ILibraryManager LibraryManager;
 
         private readonly ILogger<LibraryScanner> Logger;
 
-        public LibraryScanner(ShokoAPIManager apiManager, ILibraryManager libraryManager, ILogger<LibraryScanner> logger)
+        public LibraryScanner(ShokoAPIManager apiManager, IIdLookup lookup, ILibraryManager libraryManager, ILogger<LibraryScanner> logger)
         {
             ApiManager = apiManager;
+            Lookup = lookup;
             LibraryManager = libraryManager;
             Logger = logger;
-        }
-
-        public bool IsEnabledForItem(BaseItem item)
-        {
-            if (item == null)
-                return false;
-            var libraryOptions = LibraryManager.GetLibraryOptions(item);
-            return libraryOptions != null && 
-                libraryOptions.TypeOptions.Any(o => o.Type == nameof (Series) && o.MetadataFetchers.Contains(Plugin.MetadataProviderName));
         }
 
         /// <summary>
@@ -50,7 +43,7 @@ namespace Shokofin
 
             try {
                 // Enable the scanner if we selected to use the Shoko provider for any metadata type on the current root folder.
-                if (!IsEnabledForItem(parent))
+                if (!Lookup.IsEnabledForItem(parent))
                     return false;
 
                 var fullPath = fileInfo.FullName;
