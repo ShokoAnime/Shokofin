@@ -613,11 +613,14 @@ namespace Shokofin.API
 
         public GroupInfo GetGroupInfoForSeriesSync(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
         {
+            if (string.IsNullOrEmpty(seriesId))
+                return null;
+
             if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
                 if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info))
                     return info;
 
-                return GetGroupInfoSync(groupId, filterByType);
+                return GetGroupInfo(groupId, filterByType).GetAwaiter().GetResult();
             }
 
             return GetGroupInfoForSeries(seriesId, filterByType).GetAwaiter().GetResult();
@@ -625,6 +628,9 @@ namespace Shokofin.API
 
         public async Task<GroupInfo> GetGroupInfoForSeries(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
         {
+            if (string.IsNullOrEmpty(seriesId))
+                return null;
+
             if (!SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
                 var group = await ShokoAPI.GetGroupFromSeries(seriesId);
                 if (group == null)
