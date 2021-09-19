@@ -159,6 +159,12 @@ namespace Shokofin.API
             return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Role>>(responseStream) : null;
         }
 
+        public static async Task<IEnumerable<Role>> GetSeriesCast(string id, Role.CreatorRoleType role)
+        {
+            var responseStream = await CallApi($"/api/v3/Series/{id}/Cast?roleType={role.ToString()}");
+            return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Role>>(responseStream) : null;
+        }
+
         public static async Task<Images> GetSeriesImages(string id)
         {
             var responseStream = await CallApi($"/api/v3/Series/{id}/Images");

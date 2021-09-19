@@ -133,13 +133,21 @@ namespace Shokofin.API
             var roles = await ShokoAPI.GetSeriesCast(seriesId);
             foreach (var role in roles)
             {
-                list.Add(new PersonInfo
-                {
-                    Type = PersonType.Actor,
-                    Name = role.Staff.Name,
-                    Role = role.Character.Name,
-                    ImageUrl = role.Staff.Image?.ToURLString(),
-                });
+                switch (role.RoleName) {
+                    case Role.CreatorRoleType.Studio:
+                        break;
+                    case Role.CreatorRoleType.Seiyuu:
+                        list.Add(new PersonInfo
+                        {
+                            Type = PersonType.Actor,
+                            Name = role.Staff.Name,
+                            Role = role.Character.Name,
+                            ImageUrl = role.Staff.Image?.ToURLString(),
+                        });
+                        break;
+                    default:
+                        break;
+                }
             }
             return list;
         }
@@ -182,6 +190,18 @@ namespace Shokofin.API
         private string SelectTagName(Tag tag)
         {
             return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(tag.Name);
+        }
+
+        #endregion
+        #region Studios
+
+        public async Task<string[]> GetStudiosForSeries(string seriesId)
+        {
+            var cast = await ShokoAPI.GetSeriesCast(seriesId, Role.CreatorRoleType.Studio);
+            // * NOTE: Shoko Server version <4.1.2 don't support filtered cast, nor other role types besides Role.CreatorRoleType.Seiyuu.
+            if (cast.Any(p => p.RoleName != Role.CreatorRoleType.Studio))
+                return new string[0];
+            return cast.Select(p => p.Staff.Name).ToArray();
         }
 
         #endregion
@@ -458,6 +478,7 @@ namespace Shokofin.API
             var tvDbId = series.IDs.TvDB?.FirstOrDefault();
             var tags = await GetTags(seriesId);
             var genres = await GetGenresForSeries(seriesId);
+            var studios = await GetStudiosForSeries(seriesId);
             Dictionary<string, EpisodeInfo> specialsAnchorDictionary = new Dictionary<string, EpisodeInfo>();
             var specialsList = new List<EpisodeInfo>();
             var episodesList = new List<EpisodeInfo>();
@@ -506,7 +527,7 @@ namespace Shokofin.API
                 TvDB = tvDbId != 0 ? (await ShokoAPI.GetSeriesTvDB(seriesId)).FirstOrDefault() : null,
                 Tags = tags,
                 Genres = genres,
-                Studios = new string[0],
+                Studios = studios,
                 RawEpisodeList = allEpisodesList,
                 EpisodeList = episodesList,
                 AlternateEpisodesList = altEpisodesList,
