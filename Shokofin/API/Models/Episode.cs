@@ -44,11 +44,11 @@ namespace Shokofin.API.Models
 
             public DateTime? AirDate { get; set; }
 
-            public int AirsAfterSeason { get; set; }
+            public int? AirsAfterSeason { get; set; }
 
-            public int AirsBeforeSeason { get; set; }
+            public int? AirsBeforeSeason { get; set; }
 
-            public int AirsBeforeEpisode { get; set; }
+            public int? AirsBeforeEpisode { get; set; }
 
             public Rating Rating { get; set; }
 

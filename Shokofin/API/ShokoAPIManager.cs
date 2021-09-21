@@ -505,7 +505,7 @@ namespace Shokofin.API
             var tags = await GetTags(seriesId);
             var genres = await GetGenresForSeries(seriesId);
             var studios = await GetStudiosForSeries(seriesId);
-            Dictionary<string, EpisodeInfo> specialsAnchorDictionary = new Dictionary<string, EpisodeInfo>();
+            Dictionary<EpisodeInfo, EpisodeInfo> specialsAnchorDictionary = new Dictionary<EpisodeInfo, EpisodeInfo>();
             var specialsList = new List<EpisodeInfo>();
             var episodesList = new List<EpisodeInfo>();
             var extrasList = new List<EpisodeInfo>();
@@ -536,7 +536,7 @@ namespace Shokofin.API
                         .GetRange(0, index)
                         .LastOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
                     if (previousEpisode != null)
-                        specialsAnchorDictionary[episode.Id] = previousEpisode;
+                        specialsAnchorDictionary[episode] = previousEpisode;
                 }
             }
 

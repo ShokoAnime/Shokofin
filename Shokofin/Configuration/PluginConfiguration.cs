@@ -3,6 +3,7 @@ using TextSourceType = Shokofin.Utils.Text.TextSourceType;
 using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
 using SeriesAndBoxSetGroupType = Shokofin.Utils.Ordering.GroupType;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
+using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
 
 namespace Shokofin.Configuration
 {
@@ -48,7 +49,7 @@ namespace Shokofin.Configuration
 
         public bool MarkSpecialsWhenGrouped { get; set; }
 
-        public bool DisplaySpecialsInSeason { get; set; }
+        public SpecialOrderType SpecialsPlacement { get; set; }
 
         public SeriesAndBoxSetGroupType BoxSetGrouping { get; set; }
 
@@ -83,8 +84,8 @@ namespace Shokofin.Configuration
             DescriptionSource = TextSourceType.Default;
             SeriesGrouping = SeriesAndBoxSetGroupType.Default;
             SeasonOrdering = OrderType.Default;
+            SpecialsPlacement = SpecialOrderType.Default;
             MarkSpecialsWhenGrouped = true;
-            DisplaySpecialsInSeason = false;
             BoxSetGrouping = SeriesAndBoxSetGroupType.Default;
             MovieOrdering = OrderType.Default;
             FilterOnLibraryTypes = false;

@@ -53,7 +53,7 @@
                         <div class="selectContainer">
                             <label class="selectLabel" for="DescriptionSource">Synopsis source</label>
                             <select is="emby-select" id="DescriptionSource" name="DescriptionSource" class="emby-select-withcolor emby-select">
-                                <option value="Default">Use default for Series Grouping</option>
+                                <option value="Default">Use default source for Series Grouping</option>
                                 <option value="OnlyAniDb">Only use AniDB</option>
                                 <option value="PreferAniDb">Prefer AniDB if available, otherwise use TvDB/TMDB</option>
                                 <option value="OnlyOther">Only use TvDB/TMDB</option>
@@ -86,8 +86,8 @@
                             <label class="selectLabel" for="SeriesGrouping">Series grouping</label>
                             <select is="emby-select" id="SeriesGrouping" name="SeriesGrouping" class="emby-select-withcolor emby-select">
                                 <option value="Default" selected>Do not group series</option>
-                                <option value="MergeFriendly">Make series merge-friendly with TvDB/TMDB</option>
-                                <option value="ShokoGroup">Group series based on Shoko's group feature</option>
+                                <option value="MergeFriendly">Group series using the TvDB/TMDB data stored in Shoko</option>
+                                <option value="ShokoGroup">Group series using Shoko's Group feature</option>
                             </select>
                             <div id="SG_ShokoGroup_Warning" class="fieldDescription"><strong>Warning:</strong> Series merging must be enabled in the <strong>library settings</strong> when using this option.</div>
                         </div>
@@ -99,13 +99,21 @@
                                 <!--<option value="Chronological">Chronological order</option>-->
                             </select>
                         </div>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="SpecialsPlacement">Specials placement</label>
+                            <select is="emby-select" id="SpecialsPlacement" name="SpecialsPlacement" class="emby-select-withcolor emby-select">
+                                <option value="Default">Use default placement for Series Grouping</option>
+                                <option value="Excluded">Don't show specials within seasons</option>
+                                <option value="AfterSeason">Always place specials after the normal episodes</option>
+                                <option value="InBetweenSeasonByAirDate">Use release date to place specials</option>
+                                <option value="InBetweenSeasonByOtherData">Use the TvDB/TMDB data (if available) to place specials</option>
+                                <option value="InBetweenSeasonMixed">Use either the TvDB/TMDB data or release date if the data is not available to place specials</option>
+                            </select>
+                            <div class="fieldDescription"><strong>Warning:</strong> Modifying this setting requires a rebuild (and not a full-refresh) of any libraries using this plugin, else you will have mixed metadata.</div>
+                        </div>
                         <label id="MarkSpecialsWhenGroupedItem" class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
                             <span>Add type and number to title, excluding normal episodes</span>
-                        </label>
-                        <label id="DisplaySpecialsInSeasonItem" class="checkboxContainer">
-                            <input is="emby-checkbox" type="checkbox" id="DisplaySpecialsInSeason" />
-                            <span>Display specials in-between normal episodes</span>
                         </label>
                         <div class="selectContainer">
                             <label class="selectLabel" for="BoxSetGrouping">Box-set grouping</label>
@@ -194,10 +202,10 @@
                         document.querySelector('#DescriptionSource').value = config.DescriptionSource;
                         document.querySelector('#SeriesGrouping').value = config.SeriesGrouping;
                         document.querySelector('#SeasonOrdering').value = config.SeasonOrdering;
+                        document.querySelector('#SpecialsPlacement').value = config.SpecialsPlacement;
                         document.querySelector('#BoxSetGrouping').value = config.BoxSetGrouping;
                         document.querySelector('#MovieOrdering').value = config.MovieOrdering;
                         document.querySelector('#MarkSpecialsWhenGrouped').checked = config.MarkSpecialsWhenGrouped;
-                        document.querySelector('#DisplaySpecialsInSeason').checked = config.DisplaySpecialsInSeason;
                         document.querySelector('#FilterOnLibraryTypes').checked = config.FilterOnLibraryTypes;
                         document.querySelector('#AddAniDBId').checked = config.AddAniDBId;
                         document.querySelector('#PreferAniDbPoster').checked = config.PreferAniDbPoster;
@@ -205,13 +213,11 @@
                             document.querySelector('#SG_ShokoGroup_Warning').removeAttribute("hidden");
                             document.querySelector('#SeasonOrderingItem').removeAttribute("hidden");
                             document.querySelector('#MarkSpecialsWhenGroupedItem').removeAttribute("hidden");
-                            document.querySelector('#DisplaySpecialsInSeasonItem').removeAttribute("hidden");
                         }
                         else {
                             document.querySelector('#SG_ShokoGroup_Warning').setAttribute("hidden", "");
                             document.querySelector('#SeasonOrderingItem').setAttribute("hidden", "");
                             document.querySelector('#MarkSpecialsWhenGroupedItem').setAttribute("hidden", "");
-                            document.querySelector('#DisplaySpecialsInSeasonItem').setAttribute("hidden", "");
                         }
                         if (config.BoxSetGrouping === "ShokoGroup") {
                             document.querySelector('#MovieOrderingItem').removeAttribute("hidden");
@@ -228,13 +234,11 @@
                         document.querySelector('#SG_ShokoGroup_Warning').removeAttribute("hidden");
                         document.querySelector('#SeasonOrderingItem').removeAttribute("hidden");
                         document.querySelector('#MarkSpecialsWhenGroupedItem').removeAttribute("hidden");
-                        document.querySelector('#DisplaySpecialsInSeasonItem').removeAttribute("hidden");
                     }
                     else {
                         document.querySelector('#SG_ShokoGroup_Warning').setAttribute("hidden", "");
                         document.querySelector('#SeasonOrderingItem').setAttribute("hidden", "");
                         document.querySelector('#MarkSpecialsWhenGroupedItem').setAttribute("hidden", "");
-                        document.querySelector('#DisplaySpecialsInSeasonItem').setAttribute("hidden", "");
                     }
                 });
             document.querySelector('#BoxSetGrouping')
@@ -271,6 +275,7 @@
                         config.DescriptionSource = document.querySelector('#DescriptionSource').value;
                         config.SeriesGrouping = document.querySelector('#SeriesGrouping').value;
                         config.SeasonOrdering = document.querySelector('#SeasonOrdering').value;
+                        config.SpecialsPlacement = document.querySelector('#SpecialsPlacement').value;
                         config.BoxSetGrouping = document.querySelector('#BoxSetGrouping').value;
                         config.MovieOrdering = document.querySelector('#MovieOrdering').value;
                         config.MarkSpecialsWhenGrouped = document.querySelector('#MarkSpecialsWhenGrouped').checked;

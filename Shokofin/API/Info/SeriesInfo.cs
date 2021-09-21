@@ -52,7 +52,7 @@ namespace Shokofin.API.Info
         /// <summary>
         /// A dictionary holding mappings for the previous normal episode for every special episode in a series.
         /// </summary>
-        public Dictionary<string, EpisodeInfo> SpesialsAnchors;
+        public Dictionary<EpisodeInfo, EpisodeInfo> SpesialsAnchors;
 
         /// <summary>
         /// A pre-filtered list of special episodes without an ExtraType

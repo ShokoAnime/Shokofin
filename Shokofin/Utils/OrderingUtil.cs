@@ -61,6 +61,38 @@ namespace Shokofin.Utils
             Chronological = 2,
         }
 
+        public enum SpecialOrderType {
+            /// <summary>
+            /// Use the default for the type.
+            /// </summary>
+            Default = 0,
+
+            /// <summary>
+            /// Always exclude the specials from the season.
+            /// </summary>
+            Excluded = 1,
+
+            /// <summary>
+            /// Always place the specials after the normal episodes in the season.
+            /// </summary>
+            AfterSeason = 2,
+
+            /// <summary>
+            /// Use a mix of <see cref="Shokofin.Utils.Ordering.SpecialOrderType.InBetweenSeasonByOtherData" /> and <see cref="Shokofin.Utils.Ordering.SpecialOrderType.InBetweenSeasonByAirDate" />.
+            /// </summary>
+            InBetweenSeasonMixed = 3,
+
+            /// <summary>
+            /// Place the specials in-between normal episodes based on the time the episodes aired.
+            /// </summary>
+            InBetweenSeasonByAirDate = 4,
+
+            /// <summary>
+            /// Place the specials in-between normal episodes based upon the data from TvDB or TMDB.
+            /// </summary>
+            InBetweenSeasonByOtherData = 5,
+        }
+
         /// <summary>
         /// Get index number for a movie in a box-set.
         /// </summary>
@@ -181,6 +213,90 @@ namespace Shokofin.Utils
                     return offset + episode.AniDB.EpisodeNumber;
                 }
             }
+        }
+
+        public static (int?, int?, int?) GetSpecialPlacement(GroupInfo group, SeriesInfo series, EpisodeInfo episode)
+        {
+            if (episode.AniDB.Type != EpisodeType.Special)
+                return (null, null, null);
+
+            var order = Plugin.Instance.Configuration.SpecialsPlacement;
+            if (order == SpecialOrderType.Excluded)
+                return (null, null, null);
+
+            int? episodeNumber = null;
+            int? seasonNumber = null;
+            int? airsBeforeEpisodeNumber = null;
+            int? airsBeforeSeasonNumber = null;
+            int? airsAfterSeasonNumber = null;
+            switch (order) {
+                default:
+                    switch (Plugin.Instance.Configuration.SeriesGrouping) {
+                        default:
+                            goto byAirdate;
+                        case GroupType.MergeFriendly:
+                            goto byOtherData;
+                    }
+                case SpecialOrderType.InBetweenSeasonByAirDate:
+                    byAirdate:
+                    // Reset the order if we come from `SpecialOrderType.InBetweenSeasonMixed`.
+                    episodeNumber = null;
+                    if (series.SpesialsAnchors.TryGetValue(episode, out var previousEpisode))
+                        episodeNumber = GetEpisodeNumber(group, series, previousEpisode);
+
+                    seasonNumber = GetSeasonNumber(group, series, episode);
+                    if (episodeNumber.HasValue && episodeNumber.Value < series.EpisodeList.Count) {
+                        airsBeforeEpisodeNumber = episodeNumber.Value + 1;
+                        airsBeforeSeasonNumber = seasonNumber;
+                    }
+                    else {
+                        airsAfterSeasonNumber = seasonNumber;
+                    }
+                    break;
+                case SpecialOrderType.InBetweenSeasonMixed:
+                case SpecialOrderType.InBetweenSeasonByOtherData:
+                    byOtherData:
+                    // We need to have TvDB/TMDB data in the first place to do this method.
+                    if (episode.TvDB == null) {
+                        if (order == SpecialOrderType.InBetweenSeasonMixed)
+                            goto byAirdate;
+
+                        break;
+                    }
+
+                    episodeNumber = episode.TvDB.AirsBeforeEpisode;
+                    if (!episodeNumber.HasValue) {
+                        if (episode.TvDB.AirsAfterSeason.HasValue) {
+                            airsAfterSeasonNumber = episode.TvDB.AirsAfterSeason.Value;
+                            break;
+                        }
+
+                        if (order == SpecialOrderType.InBetweenSeasonMixed)
+                            goto byAirdate;
+
+                        break;
+                    }
+
+                    seasonNumber = episode.TvDB.AirsBeforeEpisode ?? episode.TvDB.AirsAfterSeason;
+                    if (!seasonNumber.HasValue) {
+                        if (order == SpecialOrderType.InBetweenSeasonMixed)
+                            goto byAirdate;
+
+                        break;
+                    }
+
+                    var nextEpisode = series.EpisodeList.FirstOrDefault(e => e.TvDB != null && e.TvDB.Season == seasonNumber && e.TvDB.Number == episodeNumber);
+                    if (nextEpisode != null) {
+                        airsBeforeEpisodeNumber = GetEpisodeNumber(group, series, nextEpisode);
+                        airsBeforeSeasonNumber = seasonNumber;
+                    }
+                    else if (order == SpecialOrderType.InBetweenSeasonMixed)
+                        goto byAirdate;
+
+                    break;
+            }
+
+            return (airsBeforeEpisodeNumber, airsBeforeSeasonNumber, airsAfterSeasonNumber);
         }
 
         /// <summary>
