@@ -78,7 +78,7 @@ namespace Shokofin.Providers
 
             int seasonNumber;
             API.Info.SeriesInfo series;
-            var alternateEpisodes = false;
+            var offset = 0;
             // Virtual seasons
             if (info.Path == null) {
                 if (!info.IndexNumber.HasValue)
@@ -100,7 +100,7 @@ namespace Shokofin.Providers
                     }
 
                     if (seasonNumber != group.SeasonNumberBaseDictionary[series])
-                        alternateEpisodes = true;
+                        offset = seasonNumber - group.SeasonNumberBaseDictionary[series];
 
                     Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Group={GroupId},Series={SeriesId})", seasonNumber, group.Shoko.Name, group.Id, series.Id);
                 }
@@ -126,7 +126,7 @@ namespace Shokofin.Providers
                     seasonNumber = Ordering.GetSeasonNumber(group, series, series.EpisodeList[0]);
 
                     if (seasonNumber != group.SeasonNumberBaseDictionary[series])
-                        alternateEpisodes = true;
+                        offset = seasonNumber - group.SeasonNumberBaseDictionary[series];
 
                     Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Group={GroupId},Series={SeriesId})", seasonNumber, group.Shoko.Name, group.Id, series.Id);
                 }
@@ -141,13 +141,28 @@ namespace Shokofin.Providers
                 }
             }
 
-
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
             var sortTitle = $"I{seasonNumber} - {series.Shoko.Name}";
 
-            if (alternateEpisodes) {
-                displayTitle += " (Other Episodes)";
-                alternateTitle += " (Other Episodes)";
+            if (offset > 0) {
+                string type = "";
+                switch (offset) {
+                    default:
+                        break;
+                    case -1:
+                    case 1:
+                        if (series.AlternateEpisodesList.Count > 0)
+                            type = "Alternate Stories";
+                        else
+                            type = "Other Episodes";
+                        break;
+                    case -2:
+                    case 2:
+                        type = "Other Episodes";
+                        break;
+                }
+                displayTitle += $" ({type})";
+                alternateTitle += $" ({type})";
             }
 
             result.Item = new Season {
@@ -200,6 +215,8 @@ namespace Shokofin.Providers
                     return "Trailers";
                 case 124:
                     return "Others";
+                case 123:
+                    return "Unknown";
                 default:
                     return seasonName;
             }

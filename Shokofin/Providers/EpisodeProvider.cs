@@ -122,6 +122,7 @@ namespace Shokofin.Providers
 
             if (group != null && config.MarkSpecialsWhenGrouped) switch (episode.AniDB.Type) {
                 case EpisodeType.Unknown:
+                case EpisodeType.Other:
                 case EpisodeType.Normal:
                     break;
                 case EpisodeType.Special: {

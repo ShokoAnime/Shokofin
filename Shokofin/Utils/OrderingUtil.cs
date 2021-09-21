@@ -192,6 +192,7 @@ namespace Shokofin.Utils
                     }
                     var sizes = series.Shoko.Sizes.Total;
                     switch (episode.AniDB.Type) {
+                        case EpisodeType.Other:
                         case EpisodeType.Unknown:
                         case EpisodeType.Normal:
                             // offset += 0; // it's not needed, so it's just here as a comment instead.
@@ -201,8 +202,8 @@ namespace Shokofin.Utils
                             offset += sizes?.Episodes ?? 0;
                             goto case EpisodeType.Normal;
                         case EpisodeType.OpeningSong:
-                            offset += sizes?.Others ?? 0;
-                            goto case EpisodeType.Unknown;
+                            offset += sizes?.Parodies ?? 0;
+                            goto case EpisodeType.Parody;
                         case EpisodeType.Trailer:
                             offset += sizes?.Credits ?? 0;
                             goto case EpisodeType.OpeningSong;
@@ -317,6 +318,8 @@ namespace Shokofin.Utils
                         case EpisodeType.Special:
                             return 0;
                         case EpisodeType.Unknown:
+                            return 123;
+                        case EpisodeType.Other:
                             return 124;
                         case EpisodeType.Trailer:
                             return 125;
@@ -332,17 +335,25 @@ namespace Shokofin.Utils
                     return seasonNumber.Value;
                 }
                 case GroupType.ShokoGroup: {
-                    var id = series.Id;
-                    if (series == group.DefaultSeries)
-                        return 1;
                     if (!group.SeasonNumberBaseDictionary.TryGetValue(series, out var seasonNumber))
-                        throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={id})");
-                    
-                    // Alternate Season List
-                    if (series.AlternateEpisodesList.Count > 0 && episode.AniDB.Type == EpisodeType.Unknown)
-                        return seasonNumber > 0 ? seasonNumber + 1 : seasonNumber - 1;
+                        throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id})");
 
-                    return seasonNumber;
+
+                    var offset = 0;
+                    switch (episode.AniDB.Type) {
+                        default:
+                            break;
+                        case EpisodeType.Unknown: {
+                            offset = 1;
+                            break;
+                        }
+                        case EpisodeType.Other: {
+                            offset = series.AlternateEpisodesList.Count > 0 ? 2 : 1;
+                            break;
+                        }
+                    }
+
+                    return seasonNumber + (seasonNumber < 0 ? -offset : offset);
                 }
             }
         }
@@ -357,6 +368,7 @@ namespace Shokofin.Utils
             switch (episode.Type)
             {
                 case EpisodeType.Normal:
+                case EpisodeType.Other:
                 case EpisodeType.Unknown:
                     return null;
                 case EpisodeType.ThemeSong:

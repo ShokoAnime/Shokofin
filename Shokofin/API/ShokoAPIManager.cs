@@ -510,6 +510,7 @@ namespace Shokofin.API
             var episodesList = new List<EpisodeInfo>();
             var extrasList = new List<EpisodeInfo>();
             var altEpisodesList = new List<EpisodeInfo>();
+            var othersList = new List<EpisodeInfo>();
 
             // The episode list is ordered by air date
             var allEpisodesList = ShokoAPI.GetEpisodesFromSeries(seriesId)
@@ -518,25 +519,36 @@ namespace Shokofin.API
                 .GetAwaiter()
                 .GetResult()
                 .Where(e => e != null && e.Shoko != null && e.AniDB != null)
+                .OrderBy(e => e.AniDB.AirDate)
                 .ToList();
 
             // Iterate over the episodes once and store some values for later use.
-            for (var index = 0; index < allEpisodesList.Count; index++) {
+            for (int index = 0, lastNormalEpisode = 0; index < allEpisodesList.Count; index++) {
                 var episode = allEpisodesList[index];
                 EpisodeIdToSeriesIdDictionary[episode.Id] = seriesId;
-                if (episode.AniDB.Type == EpisodeType.Normal)
-                    episodesList.Add(episode);
-                else if (episode.AniDB.Type == EpisodeType.Unknown)
-                    altEpisodesList.Add(episode);
-                else if (episode.ExtraType != null)
-                    extrasList.Add(episode);
-                else if (episode.AniDB.Type == EpisodeType.Special) {
-                    specialsList.Add(episode);
-                    var previousEpisode = allEpisodesList
-                        .GetRange(0, index)
-                        .LastOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
-                    if (previousEpisode != null)
-                        specialsAnchorDictionary[episode] = previousEpisode;
+                switch (episode.AniDB.Type) {
+                    case EpisodeType.Normal:
+                        episodesList.Add(episode);
+                        lastNormalEpisode = index;
+                        break;
+                    case EpisodeType.Other:
+                        othersList.Add(episode);
+                        break;
+                    case EpisodeType.Unknown:
+                        altEpisodesList.Add(episode);
+                        break;
+                    default:
+                        if (episode.ExtraType != null)
+                            extrasList.Add(episode);
+                        else if (episode.AniDB.Type == EpisodeType.Special) {
+                            specialsList.Add(episode);
+                            var previousEpisode = allEpisodesList
+                                .GetRange(lastNormalEpisode, index - lastNormalEpisode)
+                                .FirstOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
+                            if (previousEpisode != null)
+                                specialsAnchorDictionary[episode] = previousEpisode;
+                        }
+                        break;
                 }
             }
 
@@ -557,6 +569,7 @@ namespace Shokofin.API
                 RawEpisodeList = allEpisodesList,
                 EpisodeList = episodesList,
                 AlternateEpisodesList = altEpisodesList,
+                OthersList = othersList,
                 ExtrasList = extrasList,
                 SpesialsAnchors = specialsAnchorDictionary,
                 SpecialsList = specialsList,
@@ -720,22 +733,26 @@ namespace Shokofin.API
             var negativeSeasonNumber = -1;
             foreach (var (seriesInfo, index) in seriesList.Select((s, i) => (s, i))) {
                 int seasonNumber;
-                var includeAlternateSeason = seriesInfo.AlternateEpisodesList.Count > 0;
+                var offset = 0;
+                if (seriesInfo.AlternateEpisodesList.Count > 0)
+                    offset++;
+                if (seriesInfo.OthersList.Count > 0)
+                    offset++;
 
                 // Series before the default series get a negative season number
                 if (index < foundIndex) {
                     seasonNumber = negativeSeasonNumber;
-                    negativeSeasonNumber -= includeAlternateSeason ? 2 : 1;
+                    negativeSeasonNumber -= offset + 1;
                 }
                 else {
                     seasonNumber = positiveSeasonNumber;
-                    positiveSeasonNumber += includeAlternateSeason ? 2 : 1;
+                    positiveSeasonNumber += offset + 1;
                 }
 
                 seasonNumberBaseDictionary.Add(seriesInfo, seasonNumber);
                 seasonOrderDictionary.Add(seasonNumber, seriesInfo);
-                if (includeAlternateSeason)
-                    seasonOrderDictionary.Add(index < foundIndex ? seasonNumber - 1 : seasonNumber + 1, seriesInfo);
+                for (var i = 0; i < offset; i++)
+                    seasonOrderDictionary.Add(seasonNumber + (index < foundIndex ? -(i + 1) :  (i + 1)), seriesInfo);
             }
 
             groupInfo = new GroupInfo {

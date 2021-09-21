@@ -36,11 +36,18 @@ namespace Shokofin.API.Info
         public List<EpisodeInfo> EpisodeList;
 
         /// <summary>
-        /// A pre-filtered list of "other" episodes that belong to this series.
+        /// A pre-filtered list of "unknown" episodes that belong to this series.
         /// 
         /// Ordered by AniDb air-date.
         /// </summary>
         public List<EpisodeInfo> AlternateEpisodesList;
+
+        /// <summary>
+        /// A pre-filtered list of "other" episodes that belong to this series.
+        /// 
+        /// Ordered by AniDb air-date.
+        /// </summary>
+        public List<EpisodeInfo> OthersList;
 
         /// <summary>
         /// A pre-filtered list of "extra" videos that belong to this series.
