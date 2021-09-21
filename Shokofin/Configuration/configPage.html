@@ -14,7 +14,7 @@
                             <h2 class="sectionTitle">Shoko</h2>
                             <a is="emby-linkbutton" rel="noopener noreferrer" class="raised button-alt headerHelpButton emby-button" target="_blank" href="https://docs.shokoanime.com/shokofin/configuration/">Help</a>
                         </div>
-                        <h3>Connection Options</h3>
+                        <h3>Connection Settings</h3>
                         <div class="inputContainer">
                             <input is="emby-input" type="text" id="Host" required label="Host" />
                             <div class="fieldDescription">This is the URL leading to where Shoko is running.</div>
@@ -29,7 +29,74 @@
                             <input is="emby-input" type="text" id="ApiKey" label="API Key" />
                             <div class="fieldDescription">This field is auto-generated using the credentials. Only set this manually if that doesn't work!</div>
                         </div>
-                        <h3>Title Options</h3>
+                        <h3>Library Settings</h3>
+                        <h4>Shared</h4>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="UpdateWatchedStatus" />
+                            <span>Sync-back watched status on Shoko (Scrobble)</span>
+                        </label>
+                        <label class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="FilterOnLibraryTypes" />
+                            <span>Filter out files for 'Shows' and 'Movie' library-types</span>
+                        </label>
+                        <h4>Series</h4>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="SeriesGrouping">Series/Season Grouping</label>
+                            <select is="emby-select" id="SeriesGrouping" name="SeriesGrouping" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Do not group series into seasons</option>
+                                <option value="MergeFriendly">Group series into seasons using the TvDB/TMDB data stored in Shoko</option>
+                                <option value="ShokoGroup">Group series into seasons based on Shoko's groups</option>
+                            </select>
+                            <div class="fieldDescription">Determines how to group Series together and divide them into Seasons.</div>
+                            <div class="fieldDescription"><strong>Warning:</strong> Series merging must be enabled in the <strong>library settings</strong> when using this option.</div>
+                        </div>
+                        <div id="SeasonOrderingItem" class="selectContainer">
+                            <label class="selectLabel" for="SeasonOrdering">Shoko Group's Season Order</label>
+                            <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select">
+                                <option value="Default">Let Shoko decide the order</option>
+                                <option value="ReleaseDate">Order seasons by their release date</option>
+                                <!--<option value="Chronological">Chronological order</option>-->
+                            </select>
+                            <div class="fieldDescription">Determines the Season order within each Series.</div>
+                        </div>
+                        <h4>Specials</h4>
+                        <label id="MarkSpecialsWhenGroupedItem" class="checkboxContainer">
+                            <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
+                            <span>Add a number to the title of each Specials</span>
+                        </label>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="SpecialsPlacement">Specials placement</label>
+                            <select is="emby-select" id="SpecialsPlacement" name="SpecialsPlacement" class="emby-select-withcolor emby-select">
+                                <option value="Default">Use default placement for Series Grouping</option>
+                                <option value="Excluded">Don't place specials within seasons</option>
+                                <option value="AfterSeason">Always place specials after the normal episodes</option>
+                                <option value="InBetweenSeasonByAirDate">Use release date to place specials</option>
+                                <option value="InBetweenSeasonByOtherData">Use the TvDB/TMDB data (if available) to place specials</option>
+                                <option value="InBetweenSeasonMixed">Use either the TvDB/TMDB data or release date if the data is not available to place specials</option>
+                            </select>
+                            <div class="fieldDescription">Determines how to place Specials within Seasons</div>
+                            <div class="fieldDescription"><strong>Warning:</strong> Modifying this setting requires a rebuild (and not just a full-refresh) of any libraries using this plugin, or else you will have mixed metadata.</div>
+                        </div>
+                        <h4>Movies</h4>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="BoxSetGrouping">Box-Set Creation</label>
+                            <select is="emby-select" id="BoxSetGrouping" name="BoxSetGrouping" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Do not create Bos-Sets for Movies</option>
+                                <option value="ShokoSeries">Create Box-Sets based upon Shoko's Series entries</option>
+                                <option value="ShokoGroup">Create Box-Sets based upon Shoko's Groups and Series entries</option>
+                            </select>
+                            <div class="fieldDescription">Determines how to group Movies together into Box-Sets.</div>
+                        </div>
+                        <div id="MovieOrderingItem" class="selectContainer">
+                            <label class="selectLabel" for="MovieOrdering">Box-Set Movie Order</label>
+                            <select is="emby-select" id="MovieOrdering" name="MovieOrdering" class="emby-select-withcolor emby-select">
+                                <option value="Default">Let Shoko decide the order</option>
+                                <option value="ReleaseDate">Order Movies by their release date</option>
+                                <!--<option value="Chronological">Chronological order</option>-->
+                            </select>
+                            <div class="fieldDescription">Determines the Movie order within each Box-Set</div>
+                        </div>
+                        <h3>Title Settings</h3>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="TitleMainType">Main Title</label>
                             <select is="emby-select" id="TitleMainType" name="TitleMainType" class="emby-select-withcolor emby-select">
@@ -49,7 +116,7 @@
                             </select>
                             <div class="fieldDescription">Titles will fallback to Default if not found for the target language.</div>
                         </div>
-                        <h3>Synopsis Options</h3>
+                        <h3>Synopsis Settings</h3>
                         <div class="selectContainer">
                             <label class="selectLabel" for="DescriptionSource">Synopsis source</label>
                             <select is="emby-select" id="DescriptionSource" name="DescriptionSource" class="emby-select-withcolor emby-select">
@@ -76,75 +143,16 @@
                             <input is="emby-checkbox" type="checkbox" id="SynopsisCleanMultiEmptyLines" />
                             <span>Collapse excessive empty lines</span>
                         </label>
-                        <h3>Image Options</h3>
+                        <h3>Provider Settings</h3>
                         <label class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="PreferAniDbPoster" />
                             <span>Prefer poster image from AniDb for Series/Seasons</span>
                         </label>
-                        <h3>Library Options</h3>
-                        <div class="selectContainer">
-                            <label class="selectLabel" for="SeriesGrouping">Series grouping</label>
-                            <select is="emby-select" id="SeriesGrouping" name="SeriesGrouping" class="emby-select-withcolor emby-select">
-                                <option value="Default" selected>Do not group series</option>
-                                <option value="MergeFriendly">Group series using the TvDB/TMDB data stored in Shoko</option>
-                                <option value="ShokoGroup">Group series using Shoko's Group feature</option>
-                            </select>
-                            <div id="SG_ShokoGroup_Warning" class="fieldDescription"><strong>Warning:</strong> Series merging must be enabled in the <strong>library settings</strong> when using this option.</div>
-                        </div>
-                        <div id="SeasonOrderingItem" class="selectContainer">
-                            <label class="selectLabel" for="SeasonOrdering">Season ordering</label>
-                            <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select">
-                                <option value="Default">Let Shoko decide</option>
-                                <option value="ReleaseDate">By release date</option>
-                                <!--<option value="Chronological">Chronological order</option>-->
-                            </select>
-                        </div>
-                        <div class="selectContainer">
-                            <label class="selectLabel" for="SpecialsPlacement">Specials placement</label>
-                            <select is="emby-select" id="SpecialsPlacement" name="SpecialsPlacement" class="emby-select-withcolor emby-select">
-                                <option value="Default">Use default placement for Series Grouping</option>
-                                <option value="Excluded">Don't show specials within seasons</option>
-                                <option value="AfterSeason">Always place specials after the normal episodes</option>
-                                <option value="InBetweenSeasonByAirDate">Use release date to place specials</option>
-                                <option value="InBetweenSeasonByOtherData">Use the TvDB/TMDB data (if available) to place specials</option>
-                                <option value="InBetweenSeasonMixed">Use either the TvDB/TMDB data or release date if the data is not available to place specials</option>
-                            </select>
-                            <div class="fieldDescription"><strong>Warning:</strong> Modifying this setting requires a rebuild (and not a full-refresh) of any libraries using this plugin, else you will have mixed metadata.</div>
-                        </div>
-                        <label id="MarkSpecialsWhenGroupedItem" class="checkboxContainer">
-                            <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
-                            <span>Add type and number to title, excluding normal episodes</span>
-                        </label>
-                        <div class="selectContainer">
-                            <label class="selectLabel" for="BoxSetGrouping">Box-set grouping</label>
-                            <select is="emby-select" id="BoxSetGrouping" name="BoxSetGrouping" class="emby-select-withcolor emby-select">
-                                <option value="Default" selected>Do not group movies into box-sets</option>
-                                <option value="ShokoSeries">Group movies within Shoko's series only</option>
-                                <option value="ShokoGroup">Group movies in Shoko's groups and series</option>
-                            </select>
-                        </div>
-                        <div id="MovieOrderingItem" class="selectContainer">
-                            <label class="selectLabel" for="MovieOrdering">Movie ordering</label>
-                            <select is="emby-select" id="MovieOrdering" name="MovieOrdering" class="emby-select-withcolor emby-select">
-                                <option value="Default">Let Shoko decide</option>
-                                <option value="ReleaseDate">By release date</option>
-                                <!--<option value="Chronological">Chronological order</option>-->
-                            </select>
-                        </div>
-                        <label class="checkboxContainer">
-                            <input is="emby-checkbox" type="checkbox" id="FilterOnLibraryTypes" />
-                            <span>Disallow overlap of Movies and Series library types</span>
-                        </label>
-                        <label class="checkboxContainer">
-                            <input is="emby-checkbox" type="checkbox" id="UpdateWatchedStatus" />
-                            <span>Update watched status on Shoko (Scrobble)</span>
-                        </label>
-                        <h3>Provider Options</h3>
                         <label class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="AddAniDBId" />
                             <span>Add AniDB Id to all entries</span>
                         </label>
-                        <h3>Tag Options</h3>
+                        <h3>Tag Settings</h3>
                         <label class="checkboxContainer">
                             <input is="emby-checkbox" type="checkbox" id="HideArtStyleTags" />
                             <span>Hide art style related tags</span>
@@ -210,12 +218,10 @@
                         document.querySelector('#AddAniDBId').checked = config.AddAniDBId;
                         document.querySelector('#PreferAniDbPoster').checked = config.PreferAniDbPoster;
                         if (config.SeriesGrouping === "ShokoGroup") {
-                            document.querySelector('#SG_ShokoGroup_Warning').removeAttribute("hidden");
                             document.querySelector('#SeasonOrderingItem').removeAttribute("hidden");
                             document.querySelector('#MarkSpecialsWhenGroupedItem').removeAttribute("hidden");
                         }
                         else {
-                            document.querySelector('#SG_ShokoGroup_Warning').setAttribute("hidden", "");
                             document.querySelector('#SeasonOrderingItem').setAttribute("hidden", "");
                             document.querySelector('#MarkSpecialsWhenGroupedItem').setAttribute("hidden", "");
                         }
@@ -231,12 +237,10 @@
             document.querySelector('#SeriesGrouping')
                 .addEventListener('input', function () {
                     if (document.querySelector('#SeriesGrouping').value === "ShokoGroup") {
-                        document.querySelector('#SG_ShokoGroup_Warning').removeAttribute("hidden");
                         document.querySelector('#SeasonOrderingItem').removeAttribute("hidden");
                         document.querySelector('#MarkSpecialsWhenGroupedItem').removeAttribute("hidden");
                     }
                     else {
-                        document.querySelector('#SG_ShokoGroup_Warning').setAttribute("hidden", "");
                         document.querySelector('#SeasonOrderingItem').setAttribute("hidden", "");
                         document.querySelector('#MarkSpecialsWhenGroupedItem').setAttribute("hidden", "");
                     }
