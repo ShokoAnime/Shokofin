@@ -637,16 +637,15 @@ namespace Shokofin.Providers
 
         public void RemoveDuplicateSeasons(Series series, string seriesId)
         {
-            var seasonNumbers = new List<int>();
+            var seasonNumbers = new HashSet<int>();
             foreach (var season in series.GetSeasons(null, new DtoOptions(true)).OfType<Season>()) {
                 if (!season.IndexNumber.HasValue)
                     continue;
 
                 var seasonNumber = season.IndexNumber.Value;
-                if (seasonNumbers.Contains(seasonNumber))
+                if (!seasonNumbers.Add(seasonNumber))
                     continue;
-
-                seasonNumbers.Add(seasonNumber);
+    
                 RemoveDuplicateSeasons(season, series, seasonNumber, seriesId);
             }
 
@@ -661,7 +660,10 @@ namespace Shokofin.Providers
                 DtoOptions = new DtoOptions(true),
             }, true).Where(item => !item.IndexNumber.HasValue).ToList();
 
-            Logger.LogWarning("Removing {Count} dummy seasons from {SeriesName} (Series={SeriesId})", searchList.Count, series.Name, seriesId);
+            if (searchList.Count == 0)
+                return;
+
+            Logger.LogWarning("Removing {Count} duplicate seasons from {SeriesName} (Series={SeriesId})", searchList.Count, series.Name, seriesId);
             var deleteOptions = new DeleteOptions {
                 DeleteFileLocation = false,
             };
