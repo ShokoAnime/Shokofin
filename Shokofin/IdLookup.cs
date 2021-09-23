@@ -179,7 +179,7 @@ namespace Shokofin
                 return true;
             }
 
-            if (ApiManager.TryGetEpisodeIdForPath(movie.Path, out var episodeId) && ApiManager.TryGetSeriesIdForEpisodeId(episodeId, out seriesId)) {
+            if (TryGetEpisodeIdForPath(movie.Path, out var episodeId) && TryGetSeriesIdForEpisodeId(episodeId, out seriesId)) {
                 return true;
             }
 
@@ -192,8 +192,8 @@ namespace Shokofin
                 return true;
             }
 
-            if (ApiManager.TryGetSeriesIdForPath(boxSet.Path, out seriesId)) {
-                if (ApiManager.TryGetGroupIdForSeriesId(seriesId, out var groupId)) {
+            if (TryGetSeriesIdForPath(boxSet.Path, out seriesId)) {
+                if (TryGetGroupIdForSeriesId(seriesId, out var groupId)) {
                     var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
                     var groupInfo = ApiManager.GetGroupInfoSync(groupId, filterByType);
                     seriesId = groupInfo.DefaultSeries.Id;

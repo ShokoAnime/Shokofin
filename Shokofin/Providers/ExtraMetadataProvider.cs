@@ -782,7 +782,7 @@ namespace Shokofin.Providers
             var needsUpdate = false;
             var extraIds = new List<Guid>();
             foreach (var episodeInfo in seriesInfo.ExtrasList) {
-                if (!ApiManager.TryGetEpisodePathForId(episodeInfo.Id, out var episodePath))
+                if (!Lookup.TryGetPathForEpisodeId(episodeInfo.Id, out var episodePath))
                     continue;
 
                 switch (episodeInfo.ExtraType) {
