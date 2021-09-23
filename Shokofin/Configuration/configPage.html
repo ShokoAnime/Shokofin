@@ -143,25 +143,25 @@
                             </div>
                             <div class="selectContainer selectContainer-withDescription">
                                 <label class="selectLabel" for="UserSelector">Select user:</label>
-                                <select is="emby-select" id="MovieOrdering" name="MovieOrdering" class="emby-select-withcolor emby-select">
-                                    <option value="root">root</option>
+                                <select is="emby-select" id="MovieOrdering" name="MovieOrdering" class="emby-select-withcolor emby-select" disabled>
+                                    <option value="root">WIP, non-functional atm</option>
                                 </select>
                                 <div class="fieldDescription selectFieldDescription">Select a user to add or modify a mapping for watch-state synchronization to work.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="UserEnabled" />
+                                    <input is="emby-checkbox" type="checkbox" id="UserEnabled" disabled />
                                     <span>Enable for user</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">Enable the mapping for the current user</div>
+                                <div class="fieldDescription checkboxFieldDescription">Enable user-mapping for the currently selected user</div>
                             </div>
                             <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="UserUsername" required label="Username:" />
-                                <div class="fieldDescription">.</div>
+                                <input is="emby-input" type="text" id="UserUsername" label="Username:" disabled />
+                                <div class="fieldDescription">The username of the account to synchronize with the currently selected user.</div>
                             </div>
                             <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="UserPassword" label="Password:" />
-                                <div class="fieldDescription">.</div>
+                                <input is="emby-input" type="text" id="UserPassword" label="Password:" disabled />
+                                <div class="fieldDescription">The password for account. It can be empty.</div>
                             </div>
                         </fieldset>
                         <fieldset class="verticalSection verticalSection-extrabottompadding">
@@ -204,7 +204,7 @@
                                 <h3>Advanced Settings</h3>
                             </legend>
                             <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="PublicHost" required label="Public Shoko host url:" />
+                                <input is="emby-input" type="text" id="PublicHost" label="Public Shoko host url:" />
                                 <div class="fieldDescription">This is the public URL leading to where Shoko is running. It is used to redirect to Shoko if you click on a Shoko Id in the UI if Shoko and/or Jellyfin is running within a container. It should include both the protocol and the ip/dns-name.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
