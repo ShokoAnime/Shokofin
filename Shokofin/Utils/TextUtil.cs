@@ -143,7 +143,7 @@ namespace Shokofin.Utils
                 summary = Regex.Replace(summary, @"\n(Source|Note|Summary):.*", "", RegexOptions.Singleline);
 
             if (config.SynopsisCleanMultiEmptyLines)
-                summary = Regex.Replace(summary, @"\n\n+", "", RegexOptions.Singleline);
+                summary = Regex.Replace(summary, @"\n{2,}", "\n", RegexOptions.Singleline);
 
             return summary;
         }

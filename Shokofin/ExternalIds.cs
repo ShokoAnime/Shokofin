@@ -20,8 +20,8 @@ namespace Shokofin
         public ExternalIdMediaType? Type
             => null;
 
-        public string UrlFormatString
-            => null;
+        public virtual string UrlFormatString
+            => $"{Plugin.Instance.Configuration.PrettyHost}/webui/group/{{0}}";
     }
 
     public class ShokoSeriesExternalId : IExternalId
@@ -38,8 +38,8 @@ namespace Shokofin
         public ExternalIdMediaType? Type
             => null;
 
-        public string UrlFormatString
-            => null;
+        public virtual string UrlFormatString
+            => $"{Plugin.Instance.Configuration.PrettyHost}/webui/series/{{0}}";
     }
 
     public class ShokoEpisodeExternalId : IExternalId
@@ -56,8 +56,8 @@ namespace Shokofin
         public ExternalIdMediaType? Type
             => null;
 
-        public string UrlFormatString
-            => null;
+        public virtual string UrlFormatString
+            => $"{Plugin.Instance.Configuration.PrettyHost}/webui/episode/{{0}}";
     }
 
     public class ShokoFileExternalId : IExternalId
@@ -74,7 +74,7 @@ namespace Shokofin
         public ExternalIdMediaType? Type
             => null;
 
-        public string UrlFormatString
+        public virtual string UrlFormatString
             => null;
     }
 }

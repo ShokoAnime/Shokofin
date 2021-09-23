@@ -1,4 +1,6 @@
 using MediaBrowser.Model.Plugins;
+using System.Text.Json.Serialization;
+
 using TextSourceType = Shokofin.Utils.Text.TextSourceType;
 using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
 using SeriesAndBoxSetGroupType = Shokofin.Utils.Ordering.GroupType;
@@ -10,6 +12,12 @@ namespace Shokofin.Configuration
     public class PluginConfiguration : BasePluginConfiguration
     {
         public string Host { get; set; }
+
+        public string PublicHost { get; set; }
+
+        [JsonIgnore]
+        public virtual string PrettyHost 
+            => string.IsNullOrEmpty(PublicHost) ? Host : PublicHost;
 
         public string Username { get; set; }
 
@@ -64,6 +72,7 @@ namespace Shokofin.Configuration
         public PluginConfiguration()
         {
             Host = "http://127.0.0.1:8111";
+            PublicHost = "";
             Username = "Default";
             Password = "";
             ApiKey = "";
