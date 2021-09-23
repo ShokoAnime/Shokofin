@@ -268,7 +268,7 @@ namespace Shokofin.Utils
                     episodeNumber = episode.TvDB.AirsBeforeEpisode;
                     if (!episodeNumber.HasValue) {
                         if (episode.TvDB.AirsAfterSeason.HasValue) {
-                            airsAfterSeasonNumber = episode.TvDB.AirsAfterSeason.Value;
+                            airsAfterSeasonNumber = GetSeasonNumber(group, series, episode);
                             break;
                         }
 
@@ -289,7 +289,7 @@ namespace Shokofin.Utils
                     var nextEpisode = series.EpisodeList.FirstOrDefault(e => e.TvDB != null && e.TvDB.Season == seasonNumber && e.TvDB.Number == episodeNumber);
                     if (nextEpisode != null) {
                         airsBeforeEpisodeNumber = GetEpisodeNumber(group, series, nextEpisode);
-                        airsBeforeSeasonNumber = seasonNumber;
+                        airsBeforeSeasonNumber = GetSeasonNumber(group, series, episode);
                     }
                     else if (order == SpecialOrderType.InBetweenSeasonMixed)
                         goto byAirdate;

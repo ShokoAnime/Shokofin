@@ -95,7 +95,7 @@ namespace Shokofin.Providers
                     var group = await ApiManager.GetGroupInfoForSeries(seriesId, filterLibrary);
                     series = group?.GetSeriesInfoBySeasonNumber(seasonNumber);
                     if (group == null || series == null) {
-                        Logger.LogWarning("Unable to find info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, series.Id);
+                        Logger.LogWarning("Unable to find info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
                         return result;
                     }
 
@@ -107,7 +107,7 @@ namespace Shokofin.Providers
                 else {
                     series = await ApiManager.GetSeriesInfo(seriesId);
                     if (series == null) {
-                        Logger.LogWarning("Unable to find info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, series.Id);
+                        Logger.LogWarning("Unable to find info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
                         return result;
                     }
                     Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId})", seasonNumber, series.Shoko.Name, series.Id);

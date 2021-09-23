@@ -381,26 +381,28 @@ namespace Shokofin.Providers
                 }
 
                 seriesInfo = groupInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
-                if (seriesInfo == null) {
-                    Logger.LogWarning("Unable to find series info for {SeasonNumber} in group for series. (Group={GroupId})", seasonNumber, groupInfo.Id);
+                if (seasonNumber != 0 && seriesInfo == null) {
+                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber} in group for series. (Group={GroupId})", seasonNumber, groupInfo.Id);
                     return;
                 }
 
                 if (deleted) {
-                    var alternateEpisodes = seasonNumber != groupInfo.SeasonNumberBaseDictionary[seriesInfo];
-                    season = seasonNumber == 0 ? AddVirtualSeason(0, series) : AddVirtualSeason(seriesInfo, alternateEpisodes, seasonNumber, series);
+                    var offset = seasonNumber - groupInfo.SeasonNumberBaseDictionary[seriesInfo];
+                    season = seasonNumber == 0 ? AddVirtualSeason(0, series) : AddVirtualSeason(seriesInfo, offset, seasonNumber, series);
                 }
             }
             // Provide metadata for other seasons
             else {
                 seriesInfo = ApiManager.GetSeriesInfoSync(seriesId);
                 if (seriesInfo == null) {
-                    Logger.LogWarning("Unable to find series info. (Series={SeriesId})", seriesId);
+                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
                     return;
                 }
 
-                if (deleted)
-                    season = AddVirtualSeason(seasonNumber, series);
+                if (deleted) {
+                    var mergeFriendly = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly && seriesInfo.TvDB != null;
+                    season = seasonNumber == 1 && (!mergeFriendly) ? AddVirtualSeason(seriesInfo, 0, 1, series) : AddVirtualSeason(seasonNumber, series);
+                }
             }
 
             // Get a hash-set of existing episodes – both physical and virtual – to exclude when adding new virtual episodes.
@@ -417,7 +419,7 @@ namespace Shokofin.Providers
                             if (existingEpisodes.Contains(episodeInfo.Id))
                                 continue;
 
-                            AddVirtualEpisode(groupInfo, seriesInfo, episodeInfo, season);
+                            AddVirtualEpisode(groupInfo, sI, episodeInfo, season);
                         }
                     }
                 }
@@ -442,11 +444,10 @@ namespace Shokofin.Providers
                     AddVirtualEpisode(groupInfo, seriesInfo, episodeInfo, season);
                 }
 
-            }
-
-            // We add the extras to the season if we're using Shoko Groups.
-            if (seriesGrouping) {
-                AddExtras(season, seriesInfo);
+                // We add the extras to the season if we're using Shoko Groups.
+                if (seriesGrouping) {
+                    AddExtras(season, seriesInfo);
+                }
             }
         }
 
@@ -486,7 +487,7 @@ namespace Shokofin.Providers
             var missingSeasonNumbers = allSeasonNumbers.Except(existingSeasons.Keys).ToList();
             var mergeFriendly = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly && seriesInfo.TvDB != null;
             foreach (var seasonNumber in missingSeasonNumbers) {
-                var season = seasonNumber == 1 && !mergeFriendly ? AddVirtualSeason(seriesInfo, false, 1, series) : AddVirtualSeason(seasonNumber, series);
+                var season = seasonNumber == 1 && !mergeFriendly ? AddVirtualSeason(seriesInfo, 0, 1, series) : AddVirtualSeason(seasonNumber, series);
                 if (season == null)
                     continue;
                 yield return (seasonNumber, season);
@@ -501,8 +502,8 @@ namespace Shokofin.Providers
                     continue;
                 if (pair.Value.SpecialsList.Count > 0)
                     hasSpecials = true;
-                var alternateEpisodes = pair.Key != groupInfo.SeasonNumberBaseDictionary[pair.Value];
-                var season = AddVirtualSeason(pair.Value, alternateEpisodes, pair.Key, series);
+                var offset = pair.Key - groupInfo.SeasonNumberBaseDictionary[pair.Value];
+                var season = AddVirtualSeason(pair.Value, offset, pair.Key, series);
                 if (season == null)
                     continue;
                 yield return (pair.Key, season);
@@ -568,7 +569,7 @@ namespace Shokofin.Providers
             return season;
         }
 
-        private Season AddVirtualSeason(Info.SeriesInfo seriesInfo, bool alternateEpisodes, int seasonNumber, Series series)
+        private Season AddVirtualSeason(Info.SeriesInfo seriesInfo, int offset, int seasonNumber, Series series)
         {
             var seriesPresentationUniqueKey = series.GetPresentationUniqueKey();
             if (SeasonExists(seriesPresentationUniqueKey, series.Name, seasonNumber))
@@ -577,9 +578,25 @@ namespace Shokofin.Providers
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(seriesInfo.AniDB.Titles, seriesInfo.Shoko.Name, series.GetPreferredMetadataLanguage());
             var sortTitle = $"S{seasonNumber} - {seriesInfo.Shoko.Name}";
 
-            if (alternateEpisodes) {
-                displayTitle += " (Other Episodes)";
-                alternateTitle += " (Other Episodes)";
+            if (offset > 0) {
+                string type = "";
+                switch (offset) {
+                    default:
+                        break;
+                    case -1:
+                    case 1:
+                        if (seriesInfo.AlternateEpisodesList.Count > 0)
+                            type = "Alternate Stories";
+                        else
+                            type = "Other Episodes";
+                        break;
+                    case -2:
+                    case 2:
+                        type = "Other Episodes";
+                        break;
+                }
+                displayTitle += $" ({type})";
+                alternateTitle += $" ({type})";
             }
 
             Logger.LogInformation("Adding virtual season {SeasonName} entry for {SeriesName}", displayTitle, series.Name);
@@ -645,7 +662,7 @@ namespace Shokofin.Providers
                 var seasonNumber = season.IndexNumber.Value;
                 if (!seasonNumbers.Add(seasonNumber))
                     continue;
-    
+
                 RemoveDuplicateSeasons(season, series, seasonNumber, seriesId);
             }
 
