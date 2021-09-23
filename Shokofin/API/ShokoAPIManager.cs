@@ -23,26 +23,33 @@ namespace Shokofin.API
 
         private readonly ILibraryManager LibraryManager;
 
-        private static readonly List<Folder> MediaFolderList = new List<Folder>();
+        private readonly ShokoAPIClient APIClient;
 
-        private static readonly ConcurrentDictionary<string, string> SeriesPathToIdDictionary = new ConcurrentDictionary<string, string>();
+        private readonly List<Folder> MediaFolderList = new List<Folder>();
 
-        private static readonly ConcurrentDictionary<string, string> SeriesIdToPathDictionary = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> SeriesPathToIdDictionary = new ConcurrentDictionary<string, string>();
 
-        private static readonly ConcurrentDictionary<string, string> SeriesIdToGroupIdDictionary = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> SeriesIdToPathDictionary = new ConcurrentDictionary<string, string>();
 
-        private static readonly ConcurrentDictionary<string, string> EpisodePathToEpisodeIdDictionary = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> SeriesIdToGroupIdDictionary = new ConcurrentDictionary<string, string>();
 
-        private static readonly ConcurrentDictionary<string, string> EpisodeIdToEpisodePathDictionary = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> EpisodePathToEpisodeIdDictionary = new ConcurrentDictionary<string, string>();
 
-        private static readonly ConcurrentDictionary<string, string> EpisodeIdToSeriesIdDictionary = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> EpisodeIdToEpisodePathDictionary = new ConcurrentDictionary<string, string>();
 
-        public static readonly ConcurrentDictionary<string, HashSet<string>> LockedIdDictionary = new ConcurrentDictionary<string, HashSet<string>>();
+        private readonly ConcurrentDictionary<string, string> EpisodeIdToSeriesIdDictionary = new ConcurrentDictionary<string, string>();
 
-        public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ILibraryManager libraryManager)
+        private readonly ConcurrentDictionary<string, (string, int, string, string)> FilePathToFileIdAndEpisodeCountDictionary = new ConcurrentDictionary<string,  (string, int, string, string)>();
+
+        private readonly ConcurrentDictionary<string, string> FileIdToEpisodeIdDictionary = new ConcurrentDictionary<string, string>();
+
+        private readonly ConcurrentDictionary<string, HashSet<string>> LockedIdDictionary = new ConcurrentDictionary<string, HashSet<string>>();
+
+        public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ILibraryManager libraryManager, ShokoAPIClient apiClient)
         {
             Logger = logger;
             LibraryManager = libraryManager;
+            APIClient = apiClient;
         }
 
         private static IMemoryCache DataCache = new MemoryCache(new MemoryCacheOptions() {
@@ -124,6 +131,8 @@ namespace Shokofin.API
             DataCache.Dispose();
             LockedIdDictionary.Clear();
             MediaFolderList.Clear();
+            FileIdToEpisodeIdDictionary.Clear();
+            FilePathToFileIdAndEpisodeCountDictionary.Clear();
             EpisodeIdToSeriesIdDictionary.Clear();
             EpisodePathToEpisodeIdDictionary.Clear();
             EpisodeIdToEpisodePathDictionary.Clear();
@@ -141,7 +150,7 @@ namespace Shokofin.API
         public async Task<IEnumerable<PersonInfo>> GetPeople(string seriesId)
         {
             var list = new List<PersonInfo>();
-            var roles = await ShokoAPI.GetSeriesCast(seriesId);
+            var roles = await APIClient.GetSeriesCast(seriesId);
             foreach (var role in roles)
             {
                 switch (role.RoleName) {
@@ -168,7 +177,7 @@ namespace Shokofin.API
 
         private async Task<string[]> GetTags(string seriesId)
         {
-            return (await ShokoAPI.GetSeriesTags(seriesId, GetTagFilter()))?.Select(SelectTagName).ToArray() ?? new string[0];
+            return (await APIClient.GetSeriesTags(seriesId, GetTagFilter()))?.Select(SelectTagName).ToArray() ?? new string[0];
         }
 
         /// <summary>
@@ -195,7 +204,7 @@ namespace Shokofin.API
         public async Task<string[]> GetGenresForSeries(string seriesId)
         {
             // The following magic number is the filter value to allow only genres in the returned list.
-            return (await ShokoAPI.GetSeriesTags(seriesId, -2147483520))?.Select(SelectTagName).ToArray() ?? new string[0];
+            return (await APIClient.GetSeriesTags(seriesId, -2147483520))?.Select(SelectTagName).ToArray() ?? new string[0];
         }
 
         private string SelectTagName(Tag tag)
@@ -208,7 +217,7 @@ namespace Shokofin.API
 
         public async Task<string[]> GetStudiosForSeries(string seriesId)
         {
-            var cast = await ShokoAPI.GetSeriesCast(seriesId, Role.CreatorRoleType.Studio);
+            var cast = await APIClient.GetSeriesCast(seriesId, Role.CreatorRoleType.Studio);
             // * NOTE: Shoko Server version <4.1.2 don't support filtered cast, nor other role types besides Role.CreatorRoleType.Seiyuu.
             if (cast.Any(p => p.RoleName != Role.CreatorRoleType.Studio))
                 return new string[0];
@@ -220,14 +229,24 @@ namespace Shokofin.API
 
         public (FileInfo, EpisodeInfo, SeriesInfo, GroupInfo) GetFileInfoByPathSync(string path, Ordering.GroupFilterType? filterGroupByType)
         {
+            if (FilePathToFileIdAndEpisodeCountDictionary.ContainsKey(path)) {
+                var (fileId, extraEpisodesCount, episodeId, seriesId) = FilePathToFileIdAndEpisodeCountDictionary[path];
+                return (GetFileInfoSync(fileId, extraEpisodesCount), GetEpisodeInfoSync(episodeId), GetSeriesInfoSync(seriesId), filterGroupByType.HasValue ? GetGroupInfoForSeriesSync(seriesId, filterGroupByType.Value) : null);
+            }
+
             return GetFileInfoByPath(path, filterGroupByType).GetAwaiter().GetResult();
         }
 
         public async Task<(FileInfo, EpisodeInfo, SeriesInfo, GroupInfo)> GetFileInfoByPath(string path, Ordering.GroupFilterType? filterGroupByType)
         {
+            if (FilePathToFileIdAndEpisodeCountDictionary.ContainsKey(path)) {
+                var (fI, eC, eI, sI) = FilePathToFileIdAndEpisodeCountDictionary[path];
+                return (GetFileInfoSync(fI, eC), GetEpisodeInfoSync(eI), GetSeriesInfoSync(sI), filterGroupByType.HasValue ? GetGroupInfoForSeriesSync(sI, filterGroupByType.Value) : null);
+            }
+
             var partialPath = StripMediaFolder(path);
             Logger.LogDebug("Looking for file matching {Path}", partialPath);
-            var result = await ShokoAPI.GetFileByPath(partialPath);
+            var result = await APIClient.GetFileByPath(partialPath);
 
             var file = result?.FirstOrDefault();
             if (file == null)
@@ -255,30 +274,59 @@ namespace Shokofin.API
             if (episodeInfo == null)
                 return (null, null, null, null);
 
-            var fileInfo = CreateFileInfo(file, file.ID.ToString(), series?.EpisodeIDs?.Count ?? 0);
+            var fileId = file.ID.ToString();
+            var episodeCount = series?.EpisodeIDs?.Count ?? 0;
+            var fileInfo = CreateFileInfo(file, fileId, episodeCount);
 
+            // Add pointers for faster lookup.
+            EpisodePathToEpisodeIdDictionary.TryAdd(path, episodeId);
+            EpisodeIdToEpisodePathDictionary.TryAdd(episodeId, path);
+            FilePathToFileIdAndEpisodeCountDictionary.TryAdd(path, (fileId, episodeCount, episodeId, seriesId));
             return (fileInfo, episodeInfo, seriesInfo, groupInfo);
         }
 
-        public async Task<FileInfo> GetFileInfo(string fileId)
+        public FileInfo GetFileInfoSync(string fileId, int episodeCount = 0)
         {
-            var file = await ShokoAPI.GetFile(fileId);
-            if (file == null)
+            if (string.IsNullOrEmpty(fileId))
                 return null;
-            return CreateFileInfo(file);
+
+            var cacheKey = $"file:{fileId}:{episodeCount}";
+            FileInfo info = null;
+            if (DataCache.TryGetValue<FileInfo>(cacheKey, out info))
+                return info;
+
+            var file = APIClient.GetFile(fileId).GetAwaiter().GetResult();
+            return CreateFileInfo(file, fileId, episodeCount);
+        }
+
+        public async Task<FileInfo> GetFileInfo(string fileId, int episodeCount = 0)
+        {
+            if (string.IsNullOrEmpty(fileId))
+                return null;
+
+            var cacheKey = $"file:{fileId}:{episodeCount}";
+            FileInfo info = null;
+            if (DataCache.TryGetValue<FileInfo>(cacheKey, out info))
+                return info;
+
+            var file = await APIClient.GetFile(fileId);
+            return CreateFileInfo(file, fileId, episodeCount);
         }
 
         private FileInfo CreateFileInfo(File file, string fileId = null, int episodeCount = 0)
         {
             if (file == null)
                 return null;
+
             if (string.IsNullOrEmpty(fileId))
                 fileId = file.ID.ToString();
+
             var cacheKey = $"file:{fileId}:{episodeCount}";
             FileInfo info = null;
             if (DataCache.TryGetValue<FileInfo>(cacheKey, out info))
                 return info;
-            Logger.LogDebug("Creating info object for file. (File={FileId})", fileId);
+
+            Logger.LogTrace("Creating info object for file. (File={FileId})", fileId);
             info = new FileInfo
             {
                 Id = fileId,
@@ -307,7 +355,7 @@ namespace Shokofin.API
                 return null;
             if (DataCache.TryGetValue<EpisodeInfo>($"episode:{episodeId}", out var info))
                 return info;
-            var episode = await ShokoAPI.GetEpisode(episodeId);
+            var episode = await APIClient.GetEpisode(episodeId);
             return await CreateEpisodeInfo(episode, episodeId);
         }
 
@@ -321,24 +369,18 @@ namespace Shokofin.API
             EpisodeInfo info = null;
             if (DataCache.TryGetValue<EpisodeInfo>(cacheKey, out info))
                 return info;
-            Logger.LogDebug("Creating info object for episode {EpisodeName}. (Episode={EpisodeId})", episode.Name, episodeId);
-            var aniDB = (await ShokoAPI.GetEpisodeAniDb(episodeId));
+            Logger.LogTrace("Creating info object for episode {EpisodeName}. (Episode={EpisodeId})", episode.Name, episodeId);
+            var aniDB = (await APIClient.GetEpisodeAniDb(episodeId));
             info = new EpisodeInfo
             {
                 Id = episodeId,
                 ExtraType = Ordering.GetExtraType(aniDB),
-                Shoko = (await ShokoAPI.GetEpisode(episodeId)),
+                Shoko = episode,
                 AniDB = aniDB,
-                TvDB = ((await ShokoAPI.GetEpisodeTvDb(episodeId))?.FirstOrDefault()),
+                TvDB = ((await APIClient.GetEpisodeTvDb(episodeId))?.FirstOrDefault()),
             };
             DataCache.Set<EpisodeInfo>(cacheKey, info, DefaultTimeSpan);
             return info;
-        }
-
-        public void MarkEpisodeAsFound(string episodeId, string fullPath)
-        {
-            EpisodePathToEpisodeIdDictionary.TryAdd(fullPath, episodeId);
-            EpisodeIdToEpisodePathDictionary.TryAdd(episodeId, fullPath);
         }
 
         public bool TryGetEpisodeIdForPath(string path, out string episodeId)
@@ -384,26 +426,22 @@ namespace Shokofin.API
             var partialPath = StripMediaFolder(path);
             Logger.LogDebug("Looking for series matching {Path}", partialPath);
             string seriesId;
-            if (SeriesPathToIdDictionary.ContainsKey(path))
+            if (!SeriesPathToIdDictionary.TryGetValue(path, out seriesId))
             {
-                seriesId = SeriesPathToIdDictionary[path];
-            }
-            else
-            {
-                var result = await ShokoAPI.GetSeriesPathEndsWith(partialPath);
+                var result = await APIClient.GetSeriesPathEndsWith(partialPath);
                 seriesId = result?.FirstOrDefault()?.IDs?.ID.ToString();
+
+                if (string.IsNullOrEmpty(seriesId))
+                    return null;
 
                 SeriesPathToIdDictionary[path] = seriesId;
                 SeriesIdToPathDictionary.TryAdd(seriesId, path);
             }
 
-            if (string.IsNullOrEmpty(seriesId))
-                return null;
-
             if (DataCache.TryGetValue<SeriesInfo>( $"series:{seriesId}", out var info))
                 return info;
 
-            var series = await ShokoAPI.GetSeries(seriesId);
+            var series = await APIClient.GetSeries(seriesId);
             return await CreateSeriesInfo(series, seriesId);
         }
 
@@ -420,7 +458,7 @@ namespace Shokofin.API
                 return null;
             if (DataCache.TryGetValue<SeriesInfo>( $"series:{seriesId}", out var info))
                 return info;
-            var series = ShokoAPI.GetSeries(seriesId).GetAwaiter().GetResult();
+            var series = APIClient.GetSeries(seriesId).GetAwaiter().GetResult();
             return CreateSeriesInfo(series, seriesId).GetAwaiter().GetResult();
         }
 
@@ -430,7 +468,7 @@ namespace Shokofin.API
                 return null;
             if (DataCache.TryGetValue<SeriesInfo>( $"series:{seriesId}", out var info))
                 return info;
-            var series = await ShokoAPI.GetSeries(seriesId);
+            var series = await APIClient.GetSeries(seriesId);
             return await CreateSeriesInfo(series, seriesId);
         }
 
@@ -454,7 +492,7 @@ namespace Shokofin.API
                 seriesId = EpisodeIdToSeriesIdDictionary[episodeId];
             }
             else {
-                var group = await ShokoAPI.GetGroupFromSeries(episodeId);
+                var group = await APIClient.GetGroupFromSeries(episodeId);
                 if (group == null)
                     return null;
                 seriesId = group.IDs.ID.ToString();
@@ -498,9 +536,9 @@ namespace Shokofin.API
             var cacheKey = $"series:{seriesId}";
             if (DataCache.TryGetValue<SeriesInfo>(cacheKey, out info))
                 return info;
-            Logger.LogDebug("Creating info object for series {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
+            Logger.LogTrace("Creating info object for series {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
 
-            var aniDb = await ShokoAPI.GetSeriesAniDB(seriesId);
+            var aniDb = await APIClient.GetSeriesAniDB(seriesId);
             var tvDbId = series.IDs.TvDB?.FirstOrDefault();
             var tags = await GetTags(seriesId);
             var genres = await GetGenresForSeries(seriesId);
@@ -513,7 +551,7 @@ namespace Shokofin.API
             var othersList = new List<EpisodeInfo>();
 
             // The episode list is ordered by air date
-            var allEpisodesList = ShokoAPI.GetEpisodesFromSeries(seriesId)
+            var allEpisodesList = APIClient.GetEpisodesFromSeries(seriesId)
                 .ContinueWith(task => Task.WhenAll(task.Result.Select(e => CreateEpisodeInfo(e))))
                 .Unwrap()
                 .GetAwaiter()
@@ -562,7 +600,7 @@ namespace Shokofin.API
                 Shoko = series,
                 AniDB = aniDb,
                 TvDBId = tvDbId != 0 ? tvDbId.ToString() : null,
-                TvDB = tvDbId != 0 ? (await ShokoAPI.GetSeriesTvDB(seriesId)).FirstOrDefault() : null,
+                TvDB = tvDbId != 0 ? (await APIClient.GetSeriesTvDB(seriesId)).FirstOrDefault() : null,
                 Tags = tags,
                 Genres = genres,
                 Studios = studios,
@@ -591,17 +629,30 @@ namespace Shokofin.API
         {
             var partialPath = StripMediaFolder(path);
             Logger.LogDebug("Looking for group matching {Path}", partialPath);
-            var result = await ShokoAPI.GetSeriesPathEndsWith(partialPath);
 
-            var seriesId = result?.FirstOrDefault()?.IDs?.ID.ToString();
-            if (string.IsNullOrEmpty(seriesId))
-                return null;
+            string seriesId;
+            if (SeriesPathToIdDictionary.TryGetValue(path, out seriesId))
+            {
+                if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
+                    if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info))
+                        return info;
 
-            var groupInfo = await GetGroupInfoForSeries(seriesId, filterByType);
-            if (groupInfo == null)
-                return null;
+                    return await GetGroupInfo(groupId, filterByType);
+                }
+            }
+            else
+            {
+                var result = await APIClient.GetSeriesPathEndsWith(partialPath);
+                seriesId = result?.FirstOrDefault()?.IDs?.ID.ToString();
 
-            return groupInfo;
+                if (string.IsNullOrEmpty(seriesId))
+                    return null;
+
+                SeriesPathToIdDictionary[path] = seriesId;
+                SeriesIdToPathDictionary.TryAdd(seriesId, path);
+            }
+
+            return await GetGroupInfoForSeries(seriesId, filterByType);
         }
 
         public GroupInfo GetGroupInfoSync(string groupId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
@@ -620,7 +671,7 @@ namespace Shokofin.API
             if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info))
                 return info;
 
-            var group = await ShokoAPI.GetGroup(groupId);
+            var group = await APIClient.GetGroup(groupId);
             return await CreateGroupInfo(group, groupId, filterByType);
         }
 
@@ -645,7 +696,7 @@ namespace Shokofin.API
                 return null;
 
             if (!SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
-                var group = await ShokoAPI.GetGroupFromSeries(seriesId);
+                var group = await APIClient.GetGroupFromSeries(seriesId);
                 if (group == null)
                     return null;
 
@@ -667,9 +718,9 @@ namespace Shokofin.API
             GroupInfo groupInfo = null;
             if (DataCache.TryGetValue<GroupInfo>(cacheKey, out groupInfo))
                 return groupInfo;
-            Logger.LogDebug("Creating info object for group {GroupName}. (Group={GroupId})", group.Name, groupId);
+            Logger.LogTrace("Creating info object for group {GroupName}. (Group={GroupId})", group.Name, groupId);
 
-            var seriesList = (await ShokoAPI.GetSeriesInGroup(groupId)
+            var seriesList = (await APIClient.GetSeriesInGroup(groupId)
                 .ContinueWith(task => Task.WhenAll(task.Result.Select(s => CreateSeriesInfo(s))))
                 .Unwrap())
                 .Where(s => s != null)

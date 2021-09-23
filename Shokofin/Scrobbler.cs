@@ -14,10 +14,13 @@ namespace Shokofin
 
         private readonly ILogger<Scrobbler> Logger;
 
-        public Scrobbler(ISessionManager sessionManager, ILogger<Scrobbler> logger)
+        private readonly ShokoAPIClient APIClient;
+
+        public Scrobbler(ISessionManager sessionManager, ILogger<Scrobbler> logger, ShokoAPIClient apiClient)
         {
             SessionManager = sessionManager;
             Logger = logger;
+            APIClient = apiClient;
         }
 
         public Task RunAsync()
@@ -43,7 +46,7 @@ namespace Shokofin
             var watched = e.PlayedToCompletion;
             var resumePosition = e.PlaybackPositionTicks ?? 0;
             Logger.LogInformation("Playback was stopped. Syncing watch state of file back to Shoko. (File={FileId},Watched={WatchState},ResumePosition={ResumePosition})", fileId, watched, resumePosition);
-            var result = await ShokoAPI.ScrobbleFile(fileId, watched, resumePosition);
+            var result = await APIClient.ScrobbleFile(fileId, watched, resumePosition);
             if (result)
                 Logger.LogInformation("File marked as watched! (File={FileId})", fileId);
             else

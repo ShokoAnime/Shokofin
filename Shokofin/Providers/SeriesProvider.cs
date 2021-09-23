@@ -23,14 +23,17 @@ namespace Shokofin.Providers
 
         private readonly ILogger<SeriesProvider> Logger;
 
+        private readonly ShokoAPIClient ApiClient;
+
         private readonly ShokoAPIManager ApiManager;
 
         private readonly IFileSystem FileSystem;
 
-        public SeriesProvider(IHttpClientFactory httpClientFactory, ILogger<SeriesProvider> logger, ShokoAPIManager apiManager, IFileSystem fileSystem)
+        public SeriesProvider(IHttpClientFactory httpClientFactory, ILogger<SeriesProvider> logger, ShokoAPIClient apiClient, ShokoAPIManager apiManager, IFileSystem fileSystem)
         {
             Logger = logger;
             HttpClientFactory = httpClientFactory;
+            ApiClient = apiClient;
             ApiManager = apiManager;
             FileSystem = fileSystem;
         }
@@ -182,7 +185,7 @@ namespace Shokofin.Providers
         {
             try {
                 var results = new List<RemoteSearchResult>();
-                var searchResults = await ShokoAPI.SeriesSearch(info.Name).ContinueWith((e) => e.Result.ToList());
+                var searchResults = await ApiClient.SeriesSearch(info.Name).ContinueWith((e) => e.Result.ToList());
                 Logger.LogInformation($"Series search returned {searchResults.Count} results.");
 
                 foreach (var series in searchResults) {

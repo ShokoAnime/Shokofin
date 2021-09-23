@@ -117,7 +117,6 @@ namespace Shokofin
                 return false;
             }
 
-            ApiManager.MarkEpisodeAsFound(episode.Id, fullPath);
             Logger.LogInformation("Found episode for {SeriesName} (Series={SeriesId},Episode={EpisodeId},File={FileId})", series.Shoko.Name, series.Id, episode.Id, file.Id);
 
             // We're going to post process this file later, but we don't want to include it in our library for now.
