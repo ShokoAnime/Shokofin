@@ -6,6 +6,7 @@
         "overview": "Manage your anime from Jellyfin using metadata from Shoko",
         "owner": "shoko",
         "category": "Metadata",
+        "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
                 "version": "1.5.0.29",
