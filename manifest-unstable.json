@@ -8,6 +8,14 @@
         "category": "Metadata",
         "versions": [
             {
+                "version": "1.5.0.29",
+                "changelog": "NA",
+                "targetAbi": "10.7.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.5.0.29/shokofin_1.5.0.29.zip",
+                "checksum": "59e565cfa5b59feb8791f8fb726ba0a2",
+                "timestamp": "2021-09-23T23:19:15Z"
+            },
+            {
                 "version": "1.5.0.28",
                 "changelog": "NA",
                 "targetAbi": "10.7.0.0",
