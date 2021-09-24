@@ -5,6 +5,7 @@ const PluginConfig = {
 function loadUserConfig(page, userId) {
     if (!userId) {
         page.querySelector("#UserSettingsContainer").setAttribute("hidden", "");
+        page.querySelector("#UserUsername").removeAttribute("required");
         Dashboard.hideLoadingMsg();
         return;
     }
