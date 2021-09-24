@@ -1,4 +1,5 @@
 using MediaBrowser.Model.Plugins;
+using System;
 using System.Text.Json.Serialization;
 
 using TextSourceType = Shokofin.Utils.Text.TextSourceType;
@@ -69,6 +70,8 @@ namespace Shokofin.Configuration
 
         public DisplayLanguageType TitleAlternateType { get; set; }
 
+        public UserConfiguration[] UserList { get; set; }
+
         public PluginConfiguration()
         {
             Host = "http://127.0.0.1:8111";
@@ -98,6 +101,7 @@ namespace Shokofin.Configuration
             BoxSetGrouping = SeriesAndBoxSetGroupType.Default;
             MovieOrdering = OrderType.Default;
             FilterOnLibraryTypes = false;
+            UserList = Array.Empty<UserConfiguration>();
         }
     }
 }
