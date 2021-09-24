@@ -1,347 +1,250 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Shoko</title>
-</head>
-<body>
-    <div data-role="page" class="page type-interior pluginConfigurationPage shokoConfigPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
-        <div data-role="content">
-            <div class="content-primary">
-                <form class="shokoConfigForm">
-                    <div class="verticalSection verticalSection-extrabottompadding">
-                        <div class="sectionTitleContainer flex align-items-center">
-                            <h2 class="sectionTitle">Shoko</h2>
-                            <a is="emby-linkbutton" rel="noopener noreferrer" class="raised button-alt headerHelpButton emby-button" target="_blank" href="https://docs.shokoanime.com/shokofin/configuration/">Help</a>
+<div id="ShokoConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox" data-controller="__plugin/ShokoController.js">
+    <div data-role="content">
+        <div class="content-primary">
+            <form id="ShokoConfigForm">
+                <div class="verticalSection verticalSection-extrabottompadding">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">Shoko</h2>
+                        <a is="emby-linkbutton" rel="noopener noreferrer" class="raised button-alt headerHelpButton emby-button" target="_blank" href="https://docs.shokoanime.com/shokofin/configuration/">Help</a>
+                    </div>
+                    <fieldset class="verticalSection verticalSection-extrabottompadding">
+                        <legend>
+                            <h3>Connection Settings</h3>
+                        </legend>
+                        <div class="inputContainer inputContainer-withDescription">
+                            <input is="emby-input" type="text" id="Host" required label="Shoko host URL:" />
+                            <div class="fieldDescription">This is the URL leading to where Shoko is running. It should include both the protocol and the ip/dns-name.</div>
                         </div>
-                        <fieldset class="verticalSection verticalSection-extrabottompadding">
-                            <legend>
-                                <h3>Connection Settings</h3>
-                            </legend>
-                            <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="Host" required label="Shoko host URL:" />
-                                <div class="fieldDescription">This is the URL leading to where Shoko is running. It should include both the protocol and the ip/dns-name.</div>
-                            </div>
-                            <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="Username" required label="Username:" />
-                                <div class="fieldDescription">The user should be an administrator in Shoko, preferably without any filtering applied.</div>
-                            </div>
+                        <div class="inputContainer inputContainer-withDescription">
+                            <input is="emby-input" type="text" id="Username" required label="Username:" />
+                            <div class="fieldDescription">The user should be an administrator in Shoko, preferably without any filtering applied.</div>
+                        </div>
+                        <div id="ConnectionResetContainer" hidden>
+                            <button is="emby-button" type="submit" name="reset-connection" class="raised block emby-button">
+                                <span>Reset</span>
+                            </button>
+                            <div class="fieldDescription">Reset the connection settings. Be sure to stop any tasks using this plugin before you press the button.</div>
+                        </div>
+                        <div id="ConnectionSetContainer">
                             <div class="inputContainer inputContainer-withDescription">
                                 <input is="emby-input" type="text" id="Password" label="Password:" />
                                 <div class="fieldDescription">The password for account. It can be empty.</div>
                             </div>
-                        </fieldset>
-                        <fieldset class="verticalSection verticalSection-extrabottompadding">
-                            <legend>
-                                <h3>Metadata Settings</h3>
-                            </legend>
-                            <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="TitleMainType">Main title source:</label>
-                                <select is="emby-select" id="TitleMainType" name="TitleMainType" class="emby-select-withcolor emby-select">
-                                    <option value="Default">Let Shoko decide the title</option>
-                                    <option value="MetadataPreferred">Use the preferred library metadata language</option>
-                                    <option value="Origin">Use the language from country of origin</option>
-                                </select>
-                                <div class="fieldDescription selectFieldDescription">How to select the main title for each item. The plugin will fallback to the default title if no title can be found in the target language.</div>
-                            </div>
-                            <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="TitleAlternateType">Alternate title source:</label>
-                                <select is="emby-select" id="TitleAlternateType" name="TitleAlternateType" class="emby-select-withcolor emby-select">
-                                    <option value="Default">Let Shoko decide the title</option>
-                                    <option value="MetadataPreferred">Use the preferred library metadata language</option>
-                                    <option value="Origin">Use the language from country of origin</option>
-                                    <option value="Ignore">Do not use alternate titles</option>
-                                </select>
-                                <div class="fieldDescription selectFieldDescription">How to select the alternate title for each item. The plugin will fallback to the default title if no title can be found in the target language.</div>
-                            </div>
-                            <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="DescriptionSource">Description source:</label>
-                                <select is="emby-select" id="DescriptionSource" name="DescriptionSource" class="emby-select-withcolor emby-select">
-                                    <option value="Default">Use default source for selected Series/Season grouping</option>
-                                    <option value="OnlyAniDb">Only use AniDB</option>
-                                    <option value="PreferAniDb">Prefer AniDB if available, otherwise use TvDB/TMDB</option>
-                                    <option value="OnlyOther">Only use TvDB/TMDB</option>
-                                    <option value="PreferOther">Prefer TvDB/TMDB if available, otherwise use AniDB</option>
-                                </select>
-                                <div class="fieldDescription selectFieldDescription">How to select the description to use for each item.</div>
-                            </div>
+                            <button is="emby-button" type="submit" name="set-connection" class="raised button-submit block emby-button">
+                                <span>Connect</span>
+                            </button>
+                            <div class="fieldDescription">Establish a connection to Shoko Server using the provided credentials.</div>
+                        </div>
+                    </fieldset>
+                    <fieldset id="MetadataSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Metadata Settings</h3>
+                        </legend>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="TitleMainType">Main title source:</label>
+                            <select is="emby-select" id="TitleMainType" name="TitleMainType" class="emby-select-withcolor emby-select">
+                                <option value="Default">Let Shoko decide the title</option>
+                                <option value="MetadataPreferred">Use the preferred library metadata language</option>
+                                <option value="Origin">Use the language from country of origin</option>
+                            </select>
+                            <div class="fieldDescription selectFieldDescription">How to select the main title for each item. The plugin will fallback to the default title if no title can be found in the target language.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="TitleAlternateType">Alternate title source:</label>
+                            <select is="emby-select" id="TitleAlternateType" name="TitleAlternateType" class="emby-select-withcolor emby-select">
+                                <option value="Default">Let Shoko decide the title</option>
+                                <option value="MetadataPreferred">Use the preferred library metadata language</option>
+                                <option value="Origin">Use the language from country of origin</option>
+                                <option value="Ignore">Do not use alternate titles</option>
+                            </select>
+                            <div class="fieldDescription selectFieldDescription">How to select the alternate title for each item. The plugin will fallback to the default title if no title can be found in the target language.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="DescriptionSource">Description source:</label>
+                            <select is="emby-select" id="DescriptionSource" name="DescriptionSource" class="emby-select-withcolor emby-select">
+                                <option value="Default">Use default source for selected Series/Season grouping</option>
+                                <option value="OnlyAniDb">Only use AniDB</option>
+                                <option value="PreferAniDb">Prefer AniDB if available, otherwise use TvDB/TMDB</option>
+                                <option value="OnlyOther">Only use TvDB/TMDB</option>
+                                <option value="PreferOther">Prefer TvDB/TMDB if available, otherwise use AniDB</option>
+                            </select>
+                            <div class="fieldDescription selectFieldDescription">How to select the description to use for each item.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="CleanupAniDBDescriptions" />
+                                <span>Cleanup AniDB descriptions</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Remove links and collapse multiple empty lines into one empty line</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="MinimalAniDBDescriptions" />
+                                <span>Minimalistic AniDB descriptions</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Remove any lines starting with '* ', '-- ',  '~ ', 'Note', 'Source', and/or 'Summery'</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="LibrarySection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Library Settings</h3>
+                        </legend>
+                        <div class="fieldDescription verticalSection-extrabottompadding">Series merging must be enabled in the <a href="#!/library.html">Library Settings</a>, or else unexpected results will occur.</div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="SeriesGrouping">Series/season grouping:</label>
+                            <select is="emby-select" id="SeriesGrouping" name="SeriesGrouping" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Do not group Series into Seasons</option>
+                                <option value="MergeFriendly">Group series into Seasons using the TvDB/TMDB data stored in Shoko</option>
+                                <option value="ShokoGroup">Group series into Seasons based on Shoko's Groups</option>
+                            </select>
+                            <div class="fieldDescription selectFieldDescription">Determines how to group Series together and divide them into Seasons.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="BoxSetGrouping">Box-set/Movie grouping:</label>
+                            <select is="emby-select" id="BoxSetGrouping" name="BoxSetGrouping" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Do not create Box-sets for Movies</option>
+                                <option value="ShokoSeries">Create Box-sets based upon Shoko's Series entries</option>
+                                <option value="ShokoGroup">Create Box-sets based upon Shoko's Groups and Series entries</option>
+                            </select>
+                            <div class="fieldDescription">Determines how to group Movies together into Box-sets.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="FilterOnLibraryTypes" />
+                                <span>Enable library seperation</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Split Shoko Groups in two, and actively filter out folders and files that don't belong to the selected library type.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="SpecialsPlacement">Specials placement within seasons:</label>
+                            <select is="emby-select" id="SpecialsPlacement" name="SpecialsPlacement" class="emby-select-withcolor emby-select">
+                                <option value="Default">Use default placement for selected Series/Season grouping</option>
+                                <option value="AfterSeason">Always place Specials after the normal episodes</option>
+                                <option value="InBetweenSeasonByAirDate">Use release date to place Specials</option>
+                                <option value="InBetweenSeasonByOtherData">Use the TvDB/TMDB data (if available) to place Specials</option>
+                                <option value="InBetweenSeasonMixed">Use either the TvDB/TMDB data or release date if the data is not available to place Specials</option>
+                                <option value="Excluded">Don't place specials within Seasons</option>
+                            </select>
+                            <div class="fieldDescription selectFieldDescription">Determines how Specials are placed within Seasons. <strong>Warning:</strong> Modifying this setting requires a rebuild (and not just a full-refresh) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
+                                <span>Mark specials</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add a number to the title of each Special episode</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="UserSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>User Settings</h3>
+                        </legend>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="UserSelector">Configure settings for:</label>
+                            <select is="emby-select" id="UserSelector" name="UserSelector" value="" class="emby-select-withcolor emby-select">
+                                <option value="">Click here to select a user</option>
+                            </select>
+                            <div class="fieldDescription selectFieldDescription">Select a user to add, modify or delete the user settings for.</div>
+                        </div>
+                        <div id="UserSettingsContainer" hidden>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="CleanupAniDBDescriptions" />
-                                    <span>Cleanup AniDB descriptions</span>
-                                </label>
-                                <div class="fieldDescription checkboxFieldDescription">Remove links and collapse multiple empty lines into one empty line</div>
-                            </div>
-                            <div class="checkboxContainer checkboxContainer-withDescription">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="MinimalAniDBDescriptions" />
-                                    <span>Minimalistic AniDB descriptions</span>
-                                </label>
-                                <div class="fieldDescription checkboxFieldDescription">Remove any lines starting with '* ', '-- ',  '~ ', 'Note', 'Source', and/or 'Summery'</div>
-                            </div>
-                        </fieldset>
-                        <fieldset class="verticalSection verticalSection-extrabottompadding">
-                            <legend>
-                                <h3>Library Settings</h3>
-                            </legend>
-                            <div class="fieldDescription verticalSection-extrabottompadding">Series merging must be enabled in the <a href="#!/library.html">Library Settings</a>, or else unexpected results will occur.</div>
-                            <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="SeriesGrouping">Series/season grouping:</label>
-                                <select is="emby-select" id="SeriesGrouping" name="SeriesGrouping" class="emby-select-withcolor emby-select">
-                                    <option value="Default" selected>Do not group Series into Seasons</option>
-                                    <option value="MergeFriendly">Group series into Seasons using the TvDB/TMDB data stored in Shoko</option>
-                                    <option value="ShokoGroup">Group series into Seasons based on Shoko's Groups</option>
-                                </select>
-                                <div class="fieldDescription selectFieldDescription">Determines how to group Series together and divide them into Seasons.</div>
-                            </div>
-                            <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="BoxSetGrouping">Box-set/Movie grouping:</label>
-                                <select is="emby-select" id="BoxSetGrouping" name="BoxSetGrouping" class="emby-select-withcolor emby-select">
-                                    <option value="Default" selected>Do not create Box-sets for Movies</option>
-                                    <option value="ShokoSeries">Create Box-sets based upon Shoko's Series entries</option>
-                                    <option value="ShokoGroup">Create Box-sets based upon Shoko's Groups and Series entries</option>
-                                </select>
-                                <div class="fieldDescription">Determines how to group Movies together into Box-sets.</div>
-                            </div>
-                            <div class="checkboxContainer checkboxContainer-withDescription">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="FilterOnLibraryTypes" />
-                                    <span>Enable library seperation</span>
-                                </label>
-                                <div class="fieldDescription checkboxFieldDescription">Split Shoko Groups in two, and actively filter out folders and files that don't belong to the selected library type.</div>
-                            </div>
-                            <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="SpecialsPlacement">Specials placement within seasons:</label>
-                                <select is="emby-select" id="SpecialsPlacement" name="SpecialsPlacement" class="emby-select-withcolor emby-select">
-                                    <option value="Default">Use default placement for selected Series/Season grouping</option>
-                                    <option value="AfterSeason">Always place Specials after the normal episodes</option>
-                                    <option value="InBetweenSeasonByAirDate">Use release date to place Specials</option>
-                                    <option value="InBetweenSeasonByOtherData">Use the TvDB/TMDB data (if available) to place Specials</option>
-                                    <option value="InBetweenSeasonMixed">Use either the TvDB/TMDB data or release date if the data is not available to place Specials</option>
-                                    <option value="Excluded">Don't place specials within Seasons</option>
-                                </select>
-                                <div class="fieldDescription selectFieldDescription">Determines how Specials are placed within Seasons. <strong>Warning:</strong> Modifying this setting requires a rebuild (and not just a full-refresh) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
-                            </div>
-                            <div class="checkboxContainer checkboxContainer-withDescription">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
-                                    <span>Mark specials</span>
-                                </label>
-                                <div class="fieldDescription checkboxFieldDescription">Add a number to the title of each Special episode</div>
-                            </div>
-                        </fieldset>
-                        <fieldset class="verticalSection verticalSection-extrabottompadding">
-                            <legend>
-                                <h3>Synchronization Settings</h3>
-                            </legend>
-                            <div class="checkboxContainer checkboxContainer-withDescription">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="UpdateWatchedStatus" />
+                                    <input is="emby-checkbox" type="checkbox" id="UserEnableSynchronization" />
                                     <span>Enable synchronization</span>
                                 </label>
                                 <div class="fieldDescription checkboxFieldDescription">Enabling this will sync-back watched status to Shoko under and after play-back, and sync-back watch status from Shoko on import or refresh.</div>
                             </div>
-                            <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="UserSelector">Select user:</label>
-                                <select is="emby-select" id="MovieOrdering" name="MovieOrdering" class="emby-select-withcolor emby-select" disabled>
-                                    <option value="root">WIP, non-functional atm</option>
-                                </select>
-                                <div class="fieldDescription selectFieldDescription">Select a user to add or modify a mapping for watch-state synchronization to work.</div>
-                            </div>
-                            <div class="checkboxContainer checkboxContainer-withDescription">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="UserEnabled" disabled />
-                                    <span>Enable for user</span>
-                                </label>
-                                <div class="fieldDescription checkboxFieldDescription">Enable user-mapping for the currently selected user</div>
-                            </div>
                             <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="UserUsername" label="Username:" disabled />
+                                <input is="emby-input" type="text" id="UserUsername" label="Username:" />
                                 <div class="fieldDescription">The username of the account to synchronize with the currently selected user.</div>
                             </div>
-                            <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="UserPassword" label="Password:" disabled />
+                            <div id="UserPasswordContainer" class="inputContainer inputContainer-withDescription">
+                                <input is="emby-input" type="text" id="UserPassword" label="Password:" />
                                 <div class="fieldDescription">The password for account. It can be empty.</div>
                             </div>
-                        </fieldset>
-                        <fieldset class="verticalSection verticalSection-extrabottompadding">
-                            <legend>
-                                <h3>Tag Settings</h3>
-                            </legend>
-                            <div class="checkboxContainer">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="HideArtStyleTags" />
-                                    <span>Hide art style related tags</span>
-                                </label>
+                            <div id="UserDeleteContainer" class="inputContainer inputContainer-withDescription" hidden>
+                                <button is="emby-button" type="submit" name="unlink-user" class="raised button-delete block emby-button">
+                                    <span>Delete</span>
+                                </button>
+                                <div class="fieldDescription">This will delete any saved settings for the user.</div>
                             </div>
-                            <div class="checkboxContainer">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="HideSourceTags" />
-                                    <span>Hide source related tags</span>
-                                </label>
-                            </div>
-                            <div class="checkboxContainer">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="HideMiscTags" />
-                                    <span>Hide misc info tags that may be useful</span>
-                                </label>
-                            </div>
-                            <div class="checkboxContainer">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="HidePlotTags" />
-                                    <span>Hide potentially plot-spoiling tags</span>
-                                </label>
-                            </div>
-                            <div class="checkboxContainer">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="HideAniDbTags" />
-                                    <span>Hide any miscellaneous tags</span>
-                                </label>
-                            </div>
-                        </fieldset>
-                        <fieldset class="verticalSection verticalSection-extrabottompadding">
-                            <legend>
-                                <h3>Advanced Settings</h3>
-                            </legend>
-                            <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="PublicHost" label="Public Shoko host URL:" />
-                                <div class="fieldDescription">This is the public URL leading to where Shoko is running. It is used to redirect to Shoko if you click on a Shoko ID in the UI if Shoko and/or Jellyfin is running within a container. It should include both the protocol and the IP/DNS name.</div>
-                            </div>
-                            <div class="checkboxContainer checkboxContainer-withDescription">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="PreferAniDbPoster" />
-                                    <span>Prefer AniDB poster</span>
-                                </label>
-                                <div class="fieldDescription checkboxFieldDescription">Enabling this will prefer the poster image from AniDB over other sources for the default Series/Seasons poster</div>
-                            </div>
-                            <div class="checkboxContainer checkboxContainer-withDescription">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="AddAniDBId" />
-                                    <span>Add AniDB ID to items</span>
-                                </label>
-                                <div class="fieldDescription checkboxFieldDescription">Enabling this will add the AniDB ID for all supported item types where an ID is available.</div>
-                            </div>
-                        </fieldset>
-                        <div>
-                            <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <button is="emby-button" type="submit" name="user-settings" class="raised button-submit block emby-button">
                                 <span>Save</span>
                             </button>
                         </div>
-                    </div>
-                </form>
-            </div>
+                    </fieldset>
+                    <fieldset id="TagSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Tag Settings</h3>
+                        </legend>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="HideArtStyleTags" />
+                                <span>Hide art style related tags</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="HideSourceTags" />
+                                <span>Hide source related tags</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="HideMiscTags" />
+                                <span>Hide misc info tags that may be useful</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="HidePlotTags" />
+                                <span>Hide potentially plot-spoiling tags</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="HideAniDbTags" />
+                                <span>Hide any miscellaneous tags</span>
+                            </label>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="AdvancedSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Advanced Settings</h3>
+                        </legend>
+                        <div class="inputContainer inputContainer-withDescription">
+                            <input is="emby-input" type="text" id="PublicHost" label="Public Shoko host URL:" />
+                            <div class="fieldDescription">This is the public URL leading to where Shoko is running. It is used to redirect to Shoko if you click on a Shoko ID in the UI if Shoko and/or Jellyfin is running within a container. It should include both the protocol and the IP/DNS name.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="PreferAniDbPoster" />
+                                <span>Prefer AniDB poster</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will prefer the poster image from AniDB over other sources for the default Series/Seasons poster</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddAniDBId" />
+                                <span>Add AniDB ID to items</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the AniDB ID for all supported item types where an ID is available.</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                </div>
+            </form>
         </div>
-        <script type="text/javascript">
-            var PluginConfig = {
-                pluginId: "5216ccbf-d24a-4eb3-8a7e-7da4230b7052"
-            };
-
-            document.querySelector('.shokoConfigPage')
-                .addEventListener('pageshow', function () {
-                    Dashboard.showLoadingMsg();
-                    ApiClient.getPluginConfiguration(PluginConfig.pluginId).then(function (config) {
-                        // Connection settings
-                        document.querySelector('#Host').value = config.Host;
-                        document.querySelector('#Username').value = config.Username;
-                        document.querySelector('#Password').value = config.Password;
-
-                        // Metadata settings
-                        document.querySelector('#TitleMainType').value = config.TitleMainType;
-                        document.querySelector('#TitleAlternateType').value = config.TitleAlternateType;
-                        document.querySelector('#DescriptionSource').value = config.DescriptionSource;
-                        document.querySelector('#CleanupAniDBDescriptions').checked = config.SynopsisCleanMultiEmptyLines || config.SynopsisCleanLinks;
-                        document.querySelector('#MinimalAniDBDescriptions').checked = config.SynopsisRemoveSummary || config.SynopsisCleanMiscLines;
-
-                        // Library settings
-                        document.querySelector('#SeriesGrouping').value = config.SeriesGrouping;
-                        document.querySelector('#BoxSetGrouping').value = config.BoxSetGrouping;
-                        document.querySelector('#FilterOnLibraryTypes').checked = config.FilterOnLibraryTypes;
-                        document.querySelector('#SpecialsPlacement').value = config.SpecialsPlacement;
-                        document.querySelector('#MarkSpecialsWhenGrouped').checked = config.MarkSpecialsWhenGrouped;
-
-                        // Synchronization settings
-                        document.querySelector('#UpdateWatchedStatus').checked = config.UpdateWatchedStatus;
-
-                        // Tag settings
-                        document.querySelector('#HideArtStyleTags').checked = config.HideArtStyleTags;
-                        document.querySelector('#HideSourceTags').checked = config.HideSourceTags;
-                        document.querySelector('#HideMiscTags').checked = config.HideMiscTags;
-                        document.querySelector('#HidePlotTags').checked = config.HidePlotTags;
-                        document.querySelector('#HideAniDbTags').checked = config.HideAniDbTags;
-
-                        // Advanced settings
-                        document.querySelector('#PublicHost').value = config.PublicHost;
-                        document.querySelector('#PreferAniDbPoster').checked = config.PreferAniDbPoster;
-                        document.querySelector('#AddAniDBId').checked = config.AddAniDBId;
-
-                        Dashboard.hideLoadingMsg();
-                    });
-                });
-
-            document.querySelector('.shokoConfigForm')
-                .addEventListener('submit', function (e) {
-                    Dashboard.showLoadingMsg();
-
-                    ApiClient.getPluginConfiguration(PluginConfig.pluginId).then(function (config) {
-                        let host = document.querySelector('#Host').value;
-                        if (host.endsWith("/")) {
-                            host = host.slice(0, -1);
-                            document.querySelector('#Host').value = host;
-                        }
-                        let publicHost = document.querySelector('#PublicHost').value;
-                        if (publicHost.endsWith("/")) {
-                            publicHost = publicHost.slice(0, -1);
-                            document.querySelector('#PublicHost').value = publicHost;
-                        }
-
-                        const username = document.querySelector('#Username').value;
-                        const password = document.querySelector('#Password').value;
-                        // Reset the api-key if the username and/or password have changed.
-                        if (config.Username != username || config.Password !== password)
-                            config.ApiKey = "";
-
-                        // Connection settings
-                        config.Host = host;
-                        config.Username = username;
-                        config.Password = password;
-
-                        // Metadata settings
-                        config.TitleMainType = document.querySelector('#TitleMainType').value;
-                        config.TitleAlternateType = document.querySelector('#TitleAlternateType').value;
-                        config.DescriptionSource = document.querySelector('#DescriptionSource').value;
-                        config.SynopsisCleanLinks = document.querySelector('#CleanupAniDBDescriptions').checked;
-                        config.SynopsisCleanMultiEmptyLines = document.querySelector('#CleanupAniDBDescriptions').checked;
-                        config.SynopsisCleanMiscLines = document.querySelector('#MinimalAniDBDescriptions').checked;
-                        config.SynopsisRemoveSummary = document.querySelector('#MinimalAniDBDescriptions').checked;
-
-                        // Library settings
-                        config.SeriesGrouping = document.querySelector('#SeriesGrouping').value;
-                        config.BoxSetGrouping = document.querySelector('#BoxSetGrouping').value;
-                        config.FilterOnLibraryTypes = document.querySelector('#FilterOnLibraryTypes').checked;
-                        config.SpecialsPlacement = document.querySelector('#SpecialsPlacement').value;
-                        config.MarkSpecialsWhenGrouped = document.querySelector('#MarkSpecialsWhenGrouped').checked;
-
-                        // Synchronization settings
-                        config.UpdateWatchedStatus = document.querySelector('#UpdateWatchedStatus').checked;
-
-                        // Tag settings
-                        config.HideArtStyleTags = document.querySelector('#HideArtStyleTags').checked;
-                        config.HideSourceTags = document.querySelector('#HideSourceTags').checked;
-                        config.HideMiscTags = document.querySelector('#HideMiscTags').checked;
-                        config.HidePlotTags = document.querySelector('#HidePlotTags').checked;
-                        config.HideAniDbTags = document.querySelector('#HideAniDbTags').checked;
-
-                        // Advanced settings
-                        config.PublicHost = publicHost;
-                        config.PreferAniDbPoster = document.querySelector('#PreferAniDbPoster').checked;
-                        config.AddAniDBId = document.querySelector('#AddAniDBId').checked;
-
-                        ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
-                    });
-                    e.preventDefault();
-                    return false;
-                });
-        </script>
     </div>
-</body>
-</html>
+</div>

@@ -30,7 +30,10 @@ namespace Shokofin.API
 
         private async Task<Stream> CallApi(string url, string requestType = "GET", string apiKey = null)
         {
-            if (!CheckApiKey()) return null;
+            if (string.IsNullOrEmpty(Plugin.Instance.Configuration.ApiKey)) {
+                _httpClient.DefaultRequestHeaders.Clear();
+                throw new Exception("Unable to call the API before an connection is established to Shoko Server!");
+            }
 
             try
             {
@@ -53,30 +56,18 @@ namespace Shokofin.API
             }
         }
 
-        private bool CheckApiKey()
-        {
-            if (!string.IsNullOrEmpty(Plugin.Instance.Configuration.ApiKey)) return true;
-
-            var apikey = GetApiKey().GetAwaiter().GetResult();
-            if (string.IsNullOrEmpty(apikey)) return false;
-            Plugin.Instance.Configuration.ApiKey = apikey;
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("apikey", apikey);
-            return true;
-        }
-
-        private async Task<string> GetApiKey()
+        public async Task<ApiKey> GetApiKey(string username, string password)
         {
             var postData = JsonSerializer.Serialize(new Dictionary<string, string>
             {
-                {"user", Plugin.Instance.Configuration.Username},
-                {"pass", Plugin.Instance.Configuration.Password},
+                {"user", username},
+                {"pass", password},
                 {"device", "Shoko Jellyfin Plugin (Shokofin)"},
             });
             var apiBaseUrl = Plugin.Instance.Configuration.Host;
             var response = await _httpClient.PostAsync($"{apiBaseUrl}/api/auth", new StringContent(postData, Encoding.UTF8, "application/json"));
             if (response.StatusCode == HttpStatusCode.OK)
-                return (await JsonSerializer.DeserializeAsync<ApiKey>(response.Content.ReadAsStreamAsync().Result))?.apikey ?? null;
+                return (await JsonSerializer.DeserializeAsync<ApiKey>(response.Content.ReadAsStreamAsync().Result));
 
             return null;
         }

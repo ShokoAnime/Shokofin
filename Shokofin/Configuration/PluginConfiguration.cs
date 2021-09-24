@@ -1,4 +1,5 @@
 using MediaBrowser.Model.Plugins;
+using System;
 using System.Text.Json.Serialization;
 
 using TextSourceType = Shokofin.Utils.Text.TextSourceType;
@@ -20,8 +21,6 @@ namespace Shokofin.Configuration
             => string.IsNullOrEmpty(PublicHost) ? Host : PublicHost;
 
         public string Username { get; set; }
-
-        public string Password { get; set; }
 
         public string ApiKey { get; set; }
 
@@ -69,12 +68,13 @@ namespace Shokofin.Configuration
 
         public DisplayLanguageType TitleAlternateType { get; set; }
 
+        public UserConfiguration[] UserList { get; set; }
+
         public PluginConfiguration()
         {
             Host = "http://127.0.0.1:8111";
             PublicHost = "";
             Username = "Default";
-            Password = "";
             ApiKey = "";
             UpdateWatchedStatus = false;
             HideArtStyleTags = false;
@@ -98,6 +98,7 @@ namespace Shokofin.Configuration
             BoxSetGrouping = SeriesAndBoxSetGroupType.Default;
             MovieOrdering = OrderType.Default;
             FilterOnLibraryTypes = false;
+            UserList = Array.Empty<UserConfiguration>();
         }
     }
 }

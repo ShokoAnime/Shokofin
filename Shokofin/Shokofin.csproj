@@ -5,15 +5,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Jellyfin.Common" Version="10.7.0" />
       <PackageReference Include="Jellyfin.Controller" Version="10.7.0" />
-      <PackageReference Include="Jellyfin.Data" Version="10.7.0" />
-      <PackageReference Include="Jellyfin.Model" Version="10.7.0" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     </ItemGroup>
 
     <ItemGroup>
+        <None Remove="Configuration\configController.js" />
         <None Remove="Configuration\configPage.html" />
+        <EmbeddedResource Include="Configuration\configController.js" />
         <EmbeddedResource Include="Configuration\configPage.html" />
     </ItemGroup>
 

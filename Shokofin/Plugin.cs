@@ -31,6 +31,11 @@ namespace Shokofin
                 {
                     Name = Name,
                     EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html",
+                },
+                new PluginPageInfo
+                {
+                    Name = "ShokoController.js",
+                    EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configController.js",
                 }
             };
         }
