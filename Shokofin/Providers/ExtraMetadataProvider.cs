@@ -156,8 +156,6 @@ namespace Shokofin.Providers
                         RemoveDummySeasons(series, seriesId);
 
                         RemoveDuplicateSeasons(series, seriesId);
-
-                        RemoveDuplicateEpisodes(series, seriesId);
                     }
                     finally {
                         ApiManager.TryUnlockActionForIdOFType("series", seriesId, "update");
@@ -186,8 +184,6 @@ namespace Shokofin.Providers
                         UpdateSeason(season, series, seriesId);
 
                         RemoveDuplicateSeasons(season, series, season.IndexNumber.Value, seriesId);
-
-                        RemoveDuplicateEpisodes(season, seriesId);
                     }
                     finally {
                         ApiManager.TryUnlockActionForIdOFType("season", seasonId, "update");
@@ -655,7 +651,11 @@ namespace Shokofin.Providers
         public void RemoveDuplicateSeasons(Series series, string seriesId)
         {
             var seasonNumbers = new HashSet<int>();
-            foreach (var season in series.GetSeasons(null, new DtoOptions(true)).OfType<Season>()) {
+            var seasons = series
+                .GetSeasons(null, new DtoOptions(true))
+                .OfType<Season>()
+                .OrderBy(s => s.IsVirtualItem);
+            foreach (var season in seasons) {
                 if (!season.IndexNumber.HasValue)
                     continue;
 
@@ -665,7 +665,6 @@ namespace Shokofin.Providers
 
                 RemoveDuplicateSeasons(season, series, seasonNumber, seriesId);
             }
-
         }
 
         public void RemoveDuplicateSeasons(Season season, Series series, int seasonNumber, string seriesId)
@@ -686,6 +685,18 @@ namespace Shokofin.Providers
             };
             foreach (var item in searchList)
                 LibraryManager.DeleteItem(item, deleteOptions);
+
+            foreach (var episode in season.GetEpisodes(null, new DtoOptions(true)).OfType<Episode>()) {
+                // We're only interested in physical episodes.
+                if (episode.IsVirtualItem)
+                    continue;
+
+                // Abort if we're unable to get the shoko episode id
+                if (!Lookup.TryGetEpisodeIdForEpisode(episode, out var episodeId))
+                    continue;
+
+                RemoveDuplicateEpisodes(episode, episodeId);
+            }
         }
 
         #endregion
@@ -718,32 +729,6 @@ namespace Shokofin.Providers
             Logger.LogInformation("Creating virtual episode for {SeriesName} S{SeasonNumber}:E{EpisodeNumber} (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", groupInfo?.Shoko.Name ?? seriesInfo.Shoko.Name, season.IndexNumber, result.IndexNumber, episodeInfo.Id, seriesInfo.Id, groupId);
 
             season.AddChild(result, CancellationToken.None);
-        }
-
-        private void RemoveDuplicateEpisodes(Series series, string seriesId)
-        {
-            foreach (var season in series.GetSeasons(null, new DtoOptions(true)).OfType<Season>()) {
-                // We're not interested in any dummy seasons
-                if (!season.IndexNumber.HasValue)
-                    continue;
-
-                RemoveDuplicateEpisodes(season, seriesId);
-            }
-        }
-
-        private void RemoveDuplicateEpisodes(Season season, string seriesId)
-        {
-            foreach (var episode in season.GetEpisodes(null, new DtoOptions(true)).OfType<Episode>()) {
-                // We're only interested in physical episodes.
-                if (episode.IsVirtualItem)
-                    continue;
-
-                // Abort if we're unable to get the shoko episode id
-                if (!Lookup.TryGetEpisodeIdForEpisode(episode, out var episodeId))
-                    continue;
-
-                RemoveDuplicateEpisodes(episode, episodeId);
-            }
         }
 
         private void RemoveDuplicateEpisodes(Episode episode, string episodeId)
