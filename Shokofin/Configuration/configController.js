@@ -199,6 +199,7 @@ export default function (page) {
             form.querySelector("#Password").value = "";
             form.querySelector("#ConnectionSetContainer").setAttribute("hidden", "");
             form.querySelector("#ConnectionResetContainer").removeAttribute("hidden");
+            form.querySelector("#ConnectionSection").removeAttribute("hidden");
             form.querySelector("#MetadataSection").removeAttribute("hidden");
             form.querySelector("#MetadataSection").removeAttribute("hidden");
             form.querySelector("#LibrarySection").removeAttribute("hidden");
@@ -211,6 +212,7 @@ export default function (page) {
             form.querySelector("#Username").removeAttribute("disabled");
             form.querySelector("#ConnectionSetContainer").removeAttribute("hidden");
             form.querySelector("#ConnectionResetContainer").setAttribute("hidden", "");
+            form.querySelector("#ConnectionSection").removeAttribute("hidden");
             form.querySelector("#MetadataSection").setAttribute("hidden", "");
             form.querySelector("#MetadataSection").setAttribute("hidden", "");
             form.querySelector("#LibrarySection").setAttribute("hidden", "");
