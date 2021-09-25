@@ -40,10 +40,15 @@ namespace Shokofin.Web
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<ActionResult<ApiKey>> PostAsync([FromBody] ApiLoginRequest body)
         {
-            var apiKey = await APIClient.GetApiKey(body.username, body.password).ConfigureAwait(false);
-            if (apiKey == null)
-                return new StatusCodeResult(StatusCodes.Status401Unauthorized);
-            return apiKey;
+            try {
+                var apiKey = await APIClient.GetApiKey(body.username, body.password).ConfigureAwait(false);
+                if (apiKey == null)
+                    return new StatusCodeResult(StatusCodes.Status401Unauthorized);
+                return apiKey;
+            }
+            catch {
+                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+            }
         }
     }
 
