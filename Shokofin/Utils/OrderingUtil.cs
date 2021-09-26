@@ -254,6 +254,10 @@ namespace Shokofin.Utils
                         airsAfterSeasonNumber = seasonNumber;
                     }
                     break;
+                case SpecialOrderType.AfterSeason: {
+                    airsAfterSeasonNumber = GetSeasonNumber(group, series, episode);
+                    break;
+                }
                 case SpecialOrderType.InBetweenSeasonMixed:
                 case SpecialOrderType.InBetweenSeasonByOtherData:
                     byOtherData:
