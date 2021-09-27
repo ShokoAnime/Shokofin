@@ -147,29 +147,53 @@ namespace Shokofin.API
         #endregion
         #region People
 
-        public async Task<IEnumerable<PersonInfo>> GetPeople(string seriesId)
+        private PersonInfo RoleToPersonInfo(Role role)
         {
-            var list = new List<PersonInfo>();
-            var roles = await APIClient.GetSeriesCast(seriesId);
-            foreach (var role in roles)
-            {
-                switch (role.RoleName) {
-                    case Role.CreatorRoleType.Studio:
-                        break;
+            switch (role.RoleName) {
+                    default:
+                        return null;
+                    case Role.CreatorRoleType.Director:
+                        return new PersonInfo {
+                            Type = PersonType.Director,
+                            Name = role.Staff.Name,
+                            Role = role.RoleDetails,
+                            ImageUrl = role.Staff.Image?.ToURLString(),
+                        };
+                    case Role.CreatorRoleType.Producer:
+                        return new PersonInfo {
+                            Type = PersonType.Producer,
+                            Name = role.Staff.Name,
+                            Role = role.RoleDetails,
+                            ImageUrl = role.Staff.Image?.ToURLString(),
+                        };
+                    case Role.CreatorRoleType.Music:
+                        return new PersonInfo {
+                            Type = PersonType.Lyricist,
+                            Name = role.Staff.Name,
+                            Role = role.RoleDetails,
+                            ImageUrl = role.Staff.Image?.ToURLString(),
+                        };
+                    case Role.CreatorRoleType.SourceWork:
+                        return new PersonInfo {
+                            Type = PersonType.Writer,
+                            Name = role.Staff.Name,
+                            Role = role.RoleDetails,
+                            ImageUrl = role.Staff.Image?.ToURLString(),
+                        };
+                    case Role.CreatorRoleType.SeriesComposer:
+                        return new PersonInfo {
+                            Type = PersonType.Composer,
+                            Name = role.Staff.Name,
+                            ImageUrl = role.Staff.Image?.ToURLString(),
+                        };
                     case Role.CreatorRoleType.Seiyuu:
-                        list.Add(new PersonInfo
-                        {
+                        return new PersonInfo {
                             Type = PersonType.Actor,
                             Name = role.Staff.Name,
                             Role = role.Character.Name,
                             ImageUrl = role.Staff.Image?.ToURLString(),
-                        });
-                        break;
-                    default:
-                        break;
+                        };
                 }
-            }
-            return list;
         }
 
         #endregion
@@ -542,8 +566,11 @@ namespace Shokofin.API
             var tvDbId = series.IDs.TvDB?.FirstOrDefault();
             var tags = await GetTags(seriesId);
             var genres = await GetGenresForSeries(seriesId);
-            var studios = await GetStudiosForSeries(seriesId);
-            Dictionary<EpisodeInfo, EpisodeInfo> specialsAnchorDictionary = new Dictionary<EpisodeInfo, EpisodeInfo>();
+            var cast = await APIClient.GetSeriesCast(seriesId);
+
+            var studios = cast.Where(r => r.RoleName == Role.CreatorRoleType.Studio).Select(r => r.Staff.Name).ToArray();
+            var staff = cast.Select(RoleToPersonInfo).OfType<PersonInfo>().ToArray();
+            var specialsAnchorDictionary = new Dictionary<EpisodeInfo, EpisodeInfo>();
             var specialsList = new List<EpisodeInfo>();
             var episodesList = new List<EpisodeInfo>();
             var extrasList = new List<EpisodeInfo>();
@@ -604,6 +631,7 @@ namespace Shokofin.API
                 Tags = tags,
                 Genres = genres,
                 Studios = studios,
+                Staff = staff,
                 RawEpisodeList = allEpisodesList,
                 EpisodeList = episodesList,
                 AlternateEpisodesList = altEpisodesList,

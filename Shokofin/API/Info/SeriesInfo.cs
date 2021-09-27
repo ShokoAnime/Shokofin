@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Shokofin.API.Models;
 
+using PersonInfo = MediaBrowser.Controller.Entities.PersonInfo;
+
 namespace Shokofin.API.Info
 {
     public class SeriesInfo
@@ -20,6 +22,8 @@ namespace Shokofin.API.Info
         public string[] Genres;
 
         public string[] Studios;
+
+        public PersonInfo[] Staff;
 
         /// <summary>
         /// All episodes (of all type) that belong to this series.

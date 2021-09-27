@@ -113,7 +113,7 @@ namespace Shokofin.Providers
             result.HasMetadata = true;
 
             result.ResetPeople();
-            foreach (var person in await ApiManager.GetPeople(series.Id))
+            foreach (var person in series.Staff)
                 result.AddPerson(person);
 
             return result;
@@ -160,7 +160,7 @@ namespace Shokofin.Providers
             result.HasMetadata = true;
 
             result.ResetPeople();
-            foreach (var person in await ApiManager.GetPeople(series.Id))
+            foreach (var person in series.Staff)
                 result.AddPerson(person);
 
             return result;
