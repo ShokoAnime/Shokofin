@@ -19,21 +19,21 @@
                             <input is="emby-input" type="text" id="Username" required label="Username:" />
                             <div class="fieldDescription">The user should be an administrator in Shoko, preferably without any filtering applied.</div>
                         </div>
-                        <div id="ConnectionResetContainer" hidden>
-                            <button is="emby-button" type="submit" name="reset-connection" class="raised block emby-button">
-                                <span>Reset</span>
-                            </button>
-                            <div class="fieldDescription">Reset the connection settings. Be sure to stop any tasks using this plugin before you press the button.</div>
-                        </div>
                         <div id="ConnectionSetContainer">
                             <div class="inputContainer inputContainer-withDescription">
                                 <input is="emby-input" type="text" id="Password" label="Password:" />
                                 <div class="fieldDescription">The password for account. It can be empty.</div>
                             </div>
-                            <button is="emby-button" type="submit" name="set-connection" class="raised button-submit block emby-button">
+                            <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                                 <span>Connect</span>
                             </button>
                             <div class="fieldDescription">Establish a connection to Shoko Server using the provided credentials.</div>
+                        </div>
+                        <div id="ConnectionResetContainer" hidden>
+                            <button is="emby-button" type="submit" name="reset-connection" class="raised block emby-button">
+                                <span>Reset</span>
+                            </button>
+                            <div class="fieldDescription">Reset the connection settings. Be sure to stop any tasks using this plugin before you press the button.</div>
                         </div>
                     </fieldset>
                     <fieldset id="MetadataSection" class="verticalSection verticalSection-extrabottompadding" hidden>
