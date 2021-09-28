@@ -17,6 +17,27 @@ namespace Shokofin.API.Models
         
         public DateTime Created { get; set; }
 
+        /// <summary>
+        /// A summerised view of the user data for this file.
+        /// </summary>
+        public class UserDataSummary {
+            /// <summary>
+            /// The number of times this file have been watched. Doesn't include
+            /// active watch seesions.
+            /// </summary>
+            public int WatchedCount;
+
+            /// <summary>
+            /// The last time this file was watched, if at all.
+            /// </summary>
+            public DateTime? LastWatchedAt;
+
+            /// <summary>
+            /// Number of ticks into the video to resume from. This is 0 if the video is not currently watched.
+            /// </summary>
+            public long ResumePositionTicks { get; set; }
+        }
+
         public class Location
         {
             public int ImportFolderID { get; set; }

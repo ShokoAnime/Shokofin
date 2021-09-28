@@ -60,12 +60,15 @@ namespace Shokofin.Providers
             LibraryManager.ItemRemoved -= OnLibraryManagerItemRemoved;
         }
 
-        private void OnLibraryManagerItemAdded(object sender, ItemChangeEventArgs itemChangeEventArgs)
+        private void OnLibraryManagerItemAdded(object sender, ItemChangeEventArgs e)
         {
-            switch (itemChangeEventArgs.Item) {
+            if (e == null || e.Item == null || e.Parent == null || !(e.UpdateReason.HasFlag(ItemUpdateType.MetadataImport) || e.UpdateReason.HasFlag(ItemUpdateType.MetadataDownload)))
+                return;
+
+            switch (e.Item) {
                 case Series series: {
                     // Abort if we're unable to get the shoko series id
-                    if (!Lookup.TryGetSeriesIdForSeries(series, out var seriesId))
+                    if (!Lookup.TryGetSeriesIdFor(series, out var seriesId))
                         return;
 
                     if (!ApiManager.TryLockActionForIdOFType("series", seriesId, "update"))
@@ -87,11 +90,11 @@ namespace Shokofin.Providers
                     if (!season.IndexNumber.HasValue)
                         return;
 
-                    if (!(itemChangeEventArgs.Parent is Series series))
+                    if (!(e.Parent is Series series))
                         return;
 
                     // Abort if we're unable to get the shoko series id
-                    if (!Lookup.TryGetSeriesIdForSeason(season, out var seriesId))
+                    if (!Lookup.TryGetSeriesIdFor(season, out var seriesId))
                         return;
 
                     if (ApiManager.IsActionForIdOfTypeLocked("series", seriesId, "update"))
@@ -112,7 +115,7 @@ namespace Shokofin.Providers
                 }
                 case Episode episode: {
                     // Abort if we're unable to get the shoko episode id
-                    if (!(Lookup.TryGetEpisodeIdForEpisode(episode, out var episodeId) && Lookup.TryGetSeriesIdForEpisodeId(episodeId, out var seriesId)))
+                    if (!(Lookup.TryGetEpisodeIdFor(episode, out var episodeId) && Lookup.TryGetSeriesIdFromEpisodeId(episodeId, out var seriesId)))
                         return;
 
                     if (ApiManager.IsActionForIdOfTypeLocked("series", seriesId, "update"))
@@ -139,12 +142,15 @@ namespace Shokofin.Providers
             }
         }
 
-        private void OnLibraryManagerItemUpdated(object sender, ItemChangeEventArgs itemChangeEventArgs)
+        private void OnLibraryManagerItemUpdated(object sender, ItemChangeEventArgs e)
         {
-            switch (itemChangeEventArgs.Item) {
+            if (e == null || e.Item == null || e.Parent == null || !(e.UpdateReason.HasFlag(ItemUpdateType.MetadataImport) || e.UpdateReason.HasFlag(ItemUpdateType.MetadataDownload)))
+                return;
+
+            switch (e.Item) {
                 case Series series: {
                     // Abort if we're unable to get the shoko episode id
-                    if (!Lookup.TryGetSeriesIdForSeries(series, out var seriesId))
+                    if (!Lookup.TryGetSeriesIdFor(series, out var seriesId))
                         return;
 
                     if (!ApiManager.TryLockActionForIdOFType("series", seriesId, "update"))
@@ -169,7 +175,7 @@ namespace Shokofin.Providers
                         return;
 
                     // Abort if we're unable to get the shoko series id
-                    if (!Lookup.TryGetSeriesIdForSeason(season, out var seriesId))
+                    if (!Lookup.TryGetSeriesIdFor(season, out var seriesId))
                         return;
 
                     if (ApiManager.IsActionForIdOfTypeLocked("series", seriesId, "update"))
@@ -194,7 +200,7 @@ namespace Shokofin.Providers
                 }
                 case Episode episode: {
                     // Abort if we're unable to get the shoko episode id
-                    if (!(Lookup.TryGetEpisodeIdForEpisode(episode, out var episodeId) && Lookup.TryGetSeriesIdForEpisodeId(episodeId, out var seriesId)))
+                    if (!(Lookup.TryGetEpisodeIdFor(episode, out var episodeId) && Lookup.TryGetSeriesIdFromEpisodeId(episodeId, out var seriesId)))
                         return;
 
                     if (ApiManager.IsActionForIdOfTypeLocked("series", seriesId, "update"))
@@ -221,15 +227,18 @@ namespace Shokofin.Providers
             }
         }
 
-        private void OnLibraryManagerItemRemoved(object sender, ItemChangeEventArgs itemChangeEventArgs)
+        private void OnLibraryManagerItemRemoved(object sender, ItemChangeEventArgs e)
         {
-            if (itemChangeEventArgs.Item.IsVirtualItem)
+            if (e == null || e.Item == null || e.Parent == null || !(e.UpdateReason.HasFlag(ItemUpdateType.MetadataImport) || e.UpdateReason.HasFlag(ItemUpdateType.MetadataDownload)))
                 return;
 
-            switch (itemChangeEventArgs.Item) {
+            if (e.Item.IsVirtualItem)
+                return;
+
+            switch (e.Item) {
                 // Clean up after removing a series.
                 case Series series: {
-                    if (!Lookup.TryGetSeriesIdForSeries(series, out var seriesId))
+                    if (!Lookup.TryGetSeriesIdFor(series, out var seriesId))
                         return;
 
                     RemoveExtras(series, seriesId);
@@ -245,10 +254,10 @@ namespace Shokofin.Providers
                 // Create a new virtual season if the real one was deleted and clean up extras if the season was deleted.
                 case Season season: {
                     // Abort if we're unable to get the shoko episode id
-                    if (!(Lookup.TryGetSeriesIdForSeason(season, out var seriesId) && (itemChangeEventArgs.Parent is Series series)))
+                    if (!(Lookup.TryGetSeriesIdFor(season, out var seriesId) && (e.Parent is Series series)))
                         return;
 
-                    if (itemChangeEventArgs.UpdateReason == ItemUpdateType.None)
+                    if (e.UpdateReason == ItemUpdateType.None)
                         RemoveExtras(season, seriesId);
                     else
                         UpdateSeason(season, series, seriesId, true);
@@ -257,7 +266,7 @@ namespace Shokofin.Providers
                 }
                 // Similarly, create a new virtual episode if the real one was deleted.
                 case Episode episode: {
-                    if (!Lookup.TryGetEpisodeIdForEpisode(episode, out var episodeId))
+                    if (!Lookup.TryGetEpisodeIdFor(episode, out var episodeId))
                         return;
 
                     RemoveDuplicateEpisodes(episode, episodeId);
@@ -404,7 +413,7 @@ namespace Shokofin.Providers
             // Get a hash-set of existing episodes – both physical and virtual – to exclude when adding new virtual episodes.
             var existingEpisodes = new HashSet<string>();
             foreach (var episode in season.Children.OfType<Episode>())
-                if (Lookup.TryGetEpisodeIdForEpisode(episode, out var episodeId))
+                if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId))
                     existingEpisodes.Add(episodeId);
 
             // Handle specials when grouped.
@@ -469,7 +478,7 @@ namespace Shokofin.Providers
                     break;
                 case Episode episode:
                     // Get a hash-set of existing episodes – both physical and virtual – to exclude when adding new virtual episodes.
-                    if (Lookup.TryGetEpisodeIdForEpisode(episode, out var episodeId))
+                    if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId))
                         episodes.Add(episodeId);
                     break;
             }
@@ -692,7 +701,7 @@ namespace Shokofin.Providers
                     continue;
 
                 // Abort if we're unable to get the shoko episode id
-                if (!Lookup.TryGetEpisodeIdForEpisode(episode, out var episodeId))
+                if (!Lookup.TryGetEpisodeIdFor(episode, out var episodeId))
                     continue;
 
                 RemoveDuplicateEpisodes(episode, episodeId);

@@ -42,7 +42,7 @@ namespace Shokofin.Providers
                 var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Utils.Ordering.GroupFilterType.Others : Utils.Ordering.GroupFilterType.Default;
                 switch (item) {
                     case Episode episode: {
-                        if (Lookup.TryGetEpisodeIdForEpisode(episode, out var episodeId)) {
+                        if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId)) {
                             var episodeInfo = await ApiManager.GetEpisodeInfo(episodeId);
                             if (episodeInfo != null) {
                                 AddImagesForEpisode(ref list, episodeInfo);
@@ -52,7 +52,7 @@ namespace Shokofin.Providers
                         break;
                     }
                     case Series series: {
-                        if (Lookup.TryGetSeriesIdForSeries(series, out var seriesId)) {
+                        if (Lookup.TryGetSeriesIdFor(series, out var seriesId)) {
                             if (Plugin.Instance.Configuration.SeriesGrouping == Utils.Ordering.GroupType.ShokoGroup) {
                                 var groupInfo = await ApiManager.GetGroupInfoForSeries(seriesId, filterLibrary);
                                 var seriesInfo = groupInfo?.DefaultSeries;
@@ -72,7 +72,7 @@ namespace Shokofin.Providers
                         break;
                     }
                     case Season season: {
-                        if (Lookup.TryGetSeriesIdForSeason(season, out var seriesId)) {
+                        if (Lookup.TryGetSeriesIdFor(season, out var seriesId)) {
                             var groupInfo = await ApiManager.GetGroupInfoForSeries(seriesId, filterLibrary);
                             var seriesInfo = groupInfo?.GetSeriesInfoBySeasonNumber(season.IndexNumber.Value);
                             if (seriesInfo != null) {
@@ -83,7 +83,7 @@ namespace Shokofin.Providers
                         break;
                     }
                     case Movie movie: {
-                        if (Lookup.TryGetSeriesIdForMovie(movie, out var seriesId)) {
+                        if (Lookup.TryGetSeriesIdFor(movie, out var seriesId)) {
                             var seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
                             if (seriesInfo != null) {
                                 AddImagesForSeries(ref list, seriesInfo);
@@ -93,7 +93,7 @@ namespace Shokofin.Providers
                         break;
                     }
                     case BoxSet boxSet: {
-                        if (Lookup.TryGetSeriesIdForBoxSet(boxSet, out var seriesId)) {
+                        if (Lookup.TryGetSeriesIdFor(boxSet, out var seriesId)) {
                             var seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
                             if (seriesInfo != null) {
                                 AddImagesForSeries(ref list, seriesInfo);

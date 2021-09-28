@@ -23,36 +23,69 @@ namespace Shokofin.API
 
         public ShokoAPIClient(ILogger<ShokoAPIClient> logger)
         {
+            _httpClient = (new HttpClient());
             Logger = logger;
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("apikey", Plugin.Instance.Configuration.ApiKey);
         }
 
-        private async Task<Stream> CallApi(string url, string requestType = "GET", string apiKey = null)
+        private Task<ReturnType> CallApi<ReturnType>(string url, string apiKey = null)
+            => CallApi<ReturnType>(url, HttpMethod.Get, apiKey);
+
+        private async Task<ReturnType> CallApi<ReturnType>(string url, HttpMethod method, string apiKey = null)
         {
-            if (string.IsNullOrEmpty(Plugin.Instance.Configuration.ApiKey)) {
+            // Use the default key if no key was provided.
+            if (apiKey == null)
+                apiKey = Plugin.Instance.Configuration.ApiKey;
+
+            // Check if we have a key to use.
+            if (string.IsNullOrEmpty(apiKey)) {
                 _httpClient.DefaultRequestHeaders.Clear();
                 throw new Exception("Unable to call the API before an connection is established to Shoko Server!");
             }
 
-            try
-            {
-                var apiBaseUrl = Plugin.Instance.Configuration.Host;
-                url = $"{apiBaseUrl}{url}";
-                Logger.LogTrace("{HTTPVerb} {Url}", requestType, url);
-                switch (requestType)
-                {
-                    case "PATCH":
-                    case "POST":
-                        var response = await _httpClient.PostAsync(url,  new StringContent(""));
-                        return response.StatusCode == HttpStatusCode.OK ? response.Content.ReadAsStreamAsync().Result : null;
-                    default:
-                        return await _httpClient.GetStreamAsync(url);
+            try {
+                var remoteUrl = string.Concat(Plugin.Instance.Configuration.Host, url);
+                using (var requestMessage = new HttpRequestMessage(method, remoteUrl)) {
+                    requestMessage.Content = (new StringContent(""));
+                    requestMessage.Headers.Add("apikey", apiKey);
+                    var response = await _httpClient.SendAsync(requestMessage);
+                    var responseStream = response.StatusCode == HttpStatusCode.OK ? await response.Content.ReadAsStreamAsync() : null;
+                    return responseStream != null ? await JsonSerializer.DeserializeAsync<ReturnType>(responseStream) : default(ReturnType);
                 }
             }
             catch (HttpRequestException)
             {
-                return null;
+                return default(ReturnType);
+            }
+        }
+
+        private Task<ReturnType> CallApi<Type, ReturnType>(string url, Type body, string apiKey = null)
+            => CallApi<Type, ReturnType>(url, HttpMethod.Post, body, apiKey);
+
+        private async Task<ReturnType> CallApi<Type, ReturnType>(string url, HttpMethod method, Type body, string apiKey = null)
+        {
+            // Use the default key if no key was provided.
+            if (apiKey == null)
+                apiKey = Plugin.Instance.Configuration.ApiKey;
+
+            // Check if we have a key to use.
+            if (string.IsNullOrEmpty(apiKey)) {
+                _httpClient.DefaultRequestHeaders.Clear();
+                throw new Exception("Unable to call the API before an connection is established to Shoko Server!");
+            }
+
+            try {
+                var remoteUrl = string.Concat(Plugin.Instance.Configuration.Host, url);
+                using (var requestMessage = new HttpRequestMessage(method, remoteUrl)) {
+                    requestMessage.Content = (new StringContent(JsonSerializer.Serialize<Type>(body), Encoding.UTF8, "application/json"));
+                    requestMessage.Headers.Add("apikey", apiKey);
+                    var response = await _httpClient.SendAsync(requestMessage);
+                    var responseStream = response.StatusCode == HttpStatusCode.OK ? response.Content.ReadAsStreamAsync().Result : null;
+                    return responseStream != null ? await JsonSerializer.DeserializeAsync<ReturnType>(responseStream) : default(ReturnType);
+                }
+            }
+            catch (HttpRequestException)
+            {
+                return default(ReturnType);
             }
         }
 
@@ -72,136 +105,124 @@ namespace Shokofin.API
             return null;
         }
 
-        public async Task<Episode> GetEpisode(string id)
+        public Task<Episode> GetEpisode(string id)
         {
-            var responseStream = await CallApi($"/api/v3/Episode/{id}");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<Episode>(responseStream) : null;
+            return CallApi<Episode>($"/api/v3/Episode/{id}");
         }
 
-        public async Task<List<Episode>> GetEpisodesFromSeries(string seriesId)
+        public Task<List<Episode>> GetEpisodesFromSeries(string seriesId)
         {
-            var responseStream = await CallApi($"/api/v3/Series/{seriesId}/Episode?includeMissing=true");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<List<Episode>>(responseStream) : null;
+            return CallApi<List<Episode>>($"/api/v3/Series/{seriesId}/Episode?includeMissing=true");
         }
 
-        public async Task<List<Episode>> GetEpisodeFromFile(string id)
+        public Task<List<Episode>> GetEpisodeFromFile(string id)
         {
-            var responseStream = await CallApi($"/api/v3/File/{id}/Episode");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<List<Episode>>(responseStream) : null;
+            return CallApi<List<Episode>>($"/api/v3/File/{id}/Episode");
         }
 
-        public async Task<Episode.AniDB> GetEpisodeAniDb(string id)
+        public Task<Episode.AniDB> GetEpisodeAniDb(string id)
         {
-            var responseStream = await CallApi($"/api/v3/Episode/{id}/AniDB");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<Episode.AniDB>(responseStream) : null;
+            return CallApi<Episode.AniDB>($"/api/v3/Episode/{id}/AniDB");
         }
 
-        public async Task<IEnumerable<Episode.TvDB>> GetEpisodeTvDb(string id)
+        public Task<List<Episode.TvDB>> GetEpisodeTvDb(string id)
         {
-            var responseStream = await CallApi($"/api/v3/Episode/{id}/TvDB");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Episode.TvDB>>(responseStream) : null;
+            return CallApi<List<Episode.TvDB>>($"/api/v3/Episode/{id}/TvDB");
         }
 
-        public async Task<File> GetFile(string id)
+        public Task<File> GetFile(string id)
         {
-            var responseStream = await CallApi($"/api/v3/File/{id}");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<File>(responseStream) : null;
+            return CallApi<File>($"/api/v3/File/{id}");
         }
 
-        public async Task<bool> ScrobbleFile(string id, bool watched, long? progress)
+        public Task<List<File.FileDetailed>> GetFileByPath(string filename)
         {
-            var responseStream = await CallApi($"/api/v3/File/{id}/Scrobble?watched={watched}&resumePosition={progress ?? 0}", "PATCH");
-            return responseStream != null;
+            return CallApi<List<File.FileDetailed>>($"/api/v3/File/PathEndsWith/{Uri.EscapeDataString(filename)}");
         }
 
-        public async Task<IEnumerable<File.FileDetailed>> GetFileByPath(string filename)
+        public Task<File.UserDataSummary> GetFileUserData(string fileId, string apiKey)
         {
-            var responseStream = await CallApi($"/api/v3/File/PathEndsWith/{Uri.EscapeDataString(filename)}");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<File.FileDetailed>>(responseStream) : null;
+            return CallApi<File.UserDataSummary>($"/api/v3/File/UserData");
         }
 
-        public async Task<Series> GetSeries(string id)
+        public Task<bool> ScrobbleFile(string id, bool watched, string apiKey)
         {
-            var responseStream = await CallApi($"/api/v3/Series/{id}");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<Series>(responseStream) : null;
+            return CallApi<bool>($"/api/v3/File/{id}/Scrobble?watched={watched}", HttpMethod.Patch, apiKey);
         }
 
-        public async Task<Series> GetSeriesFromEpisode(string id)
+        public Task<bool> ScrobbleFile(string id, long progress, string apiKey)
         {
-            var responseStream = await CallApi($"/api/v3/Episode/{id}/Series");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<Series>(responseStream) : null;
+            return CallApi<bool>($"/api/v3/File/{id}/Scrobble?resumePosition={progress}", HttpMethod.Patch, apiKey);
         }
 
-        public async Task<List<Series>> GetSeriesInGroup(string id)
+        public Task<bool> ScrobbleFile(string id, bool watched, long? progress, string apiKey)
         {
-            var responseStream = await CallApi($"/api/v3/Filter/0/Group/{id}/Series");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<List<Series>>(responseStream) : null;
+            return CallApi<bool>($"/api/v3/File/{id}/Scrobble?watched={watched}&resumePosition={progress ?? 0}", HttpMethod.Patch, apiKey);
         }
 
-        public async Task<Series.AniDB> GetSeriesAniDB(string id)
+        public Task<Series> GetSeries(string id)
         {
-            var responseStream = await CallApi($"/api/v3/Series/{id}/AniDB");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<Series.AniDB>(responseStream) : null;
+            return CallApi<Series>($"/api/v3/Series/{id}");
         }
 
-        public async Task<IEnumerable<Series.TvDB>> GetSeriesTvDB(string id)
+        public Task<Series> GetSeriesFromEpisode(string id)
         {
-            var responseStream = await CallApi($"/api/v3/Series/{id}/TvDB");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Series.TvDB>>(responseStream) : null;
+            return CallApi<Series>($"/api/v3/Episode/{id}/Series");
         }
 
-        public async Task<IEnumerable<Role>> GetSeriesCast(string id)
+        public Task<List<Series>> GetSeriesInGroup(string id)
         {
-            var responseStream = await CallApi($"/api/v3/Series/{id}/Cast");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Role>>(responseStream) : null;
+            return CallApi<List<Series>>($"/api/v3/Filter/0/Group/{id}/Series");
         }
 
-        public async Task<IEnumerable<Role>> GetSeriesCast(string id, Role.CreatorRoleType role)
+        public Task<Series.AniDB> GetSeriesAniDB(string id)
         {
-            var responseStream = await CallApi($"/api/v3/Series/{id}/Cast?roleType={role.ToString()}");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Role>>(responseStream) : null;
+            return CallApi<Series.AniDB>($"/api/v3/Series/{id}/AniDB");
         }
 
-        public async Task<Images> GetSeriesImages(string id)
+        public Task<List<Series.TvDB>> GetSeriesTvDB(string id)
         {
-            var responseStream = await CallApi($"/api/v3/Series/{id}/Images");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<Images>(responseStream) : null;
+            return CallApi<List<Series.TvDB>>($"/api/v3/Series/{id}/TvDB");
         }
 
-        public async Task<IEnumerable<Series>> GetSeriesPathEndsWith(string dirname)
+        public Task<List<Role>> GetSeriesCast(string id)
         {
-            var responseStream = await CallApi($"/api/v3/Series/PathEndsWith/{Uri.EscapeDataString(dirname)}");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Series>>(responseStream) : null;
+            return CallApi<List<Role>>($"/api/v3/Series/{id}/Cast");
         }
 
-        public async Task<IEnumerable<Tag>> GetSeriesTags(string id, int filter = 0)
+        public Task<List<Role>> GetSeriesCast(string id, Role.CreatorRoleType role)
         {
-            var responseStream = await CallApi($"/api/v3/Series/{id}/Tags/{filter}?excludeDescriptions=true");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<Tag>>(responseStream) : null;
+            return CallApi<List<Role>>($"/api/v3/Series/{id}/Cast?roleType={role.ToString()}");
         }
 
-        public async Task<Group> GetGroup(string id)
+        public Task<Images> GetSeriesImages(string id)
         {
-            var responseStream = await CallApi($"/api/v3/Group/{id}");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<Group>(responseStream) : null;
+            return CallApi<Images>($"/api/v3/Series/{id}/Images");
         }
 
-        public async Task<Group> GetGroupFromSeries(string id)
+        public Task<List<Series>> GetSeriesPathEndsWith(string dirname)
         {
-            var responseStream = await CallApi($"/api/v3/Series/{id}/Group");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<Group>(responseStream) : null;
+            return CallApi<List<Series>>($"/api/v3/Series/PathEndsWith/{Uri.EscapeDataString(dirname)}");
         }
 
-        public async Task<IEnumerable<SeriesSearchResult>> SeriesSearch(string query)
+        public Task<List<Tag>> GetSeriesTags(string id, int filter = 0)
         {
-            var responseStream = await CallApi($"/api/v3/Series/Search/{Uri.EscapeDataString(query)}");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<SeriesSearchResult>>(responseStream) : null;
+            return CallApi<List<Tag>>($"/api/v3/Series/{id}/Tags/{filter}?excludeDescriptions=true");
         }
 
-        public async Task<IEnumerable<SeriesSearchResult>> SeriesStartsWith(string query)
+        public Task<Group> GetGroup(string id)
         {
-            var responseStream = await CallApi($"/api/v3/Series/StartsWith/{Uri.EscapeDataString(query)}");
-            return responseStream != null ? await JsonSerializer.DeserializeAsync<IEnumerable<SeriesSearchResult>>(responseStream) : null;
+            return CallApi<Group>($"/api/v3/Group/{id}");
+        }
+
+        public Task<Group> GetGroupFromSeries(string id)
+        {
+            return CallApi<Group>($"/api/v3/Series/{id}/Group");
+        }
+
+        public Task<List<SeriesSearchResult>> SeriesSearch(string query)
+        {
+            return CallApi<List<SeriesSearchResult>>($"/api/v3/Series/Search/{Uri.EscapeDataString(query)}");
         }
     }
 }

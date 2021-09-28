@@ -13,6 +13,7 @@ namespace Shokofin
             serviceCollection.AddSingleton<Shokofin.API.ShokoAPIClient>();
             serviceCollection.AddSingleton<Shokofin.API.ShokoAPIManager>();
             serviceCollection.AddSingleton<IIdLookup, IdLookup>();
+            serviceCollection.AddSingleton<Shokofin.UserSyncManager>();
         }
     }
 }

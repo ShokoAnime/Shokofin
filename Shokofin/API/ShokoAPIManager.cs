@@ -361,6 +361,19 @@ namespace Shokofin.API
             return info;
         }
 
+        public bool TryGetFileIdForPath(string path, out string fileId, out int episodeCount)
+        {
+            if (!string.IsNullOrEmpty(path) && FilePathToFileIdAndEpisodeCountDictionary.TryGetValue(path, out var pair)) {
+                fileId = pair.Item1;
+                episodeCount = pair.Item2;
+                return true;
+            }
+
+            fileId = null;
+            episodeCount = 0;
+            return false;
+        }
+
         #endregion
         #region Episode Info
 

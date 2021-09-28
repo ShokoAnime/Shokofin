@@ -24,14 +24,14 @@ namespace Shokofin
         #endregion
         #region Group Id
 
-        bool TryGetGroupIdForSeriesId(string seriesId, out string groupId);
+        bool TryGetGroupIdFromSeriesId(string seriesId, out string groupId);
 
         #endregion
         #region Series Id
 
-        bool TryGetSeriesIdForPath(string path, out string seriesId);
+        bool TryGetSeriesIdFor(string path, out string seriesId);
 
-        bool TryGetSeriesIdForEpisodeId(string episodeId, out string seriesId);
+        bool TryGetSeriesIdFromEpisodeId(string episodeId, out string seriesId);
 
         /// <summary>
         /// Try to get the Shoko Series Id for the <see cref="MediaBrowser.Controller.Entities.TV.Series" />.
@@ -39,7 +39,7 @@ namespace Shokofin
         /// <param name="series">The <see cref="MediaBrowser.Controller.Entities.TV.Series" /> to check for.</param>
         /// <param name="seriesId">The variable to put the id in.</param>
         /// <returns>True if it successfully retrived the id for the <see cref="MediaBrowser.Controller.Entities.TV.Series" />.</returns>
-        bool TryGetSeriesIdForSeries(Series series, out string seriesId);
+        bool TryGetSeriesIdFor(Series series, out string seriesId);
 
         /// <summary>
         /// Try to get the Shoko Series Id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.
@@ -47,7 +47,7 @@ namespace Shokofin
         /// <param name="season">The <see cref="MediaBrowser.Controller.Entities.TV.Season" /> to check for.</param>
         /// <param name="seriesId">The variable to put the id in.</param>
         /// <returns>True if it successfully retrived the id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.</returns>
-        bool TryGetSeriesIdForSeason(Season season, out string seriesId);
+        bool TryGetSeriesIdFor(Season season, out string seriesId);
 
         /// <summary>
         /// Try to get the Shoko Series Id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.
@@ -55,7 +55,7 @@ namespace Shokofin
         /// <param name="season">The <see cref="MediaBrowser.Controller.Entities.TV.Season" /> to check for.</param>
         /// <param name="seriesId">The variable to put the id in.</param>
         /// <returns>True if it successfully retrived the id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.</returns>
-        bool TryGetSeriesIdForBoxSet(BoxSet boxSet, out string seriesId);
+        bool TryGetSeriesIdFor(BoxSet boxSet, out string seriesId);
 
         /// <summary>
         /// Try to get the Shoko Series Id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.
@@ -63,7 +63,7 @@ namespace Shokofin
         /// <param name="season">The <see cref="MediaBrowser.Controller.Entities.TV.Season" /> to check for.</param>
         /// <param name="seriesId">The variable to put the id in.</param>
         /// <returns>True if it successfully retrived the id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.</returns>
-        bool TryGetSeriesIdForMovie(Movie movie, out string seriesId);
+        bool TryGetSeriesIdFor(Movie movie, out string seriesId);
 
         #endregion
         #region Series Path
@@ -73,16 +73,19 @@ namespace Shokofin
         #endregion
         #region Episode Id
 
-        bool TryGetEpisodeIdForPath(string path, out string episodeId);
+        bool TryGetEpisodeIdFor(string path, out string episodeId);
 
-        bool TryGetEpisodeIdForEpisode(Episode episode, out string episodeId);
-
-        bool TryGetEpisodeIdForMovie(Movie movie, out string episodeId);
+        bool TryGetEpisodeIdFor(BaseItem item, out string episodeId);
 
         #endregion
         #region Episode Path
 
         bool TryGetPathForEpisodeId(string episodeId, out string path);
+
+        #endregion
+        #region File Id
+
+        bool TryGetFileIdFor(BaseItem item, out string fileId);
 
         #endregion
     }
@@ -119,7 +122,7 @@ namespace Shokofin
         #endregion
         #region Group Id
 
-        public bool TryGetGroupIdForSeriesId(string seriesId, out string groupId)
+        public bool TryGetGroupIdFromSeriesId(string seriesId, out string groupId)
         {
             return ApiManager.TryGetGroupIdForSeriesId(seriesId, out groupId);
         }
@@ -127,25 +130,25 @@ namespace Shokofin
         #endregion
         #region Series Id
 
-        public bool TryGetSeriesIdForPath(string path, out string seriesId)
+        public bool TryGetSeriesIdFor(string path, out string seriesId)
         {
             return ApiManager.TryGetSeriesIdForPath(path, out seriesId);
         }
 
-        public bool TryGetSeriesIdForEpisodeId(string episodeId, out string seriesId)
+        public bool TryGetSeriesIdFromEpisodeId(string episodeId, out string seriesId)
         {
             return ApiManager.TryGetSeriesIdForEpisodeId(episodeId, out seriesId);
         }
 
-        public bool TryGetSeriesIdForSeries(Series series, out string seriesId)
+        public bool TryGetSeriesIdFor(Series series, out string seriesId)
         {
             if (series.ProviderIds.TryGetValue("Shoko Series", out seriesId) && !string.IsNullOrEmpty(seriesId)) {
                 return true;
             }
 
-            if (TryGetSeriesIdForPath(series.Path, out seriesId)) {
+            if (TryGetSeriesIdFor(series.Path, out seriesId)) {
                 // Set the "Shoko Group" and "Shoko Series" provider ids for the series, since it haven't been set again. It doesn't matter if it's not saved to the database, since we only need it while running the following code.
-                if (TryGetGroupIdForSeriesId(seriesId, out var groupId)) {
+                if (TryGetGroupIdFromSeriesId(seriesId, out var groupId)) {
                     var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
                     var groupInfo = ApiManager.GetGroupInfoSync(groupId, filterByType);
                     seriesId = groupInfo.DefaultSeries.Id;
@@ -164,36 +167,36 @@ namespace Shokofin
             return false;
         }
 
-        public bool TryGetSeriesIdForSeason(Season season, out string seriesId)
+        public bool TryGetSeriesIdFor(Season season, out string seriesId)
         {
             if (!season.IndexNumber.HasValue) {
                 seriesId = null;
                 return false;
             }
-            return TryGetSeriesIdForSeries(season.Series, out seriesId);
+            return TryGetSeriesIdFor(season.Series, out seriesId);
         }
 
-        public bool TryGetSeriesIdForMovie(Movie movie, out string seriesId)
+        public bool TryGetSeriesIdFor(Movie movie, out string seriesId)
         {
             if (movie.ProviderIds.TryGetValue("Shoko Series", out seriesId) && !string.IsNullOrEmpty(seriesId)) {
                 return true;
             }
 
-            if (TryGetEpisodeIdForPath(movie.Path, out var episodeId) && TryGetSeriesIdForEpisodeId(episodeId, out seriesId)) {
+            if (TryGetEpisodeIdFor(movie.Path, out var episodeId) && TryGetSeriesIdFromEpisodeId(episodeId, out seriesId)) {
                 return true;
             }
 
             return false;
         }
 
-        public bool TryGetSeriesIdForBoxSet(BoxSet boxSet, out string seriesId)
+        public bool TryGetSeriesIdFor(BoxSet boxSet, out string seriesId)
         {
             if (boxSet.ProviderIds.TryGetValue("Shoko Series", out seriesId) && !string.IsNullOrEmpty(seriesId)) {
                 return true;
             }
 
-            if (TryGetSeriesIdForPath(boxSet.Path, out seriesId)) {
-                if (TryGetGroupIdForSeriesId(seriesId, out var groupId)) {
+            if (TryGetSeriesIdFor(boxSet.Path, out seriesId)) {
+                if (TryGetGroupIdFromSeriesId(seriesId, out var groupId)) {
                     var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
                     var groupInfo = ApiManager.GetGroupInfoSync(groupId, filterByType);
                     seriesId = groupInfo.DefaultSeries.Id;
@@ -215,33 +218,20 @@ namespace Shokofin
         #endregion
         #region Episode Id
 
-        public bool TryGetEpisodeIdForPath(string path, out string episodeId)
+        public bool TryGetEpisodeIdFor(string path, out string episodeId)
         {
             return ApiManager.TryGetEpisodeIdForPath(path, out episodeId);
         }
 
-        public bool TryGetEpisodeIdForEpisode(Episode episode, out string episodeId)
+        public bool TryGetEpisodeIdFor(BaseItem item, out string episodeId)
         {
             // This will account for virtual episodes and existing episodes
-            if (episode.ProviderIds.TryGetValue("Shoko Episode", out episodeId) && !string.IsNullOrEmpty(episodeId)) {
+            if (item.ProviderIds.TryGetValue("Shoko Episode", out episodeId) && !string.IsNullOrEmpty(episodeId)) {
                 return true;
             }
 
             // This will account for new episodes that haven't received their first metadata update yet.
-            if (TryGetEpisodeIdForPath(episode.Path, out episodeId)) {
-                return true;
-            }
-
-            return false;
-        }
-
-        public bool TryGetEpisodeIdForMovie(Movie movie, out string episodeId)
-        {
-            if (movie.ProviderIds.TryGetValue("Shoko Episode", out episodeId) && !string.IsNullOrEmpty(episodeId)) {
-                return true;
-            }
-
-            if (TryGetEpisodeIdForPath(movie.Path, out episodeId)) {
+            if (TryGetEpisodeIdFor(item.Path, out episodeId)) {
                 return true;
             }
 
@@ -254,6 +244,17 @@ namespace Shokofin
         public bool TryGetPathForEpisodeId(string episodeId, out string path)
         {
             return ApiManager.TryGetEpisodePathForId(episodeId, out path);
+        }
+
+        #endregion
+        #region File Id
+
+        public bool TryGetFileIdFor(BaseItem episode, out string fileId)
+        {
+            if (episode.ProviderIds.TryGetValue("Shoko File", out fileId))
+                return true;
+
+            return ApiManager.TryGetFileIdForPath(episode.Path, out fileId, out var episodeCount);
         }
 
         #endregion
