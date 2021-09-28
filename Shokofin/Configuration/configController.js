@@ -45,6 +45,19 @@ async function loadUserConfig(page, userId, config) {
     Dashboard.hideLoadingMsg();
 }
 
+function toggleSyncUnderPlayback(form, checked) {
+    const elem = form.querySelector("#SyncUserDataUnderPlayback");
+    if (checked) {
+        elem.removeAttribute("disabled");
+        elem.classList.remove("disabled");
+    }
+    else {
+        elem.setAttribute("disabled", "");
+        elem.classList.add("disabled");
+        elem.checked = false;
+    }
+}
+
 function getApiKey(username, password) {
     return ApiClient.fetch({
         dataType: "json",
@@ -86,6 +99,11 @@ async function defaultSubmit(form) {
         config.FilterOnLibraryTypes = form.querySelector("#FilterOnLibraryTypes").checked;
         config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
         config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
+
+        // Synchronization settings
+        config.SyncUserDataOnImport = form.querySelector("#SyncUserDataOnImport").checked;
+        config.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
+        config.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked && form.querySelector("#SyncUserDataUnderPlayback").checked;
     
         // Tag settings
         config.HideArtStyleTags = form.querySelector("#HideArtStyleTags").checked;
@@ -202,6 +220,11 @@ async function syncSettings(form) {
     config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
     config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
 
+    // Synchronization settings
+    config.SyncUserDataOnImport = form.querySelector("#SyncUserDataOnImport").checked;
+    config.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
+    config.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked && form.querySelector("#SyncUserDataUnderPlayback").checked;
+
     // Tag settings
     config.HideArtStyleTags = form.querySelector("#HideArtStyleTags").checked;
     config.HideSourceTags = form.querySelector("#HideSourceTags").checked;
@@ -235,11 +258,13 @@ async function unlinkUser(form) {
 
     return config;
 }
-async function syncUserSettings(form) {
-    const userId = form.querySelector("#UserSelector").value;
-    if (!userId) return;
 
+async function syncUserSettings(form) {
     const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
+    const userId = form.querySelector("#UserSelector").value;
+    if (!userId)
+        return config;
+
     let userConfig = config.UserList.find((c) => userId === c.UserId);
     if (!userConfig) {
         userConfig = { UserId: userId };
@@ -285,6 +310,7 @@ export default function (page) {
             form.querySelector("#MetadataSection").removeAttribute("hidden");
             form.querySelector("#MetadataSection").removeAttribute("hidden");
             form.querySelector("#LibrarySection").removeAttribute("hidden");
+            form.querySelector("#SyncSection").removeAttribute("hidden");
             form.querySelector("#UserSection").removeAttribute("hidden");
             form.querySelector("#TagSection").removeAttribute("hidden");
             form.querySelector("#AdvancedSection").removeAttribute("hidden");
@@ -298,6 +324,7 @@ export default function (page) {
             form.querySelector("#MetadataSection").setAttribute("hidden", "");
             form.querySelector("#MetadataSection").setAttribute("hidden", "");
             form.querySelector("#LibrarySection").setAttribute("hidden", "");
+            form.querySelector("#SyncSection").setAttribute("hidden", "");
             form.querySelector("#UserSection").setAttribute("hidden", "");
             form.querySelector("#TagSection").setAttribute("hidden", "");
             form.querySelector("#AdvancedSection").setAttribute("hidden", "");
@@ -305,6 +332,7 @@ export default function (page) {
 
         const userId = form.querySelector("#UserSelector").value;
         loadUserConfig(page, userId, config);
+        toggleSyncUnderPlayback(page, config.SyncUserDataAfterPlayback);
     };
 
     const onError = (err) => {
@@ -315,6 +343,10 @@ export default function (page) {
 
     userSelector.addEventListener("change", function () {
         loadUserConfig(page, this.value);
+    });
+
+    form.querySelector("#SyncUserDataAfterPlayback").addEventListener("change", function () {
+        toggleSyncUnderPlayback(page, this.checked);
     });
 
     page.addEventListener("viewshow", async function () {
@@ -341,6 +373,11 @@ export default function (page) {
             form.querySelector("#FilterOnLibraryTypes").checked = config.FilterOnLibraryTypes;
             form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
+
+            // Synchronization settings
+            form.querySelector("#SyncUserDataOnImport").checked = config.SyncUserDataOnImport;
+            form.querySelector("#SyncUserDataAfterPlayback").checked = config.SyncUserDataAfterPlayback;
+            form.querySelector("#SyncUserDataUnderPlayback").checked = config.SyncUserDataAfterPlayback && config.SyncUserDataUnderPlayback;
 
             // User settings
             userSelector.innerHTML += users.map((user) => `<option value="${user.Id}">${user.Name}</option>`);

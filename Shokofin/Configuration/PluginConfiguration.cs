@@ -24,7 +24,11 @@ namespace Shokofin.Configuration
 
         public string ApiKey { get; set; }
 
-        public bool UpdateWatchedStatus { get; set; }
+        public bool SyncUserDataAfterPlayback { get; set; }
+    
+        public bool SyncUserDataUnderPlayback { get; set; }
+
+        public bool SyncUserDataOnImport { get; set; }
 
         public bool HideArtStyleTags { get; set; }
 
@@ -76,7 +80,9 @@ namespace Shokofin.Configuration
             PublicHost = "";
             Username = "Default";
             ApiKey = "";
-            UpdateWatchedStatus = false;
+            SyncUserDataAfterPlayback = false;
+            SyncUserDataUnderPlayback = false;
+            SyncUserDataOnImport = false;
             HideArtStyleTags = false;
             HideSourceTags = false;
             HideMiscTags = false;

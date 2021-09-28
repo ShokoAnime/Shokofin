@@ -141,6 +141,35 @@
                             <span>Save</span>
                         </button>
                     </fieldset>
+                    <fieldset id="SyncSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Synchronization Settings</h3>
+                        </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="SyncUserDataOnImport" />
+                                <span>Sync watch-state on import</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will import the watch-state for items from Shoko on import or refresh.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="SyncUserDataAfterPlayback" />
+                                <span>Sync watch-state after play-back</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will sync-back the watch-state to Shoko after play-back has ended.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="SyncUserDataUnderPlayback" />
+                                <span>Sync watch-state under play-back</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will sync-back back the watch-state to Shoko under play-back. "Sync watch-state after play-back" must be enabled first to enable this setting.</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
                     <fieldset id="UserSection" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
                             <h3>User Settings</h3>
