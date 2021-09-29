@@ -169,11 +169,11 @@ namespace Shokofin
 
         public bool TryGetSeriesIdFor(Season season, out string seriesId)
         {
-            if (!season.IndexNumber.HasValue) {
-                seriesId = null;
-                return false;
+            if (season.ProviderIds.TryGetValue("Shoko Series", out seriesId) && !string.IsNullOrEmpty(seriesId)) {
+                return true;
             }
-            return TryGetSeriesIdFor(season.Series, out seriesId);
+
+            return TryGetSeriesIdFor(season.Path, out seriesId);
         }
 
         public bool TryGetSeriesIdFor(Movie movie, out string seriesId)

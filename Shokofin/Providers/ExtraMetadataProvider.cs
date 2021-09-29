@@ -94,7 +94,7 @@ namespace Shokofin.Providers
                         return;
 
                     // Abort if we're unable to get the shoko series id
-                    if (!Lookup.TryGetSeriesIdFor(season, out var seriesId))
+                    if (!Lookup.TryGetSeriesIdFor(season.Series, out var seriesId))
                         return;
 
                     if (ApiManager.IsActionForIdOfTypeLocked("series", seriesId, "update"))
@@ -175,7 +175,7 @@ namespace Shokofin.Providers
                         return;
 
                     // Abort if we're unable to get the shoko series id
-                    if (!Lookup.TryGetSeriesIdFor(season, out var seriesId))
+                    if (!Lookup.TryGetSeriesIdFor(season.Series, out var seriesId))
                         return;
 
                     if (ApiManager.IsActionForIdOfTypeLocked("series", seriesId, "update"))
@@ -254,7 +254,7 @@ namespace Shokofin.Providers
                 // Create a new virtual season if the real one was deleted and clean up extras if the season was deleted.
                 case Season season: {
                     // Abort if we're unable to get the shoko episode id
-                    if (!(Lookup.TryGetSeriesIdFor(season, out var seriesId) && (e.Parent is Series series)))
+                    if (!(Lookup.TryGetSeriesIdFor(season.Series, out var seriesId) && (e.Parent is Series series)))
                         return;
 
                     if (e.UpdateReason == ItemUpdateType.None)
