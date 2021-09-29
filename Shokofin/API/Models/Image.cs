@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Shokofin.API.Models
 {
     public class Image
@@ -14,9 +16,13 @@ namespace Shokofin.API.Models
         
         public bool Disabled { get; set; }
         
+        [JsonIgnore]
+        public virtual string Path
+            => $"/api/v3/Image/{Source}/{Type}/{ID}";
+        
         public string ToURLString()
         {
-            return $"{Plugin.Instance.Configuration.Host}/api/v3/Image/{Source}/{Type}/{ID}";
+            return string.Concat(Plugin.Instance.Configuration.Host, Path);
         }
     }
 }

@@ -147,6 +147,11 @@ namespace Shokofin.API
         #endregion
         #region People
 
+        private string GetImagePath(Image image)
+        {
+            return image != null && APIClient.CheckImage(image.Path) ? image.ToURLString() : null;
+        }
+
         private PersonInfo RoleToPersonInfo(Role role)
         {
             switch (role.RoleName) {
@@ -157,41 +162,41 @@ namespace Shokofin.API
                             Type = PersonType.Director,
                             Name = role.Staff.Name,
                             Role = role.RoleDetails,
-                            ImageUrl = role.Staff.Image?.ToURLString(),
+                            ImageUrl = GetImagePath(role.Staff.Image),
                         };
                     case Role.CreatorRoleType.Producer:
                         return new PersonInfo {
                             Type = PersonType.Producer,
                             Name = role.Staff.Name,
                             Role = role.RoleDetails,
-                            ImageUrl = role.Staff.Image?.ToURLString(),
+                            ImageUrl = GetImagePath(role.Staff.Image),
                         };
                     case Role.CreatorRoleType.Music:
                         return new PersonInfo {
                             Type = PersonType.Lyricist,
                             Name = role.Staff.Name,
                             Role = role.RoleDetails,
-                            ImageUrl = role.Staff.Image?.ToURLString(),
+                            ImageUrl = GetImagePath(role.Staff.Image),
                         };
                     case Role.CreatorRoleType.SourceWork:
                         return new PersonInfo {
                             Type = PersonType.Writer,
                             Name = role.Staff.Name,
                             Role = role.RoleDetails,
-                            ImageUrl = role.Staff.Image?.ToURLString(),
+                            ImageUrl = GetImagePath(role.Staff.Image),
                         };
                     case Role.CreatorRoleType.SeriesComposer:
                         return new PersonInfo {
                             Type = PersonType.Composer,
                             Name = role.Staff.Name,
-                            ImageUrl = role.Staff.Image?.ToURLString(),
+                            ImageUrl = GetImagePath(role.Staff.Image),
                         };
                     case Role.CreatorRoleType.Seiyuu:
                         return new PersonInfo {
                             Type = PersonType.Actor,
                             Name = role.Staff.Name,
                             Role = role.Character.Name,
-                            ImageUrl = role.Staff.Image?.ToURLString(),
+                            ImageUrl = GetImagePath(role.Staff.Image),
                         };
                 }
         }

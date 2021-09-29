@@ -191,7 +191,7 @@ namespace Shokofin.Providers
                 foreach (var series in searchResults) {
                     var seriesId = series.IDs.ID.ToString();
                     var seriesInfo = ApiManager.GetSeriesInfoSync(seriesId);
-                    var imageUrl = seriesInfo.AniDB.Poster?.ToURLString();
+                    var imageUrl = seriesInfo.AniDB.Poster != null && ApiClient.CheckImage(seriesInfo.AniDB.Poster.Path) ? seriesInfo.AniDB.Poster.ToURLString() : null;
                     var parsedSeries = new RemoteSearchResult {
                         Name = Text.GetSeriesTitle(seriesInfo.AniDB.Titles, seriesInfo.Shoko.Name, info.MetadataLanguage),
                         SearchProviderName = Name,

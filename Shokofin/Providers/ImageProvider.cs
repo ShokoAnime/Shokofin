@@ -22,14 +22,17 @@ namespace Shokofin.Providers
 
         private readonly ILogger<ImageProvider> Logger;
 
+        private readonly ShokoAPIClient ApiClient;
+
         private readonly ShokoAPIManager ApiManager;
 
         private readonly IIdLookup Lookup;
 
-        public ImageProvider(IHttpClientFactory httpClientFactory, ILogger<ImageProvider> logger, ShokoAPIManager apiManager, IIdLookup lookup)
+        public ImageProvider(IHttpClientFactory httpClientFactory, ILogger<ImageProvider> logger, ShokoAPIClient apiClient, ShokoAPIManager apiManager, IIdLookup lookup)
         {
             HttpClientFactory = httpClientFactory;
             Logger = logger;
+            ApiClient = apiClient;
             ApiManager = apiManager;
             Lookup = lookup;
         }
@@ -133,21 +136,13 @@ namespace Shokofin.Providers
 
         private void AddImage(ref List<RemoteImageInfo> list, ImageType imageType, API.Models.Image image)
         {
-            var imageInfo = GetImage(image, imageType);
-            if (imageInfo != null)
-                list.Add(imageInfo);
-        }
-
-        private RemoteImageInfo GetImage(API.Models.Image image, ImageType imageType)
-        {
-            var imageUrl = image?.ToURLString();
-            if (string.IsNullOrEmpty(imageUrl) || image.RelativeFilepath.Equals("/"))
-                return null;
-            return new RemoteImageInfo {
-                ProviderName = "Shoko",
+            if (image == null || !ApiClient.CheckImage(image.Path))
+                return;
+            list.Add(new RemoteImageInfo {
+                ProviderName = Plugin.MetadataProviderName,
                 Type = imageType,
-                Url = imageUrl
-            };
+                Url = image.ToURLString(),
+            });
         }
 
         public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
