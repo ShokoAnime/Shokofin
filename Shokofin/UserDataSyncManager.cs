@@ -14,19 +14,19 @@ using Shokofin.Configuration;
 
 namespace Shokofin
 {
-    public class UserSyncManager
+    public class UserDataSyncManager
     {
         private readonly IUserDataManager UserDataManager;
 
         private readonly ILibraryManager LibraryManager;
 
-        private readonly ILogger<UserSyncManager> Logger;
+        private readonly ILogger<UserDataSyncManager> Logger;
 
         private readonly ShokoAPIClient APIClient;
 
         private readonly IIdLookup Lookup;
 
-        public UserSyncManager(IUserDataManager userDataManager, ILibraryManager libraryManager, ILogger<UserSyncManager> logger, ShokoAPIClient apiClient, IIdLookup lookup)
+        public UserDataSyncManager(IUserDataManager userDataManager, ILibraryManager libraryManager, ILogger<UserDataSyncManager> logger, ShokoAPIClient apiClient, IIdLookup lookup)
         {
             UserDataManager = userDataManager;
             LibraryManager = libraryManager;
@@ -48,11 +48,11 @@ namespace Shokofin
 
         private bool TryGetUserConfiguration(Guid userId, out UserConfiguration config)
         {
-            config = Plugin.Instance.Configuration.UserList.FirstOrDefault(c => c.UserId == userId);
+            config = Plugin.Instance.Configuration.UserList.FirstOrDefault(c => c.UserId == userId && c.EnableSynchronization);
             return config != null;
         }
 
-        #region Export
+        #region Export/Scrobble
 
         public void OnUserDataSaved(object sender, UserDataSaveEventArgs e)
         {
@@ -72,33 +72,68 @@ namespace Shokofin
                 ))
                 return;
 
+            var userData = e.UserData;
             var config = Plugin.Instance.Configuration;
             switch (e.SaveReason) {
                 case UserDataSaveReason.PlaybackStart:
                 case UserDataSaveReason.PlaybackProgress:
                     if (!config.SyncUserDataUnderPlayback || !userConfig.EnableSynchronization)
                         return;
-                    SyncVideo(userConfig, e.Item as Video, fileId, episodeId).ConfigureAwait(false);
+                    Logger.LogDebug("Scrobbled during playback. (File={FileId})", fileId);
+                    APIClient.ScrobbleFile(fileId, userData.PlaybackPositionTicks, userConfig.Token).ConfigureAwait(false);
                     break;
                 case UserDataSaveReason.PlaybackFinished:
                     if (!config.SyncUserDataAfterPlayback || !userConfig.EnableSynchronization)
                         return;
-                    SyncVideo(userConfig, e.Item as Video, fileId, episodeId).ConfigureAwait(false);
+                    Logger.LogDebug("Scrobbled after playback. (File={FileId})", fileId);
+                    APIClient.ScrobbleFile(fileId, userData.Played, userData.PlaybackPositionTicks, userConfig.Token).ConfigureAwait(false);
                     break;
                 case UserDataSaveReason.TogglePlayed:
-                    SyncVideo(userConfig, e.Item as Video, fileId, episodeId).ConfigureAwait(false);
+                    Logger.LogDebug("Scrobbled when toggled. (File={FileId})", fileId);
+                    if (userData.PlaybackPositionTicks == 0)
+                        APIClient.ScrobbleFile(fileId, userData.Played, userConfig.Token).ConfigureAwait(false);
+                    else
+                        APIClient.ScrobbleFile(fileId, userData.PlaybackPositionTicks, userConfig.Token).ConfigureAwait(false);
                     break;
             }
         }
 
+        // Updates to favotite state and/or user rating.
         private void OnUserRatingSaved(object sender, UserDataSaveEventArgs e)
         {
-            // TODO: Sync user ratings.
-            Logger.LogDebug("Sync user rating for {ItemName}.", e.Item.Name);
+            if (!TryGetUserConfiguration(e.UserId, out var userConfig))
+                return;
+            var userData = e.UserData;
+            var config = Plugin.Instance.Configuration;
+            switch (e.Item) {
+                case Episode:
+                case Movie: {
+                    var video = e.Item as Video;
+                    if (!Lookup.TryGetEpisodeIdFor(video, out var episodeId))
+                        return;
+
+                    Logger.LogDebug("TODO; Sync user rating for video {VideoName}. (Episode={EpisodeId})", e.Item.Name, episodeId);
+                    break;
+                }
+                case Season season: {
+                    if (!Lookup.TryGetSeriesIdFor(season, out var seriesId))
+                        return;
+
+                    Logger.LogDebug("TODO; Sync user rating for season {SeasonNumber} in series {SeriesName}. (Series={SeriesId})", season.IndexNumber, season.SeriesName, seriesId);
+                    break;
+                }
+                case Series series: {
+                    if (!Lookup.TryGetSeriesIdFor(series, out var seriesId))
+                        return;
+
+                    Logger.LogDebug("TODO; Sync user rating for series {SeriesName}. (Series={SeriesId})", e.Item.Name, seriesId);
+                    break;
+                }
+            }
         }
 
         #endregion
-        #region Import
+        #region Import/Sync
 
         public async Task ScanAndSync(IProgress<double> progress, CancellationToken cancellationToken)
         {
@@ -107,7 +142,7 @@ namespace Shokofin
                 progress.Report(100);
                 return;
             }
-    
+
             var videos = LibraryManager.GetItemList(new InternalItemsQuery {
                 MediaTypes = new[] { MediaType.Video },
                 IsFolder = false,
@@ -132,7 +167,7 @@ namespace Shokofin
                     continue;
 
                 foreach (var userConfig in enabledUsers) {
-                    await SyncVideo(userConfig, video, fileId, episodeId).ConfigureAwait(false);
+                    await SyncVideo(userConfig, null, video, fileId, episodeId).ConfigureAwait(false);
 
                     numComplete++;
                     double percent = numComplete;
@@ -146,12 +181,15 @@ namespace Shokofin
 
         public void OnItemAddedOrUpdated(object sender, ItemChangeEventArgs e)
         {
+            if (Plugin.Instance.Configuration.SyncUserDataOnImport)
+                return;
+
             if (e == null || e.Item == null || e.Parent == null || !(e.UpdateReason.HasFlag(ItemUpdateType.MetadataImport) || e.UpdateReason.HasFlag(ItemUpdateType.MetadataDownload)))
                 return;
 
             if (!(e.Item is Video video))
                 return;
-            
+
             if (!(Lookup.TryGetFileIdFor(video, out var fileId) && Lookup.TryGetEpisodeIdFor(video, out var episodeId)))
                 return;
 
@@ -159,27 +197,31 @@ namespace Shokofin
                 if (!userConfig.EnableSynchronization)
                     continue;
 
-                SyncVideo(userConfig, video, fileId, episodeId).ConfigureAwait(false);
+                SyncVideo(userConfig, null, video, fileId, episodeId).ConfigureAwait(false);
             }
         }
 
         #endregion
 
-        private async Task SyncVideo(UserConfiguration userConfig, Video item, string fileId, string episodeId)
+        private async Task SyncVideo(UserConfiguration userConfig, UserItemData userData, Video item, string fileId, string episodeId)
         {
             // var remoteUserData = await APIClient.GetFileUserData(fileId, userConfig.Token);
             // if (remoteUserData == null)
             //     return;
 
-            var userData = UserDataManager.GetUserData(userConfig.UserId, item);
-            if (userData == null) 
+            // Try to load the user-data if it was not provided
+            if (userData == null)
+                userData = UserDataManager.GetUserData(userConfig.UserId, item);
+            // Create some new user-data if none exists.
+            if (userData == null)
                 userData = new UserItemData {
                     UserId = userConfig.UserId,
+
                     LastPlayedDate = null,
                 };
 
             // TODO: Check what needs to be done, e.g. update JF, update SS, or nothing.
-            Logger.LogDebug("Sync user data for {ItemName}.", item.Name);
+            Logger.LogDebug("TODO: Sync user data for video {ItemName}. (File={FileId},Episode={EpisodeId})", item.Name, fileId, episodeId);
         }
     }
 }
