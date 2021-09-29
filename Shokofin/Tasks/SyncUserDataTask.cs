@@ -20,12 +20,12 @@ namespace Shokofin.Tasks
         /// <summary>
         /// The _library manager.
         /// </summary>
-        private readonly UserSyncManager _userSyncManager;
+        private readonly UserDataSyncManager _userSyncManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SyncUserDataTask" /> class.
         /// </summary>
-        public SyncUserDataTask(UserSyncManager userSyncManager)
+        public SyncUserDataTask(UserDataSyncManager userSyncManager)
         {
             _userSyncManager = userSyncManager;
         }
