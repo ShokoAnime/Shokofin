@@ -33,7 +33,7 @@ namespace Shokofin.API
         private async Task<ReturnType> GetAsync<ReturnType>(string url, HttpMethod method, string apiKey = null)
         {
             var response = await GetAsync(url, method, apiKey);
-            var responseStream = response.StatusCode == HttpStatusCode.OK ? response.Content.ReadAsStreamAsync().Result : null;
+            var responseStream = response != null && response.StatusCode == HttpStatusCode.OK ? response.Content.ReadAsStreamAsync().Result : null;
             return responseStream != null ? await JsonSerializer.DeserializeAsync<ReturnType>(responseStream) : default(ReturnType);
         }
 
@@ -57,8 +57,9 @@ namespace Shokofin.API
                     return await _httpClient.SendAsync(requestMessage);
                 }
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException ex)
             {
+                Logger.LogWarning(ex, "Unable to connection to complete the request to Shoko.");
                 return null;
             }
         }
@@ -69,7 +70,7 @@ namespace Shokofin.API
         private async Task<ReturnType> PostAsync<Type, ReturnType>(string url, HttpMethod method, Type body, string apiKey = null)
         {
             var response = await PostAsync<Type>(url, method, body, apiKey);
-            var responseStream = response.StatusCode == HttpStatusCode.OK ? response.Content.ReadAsStreamAsync().Result : null;
+            var responseStream = response != null && response.StatusCode == HttpStatusCode.OK ? response.Content.ReadAsStreamAsync().Result : null;
             return responseStream != null ? await JsonSerializer.DeserializeAsync<ReturnType>(responseStream) : default(ReturnType);
         }
 
@@ -93,8 +94,9 @@ namespace Shokofin.API
                     return await _httpClient.SendAsync(requestMessage);
                 }
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException ex)
             {
+                Logger.LogWarning(ex, "Unable to connection to complete the request to Shoko.");
                 return null;
             }
         }
