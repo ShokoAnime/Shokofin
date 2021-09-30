@@ -246,6 +246,10 @@
                             <input is="emby-input" type="text" id="PublicHost" label="Public Shoko host URL:" />
                             <div class="fieldDescription">This is the public URL leading to where Shoko is running. It is used to redirect to Shoko if you click on a Shoko ID in the UI if Shoko and/or Jellyfin is running within a container. It should include both the protocol and the IP/DNS name.</div>
                         </div>
+                        <div class="inputContainer inputContainer-withDescription">
+                            <input is="emby-input" type="text" id="IgnoredFileExtensions" label="Ignored file extensions:" />
+                            <div class="fieldDescription">A space seperated list of file extensions which will be ignored during the library scan.</div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="PreferAniDbPoster" />

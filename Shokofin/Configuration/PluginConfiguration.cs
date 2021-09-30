@@ -68,6 +68,8 @@ namespace Shokofin.Configuration
 
         public UserConfiguration[] UserList { get; set; }
 
+        public string[] IgnoredFileExtensions { get; set; }
+
         public PluginConfiguration()
         {
             Host = "http://127.0.0.1:8111";
@@ -96,6 +98,7 @@ namespace Shokofin.Configuration
             MovieOrdering = OrderType.Default;
             FilterOnLibraryTypes = false;
             UserList = Array.Empty<UserConfiguration>();
+            IgnoredFileExtensions  = new [] { ".nfo", ".jpg", ".jpeg", ".png", ".srt", ".stl", ".sub", ".scc" };
         }
     }
 }

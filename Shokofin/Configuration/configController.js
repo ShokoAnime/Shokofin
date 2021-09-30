@@ -87,6 +87,7 @@ async function defaultSubmit(form) {
             publicHost = publicHost.slice(0, -1);
             form.querySelector("#PublicHost").value = publicHost;
         }
+        const ignoredFileExtensions = form.querySelector("#IgnoredFileExtensions").value.split(/[\s,]+/g).map(str =>  { str = str.trim(); if (str[0] !== ".") str = "." + str; return str; });
 
         // Metadata settings
         config.TitleMainType = form.querySelector("#TitleMainType").value;
@@ -113,6 +114,8 @@ async function defaultSubmit(form) {
     
         // Advanced settings
         config.PublicHost = publicHost;
+        config.IgnoredFileExtensions = ignoredFileExtensions;
+        form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
         config.PreferAniDbPoster = form.querySelector("#PreferAniDbPoster").checked;
         config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
 
@@ -205,6 +208,7 @@ async function syncSettings(form) {
         publicHost = publicHost.slice(0, -1);
         form.querySelector("#PublicHost").value = publicHost;
     }
+    const ignoredFileExtensions = form.querySelector("#IgnoredFileExtensions").value.split(/[\s,]+/g).map(str =>  { str = str.trim(); if (str[0] !== ".") str = "." + str; return str; });
 
     // Metadata settings
     config.TitleMainType = form.querySelector("#TitleMainType").value;
@@ -231,6 +235,8 @@ async function syncSettings(form) {
 
     // Advanced settings
     config.PublicHost = publicHost;
+    config.IgnoredFileExtensions = ignoredFileExtensions;
+    form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
     config.PreferAniDbPoster = form.querySelector("#PreferAniDbPoster").checked;
     config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
 
@@ -383,6 +389,7 @@ export default function (page) {
 
             // Advanced settings
             form.querySelector("#PublicHost").value = config.PublicHost;
+            form.querySelector("#IgnoredFileExtensions").value = config.IgnoredFileExtensions.join(" ");
             form.querySelector("#PreferAniDbPoster").checked = config.PreferAniDbPoster;
             form.querySelector("#AddAniDBId").checked = config.AddAniDBId;
 

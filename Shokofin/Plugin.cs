@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
@@ -19,7 +20,18 @@ namespace Shokofin
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
+            ConfigurationChanged += OnConfigChanged;
+            IgnoredFileExtensions = this.Configuration.IgnoredFileExtensions.Where(s => s != null).Select(s => s[0] == '.' ? s : string.Concat(".", s)).ToHashSet();
         }
+
+        public void OnConfigChanged(object sender, BasePluginConfiguration e)
+        {
+            if (!(e is PluginConfiguration config))
+                return;
+            IgnoredFileExtensions = config.IgnoredFileExtensions.Where(s => s != null).Select(s => s[0] == '.' ? s : string.Concat(".", s)).ToHashSet();
+        }
+
+        public HashSet<string> IgnoredFileExtensions;
 
         public static Plugin Instance { get; private set; }
 
