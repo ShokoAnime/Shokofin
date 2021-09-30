@@ -8,10 +8,10 @@ const Messages = {
     UnableToRender: "There was an error loading the page, please refresh once to see if that will fix it.",
 };
 
-async function loadUserConfig(page, userId, config) {
+async function loadUserConfig(form, userId, config) {
     if (!userId) {
-        page.querySelector("#UserSettingsContainer").setAttribute("hidden", "");
-        page.querySelector("#UserUsername").removeAttribute("required");
+        form.querySelector("#UserSettingsContainer").setAttribute("hidden", "");
+        form.querySelector("#UserUsername").removeAttribute("required");
         Dashboard.hideLoadingMsg();
         return;
     }
@@ -23,24 +23,28 @@ async function loadUserConfig(page, userId, config) {
     const userConfig = config.UserList.find((c) => userId === c.UserId) || { UserId: userId };
 
     // Configure the elements within the user container
-    page.querySelector("#UserEnableSynchronization").checked = userConfig.EnableSynchronization || false;
-    page.querySelector("#UserUsername").value = userConfig.Username || "";
-    page.querySelector("#UserPassword").value = "";
+    form.querySelector("#UserEnableSynchronization").checked = userConfig.EnableSynchronization || false;
+    form.querySelector("#SyncUserDataOnImport").checked = userConfig.SyncUserDataOnImport;
+    form.querySelector("#SyncUserDataAfterPlayback").checked = userConfig.SyncUserDataAfterPlayback;
+    form.querySelector("#SyncUserDataUnderPlayback").checked = userConfig.SyncUserDataAfterPlayback && userConfig.SyncUserDataUnderPlayback;
+    form.querySelector("#UserUsername").value = userConfig.Username || "";
+    // Synchronization settings
+    form.querySelector("#UserPassword").value = "";
     if (userConfig.Token) {
-        page.querySelector("#UserDeleteContainer").removeAttribute("hidden");
-        page.querySelector("#UserUsername").setAttribute("disabled", "");
-        page.querySelector("#UserPasswordContainer").setAttribute("hidden", "");
-        page.querySelector("#UserUsername").removeAttribute("required");
+        form.querySelector("#UserDeleteContainer").removeAttribute("hidden");
+        form.querySelector("#UserUsername").setAttribute("disabled", "");
+        form.querySelector("#UserPasswordContainer").setAttribute("hidden", "");
+        form.querySelector("#UserUsername").removeAttribute("required");
     }
     else {
-        page.querySelector("#UserDeleteContainer").setAttribute("hidden", "");
-        page.querySelector("#UserUsername").removeAttribute("disabled");
-        page.querySelector("#UserPasswordContainer").removeAttribute("hidden");
-        page.querySelector("#UserUsername").setAttribute("required", "");
+        form.querySelector("#UserDeleteContainer").setAttribute("hidden", "");
+        form.querySelector("#UserUsername").removeAttribute("disabled");
+        form.querySelector("#UserPasswordContainer").removeAttribute("hidden");
+        form.querySelector("#UserUsername").setAttribute("required", "");
     }
 
     // Show the user settings now if it was previously hidden.
-    page.querySelector("#UserSettingsContainer").removeAttribute("hidden");
+    form.querySelector("#UserSettingsContainer").removeAttribute("hidden");
 
     Dashboard.hideLoadingMsg();
 }
@@ -99,11 +103,6 @@ async function defaultSubmit(form) {
         config.FilterOnLibraryTypes = form.querySelector("#FilterOnLibraryTypes").checked;
         config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
         config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
-
-        // Synchronization settings
-        config.SyncUserDataOnImport = form.querySelector("#SyncUserDataOnImport").checked;
-        config.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
-        config.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked && form.querySelector("#SyncUserDataUnderPlayback").checked;
     
         // Tag settings
         config.HideArtStyleTags = form.querySelector("#HideArtStyleTags").checked;
@@ -128,6 +127,9 @@ async function defaultSubmit(form) {
             
             // The user settings goes below here;
             userConfig.EnableSynchronization = form.querySelector("#UserEnableSynchronization").checked;
+            userConfig.SyncUserDataOnImport = form.querySelector("#SyncUserDataOnImport").checked;
+            userConfig.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
+            userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked && form.querySelector("#SyncUserDataUnderPlayback").checked;
             
             // Only try to save a new token if a token is not already present.
             const username = form.querySelector("#UserUsername").value;
@@ -220,11 +222,6 @@ async function syncSettings(form) {
     config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
     config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
 
-    // Synchronization settings
-    config.SyncUserDataOnImport = form.querySelector("#SyncUserDataOnImport").checked;
-    config.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
-    config.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked && form.querySelector("#SyncUserDataUnderPlayback").checked;
-
     // Tag settings
     config.HideArtStyleTags = form.querySelector("#HideArtStyleTags").checked;
     config.HideSourceTags = form.querySelector("#HideSourceTags").checked;
@@ -273,6 +270,9 @@ async function syncUserSettings(form) {
     
     // The user settings goes below here;
     userConfig.EnableSynchronization = form.querySelector("#UserEnableSynchronization").checked;
+    userConfig.SyncUserDataOnImport = form.querySelector("#SyncUserDataOnImport").checked;
+    userConfig.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
+    userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked && form.querySelector("#SyncUserDataUnderPlayback").checked;
     
     // Only try to save a new token if a token is not already present.
     const username = form.querySelector("#UserUsername").value;
@@ -310,7 +310,6 @@ export default function (page) {
             form.querySelector("#MetadataSection").removeAttribute("hidden");
             form.querySelector("#MetadataSection").removeAttribute("hidden");
             form.querySelector("#LibrarySection").removeAttribute("hidden");
-            form.querySelector("#SyncSection").removeAttribute("hidden");
             form.querySelector("#UserSection").removeAttribute("hidden");
             form.querySelector("#TagSection").removeAttribute("hidden");
             form.querySelector("#AdvancedSection").removeAttribute("hidden");
@@ -324,15 +323,13 @@ export default function (page) {
             form.querySelector("#MetadataSection").setAttribute("hidden", "");
             form.querySelector("#MetadataSection").setAttribute("hidden", "");
             form.querySelector("#LibrarySection").setAttribute("hidden", "");
-            form.querySelector("#SyncSection").setAttribute("hidden", "");
             form.querySelector("#UserSection").setAttribute("hidden", "");
             form.querySelector("#TagSection").setAttribute("hidden", "");
             form.querySelector("#AdvancedSection").setAttribute("hidden", "");
         }
 
         const userId = form.querySelector("#UserSelector").value;
-        loadUserConfig(page, userId, config);
-        toggleSyncUnderPlayback(page, config.SyncUserDataAfterPlayback);
+        loadUserConfig(form, userId, config);
     };
 
     const onError = (err) => {
@@ -373,11 +370,6 @@ export default function (page) {
             form.querySelector("#FilterOnLibraryTypes").checked = config.FilterOnLibraryTypes;
             form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
-
-            // Synchronization settings
-            form.querySelector("#SyncUserDataOnImport").checked = config.SyncUserDataOnImport;
-            form.querySelector("#SyncUserDataAfterPlayback").checked = config.SyncUserDataAfterPlayback;
-            form.querySelector("#SyncUserDataUnderPlayback").checked = config.SyncUserDataAfterPlayback && config.SyncUserDataUnderPlayback;
 
             // User settings
             userSelector.innerHTML += users.map((user) => `<option value="${user.Id}">${user.Name}</option>`);

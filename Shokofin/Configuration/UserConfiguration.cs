@@ -17,6 +17,12 @@ namespace Shokofin.Configuration
         /// </summary>
         public bool EnableSynchronization { get; set; }
 
+        public bool SyncUserDataAfterPlayback { get; set; }
+    
+        public bool SyncUserDataUnderPlayback { get; set; }
+
+        public bool SyncUserDataOnImport { get; set; }
+
         /// <summary>
         /// The username of the linked user in Shoko.
         /// </summary>
