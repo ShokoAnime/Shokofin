@@ -98,7 +98,7 @@ namespace Shokofin.Configuration
             MovieOrdering = OrderType.Default;
             FilterOnLibraryTypes = false;
             UserList = Array.Empty<UserConfiguration>();
-            IgnoredFileExtensions  = new [] { ".nfo", ".jpg", ".jpeg", ".png", ".srt", ".stl", ".sub", ".scc" };
+            IgnoredFileExtensions  = new [] { ".nfo", ".jpg", ".jpeg", ".png" };
         }
     }
 }
