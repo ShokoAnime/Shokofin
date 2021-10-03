@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -60,6 +61,39 @@ namespace Shokofin.Providers
             LibraryManager.ItemRemoved -= OnLibraryManagerItemRemoved;
         }
 
+        #region Locking
+
+        private readonly ConcurrentDictionary<string, HashSet<string>> LockedIdDictionary = new ConcurrentDictionary<string, HashSet<string>>();
+
+        public bool TryLockActionForIdOFType(string type, string id, string action)
+        {
+            var key = $"{type}:{id}";
+            if (!LockedIdDictionary.TryGetValue(key, out var hashSet)) {
+                LockedIdDictionary.TryAdd(key, new HashSet<string>());
+                if (!LockedIdDictionary.TryGetValue(key, out hashSet))
+                    throw new Exception("Unable to set hash set");
+            }
+            return hashSet.Add(action);
+        }
+
+        public bool TryUnlockActionForIdOFType(string type, string id, string action)
+        {
+            var key = $"{type}:{id}";
+            if (LockedIdDictionary.TryGetValue(key, out var hashSet))
+                return hashSet.Remove(action);
+            return false;
+        }
+
+        public bool IsActionForIdOfTypeLocked(string type, string id, string action)
+        {
+            var key = $"{type}:{id}";
+            if (LockedIdDictionary.TryGetValue(key, out var hashSet))
+                return hashSet.Contains(action);
+            return false;
+        }
+
+        #endregion
+
         private void OnLibraryManagerItemAdded(object sender, ItemChangeEventArgs e)
         {
             if (e == null || e.Item == null || e.Parent == null || !(e.UpdateReason.HasFlag(ItemUpdateType.MetadataImport) || e.UpdateReason.HasFlag(ItemUpdateType.MetadataDownload)))
@@ -71,7 +105,7 @@ namespace Shokofin.Providers
                     if (!Lookup.TryGetSeriesIdFor(series, out var seriesId))
                         return;
 
-                    if (!ApiManager.TryLockActionForIdOFType("series", seriesId, "update"))
+                    if (!TryLockActionForIdOFType("series", seriesId, "update"))
                         return;
 
                     try {
@@ -80,7 +114,7 @@ namespace Shokofin.Providers
                         RemoveDummySeasons(series, seriesId);
                     }
                     finally {
-                        ApiManager.TryUnlockActionForIdOFType("series", seriesId, "update");
+                        TryUnlockActionForIdOFType("series", seriesId, "update");
                     }
 
                     return;
@@ -97,18 +131,18 @@ namespace Shokofin.Providers
                     if (!Lookup.TryGetSeriesIdFor(season.Series, out var seriesId))
                         return;
 
-                    if (ApiManager.IsActionForIdOfTypeLocked("series", seriesId, "update"))
+                    if (IsActionForIdOfTypeLocked("series", seriesId, "update"))
                         return;
 
                     var seasonId = $"{seriesId}:{season.IndexNumber.Value}";
-                    if (!ApiManager.TryLockActionForIdOFType("season", seasonId, "update"))
+                    if (!TryLockActionForIdOFType("season", seasonId, "update"))
                         return;
 
                     try {
                         UpdateSeason(season, series, seriesId);
                     }
                     finally {
-                        ApiManager.TryUnlockActionForIdOFType("season", seasonId, "update");
+                        TryUnlockActionForIdOFType("season", seasonId, "update");
                     }
 
                     return;
@@ -118,23 +152,23 @@ namespace Shokofin.Providers
                     if (!(Lookup.TryGetEpisodeIdFor(episode, out var episodeId) && Lookup.TryGetSeriesIdFromEpisodeId(episodeId, out var seriesId)))
                         return;
 
-                    if (ApiManager.IsActionForIdOfTypeLocked("series", seriesId, "update"))
+                    if (IsActionForIdOfTypeLocked("series", seriesId, "update"))
                         return;
 
                     if (episode.ParentIndexNumber.HasValue) {
                         var seasonId = $"{seriesId}:{episode.ParentIndexNumber.Value}";
-                        if (ApiManager.IsActionForIdOfTypeLocked("season", seasonId, "update"))
+                        if (IsActionForIdOfTypeLocked("season", seasonId, "update"))
                             return;
                     }
 
-                    if (!ApiManager.TryLockActionForIdOFType("episode", episodeId, "update"))
+                    if (!TryLockActionForIdOFType("episode", episodeId, "update"))
                         return;
 
                     try {
                         RemoveDuplicateEpisodes(episode, episodeId);
                     }
                     finally {
-                        ApiManager.TryUnlockActionForIdOFType("episode", episodeId, "update");
+                        TryUnlockActionForIdOFType("episode", episodeId, "update");
                     }
 
                     return;
@@ -153,7 +187,7 @@ namespace Shokofin.Providers
                     if (!Lookup.TryGetSeriesIdFor(series, out var seriesId))
                         return;
 
-                    if (!ApiManager.TryLockActionForIdOFType("series", seriesId, "update"))
+                    if (!TryLockActionForIdOFType("series", seriesId, "update"))
                         return;
 
                     try {
@@ -164,7 +198,7 @@ namespace Shokofin.Providers
                         RemoveDuplicateSeasons(series, seriesId);
                     }
                     finally {
-                        ApiManager.TryUnlockActionForIdOFType("series", seriesId, "update");
+                        TryUnlockActionForIdOFType("series", seriesId, "update");
                     }
 
                     return;
@@ -178,11 +212,11 @@ namespace Shokofin.Providers
                     if (!Lookup.TryGetSeriesIdFor(season.Series, out var seriesId))
                         return;
 
-                    if (ApiManager.IsActionForIdOfTypeLocked("series", seriesId, "update"))
+                    if (IsActionForIdOfTypeLocked("series", seriesId, "update"))
                         return;
 
                     var seasonId = $"{seriesId}:{season.IndexNumber.Value}";
-                    if (!ApiManager.TryLockActionForIdOFType("season", seasonId, "update"))
+                    if (!TryLockActionForIdOFType("season", seasonId, "update"))
                         return;
 
                     try {
@@ -192,7 +226,7 @@ namespace Shokofin.Providers
                         RemoveDuplicateSeasons(season, series, season.IndexNumber.Value, seriesId);
                     }
                     finally {
-                        ApiManager.TryUnlockActionForIdOFType("season", seasonId, "update");
+                        TryUnlockActionForIdOFType("season", seasonId, "update");
                     }
 
 
@@ -203,23 +237,23 @@ namespace Shokofin.Providers
                     if (!(Lookup.TryGetEpisodeIdFor(episode, out var episodeId) && Lookup.TryGetSeriesIdFromEpisodeId(episodeId, out var seriesId)))
                         return;
 
-                    if (ApiManager.IsActionForIdOfTypeLocked("series", seriesId, "update"))
+                    if (IsActionForIdOfTypeLocked("series", seriesId, "update"))
                         return;
 
                     if (episode.ParentIndexNumber.HasValue) {
                         var seasonId = $"{seriesId}:{episode.ParentIndexNumber.Value}";
-                        if (ApiManager.IsActionForIdOfTypeLocked("season", seasonId, "update"))
+                        if (IsActionForIdOfTypeLocked("season", seasonId, "update"))
                             return;
                     }
 
-                    if (!ApiManager.TryLockActionForIdOFType("episode", episodeId, "update"))
+                    if (!TryLockActionForIdOFType("episode", episodeId, "update"))
                         return;
 
                     try {
                         RemoveDuplicateEpisodes(episode, episodeId);
                     }
                     finally {
-                        ApiManager.TryUnlockActionForIdOFType("episode", episodeId, "update");
+                        TryUnlockActionForIdOFType("episode", episodeId, "update");
                     }
 
                     return;

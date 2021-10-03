@@ -93,43 +93,12 @@ namespace Shokofin.API
         }
 
         #endregion
-        #region Update locks
-
-        public bool TryLockActionForIdOFType(string type, string id, string action)
-        {
-            var key = $"{type}:{id}";
-            if (!LockedIdDictionary.TryGetValue(key, out var hashSet)) {
-                LockedIdDictionary.TryAdd(key, new HashSet<string>());
-                if (!LockedIdDictionary.TryGetValue(key, out hashSet))
-                    throw new Exception("Unable to set hash set");
-            }
-            return hashSet.Add(action);
-        }
-
-        public bool TryUnlockActionForIdOFType(string type, string id, string action)
-        {
-            var key = $"{type}:{id}";
-            if (LockedIdDictionary.TryGetValue(key, out var hashSet))
-                return hashSet.Remove(action);
-            return false;
-        }
-
-
-        public bool IsActionForIdOfTypeLocked(string type, string id, string action)
-        {
-            var key = $"{type}:{id}";
-            if (LockedIdDictionary.TryGetValue(key, out var hashSet))
-                return hashSet.Contains(action);
-            return false;
-        }
-        #endregion
         #region Clear
 
         public void Clear()
         {
             Logger.LogDebug("Clearing data.");
             DataCache.Dispose();
-            LockedIdDictionary.Clear();
             MediaFolderList.Clear();
             FileIdToEpisodeIdDictionary.Clear();
             FilePathToFileIdAndEpisodeCountDictionary.Clear();
