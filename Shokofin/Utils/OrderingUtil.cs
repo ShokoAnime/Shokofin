@@ -266,6 +266,7 @@ namespace Shokofin.Utils
                         if (order == SpecialOrderType.InBetweenSeasonMixed)
                             goto byAirdate;
 
+                        airsAfterSeasonNumber = GetSeasonNumber(group, series, episode);
                         break;
                     }
 
@@ -279,6 +280,7 @@ namespace Shokofin.Utils
                         if (order == SpecialOrderType.InBetweenSeasonMixed)
                             goto byAirdate;
 
+                        airsAfterSeasonNumber = GetSeasonNumber(group, series, episode);
                         break;
                     }
 
@@ -287,6 +289,7 @@ namespace Shokofin.Utils
                         if (order == SpecialOrderType.InBetweenSeasonMixed)
                             goto byAirdate;
 
+                        airsAfterSeasonNumber = GetSeasonNumber(group, series, episode);
                         break;
                     }
 
@@ -294,10 +297,12 @@ namespace Shokofin.Utils
                     if (nextEpisode != null) {
                         airsBeforeEpisodeNumber = GetEpisodeNumber(group, series, nextEpisode);
                         airsBeforeSeasonNumber = GetSeasonNumber(group, series, episode);
+                        break;
                     }
-                    else if (order == SpecialOrderType.InBetweenSeasonMixed)
+                    if (order == SpecialOrderType.InBetweenSeasonMixed)
                         goto byAirdate;
 
+                    airsAfterSeasonNumber = GetSeasonNumber(group, series, episode);
                     break;
             }
 
