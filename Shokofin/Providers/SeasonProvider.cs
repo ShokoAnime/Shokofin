@@ -118,25 +118,40 @@ namespace Shokofin.Providers
                 if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {
                     var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
                     series = await ApiManager.GetSeriesInfoByPath(info.Path);
-                    var group = await ApiManager.GetGroupInfoForSeries(series?.Id);
+                    var group = await ApiManager.GetGroupInfoForSeries(series?.Id, filterLibrary);
                     if (group == null || series == null) {
-                        Logger.LogWarning("Unable to find info for Season {SeasonNumber} by path {Path}", info.IndexNumber, info.Path);
+                        Logger.LogWarning("Unable to find info for Season {SeasonNumber} by path {Path}", null, info.Path);
                         return result;
                     }
-                    seasonNumber = Ordering.GetSeasonNumber(group, series, series.EpisodeList[0]);
+
+                    if (!group.SeasonNumberBaseDictionary.TryGetValue(series, out seasonNumber)) {
+                        Logger.LogWarning("Unable to find season number for Season by path {Path}. (Series={SeriesId},Group={GroupId})", info.Path, series.Id, group.Id);
+                        return result;
+                    }
 
                     if (seasonNumber != group.SeasonNumberBaseDictionary[series])
                         offset = seasonNumber - group.SeasonNumberBaseDictionary[series];
 
-                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Group={GroupId},Series={SeriesId})", seasonNumber, group.Shoko.Name, group.Id, series.Id);
+                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, group.Shoko.Name, series.Id, group.Id);
                 }
                 else {
                     series = await ApiManager.GetSeriesInfoByPath(info.Path);
                     if (series == null) {
-                        Logger.LogWarning("Unable to find info for Season {SeasonNumber} by path {Path}", info.IndexNumber, info.Path);
+                        Logger.LogWarning("Unable to find info for Season {SeasonNumber} by path {Path}", null, info.Path);
                         return result;
                     }
-                    seasonNumber = Ordering.GetSeasonNumber(null, series, series.EpisodeList[0]);
+
+                    // Find the first availabe episode that is not a 'special' episode.
+                    var episode = series.EpisodeList.Count > 0 ? series.EpisodeList[0] :
+                        series.AlternateEpisodesList.Count > 0 ? series.AlternateEpisodesList[0] :
+                        series.OthersList.Count > 0 ? series.OthersList[0] :
+                        null;
+                    if (episode == null) {
+                        Logger.LogWarning("Unable to find season number for Season by path {Path}. (Series={SeriesId})", info.Path, series.Id);
+                        return result;
+                    }
+                    seasonNumber = Ordering.GetSeasonNumber(null, series, episode);
+
                     Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId})", seasonNumber, series.Shoko.Name, series.Id);
                 }
             }
