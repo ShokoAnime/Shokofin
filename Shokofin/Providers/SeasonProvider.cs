@@ -78,49 +78,49 @@ namespace Shokofin.Providers
 
             int seasonNumber;
             API.Info.SeriesInfo series;
-            var offset = 0;
-            // Virtual seasons
-            if (info.Path == null) {
-                if (!info.IndexNumber.HasValue)
-                    return result;
+            int offset = 0;
+            // All previsouly known seasons
+            if (info.ProviderIds.TryGetValue("Shoko Series", out var seriesId) && info.ProviderIds.TryGetValue("Shoko Season Offset", out var offsetText) && int.TryParse(offsetText, out offset)) {
+                series = await ApiManager.GetSeriesInfo(seriesId);
 
-                seasonNumber = info.IndexNumber.Value;
-                if (!info.SeriesProviderIds.TryGetValue("Shoko Series", out var seriesId)) {
-                    Logger.LogWarning($"Unable refresh item, Shoko Group Id was not stored for Series.");
+                if (series == null) {
+                    Logger.LogWarning("Unable to find series info for Season. (Series={SeriesId})", seriesId);
                     return result;
                 }
 
                 if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {
-                    var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
-                    var group = await ApiManager.GetGroupInfoForSeries(seriesId, filterLibrary);
-                    series = group?.GetSeriesInfoBySeasonNumber(seasonNumber);
-                    if (group == null || series == null) {
-                        Logger.LogWarning("Unable to find info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
+                    var group = await ApiManager.GetGroupInfoForSeries(seriesId);
+                    if (group == null) {
+                        Logger.LogWarning("Unable to find group info for Season. (Series={SeriesId})", series.Id);
                         return result;
                     }
 
-                    if (seasonNumber != group.SeasonNumberBaseDictionary[series])
-                        offset = seasonNumber - group.SeasonNumberBaseDictionary[series];
+                    if (!group.SeasonNumberBaseDictionary.TryGetValue(series, out seasonNumber)) {
+                        Logger.LogWarning("Unable to find season number for Season. (Series={SeriesId},Group={GroupId})", series.Id, group.Id);
+                        return result;
+                    }
+                    seasonNumber = seasonNumber + (seasonNumber < 0 ? -offset : offset);
 
-                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Group={GroupId},Series={SeriesId})", seasonNumber, group.Shoko.Name, group.Id, series.Id);
+                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, group.Shoko.Name, series.Id, group.Id);
                 }
                 else {
-                    series = await ApiManager.GetSeriesInfo(seriesId);
-                    if (series == null) {
-                        Logger.LogWarning("Unable to find info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
-                        return result;
-                    }
+                    seasonNumber = 1 + offset;
+
                     Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId})", seasonNumber, series.Shoko.Name, series.Id);
                 }
             }
-            // Non-virtual seasons.
-            else {
-                if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {
-                    var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
-                    series = await ApiManager.GetSeriesInfoByPath(info.Path);
-                    var group = await ApiManager.GetGroupInfoForSeries(series?.Id, filterLibrary);
-                    if (group == null || series == null) {
-                        Logger.LogWarning("Unable to find info for Season {SeasonNumber} by path {Path}", null, info.Path);
+            // New physical seasons
+            else if (info.Path != null) {
+                series = await ApiManager.GetSeriesInfoByPath(info.Path);
+
+                if (series == null) {
+                    Logger.LogWarning("Unable to find series info for Season by path {Path}.", info.Path);
+                    return result;
+                }
+
+                if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {var group = await ApiManager.GetGroupInfoForSeries(seriesId);
+                    if (group == null) {
+                        Logger.LogWarning("Unable to find group info for Season by path {Path}. (Series={SeriesId})", info.Path, series.Id);
                         return result;
                     }
 
@@ -129,31 +129,44 @@ namespace Shokofin.Providers
                         return result;
                     }
 
-                    if (seasonNumber != group.SeasonNumberBaseDictionary[series])
-                        offset = seasonNumber - group.SeasonNumberBaseDictionary[series];
+                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, group.Shoko.Name, series.Id, group.Id);
+                }
+                else {
+                    seasonNumber = 1;
+
+                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId})", seasonNumber, series.Shoko.Name, series.Id);
+                }
+            }
+            // New virtual seasons
+            else if (info.SeriesProviderIds.TryGetValue("Shoko Series", out seriesId) && info.IndexNumber.HasValue) {
+                seasonNumber = info.IndexNumber.Value;
+                if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {
+                    var group = await ApiManager.GetGroupInfoForSeries(seriesId);
+                    series = group?.GetSeriesInfoBySeasonNumber(seasonNumber);
+                    if (group == null || series == null || !group.SeasonNumberBaseDictionary.TryGetValue(series, out var baseSeasonNumber)) {
+                        Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Series={SeriesId},Group={GroupId})", seasonNumber, seriesId, group?.Id);
+                        return result;
+                    }
+                    offset = Math.Abs(seasonNumber - baseSeasonNumber);
 
                     Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, group.Shoko.Name, series.Id, group.Id);
                 }
                 else {
-                    series = await ApiManager.GetSeriesInfoByPath(info.Path);
-                    if (series == null) {
-                        Logger.LogWarning("Unable to find info for Season {SeasonNumber} by path {Path}", null, info.Path);
-                        return result;
-                    }
+                    series = await ApiManager.GetSeriesInfo(seriesId);
+                    offset = seasonNumber - 1;
 
-                    // Find the first availabe episode that is not a 'special' episode.
-                    var episode = series.EpisodeList.Count > 0 ? series.EpisodeList[0] :
-                        series.AlternateEpisodesList.Count > 0 ? series.AlternateEpisodesList[0] :
-                        series.OthersList.Count > 0 ? series.OthersList[0] :
-                        null;
-                    if (episode == null) {
-                        Logger.LogWarning("Unable to find season number for Season by path {Path}. (Series={SeriesId})", info.Path, series.Id);
+                    if (series == null) {
+                        Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
                         return result;
                     }
-                    seasonNumber = Ordering.GetSeasonNumber(null, series, episode);
 
                     Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId})", seasonNumber, series.Shoko.Name, series.Id);
                 }
+            }
+            // Everything else.
+            else {
+                Logger.LogDebug("Unable refresh Season {SeasonNumber} {SeasonName}", info.IndexNumber, info.Name);
+                return result;
             }
 
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
@@ -196,6 +209,7 @@ namespace Shokofin.Providers
                 CommunityRating = series.AniDB.Rating?.ToFloat(10),
             };
             result.Item.ProviderIds.Add("Shoko Series", series.Id);
+            result.Item.ProviderIds.Add("Shoko Season Offset", offset.ToString());
             if (Plugin.Instance.Configuration.AddAniDBId)
                 result.Item.ProviderIds.Add("AniDB", series.AniDB.ID.ToString());
 

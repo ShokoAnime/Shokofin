@@ -630,6 +630,7 @@ namespace Shokofin.Providers
                 DateLastSaved = DateTime.UtcNow,
             };
             season.ProviderIds.Add("Shoko Series", seriesInfo.Id);
+            season.ProviderIds.Add("Shoko Season Offset", offset.ToString());
             if (Plugin.Instance.Configuration.AddAniDBId)
                 season.ProviderIds.Add("AniDB", seriesInfo.AniDB.ID.ToString());
 
