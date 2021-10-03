@@ -46,7 +46,7 @@ namespace Shokofin
                 if (!Lookup.IsEnabledForItem(parent))
                     return false;
 
-                if (!fileInfo.IsDirectory && Plugin.Instance.IgnoredFileExtensions.Contains(fileInfo.Extension)) {
+                if (!fileInfo.IsDirectory && Plugin.Instance.IgnoredFileExtensions.Contains(fileInfo.Extension.ToLowerInvariant())) {
                     Logger.LogDebug("Skipped excluded file at path {Path}", fileInfo.FullName);
                     return false;
                 }

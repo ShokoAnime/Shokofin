@@ -21,14 +21,14 @@ namespace Shokofin
         {
             Instance = this;
             ConfigurationChanged += OnConfigChanged;
-            IgnoredFileExtensions = this.Configuration.IgnoredFileExtensions.Where(s => s != null).Select(s => s[0] == '.' ? s : string.Concat(".", s)).ToHashSet();
+            IgnoredFileExtensions = this.Configuration.IgnoredFileExtensions.ToHashSet();
         }
 
         public void OnConfigChanged(object sender, BasePluginConfiguration e)
         {
             if (!(e is PluginConfiguration config))
                 return;
-            IgnoredFileExtensions = config.IgnoredFileExtensions.Where(s => s != null).Select(s => s[0] == '.' ? s : string.Concat(".", s)).ToHashSet();
+            IgnoredFileExtensions = config.IgnoredFileExtensions.ToHashSet();
         }
 
         public HashSet<string> IgnoredFileExtensions;

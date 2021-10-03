@@ -8,6 +8,10 @@ const Messages = {
     UnableToRender: "There was an error loading the page, please refresh once to see if that will fix it.",
 };
 
+function filterIgnoreList(value) {
+    return Array.from(new Set(value.split(/[\s,]+/g).map(str =>  { str = str.trim().toLowerCase(); if (str[0] !== ".") str = "." + str; return str; })));
+}
+
 async function loadUserConfig(form, userId, config) {
     if (!userId) {
         form.querySelector("#UserSettingsContainer").setAttribute("hidden", "");
@@ -87,7 +91,7 @@ async function defaultSubmit(form) {
             publicHost = publicHost.slice(0, -1);
             form.querySelector("#PublicHost").value = publicHost;
         }
-        const ignoredFileExtensions = form.querySelector("#IgnoredFileExtensions").value.split(/[\s,]+/g).map(str =>  { str = str.trim(); if (str[0] !== ".") str = "." + str; return str; });
+        const ignoredFileExtensions = filterIgnoreList(form.querySelector("#IgnoredFileExtensions").value);
 
         // Metadata settings
         config.TitleMainType = form.querySelector("#TitleMainType").value;
@@ -208,7 +212,7 @@ async function syncSettings(form) {
         publicHost = publicHost.slice(0, -1);
         form.querySelector("#PublicHost").value = publicHost;
     }
-    const ignoredFileExtensions = form.querySelector("#IgnoredFileExtensions").value.split(/[\s,]+/g).map(str =>  { str = str.trim(); if (str[0] !== ".") str = "." + str; return str; });
+    const ignoredFileExtensions = filterIgnoreList(form.querySelector("#IgnoredFileExtensions").value);
 
     // Metadata settings
     config.TitleMainType = form.querySelector("#TitleMainType").value;
