@@ -51,6 +51,28 @@ namespace Shokofin.API
 
             try {
                 var remoteUrl = string.Concat(Plugin.Instance.Configuration.Host, url);
+
+                // Because Shoko Server don't support HEAD requests, we spoof it instead.
+                if (method == HttpMethod.Head) {
+                    var real = await _httpClient.GetAsync(remoteUrl, HttpCompletionOption.ResponseHeadersRead);
+                    var fake = new HttpResponseMessage(real.StatusCode);
+                    fake.ReasonPhrase = real.ReasonPhrase;
+                    fake.RequestMessage = real.RequestMessage;
+                    fake.RequestMessage.Method = HttpMethod.Head;
+                    fake.Version = real.Version;
+                    fake.Content = (new StringContent(String.Empty));
+                    fake.Content.Headers.Clear();
+                    foreach (var pair in real.Content.Headers) {
+                        fake.Content.Headers.Add(pair.Key, pair.Value);
+                    }
+                    fake.Headers.Clear();
+                    foreach (var pair in real.Headers) {
+                        fake.Headers.Add(pair.Key, pair.Value);
+                    }
+                    real.Dispose();
+                    return fake;
+                }
+
                 using (var requestMessage = new HttpRequestMessage(method, remoteUrl)) {
                     requestMessage.Content = (new StringContent(""));
                     requestMessage.Headers.Add("apikey", apiKey);
@@ -88,6 +110,13 @@ namespace Shokofin.API
 
             try {
                 var remoteUrl = string.Concat(Plugin.Instance.Configuration.Host, url);
+
+                if (method == HttpMethod.Get)
+                    throw new HttpRequestException("Get requests cannot contain a body.");
+
+                if (method == HttpMethod.Head)
+                    throw new HttpRequestException("Head requests cannot contain a body.");
+
                 using (var requestMessage = new HttpRequestMessage(method, remoteUrl)) {
                     requestMessage.Content = (new StringContent(JsonSerializer.Serialize<Type>(body), Encoding.UTF8, "application/json"));
                     requestMessage.Headers.Add("apikey", apiKey);
