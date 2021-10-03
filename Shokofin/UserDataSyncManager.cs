@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,16 +16,29 @@ using Shokofin.Configuration;
 namespace Shokofin
 {
 
-    [Flags]
-    public enum SyncDirection {
-        None = 0,
-        Import = 1,
-        Export = 2,
-        Both = 3,
-    }
-
     public class UserDataSyncManager
     {
+        /// <summary>
+        /// Determines if we should push or pull the data.
+        /// </summary>
+        [Flags]
+        public enum SyncDirection {
+            /// <summary>
+            /// Import data from Shoko.
+            /// </summary>
+            Import = 1,
+            /// <summary>
+            /// Export data to Shoko.
+            /// </summary>
+            Export = 2,
+            /// <summary>
+            /// Sync data with Shoko and only keep the latest data.
+            /// <br/>
+            /// This will conditionally import or export the data as needed.
+            /// </summary>
+            Sync = 3,
+        }
+
         private readonly IUserDataManager UserDataManager;
 
         private readonly ILibraryManager LibraryManager;
@@ -63,7 +77,16 @@ namespace Shokofin
 
         #region Export/Scrobble
 
-        public void OnUserDataSaved(object sender, UserDataSaveEventArgs e)
+        internal class SeesionMetadata {
+            public Guid ItemId;
+            public string FileId;
+            public long Ticks;
+            public bool SentPaused;
+        }
+
+        private readonly ConcurrentDictionary<Guid, SeesionMetadata> ActiveSessions = new ConcurrentDictionary<Guid, SeesionMetadata>();
+
+        public async void OnUserDataSaved(object sender, UserDataSaveEventArgs e)
         {
             if (e == null || e.Item == null || Guid.Equals(e.UserId, Guid.Empty) || e.UserData == null)
                 return;
@@ -76,42 +99,94 @@ namespace Shokofin
             if (!(
                     (e.Item is Movie || e.Item is Episode) &&
                     TryGetUserConfiguration(e.UserId, out var userConfig) &&
-                    Lookup.TryGetFileIdFor(e.Item, out var fileId) &&
-                    Lookup.TryGetEpisodeIdFor(e.Item, out var episodeId)
+                    Lookup.TryGetFileIdFor(e.Item, out var fileId)
                 ))
                 return;
 
+            var itemId = e.Item.Id;
             var userData = e.UserData;
             var config = Plugin.Instance.Configuration;
+            bool success = false;
             switch (e.SaveReason) {
                 case UserDataSaveReason.PlaybackStart:
-                case UserDataSaveReason.PlaybackProgress:
+                case UserDataSaveReason.PlaybackProgress: {
                     if (!userConfig.SyncUserDataUnderPlayback)
                         return;
-                    Logger.LogDebug("Scrobbled during playback. (File={FileId})", fileId);
-                    APIClient.ScrobbleFile(fileId, userData.PlaybackPositionTicks, userConfig.Token).ConfigureAwait(false);
+
+                    // If a session can't be found or created then throw an error.
+                    if (!ActiveSessions.TryGetValue(e.UserId, out var sessionInfo) &&
+                        !ActiveSessions.TryAdd(e.UserId, sessionInfo = new SeesionMetadata { ItemId = Guid.Empty, FileId = null, Ticks = 0, SentPaused = false }))
+                        throw new Exception("Unable to create session data.");
+
+                    // The active video changed, so send a start event.
+                    if (!Guid.Equals(sessionInfo.ItemId, itemId)) {
+                        sessionInfo.ItemId = e.Item.Id;
+                        sessionInfo.FileId = fileId;
+                        sessionInfo.Ticks = userData.PlaybackPositionTicks;
+                        sessionInfo.SentPaused = false;
+
+                        Logger.LogInformation("Playback has started. (File={FileId})", fileId);
+                        success = await APIClient.ScrobbleFile(fileId, "play", sessionInfo.Ticks, userConfig.Token).ConfigureAwait(false);
+                    }
+                    // We received an event, but the position didn't change, so the playback is most likely paused.
+                    else if (userData.PlaybackPositionTicks == sessionInfo.Ticks) {
+                        if (sessionInfo.SentPaused)
+                            return;
+
+                        sessionInfo.SentPaused = true;
+
+                        Logger.LogInformation("Playback was paused. (File={FileId})", fileId);
+                        success = await APIClient.ScrobbleFile(fileId, "pause", sessionInfo.Ticks, userConfig.Token).ConfigureAwait(false);
+                    }
+                    // The playback was resumed.
+                    else if (sessionInfo.SentPaused) {
+                        sessionInfo.Ticks = userData.PlaybackPositionTicks;
+                        sessionInfo.SentPaused = false;
+
+                        Logger.LogInformation("Playback was resumed. (File={FileId})", fileId);
+                        success = await APIClient.ScrobbleFile(fileId, "resume", sessionInfo.Ticks, userConfig.Token).ConfigureAwait(false);
+                    }
+                    // Scrobble.
+                    else {
+                        sessionInfo.Ticks = userData.PlaybackPositionTicks;
+
+                        Logger.LogInformation("Scrobbled during playback. (File={FileId})", fileId);
+                        success = await APIClient.ScrobbleFile(fileId, "scrobble", sessionInfo.Ticks, userConfig.Token).ConfigureAwait(false);
+                    }
                     break;
+                }
                 case UserDataSaveReason.PlaybackFinished:
                     if (!userConfig.SyncUserDataAfterPlayback)
                         return;
-                    Logger.LogDebug("Scrobbled after playback. (File={FileId})", fileId);
-                    APIClient.ScrobbleFile(fileId, userData.Played, userData.PlaybackPositionTicks, userConfig.Token).ConfigureAwait(false);
+
+                    // Remove the session metadata if the watch session was ended.
+                    if (userConfig.SyncUserDataUnderPlayback) {
+                        if (ActiveSessions.TryGetValue(e.UserId, out var sessionInfo) && sessionInfo.ItemId == itemId && !ActiveSessions.TryRemove(e.UserId, out sessionInfo))
+                            Logger.LogWarning("Unable to remove session metadata for last session. (File={FileId})", fileId);
+                    }
+
+                    Logger.LogInformation("Playback has ended. (File={FileId})", fileId);
+                    success = await APIClient.ScrobbleFile(fileId, "stop", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
                     break;
                 case UserDataSaveReason.TogglePlayed:
-                    Logger.LogDebug("Scrobbled when toggled. (File={FileId})", fileId);
-                    if (userData.PlaybackPositionTicks == 0)
-                        APIClient.ScrobbleFile(fileId, userData.Played, userConfig.Token).ConfigureAwait(false);
-                    else
-                        APIClient.ScrobbleFile(fileId, userData.PlaybackPositionTicks, userConfig.Token).ConfigureAwait(false);
+                    Logger.LogInformation("Scrobbled when toggled. (File={FileId})", fileId);
+                    success = await APIClient.ScrobbleFile(fileId, "toggle-played", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
                     break;
+            }
+            if (success) {
+                Logger.LogInformation("Successfully synced watch state with Shoko. (File={FileId})", fileId);
+            }
+            else {
+                Logger.LogInformation("Failed to sync watch state with Shoko. (File={FileId})", fileId);
             }
         }
 
-        // Updates to favotite state and/or user rating.
+        // Updates to favotite state and/or user data.
         private void OnUserRatingSaved(object sender, UserDataSaveEventArgs e)
         {
             if (!TryGetUserConfiguration(e.UserId, out var userConfig))
                 return;
+
             var userData = e.UserData;
             var config = Plugin.Instance.Configuration;
             switch (e.Item) {
@@ -176,7 +251,7 @@ namespace Shokofin
                     continue;
 
                 foreach (var userConfig in enabledUsers) {
-                    await SyncVideo(video, userConfig, null, SyncDirection.Both, fileId, episodeId).ConfigureAwait(false);
+                    await SyncVideo(video, userConfig, null, SyncDirection.Sync, fileId, episodeId).ConfigureAwait(false);
 
                     numComplete++;
                     double percent = numComplete;
@@ -245,39 +320,41 @@ namespace Shokofin
 
         #endregion
 
-        private async Task SyncSeries(Series series, UserConfiguration userConfig, UserItemData userData, SyncDirection direction, string seriesId)
+        private Task SyncSeries(Series series, UserConfiguration userConfig, UserItemData userData, SyncDirection direction, string seriesId)
         {
+            // Try to load the user-data if it was not provided
             if (userData == null)
                 userData = UserDataManager.GetUserData(userConfig.UserId, series);
             // Create some new user-data if none exists.
             if (userData == null)
                 userData = new UserItemData {
                     UserId = userConfig.UserId,
-
-                    LastPlayedDate = null,
+                    Key = series.GetUserDataKeys()[0],
                 };
 
-            // TODO: Check what needs to be done, e.g. update JF, update SS, or nothing.
-            Logger.LogDebug("TODO; Sync user rating for series {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
+            Logger.LogDebug("TODO; {SyncDirection} user data for Series {SeriesName}. (Series={SeriesId})", direction.ToString(), series.Name, seriesId);
+
+            return Task.CompletedTask;
         }
 
-        private async Task SyncSeason(Season season, UserConfiguration userConfig, UserItemData userData, SyncDirection direction, string seriesId)
+        private Task SyncSeason(Season season, UserConfiguration userConfig, UserItemData userData, SyncDirection direction, string seriesId)
         {
+            // Try to load the user-data if it was not provided
             if (userData == null)
                 userData = UserDataManager.GetUserData(userConfig.UserId, season);
             // Create some new user-data if none exists.
             if (userData == null)
                 userData = new UserItemData {
                     UserId = userConfig.UserId,
-
-                    LastPlayedDate = null,
+                    Key = season.GetUserDataKeys()[0],
                 };
 
-            // TODO: Check what needs to be done, e.g. update JF, update SS, or nothing.
-            Logger.LogDebug("TODO; Sync user rating for season {SeasonNumber} in series {SeriesName}. (Series={SeriesId})", season.IndexNumber, season.SeriesName, seriesId);
+            Logger.LogDebug("TODO; {SyncDirection} user data for Season {SeasonNumber} in Series {SeriesName}. (Series={SeriesId})", direction.ToString(), season.IndexNumber, season.SeriesName, seriesId);
+
+            return Task.CompletedTask;
         }
 
-        private async Task SyncVideo(Video video, UserConfiguration userConfig, UserItemData userData, SyncDirection direction, string episodeId)
+        private Task SyncVideo(Video video, UserConfiguration userConfig, UserItemData userData, SyncDirection direction, string episodeId)
         {
             // Try to load the user-data if it was not provided
             if (userData == null)
@@ -286,7 +363,7 @@ namespace Shokofin
             if (userData == null)
                 userData = new UserItemData {
                     UserId = userConfig.UserId,
-
+                    Key = video.GetUserDataKeys()[0],
                     LastPlayedDate = null,
                 };
 
@@ -294,11 +371,12 @@ namespace Shokofin
             // if (remoteUserData == null)
             //     return;
 
-            // TODO: Check what needs to be done, e.g. update JF, update SS, or nothing.
-            Logger.LogDebug("TODO: Sync user data for video {ItemName}. (Episode={EpisodeId})", video.Name, episodeId);
+            Logger.LogDebug("TODO; {SyncDirection} user data for video {VideoName}. (Episode={EpisodeId})", direction.ToString(), video.Name, episodeId);
+
+            return Task.CompletedTask;
         }
 
-        private async Task SyncVideo(Video video, UserConfiguration userConfig, UserItemData userData, SyncDirection direction, string fileId, string episodeId)
+        private Task SyncVideo(Video video, UserConfiguration userConfig, UserItemData userData, SyncDirection direction, string fileId, string episodeId)
         {
             // Try to load the user-data if it was not provided
             if (userData == null)
@@ -307,7 +385,7 @@ namespace Shokofin
             if (userData == null)
                 userData = new UserItemData {
                     UserId = userConfig.UserId,
-
+                    Key = video.GetUserDataKeys()[0],
                     LastPlayedDate = null,
                 };
 
@@ -315,8 +393,9 @@ namespace Shokofin
             // if (remoteUserData == null)
             //     return;
 
-            // TODO: Check what needs to be done, e.g. update JF, update SS, or nothing.
-            Logger.LogDebug("TODO: Sync user data for video {ItemName}. (File={FileId},Episode={EpisodeId})", video.Name, fileId, episodeId);
+            Logger.LogDebug("TODO; {SyncDirection} user data for video {VideoName}. (File={FileId},Episode={EpisodeId})", direction.ToString(), video.Name, fileId, episodeId);
+
+            return Task.CompletedTask;
         }
     }
 }

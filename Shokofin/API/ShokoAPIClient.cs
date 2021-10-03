@@ -192,19 +192,19 @@ namespace Shokofin.API
             return GetAsync<File.UserDataSummary>($"/api/v3/File/UserData");
         }
 
-        public Task<bool> ScrobbleFile(string id, bool watched, string apiKey)
+        public Task<bool> ScrobbleFile(string id, string eventName, bool watched, string apiKey)
         {
-            return GetAsync<bool>($"/api/v3/File/{id}/Scrobble?watched={watched}", HttpMethod.Patch, apiKey);
+            return GetAsync<bool>($"/api/v3/File/{id}/Scrobble?event={eventName}&watched={watched}", HttpMethod.Patch, apiKey);
         }
 
-        public Task<bool> ScrobbleFile(string id, long progress, string apiKey)
+        public Task<bool> ScrobbleFile(string id, string eventName, long progress, string apiKey)
         {
-            return GetAsync<bool>($"/api/v3/File/{id}/Scrobble?resumePosition={progress}", HttpMethod.Patch, apiKey);
+            return GetAsync<bool>($"/api/v3/File/{id}/Scrobble?event={eventName}&resumePosition={progress}", HttpMethod.Patch, apiKey);
         }
 
-        public Task<bool> ScrobbleFile(string id, bool watched, long? progress, string apiKey)
+        public Task<bool> ScrobbleFile(string id, string eventName, long? progress, bool watched, string apiKey)
         {
-            return GetAsync<bool>($"/api/v3/File/{id}/Scrobble?watched={watched}&resumePosition={progress ?? 0}", HttpMethod.Patch, apiKey);
+            return GetAsync<bool>($"/api/v3/File/{id}/Scrobble?event={eventName}&resumePosition={progress ?? 0}&watched={watched}", HttpMethod.Patch, apiKey);
         }
 
         public Task<Series> GetSeries(string id)
