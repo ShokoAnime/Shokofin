@@ -12,7 +12,6 @@ using Shokofin.API.Info;
 using Shokofin.API.Models;
 using Shokofin.Utils;
 
-using ILibraryManager = MediaBrowser.Controller.Library.ILibraryManager;
 using CultureInfo = System.Globalization.CultureInfo;
 
 namespace Shokofin.API
@@ -20,8 +19,6 @@ namespace Shokofin.API
     public class ShokoAPIManager
     {
         private readonly ILogger<ShokoAPIManager> Logger;
-
-        private readonly ILibraryManager LibraryManager;
 
         private readonly ShokoAPIClient APIClient;
 
@@ -43,12 +40,9 @@ namespace Shokofin.API
 
         private readonly ConcurrentDictionary<string, string> FileIdToEpisodeIdDictionary = new ConcurrentDictionary<string, string>();
 
-        private readonly ConcurrentDictionary<string, HashSet<string>> LockedIdDictionary = new ConcurrentDictionary<string, HashSet<string>>();
-
-        public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ILibraryManager libraryManager, ShokoAPIClient apiClient)
+        public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ShokoAPIClient apiClient)
         {
             Logger = logger;
-            LibraryManager = libraryManager;
             APIClient = apiClient;
         }
 
@@ -72,10 +66,7 @@ namespace Shokofin.API
             mediaFolder = parent;
             while (!mediaFolder.ParentId.Equals(root.Id)) {
                 if (mediaFolder.Parent == null) {
-                    if (mediaFolder.ParentId.Equals(Guid.Empty))
-                        break;
-                    mediaFolder = LibraryManager.GetItemById(mediaFolder.ParentId) as Folder;
-                    continue;
+                    break;
                 }
                 mediaFolder = mediaFolder.Parent;
             }
