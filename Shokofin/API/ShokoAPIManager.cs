@@ -494,10 +494,10 @@ namespace Shokofin.API
                 seriesId = EpisodeIdToSeriesIdDictionary[episodeId];
             }
             else {
-                var group = await APIClient.GetGroupFromSeries(episodeId);
-                if (group == null)
+                var series = await APIClient.GetSeriesFromEpisode(episodeId);
+                if (series == null)
                     return null;
-                seriesId = group.IDs.ID.ToString();
+                seriesId = series.IDs.ID.ToString();
             }
 
             return await GetSeriesInfo(seriesId);
