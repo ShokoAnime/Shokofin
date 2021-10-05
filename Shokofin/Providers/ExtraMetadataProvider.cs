@@ -654,7 +654,7 @@ namespace Shokofin.Providers
             if (searchList.Count == 0)
                 return;
 
-            Logger.LogWarning("Removing {Count} duplicate seasons from {SeriesName} (Series={SeriesId})", searchList.Count, series.Name, seriesId);
+            Logger.LogWarning("Removing {Count:00} duplicate seasons from Series {SeriesName} (Series={SeriesId})", searchList.Count, series.Name, seriesId);
             var deleteOptions = new DeleteOptions {
                 DeleteFileLocation = false,
             };
@@ -699,11 +699,11 @@ namespace Shokofin.Providers
                 return;
 
             var episodeId = LibraryManager.GetNewItemId(season.Series.Id + "Season " + seriesInfo.Id + " Episode " + episodeInfo.Id, typeof(Episode));
-            var result = EpisodeProvider.CreateMetadata(groupInfo, seriesInfo, episodeInfo, season, episodeId);
+            var episode = EpisodeProvider.CreateMetadata(groupInfo, seriesInfo, episodeInfo, season, episodeId);
 
-            Logger.LogInformation("Creating virtual episode for {SeriesName} S{SeasonNumber}:E{EpisodeNumber} (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", groupInfo?.Shoko.Name ?? seriesInfo.Shoko.Name, season.IndexNumber, result.IndexNumber, episodeInfo.Id, seriesInfo.Id, groupId);
+            Logger.LogInformation("Adding virtual Episode {EpisodeNumber:000} in Season {SeasonNumber:00} for Series {SeriesName}. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", episode.IndexNumber, season.Name, groupInfo?.Shoko.Name ?? seriesInfo.Shoko.Name, episodeInfo.Id, seriesInfo.Id, groupId);
 
-            season.AddChild(result, CancellationToken.None);
+            season.AddChild(episode, CancellationToken.None);
         }
 
         private void RemoveDuplicateEpisodes(Episode episode, string episodeId)
@@ -728,7 +728,7 @@ namespace Shokofin.Providers
                 LibraryManager.DeleteItem(item, deleteOptions);
 
             if (existingVirtualItems.Count > 0)
-                Logger.LogInformation("Removed {Count} duplicate episodes for episode {EpisodeName}. (Episode={EpisodeId})", existingVirtualItems.Count, episode.Name, episodeId);
+                Logger.LogInformation("Removed {Count:00} duplicate episodes for episode {EpisodeName}. (Episode={EpisodeId})", existingVirtualItems.Count, episode.Name, episodeId);
         }
 
         #endregion
@@ -812,7 +812,7 @@ namespace Shokofin.Providers
                 LibraryManager.DeleteItem(video, deleteOptions);
 
             if (searchList.Count > 0)
-                Logger.LogInformation("Removed {Count} extras from parent {ParentName}. (Series={SeriesId})", searchList.Count, parent.Name, seriesId);
+                Logger.LogInformation("Removed {Count:00} extras from parent {ParentName}. (Series={SeriesId})", searchList.Count, parent.Name, seriesId);
         }
 
         #endregion
