@@ -707,6 +707,10 @@ namespace Shokofin.API
                     return null;
 
                 groupId = group.IDs.ID.ToString();
+                if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var groupInfo))
+                    return groupInfo;
+
+                return await CreateGroupInfo(group, groupId, filterByType);
             }
 
             return await GetGroupInfo(groupId, filterByType);
@@ -743,8 +747,23 @@ namespace Shokofin.API
             }
 
             // Return ealty if no series matched the filter or if the list was empty.
-            if (seriesList == null || seriesList.Count == 0)
-                return null;
+            if (seriesList == null || seriesList.Count == 0) {
+                Logger.LogWarning("Creating an empty group info for filter {Filter}! (Group={GroupId})", filterByType.ToString(), groupId);
+                groupInfo = new GroupInfo {
+                    Id = groupId,
+                    Shoko = group,
+                    Tags = new string[0],
+                    Genres = new string[0],
+                    Studios = new string[0],
+                    SeriesList = (seriesList ?? new List<SeriesInfo>()),
+                    SeasonNumberBaseDictionary = (new Dictionary<SeriesInfo, int>()),
+                    SeasonOrderDictionary = (new Dictionary<int, SeriesInfo>()),
+                    DefaultSeries = null,
+                    DefaultSeriesIndex = -1,
+                };
+                DataCache.Set<GroupInfo>(cacheKey, groupInfo, DefaultTimeSpan);
+                return groupInfo;
+            }
 
             // Order series list
             var orderingType = filterByType == Ordering.GroupFilterType.Movies ? Plugin.Instance.Configuration.MovieOrdering : Plugin.Instance.Configuration.SeasonOrdering;
