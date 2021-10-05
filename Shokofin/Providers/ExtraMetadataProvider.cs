@@ -418,22 +418,29 @@ namespace Shokofin.Providers
                     return;
                 }
 
-                seriesInfo = groupInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
-                if (seasonNumber != 0 && seriesInfo == null) {
-                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber} in group for series. (Group={GroupId})", seasonNumber, groupInfo.Id);
-                    return;
+                if (seasonNumber == 0) {
+                    if (deleted) {
+                        season = AddVirtualSeason(0, series);
+                    }
                 }
+                else {
+                    seriesInfo = groupInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
+                    if (seriesInfo == null) {
+                        Logger.LogWarning("Unable to find series info for Season {SeasonNumber:00} in group for series. (Group={GroupId})", seasonNumber, groupInfo.Id);
+                        return;
+                    }
 
-                if (deleted) {
-                    var offset = seasonNumber - groupInfo.SeasonNumberBaseDictionary[seriesInfo];
-                    season = seasonNumber == 0 ? AddVirtualSeason(0, series) : AddVirtualSeason(seriesInfo, offset, seasonNumber, series);
+                    if (deleted) {
+                        var offset = seasonNumber - groupInfo.SeasonNumberBaseDictionary[seriesInfo];
+                        season = AddVirtualSeason(seriesInfo, offset, seasonNumber, series);
+                    }
                 }
             }
             // Provide metadata for other seasons
             else {
                 seriesInfo = ApiManager.GetSeriesInfoSync(seriesId);
                 if (seriesInfo == null) {
-                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
+                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber:00}. (Series={SeriesId})", seasonNumber, seriesId);
                     return;
                 }
 
@@ -572,8 +579,7 @@ namespace Shokofin.Providers
 
         private Season AddVirtualSeason(int seasonNumber, Series series)
         {
-            var seriesPresentationUniqueKey = series.GetPresentationUniqueKey();
-            if (SeasonExists(seriesPresentationUniqueKey, series.Name, seasonNumber))
+            if (SeasonExists(series.GetPresentationUniqueKey(), series.Name, seasonNumber))
                 return null;
 
             string seasonName;
@@ -583,8 +589,6 @@ namespace Shokofin.Providers
                 seasonName = string.Format(
                     LocalizationManager.GetLocalizedString("NameSeasonNumber"),
                     seasonNumber.ToString(CultureInfo.InvariantCulture));
-
-            Logger.LogInformation("Creating virtual season {SeasonName} entry for {SeriesName}", seasonName, series.Name);
 
             var season = new Season {
                 Name = seasonName,
@@ -602,6 +606,8 @@ namespace Shokofin.Providers
                 DateLastSaved = DateTime.UtcNow,
             };
 
+            Logger.LogInformation("Adding virtual Season {SeasonNumber:00} to Series {SeriesName}.", seasonNumber, series.Name);
+
             series.AddChild(season, CancellationToken.None);
 
             return season;
@@ -609,63 +615,13 @@ namespace Shokofin.Providers
 
         private Season AddVirtualSeason(Info.SeriesInfo seriesInfo, int offset, int seasonNumber, Series series)
         {
-            var seriesPresentationUniqueKey = series.GetPresentationUniqueKey();
-            if (SeasonExists(seriesPresentationUniqueKey, series.Name, seasonNumber))
+            if (SeasonExists(series.GetPresentationUniqueKey(), series.Name, seasonNumber))
                 return null;
 
-            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(seriesInfo.AniDB.Titles, seriesInfo.Shoko.Name, series.GetPreferredMetadataLanguage());
-            var sortTitle = $"S{seasonNumber} - {seriesInfo.Shoko.Name}";
+            var seasonId = LibraryManager.GetNewItemId(series.Id + "Season " + seasonNumber.ToString(CultureInfo.InvariantCulture), typeof(Season));
+            var season = SeasonProvider.CreateMetadata(seriesInfo, seasonNumber, offset, series, seasonId);
 
-            if (offset > 0) {
-                string type = "";
-                switch (offset) {
-                    default:
-                        break;
-                    case -1:
-                    case 1:
-                        if (seriesInfo.AlternateEpisodesList.Count > 0)
-                            type = "Alternate Stories";
-                        else
-                            type = "Other Episodes";
-                        break;
-                    case -2:
-                    case 2:
-                        type = "Other Episodes";
-                        break;
-                }
-                displayTitle += $" ({type})";
-                alternateTitle += $" ({type})";
-            }
-
-            Logger.LogInformation("Adding virtual season {SeasonName} entry for {SeriesName}", displayTitle, series.Name);
-            var season = new Season {
-                Name = displayTitle,
-                OriginalTitle = alternateTitle,
-                IndexNumber = seasonNumber,
-                SortName = sortTitle,
-                ForcedSortName = sortTitle,
-                Id = LibraryManager.GetNewItemId(
-                    series.Id + "Season " + seasonNumber.ToString(CultureInfo.InvariantCulture),
-                    typeof(Season)),
-                IsVirtualItem = true,
-                Overview = Text.GetDescription(seriesInfo),
-                PremiereDate = seriesInfo.AniDB.AirDate,
-                EndDate = seriesInfo.AniDB.EndDate,
-                ProductionYear = seriesInfo.AniDB.AirDate?.Year,
-                Tags = seriesInfo.Tags.ToArray(),
-                Genres = seriesInfo.Genres.ToArray(),
-                Studios = seriesInfo.Studios.ToArray(),
-                CommunityRating = seriesInfo.AniDB.Rating?.ToFloat(10),
-                SeriesId = series.Id,
-                SeriesName = series.Name,
-                SeriesPresentationUniqueKey = seriesPresentationUniqueKey,
-                DateModified = DateTime.UtcNow,
-                DateLastSaved = DateTime.UtcNow,
-            };
-            season.ProviderIds.Add("Shoko Series", seriesInfo.Id);
-            season.ProviderIds.Add("Shoko Season Offset", offset.ToString());
-            if (Plugin.Instance.Configuration.AddAniDBId)
-                season.ProviderIds.Add("AniDB", seriesInfo.AniDB.ID.ToString());
+            Logger.LogInformation("Adding virtual Season {SeasonNumber:00} to Series {SeriesName}. (Series={SeriesId})", seasonNumber, series.Name, seriesInfo.Id);
 
             series.AddChild(season, CancellationToken.None);
 
