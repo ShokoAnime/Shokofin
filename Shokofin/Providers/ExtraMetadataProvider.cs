@@ -109,8 +109,6 @@ namespace Shokofin.Providers
 
                     try {
                         UpdateSeries(series, seriesId);
-
-                        RemoveDummySeasons(series, seriesId);
                     }
                     finally {
                         TryUnlockActionForIdOFType("series", seriesId, "update");
@@ -192,8 +190,6 @@ namespace Shokofin.Providers
                     try {
                         UpdateSeries(series, seriesId);
 
-                        RemoveDummySeasons(series, seriesId);
-
                         RemoveDuplicateSeasons(series, seriesId);
                     }
                     finally {
@@ -227,7 +223,6 @@ namespace Shokofin.Providers
                     finally {
                         TryUnlockActionForIdOFType("season", seasonId, "update");
                     }
-
 
                     return;
                 }
@@ -626,25 +621,6 @@ namespace Shokofin.Providers
             series.AddChild(season, CancellationToken.None);
 
             return season;
-        }
-
-        public void RemoveDummySeasons(Series series, string seriesId)
-        {
-            var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
-                IncludeItemTypes = new [] { nameof (Season) },
-                SeriesPresentationUniqueKey = series.GetPresentationUniqueKey(),
-                DtoOptions = new DtoOptions(true),
-            }, true).Where(item => !item.IndexNumber.HasValue).ToList();
-
-            if (searchList.Count == 0)
-                return;
-
-            Logger.LogWarning("Removing {Count} dummy seasons from {SeriesName} (Series={SeriesId})", searchList.Count, series.Name, seriesId);
-            var deleteOptions = new DeleteOptions {
-                DeleteFileLocation = false,
-            };
-            foreach (var item in searchList)
-                LibraryManager.DeleteItem(item, deleteOptions);
         }
 
         public void RemoveDuplicateSeasons(Series series, string seriesId)
