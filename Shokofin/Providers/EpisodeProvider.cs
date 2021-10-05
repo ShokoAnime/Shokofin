@@ -84,7 +84,6 @@ namespace Shokofin.Providers
                         result.Item.IndexNumberEnd = episodeNumberEnd;
                 }
 
-
                 return result;
             }
             catch (Exception e) {
@@ -94,15 +93,13 @@ namespace Shokofin.Providers
         }
 
         public static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, Season season, System.Guid episodeId)
-            => CreateMetadata(group, series, episode, null, null, season, episodeId);
+            => CreateMetadata(group, series, episode, null, season.GetPreferredMetadataLanguage(), season, episodeId);
 
         public static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, string fileId, string metadataLanguage)
             => CreateMetadata(group, series, episode, fileId, metadataLanguage, null, Guid.Empty);
 
         private static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, string fileId, string metadataLanguage, Season season, System.Guid episodeId)
         {
-            if (string.IsNullOrEmpty(metadataLanguage) && season != null)
-                metadataLanguage = season.GetPreferredMetadataLanguage();
             var config = Plugin.Instance.Configuration;
             var mergeFriendly = config.SeriesGrouping == Ordering.GroupType.MergeFriendly && series.TvDB != null && episode.TvDB != null;
 
