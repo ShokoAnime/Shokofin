@@ -661,13 +661,15 @@ namespace Shokofin.Providers
             foreach (var item in searchList)
                 LibraryManager.DeleteItem(item, deleteOptions);
 
-            foreach (var episode in season.GetEpisodes(null, new DtoOptions(true)).OfType<Episode>()) {
-                // We're only interested in physical episodes.
-                if (episode.IsVirtualItem)
-                    continue;
-
+            var episodeNumbers = new HashSet<int?>();
+            // Ordering by `IsVirtualItem` will put physical episodes first.
+            foreach (var episode in season.GetEpisodes(null, new DtoOptions(true)).OfType<Episode>().OrderBy(e => e.IsVirtualItem)) {
                 // Abort if we're unable to get the shoko episode id
                 if (!Lookup.TryGetEpisodeIdFor(episode, out var episodeId))
+                    continue;
+
+                // Only iterate over the same index number once.
+                if (!episodeNumbers.Add(episode.IndexNumber))
                     continue;
 
                 RemoveDuplicateEpisodes(episode, episodeId);
