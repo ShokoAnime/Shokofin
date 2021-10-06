@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
@@ -104,6 +105,8 @@ namespace Shokofin
 
         #region Base Item
 
+        private readonly HashSet<string> AllowedTypes = new HashSet<string>() { nameof(Series), nameof(Episode), nameof(Movie) };
+
         public bool IsEnabledForItem(BaseItem item)
         {
             var reItem = item switch {
@@ -116,7 +119,7 @@ namespace Shokofin
                 return false;
             var libraryOptions = LibraryManager.GetLibraryOptions(reItem);
             return libraryOptions != null &&
-                libraryOptions.TypeOptions.Any(o => o.Type == nameof (Series) && o.MetadataFetchers.Contains(Plugin.MetadataProviderName));
+                libraryOptions.TypeOptions.Any(o => AllowedTypes.Contains(o.Type) && o.MetadataFetchers.Contains(Plugin.MetadataProviderName));
         }
 
         #endregion
