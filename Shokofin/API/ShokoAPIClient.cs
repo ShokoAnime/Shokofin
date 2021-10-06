@@ -192,19 +192,22 @@ namespace Shokofin.API
             return GetAsync<File.UserDataSummary>($"/api/v3/File/UserData");
         }
 
-        public Task<bool> ScrobbleFile(string id, string eventName, bool watched, string apiKey)
+        public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, bool watched, string apiKey)
         {
-            return GetAsync<bool>($"/api/v3/File/{id}/Scrobble?event={eventName}&watched={watched}", HttpMethod.Patch, apiKey);
+            var response = await GetAsync($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&watched={watched}", HttpMethod.Patch, apiKey);
+            return response != null && (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent);
         }
 
-        public Task<bool> ScrobbleFile(string id, string eventName, long progress, string apiKey)
+        public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, long progress, string apiKey)
         {
-            return GetAsync<bool>($"/api/v3/File/{id}/Scrobble?event={eventName}&resumePosition={progress}", HttpMethod.Patch, apiKey);
+            var response = await GetAsync($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={progress}", HttpMethod.Patch, apiKey);
+            return response != null && (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent);
         }
 
-        public Task<bool> ScrobbleFile(string id, string eventName, long? progress, bool watched, string apiKey)
+        public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, long? progress, bool watched, string apiKey)
         {
-            return GetAsync<bool>($"/api/v3/File/{id}/Scrobble?event={eventName}&resumePosition={progress ?? 0}&watched={watched}", HttpMethod.Patch, apiKey);
+            var response = await GetAsync($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={progress ?? 0}&watched={watched}", HttpMethod.Patch, apiKey);
+            return response != null && (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent);
         }
 
         public Task<Series> GetSeries(string id)
