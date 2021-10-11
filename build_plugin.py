@@ -30,6 +30,6 @@ zipfile=os.popen('jprm --verbosity=debug plugin build "." --output="%s" --versio
 
 os.system('jprm repo add --url=%s %s %s' % (jellyfin_repo_url, jellyfin_repo_file, zipfile))
 
-os.system('sed -i "s/shokofin\//%s\//" %s' % (version, jellyfin_repo_file))
+os.system('sed -i "s/shoko\//%s\//" %s' % (version, jellyfin_repo_file))
 
 print(version)
