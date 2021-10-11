@@ -47,7 +47,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./artifacts/shokofin_*.zip
+          files: ./artifacts/shoko_*.zip
           tag_name: ${{ env.NEW_VERSION }}
           prerelease: true
           fail_on_unmatched_files: true

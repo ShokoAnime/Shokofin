@@ -34,7 +34,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./artifacts/shokofin_*.zip
+          file: ./artifacts/shoko_*.zip
           tag: ${{ github.ref }}
           file_glob: true
       - name: Update manifest
