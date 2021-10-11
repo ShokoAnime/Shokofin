@@ -1,13 +1,21 @@
 [
     {
         "guid": "5216ccbf-d24a-4eb3-8a7e-7da4230b7052",
-        "name": "Shokofin",
-        "description": "This plugin gets metadata for all your anime from your Shoko Server. The official Anime and TvDB plugins can be used to fill the missing data.\n",
+        "name": "Shoko",
+        "description": "A plugin to provide metadata from Shoko Server for your locally organised anime library in Jellyfin.\n",
         "overview": "Manage your anime from Jellyfin using metadata from Shoko",
-        "owner": "shoko",
+        "owner": "shokoanime",
         "category": "Metadata",
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
+            {
+                "version": "1.6.0.0",
+                "changelog": "NA",
+                "targetAbi": "10.7.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/shoko/shoko_1.6.0.0.zip",
+                "checksum": "18dfd06489b5c77ba7e3d310ac255a3d",
+                "timestamp": "2021-10-11T14:11:13Z"
+            },
             {
                 "version": "1.5.0.0",
                 "changelog": "NA",
