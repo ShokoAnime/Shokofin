@@ -36,13 +36,7 @@ namespace Shokofin.Tasks
         /// </summary>
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         {
-            return new[] {
-                new TaskTriggerInfo {
-                    Type = TaskTriggerInfo.TriggerDaily,
-                    TimeOfDayTicks = TimeSpan.FromHours(3).Ticks,
-                    MaxRuntimeTicks = TimeSpan.FromHours(4).Ticks,
-                },
-            };
+            return new TaskTriggerInfo[0];
         }
 
         /// <summary>
