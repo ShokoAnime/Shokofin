@@ -131,98 +131,105 @@ namespace Shokofin
 
         public async void OnUserDataSaved(object sender, UserDataSaveEventArgs e)
         {
-            if (e == null || e.Item == null || Guid.Equals(e.UserId, Guid.Empty) || e.UserData == null)
-                return;
+            try {
 
-            if (e.SaveReason == UserDataSaveReason.UpdateUserRating) {
-                OnUserRatingSaved(sender, e);
-                return;
-            }
+                if (e == null || e.Item == null || Guid.Equals(e.UserId, Guid.Empty) || e.UserData == null)
+                    return;
 
-            if (!(
-                    (e.Item is Movie || e.Item is Episode) &&
-                    TryGetUserConfiguration(e.UserId, out var userConfig) &&
-                    Lookup.TryGetFileIdFor(e.Item, out var fileId) &&
-                    Lookup.TryGetEpisodeIdFor(e.Item, out var episodeId)
-                ))
-                return;
+                if (e.SaveReason == UserDataSaveReason.UpdateUserRating) {
+                    OnUserRatingSaved(sender, e);
+                    return;
+                }
 
-            var itemId = e.Item.Id;
-            var userData = e.UserData;
-            var config = Plugin.Instance.Configuration;
-            bool success = false;
-            switch (e.SaveReason) {
-                // case UserDataSaveReason.PlaybackStart: // The progress event is sent at the same time, so this event is not needed.
-                case UserDataSaveReason.PlaybackProgress: {
-                    // If a session can't be found or created then throw an error.
-                    if (!ActiveSessions.TryGetValue(e.UserId, out var sessionMetadata))
-                        return;
+                if (!(
+                        (e.Item is Movie || e.Item is Episode) &&
+                        TryGetUserConfiguration(e.UserId, out var userConfig) &&
+                        Lookup.TryGetFileIdFor(e.Item, out var fileId) &&
+                        Lookup.TryGetEpisodeIdFor(e.Item, out var episodeId)
+                    ))
+                    return;
 
-                    // The active video changed, so send a start event.
-                    if (!Guid.Equals(sessionMetadata.ItemId, itemId)) {
-                        sessionMetadata.ItemId = e.Item.Id;
-                        sessionMetadata.FileId = fileId;
-                        sessionMetadata.Ticks = userData.PlaybackPositionTicks;
-                        sessionMetadata.SentPaused = false;
+                var itemId = e.Item.Id;
+                var userData = e.UserData;
+                var config = Plugin.Instance.Configuration;
+                bool success = false;
+                switch (e.SaveReason) {
+                    // case UserDataSaveReason.PlaybackStart: // The progress event is sent at the same time, so this event is not needed.
+                    case UserDataSaveReason.PlaybackProgress: {
+                        // If a session can't be found or created then throw an error.
+                        if (!ActiveSessions.TryGetValue(e.UserId, out var sessionMetadata))
+                            return;
 
-                        Logger.LogInformation("Playback has started. (File={FileId})", fileId);
-                        success = await APIClient.ScrobbleFile(fileId, episodeId, "play", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
-                    }
-                    else {
-                        long ticks = sessionMetadata.Session.PlayState.PositionTicks ?? userData.PlaybackPositionTicks;
-                        // We received an event, but the position didn't change, so the playback is most likely paused.
-                        if (sessionMetadata.Session.PlayState?.IsPaused ?? false) {
-                            if (sessionMetadata.SentPaused)
-                                return;
-
-                            sessionMetadata.SentPaused = true;
-
-                            Logger.LogInformation("Playback was paused. (File={FileId})", fileId);
-                            success = await APIClient.ScrobbleFile(fileId, episodeId, "pause", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
-                        }
-                        // The playback was resumed.
-                        else if (sessionMetadata.SentPaused) {
-                            sessionMetadata.Ticks = ticks;
+                        // The active video changed, so send a start event.
+                        if (!Guid.Equals(sessionMetadata.ItemId, itemId)) {
+                            sessionMetadata.ItemId = e.Item.Id;
+                            sessionMetadata.FileId = fileId;
+                            sessionMetadata.Ticks = userData.PlaybackPositionTicks;
                             sessionMetadata.SentPaused = false;
 
-                            Logger.LogInformation("Playback was resumed. (File={FileId})", fileId);
-                            success = await APIClient.ScrobbleFile(fileId, episodeId, "resume", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
+                            Logger.LogInformation("Playback has started. (File={FileId})", fileId);
+                            success = await APIClient.ScrobbleFile(fileId, episodeId, "play", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
                         }
-                        // Scrobble.
                         else {
-                            sessionMetadata.Ticks = ticks;
+                            long ticks = sessionMetadata.Session.PlayState.PositionTicks ?? userData.PlaybackPositionTicks;
+                            // We received an event, but the position didn't change, so the playback is most likely paused.
+                            if (sessionMetadata.Session.PlayState?.IsPaused ?? false) {
+                                if (sessionMetadata.SentPaused)
+                                    return;
 
-                            Logger.LogInformation("Scrobbled during playback. (File={FileId})", fileId);
-                            success = await APIClient.ScrobbleFile(fileId, episodeId, "scrobble", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
+                                sessionMetadata.SentPaused = true;
+
+                                Logger.LogInformation("Playback was paused. (File={FileId})", fileId);
+                                success = await APIClient.ScrobbleFile(fileId, episodeId, "pause", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
+                            }
+                            // The playback was resumed.
+                            else if (sessionMetadata.SentPaused) {
+                                sessionMetadata.Ticks = ticks;
+                                sessionMetadata.SentPaused = false;
+
+                                Logger.LogInformation("Playback was resumed. (File={FileId})", fileId);
+                                success = await APIClient.ScrobbleFile(fileId, episodeId, "resume", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
+                            }
+                            // Scrobble.
+                            else {
+                                sessionMetadata.Ticks = ticks;
+
+                                Logger.LogInformation("Scrobbled during playback. (File={FileId})", fileId);
+                                success = await APIClient.ScrobbleFile(fileId, episodeId, "scrobble", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
+                            }
                         }
+                        break;
                     }
-                    break;
-                }
-                case UserDataSaveReason.PlaybackFinished: {
-                    if (!userConfig.SyncUserDataAfterPlayback)
-                        return;
+                    case UserDataSaveReason.PlaybackFinished: {
+                        if (!userConfig.SyncUserDataAfterPlayback)
+                            return;
 
-                    if (ActiveSessions.TryGetValue(e.UserId, out var sessionMetadata) && sessionMetadata.ItemId == e.Item.Id) {
-                        sessionMetadata.ItemId = Guid.Empty;
-                        sessionMetadata.FileId = null;
-                        sessionMetadata.Ticks = 0;
-                        sessionMetadata.SentPaused = false;
+                        if (ActiveSessions.TryGetValue(e.UserId, out var sessionMetadata) && sessionMetadata.ItemId == e.Item.Id) {
+                            sessionMetadata.ItemId = Guid.Empty;
+                            sessionMetadata.FileId = null;
+                            sessionMetadata.Ticks = 0;
+                            sessionMetadata.SentPaused = false;
+                        }
+
+                        Logger.LogInformation("Playback has ended. (File={FileId})", fileId);
+                        success = await APIClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
+                        break;
                     }
-
-                    Logger.LogInformation("Playback has ended. (File={FileId})", fileId);
-                    success = await APIClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
-                    break;
+                    case UserDataSaveReason.TogglePlayed:
+                        Logger.LogInformation("Scrobbled when toggled. (File={FileId})", fileId);
+                        success = await APIClient.ScrobbleFile(fileId, episodeId, "user-interaction", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
+                        break;
                 }
-                case UserDataSaveReason.TogglePlayed:
-                    Logger.LogInformation("Scrobbled when toggled. (File={FileId})", fileId);
-                    success = await APIClient.ScrobbleFile(fileId, episodeId, "user-interaction", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
-                    break;
+                if (success) {
+                    Logger.LogInformation("Successfully synced watch state with Shoko. (File={FileId})", fileId);
+                }
+                else {
+                    Logger.LogInformation("Failed to sync watch state with Shoko. (File={FileId})", fileId);
+                }
             }
-            if (success) {
-                Logger.LogInformation("Successfully synced watch state with Shoko. (File={FileId})", fileId);
-            }
-            else {
-                Logger.LogInformation("Failed to sync watch state with Shoko. (File={FileId})", fileId);
+            catch (Exception ex) {
+                Logger.LogError(ex, "Threw unexpectedly; {ErrorMessage}", ex.Message);
+                return;
             }
         }
 
