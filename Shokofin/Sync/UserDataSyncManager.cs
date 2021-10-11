@@ -14,31 +14,10 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
 
-namespace Shokofin
+namespace Shokofin.Sync
 {
-
     public class UserDataSyncManager
     {
-        /// <summary>
-        /// Determines if we should push or pull the data.
-        /// </summary>
-        [Flags]
-        public enum SyncDirection {
-            /// <summary>
-            /// Import data from Shoko.
-            /// </summary>
-            Import = 1,
-            /// <summary>
-            /// Export data to Shoko.
-            /// </summary>
-            Export = 2,
-            /// <summary>
-            /// Sync data with Shoko and only keep the latest data.
-            /// <br/>
-            /// This will conditionally import or export the data as needed.
-            /// </summary>
-            Sync = 3,
-        }
 
         private readonly IUserDataManager UserDataManager;
 
@@ -271,7 +250,7 @@ namespace Shokofin
         #endregion
         #region Import/Sync
 
-        public async Task ScanAndSync(IProgress<double> progress, CancellationToken cancellationToken)
+        public async Task ScanAndSync(SyncDirection direction, IProgress<double> progress, CancellationToken cancellationToken)
         {
             var enabledUsers = Plugin.Instance.Configuration.UserList.Where(c => c.EnableSynchronization).ToList();
             if (enabledUsers.Count == 0) {
@@ -303,7 +282,7 @@ namespace Shokofin
                     continue;
 
                 foreach (var userConfig in enabledUsers) {
-                    await SyncVideo(video, userConfig, null, SyncDirection.Sync, fileId, episodeId).ConfigureAwait(false);
+                    await SyncVideo(video, userConfig, null, direction, fileId, episodeId).ConfigureAwait(false);
 
                     numComplete++;
                     double percent = numComplete;

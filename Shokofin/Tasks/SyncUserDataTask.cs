@@ -9,6 +9,7 @@ using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Tasks;
 using MediaBrowser.Model.Globalization;
+using Shokofin.Sync;
 
 namespace Shokofin.Tasks
 {
@@ -52,7 +53,7 @@ namespace Shokofin.Tasks
         /// <returns>Task.</returns>
         public async Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
         {
-            await _userSyncManager.ScanAndSync(progress, cancellationToken);
+            await _userSyncManager.ScanAndSync(SyncDirection.Sync, progress, cancellationToken);
         }
 
         /// <inheritdoc />
