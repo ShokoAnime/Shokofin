@@ -76,8 +76,8 @@ namespace Shokofin
                 Logger.LogWarning("Skipped unknown folder at path {Path}", partialPath);
                 return false;
             }
-            Logger.LogInformation("Found series {SeriesName} (Series={SeriesId})", series.Shoko.Name, series.Id);
 
+            API.Info.GroupInfo group = null;
             // Filter library if we enabled the option.
             if (Plugin.Instance.Configuration.FilterOnLibraryTypes) switch (libraryType) {
                 default:
@@ -90,7 +90,7 @@ namespace Shokofin
 
                     // If we're using series grouping, pre-load the group now to help reduce load times later.
                     if (includeGroup)
-                        ApiManager.GetGroupInfoForSeriesSync(series.Id, Ordering.GroupFilterType.Others);
+                        group = ApiManager.GetGroupInfoForSeriesSync(series.Id, Ordering.GroupFilterType.Others);
                     break;
                 case "movies":
                     if (series.AniDB.Type != SeriesType.Movie) {
@@ -100,12 +100,17 @@ namespace Shokofin
 
                     // If we're using series grouping, pre-load the group now to help reduce load times later.
                     if (includeGroup)
-                        ApiManager.GetGroupInfoForSeriesSync(series.Id, Ordering.GroupFilterType.Movies);
+                        group = ApiManager.GetGroupInfoForSeriesSync(series.Id, Ordering.GroupFilterType.Movies);
                     break;
             }
             // If we're using series grouping, pre-load the group now to help reduce load times later.
             else if (includeGroup)
-                ApiManager.GetGroupInfoForSeriesSync(series.Id);
+                group = ApiManager.GetGroupInfoForSeriesSync(series.Id);
+
+            if (group != null)
+                Logger.LogInformation("Found group {GroupName} (Series={SeriesId},Group={GroupId})", group.Shoko.Name, series.Id, group.Id);
+            else
+                Logger.LogInformation("Found series {SeriesName} (Series={SeriesId})", series.Shoko.Name, series.Id);
 
             return false;
         }
