@@ -56,39 +56,29 @@ namespace Shokofin.Providers
                     }
                     case Series series: {
                         if (Lookup.TryGetSeriesIdFor(series, out var seriesId)) {
-                            if (Plugin.Instance.Configuration.SeriesGrouping == Utils.Ordering.GroupType.ShokoGroup) {
-                                var groupInfo = await ApiManager.GetGroupInfoForSeries(seriesId, filterLibrary);
-                                var seriesInfo = groupInfo?.DefaultSeries;
-                                if (seriesInfo != null) {
-                                    AddImagesForSeries(ref list, seriesInfo);
-                                    Logger.LogInformation("Getting {Count} images for series {SeriesName} (Series={SeriesId},Group={GroupId})", list.Count, series.Name, seriesInfo.Id, groupInfo.Id);
-                                }
-                            }
-                            else {
-                                var seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
-                                if (seriesInfo != null) {
-                                    AddImagesForSeries(ref list, seriesInfo);
-                                    Logger.LogInformation("Getting {Count} images for series {SeriesName} (Series={SeriesId})", list.Count, series.Name, seriesId);
-                                }
+                            var seriesImages = await ApiClient.GetSeriesImages(seriesId);
+                            if (seriesImages != null) {
+                                AddImagesForSeries(ref list, seriesImages);
+                                Logger.LogInformation("Getting {Count} images for series {SeriesName} (Series={SeriesId})", list.Count, series.Name, seriesId);
                             }
                         }
                         break;
                     }
                     case Season season: {
                         if (Lookup.TryGetSeriesIdFor(season, out var seriesId)) {
-                            var seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
-                            if (seriesInfo != null) {
-                                AddImagesForSeries(ref list, seriesInfo);
-                                Logger.LogInformation("Getting {Count} images for season {SeasonNumber} in {SeriesName} (Series={SeriesId})", list.Count, season.IndexNumber, season.SeriesName, seriesInfo.Id);
+                            var seriesImages = await ApiClient.GetSeriesImages(seriesId);
+                            if (seriesImages != null) {
+                                AddImagesForSeries(ref list, seriesImages);
+                                Logger.LogInformation("Getting {Count} images for season {SeasonNumber} in {SeriesName} (Series={SeriesId})", list.Count, season.IndexNumber, season.SeriesName, seriesId);
                             }
                         }
                         break;
                     }
                     case Movie movie: {
                         if (Lookup.TryGetSeriesIdFor(movie, out var seriesId)) {
-                            var seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
-                            if (seriesInfo != null) {
-                                AddImagesForSeries(ref list, seriesInfo);
+                            var seriesImages = await ApiClient.GetSeriesImages(seriesId);
+                            if (seriesImages != null) {
+                                AddImagesForSeries(ref list, seriesImages);
                                 Logger.LogInformation("Getting {Count} images for movie {MovieName} (Series={SeriesId})", list.Count, movie.Name, seriesId);
                             }
                         }
@@ -96,9 +86,9 @@ namespace Shokofin.Providers
                     }
                     case BoxSet boxSet: {
                         if (Lookup.TryGetSeriesIdFor(boxSet, out var seriesId)) {
-                            var seriesInfo = await ApiManager.GetSeriesInfo(seriesId);
-                            if (seriesInfo != null) {
-                                AddImagesForSeries(ref list, seriesInfo);
+                            var seriesImages = await ApiClient.GetSeriesImages(seriesId);
+                            if (seriesImages != null) {
+                                AddImagesForSeries(ref list, seriesImages);
                                 Logger.LogInformation("Getting {Count} images for box-set {BoxSetName} (Series={SeriesId})", list.Count, boxSet.Name, seriesId);
                             }
                         }
@@ -118,15 +108,10 @@ namespace Shokofin.Providers
             AddImage(ref list, ImageType.Primary, episodeInfo?.TvDB?.Thumbnail);
         }
 
-        private void AddImagesForSeries(ref List<RemoteImageInfo> list, API.Info.SeriesInfo seriesInfo)
+        private void AddImagesForSeries(ref List<RemoteImageInfo> list, API.Models.Images images)
         {
-            var images = seriesInfo.Shoko.Images;
-            if (Plugin.Instance.Configuration.PreferAniDbPoster)
-                AddImage(ref list, ImageType.Primary, seriesInfo.AniDB.Poster);
             foreach (var image in images?.Posters)
                 AddImage(ref list, ImageType.Primary, image);
-            if (!Plugin.Instance.Configuration.PreferAniDbPoster)
-                AddImage(ref list, ImageType.Primary, seriesInfo.AniDB.Poster);
             foreach (var image in images?.Fanarts)
                 AddImage(ref list, ImageType.Backdrop, image);
             foreach (var image in images?.Banners)

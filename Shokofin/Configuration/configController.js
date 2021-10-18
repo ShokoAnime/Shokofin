@@ -120,7 +120,6 @@ async function defaultSubmit(form) {
         config.PublicHost = publicHost;
         config.IgnoredFileExtensions = ignoredFileExtensions;
         form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
-        config.PreferAniDbPoster = form.querySelector("#PreferAniDbPoster").checked;
         config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
 
         // User settings
@@ -241,7 +240,6 @@ async function syncSettings(form) {
     config.PublicHost = publicHost;
     config.IgnoredFileExtensions = ignoredFileExtensions;
     form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
-    config.PreferAniDbPoster = form.querySelector("#PreferAniDbPoster").checked;
     config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
@@ -394,7 +392,6 @@ export default function (page) {
             // Advanced settings
             form.querySelector("#PublicHost").value = config.PublicHost;
             form.querySelector("#IgnoredFileExtensions").value = config.IgnoredFileExtensions.join(" ");
-            form.querySelector("#PreferAniDbPoster").checked = config.PreferAniDbPoster;
             form.querySelector("#AddAniDBId").checked = config.AddAniDBId;
 
             if (!config.ApiKey) {
