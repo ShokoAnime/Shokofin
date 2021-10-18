@@ -178,7 +178,7 @@ namespace Shokofin.API
             var config = Plugin.Instance.Configuration;
             var filter = 128; // We exclude genres by default
 
-            if (config.HideAniDbTags) filter = 1;
+            if (config.HideAniDbTags) filter = 129;
             if (config.HideArtStyleTags) filter |= (filter << 1);
             if (config.HideSourceTags) filter |= (filter << 2);
             if (config.HideMiscTags) filter |= (filter << 3);
