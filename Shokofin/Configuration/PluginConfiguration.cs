@@ -44,6 +44,8 @@ namespace Shokofin.Configuration
 
         public bool AddAniDBId { get; set; }
 
+        public bool AddOtherId { get; set; }
+
         public TextSourceType DescriptionSource { get; set; }
 
         public SeriesAndBoxSetGroupType SeriesGrouping { get; set; }
@@ -84,6 +86,7 @@ namespace Shokofin.Configuration
             SynopsisRemoveSummary = true;
             SynopsisCleanMultiEmptyLines = true;
             AddAniDBId = true;
+            AddOtherId = false;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
             DescriptionSource = TextSourceType.Default;

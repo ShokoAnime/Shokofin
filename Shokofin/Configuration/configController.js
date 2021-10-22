@@ -121,6 +121,7 @@ async function defaultSubmit(form) {
         config.IgnoredFileExtensions = ignoredFileExtensions;
         form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
         config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
+        config.AddOtherId = form.querySelector("#AddOtherId").checked;
 
         // User settings
         const userId = form.querySelector("#UserSelector").value;
@@ -241,6 +242,7 @@ async function syncSettings(form) {
     config.IgnoredFileExtensions = ignoredFileExtensions;
     form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
     config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
+    config.AddOtherId = form.querySelector("#AddOtherId").checked;
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
     Dashboard.processPluginConfigurationUpdateResult(result);
@@ -393,6 +395,7 @@ export default function (page) {
             form.querySelector("#PublicHost").value = config.PublicHost;
             form.querySelector("#IgnoredFileExtensions").value = config.IgnoredFileExtensions.join(" ");
             form.querySelector("#AddAniDBId").checked = config.AddAniDBId;
+            form.querySelector("#AddOtherBId").checked = config.AddOtherBId;
 
             if (!config.ApiKey) {
                 Dashboard.alert(Messages.ConnectToShoko);

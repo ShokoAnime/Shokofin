@@ -230,6 +230,9 @@ namespace Shokofin.Providers
                         CommunityRating = episode.AniDB.Rating.ToFloat(10),
                     };
                 }
+
+                if (config.SeriesGrouping == Ordering.GroupType.Default && config.AddOtherId)
+                    result.SetProviderId(MetadataProvider.Tvdb, episode.TvDB.ID.ToString());
             }
 
             result.SetProviderId("Shoko Episode", episode.Id);
