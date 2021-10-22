@@ -395,7 +395,7 @@ export default function (page) {
             form.querySelector("#PublicHost").value = config.PublicHost;
             form.querySelector("#IgnoredFileExtensions").value = config.IgnoredFileExtensions.join(" ");
             form.querySelector("#AddAniDBId").checked = config.AddAniDBId;
-            form.querySelector("#AddOtherBId").checked = config.AddOtherBId;
+            form.querySelector("#AddOtherId").checked = config.AddOtherId;
 
             if (!config.ApiKey) {
                 Dashboard.alert(Messages.ConnectToShoko);
