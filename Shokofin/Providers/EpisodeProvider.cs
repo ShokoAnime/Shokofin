@@ -117,7 +117,7 @@ namespace Shokofin.Providers
             var seasonNumber = Ordering.GetSeasonNumber(group, series, episode);
             var description = Text.GetDescription(episode);
 
-            if (group != null && config.MarkSpecialsWhenGrouped) switch (episode.AniDB.Type) {
+            if (config.MarkSpecialsWhenGrouped) switch (episode.AniDB.Type) {
                 case EpisodeType.Unknown:
                 case EpisodeType.Other:
                 case EpisodeType.Normal:
