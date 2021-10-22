@@ -218,15 +218,17 @@ namespace Shokofin.Utils
 
         public static (int?, int?, int?) GetSpecialPlacement(GroupInfo group, SeriesInfo series, EpisodeInfo episode)
         {
-            if (episode.AniDB.Type != EpisodeType.Special)
-                return (null, null, null);
-
             var order = Plugin.Instance.Configuration.SpecialsPlacement;
             if (order == SpecialOrderType.Excluded)
                 return (null, null, null);
 
+            // Abort if episode is not a TvDB special or AniDB special
+            var allowOtherData = order == SpecialOrderType.InBetweenSeasonByOtherData || order == SpecialOrderType.InBetweenSeasonMixed;
+            if (allowOtherData  ? !(episode?.TvDB?.Season == 0 || episode.AniDB.Type == EpisodeType.Special) : episode.AniDB.Type != EpisodeType.Special)
+                return (null, null, null);
+
             int? episodeNumber = null;
-            int? seasonNumber = null;
+            int seasonNumber = GetSeasonNumber(group, series, episode);
             int? airsBeforeEpisodeNumber = null;
             int? airsBeforeSeasonNumber = null;
             int? airsAfterSeasonNumber = null;
@@ -245,7 +247,6 @@ namespace Shokofin.Utils
                     if (series.SpesialsAnchors.TryGetValue(episode, out var previousEpisode))
                         episodeNumber = GetEpisodeNumber(group, series, previousEpisode);
 
-                    seasonNumber = GetSeasonNumber(group, series, episode);
                     if (episodeNumber.HasValue && episodeNumber.Value < series.EpisodeList.Count) {
                         airsBeforeEpisodeNumber = episodeNumber.Value + 1;
                         airsBeforeSeasonNumber = seasonNumber;
@@ -255,7 +256,7 @@ namespace Shokofin.Utils
                     }
                     break;
                 case SpecialOrderType.AfterSeason: {
-                    airsAfterSeasonNumber = GetSeasonNumber(group, series, episode);
+                    airsAfterSeasonNumber = seasonNumber;
                     break;
                 }
                 case SpecialOrderType.InBetweenSeasonMixed:
@@ -263,46 +264,32 @@ namespace Shokofin.Utils
                     byOtherData:
                     // We need to have TvDB/TMDB data in the first place to do this method.
                     if (episode.TvDB == null) {
-                        if (order == SpecialOrderType.InBetweenSeasonMixed)
-                            goto byAirdate;
-
-                        airsAfterSeasonNumber = GetSeasonNumber(group, series, episode);
+                        if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirdate;
+                        airsAfterSeasonNumber = seasonNumber;
                         break;
                     }
 
                     episodeNumber = episode.TvDB.AirsBeforeEpisode;
                     if (!episodeNumber.HasValue) {
                         if (episode.TvDB.AirsAfterSeason.HasValue) {
-                            airsAfterSeasonNumber = GetSeasonNumber(group, series, episode);
+                            airsAfterSeasonNumber = seasonNumber;
                             break;
                         }
 
-                        if (order == SpecialOrderType.InBetweenSeasonMixed)
-                            goto byAirdate;
-
-                        airsAfterSeasonNumber = GetSeasonNumber(group, series, episode);
-                        break;
-                    }
-
-                    seasonNumber = episode.TvDB.AirsBeforeEpisode ?? episode.TvDB.AirsAfterSeason;
-                    if (!seasonNumber.HasValue) {
-                        if (order == SpecialOrderType.InBetweenSeasonMixed)
-                            goto byAirdate;
-
-                        airsAfterSeasonNumber = GetSeasonNumber(group, series, episode);
+                        if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirdate;
+                        airsAfterSeasonNumber = seasonNumber;
                         break;
                     }
 
                     var nextEpisode = series.EpisodeList.FirstOrDefault(e => e.TvDB != null && e.TvDB.Season == seasonNumber && e.TvDB.Number == episodeNumber);
                     if (nextEpisode != null) {
                         airsBeforeEpisodeNumber = GetEpisodeNumber(group, series, nextEpisode);
-                        airsBeforeSeasonNumber = GetSeasonNumber(group, series, episode);
+                        airsBeforeSeasonNumber = seasonNumber;
                         break;
                     }
-                    if (order == SpecialOrderType.InBetweenSeasonMixed)
-                        goto byAirdate;
 
-                    airsAfterSeasonNumber = GetSeasonNumber(group, series, episode);
+                    if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirdate;
+                    airsAfterSeasonNumber = seasonNumber;
                     break;
             }
 
@@ -338,7 +325,13 @@ namespace Shokofin.Utils
                             return 127;
                     }
                 case GroupType.MergeFriendly: {
-                    var seasonNumber = episode?.TvDB?.Season;
+                    int? seasonNumber = null;
+                    if (episode.TvDB != null) {
+                        if (episode.TvDB.Season == 0)
+                            seasonNumber = episode.TvDB.AirsAfterSeason ?? episode.TvDB.AirsBeforeSeason ?? 1;
+                        else
+                            seasonNumber = episode.TvDB.Season;
+                    }
                     if (!seasonNumber.HasValue)
                         goto case GroupType.Default;
                     return seasonNumber.Value;
