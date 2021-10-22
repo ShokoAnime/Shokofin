@@ -92,15 +92,15 @@
                         <legend>
                             <h3>Library Settings</h3>
                         </legend>
-                        <div class="fieldDescription verticalSection-extrabottompadding">Series merging must be enabled in the <a href="#!/library.html">Library Settings</a>, or else unexpected results will occur.</div>
+                        <div class="fieldDescription verticalSection-extrabottompadding">"A setting" must be disabled in the <a href="#!/library.html">Library Settings</a> if the Series/Season grouping set to "Do not group Series into Seasons", otherwise it must be enabled. If you do do this then the plugin will not work as expected.</div>
                         <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="SeriesGrouping">Series/season grouping:</label>
+                            <label class="selectLabel" for="SeriesGrouping">Series/Season grouping:</label>
                             <select is="emby-select" id="SeriesGrouping" name="SeriesGrouping" class="emby-select-withcolor emby-select">
                                 <option value="Default" selected>Do not group Series into Seasons</option>
                                 <option value="MergeFriendly">Group series into Seasons using the TvDB/TMDB data stored in Shoko</option>
                                 <option value="ShokoGroup">Group series into Seasons based on Shoko's Groups</option>
                             </select>
-                            <div class="fieldDescription selectFieldDescription">Determines how to group Series together and divide them into Seasons.</div>
+                            <div class="fieldDescription selectFieldDescription">Determines how to group Series together and divide them into Seasons. <strong>Warning:</strong> Modifying this setting requires a recreation (read as; delete existing then create a new) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="BoxSetGrouping">Box-set/Movie grouping:</label>
@@ -128,7 +128,7 @@
                                 <option value="InBetweenSeasonMixed">Use either the TvDB/TMDB data or release date if the data is not available to place Specials</option>
                                 <option value="Excluded">Don't place specials within Seasons</option>
                             </select>
-                            <div class="fieldDescription selectFieldDescription">Determines how Specials are placed within Seasons. <strong>Warning:</strong> Modifying this setting requires a rebuild (and not just a full-refresh) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
+                            <div class="fieldDescription selectFieldDescription">Determines how Specials are placed within Seasons. <strong>Warning:</strong> Modifying this setting requires a recreation (read as; delete existing then create a new) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
