@@ -92,7 +92,7 @@ namespace Shokofin.Configuration
             DescriptionSource = TextSourceType.Default;
             SeriesGrouping = SeriesAndBoxSetGroupType.Default;
             SeasonOrdering = OrderType.Default;
-            SpecialsPlacement = SpecialOrderType.Default;
+            SpecialsPlacement = SpecialOrderType.AfterSeason;
             MarkSpecialsWhenGrouped = true;
             BoxSetGrouping = SeriesAndBoxSetGroupType.Default;
             MovieOrdering = OrderType.Default;

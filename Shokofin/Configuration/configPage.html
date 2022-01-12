@@ -121,12 +121,11 @@
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="SpecialsPlacement">Specials placement within seasons:</label>
                             <select is="emby-select" id="SpecialsPlacement" name="SpecialsPlacement" class="emby-select-withcolor emby-select">
-                                <option value="Default">Use default placement for selected Series/Season grouping</option>
-                                <option value="AfterSeason">Always place Specials after the normal episodes</option>
-                                <option value="InBetweenSeasonByAirDate">Use release date to place Specials</option>
-                                <option value="InBetweenSeasonByOtherData">Use the TvDB/TMDB data (if available) to place Specials</option>
-                                <option value="InBetweenSeasonMixed">Use either the TvDB/TMDB data or release date if the data is not available to place Specials</option>
-                                <option value="Excluded">Don't place specials within Seasons</option>
+                                <option value="AfterSeason">Always place Specials after the normal Episodes (Default)</option>
+                                <option value="InBetweenSeasonByAirDate">Use release dates to place Specials</option>
+                                <option value="InBetweenSeasonByOtherData">Loosely use the TvDB/TMDB data available in Shoko to place Specials</option>
+                                <option value="InBetweenSeasonMixed">Either loosely use the TvDB/TMDB data available in Shoko or fallback to using release dates to place Specials</option>
+                                <option value="Excluded">Exclude Specials from the Seasons</option>
                             </select>
                             <div class="fieldDescription selectFieldDescription">Determines how Specials are placed within Seasons. <strong>Warning:</strong> Modifying this setting requires a recreation (read as; delete existing then create a new) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
                         </div>

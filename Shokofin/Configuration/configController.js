@@ -396,7 +396,7 @@ export default function (page) {
             form.querySelector("#SeriesGrouping").value = config.SeriesGrouping;
             form.querySelector("#BoxSetGrouping").value = config.BoxSetGrouping;
             form.querySelector("#FilterOnLibraryTypes").checked = config.FilterOnLibraryTypes;
-            form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement;
+            form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
 
             // User settings

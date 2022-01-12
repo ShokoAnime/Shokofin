@@ -234,12 +234,8 @@ namespace Shokofin.Utils
             int? airsAfterSeasonNumber = null;
             switch (order) {
                 default:
-                    switch (Plugin.Instance.Configuration.SeriesGrouping) {
-                        default:
-                            goto byAirdate;
-                        case GroupType.MergeFriendly:
-                            goto byOtherData;
-                    }
+                    airsAfterSeasonNumber = seasonNumber;
+                    break;
                 case SpecialOrderType.InBetweenSeasonByAirDate:
                     byAirdate:
                     // Reset the order if we come from `SpecialOrderType.InBetweenSeasonMixed`.
@@ -255,13 +251,8 @@ namespace Shokofin.Utils
                         airsAfterSeasonNumber = seasonNumber;
                     }
                     break;
-                case SpecialOrderType.AfterSeason: {
-                    airsAfterSeasonNumber = seasonNumber;
-                    break;
-                }
                 case SpecialOrderType.InBetweenSeasonMixed:
                 case SpecialOrderType.InBetweenSeasonByOtherData:
-                    byOtherData:
                     // We need to have TvDB/TMDB data in the first place to do this method.
                     if (episode.TvDB == null) {
                         if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirdate;
