@@ -231,7 +231,7 @@ namespace Shokofin.Providers
                     };
                 }
 
-                if (config.SeriesGrouping == Ordering.GroupType.Default && config.AddOtherId)
+                if (config.SeriesGrouping == Ordering.GroupType.Default && config.AddOtherId && episode.TvDB != null)
                     result.SetProviderId(MetadataProvider.Tvdb, episode.TvDB.ID.ToString());
             }
 
