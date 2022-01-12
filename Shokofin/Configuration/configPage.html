@@ -12,8 +12,8 @@
                             <h3>Connection Settings</h3>
                         </legend>
                         <div class="inputContainer inputContainer-withDescription">
-                            <input is="emby-input" type="text" id="Host" required label="Shoko host URL:" />
-                            <div class="fieldDescription">This is the URL leading to where Shoko is running. It should include both the protocol and the ip/dns-name.</div>
+                            <input is="emby-input" type="text" id="Host" required label="Host:" />
+                            <div class="fieldDescription">This is the URL leading to where Shoko is running. You can input a full url, or just the dns name/ip.</div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription">
                             <input is="emby-input" type="text" id="Username" required label="Username:" />
@@ -31,9 +31,9 @@
                         </div>
                         <div id="ConnectionResetContainer" hidden>
                             <button is="emby-button" type="submit" name="reset-connection" class="raised block emby-button">
-                                <span>Reset</span>
+                                <span>Reset Connection</span>
                             </button>
-                            <div class="fieldDescription">Reset the connection settings. Be sure to stop any tasks using this plugin before you press the button.</div>
+                            <div class="fieldDescription">Reset the connection. Be sure to stop any tasks using this plugin before you press the button.</div>
                         </div>
                     </fieldset>
                     <fieldset id="MetadataSection" class="verticalSection verticalSection-extrabottompadding" hidden>

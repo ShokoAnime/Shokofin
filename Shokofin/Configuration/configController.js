@@ -160,14 +160,32 @@ async function defaultSubmit(form) {
     else {
         // Connection settings
         let host = form.querySelector("#Host").value;
+        if (!host) {
+            host = "http://localhost:8111";
+        }
+        else {
+            try {
+                let url = new URL(host);
+                host = url.href;
+            }
+            catch (err) {
+                try {
+                    let url = new URL(`http://${host}:8111`);
+                    host = url.href;
+                }
+                catch (err2) {
+                  throw err;
+                }
+            }
+        }
         if (host.endsWith("/")) {
             host = host.slice(0, -1);
-            form.querySelector("#Host").value = host;
         }
 
         // Update the host if needed.
         if (config.Host !== host) {
             config.Host = host;
+            form.querySelector("#Host").value = host;
             let result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
             Dashboard.processPluginConfigurationUpdateResult(result);
         }
