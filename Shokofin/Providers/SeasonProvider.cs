@@ -43,6 +43,9 @@ namespace Shokofin.Providers
 
                         return GetDefaultMetadata(info, cancellationToken);
                     case Ordering.GroupType.MergeFriendly:
+                        if (!info.IndexNumber.HasValue)
+                            return new MetadataResult<Season>();
+
                         return GetDefaultMetadata(info, cancellationToken);
                     case Ordering.GroupType.ShokoGroup:
                         if (info.IndexNumber.HasValue && info.IndexNumber.Value == 0)
