@@ -51,6 +51,7 @@ namespace Shokofin.Providers
                 Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", displayTitle, file.Id, episode.Id, series.Id);
 
                 bool isMultiEntry = series.Shoko.Sizes.Total.Episodes > 1;
+                bool isMainEntry = episode.AniDB.Type == API.Models.EpisodeType.Normal && episode.Shoko.Name.Trim() == "Complete Movie";
                 var rating = isMultiEntry ? episode.AniDB.Rating.ToFloat(10) : series.AniDB.Rating.ToFloat(10);
 
                 result.Item = new Movie {
@@ -58,8 +59,8 @@ namespace Shokofin.Providers
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
                     PremiereDate = episode.AniDB.AirDate,
-                    // Use the file description if collection contains more than one movie, otherwise use the collection description.
-                    Overview = (isMultiEntry ? Text.GetDescription(episode) : Text.GetDescription(series)),
+                    // Use the file description if collection contains more than one movie and the file is not the main entry, otherwise use the collection description.
+                    Overview = (isMultiEntry && !isMainEntry ? Text.GetDescription(episode) : Text.GetDescription(series)),
                     ProductionYear = episode.AniDB.AirDate?.Year,
                     Tags = series.Tags.ToArray(),
                     Genres = series.Genres.ToArray(),
