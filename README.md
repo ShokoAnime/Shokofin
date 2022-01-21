@@ -1,18 +1,20 @@
 # Shokofin
 
-**Warning**: This plugin requires a version of Jellyfin after 10.7 (`>=10.7.0`) and a stable version of Shoko after 4.1.1 (`>=4.1.1`) to be installed to work properly.
+A Jellyfin plugin to integrate [Jellyfin](https://jellyfin.org/docs/) with [Shoko Server](https://shokoanime.com/downloads/shoko-server/).
 
-A plugin to integrate your Shoko database with the Jellyfin media server.
+## Read this before installing
+
+The plugin requires a version of Jellyfin greater or equal to **10.7.0** (`>=10.7.0`) and an ustable version of Shoko Server greater or equal to **4.1.1** (`>=4.1.1`) to be installed. It also requires that you have already set up and are using Shoko Server, and that the directories/folders you intend to use in Jellyfin are fully indexed (and optionally managed) by Shoko Server, otherwise the plugin won't be able to funciton properly — it won't be able to find metadata about any entries that are not indexed by Shoko Server since the metadata we want is not available.
 
 ## Breaking Changes
 
 ### 1.5.0
 
-If you're upgrading from an older version to version 1.5.0, then be sure to update the "Host" field in the plugin settings before you continue using the plugin.
+If you're upgrading from an older version to version 1.5.0, then be sure to update the "Host" field in the plugin settings before you continue using the plugin. **Update: Starting with 1.7.0 you just need to reset the connection then log in again.**
 
 ## Install
 
-There are multiple ways to install this plugin, but the recomended way is to use the official Jellyfin repository.
+There are many ways to install the plugin, but the recomended way is to use the official Jellyfin repository.
 
 ### Official Repository
 
