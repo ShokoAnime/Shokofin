@@ -38,7 +38,7 @@ namespace Shokofin.Providers
 
                 var includeGroup = Plugin.Instance.Configuration.BoxSetGrouping == Ordering.GroupType.ShokoGroup;
                 var config = Plugin.Instance.Configuration;
-                Ordering.GroupFilterType? filterByType = config.SeriesGrouping == Ordering.GroupType.ShokoGroup ? config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Movies : Ordering.GroupFilterType.Default : null;
+                Ordering.GroupFilterType? filterByType = config.BoxSetGrouping == Ordering.GroupType.ShokoGroup ? config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Movies : Ordering.GroupFilterType.Default : null;
                 var (file, episode, series, group) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
 
                 // if file is null then series and episode is also null.
