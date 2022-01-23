@@ -1,4 +1,5 @@
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,8 @@ namespace Shokofin.API
 
         private readonly ShokoAPIClient APIClient;
 
+        private readonly ILibraryManager LibraryManager;
+
         private readonly List<Folder> MediaFolderList = new List<Folder>();
 
         private readonly ConcurrentDictionary<string, string> SeriesPathToIdDictionary = new ConcurrentDictionary<string, string>();
@@ -40,10 +43,11 @@ namespace Shokofin.API
 
         private readonly ConcurrentDictionary<string, string> FileIdToEpisodeIdDictionary = new ConcurrentDictionary<string, string>();
 
-        public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ShokoAPIClient apiClient)
+        public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ShokoAPIClient apiClient, ILibraryManager libraryManager)
         {
             Logger = logger;
             APIClient = apiClient;
+            LibraryManager = libraryManager;
         }
 
         private static IMemoryCache DataCache = new MemoryCache(new MemoryCacheOptions() {
@@ -77,9 +81,27 @@ namespace Shokofin.API
         public string StripMediaFolder(string fullPath)
         {
             var mediaFolder = MediaFolderList.FirstOrDefault((folder) => fullPath.StartsWith(folder.Path));
-            // If no root folder was found, then we _most likely_ already stripped it out beforehand.
-            if (mediaFolder == null || string.IsNullOrEmpty(mediaFolder?.Path))
+            if (mediaFolder != null) {
+                return fullPath.Substring(mediaFolder.Path.Length);
+            }
+            // Try to get the media folder by loading the parent and navigating upwards till we reach the root.
+            var directoryPath = System.IO.Path.GetDirectoryName(fullPath);
+            if (string.IsNullOrEmpty(directoryPath)) {
                 return fullPath;
+            }
+            mediaFolder = (LibraryManager.FindByPath(directoryPath, true) as Folder);
+            if (mediaFolder == null || string.IsNullOrEmpty(mediaFolder?.Path)) {
+                return fullPath;
+            }
+            // Look for the root folder for the current item.
+            var root = LibraryManager.RootFolder;
+            while (!mediaFolder.ParentId.Equals(root.Id)) {
+                if (mediaFolder.Parent == null) {
+                    break;
+                }
+                mediaFolder = mediaFolder.Parent;
+            }
+            MediaFolderList.Add(mediaFolder);
             return fullPath.Substring(mediaFolder.Path.Length);
         }
 
