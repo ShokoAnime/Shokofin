@@ -51,7 +51,7 @@ namespace Shokofin.Tasks
         }
 
         /// <inheritdoc />
-        public string Name => "Sync user-data";
+        public string Name => "Sync User Data";
 
         /// <inheritdoc />
         public string Description => "Synchronize the user-data stored in Jellyfin with the user-data stored in Shoko. Imports or exports data as needed.";

@@ -51,7 +51,7 @@ namespace Shokofin.Tasks
         }
 
         /// <inheritdoc />
-        public string Name => "Export user-data";
+        public string Name => "Export User Data";
 
         /// <inheritdoc />
         public string Description => "Export the user-data stored in Jellyfin to Shoko. Will not import user-data from Shoko.";
