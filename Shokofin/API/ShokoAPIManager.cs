@@ -62,7 +62,7 @@ namespace Shokofin.API
 
         public Folder FindMediaFolder(string path, Folder parent, Folder root)
         {
-            var mediaFolder = MediaFolderList.Find((folder) => path.StartsWith(folder.Path));
+            var mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path));
             // Look for the root folder for the current item.
             if (mediaFolder != null) {
                 return mediaFolder;

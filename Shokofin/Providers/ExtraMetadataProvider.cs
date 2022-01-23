@@ -495,7 +495,7 @@ namespace Shokofin.Providers
         {
             Info.GroupInfo groupInfo = null;
             Info.SeriesInfo seriesInfo = ApiManager.GetSeriesInfoForEpisodeSync(episodeId);
-            Info.EpisodeInfo episodeInfo = seriesInfo.EpisodeList.Find(e => e.Id == episodeId);
+            Info.EpisodeInfo episodeInfo = seriesInfo.EpisodeList.FirstOrDefault(e => e.Id == episodeId);
             if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup)
                 groupInfo = ApiManager.GetGroupInfoForSeriesSync(seriesInfo.Id, Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default);
 
