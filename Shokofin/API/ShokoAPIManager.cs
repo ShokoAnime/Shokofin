@@ -258,6 +258,7 @@ namespace Shokofin.API
             var partialPath = StripMediaFolder(path);
             Logger.LogDebug("Looking for file matching {Path}", partialPath);
             var result = await APIClient.GetFileByPath(partialPath);
+            Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
 
             var file = result?.FirstOrDefault();
             if (file == null)
@@ -453,6 +454,7 @@ namespace Shokofin.API
             if (!SeriesPathToIdDictionary.TryGetValue(path, out seriesId))
             {
                 var result = await APIClient.GetSeriesPathEndsWith(partialPath);
+                Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
                 seriesId = result?.FirstOrDefault()?.IDs?.ID.ToString();
 
                 if (string.IsNullOrEmpty(seriesId))
@@ -671,6 +673,7 @@ namespace Shokofin.API
             else
             {
                 var result = await APIClient.GetSeriesPathEndsWith(partialPath);
+                Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
                 seriesId = result?.FirstOrDefault()?.IDs?.ID.ToString();
 
                 if (string.IsNullOrEmpty(seriesId))

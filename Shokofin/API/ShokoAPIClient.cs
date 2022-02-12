@@ -50,6 +50,7 @@ namespace Shokofin.API
             }
 
             try {
+                Logger.LogTrace("Trying to get {URL}", url);
                 var remoteUrl = string.Concat(Plugin.Instance.Configuration.Host, url);
 
                 // Because Shoko Server don't support HEAD requests, we spoof it instead.
@@ -76,7 +77,9 @@ namespace Shokofin.API
                 using (var requestMessage = new HttpRequestMessage(method, remoteUrl)) {
                     requestMessage.Content = (new StringContent(""));
                     requestMessage.Headers.Add("apikey", apiKey);
-                    return await _httpClient.SendAsync(requestMessage);
+                    var response = await _httpClient.SendAsync(requestMessage);
+                    Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
+                    return response;
                 }
             }
             catch (HttpRequestException ex)
@@ -109,6 +112,7 @@ namespace Shokofin.API
             }
 
             try {
+                Logger.LogTrace("Trying to get {URL}", url);
                 var remoteUrl = string.Concat(Plugin.Instance.Configuration.Host, url);
 
                 if (method == HttpMethod.Get)
@@ -120,7 +124,9 @@ namespace Shokofin.API
                 using (var requestMessage = new HttpRequestMessage(method, remoteUrl)) {
                     requestMessage.Content = (new StringContent(JsonSerializer.Serialize<Type>(body), Encoding.UTF8, "application/json"));
                     requestMessage.Headers.Add("apikey", apiKey);
-                    return await _httpClient.SendAsync(requestMessage);
+                    var response = await _httpClient.SendAsync(requestMessage);
+                    Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
+                    return response;
                 }
             }
             catch (HttpRequestException ex)
