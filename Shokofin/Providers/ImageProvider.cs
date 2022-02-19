@@ -125,6 +125,8 @@ namespace Shokofin.Providers
             list.Add(new RemoteImageInfo {
                 ProviderName = Plugin.MetadataProviderName,
                 Type = imageType,
+                Width = image.Width,
+                Height = image.Height,
                 Url = image.ToURLString(),
             });
         }

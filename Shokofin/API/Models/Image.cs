@@ -16,6 +16,10 @@ namespace Shokofin.API.Models
         
         public bool Disabled { get; set; }
         
+        public int? Width { get; set; }
+        
+        public int? Height { get; set; }
+        
         [JsonIgnore]
         public virtual string Path
             => $"/api/v3/Image/{Source}/{Type}/{ID}";
