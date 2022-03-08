@@ -112,7 +112,7 @@ namespace Shokofin.Utils
                 case TextSourceType.PreferAniDb:
                     preferAniDb: overview = Text.SanitizeTextSummary(aniDbDescription);
                     if (string.IsNullOrEmpty(overview))
-                        goto case TextSourceType.OnlyAniDb;
+                        goto case TextSourceType.OnlyOther;
                     break;
                 case TextSourceType.OnlyAniDb:
                     overview = Text.SanitizeTextSummary(aniDbDescription);
@@ -145,7 +145,7 @@ namespace Shokofin.Utils
             if (config.SynopsisCleanMultiEmptyLines)
                 summary = Regex.Replace(summary, @"\n{2,}", "\n", RegexOptions.Singleline);
 
-            return summary;
+            return summary.Trim();
         }
 
         public static ( string, string ) GetEpisodeTitles(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string episodeTitle, string metadataLanguage)
