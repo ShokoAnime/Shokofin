@@ -26,7 +26,7 @@ else:
 
 jellyfin_repo_url="https://github.com/ShokoAnime/Shokofin/releases/download"
 
-zipfile=os.popen('jprm --verbosity=debug plugin build "." --output="%s" --version="%s" --dotnet-framework="net5.0"' % (artifact_dir, version)).read().strip()
+zipfile=os.popen('jprm --verbosity=debug plugin build "." --output="%s" --version="%s" --dotnet-framework="net6.0"' % (artifact_dir, version)).read().strip()
 
 os.system('jprm repo add --url=%s %s %s' % (jellyfin_repo_url, jellyfin_repo_file, zipfile))
 
