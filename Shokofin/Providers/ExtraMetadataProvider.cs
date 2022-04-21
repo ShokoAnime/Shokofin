@@ -558,7 +558,7 @@ namespace Shokofin.Providers
         private bool SeasonExists(string seriesPresentationUniqueKey, string seriesName, int seasonNumber)
         {
             var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
-                IncludeItemTypes = new [] { nameof (Season) },
+                IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Season },
                 IndexNumber = seasonNumber,
                 SeriesPresentationUniqueKey = seriesPresentationUniqueKey,
                 DtoOptions = new DtoOptions(true),
@@ -603,7 +603,7 @@ namespace Shokofin.Providers
 
             Logger.LogInformation("Adding virtual Season {SeasonNumber:00} to Series {SeriesName}.", seasonNumber, series.Name);
 
-            series.AddChild(season, CancellationToken.None);
+            series.AddChild(season);
 
             return season;
         }
@@ -618,7 +618,7 @@ namespace Shokofin.Providers
 
             Logger.LogInformation("Adding virtual Season {SeasonNumber:00} to Series {SeriesName}. (Series={SeriesId})", seasonNumber, series.Name, seriesInfo.Id);
 
-            series.AddChild(season, CancellationToken.None);
+            series.AddChild(season);
 
             return season;
         }
@@ -645,7 +645,7 @@ namespace Shokofin.Providers
         public void RemoveDuplicateSeasons(Season season, Series series, int seasonNumber, string seriesId)
         {
             var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
-                IncludeItemTypes = new [] { nameof (Season) },
+                IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Season },
                 ExcludeItemIds = new [] { season.Id },
                 IndexNumber = seasonNumber,
                 DtoOptions = new DtoOptions(true),
@@ -682,7 +682,7 @@ namespace Shokofin.Providers
         private bool EpisodeExists(string episodeId, string seriesId, string groupId)
         {
             var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
-                IncludeItemTypes = new [] { nameof (Episode) },
+                IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Episode },
                 HasAnyProviderId = { ["Shoko Episode"] = episodeId },
                 DtoOptions = new DtoOptions(true)
             }, true);
@@ -705,7 +705,7 @@ namespace Shokofin.Providers
 
             Logger.LogInformation("Adding virtual Episode {EpisodeNumber:000} in Season {SeasonNumber:00} for Series {SeriesName}. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", episode.IndexNumber, season.Name, groupInfo?.Shoko.Name ?? seriesInfo.Shoko.Name, episodeInfo.Id, seriesInfo.Id, groupId);
 
-            season.AddChild(episode, CancellationToken.None);
+            season.AddChild(episode);
         }
 
         private void RemoveDuplicateEpisodes(Episode episode, string episodeId)
@@ -714,7 +714,7 @@ namespace Shokofin.Providers
                 IsVirtualItem = true,
                 ExcludeItemIds = new [] { episode.Id },
                 HasAnyProviderId = { ["Shoko Episode"] = episodeId },
-                IncludeItemTypes = new [] { nameof (Episode) },
+                IncludeItemTypes = new [] {Jellyfin.Data.Enums.BaseItemKind.Episode },
                 GroupByPresentationUniqueKey = false,
                 DtoOptions = new DtoOptions(true),
             };
@@ -792,7 +792,7 @@ namespace Shokofin.Providers
             }
             if (needsUpdate) {
                 parent.ExtraIds = parent.ExtraIds.Concat(extraIds).Distinct().ToArray();
-                LibraryManager.UpdateItemAsync(parent, parent.Parent, ItemUpdateType.None, CancellationToken.None).ConfigureAwait(false);
+                LibraryManager.UpdateItemAsync(parent, parent.GetParent(), ItemUpdateType.None, CancellationToken.None).ConfigureAwait(false);
             }
         }
 
@@ -800,7 +800,7 @@ namespace Shokofin.Providers
         {
             var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
                 IsVirtualItem = false,
-                IncludeItemTypes = new [] { nameof (Video) },
+                IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Video },
                 HasOwnerId = true,
                 HasAnyProviderId = { ["Shoko Series"] = seriesId},
                 DtoOptions = new DtoOptions(true),

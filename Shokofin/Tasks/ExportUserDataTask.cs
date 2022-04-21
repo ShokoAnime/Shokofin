@@ -45,7 +45,7 @@ namespace Shokofin.Tasks
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <param name="progress">The progress.</param>
         /// <returns>Task.</returns>
-        public async Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
+        public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
             await _userSyncManager.ScanAndSync(SyncDirection.Export, progress, cancellationToken);
         }
