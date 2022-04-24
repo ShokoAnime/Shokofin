@@ -17,14 +17,6 @@
                 "timestamp": "2022-04-21T21:46:07Z"
             },
             {
-                "version": "1.7.3.1",
-                "changelog": "NA",
-                "targetAbi": "10.7.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.7.3.1/shoko_1.7.3.1.zip",
-                "checksum": "b79a3c0620ef15f51dda1a13d0c0592c",
-                "timestamp": "2022-04-21T21:44:29Z"
-            },
-            {
                 "version": "1.7.2.3",
                 "changelog": "NA",
                 "targetAbi": "10.7.0.0",
