@@ -9,7 +9,7 @@ const Messages = {
 };
 
 function filterIgnoreList(value) {
-    return Array.from(new Set(value.split(/[\s,]+/g).map(str =>  { str = str.trim().toLowerCase(); if (str[0] !== ".") str = "." + str; return str; })));
+    return Array.from(new Set(value.split(/[\s,]+/g).map(str =>  { str = str.trim().toLowerCase(); if (str[0] !== ".") str = "." + str; return str; })));
 }
 
 async function loadUserConfig(form, userId, config) {

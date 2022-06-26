@@ -35,7 +35,7 @@ namespace Shokofin.API.Models
             /// <summary>
             /// Number of ticks into the video to resume from. This is 0 if the video is not currently watched.
             /// </summary>
-            public long ResumePositionTicks { get; set; }
+            public long ResumePositionTicks { get; set; }
         }
 
         public class Location

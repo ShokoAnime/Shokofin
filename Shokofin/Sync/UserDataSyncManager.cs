@@ -222,7 +222,7 @@ namespace Shokofin.Sync
             var config = Plugin.Instance.Configuration;
             switch (e.Item) {
                 case Episode:
-                case Movie: {
+                case Movie: {
                     var video = e.Item as Video;
                     if (!Lookup.TryGetEpisodeIdFor(video, out var episodeId))
                         return;

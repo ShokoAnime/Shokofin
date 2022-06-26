@@ -384,6 +384,13 @@ namespace Shokofin.Utils
                     // Music videos
                     if (title.Contains("music video", System.StringComparison.OrdinalIgnoreCase))
                         return ExtraType.Clip;
+                    // Behind the Scenes
+                    if (title.Contains("making of", System.StringComparison.CurrentCultureIgnoreCase))
+                        return ExtraType.BehindTheScenes;
+                    if (title.Contains("music in", System.StringComparison.CurrentCultureIgnoreCase))
+                        return ExtraType.BehindTheScenes;
+                    if (title.Contains("advance screening", System.StringComparison.CurrentCultureIgnoreCase))
+                        return ExtraType.BehindTheScenes;
                     return null;
                 }
                 default:

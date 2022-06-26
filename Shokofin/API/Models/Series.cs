@@ -78,11 +78,15 @@ namespace Shokofin.API.Models
 
     public class SeriesIDs : IDs
     {
+        public int? ParentGroup { get; set; }
+
+        public int? TopLevelGroup { get; set; }
+
         public int AniDB { get; set; }
 
         public List<int> TvDB { get; set; } = new List<int>();
 
-        public List<int> MovieDB { get; set; } = new List<int>();
+        public List<int> TMDB { get; set; } = new List<int>();
 
         public List<int> MAL { get; set; } = new List<int>();
 

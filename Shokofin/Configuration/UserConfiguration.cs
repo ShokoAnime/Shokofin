@@ -17,20 +17,20 @@ namespace Shokofin.Configuration
         /// </summary>
         public bool EnableSynchronization { get; set; }
 
-        public bool SyncUserDataAfterPlayback { get; set; }
+        public bool SyncUserDataAfterPlayback { get; set; }
     
-        public bool SyncUserDataUnderPlayback { get; set; }
+        public bool SyncUserDataUnderPlayback { get; set; }
 
-        public bool SyncUserDataOnImport { get; set; }
+        public bool SyncUserDataOnImport { get; set; }
 
         /// <summary>
         /// The username of the linked user in Shoko.
         /// </summary>
-        public string Username { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
 
         /// <summary>
         /// The API Token for authentication/authorization with Shoko Server.
         /// </summary>
-        public string Token { get; set; } = string.Empty;
+        public string Token { get; set; } = string.Empty;
     }
 }

@@ -24,6 +24,7 @@ namespace Shokofin.API
         public ShokoAPIClient(ILogger<ShokoAPIClient> logger)
         {
             _httpClient = (new HttpClient());
+            _httpClient.Timeout = TimeSpan.FromMinutes(10);
             Logger = logger;
         }
 
@@ -226,9 +227,9 @@ namespace Shokofin.API
             return GetAsync<Series>($"/api/v3/Episode/{id}/Series");
         }
 
-        public Task<List<Series>> GetSeriesInGroup(string id)
+        public Task<List<Series>> GetSeriesInGroup(string groupID, int filterID = 0)
         {
-            return GetAsync<List<Series>>($"/api/v3/Filter/0/Group/{id}/Series");
+            return GetAsync<List<Series>>($"/api/v3/Filter/{filterID}/Group/{groupID}/Series?includeMissing=true&includeIgnored=false");
         }
 
         public Task<Series.AniDB> GetSeriesAniDB(string id)

@@ -131,7 +131,7 @@ namespace Shokofin.API
 
         private string GetImagePath(Image image)
         {
-            return image != null && APIClient.CheckImage(image.Path) ? image.ToURLString() : null;
+            return image != null ? image.ToURLString() : null;
         }
 
         private PersonInfo RoleToPersonInfo(Role role)

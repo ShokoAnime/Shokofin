@@ -42,33 +42,33 @@ namespace Shokofin.Configuration
 
         public bool SynopsisCleanMultiEmptyLines { get; set; }
 
-        public bool AddAniDBId { get; set; }
+        public bool AddAniDBId { get; set; }
 
         public bool AddOtherId { get; set; }
 
         public TextSourceType DescriptionSource { get; set; }
 
-        public SeriesAndBoxSetGroupType SeriesGrouping { get; set; }
+        public SeriesAndBoxSetGroupType SeriesGrouping { get; set; }
 
-        public OrderType SeasonOrdering { get; set; }
+        public OrderType SeasonOrdering { get; set; }
 
         public bool MarkSpecialsWhenGrouped { get; set; }
 
-        public SpecialOrderType SpecialsPlacement { get; set; }
+        public SpecialOrderType SpecialsPlacement { get; set; }
 
         public SeriesAndBoxSetGroupType BoxSetGrouping { get; set; }
 
-        public OrderType MovieOrdering { get; set; }
+        public OrderType MovieOrdering { get; set; }
 
-        public bool FilterOnLibraryTypes { get; set; }
+        public bool FilterOnLibraryTypes { get; set; }
 
-        public DisplayLanguageType TitleMainType { get; set; }
+        public DisplayLanguageType TitleMainType { get; set; }
 
         public DisplayLanguageType TitleAlternateType { get; set; }
 
         public UserConfiguration[] UserList { get; set; }
 
-        public string[] IgnoredFileExtensions { get; set; }
+        public string[] IgnoredFileExtensions { get; set; }
 
         public PluginConfiguration()
         {
@@ -98,7 +98,7 @@ namespace Shokofin.Configuration
             MovieOrdering = OrderType.Default;
             FilterOnLibraryTypes = false;
             UserList = Array.Empty<UserConfiguration>();
-            IgnoredFileExtensions  = new [] { ".nfo", ".jpg", ".jpeg", ".png" };
+            IgnoredFileExtensions  = new [] { ".nfo", ".jpg", ".jpeg", ".png" };
         }
     }
 }

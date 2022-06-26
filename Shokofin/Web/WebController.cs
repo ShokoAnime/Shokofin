@@ -63,7 +63,7 @@ namespace Shokofin.Web
     }
 
     public class ApiLoginRequest {
-        public string username { get; set; }
-        public string password { get; set; }
+        public string username { get; set; }
+        public string password { get; set; }
     }
 }

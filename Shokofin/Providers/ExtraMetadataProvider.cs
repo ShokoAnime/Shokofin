@@ -558,14 +558,14 @@ namespace Shokofin.Providers
         private bool SeasonExists(string seriesPresentationUniqueKey, string seriesName, int seasonNumber)
         {
             var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
-                IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Season },
+                IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Season },
                 IndexNumber = seasonNumber,
                 SeriesPresentationUniqueKey = seriesPresentationUniqueKey,
                 DtoOptions = new DtoOptions(true),
             }, true);
 
             if (searchList.Count > 0) {
-                Logger.LogDebug("Season {SeasonName} for Series {SeriesName} was created in another concurrent thread, skipping.", searchList[0].Name, seriesName);
+                Logger.LogDebug("Season {SeasonName} for Series {SeriesName} was created in another concurrent thread, skipping.", searchList[0].Name, seriesName);
                 return true;
             }
 
@@ -645,8 +645,8 @@ namespace Shokofin.Providers
         public void RemoveDuplicateSeasons(Season season, Series series, int seasonNumber, string seriesId)
         {
             var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
-                IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Season },
-                ExcludeItemIds = new [] { season.Id },
+                IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Season },
+                ExcludeItemIds = new [] { season.Id },
                 IndexNumber = seasonNumber,
                 DtoOptions = new DtoOptions(true),
             }, true).Where(item => !item.IndexNumber.HasValue).ToList();
@@ -655,7 +655,7 @@ namespace Shokofin.Providers
                 return;
 
             Logger.LogWarning("Removing {Count:00} duplicate seasons from Series {SeriesName} (Series={SeriesId})", searchList.Count, series.Name, seriesId);
-            var deleteOptions = new DeleteOptions {
+            var deleteOptions = new DeleteOptions {
                 DeleteFileLocation = false,
             };
             foreach (var item in searchList)
@@ -683,12 +683,12 @@ namespace Shokofin.Providers
         {
             var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
                 IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Episode },
-                HasAnyProviderId = { ["Shoko Episode"] = episodeId },
-                DtoOptions = new DtoOptions(true)
+                HasAnyProviderId = new Dictionary<string, string> { ["Shoko Episode"] = episodeId },
+                DtoOptions = new DtoOptions(true),
             }, true);
 
             if (searchList.Count > 0) {
-                Logger.LogDebug("A virtual or physical episode entry already exists for Episode {EpisodeName}. Ignoreing. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", searchList[0].Name, episodeId, seriesId, groupId);
+                Logger.LogDebug("A virtual or physical episode entry already exists for Episode {EpisodeName}. Ignoreing. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", searchList[0].Name, episodeId, seriesId, groupId);
                 return true;
             }
             return false;
@@ -713,7 +713,7 @@ namespace Shokofin.Providers
             var query = new InternalItemsQuery {
                 IsVirtualItem = true,
                 ExcludeItemIds = new [] { episode.Id },
-                HasAnyProviderId = { ["Shoko Episode"] = episodeId },
+                HasAnyProviderId = new Dictionary<string, string> { ["Shoko Episode"] = episodeId },
                 IncludeItemTypes = new [] {Jellyfin.Data.Enums.BaseItemKind.Episode },
                 GroupByPresentationUniqueKey = false,
                 DtoOptions = new DtoOptions(true),
@@ -802,7 +802,7 @@ namespace Shokofin.Providers
                 IsVirtualItem = false,
                 IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Video },
                 HasOwnerId = true,
-                HasAnyProviderId = { ["Shoko Series"] = seriesId},
+                HasAnyProviderId = new Dictionary<string, string> { ["Shoko Series"] = seriesId},
                 DtoOptions = new DtoOptions(true),
             }, true);
 
