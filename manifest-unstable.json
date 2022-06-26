@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "1.7.3.4",
+                "changelog": "NA\n",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.7.3.4/shoko_1.7.3.4.zip",
+                "checksum": "b79a09736992db8f6d5c35c5e93ffbe7",
+                "timestamp": "2022-06-26T11:52:43Z"
+            },
+            {
                 "version": "1.7.3.3",
                 "changelog": "NA\n",
                 "targetAbi": "10.8.0.0",
