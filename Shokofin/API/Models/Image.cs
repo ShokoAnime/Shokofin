@@ -21,6 +21,10 @@ namespace Shokofin.API.Models
         public int? Height { get; set; }
         
         [JsonIgnore]
+        public virtual bool IsAvailable
+            => !string.IsNullOrEmpty(RelativeFilepath);
+        
+        [JsonIgnore]
         public virtual string Path
             => $"/api/v3/Image/{Source}/{Type}/{ID}";
         
