@@ -10,7 +10,7 @@ The plugin requires Jellyfin version 10.8.`x` and Shoko Server version **4.2.0**
 
 ### 2.0.0
 
-**Support for Jellyfin has landed, and support for Jellyfin 10.7.0 has ended**.
+**Support for Jellyfin 10.8 has landed, and support for Jellyfin 10.7 has ended**.
 
 ### 1.5.0
 
