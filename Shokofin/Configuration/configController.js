@@ -66,12 +66,13 @@ function toggleSyncUnderPlayback(form, checked) {
     }
 }
 
-function getApiKey(username, password) {
+function getApiKey(username, password, userKey = false) {
     return ApiClient.fetch({
         dataType: "json",
         data: JSON.stringify({
             username,
             password,
+            userKey,
         }),
         headers: {
             "Content-Type": "application/json",
@@ -142,7 +143,7 @@ async function defaultSubmit(form) {
             const username = form.querySelector("#UserUsername").value;
             const password = form.querySelector("#UserPassword").value;
             if (!userConfig.Token) try {
-                const response = await getApiKey(username, password);
+                const response = await getApiKey(username, password, true);
                 userConfig.Username = username;
                 userConfig.Token = response.apikey;
             }
@@ -306,7 +307,7 @@ async function syncUserSettings(form) {
     const username = form.querySelector("#UserUsername").value;
     const password = form.querySelector("#UserPassword").value;
     if (!userConfig.Token) try {
-        const response = await getApiKey(username, password);
+        const response = await getApiKey(username, password, true);
         userConfig.Username = username;
         userConfig.Token = response.apikey;
     }

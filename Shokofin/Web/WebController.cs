@@ -46,7 +46,7 @@ namespace Shokofin.Web
         {
             try {
                 Logger.LogDebug("Trying to create an API-key for user {Username}.", body.username);
-                var apiKey = await APIClient.GetApiKey(body.username, body.password).ConfigureAwait(false);
+                var apiKey = await APIClient.GetApiKey(body.username, body.password, body.userKey).ConfigureAwait(false);
                 if (apiKey == null) {
                     Logger.LogDebug("Failed to create an API-key for user {Username} — invalid credentials received.", body.username);
                     return new StatusCodeResult(StatusCodes.Status401Unauthorized);
@@ -65,5 +65,6 @@ namespace Shokofin.Web
     public class ApiLoginRequest {
         public string username { get; set; }
         public string password { get; set; }
+        public bool userKey { get; set; }
     }
 }

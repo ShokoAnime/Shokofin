@@ -137,13 +137,13 @@ namespace Shokofin.API
             }
         }
 
-        public async Task<ApiKey> GetApiKey(string username, string password)
+        public async Task<ApiKey> GetApiKey(string username, string password, bool forUser = false)
         {
             var postData = JsonSerializer.Serialize(new Dictionary<string, string>
             {
                 {"user", username},
                 {"pass", password},
-                {"device", "Shoko Jellyfin Plugin (Shokofin)"},
+                {"device", forUser ? "Shoko Jellyfin Plugin (Shokofin) - User Key" : "Shoko Jellyfin Plugin (Shokofin)"},
             });
             var apiBaseUrl = Plugin.Instance.Configuration.Host;
             var response = await _httpClient.PostAsync($"{apiBaseUrl}/api/auth", new StringContent(postData, Encoding.UTF8, "application/json"));
