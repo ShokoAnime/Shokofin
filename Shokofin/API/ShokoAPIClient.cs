@@ -194,9 +194,14 @@ namespace Shokofin.API
             return GetAsync<List<File.FileDetailed>>($"/api/v3/File/PathEndsWith/{Uri.EscapeDataString(filename)}");
         }
 
-        public Task<File.UserDataSummary> GetFileUserData(string fileId, string apiKey)
+        public Task<File.FileUserStats> GetFileUserStats(string fileId, string apiKey = null)
         {
-            return GetAsync<File.UserDataSummary>($"/api/v3/File/UserData");
+            return GetAsync<File.FileUserStats>($"/api/v3/File/{fileId}/UserStats", apiKey);
+        }
+
+        public Task<File.FileUserStats> PutFileUserStats(string fileId, File.FileUserStats userStats, string apiKey = null)
+        {
+            return PostAsync<File.FileUserStats, File.FileUserStats>($"/api/v3/File/{fileId}/UserStats", HttpMethod.Put, userStats, apiKey);
         }
 
         public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, bool watched, string apiKey)
