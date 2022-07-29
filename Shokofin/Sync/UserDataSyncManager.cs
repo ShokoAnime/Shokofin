@@ -13,6 +13,7 @@ using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
+using FileUserStats = Shokofin.API.Models.File.FileUserStats;
 
 namespace Shokofin.Sync
 {
@@ -131,7 +132,7 @@ namespace Shokofin.Sync
                 var itemId = e.Item.Id;
                 var userData = e.UserData;
                 var config = Plugin.Instance.Configuration;
-                bool success = false;
+                bool? success = false;
                 switch (e.SaveReason) {
                     // case UserDataSaveReason.PlaybackStart: // The progress event is sent at the same time, so this event is not needed.
                     case UserDataSaveReason.PlaybackProgress: {
@@ -191,19 +192,30 @@ namespace Shokofin.Sync
                         }
 
                         Logger.LogInformation("Playback has ended. (File={FileId})", fileId);
-                        success = await APIClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
+                        if (!userData.Played && userData.PlaybackPositionTicks > 0)
+                            success = await APIClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userConfig.Token).ConfigureAwait(false);
+                        else
+                            success = await APIClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
                         break;
                     }
                     case UserDataSaveReason.TogglePlayed:
                         Logger.LogInformation("Scrobbled when toggled. (File={FileId})", fileId);
-                        success = await APIClient.ScrobbleFile(fileId, episodeId, "user-interaction", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
+                        if (!userData.Played && userData.PlaybackPositionTicks > 0)
+                            success = await APIClient.ScrobbleFile(fileId, episodeId, "user-interaction", userData.PlaybackPositionTicks, userConfig.Token).ConfigureAwait(false);
+                        else
+                            success = await APIClient.ScrobbleFile(fileId, episodeId, "user-interaction", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
+                        break;
+                    default:
+                        success = null;
                         break;
                 }
-                if (success) {
-                    Logger.LogInformation("Successfully synced watch state with Shoko. (File={FileId})", fileId);
-                }
-                else {
-                    Logger.LogInformation("Failed to sync watch state with Shoko. (File={FileId})", fileId);
+                if (success.HasValue) {
+                    if (success.Value) {
+                        Logger.LogInformation("Successfully synced watch state with Shoko. (File={FileId})", fileId);
+                    }
+                    else {
+                        Logger.LogInformation("Failed to sync watch state with Shoko. (File={FileId})", fileId);
+                    }
                 }
             }
             catch (Exception ex) {
@@ -411,7 +423,11 @@ namespace Shokofin.Sync
         {
             var localUserStats = UserDataManager.GetUserData(userConfig.UserId, video);
             var remoteUserStats = await APIClient.GetFileUserStats(fileId, userConfig.Token);
-            Logger.LogInformation("{SyncDirection} user data for video {VideoName}. (File={FileId},Episode={EpisodeId},Local={HaveLocal},Remote={HaveRemote})", direction.ToString(), video.Name, fileId, episodeId, localUserStats != null, remoteUserStats != null);
+            bool isInSync = UserDataEqualsFileUserStats(localUserStats, remoteUserStats);
+            Logger.LogInformation("{SyncDirection} user data for video {VideoName}. (File={FileId},Episode={EpisodeId},Local={HaveLocal},Remote={HaveRemote},InSync={IsInSync})", direction.ToString(), video.Name, fileId, episodeId, localUserStats != null, remoteUserStats != null, isInSync);
+            if (isInSync)
+                return;
+
             switch (direction)
             {
                 case SyncDirection.Export:
@@ -419,9 +435,18 @@ namespace Shokofin.Sync
                     if (localUserStats == null)
                         break;
                     // Export the local stats if there is no remote stats or if the local stats are newer.
-                    if (remoteUserStats == null || localUserStats.LastPlayedDate.HasValue && localUserStats.LastPlayedDate.Value > remoteUserStats.LastUpdatedAt)
+                    if (remoteUserStats == null)
                     {
-                        remoteUserStats = await APIClient.PutFileUserStats(fileId, localUserStats.ToFileUserStats(), userConfig.Token);
+                        remoteUserStats = localUserStats.ToFileUserStats();
+                        // Don't sync if the local state is considered empty and there is no remote state.
+                        if (remoteUserStats.IsEmpty)
+                            break;
+                        remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
+                        Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, fileId, episodeId);
+                    }
+                    else if (localUserStats.LastPlayedDate.HasValue && localUserStats.LastPlayedDate.Value > remoteUserStats.LastUpdatedAt) {
+                        remoteUserStats = localUserStats.ToFileUserStats();
+                        remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, fileId, episodeId);
                     }
                     break;
@@ -436,7 +461,7 @@ namespace Shokofin.Sync
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, fileId, episodeId);
                     }
                     // Else merge the remote stats into the local stats entry.
-                    else if (!localUserStats.LastPlayedDate.HasValue || remoteUserStats.LastUpdatedAt > localUserStats.LastPlayedDate.Value)
+                    else if ((!localUserStats.LastPlayedDate.HasValue || remoteUserStats.LastUpdatedAt > localUserStats.LastPlayedDate.Value))
                     {
                         UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, fileId, episodeId);
@@ -447,22 +472,28 @@ namespace Shokofin.Sync
                     // Export if there is local stats but no remote stats.
                     if (localUserStats == null && remoteUserStats != null)
                         goto case SyncDirection.Import;
+
                     // Try to import of there is no local stats ubt there are remote stats.
                     else if (remoteUserStats == null && localUserStats != null)
                         goto case SyncDirection.Export;
+
                     // Abort if there are no local or remote stats.
                     else if (remoteUserStats == null && localUserStats == null)
                         break;
-                    // Try to sync if we're unable to read the last played timestamp.
+
+                    // Try to import if we're unable to read the last played timestamp.
                     if (!localUserStats.LastPlayedDate.HasValue)
                         goto case SyncDirection.Import;
+
                     // Abort if the stats are in sync.
-                    if (localUserStats.LastPlayedDate.Value == remoteUserStats.LastUpdatedAt)
+                    if (isInSync || localUserStats.LastPlayedDate.Value == remoteUserStats.LastUpdatedAt)
                         break;
+
                     // Export if the local state is fresher then the remote state.
                     if (localUserStats.LastPlayedDate.Value > remoteUserStats.LastUpdatedAt)
                     {
-                        remoteUserStats = await APIClient.PutFileUserStats(fileId, localUserStats.ToFileUserStats(), userConfig.Token);
+                        remoteUserStats = localUserStats.ToFileUserStats();
+                        remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, fileId, episodeId);
                     }
                     // Else import if the remote state is fresher then the local state.
@@ -474,6 +505,52 @@ namespace Shokofin.Sync
                     break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Checks if the local user data and the remote user stats are in sync.
+        /// </summary>
+        /// <param name="localUserData">The local user data</param>
+        /// <param name="remoteUserStats">The remote user stats.</param>
+        /// <returns>True if they are not in sync.</returns>
+        private static bool UserDataEqualsFileUserStats(UserItemData localUserData, FileUserStats remoteUserStats)
+        {
+            if (remoteUserStats == null && localUserData == null)
+                return true;
+
+            if (localUserData == null)
+                return false;
+
+            var localUserStats = localUserData.ToFileUserStats();
+            if (remoteUserStats == null)
+                return localUserStats.IsEmpty;
+
+            if (localUserStats.IsEmpty && remoteUserStats.IsEmpty)
+                return true;
+
+            TimeSpan? resumePosition = new TimeSpan(localUserData.PlaybackPositionTicks);
+            if (Math.Floor(resumePosition.Value.TotalMilliseconds) == 0d)
+                resumePosition = null;
+            if (resumePosition != remoteUserStats.ResumePosition)
+                return false;
+
+            if (localUserData.PlayCount != remoteUserStats.WatchedCount)
+                return false;
+
+            var played = remoteUserStats.LastWatchedAt.HasValue;
+            if (localUserData.Played != played)
+                return false;
+
+            var lastWatchedAt = localUserData.Played && !resumePosition.HasValue ? localUserData.LastPlayedDate : null;
+            if (lastWatchedAt.HasValue != remoteUserStats.LastWatchedAt.HasValue || lastWatchedAt.HasValue && lastWatchedAt != remoteUserStats.LastWatchedAt)
+                return false;
+
+            var isUpdated = resumePosition.HasValue || localUserData.Played;
+            var lastUpdatedAt = isUpdated ? localUserData.LastPlayedDate : null;
+            if (isUpdated && (!lastUpdatedAt.HasValue || lastUpdatedAt.Value != remoteUserStats.LastUpdatedAt))
+                return false;
+
+            return true;
         }
     }
 }

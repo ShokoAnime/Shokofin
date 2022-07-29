@@ -212,7 +212,7 @@ namespace Shokofin.API
 
         public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, long progress, string apiKey)
         {
-            var response = await GetAsync($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round((decimal)progress / 10000)}", HttpMethod.Patch, apiKey);
+            var response = await GetAsync($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress).TotalMilliseconds)}", HttpMethod.Patch, apiKey);
             return response != null && (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent);
         }
 
@@ -220,7 +220,7 @@ namespace Shokofin.API
         {
             if (!progress.HasValue)
                 return await ScrobbleFile(fileId, episodeId, eventName, watched, apiKey);
-            var response = await GetAsync($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round((decimal)progress.Value / 10000)}&watched={watched}", HttpMethod.Patch, apiKey);
+            var response = await GetAsync($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress.Value).TotalMilliseconds)}&watched={watched}", HttpMethod.Patch, apiKey);
             return response != null && (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent);
         }
 

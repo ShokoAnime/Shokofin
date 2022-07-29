@@ -62,6 +62,15 @@ namespace Shokofin.API.Models
             /// When the entry was last updated.
             /// </summary>
             public DateTime LastUpdatedAt { get; set; }
+
+            /// <summary>
+            /// True if the <see cref="FileUserStats"/> object is considered empty.
+            /// </summary>
+            public virtual bool IsEmpty
+            {
+                get
+                    => ResumePosition == null && WatchedCount == 0 && WatchedCount == 0;
+            }
         }
 
         public class FileDetailed : File
