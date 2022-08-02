@@ -371,6 +371,13 @@ export default function (page) {
         loadUserConfig(page, this.value);
     });
 
+    form.querySelector("#UserEnableSynchronization").addEventListener("change", function () {
+        const disabled = !this.checked;
+        form.querySelector("#SyncUserDataOnImport").disabled = disabled;
+        form.querySelector("#SyncUserDataAfterPlayback").disabled = disabled;
+        form.querySelector("#SyncUserDataUnderPlayback").disabled = disabled;
+    });
+
     form.querySelector("#SyncUserDataAfterPlayback").addEventListener("change", function () {
         toggleSyncUnderPlayback(page, this.checked);
     });
