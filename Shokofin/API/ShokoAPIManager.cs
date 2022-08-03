@@ -195,12 +195,12 @@ namespace Shokofin.API
         /// Get the tag filter
         /// </summary>
         /// <returns></returns>
-        private int GetTagFilter()
+        private ulong GetTagFilter()
         {
             var config = Plugin.Instance.Configuration;
-            var filter = 128; // We exclude genres by default
+            ulong filter = 128L; // We exclude genres by default
 
-            if (config.HideAniDbTags) filter = 129;
+            if (config.HideAniDbTags) filter = 129L;
             if (config.HideArtStyleTags) filter |= (filter << 1);
             if (config.HideSourceTags) filter |= (filter << 2);
             if (config.HideMiscTags) filter |= (filter << 3);
@@ -214,8 +214,8 @@ namespace Shokofin.API
 
         public async Task<string[]> GetGenresForSeries(string seriesId)
         {
-            // The following magic number is the filter value to allow only genres in the returned list.
-            return (await APIClient.GetSeriesTags(seriesId, -2147483520))?.Select(SelectTagName).ToArray() ?? new string[0];
+            // The following magic number is the filter value to allow only genres in the returned list.s
+            return (await APIClient.GetSeriesTags(seriesId, 2147483776))?.Select(SelectTagName).ToArray() ?? new string[0];
         }
 
         private string SelectTagName(Tag tag)
