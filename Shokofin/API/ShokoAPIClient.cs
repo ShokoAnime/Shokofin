@@ -269,7 +269,7 @@ namespace Shokofin.API
             return GetAsync<List<Series>>($"/api/v3/Series/PathEndsWith/{Uri.EscapeDataString(dirname)}");
         }
 
-        public Task<List<Tag>> GetSeriesTags(string id, int filter = 0)
+        public Task<List<Tag>> GetSeriesTags(string id, ulong filter = 0)
         {
             return GetAsync<List<Tag>>($"/api/v3/Series/{id}/Tags?filter={filter}&excludeDescriptions=true");
         }
