@@ -214,7 +214,7 @@ namespace Shokofin.API
 
         public async Task<string[]> GetGenresForSeries(string seriesId)
         {
-            // The following magic number is the filter value to allow only genres in the returned list.s
+            // The following magic number is the filter value to allow only genres in the returned list.
             return (await APIClient.GetSeriesTags(seriesId, 2147483776))?.Select(SelectTagName).ToArray() ?? new string[0];
         }
 
