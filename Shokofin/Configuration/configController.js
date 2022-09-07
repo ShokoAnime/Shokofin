@@ -113,10 +113,11 @@ async function defaultSubmit(form) {
     
         // Tag settings
         config.HideArtStyleTags = form.querySelector("#HideArtStyleTags").checked;
-        config.HideSourceTags = form.querySelector("#HideSourceTags").checked;
         config.HideMiscTags = form.querySelector("#HideMiscTags").checked;
         config.HidePlotTags = form.querySelector("#HidePlotTags").checked;
         config.HideAniDbTags = form.querySelector("#HideAniDbTags").checked;
+        config.HideSettingTags = form.querySelector("#HideSettingTags").checked;
+        config.HideProgrammingTags = form.querySelector("#HideProgrammingTags").checked;
     
         // Advanced settings
         config.PublicHost = publicHost;
@@ -253,10 +254,11 @@ async function syncSettings(form) {
 
     // Tag settings
     config.HideArtStyleTags = form.querySelector("#HideArtStyleTags").checked;
-    config.HideSourceTags = form.querySelector("#HideSourceTags").checked;
     config.HideMiscTags = form.querySelector("#HideMiscTags").checked;
     config.HidePlotTags = form.querySelector("#HidePlotTags").checked;
     config.HideAniDbTags = form.querySelector("#HideAniDbTags").checked;
+    config.HideSettingTags = form.querySelector("#HideSettingTags").checked;
+    config.HideProgrammingTags = form.querySelector("#HideProgrammingTags").checked;
 
     // Advanced settings
     config.PublicHost = publicHost;
@@ -415,10 +417,11 @@ export default function (page) {
 
             // Tag settings
             form.querySelector("#HideArtStyleTags").checked = config.HideArtStyleTags;
-            form.querySelector("#HideSourceTags").checked = config.HideSourceTags;
             form.querySelector("#HideMiscTags").checked = config.HideMiscTags;
             form.querySelector("#HidePlotTags").checked = config.HidePlotTags;
             form.querySelector("#HideAniDbTags").checked = config.HideAniDbTags;
+            form.querySelector("#HideSettingTags").checked = config.HideSettingTags;
+            form.querySelector("#HideProgrammingTags").checked = config.HideProgrammingTags;
 
             // Advanced settings
             form.querySelector("#PublicHost").value = config.PublicHost;

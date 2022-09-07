@@ -26,13 +26,15 @@ namespace Shokofin.Configuration
 
         public bool HideArtStyleTags { get; set; }
 
-        public bool HideSourceTags { get; set; }
-
         public bool HideMiscTags { get; set; }
 
         public bool HidePlotTags { get; set; }
 
         public bool HideAniDbTags { get; set; }
+        
+        public bool HideSettingTags { get; set; }
+        
+        public bool HideProgrammingTags { get; set; }
 
         public bool SynopsisCleanLinks { get; set; }
 
@@ -77,10 +79,11 @@ namespace Shokofin.Configuration
             Username = "Default";
             ApiKey = "";
             HideArtStyleTags = false;
-            HideSourceTags = false;
             HideMiscTags = false;
             HidePlotTags = true;
             HideAniDbTags = true;
+            HideSettingTags = false;
+            HideProgrammingTags = true;
             SynopsisCleanLinks = true;
             SynopsisCleanMiscLines = true;
             SynopsisRemoveSummary = true;

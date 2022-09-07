@@ -198,13 +198,14 @@ namespace Shokofin.API
         private ulong GetTagFilter()
         {
             var config = Plugin.Instance.Configuration;
-            ulong filter = 128L; // We exclude genres by default
+            ulong filter = 132L; // We exclude genres and source by default
 
-            if (config.HideAniDbTags) filter = 129L;
-            if (config.HideArtStyleTags) filter |= (filter << 1);
-            if (config.HideSourceTags) filter |= (filter << 2);
-            if (config.HideMiscTags) filter |= (filter << 3);
-            if (config.HidePlotTags) filter |= (filter << 4);
+            if (config.HideAniDbTags) filter |= (1 << 0);
+            if (config.HideArtStyleTags) filter |= (1 << 1);
+            if (config.HideMiscTags) filter |= (1 << 3);
+            if (config.HidePlotTags) filter |= (1 << 4);
+            if (config.HideSettingTags) filter |= (1 << 5);
+            if (config.HideProgrammingTags) filter |= (1 << 6);
 
             return filter;
         }
