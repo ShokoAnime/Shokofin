@@ -141,6 +141,15 @@ namespace Shokofin.Providers
             }
 
             var series = group.DefaultSeries;
+            var premiereDate = group.SeriesList
+                .Select(s => s.AniDB.AirDate)
+                .Where(s => s != null)
+                .OrderBy(s => s)
+                .FirstOrDefault();
+            var endDate = group.SeriesList.Any(s => s.AniDB.EndDate == null) ? null : group.SeriesList
+                .Select(s => s.AniDB.AirDate)
+                .OrderBy(s => s)
+                .LastOrDefault();
             var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, group.Shoko.Name, info.MetadataLanguage);
             Logger.LogInformation("Found series {SeriesName} (Series={SeriesId},Group={GroupId})", displayTitle, series.Id, group.Id);
 
@@ -148,10 +157,10 @@ namespace Shokofin.Providers
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
                 Overview = Text.GetDescription(series),
-                PremiereDate = series.AniDB.AirDate,
-                EndDate = series.AniDB.EndDate,
-                ProductionYear = series.AniDB.AirDate?.Year,
-                Status = series.AniDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
+                PremiereDate = premiereDate,
+                ProductionYear = premiereDate?.Year,
+                EndDate = endDate,
+                Status = endDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
                 Tags = group.Tags.ToArray(),
                 Genres = group.Genres.ToArray(),
                 Studios = group.Studios.ToArray(),
