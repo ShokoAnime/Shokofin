@@ -215,7 +215,40 @@ namespace Shokofin.API
         public async Task<string[]> GetGenresForSeries(string seriesId)
         {
             // The following magic number is the filter value to allow only genres in the returned list.
-            return (await APIClient.GetSeriesTags(seriesId, 2147483776))?.Select(SelectTagName).ToArray() ?? new string[0];
+            var set = (await APIClient.GetSeriesTags(seriesId, 2147483776))?.Select(SelectTagName).ToHashSet() ?? new();
+            set.Add(await GetSourceGenre(seriesId));
+            return set.ToArray();
+        }
+
+        private async Task<string> GetSourceGenre(string seriesId)
+        {
+            return (await APIClient.GetSeriesTags(seriesId, 2147483652))?.Select(SelectTagName).FirstOrDefault() switch {
+                "american derived" => "adapted from western media",
+                "cartoon" => "adapted from westen media",
+                "comic book" => "adapted from western media",
+                "4-koma" => "adapted from a manga",
+                "manga" => "adapted from a manga",
+                "4-koma manga" => "adapted from a manga",
+                "manhua" => "adapted from a manhua",
+                "manhwa" => "adapted from a manhwa",
+                "movie" => "adapted from a movie",
+                "novel" => "adapted from a light/web novel",
+                "rpg" => "adapted from a video game",
+                "action game" => "adapted from a video game",
+                "game" => "adapted from a video game",
+                "erotic game" => "adapted from an eroge",
+                "korean drama" => "adapted from a korean drama",
+                "television programme" => "adapted from a live-action show",
+                "visual novel" => "adapted from a visual novel",
+                "fan-made" => "fan-made",
+                "remake" => "remake",
+                "radio programme" => "original work",
+                "biographical film" => "original work",
+                "original work" => "original work",
+                "new" => "original work",
+                "ultra jump" => "original work",
+                _ => "original work",
+            };
         }
 
         private string SelectTagName(Tag tag)
