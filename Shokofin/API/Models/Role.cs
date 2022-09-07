@@ -26,6 +26,7 @@ namespace Shokofin.API.Models
             public Image Image { get; set; }
         }
 
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public enum CreatorRoleType
         {
             /// <summary>
