@@ -22,6 +22,8 @@ namespace Shokofin.Configuration
         public bool SyncUserDataUnderPlayback { get; set; }
 
         public bool SyncUserDataOnImport { get; set; }
+        
+        public bool SyncRestrictedVideos { get; set; }
 
         /// <summary>
         /// The username of the linked user in Shoko.

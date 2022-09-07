@@ -125,7 +125,8 @@ namespace Shokofin.Sync
                         (e.Item is Movie || e.Item is Episode) &&
                         TryGetUserConfiguration(e.UserId, out var userConfig) &&
                         Lookup.TryGetFileIdFor(e.Item, out var fileId) &&
-                        Lookup.TryGetEpisodeIdFor(e.Item, out var episodeId)
+                        Lookup.TryGetEpisodeIdFor(e.Item, out var episodeId) &&
+                        (userConfig.SyncRestrictedVideos || e.Item.CustomRating != "XXX")
                     ))
                     return;
 
@@ -399,6 +400,10 @@ namespace Shokofin.Sync
 
         private Task SyncVideo(Video video, UserConfiguration userConfig, UserItemData userData, SyncDirection direction, string episodeId)
         {
+            if (!userConfig.SyncRestrictedVideos && video.CustomRating == "XXX") {
+                Logger.LogTrace("Skipped {SyncDirection} user data for video {VideoName}. (Episode={EpisodeId})", direction.ToString(), video.Name, episodeId);
+                return Task.CompletedTask;
+            }
             // Try to load the user-data if it was not provided
             if (userData == null)
                 userData = UserDataManager.GetUserData(userConfig.UserId, video);
@@ -421,6 +426,10 @@ namespace Shokofin.Sync
 
         private async Task SyncVideo(Video video, UserConfiguration userConfig, SyncDirection direction, string fileId, string episodeId)
         {
+            if (!userConfig.SyncRestrictedVideos && video.CustomRating == "XXX") {
+                Logger.LogTrace("Skipped {SyncDirection} user data for video {VideoName}. (File={FileId},Episode={EpisodeId})", direction.ToString(), video.Name, fileId, episodeId);
+                return;
+            }
             var localUserStats = UserDataManager.GetUserData(userConfig.UserId, video);
             var remoteUserStats = await APIClient.GetFileUserStats(fileId, userConfig.Token);
             bool isInSync = UserDataEqualsFileUserStats(localUserStats, remoteUserStats);

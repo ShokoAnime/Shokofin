@@ -28,9 +28,10 @@ async function loadUserConfig(form, userId, config) {
 
     // Configure the elements within the user container
     form.querySelector("#UserEnableSynchronization").checked = userConfig.EnableSynchronization || false;
-    form.querySelector("#SyncUserDataOnImport").checked = userConfig.SyncUserDataOnImport;
-    form.querySelector("#SyncUserDataAfterPlayback").checked = userConfig.SyncUserDataAfterPlayback;
-    form.querySelector("#SyncUserDataUnderPlayback").checked = userConfig.SyncUserDataAfterPlayback && userConfig.SyncUserDataUnderPlayback;
+    form.querySelector("#SyncUserDataOnImport").checked = userConfig.SyncUserDataOnImport || false;
+    form.querySelector("#SyncUserDataAfterPlayback").checked = userConfig.SyncUserDataAfterPlayback || false;
+    form.querySelector("#SyncUserDataUnderPlayback").checked = userConfig.SyncUserDataAfterPlayback && userConfig.SyncUserDataUnderPlayback || false;
+    form.querySelector("#SyncRestrictedVideos").checked = userConfig.SyncRestrictedVideos || false;
     form.querySelector("#UserUsername").value = userConfig.Username || "";
     // Synchronization settings
     form.querySelector("#UserPassword").value = "";
@@ -138,6 +139,7 @@ async function defaultSubmit(form) {
             userConfig.SyncUserDataOnImport = form.querySelector("#SyncUserDataOnImport").checked;
             userConfig.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
             userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked && form.querySelector("#SyncUserDataUnderPlayback").checked;
+            userConfig.SyncRestrictedVideos = form.querySelector("#SyncRestrictedVideos").checked;
             
             // Only try to save a new token if a token is not already present.
             const username = form.querySelector("#UserUsername").value;
@@ -302,6 +304,7 @@ async function syncUserSettings(form) {
     userConfig.SyncUserDataOnImport = form.querySelector("#SyncUserDataOnImport").checked;
     userConfig.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
     userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked && form.querySelector("#SyncUserDataUnderPlayback").checked;
+    userConfig.SyncRestrictedVideos = form.querySelector("#SyncRestrictedVideos").checked;
     
     // Only try to save a new token if a token is not already present.
     const username = form.querySelector("#UserUsername").value;

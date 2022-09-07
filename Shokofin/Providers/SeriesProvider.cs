@@ -105,6 +105,8 @@ namespace Shokofin.Providers
                     Tags = series.Tags.ToArray(),
                     Genres = series.Genres.ToArray(),
                     Studios = series.Studios.ToArray(),
+                    OfficialRating = series.AniDB.Restricted ? "XXX" : null,
+                    CustomRating = series.AniDB.Restricted ? "XXX" : null,
                     CommunityRating = series.AniDB.Rating.ToFloat(10),
                 };
             }
@@ -153,6 +155,8 @@ namespace Shokofin.Providers
                 Tags = group.Tags.ToArray(),
                 Genres = group.Genres.ToArray(),
                 Studios = group.Studios.ToArray(),
+                OfficialRating = series.AniDB.Restricted ? "XXX" : null,
+                CustomRating = series.AniDB.Restricted ? "XXX" : null,
                 CommunityRating = series.AniDB.Rating.ToFloat(10),
             };
             AddProviderIds(result.Item, series.Id, group.Id, series.AniDB.ID.ToString());
