@@ -128,6 +128,7 @@ namespace Shokofin.Providers
                 Width = image.Width,
                 Height = image.Height,
                 Url = image.ToURLString(),
+                ThumbnailUrl = image.ToPrettyURLString(),
             });
         }
 

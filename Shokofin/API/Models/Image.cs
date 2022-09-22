@@ -32,5 +32,10 @@ namespace Shokofin.API.Models
         {
             return string.Concat(Plugin.Instance.Configuration.Host, Path);
         }
+
+        public string ToPrettyURLString()
+        {
+            return string.Concat(Plugin.Instance.Configuration.PrettyHost, Path);
+        }
     }
 }
