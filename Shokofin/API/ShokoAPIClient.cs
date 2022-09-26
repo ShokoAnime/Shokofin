@@ -79,6 +79,8 @@ namespace Shokofin.API
                     requestMessage.Content = (new StringContent(""));
                     requestMessage.Headers.Add("apikey", apiKey);
                     var response = await _httpClient.SendAsync(requestMessage);
+                    if (response.StatusCode == HttpStatusCode.Unauthorized)
+                        throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection in the plugin settings.", null, HttpStatusCode.Unauthorized);
                     Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
                     return response;
                 }
@@ -126,6 +128,8 @@ namespace Shokofin.API
                     requestMessage.Content = (new StringContent(JsonSerializer.Serialize<Type>(body), Encoding.UTF8, "application/json"));
                     requestMessage.Headers.Add("apikey", apiKey);
                     var response = await _httpClient.SendAsync(requestMessage);
+                    if (response.StatusCode == HttpStatusCode.Unauthorized)
+                        throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection in the plugin settings.", null, HttpStatusCode.Unauthorized);
                     Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
                     return response;
                 }
