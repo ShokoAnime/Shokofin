@@ -49,7 +49,7 @@ namespace Shokofin.Providers
                 }
             }
             catch (Exception e) {
-                Logger.LogError(e, $"Threw unexpectedly; {e.Message}");
+                Logger.LogError(e, $"Threw unexpetedly; {e.Message}");
                 return new MetadataResult<Series>();
             }
         }
