@@ -14,6 +14,7 @@ using Shokofin.API.Models;
 using Shokofin.Utils;
 
 using CultureInfo = System.Globalization.CultureInfo;
+using Path = System.IO.Path;
 
 namespace Shokofin.API
 {
@@ -62,7 +63,7 @@ namespace Shokofin.API
 
         public Folder FindMediaFolder(string path, Folder parent, Folder root)
         {
-            var mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path));
+            var mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.PathSeparator));
             // Look for the root folder for the current item.
             if (mediaFolder != null) {
                 return mediaFolder;
@@ -80,7 +81,7 @@ namespace Shokofin.API
 
         public string StripMediaFolder(string fullPath)
         {
-            var mediaFolder = MediaFolderList.FirstOrDefault((folder) => fullPath.StartsWith(folder.Path));
+            var mediaFolder = MediaFolderList.FirstOrDefault((folder) => fullPath.StartsWith(folder.Path + Path.PathSeparator));
             if (mediaFolder != null) {
                 return fullPath.Substring(mediaFolder.Path.Length);
             }
