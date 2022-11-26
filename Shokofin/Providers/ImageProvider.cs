@@ -11,6 +11,7 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using System.Linq;
 
 namespace Shokofin.Providers
 {
@@ -110,17 +111,17 @@ namespace Shokofin.Providers
 
         private void AddImagesForSeries(ref List<RemoteImageInfo> list, API.Models.Images images)
         {
-            foreach (var image in images?.Posters)
+            foreach (var image in images.Posters.OrderByDescending(image => image.Preferred))
                 AddImage(ref list, ImageType.Primary, image);
-            foreach (var image in images?.Fanarts)
+            foreach (var image in images.Fanarts.OrderByDescending(image => image.Preferred))
                 AddImage(ref list, ImageType.Backdrop, image);
-            foreach (var image in images?.Banners)
+            foreach (var image in images.Banners.OrderByDescending(image => image.Preferred))
                 AddImage(ref list, ImageType.Banner, image);
         }
 
         private void AddImage(ref List<RemoteImageInfo> list, ImageType imageType, API.Models.Image image)
         {
-            if (image == null || !ApiClient.CheckImage(image.Path))
+            if (image == null || !image.IsAvailable)
                 return;
             list.Add(new RemoteImageInfo {
                 ProviderName = Plugin.MetadataProviderName,
