@@ -63,7 +63,7 @@ namespace Shokofin.API
 
         public Folder FindMediaFolder(string path, Folder parent, Folder root)
         {
-            var mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.PathSeparator));
+            var mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
             // Look for the root folder for the current item.
             if (mediaFolder != null) {
                 return mediaFolder;
@@ -81,7 +81,7 @@ namespace Shokofin.API
 
         public string StripMediaFolder(string fullPath)
         {
-            var mediaFolder = MediaFolderList.FirstOrDefault((folder) => fullPath.StartsWith(folder.Path + Path.PathSeparator));
+            var mediaFolder = MediaFolderList.FirstOrDefault((folder) => fullPath.StartsWith(folder.Path + Path.DirectorySeparatorChar));
             if (mediaFolder != null) {
                 return fullPath.Substring(mediaFolder.Path.Length);
             }
