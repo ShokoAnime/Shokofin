@@ -110,7 +110,7 @@ namespace Shokofin.Providers
                     CommunityRating = series.AniDB.Rating.ToFloat(10),
                 };
             }
-            AddProviderIds(result.Item, series.Id, null, series.AniDB.ID.ToString(), mergeFriendly ? series.TvDBId : null);
+            AddProviderIds(result.Item, seriesId: series.Id, anidbId: series.AniDB.Id.ToString(), tvdbId: mergeFriendly ? series.TvDB.Id.ToString() : null, tmdbId: series.Shoko.IDs.TMDB.FirstOrDefault().ToString());
 
             result.HasMetadata = true;
 
@@ -168,7 +168,7 @@ namespace Shokofin.Providers
                 CustomRating = series.AniDB.Restricted ? "XXX" : null,
                 CommunityRating = series.AniDB.Rating.ToFloat(10),
             };
-            AddProviderIds(result.Item, series.Id, group.Id, series.AniDB.ID.ToString());
+            AddProviderIds(result.Item, seriesId: series.Id, groupId: group.Id, anidbId: series.AniDB.Id.ToString());
 
             result.HasMetadata = true;
 
@@ -179,42 +179,42 @@ namespace Shokofin.Providers
             return result;
         }
 
-        public static void AddProviderIds(Series series, string seriesId, string groupId = null, string aniDbId = null, string tvDbId = null)
+        public static void AddProviderIds(IHasProviderIds item, string seriesId, string groupId = null, string anidbId = null, string tvdbId = null, string tmdbId = null)
         {
             // NOTE: These next two lines will remain here till _someone_ fix the series merging for providers other then TvDB and ImDB in Jellyfin.
-            if (string.IsNullOrEmpty(tvDbId))
-                series.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{seriesId}");
+            // NOTE: #2 Will fix this once JF 10.9 is out, as it contains a change that will help in this situation.
+            if (string.IsNullOrEmpty(tvdbId))
+                item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{seriesId}");
 
-            series.SetProviderId("Shoko Series", seriesId);
+            item.SetProviderId("Shoko Series", seriesId);
             if (!string.IsNullOrEmpty(groupId))
-                series.SetProviderId("Shoko Group", groupId);
-            if (Plugin.Instance.Configuration.AddAniDBId && !string.IsNullOrEmpty(aniDbId))
-                series.SetProviderId("AniDB", aniDbId);
-            if (!string.IsNullOrEmpty(tvDbId))
-                series.SetProviderId(MetadataProvider.Tvdb, tvDbId);
+                item.SetProviderId("Shoko Group", groupId);
+            if (Plugin.Instance.Configuration.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
+                item.SetProviderId("AniDB", anidbId);
+            if (Plugin.Instance.Configuration.AddTvDBId &&!string.IsNullOrEmpty(tvdbId) && tvdbId != "0")
+                item.SetProviderId(MetadataProvider.Tvdb, tvdbId);
+            if (Plugin.Instance.Configuration.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")
+                item.SetProviderId(MetadataProvider.Tvdb, tmdbId);
         }
+        
 
         public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo info, CancellationToken cancellationToken)
         {
             try {
-                var results = new List<RemoteSearchResult>();
-                var searchResults = await ApiClient.SeriesSearch(info.Name).ContinueWith((e) => e.Result.ToList());
+                var searchResults = await ApiClient.SeriesSearch(info.Name).ContinueWith((e) => e.Result.List);
                 Logger.LogInformation($"Series search returned {searchResults.Count} results.");
-
-                foreach (var series in searchResults) {
-                    var seriesId = series.IDs.ID.ToString();
-                    var seriesInfo = ApiManager.GetSeriesInfoSync(seriesId);
-                    var imageUrl = seriesInfo.AniDB.Poster != null && ApiClient.CheckImage(seriesInfo.AniDB.Poster.Path) ? seriesInfo.AniDB.Poster.ToURLString() : null;
+                return searchResults.Select(series => {
+                    var seriesId = (series?.ShokoId ?? 0).ToString();
+                    var imageUrl = series?.Poster.IsAvailable ?? false ? series.Poster.ToPrettyURLString() : null;
                     var parsedSeries = new RemoteSearchResult {
-                        Name = Text.GetSeriesTitle(seriesInfo.AniDB.Titles, seriesInfo.Shoko.Name, info.MetadataLanguage),
+                        Name = Text.GetSeriesTitle(series.Titles, series.Title, info.MetadataLanguage),
                         SearchProviderName = Name,
                         ImageUrl = imageUrl,
+                        Overview = Text.SanitizeTextSummary(series.Description),
                     };
-                    parsedSeries.SetProviderId("Shoko Series", seriesId);
-                    results.Add(parsedSeries);
-                }
-
-                return results;
+                    AddProviderIds(parsedSeries, seriesId: seriesId, groupId: null, anidbId: series.Id.ToString(), tvdbId: null);
+                    return parsedSeries;
+                });
             }
             catch (Exception e) {
                 Logger.LogError(e, $"Threw unexpectedly; {e.Message}");

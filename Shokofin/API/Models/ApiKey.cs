@@ -1,7 +1,7 @@
-namespace Shokofin.API.Models
+# nullable enable
+namespace Shokofin.API.Models;
+
+public class ApiKey
 {
-    public class ApiKey
-    {
-        public string apikey { get; set; }
-    }
+    public string apikey { get; set; } = "";
 }

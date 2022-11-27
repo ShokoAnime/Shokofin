@@ -173,7 +173,7 @@ namespace Shokofin.Utils
                     }
                     return episode.AniDB.EpisodeNumber;
                 case GroupType.MergeFriendly: {
-                    var episodeNumber = episode?.TvDB?.Number;
+                    var episodeNumber = episode?.TvDB?.EpisodeNumber;
                     if (episodeNumber.HasValue)
                         return episodeNumber.Value;
                     goto case GroupType.Default;
@@ -224,7 +224,7 @@ namespace Shokofin.Utils
 
             // Abort if episode is not a TvDB special or AniDB special
             var allowOtherData = order == SpecialOrderType.InBetweenSeasonByOtherData || order == SpecialOrderType.InBetweenSeasonMixed;
-            if (allowOtherData  ? !(episode?.TvDB?.Season == 0 || episode.AniDB.Type == EpisodeType.Special) : episode.AniDB.Type != EpisodeType.Special)
+            if (allowOtherData  ? !(episode?.TvDB?.SeasonNumber == 0 || episode.AniDB.Type == EpisodeType.Special) : episode.AniDB.Type != EpisodeType.Special)
                 return (null, null, null);
 
             int? episodeNumber = null;
@@ -272,7 +272,7 @@ namespace Shokofin.Utils
                         break;
                     }
 
-                    var nextEpisode = series.EpisodeList.FirstOrDefault(e => e.TvDB != null && e.TvDB.Season == seasonNumber && e.TvDB.Number == episodeNumber);
+                    var nextEpisode = series.EpisodeList.FirstOrDefault(e => e.TvDB != null && e.TvDB.SeasonNumber == seasonNumber && e.TvDB.EpisodeNumber == episodeNumber);
                     if (nextEpisode != null) {
                         airsBeforeEpisodeNumber = GetEpisodeNumber(group, series, nextEpisode);
                         airsBeforeSeasonNumber = seasonNumber;
@@ -318,10 +318,10 @@ namespace Shokofin.Utils
                 case GroupType.MergeFriendly: {
                     int? seasonNumber = null;
                     if (episode.TvDB != null) {
-                        if (episode.TvDB.Season == 0)
+                        if (episode.TvDB.SeasonNumber == 0)
                             seasonNumber = episode.TvDB.AirsAfterSeason ?? episode.TvDB.AirsBeforeSeason ?? 1;
                         else
-                            seasonNumber = episode.TvDB.Season;
+                            seasonNumber = episode.TvDB.SeasonNumber;
                     }
                     if (!seasonNumber.HasValue)
                         goto case GroupType.Default;

@@ -78,6 +78,10 @@ namespace Shokofin
 
         bool TryGetEpisodeIdFor(BaseItem item, out string episodeId);
 
+        bool TryGetEpisodeIdsFor(string path, out List<string> episodeIds);
+
+        bool TryGetEpisodeIdsFor(BaseItem item, out List<string> episodeIds);
+
         #endregion
         #region Episode Path
 
@@ -153,7 +157,9 @@ namespace Shokofin
                 // Set the "Shoko Group" and "Shoko Series" provider ids for the series, since it haven't been set again. It doesn't matter if it's not saved to the database, since we only need it while running the following code.
                 if (TryGetGroupIdFromSeriesId(seriesId, out var groupId)) {
                     var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
-                    var groupInfo = ApiManager.GetGroupInfoSync(groupId, filterByType);
+                    var groupInfo = ApiManager.GetGroupInfo(groupId, filterByType)
+                        .GetAwaiter()
+                        .GetResult();
                     seriesId = groupInfo.DefaultSeries.Id;
 
                     SeriesProvider.AddProviderIds(series, seriesId, groupInfo.Id);
@@ -201,7 +207,9 @@ namespace Shokofin
             if (TryGetSeriesIdFor(boxSet.Path, out seriesId)) {
                 if (TryGetGroupIdFromSeriesId(seriesId, out var groupId)) {
                     var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
-                    var groupInfo = ApiManager.GetGroupInfoSync(groupId, filterByType);
+                    var groupInfo = ApiManager.GetGroupInfo(groupId, filterByType)
+                        .GetAwaiter()
+                        .GetResult();
                     seriesId = groupInfo.DefaultSeries.Id;
                 }
                 return true;
@@ -241,6 +249,26 @@ namespace Shokofin
             return false;
         }
 
+        public bool TryGetEpisodeIdsFor(string path, out List<string> episodeIds)
+        {
+            return ApiManager.TryGetEpisodeIdsForPath(path, out episodeIds);
+        }
+
+        public bool TryGetEpisodeIdsFor(BaseItem item, out List<string> episodeIds)
+        {
+            // This will account for virtual episodes and existing episodes
+            if (item.ProviderIds.TryGetValue("Shoko File", out var fileId) && ApiManager.TryGetEpisodeIdsForFileId(fileId, out episodeIds)) {
+                return true;
+            }
+
+            // This will account for new episodes that haven't received their first metadata update yet.
+            if (TryGetEpisodeIdsFor(item.Path, out episodeIds)) {
+                return true;
+            }
+
+            return false;
+        }
+
         #endregion
         #region Episode Path
 
@@ -257,7 +285,7 @@ namespace Shokofin
             if (episode.ProviderIds.TryGetValue("Shoko File", out fileId))
                 return true;
 
-            return ApiManager.TryGetFileIdForPath(episode.Path, out fileId, out var episodeCount);
+            return ApiManager.TryGetFileIdForPath(episode.Path, out fileId);
         }
 
         #endregion

@@ -14,910 +14,674 @@ using Shokofin.API.Models;
 using Shokofin.Utils;
 
 using CultureInfo = System.Globalization.CultureInfo;
+using ItemLookupInfo = MediaBrowser.Controller.Providers.ItemLookupInfo;
 using Path = System.IO.Path;
 
-namespace Shokofin.API
+#nullable enable
+namespace Shokofin.API;
+
+public class ShokoAPIManager
 {
-    public class ShokoAPIManager
+    private readonly ILogger<ShokoAPIManager> Logger;
+
+    private readonly ShokoAPIClient APIClient;
+
+    private readonly ILibraryManager LibraryManager;
+
+    private readonly List<Folder> MediaFolderList = new List<Folder>();
+
+    private readonly ConcurrentDictionary<string, string> PathToSeriesIdDictionary = new();
+
+    private readonly ConcurrentDictionary<string, List<string>> PathToEpisodeIdsDictionary = new();
+
+    private readonly ConcurrentDictionary<string, (string, string)> PathToFileIdAndSeriesIdDictionary = new();
+
+    private readonly ConcurrentDictionary<string, string> SeriesIdToPathDictionary = new();
+
+    private readonly ConcurrentDictionary<string, string> SeriesIdToGroupIdDictionary = new();
+
+    private readonly ConcurrentDictionary<string, string> EpisodeIdToEpisodePathDictionary = new();
+
+    private readonly ConcurrentDictionary<string, string> EpisodeIdToSeriesIdDictionary = new();
+
+    private readonly ConcurrentDictionary<string, List<string>> FileIdToEpisodeIdDictionary = new();
+
+    public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ShokoAPIClient apiClient, ILibraryManager libraryManager)
     {
-        private readonly ILogger<ShokoAPIManager> Logger;
+        Logger = logger;
+        APIClient = apiClient;
+        LibraryManager = libraryManager;
+    }
 
-        private readonly ShokoAPIClient APIClient;
+    private IMemoryCache DataCache = new MemoryCache(new MemoryCacheOptions() {
+        ExpirationScanFrequency = ExpirationScanFrequency,
+    });
 
-        private readonly ILibraryManager LibraryManager;
+    private static readonly System.TimeSpan ExpirationScanFrequency = new System.TimeSpan(0, 25, 0);
 
-        private readonly List<Folder> MediaFolderList = new List<Folder>();
+    private static readonly System.TimeSpan DefaultTimeSpan = new System.TimeSpan(1, 30, 0);
 
-        private readonly ConcurrentDictionary<string, string> SeriesPathToIdDictionary = new ConcurrentDictionary<string, string>();
+    #region Ignore rule
 
-        private readonly ConcurrentDictionary<string, string> SeriesIdToPathDictionary = new ConcurrentDictionary<string, string>();
-
-        private readonly ConcurrentDictionary<string, string> SeriesIdToGroupIdDictionary = new ConcurrentDictionary<string, string>();
-
-        private readonly ConcurrentDictionary<string, string> EpisodePathToEpisodeIdDictionary = new ConcurrentDictionary<string, string>();
-
-        private readonly ConcurrentDictionary<string, string> EpisodeIdToEpisodePathDictionary = new ConcurrentDictionary<string, string>();
-
-        private readonly ConcurrentDictionary<string, string> EpisodeIdToSeriesIdDictionary = new ConcurrentDictionary<string, string>();
-
-        private readonly ConcurrentDictionary<string, (string, int, string, string)> FilePathToFileIdAndEpisodeCountDictionary = new ConcurrentDictionary<string,  (string, int, string, string)>();
-
-        private readonly ConcurrentDictionary<string, string> FileIdToEpisodeIdDictionary = new ConcurrentDictionary<string, string>();
-
-        public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ShokoAPIClient apiClient, ILibraryManager libraryManager)
-        {
-            Logger = logger;
-            APIClient = apiClient;
-            LibraryManager = libraryManager;
+    public Folder FindMediaFolder(string path)
+    {
+        Folder? mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
+        if (mediaFolder == null) {
+            var parent = (Folder?)LibraryManager.FindByPath(Path.GetDirectoryName(path), true);
+            if (parent == null)
+                throw new Exception($"Unable to find parent of \"{path}\"");
+            mediaFolder = FindMediaFolder(path, parent, LibraryManager.RootFolder);
         }
+        return mediaFolder;
+    }
 
-        private static IMemoryCache DataCache = new MemoryCache(new MemoryCacheOptions() {
-            ExpirationScanFrequency = ExpirationScanFrequency,
-        });
-
-        private static readonly System.TimeSpan ExpirationScanFrequency = new System.TimeSpan(0, 25, 0);
-
-        private static readonly System.TimeSpan DefaultTimeSpan = new System.TimeSpan(1, 0, 0);
-
-        #region Ignore rule
-
-        public Folder FindMediaFolder(string path, Folder parent, Folder root)
-        {
-            var mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
-            // Look for the root folder for the current item.
-            if (mediaFolder != null) {
-                return mediaFolder;
-            }
-            mediaFolder = parent;
-            while (!mediaFolder.ParentId.Equals(root.Id)) {
-                if (mediaFolder.GetParent() == null) {
-                    break;
-                }
-                mediaFolder = (Folder)mediaFolder.GetParent();
-            }
-            MediaFolderList.Add(mediaFolder);
+    public Folder FindMediaFolder(string path, Folder parent, Folder root)
+    {
+        var mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
+        // Look for the root folder for the current item.
+        if (mediaFolder != null) {
             return mediaFolder;
         }
+        mediaFolder = parent;
+        while (!mediaFolder.ParentId.Equals(root.Id)) {
+            if (mediaFolder.GetParent() == null) {
+                break;
+            }
+            mediaFolder = (Folder)mediaFolder.GetParent();
+        }
+        MediaFolderList.Add(mediaFolder);
+        return mediaFolder;
+    }
 
-        public string StripMediaFolder(string fullPath)
-        {
-            var mediaFolder = MediaFolderList.FirstOrDefault((folder) => fullPath.StartsWith(folder.Path + Path.DirectorySeparatorChar));
-            if (mediaFolder != null) {
-                return fullPath.Substring(mediaFolder.Path.Length);
-            }
-            // Try to get the media folder by loading the parent and navigating upwards till we reach the root.
-            var directoryPath = System.IO.Path.GetDirectoryName(fullPath);
-            if (string.IsNullOrEmpty(directoryPath)) {
-                return fullPath;
-            }
-            mediaFolder = (LibraryManager.FindByPath(directoryPath, true) as Folder);
-            if (mediaFolder == null || string.IsNullOrEmpty(mediaFolder?.Path)) {
-                return fullPath;
-            }
-            // Look for the root folder for the current item.
-            var root = LibraryManager.RootFolder;
-            while (!mediaFolder.ParentId.Equals(root.Id)) {
-                if (mediaFolder.GetParent() == null) {
-                    break;
-                }
-                mediaFolder = (Folder)mediaFolder.GetParent();
-            }
-            MediaFolderList.Add(mediaFolder);
+    public string StripMediaFolder(string fullPath)
+    {
+        var mediaFolder = MediaFolderList.FirstOrDefault((folder) => fullPath.StartsWith(folder.Path + Path.DirectorySeparatorChar));
+        if (mediaFolder != null) {
             return fullPath.Substring(mediaFolder.Path.Length);
         }
-
-        #endregion
-        #region Clear
-
-        public void Clear()
-        {
-            Logger.LogDebug("Clearing data.");
-            DataCache.Dispose();
-            MediaFolderList.Clear();
-            FileIdToEpisodeIdDictionary.Clear();
-            FilePathToFileIdAndEpisodeCountDictionary.Clear();
-            EpisodeIdToSeriesIdDictionary.Clear();
-            EpisodePathToEpisodeIdDictionary.Clear();
-            EpisodeIdToEpisodePathDictionary.Clear();
-            SeriesPathToIdDictionary.Clear();
-            SeriesIdToPathDictionary.Clear();
-            SeriesIdToGroupIdDictionary.Clear();
-            DataCache = (new MemoryCache((new MemoryCacheOptions() {
-                ExpirationScanFrequency = ExpirationScanFrequency,
-            })));
+        // Try to get the media folder by loading the parent and navigating upwards till we reach the root.
+        var directoryPath = System.IO.Path.GetDirectoryName(fullPath);
+        if (string.IsNullOrEmpty(directoryPath)) {
+            return fullPath;
         }
-
-        #endregion
-        #region People
-
-        private string GetImagePath(Image image)
-        {
-            return image != null && image.IsAvailable ? image.ToURLString() : null;
+        mediaFolder = (LibraryManager.FindByPath(directoryPath, true) as Folder);
+        if (mediaFolder == null || string.IsNullOrEmpty(mediaFolder?.Path)) {
+            return fullPath;
         }
-
-        private PersonInfo RoleToPersonInfo(Role role)
-        {
-            switch (role.RoleName) {
-                    default:
-                        return null;
-                    case Role.CreatorRoleType.Director:
-                        return new PersonInfo {
-                            Type = PersonType.Director,
-                            Name = role.Staff.Name,
-                            Role = role.RoleDetails,
-                            ImageUrl = GetImagePath(role.Staff.Image),
-                        };
-                    case Role.CreatorRoleType.Producer:
-                        return new PersonInfo {
-                            Type = PersonType.Producer,
-                            Name = role.Staff.Name,
-                            Role = role.RoleDetails,
-                            ImageUrl = GetImagePath(role.Staff.Image),
-                        };
-                    case Role.CreatorRoleType.Music:
-                        return new PersonInfo {
-                            Type = PersonType.Lyricist,
-                            Name = role.Staff.Name,
-                            Role = role.RoleDetails,
-                            ImageUrl = GetImagePath(role.Staff.Image),
-                        };
-                    case Role.CreatorRoleType.SourceWork:
-                        return new PersonInfo {
-                            Type = PersonType.Writer,
-                            Name = role.Staff.Name,
-                            Role = role.RoleDetails,
-                            ImageUrl = GetImagePath(role.Staff.Image),
-                        };
-                    case Role.CreatorRoleType.SeriesComposer:
-                        return new PersonInfo {
-                            Type = PersonType.Composer,
-                            Name = role.Staff.Name,
-                            ImageUrl = GetImagePath(role.Staff.Image),
-                        };
-                    case Role.CreatorRoleType.Seiyuu:
-                        return new PersonInfo {
-                            Type = PersonType.Actor,
-                            Name = role.Staff.Name,
-                            Role = role.Character.Name,
-                            ImageUrl = GetImagePath(role.Staff.Image),
-                        };
-                }
-        }
-
-        #endregion
-        #region Tags
-
-        private async Task<string[]> GetTags(string seriesId)
-        {
-            return (await APIClient.GetSeriesTags(seriesId, GetTagFilter()))?.Select(SelectTagName).ToArray() ?? new string[0];
-        }
-
-        /// <summary>
-        /// Get the tag filter
-        /// </summary>
-        /// <returns></returns>
-        private ulong GetTagFilter()
-        {
-            var config = Plugin.Instance.Configuration;
-            ulong filter = 132L; // We exclude genres and source by default
-
-            if (config.HideAniDbTags) filter |= (1 << 0);
-            if (config.HideArtStyleTags) filter |= (1 << 1);
-            if (config.HideMiscTags) filter |= (1 << 3);
-            if (config.HidePlotTags) filter |= (1 << 4);
-            if (config.HideSettingTags) filter |= (1 << 5);
-            if (config.HideProgrammingTags) filter |= (1 << 6);
-
-            return filter;
-        }
-
-        #endregion
-        #region Genres
-
-        public async Task<string[]> GetGenresForSeries(string seriesId)
-        {
-            // The following magic number is the filter value to allow only genres in the returned list.
-            var set = (await APIClient.GetSeriesTags(seriesId, 2147483776))?.Select(SelectTagName).ToHashSet() ?? new();
-            set.Add(await GetSourceGenre(seriesId));
-            return set.ToArray();
-        }
-
-        private async Task<string> GetSourceGenre(string seriesId)
-        {
-            return(await APIClient.GetSeriesTags(seriesId, 2147483652))?.FirstOrDefault()?.Name?.ToLowerInvariant() switch {
-                "american derived" => "Adapted From Western Media",
-                "cartoon" => "Adapted From Western Media",
-                "comic book" => "Adapted From Western Media",
-                "4-koma" => "Adapted From A Manga",
-                "manga" => "Adapted From A Manga",
-                "4-koma manga" => "Adapted From A Manga",
-                "manhua" => "Adapted From A Manhua",
-                "manhwa" => "Adapted from a Manhwa",
-                "movie" => "Adapted From A Movie",
-                "novel" => "Adapted From A Light/Web Novel",
-                "rpg" => "Adapted From A Video Game",
-                "action game" => "Adapted From A Video Game",
-                "game" => "Adapted From A Video Game",
-                "erotic game" => "Adapted From An Eroge",
-                "korean drama" => "Adapted From A Korean Drama",
-                "television programme" => "Adapted From A Live-Action Show",
-                "visual novel" => "Adapted From A Visual Novel",
-                "fan-made" => "Fan-Made",
-                "remake" => "Remake",
-                "radio programme" => "Original Work",
-                "biographical film" => "Original Work",
-                "original work" => "Original Work",
-                "new" => "Original Work",
-                "ultra jump" => "Original Work",
-                _ => "Original Work",
-            };
-        }
-
-        private string SelectTagName(Tag tag)
-        {
-            return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(tag.Name);
-        }
-
-        #endregion
-        #region Studios
-
-        public async Task<string[]> GetStudiosForSeries(string seriesId)
-        {
-            var cast = await APIClient.GetSeriesCast(seriesId, Role.CreatorRoleType.Studio);
-            // * NOTE: Shoko Server version <4.1.2 don't support filtered cast, nor other role types besides Role.CreatorRoleType.Seiyuu.
-            if (cast.Any(p => p.RoleName != Role.CreatorRoleType.Studio))
-                return new string[0];
-            return cast.Select(p => p.Staff.Name).ToArray();
-        }
-
-        #endregion
-        #region File Info
-
-        public (FileInfo, EpisodeInfo, SeriesInfo, GroupInfo) GetFileInfoByPathSync(string path, Ordering.GroupFilterType? filterGroupByType)
-        {
-            if (FilePathToFileIdAndEpisodeCountDictionary.ContainsKey(path)) {
-                var (fileId, extraEpisodesCount, episodeId, seriesId) = FilePathToFileIdAndEpisodeCountDictionary[path];
-                return (GetFileInfoSync(fileId, extraEpisodesCount), GetEpisodeInfoSync(episodeId), GetSeriesInfoSync(seriesId), filterGroupByType.HasValue ? GetGroupInfoForSeriesSync(seriesId, filterGroupByType.Value) : null);
+        // Look for the root folder for the current item.
+        var root = LibraryManager.RootFolder;
+        while (!mediaFolder.ParentId.Equals(root.Id)) {
+            if (mediaFolder.GetParent() == null) {
+                break;
             }
+            mediaFolder = (Folder)mediaFolder.GetParent();
+        }
+        MediaFolderList.Add(mediaFolder);
+        return fullPath.Substring(mediaFolder.Path.Length);
+    }
 
-            return GetFileInfoByPath(path, filterGroupByType).GetAwaiter().GetResult();
+    public bool IsInMixedLibrary(ItemLookupInfo info)
+    {
+        var mediaFolder = FindMediaFolder(info.Path);
+        var type = LibraryManager.GetInheritedContentType(mediaFolder);
+        return !string.IsNullOrEmpty(type) && type == "mixed";
+    }
+
+    #endregion
+    #region Clear
+
+    public void Clear()
+    {
+        Logger.LogDebug("Clearing data.");
+        DataCache.Dispose();
+        MediaFolderList.Clear();
+        FileIdToEpisodeIdDictionary.Clear();
+        PathToFileIdAndSeriesIdDictionary.Clear();
+        EpisodeIdToSeriesIdDictionary.Clear();
+        PathToEpisodeIdsDictionary.Clear();
+        EpisodeIdToEpisodePathDictionary.Clear();
+        PathToSeriesIdDictionary.Clear();
+        SeriesIdToPathDictionary.Clear();
+        SeriesIdToGroupIdDictionary.Clear();
+        DataCache = (new MemoryCache((new MemoryCacheOptions() {
+            ExpirationScanFrequency = ExpirationScanFrequency,
+        })));
+    }
+
+    #endregion
+    #region Tags And Genres
+
+    private async Task<string[]> GetTagsForSeries(string seriesId)
+    {
+        return (await APIClient.GetSeriesTags(seriesId, GetTagFilter()))?.Select(SelectTagName).ToArray() ?? new string[0];
+    }
+
+    /// <summary>
+    /// Get the tag filter
+    /// </summary>
+    /// <returns></returns>
+    private ulong GetTagFilter()
+    {
+        var config = Plugin.Instance.Configuration;
+        ulong filter = 132L; // We exclude genres and source by default
+
+        if (config.HideAniDbTags) filter |= (1 << 0);
+        if (config.HideArtStyleTags) filter |= (1 << 1);
+        if (config.HideMiscTags) filter |= (1 << 3);
+        if (config.HidePlotTags) filter |= (1 << 4);
+        if (config.HideSettingTags) filter |= (1 << 5);
+        if (config.HideProgrammingTags) filter |= (1 << 6);
+
+        return filter;
+    }
+
+    public async Task<string[]> GetGenresForSeries(string seriesId)
+    {
+        // The following magic number is the filter value to allow only genres in the returned list.
+        var genreSet = (await APIClient.GetSeriesTags(seriesId, 2147483776))?.Select(SelectTagName).ToHashSet() ?? new();
+        var sourceGenre = await GetSourceGenre(seriesId);
+        genreSet.Add(sourceGenre);
+        return genreSet.ToArray();
+    }
+
+    private async Task<string> GetSourceGenre(string seriesId)
+    {
+        // The following magic number is the filter value to allow only the source type in the returned list.
+        return(await APIClient.GetSeriesTags(seriesId, 2147483652))?.FirstOrDefault()?.Name?.ToLowerInvariant() switch {
+            "american derived" => "Adapted From Western Media",
+            "cartoon" => "Adapted From Western Media",
+            "comic book" => "Adapted From Western Media",
+            "4-koma" => "Adapted From A Manga",
+            "manga" => "Adapted From A Manga",
+            "4-koma manga" => "Adapted From A Manga",
+            "manhua" => "Adapted From A Manhua",
+            "manhwa" => "Adapted from a Manhwa",
+            "movie" => "Adapted From A Movie",
+            "novel" => "Adapted From A Light/Web Novel",
+            "rpg" => "Adapted From A Video Game",
+            "action game" => "Adapted From A Video Game",
+            "game" => "Adapted From A Video Game",
+            "erotic game" => "Adapted From An Eroge",
+            "korean drama" => "Adapted From A Korean Drama",
+            "television programme" => "Adapted From A Live-Action Show",
+            "visual novel" => "Adapted From A Visual Novel",
+            "fan-made" => "Fan-Made",
+            "remake" => "Remake",
+            "radio programme" => "Radio Programme",
+            "biographical film" => "Original Work",
+            "original work" => "Original Work",
+            "new" => "Original Work",
+            "ultra jump" => "Original Work",
+            _ => "Original Work",
+        };
+    }
+
+    private string SelectTagName(Tag tag)
+    {
+        return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(tag.Name);
+    }
+
+    #endregion
+    #region Path Set And Local Episode IDs
+
+    public async Task<HashSet<string>> GetPathSetForSeries(string seriesId)
+    {
+        var (pathSet, _episodeIds) = await GetPathSetAndLocalEpisodeIdsForSeries(seriesId);
+        return pathSet;
+    }
+
+    public HashSet<string> GetLocalEpisodeIdsForSeries(string seriesId)
+    {
+        var (_pathSet, episodeIds) = GetPathSetAndLocalEpisodeIdsForSeries(seriesId)
+            .GetAwaiter()
+            .GetResult();
+        return episodeIds;
+    }
+
+    // Set up both at the same time.
+    private async Task<(HashSet<string>, HashSet<string>)> GetPathSetAndLocalEpisodeIdsForSeries(string seriesId)
+    {
+        var key =$"series-path-set-and-episode-ids:${seriesId}";
+        if (DataCache.TryGetValue<(HashSet<string>, HashSet<string>)>(key, out var cached))
+            return cached;
+        var pathSet = new HashSet<string>();
+        var episodeIds = new HashSet<string>();
+        foreach (var file in await APIClient.GetFilesForSeries(seriesId)) {
+            if (file.CrossReferences.Count == 1)
+                foreach (var fileLocation in file.Locations)
+                    pathSet.Add((Path.GetDirectoryName(fileLocation.Path) ?? "") + "/");
+            var xref = file.CrossReferences.First(xref => xref.Series.Shoko.ToString() == seriesId);
+            foreach (var episodeXRef in xref.Episodes)
+                episodeIds.Add(episodeXRef.Shoko.ToString());
+        }
+        DataCache.Set(key, (pathSet, episodeIds), DefaultTimeSpan);
+        return (pathSet, episodeIds);
+    }
+
+    #endregion
+    #region File Info
+
+    public async Task<(FileInfo?, SeriesInfo?, GroupInfo?)> GetFileInfoByPath(string path, Ordering.GroupFilterType? filterGroupByType)
+    {
+        // Use pointer for fast lookup.
+        if (PathToFileIdAndSeriesIdDictionary.ContainsKey(path)) {
+            var (fI, sI) = PathToFileIdAndSeriesIdDictionary[path];
+            var fileInfo = await GetFileInfo(fI, sI);
+            var seriesInfo = await GetSeriesInfo(sI);
+            var groupInfo = filterGroupByType.HasValue ? await GetGroupInfoForSeries(sI, filterGroupByType.Value) : null;
+            return new(fileInfo, seriesInfo, groupInfo);
         }
 
-        public async Task<(FileInfo, EpisodeInfo, SeriesInfo, GroupInfo)> GetFileInfoByPath(string path, Ordering.GroupFilterType? filterGroupByType)
-        {
-            if (FilePathToFileIdAndEpisodeCountDictionary.ContainsKey(path)) {
-                var (fI, eC, eI, sI) = FilePathToFileIdAndEpisodeCountDictionary[path];
-                return (GetFileInfoSync(fI, eC), GetEpisodeInfoSync(eI), GetSeriesInfoSync(sI), filterGroupByType.HasValue ? GetGroupInfoForSeriesSync(sI, filterGroupByType.Value) : null);
-            }
+        // Strip the path and search for a match.
+        var partialPath = StripMediaFolder(path);
+        Logger.LogDebug("Looking for file matching {Path}", partialPath);
+        var result = await APIClient.GetFileByPath(partialPath);
+        Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
 
-            var partialPath = StripMediaFolder(path);
-            Logger.LogDebug("Looking for file matching {Path}", partialPath);
-            var result = await APIClient.GetFileByPath(partialPath);
-            Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
+        // Check if we found a match.
+        var file = result?.FirstOrDefault();
+        if (file == null || file.CrossReferences.Count == 0)
+            return (null, null, null);
 
-            var file = result?.FirstOrDefault();
-            if (file == null)
-                return (null, null, null, null);
+        // Find the file locations matching the given path.
+        var fileId = file.Id.ToString();
+        var fileLocations = file.Locations
+            .Where(location => location.Path.EndsWith(partialPath))
+            .ToList();
+        if (fileLocations.Count != 1) {
+            if (fileLocations.Count == 0)
+                throw new Exception($"I have no idea how this happened, but the path gave a file that doesn't have a mataching file location. See you in #support. (File={fileId})");
 
-            var series = file?.SeriesIDs?.FirstOrDefault();
-            var seriesId = series?.SeriesID.ID.ToString();
-            var episodes = series?.EpisodeIDs?.FirstOrDefault();
-            var episodeId = episodes?.ID.ToString();
-            if (string.IsNullOrEmpty(seriesId) || string.IsNullOrEmpty(episodeId))
-                return (null, null, null, null);
+            Logger.LogWarning("Multiple locations matched the path, picking the first location. (File={FileId})", fileId);
+        }
 
-            GroupInfo groupInfo = null;
+        // Find the correct series based on the path.
+        var selectedPath = (Path.GetDirectoryName(fileLocations.First().Path) ?? "") + "/";
+        foreach (var seriesXRef in file.CrossReferences) {
+            var seriesId = seriesXRef.Series.Shoko.ToString();
+
+            // Check if the file is in the series folder.
+            var pathSet = await GetPathSetForSeries(seriesId);
+            if (!pathSet.Contains(selectedPath))
+                continue;
+
+            // Find the group info.
+            GroupInfo? groupInfo = null;
             if (filterGroupByType.HasValue) {
                 groupInfo =  await GetGroupInfoForSeries(seriesId, filterGroupByType.Value);
                 if (groupInfo == null)
-                    return (null, null, null, null);
+                    return (null, null, null);
             }
 
+            // Find the series info.
             var seriesInfo = await GetSeriesInfo(seriesId);
             if (seriesInfo == null)
-                return (null, null, null, null);
+                return (null, null, null);
 
-            var episodeInfo = await GetEpisodeInfo(episodeId);
-            if (episodeInfo == null)
-                return (null, null, null, null);
-
-            var fileId = file.ID.ToString();
-            var episodeCount = series?.EpisodeIDs?.Count ?? 0;
-            var fileInfo = CreateFileInfo(file, fileId, episodeCount);
+            // Find the file info for the series.
+            var fileInfo = await CreateFileInfo(file, fileId, seriesId);
 
             // Add pointers for faster lookup.
-            EpisodePathToEpisodeIdDictionary.TryAdd(path, episodeId);
-            EpisodeIdToEpisodePathDictionary.TryAdd(episodeId, path);
-            FilePathToFileIdAndEpisodeCountDictionary.TryAdd(path, (fileId, episodeCount, episodeId, seriesId));
-            return (fileInfo, episodeInfo, seriesInfo, groupInfo);
+            foreach (var episodeInfo in fileInfo.EpisodeList)
+                EpisodeIdToEpisodePathDictionary.TryAdd(episodeInfo.Id, path);
+
+            // Add pointers for faster lookup.
+            PathToFileIdAndSeriesIdDictionary.TryAdd(path, (fileId, seriesId));
+            PathToEpisodeIdsDictionary.TryAdd(path, fileInfo.EpisodeList.Select(episode => episode.Id).ToList());
+
+            // Return the result.
+            return new(fileInfo, seriesInfo, groupInfo);
         }
 
-        public FileInfo GetFileInfoSync(string fileId, int episodeCount = 0)
-        {
-            if (string.IsNullOrEmpty(fileId))
-                return null;
+        throw new Exception("Unable to find the series to use for the file.");
+    }
 
-            var cacheKey = $"file:{fileId}:{episodeCount}";
-            FileInfo info = null;
-            if (DataCache.TryGetValue<FileInfo>(cacheKey, out info))
-                return info;
+    public async Task<FileInfo?> GetFileInfo(string fileId, string seriesId)
+    {
+        if (string.IsNullOrEmpty(fileId) || string.IsNullOrEmpty(seriesId))
+            return null;
 
-            var file = APIClient.GetFile(fileId).GetAwaiter().GetResult();
-            return CreateFileInfo(file, fileId, episodeCount);
-        }
-
-        public async Task<FileInfo> GetFileInfo(string fileId, int episodeCount = 0)
-        {
-            if (string.IsNullOrEmpty(fileId))
-                return null;
-
-            var cacheKey = $"file:{fileId}:{episodeCount}";
-            FileInfo info = null;
-            if (DataCache.TryGetValue<FileInfo>(cacheKey, out info))
-                return info;
-
-            var file = await APIClient.GetFile(fileId);
-            return CreateFileInfo(file, fileId, episodeCount);
-        }
-
-        private FileInfo CreateFileInfo(File file, string fileId = null, int episodeCount = 0)
-        {
-            if (file == null)
-                return null;
-
-            if (string.IsNullOrEmpty(fileId))
-                fileId = file.ID.ToString();
-
-            var cacheKey = $"file:{fileId}:{episodeCount}";
-            FileInfo info = null;
-            if (DataCache.TryGetValue<FileInfo>(cacheKey, out info))
-                return info;
-
-            Logger.LogTrace("Creating info object for file. (File={FileId})", fileId);
-            info = new FileInfo
-            {
-                Id = fileId,
-                Shoko = file,
-                ExtraEpisodesCount = episodeCount - 1,
-            };
-            DataCache.Set<FileInfo>(cacheKey, info, DefaultTimeSpan);
+        var cacheKey = $"file:{fileId}:{seriesId}";
+        FileInfo? info = null;
+        if (DataCache.TryGetValue<FileInfo>(cacheKey, out info))
             return info;
+
+        var file = await APIClient.GetFile(fileId);
+        return await CreateFileInfo(file, fileId, seriesId);
+    }
+
+    private async Task<FileInfo> CreateFileInfo(File file, string fileId, string seriesId)
+    {
+        var cacheKey = $"file:{fileId}:{seriesId}";
+        FileInfo? info = null;
+        if (DataCache.TryGetValue<FileInfo>(cacheKey, out info))
+            return info;
+
+        var seriesXRef = file.CrossReferences.FirstOrDefault(xref => xref.Series.Shoko.ToString() == seriesId);
+        if (seriesXRef == null)
+            throw new Exception($"Unable to find any cross-references for the spesified series for the file. (File={fileId},Series={seriesId})");
+
+        // Find a list of the episode info for each episode linked to the file for the series.
+        var episodeList = new List<EpisodeInfo>();
+        foreach (var episodeXRef in seriesXRef.Episodes) {
+            var episodeId = episodeXRef.Shoko.ToString();
+            var episodeInfo = await GetEpisodeInfo(episodeId);
+            if (episodeInfo == null)
+                throw new Exception($"Unable to find episode cross-reference for the spesified series and episode for the file. (File={fileId},Episode={episodeId},Series={seriesId})");
+            episodeList.Add(episodeInfo);
         }
 
-        public bool TryGetFileIdForPath(string path, out string fileId, out int episodeCount)
-        {
-            if (!string.IsNullOrEmpty(path) && FilePathToFileIdAndEpisodeCountDictionary.TryGetValue(path, out var pair)) {
-                fileId = pair.Item1;
-                episodeCount = pair.Item2;
-                return true;
-            }
+        // Order the episodes.
+        episodeList = episodeList
+            .OrderBy(episode => episode.AniDB.Type)
+            .ThenBy(episode => episode.AniDB.EpisodeNumber)
+            .ToList();
 
-            fileId = null;
-            episodeCount = 0;
+        Logger.LogTrace("Creating info object for file. (File={FileId},Series={SeriesId})", fileId, seriesId);
+        info = new FileInfo(file, episodeList, seriesId);
+        DataCache.Set<FileInfo>(cacheKey, info, DefaultTimeSpan);
+        FileIdToEpisodeIdDictionary.TryAdd(fileId, episodeList.Select(episode => episode.Id).ToList());
+        return info;
+    }
+
+    public bool TryGetFileIdForPath(string path, out string? fileId)
+    {
+        if (!string.IsNullOrEmpty(path) && PathToFileIdAndSeriesIdDictionary.TryGetValue(path, out var pair)) {
+            fileId = pair.Item1;
+            return true;
+        }
+
+        fileId = null;
+        return false;
+    }
+
+    #endregion
+    #region Episode Info
+
+    public async Task<EpisodeInfo?> GetEpisodeInfo(string episodeId)
+    {
+        if (string.IsNullOrEmpty(episodeId))
+            return null;
+        if (DataCache.TryGetValue<EpisodeInfo>($"episode:{episodeId}", out var info))
+            return info;
+        var episode = await APIClient.GetEpisode(episodeId);
+        return CreateEpisodeInfo(episode, episodeId);
+    }
+
+    private EpisodeInfo CreateEpisodeInfo(Episode episode, string episodeId)
+    {
+        if (string.IsNullOrEmpty(episodeId))
+            episodeId = episode.IDs.Shoko.ToString();
+        var cacheKey = $"episode:{episodeId}";
+        EpisodeInfo? info = null;
+        if (DataCache.TryGetValue<EpisodeInfo>(cacheKey, out info))
+            return info;
+        Logger.LogTrace("Creating info object for episode {EpisodeName}. (Episode={EpisodeId})", episode.Name, episodeId);
+        info = new EpisodeInfo(episode);
+        DataCache.Set<EpisodeInfo>(cacheKey, info, DefaultTimeSpan);
+        return info;
+    }
+
+    public bool TryGetEpisodeIdForPath(string path, out string? episodeId)
+    {
+        if (string.IsNullOrEmpty(path)) {
+            episodeId = null;
             return false;
         }
+        var result = PathToEpisodeIdsDictionary.TryGetValue(path, out var episodeIds);
+        episodeId = episodeIds?.FirstOrDefault();
+        return result;
+    }
 
-        #endregion
-        #region Episode Info
+    public bool TryGetEpisodeIdsForPath(string path, out List<string>? episodeIds)
+    {
+        if (string.IsNullOrEmpty(path)) {
+            episodeIds = null;
+            return false;
+        }
+        return PathToEpisodeIdsDictionary.TryGetValue(path, out episodeIds);
+    }
 
-        public EpisodeInfo GetEpisodeInfoSync(string episodeId)
+    public bool TryGetEpisodeIdsForFileId(string fileId, out List<string>? episodeIds)
+    {
+        if (string.IsNullOrEmpty(fileId)) {
+            episodeIds = null;
+            return false;
+        }
+        return FileIdToEpisodeIdDictionary.TryGetValue(fileId, out episodeIds);
+    }
+
+    public bool TryGetEpisodePathForId(string episodeId, out string? path)
+    {
+        if (string.IsNullOrEmpty(episodeId)) {
+            path = null;
+            return false;
+        }
+        return EpisodeIdToEpisodePathDictionary.TryGetValue(episodeId, out path);
+    }
+
+    public bool TryGetSeriesIdForEpisodeId(string episodeId, out string? seriesId)
+    {
+        return EpisodeIdToSeriesIdDictionary.TryGetValue(episodeId, out seriesId);
+    }
+
+    #endregion
+    #region Series Info
+
+    public async Task<SeriesInfo?> GetSeriesInfoByPath(string path)
+    {
+        var partialPath = StripMediaFolder(path);
+        Logger.LogDebug("Looking for series matching {Path}", partialPath);
+        string? seriesId;
+        if (!PathToSeriesIdDictionary.TryGetValue(path, out seriesId))
         {
-            if (string.IsNullOrEmpty(episodeId))
+            var result = await APIClient.GetSeriesPathEndsWith(partialPath);
+            Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
+            seriesId = result?.FirstOrDefault()?.IDs?.Shoko.ToString();
+
+            if (string.IsNullOrEmpty(seriesId))
                 return null;
-            if (DataCache.TryGetValue<EpisodeInfo>($"episode:{episodeId}", out var info))
-                return info;
-            return GetEpisodeInfo(episodeId).GetAwaiter().GetResult();
+
+            PathToSeriesIdDictionary[path] = seriesId;
+            SeriesIdToPathDictionary.TryAdd(seriesId, path);
         }
 
-        public async Task<EpisodeInfo> GetEpisodeInfo(string episodeId)
-        {
-            if (string.IsNullOrEmpty(episodeId))
-                return null;
-            if (DataCache.TryGetValue<EpisodeInfo>($"episode:{episodeId}", out var info))
-                return info;
-            var episode = await APIClient.GetEpisode(episodeId);
-            return await CreateEpisodeInfo(episode, episodeId);
-        }
-
-        private async Task<EpisodeInfo> CreateEpisodeInfo(Episode episode, string episodeId = null)
-        {
-            if (episode == null)
-                return null;
-            if (string.IsNullOrEmpty(episodeId))
-                episodeId = episode.IDs.ID.ToString();
-            var cacheKey = $"episode:{episodeId}";
-            EpisodeInfo info = null;
-            if (DataCache.TryGetValue<EpisodeInfo>(cacheKey, out info))
-                return info;
-            Logger.LogTrace("Creating info object for episode {EpisodeName}. (Episode={EpisodeId})", episode.Name, episodeId);
-            var aniDB = (await APIClient.GetEpisodeAniDb(episodeId));
-            info = new EpisodeInfo
-            {
-                Id = episodeId,
-                ExtraType = Ordering.GetExtraType(aniDB),
-                Shoko = episode,
-                AniDB = aniDB,
-                TvDB = ((await APIClient.GetEpisodeTvDb(episodeId))?.FirstOrDefault()),
-            };
-            DataCache.Set<EpisodeInfo>(cacheKey, info, DefaultTimeSpan);
+        if (DataCache.TryGetValue<SeriesInfo>( $"series:{seriesId}", out var info))
             return info;
+
+        var series = await APIClient.GetSeries(seriesId);
+        return await CreateSeriesInfo(series, seriesId);
+    }
+
+    public async Task<SeriesInfo?> GetSeriesInfo(string seriesId)
+    {
+        if (string.IsNullOrEmpty(seriesId))
+            return null;
+        if (DataCache.TryGetValue<SeriesInfo>( $"series:{seriesId}", out var info))
+            return info;
+        var series = await APIClient.GetSeries(seriesId);
+        return await CreateSeriesInfo(series, seriesId);
+    }
+
+    public async Task<SeriesInfo?> GetSeriesInfoForEpisode(string episodeId)
+    {
+        string seriesId;
+        if (EpisodeIdToSeriesIdDictionary.ContainsKey(episodeId)) {
+            seriesId = EpisodeIdToSeriesIdDictionary[episodeId];
         }
-
-        public bool TryGetEpisodeIdForPath(string path, out string episodeId)
-        {
-            if (string.IsNullOrEmpty(path)) {
-                episodeId = null;
-                return false;
-            }
-            return EpisodePathToEpisodeIdDictionary.TryGetValue(path, out episodeId);
-        }
-
-        public bool TryGetEpisodePathForId(string episodeId, out string path)
-        {
-            if (string.IsNullOrEmpty(episodeId)) {
-                path = null;
-                return false;
-            }
-            return EpisodeIdToEpisodePathDictionary.TryGetValue(episodeId, out path);
-        }
-
-        public bool TryGetSeriesIdForEpisodeId(string episodeId, out string seriesId)
-        {
-            return EpisodeIdToSeriesIdDictionary.TryGetValue(episodeId, out seriesId);
-        }
-
-        #endregion
-        #region Series Info
-
-        public SeriesInfo GetSeriesInfoByPathSync(string path)
-        {
-            if (SeriesPathToIdDictionary.ContainsKey(path))
-            {
-                var seriesId = SeriesPathToIdDictionary[path];
-                if (DataCache.TryGetValue<SeriesInfo>( $"series:{seriesId}", out var info))
-                    return info;
-                return GetSeriesInfo(seriesId).GetAwaiter().GetResult();
-            }
-            return GetSeriesInfoByPath(path).GetAwaiter().GetResult();
-        }
-
-        public async Task<SeriesInfo> GetSeriesInfoByPath(string path)
-        {
-            var partialPath = StripMediaFolder(path);
-            Logger.LogDebug("Looking for series matching {Path}", partialPath);
-            string seriesId;
-            if (!SeriesPathToIdDictionary.TryGetValue(path, out seriesId))
-            {
-                var result = await APIClient.GetSeriesPathEndsWith(partialPath);
-                Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
-                seriesId = result?.FirstOrDefault()?.IDs?.ID.ToString();
-
-                if (string.IsNullOrEmpty(seriesId))
-                    return null;
-
-                SeriesPathToIdDictionary[path] = seriesId;
-                SeriesIdToPathDictionary.TryAdd(seriesId, path);
-            }
-
-            if (DataCache.TryGetValue<SeriesInfo>( $"series:{seriesId}", out var info))
-                return info;
-
-            var series = await APIClient.GetSeries(seriesId);
-            return await CreateSeriesInfo(series, seriesId);
-        }
-
-        public async Task<SeriesInfo> GetSeriesInfoFromGroup(string groupId, int seasonNumber, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
-        {
-            var groupInfo = await GetGroupInfo(groupId, filterByType);
-            if (groupInfo == null)
-                return null;
-            return groupInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
-        }
-        public SeriesInfo GetSeriesInfoSync(string seriesId)
-        {
-            if (string.IsNullOrEmpty(seriesId))
-                return null;
-            if (DataCache.TryGetValue<SeriesInfo>( $"series:{seriesId}", out var info))
-                return info;
-            var series = APIClient.GetSeries(seriesId).GetAwaiter().GetResult();
-            return CreateSeriesInfo(series, seriesId).GetAwaiter().GetResult();
-        }
-
-        public async Task<SeriesInfo> GetSeriesInfo(string seriesId)
-        {
-            if (string.IsNullOrEmpty(seriesId))
-                return null;
-            if (DataCache.TryGetValue<SeriesInfo>( $"series:{seriesId}", out var info))
-                return info;
-            var series = await APIClient.GetSeries(seriesId);
-            return await CreateSeriesInfo(series, seriesId);
-        }
-
-        public SeriesInfo GetSeriesInfoForEpisodeSync(string episodeId)
-        {
-            if (EpisodeIdToSeriesIdDictionary.ContainsKey(episodeId)) {
-                var seriesId = EpisodeIdToSeriesIdDictionary[episodeId];
-                if (DataCache.TryGetValue<SeriesInfo>($"series:{seriesId}", out var info))
-                    return info;
-
-                return GetSeriesInfo(seriesId).GetAwaiter().GetResult();
-            }
-
-            return GetSeriesInfoForEpisode(episodeId).GetAwaiter().GetResult();
-        }
-
-        public async Task<SeriesInfo> GetSeriesInfoForEpisode(string episodeId)
-        {
-            string seriesId;
-            if (EpisodeIdToSeriesIdDictionary.ContainsKey(episodeId)) {
-                seriesId = EpisodeIdToSeriesIdDictionary[episodeId];
-            }
-            else {
-                var series = await APIClient.GetSeriesFromEpisode(episodeId);
-                if (series == null)
-                    return null;
-                seriesId = series.IDs.ID.ToString();
-            }
-
-            return await GetSeriesInfo(seriesId);
-        }
-
-        public bool TryGetSeriesIdForPath(string path, out string seriesId)
-        {
-            if (string.IsNullOrEmpty(path)) {
-                seriesId = null;
-                return false;
-            }
-            return SeriesPathToIdDictionary.TryGetValue(path, out seriesId);
-        }
-
-        public bool TryGetSeriesPathForId(string seriesId, out string path)
-        {
-            if (string.IsNullOrEmpty(seriesId)) {
-                path = null;
-                return false;
-            }
-            return SeriesIdToPathDictionary.TryGetValue(seriesId, out path);
-        }
-
-        public bool TryGetGroupIdForSeriesId(string seriesId, out string groupId)
-        {
-            return SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out groupId);
-        }
-
-        private async Task<SeriesInfo> CreateSeriesInfo(Series series, string seriesId = null)
-        {
+        else {
+            var series = await APIClient.GetSeriesFromEpisode(episodeId);
             if (series == null)
                 return null;
+            seriesId = series.IDs.Shoko.ToString();
+        }
 
-            if (string.IsNullOrEmpty(seriesId))
-                seriesId = series.IDs.ID.ToString();
+        return await GetSeriesInfo(seriesId);
+    }
 
-            SeriesInfo info = null;
-            var cacheKey = $"series:{seriesId}";
-            if (DataCache.TryGetValue<SeriesInfo>(cacheKey, out info))
-                return info;
-            Logger.LogTrace("Creating info object for series {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
-
-            var aniDb = await APIClient.GetSeriesAniDB(seriesId);
-            var tvDbId = series.IDs.TvDB?.FirstOrDefault();
-            var tags = await GetTags(seriesId);
-            var genres = await GetGenresForSeries(seriesId);
-            var cast = await APIClient.GetSeriesCast(seriesId);
-
-            var studios = cast.Where(r => r.RoleName == Role.CreatorRoleType.Studio).Select(r => r.Staff.Name).ToArray();
-            var staff = cast.Select(RoleToPersonInfo).OfType<PersonInfo>().ToArray();
-            var specialsAnchorDictionary = new Dictionary<EpisodeInfo, EpisodeInfo>();
-            var specialsList = new List<EpisodeInfo>();
-            var episodesList = new List<EpisodeInfo>();
-            var extrasList = new List<EpisodeInfo>();
-            var altEpisodesList = new List<EpisodeInfo>();
-            var othersList = new List<EpisodeInfo>();
-
-            // The episode list is ordered by air date
-            var allEpisodesList = APIClient.GetEpisodesFromSeries(seriesId)
-                .ContinueWith(task => Task.WhenAll(task.Result.Select(e => CreateEpisodeInfo(e))))
-                .Unwrap()
-                .GetAwaiter()
-                .GetResult()
-                .Where(e => e != null && e.Shoko != null && e.AniDB != null)
-                .OrderBy(e => e.AniDB.AirDate)
-                .ToList();
-
-            // Iterate over the episodes once and store some values for later use.
-            for (int index = 0, lastNormalEpisode = 0; index < allEpisodesList.Count; index++) {
-                var episode = allEpisodesList[index];
-                EpisodeIdToSeriesIdDictionary[episode.Id] = seriesId;
-                switch (episode.AniDB.Type) {
-                    case EpisodeType.Normal:
-                        episodesList.Add(episode);
-                        lastNormalEpisode = index;
-                        break;
-                    case EpisodeType.Other:
-                        othersList.Add(episode);
-                        break;
-                    case EpisodeType.Unknown:
-                        altEpisodesList.Add(episode);
-                        break;
-                    default:
-                        if (episode.ExtraType != null)
-                            extrasList.Add(episode);
-                        else if (episode.AniDB.Type == EpisodeType.Special) {
-                            specialsList.Add(episode);
-                            var previousEpisode = allEpisodesList
-                                .GetRange(lastNormalEpisode, index - lastNormalEpisode)
-                                .FirstOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
-                            if (previousEpisode != null)
-                                specialsAnchorDictionary[episode] = previousEpisode;
-                        }
-                        break;
-                }
-            }
-
-            // While the filtered specials list is ordered by episode number
-            specialsList = specialsList
-                .OrderBy(e => e.AniDB.EpisodeNumber)
-                .ToList();
-
-            info = new SeriesInfo {
-                Id = seriesId,
-                Shoko = series,
-                AniDB = aniDb,
-                TvDBId = tvDbId != 0 ? tvDbId.ToString() : null,
-                TvDB = tvDbId != 0 ? (await APIClient.GetSeriesTvDB(seriesId)).FirstOrDefault() : null,
-                Tags = tags,
-                Genres = genres,
-                Studios = studios,
-                Staff = staff,
-                RawEpisodeList = allEpisodesList,
-                EpisodeList = episodesList,
-                AlternateEpisodesList = altEpisodesList,
-                OthersList = othersList,
-                ExtrasList = extrasList,
-                SpesialsAnchors = specialsAnchorDictionary,
-                SpecialsList = specialsList,
-            };
-
-            DataCache.Set<SeriesInfo>(cacheKey, info, DefaultTimeSpan);
+    private async Task<SeriesInfo> CreateSeriesInfo(Series series, string seriesId)
+    {
+        SeriesInfo? info = null;
+        var cacheKey = $"series:{seriesId}";
+        if (DataCache.TryGetValue<SeriesInfo>(cacheKey, out info))
             return info;
+        Logger.LogTrace("Creating info object for series {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
+
+        var episodes = (await APIClient.GetEpisodesFromSeries(seriesId) ?? new())
+            .Select(e => CreateEpisodeInfo(e, e.IDs.Shoko.ToString()))
+            .OrderBy(e => e.AniDB.AirDate)
+            .ToList();
+        var cast = await APIClient.GetSeriesCast(seriesId);
+        var genres = await GetGenresForSeries(seriesId);
+        var tags = await GetTagsForSeries(seriesId);
+
+        info = new SeriesInfo(series, episodes, cast, genres, tags);
+
+        foreach (var episode in episodes)
+            EpisodeIdToSeriesIdDictionary[episode.Id] = seriesId;
+        DataCache.Set<SeriesInfo>(cacheKey, info, DefaultTimeSpan);
+        return info;
+    }
+
+    public bool TryGetSeriesIdForPath(string path, out string? seriesId)
+    {
+        if (string.IsNullOrEmpty(path)) {
+            seriesId = null;
+            return false;
         }
+        return PathToSeriesIdDictionary.TryGetValue(path, out seriesId);
+    }
 
-        #endregion
-        #region Group Info
-
-        public GroupInfo GetGroupInfoByPathSync(string path, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
-        {
-            return GetGroupInfoByPath(path, filterByType).GetAwaiter().GetResult();
+    public bool TryGetSeriesPathForId(string seriesId, out string? path)
+    {
+        if (string.IsNullOrEmpty(seriesId)) {
+            path = null;
+            return false;
         }
+        return SeriesIdToPathDictionary.TryGetValue(seriesId, out path);
+    }
 
-        public async Task<GroupInfo> GetGroupInfoByPath(string path, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    public bool TryGetGroupIdForSeriesId(string seriesId, out string? groupId)
+    {
+        return SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out groupId);
+    }
+
+    #endregion
+    #region Group Info
+
+    public async Task<GroupInfo?> GetGroupInfoByPath(string path, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    {
+        var partialPath = StripMediaFolder(path);
+        Logger.LogDebug("Looking for group matching {Path}", partialPath);
+
+        string? seriesId;
+        if (PathToSeriesIdDictionary.TryGetValue(path, out seriesId))
         {
-            var partialPath = StripMediaFolder(path);
-            Logger.LogDebug("Looking for group matching {Path}", partialPath);
-
-            string seriesId;
-            if (SeriesPathToIdDictionary.TryGetValue(path, out seriesId))
-            {
-                if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
-                    if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info))
-                        return info;
-
-                    return await GetGroupInfo(groupId, filterByType);
-                }
-            }
-            else
-            {
-                var result = await APIClient.GetSeriesPathEndsWith(partialPath);
-                Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
-                seriesId = result?.FirstOrDefault()?.IDs?.ID.ToString();
-
-                if (string.IsNullOrEmpty(seriesId))
-                    return null;
-
-                SeriesPathToIdDictionary[path] = seriesId;
-                SeriesIdToPathDictionary.TryAdd(seriesId, path);
-            }
-
-            return await GetGroupInfoForSeries(seriesId, filterByType);
-        }
-
-        public GroupInfo GetGroupInfoSync(string groupId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
-        {
-            if (!string.IsNullOrEmpty(groupId) && DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info))
-                return info;
-
-            return GetGroupInfo(groupId, filterByType).GetAwaiter().GetResult();
-        }
-
-        public async Task<GroupInfo> GetGroupInfo(string groupId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
-        {
-            if (string.IsNullOrEmpty(groupId))
-                return null;
-
-            if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info))
-                return info;
-
-            var group = await APIClient.GetGroup(groupId);
-            return await CreateGroupInfo(group, groupId, filterByType);
-        }
-
-        public GroupInfo GetGroupInfoForSeriesSync(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
-        {
-            if (string.IsNullOrEmpty(seriesId))
-                return null;
-
             if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
                 if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info))
                     return info;
 
-                return GetGroupInfo(groupId, filterByType).GetAwaiter().GetResult();
+                return await GetGroupInfo(groupId, filterByType);
             }
-
-            return GetGroupInfoForSeries(seriesId, filterByType).GetAwaiter().GetResult();
         }
-
-        public async Task<GroupInfo> GetGroupInfoForSeries(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+        else
         {
+            var result = await APIClient.GetSeriesPathEndsWith(partialPath);
+            Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
+            seriesId = result?.FirstOrDefault()?.IDs?.Shoko.ToString();
+
             if (string.IsNullOrEmpty(seriesId))
                 return null;
 
-            if (!SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
-                var group = await APIClient.GetGroupFromSeries(seriesId);
-                if (group == null)
-                    return null;
-
-                groupId = group.IDs.ID.ToString();
-                if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var groupInfo))
-                    return groupInfo;
-
-                return await CreateGroupInfo(group, groupId, filterByType);
-            }
-
-            return await GetGroupInfo(groupId, filterByType);
+            PathToSeriesIdDictionary[path] = seriesId;
+            SeriesIdToPathDictionary.TryAdd(seriesId, path);
         }
 
-        private async Task<GroupInfo> CreateGroupInfo(Group group, string groupId, Ordering.GroupFilterType filterByType)
-        {
+        return await GetGroupInfoForSeries(seriesId, filterByType);
+    }
+
+    public async Task<GroupInfo?> GetGroupInfo(string groupId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    {
+        if (string.IsNullOrEmpty(groupId))
+            return null;
+
+        if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info))
+            return info;
+
+        var group = await APIClient.GetGroup(groupId);
+        return await CreateGroupInfo(group, groupId, filterByType);
+    }
+
+    public async Task<GroupInfo?> GetGroupInfoForSeries(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    {
+        if (string.IsNullOrEmpty(seriesId))
+            return null;
+
+        if (!SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
+            var group = await APIClient.GetGroupFromSeries(seriesId);
             if (group == null)
                 return null;
 
-            if (string.IsNullOrEmpty(groupId))
-                groupId = group.IDs.ID.ToString();
-
-            var cacheKey = $"group:{filterByType}:{groupId}";
-            GroupInfo groupInfo = null;
-            if (DataCache.TryGetValue<GroupInfo>(cacheKey, out groupInfo))
+            groupId = group.IDs.Shoko.ToString();
+            if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var groupInfo))
                 return groupInfo;
-            Logger.LogTrace("Creating info object for group {GroupName}. (Group={GroupId})", group.Name, groupId);
 
-            var seriesList = (await APIClient.GetSeriesInGroup(groupId)
-                .ContinueWith(task => Task.WhenAll(task.Result.Select(s => CreateSeriesInfo(s))))
-                .Unwrap())
-                .Where(s => s != null)
-                .ToList();
-            if (seriesList != null && seriesList.Count > 0)  switch (filterByType) {
-                default:
-                    break;
-                case Ordering.GroupFilterType.Movies:
-                    seriesList = seriesList.Where(s => s.AniDB.Type == SeriesType.Movie).ToList();
-                    break;
-                case Ordering.GroupFilterType.Others:
-                    seriesList = seriesList.Where(s => s.AniDB.Type != SeriesType.Movie).ToList();
-                    break;
-            }
+            return await CreateGroupInfo(group, groupId, filterByType);
+        }
 
-            // Return ealty if no series matched the filter or if the list was empty.
-            if (seriesList == null || seriesList.Count == 0) {
-                Logger.LogWarning("Creating an empty group info for filter {Filter}! (Group={GroupId})", filterByType.ToString(), groupId);
-                groupInfo = new GroupInfo {
-                    Id = groupId,
-                    Shoko = group,
-                    Tags = new string[0],
-                    Genres = new string[0],
-                    Studios = new string[0],
-                    SeriesList = (seriesList ?? new List<SeriesInfo>()),
-                    SeasonNumberBaseDictionary = (new Dictionary<SeriesInfo, int>()),
-                    SeasonOrderDictionary = (new Dictionary<int, SeriesInfo>()),
-                    DefaultSeries = null,
-                    DefaultSeriesIndex = -1,
-                };
-                DataCache.Set<GroupInfo>(cacheKey, groupInfo, DefaultTimeSpan);
-                return groupInfo;
-            }
+        return await GetGroupInfo(groupId, filterByType);
+    }
 
-            // Order series list
-            var orderingType = filterByType == Ordering.GroupFilterType.Movies ? Plugin.Instance.Configuration.MovieOrdering : Plugin.Instance.Configuration.SeasonOrdering;
-            switch (orderingType) {
-                case Ordering.OrderType.Default:
-                    break;
-                case Ordering.OrderType.ReleaseDate:
-                    seriesList = seriesList.OrderBy(s => s?.AniDB?.AirDate ?? System.DateTime.MaxValue).ToList();
-                    break;
-                // Should not be selectable unless a user fiddles with DevTools in the browser to select the option.
-                case Ordering.OrderType.Chronological:
-                    throw new System.Exception("Not implemented yet");
-            }
+    private async Task<GroupInfo> CreateGroupInfo(Group group, string groupId, Ordering.GroupFilterType filterByType)
+    {
+        if (string.IsNullOrEmpty(groupId))
+            groupId = group.IDs.Shoko.ToString();
 
-            // Select the targeted id if a group spesify a default series.
-            int foundIndex = -1;
-            int targetId = (group.IDs.DefaultSeries ?? 0);
-            if (targetId != 0)
-                foundIndex = seriesList.FindIndex(s => s.Shoko.IDs.ID == targetId);
-            // Else select the default series as first-to-be-released.
-            else switch (orderingType) {
-                // The list is already sorted by release date, so just return the first index.
-                case Ordering.OrderType.ReleaseDate:
-                    foundIndex = 0;
-                    break;
-                // We don't know how Shoko may have sorted it, so just find the earliest series
-                case Ordering.OrderType.Default:
-                // We can't be sure that the the series in the list was _released_ chronologically, so find the earliest series, and use that as a base.
-                case Ordering.OrderType.Chronological: {
-                    var earliestSeries = seriesList.Aggregate((cur, nxt) => (cur == null || (nxt?.AniDB.AirDate ?? System.DateTime.MaxValue) < (cur.AniDB.AirDate ?? System.DateTime.MaxValue)) ? nxt : cur);
-                    foundIndex = seriesList.FindIndex(s => s == earliestSeries);
-                    break;
-                }
-            }
+        var cacheKey = $"group:{filterByType}:{groupId}";
+        GroupInfo? groupInfo = null;
+        if (DataCache.TryGetValue<GroupInfo>(cacheKey, out groupInfo))
+            return groupInfo;
+        Logger.LogTrace("Creating info object for group {GroupName}. (Group={GroupId})", group.Name, groupId);
 
-            // Throw if we can't get a base point for seasons.
-            if (foundIndex == -1)
-                throw new System.Exception("Unable to get a base-point for seasions withing the group");
+        var seriesList = (await APIClient.GetSeriesInGroup(groupId)
+            .ContinueWith(task => Task.WhenAll(task.Result.Select(s => CreateSeriesInfo(s, s.IDs.Shoko.ToString()))))
+            .Unwrap())
+            .Where(s => s != null)
+            .ToList();
+        if (seriesList.Count > 0) switch (filterByType) {
+            default:
+                break;
+            case Ordering.GroupFilterType.Movies:
+                seriesList = seriesList.Where(s => s.AniDB.Type == SeriesType.Movie).ToList();
+                break;
+            case Ordering.GroupFilterType.Others:
+                seriesList = seriesList.Where(s => s.AniDB.Type != SeriesType.Movie).ToList();
+                break;
+        }
 
-            var seasonOrderDictionary = new Dictionary<int, SeriesInfo>();
-            var seasonNumberBaseDictionary = new Dictionary<SeriesInfo, int>();
-            var positiveSeasonNumber = 1;
-            var negativeSeasonNumber = -1;
-            foreach (var (seriesInfo, index) in seriesList.Select((s, i) => (s, i))) {
-                int seasonNumber;
-                var offset = 0;
-                if (seriesInfo.AlternateEpisodesList.Count > 0)
-                    offset++;
-                if (seriesInfo.OthersList.Count > 0)
-                    offset++;
-
-                // Series before the default series get a negative season number
-                if (index < foundIndex) {
-                    seasonNumber = negativeSeasonNumber;
-                    negativeSeasonNumber -= offset + 1;
-                }
-                else {
-                    seasonNumber = positiveSeasonNumber;
-                    positiveSeasonNumber += offset + 1;
-                }
-
-                seasonNumberBaseDictionary.Add(seriesInfo, seasonNumber);
-                seasonOrderDictionary.Add(seasonNumber, seriesInfo);
-                for (var i = 0; i < offset; i++)
-                    seasonOrderDictionary.Add(seasonNumber + (index < foundIndex ? -(i + 1) :  (i + 1)), seriesInfo);
-            }
-
-            groupInfo = new GroupInfo {
-                Id = groupId,
-                Shoko = group,
-                Tags = seriesList.SelectMany(s => s.Tags).Distinct().ToArray(),
-                Genres = seriesList.SelectMany(s => s.Genres).Distinct().ToArray(),
-                Studios = seriesList.SelectMany(s => s.Studios).Distinct().ToArray(),
-                SeriesList = seriesList,
-                SeasonNumberBaseDictionary = seasonNumberBaseDictionary,
-                SeasonOrderDictionary = seasonOrderDictionary,
-                DefaultSeries = seriesList[foundIndex],
-                DefaultSeriesIndex = foundIndex,
-            };
-            foreach (var series in seriesList)
-                SeriesIdToGroupIdDictionary[series.Id] = groupId;
+        // Return early if no series matched the filter or if the list was empty.
+        if (seriesList.Count == 0) {
+            Logger.LogWarning("Creating an empty group info for filter {Filter}! (Group={GroupId})", filterByType.ToString(), groupId);
+            groupInfo = new GroupInfo(group);
             DataCache.Set<GroupInfo>(cacheKey, groupInfo, DefaultTimeSpan);
             return groupInfo;
         }
 
-        #endregion
-        #region Post Process Library Changes
-
-        public Task PostProcess(IProgress<double> progress, CancellationToken token)
-        {
-            Clear();
-            return Task.CompletedTask;
-        }
-
-        #endregion
+        groupInfo = new GroupInfo(group, seriesList, filterByType);
+        foreach (var series in seriesList)
+            SeriesIdToGroupIdDictionary[series.Id] = groupId;
+        DataCache.Set<GroupInfo>(cacheKey, groupInfo, DefaultTimeSpan);
+        return groupInfo;
     }
+
+    #endregion
+    #region Post Process Library Changes
+
+    public Task PostProcess(IProgress<double> progress, CancellationToken token)
+    {
+        Clear();
+        return Task.CompletedTask;
+    }
+
+    #endregion
 }

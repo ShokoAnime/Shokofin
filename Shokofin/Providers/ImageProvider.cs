@@ -111,11 +111,11 @@ namespace Shokofin.Providers
 
         private void AddImagesForSeries(ref List<RemoteImageInfo> list, API.Models.Images images)
         {
-            foreach (var image in images.Posters.OrderByDescending(image => image.Preferred))
+            foreach (var image in images.Posters.OrderByDescending(image => image.IsDefault))
                 AddImage(ref list, ImageType.Primary, image);
-            foreach (var image in images.Fanarts.OrderByDescending(image => image.Preferred))
+            foreach (var image in images.Fanarts.OrderByDescending(image => image.IsDefault))
                 AddImage(ref list, ImageType.Backdrop, image);
-            foreach (var image in images.Banners.OrderByDescending(image => image.Preferred))
+            foreach (var image in images.Banners.OrderByDescending(image => image.IsDefault))
                 AddImage(ref list, ImageType.Banner, image);
         }
 

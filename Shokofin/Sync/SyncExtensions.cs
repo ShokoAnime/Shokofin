@@ -7,13 +7,13 @@ namespace Shokofin.Sync;
 
 public static class SyncExtensions
 {
-    public static File.FileUserStats ToFileUserStats(this UserItemData userData)
+    public static File.UserStats ToFileUserStats(this UserItemData userData)
     {
         TimeSpan? resumePosition = new TimeSpan(userData.PlaybackPositionTicks);
         if (Math.Floor(resumePosition.Value.TotalMilliseconds) == 0d)
             resumePosition = null;
         var lastUpdated = userData.LastPlayedDate ?? DateTime.Now;
-        return new File.FileUserStats
+        return new File.UserStats
         {
             LastUpdatedAt = lastUpdated,
             LastWatchedAt = userData.Played ? lastUpdated : null,
@@ -22,7 +22,7 @@ public static class SyncExtensions
         };
     }
     
-    public static UserItemData MergeWithFileUserStats(this UserItemData userData, File.FileUserStats userStats)
+    public static UserItemData MergeWithFileUserStats(this UserItemData userData, File.UserStats userStats)
     {
         userData.Played = userStats.LastWatchedAt.HasValue;
         userData.PlayCount = userStats.WatchedCount;
@@ -31,7 +31,7 @@ public static class SyncExtensions
         return userData;
     }
     
-    public static UserItemData ToUserData(this File.FileUserStats userStats, Video video, Guid userId)
+    public static UserItemData ToUserData(this File.UserStats userStats, Video video, Guid userId)
     {
         return new UserItemData
         {

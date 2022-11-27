@@ -13,7 +13,7 @@ using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
-using FileUserStats = Shokofin.API.Models.File.FileUserStats;
+using UserStats = Shokofin.API.Models.File.UserStats;
 
 namespace Shokofin.Sync
 {
@@ -522,7 +522,7 @@ namespace Shokofin.Sync
         /// <param name="localUserData">The local user data</param>
         /// <param name="remoteUserStats">The remote user stats.</param>
         /// <returns>True if they are not in sync.</returns>
-        private static bool UserDataEqualsFileUserStats(UserItemData localUserData, FileUserStats remoteUserStats)
+        private static bool UserDataEqualsFileUserStats(UserItemData localUserData, UserStats remoteUserStats)
         {
             if (remoteUserStats == null && localUserData == null)
                 return true;

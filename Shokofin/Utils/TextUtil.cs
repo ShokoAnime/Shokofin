@@ -129,8 +129,11 @@ namespace Shokofin.Utils
         /// </summary>
         /// <param name="summary">The raw AniDB summary</param>
         /// <returns>The sanitized AniDB summary</returns>
-        private static string SanitizeTextSummary(string summary)
+        public static string SanitizeTextSummary(string summary)
         {
+            if (string.IsNullOrWhiteSpace(summary))
+                return "";
+
             var config = Plugin.Instance.Configuration;
 
             if (config.SynopsisCleanLinks)
@@ -218,7 +221,7 @@ namespace Shokofin.Utils
                     return null;
                 case DisplayTitleType.MainTitle:
                 case DisplayTitleType.FullTitle: {
-                    string title = (GetTitleByTypeAndLanguage(seriesTitles, "official", languageCandidates) ?? seriesTitle)?.Trim();
+                    string title = (GetTitleByTypeAndLanguage(seriesTitles, TitleType.Official, languageCandidates) ?? seriesTitle)?.Trim();
                     // Return series title.
                     if (outputType == DisplayTitleType.MainTitle)
                         return title;
@@ -238,10 +241,10 @@ namespace Shokofin.Utils
             }
         }
 
-        public static string GetTitleByTypeAndLanguage(IEnumerable<Title> titles, string type, params string[] langs)
+        public static string GetTitleByTypeAndLanguage(IEnumerable<Title> titles, TitleType type, params string[] langs)
         {
             if (titles != null) foreach (string lang in langs) {
-                string title = titles.FirstOrDefault(s => s.Language == lang && s.Type == type)?.Name;
+                string title = titles.FirstOrDefault(s => s.LanguageCode == lang && s.Type == type)?.Value;
                 if (title != null)
                     return title;
             }
@@ -251,7 +254,7 @@ namespace Shokofin.Utils
         public static string GetTitleByLanguages(IEnumerable<Title> titles, params string[] langs)
         {
             if (titles != null) foreach (string lang in langs) {
-                string title = titles.FirstOrDefault(s => lang.Equals(s.Language, System.StringComparison.OrdinalIgnoreCase))?.Name;
+                string title = titles.FirstOrDefault(s => lang.Equals(s.LanguageCode, System.StringComparison.OrdinalIgnoreCase))?.Value;
                 if (title != null)
                     return title;
             }
@@ -264,7 +267,7 @@ namespace Shokofin.Utils
         /// <returns></returns>
         private static string[] GuessOriginLanguage(IEnumerable<Title> titles)
         {
-            string langCode = titles.FirstOrDefault(t => t?.Type == "main")?.Language.ToLower();
+            string langCode = titles.FirstOrDefault(t => t?.Type == TitleType.Main)?.LanguageCode;
             // Guess the origin language based on the main title.
             switch (langCode) {
                 case null: // fallback

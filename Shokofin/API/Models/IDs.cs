@@ -1,7 +1,10 @@
-namespace Shokofin.API.Models
+using System.Text.Json.Serialization;
+
+#nullable enable
+namespace Shokofin.API.Models;
+
+public class IDs
 {
-    public class IDs
-    {
-        public int ID { get; set; }
-    }
+    [JsonPropertyName("ID")]
+    public int Shoko { get; set; }
 }

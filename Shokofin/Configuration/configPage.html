@@ -88,6 +88,36 @@
                             <span>Save</span>
                         </button>
                     </fieldset>
+                    <fieldset id="ProviderSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Plugin Compatibility Settings</h3>
+                        </legend>
+                        <div class="fieldDescription verticalSection-extrabottompadding">We can optionally set some ids for interopobility with other plugins.</div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddAniDBId" />
+                                <span>Add AniDB IDs</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the AniDB ID for all supported item types where an ID is available.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddTvDBId" />
+                                <span>Add TvDB IDs</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the TvDB ID for all supported item types where an ID is available.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddTMDBId" />
+                                <span>Add TMDB IDs</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the TMDB ID for all supported item types where an ID is available.</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
                     <fieldset id="LibrarySection" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
                             <h3>Library Settings</h3>
@@ -264,18 +294,12 @@
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="AddAniDBId" />
-                                <span>Add AniDB ID to items</span>
+                                <input is="emby-checkbox" type="checkbox" id="MergeQuartSeasons" />
+                                <span>Automatically merge quart seasons</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the AniDB ID for all supported item types where an ID is available.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Enable at your own risk</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="AddOtherId" />
-                                <span>Add TvDB/TMDB ID to items</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the TvDB/TMDB ID for all supported item types where an ID is available when using the default Series/Season grouping.</div>
-                        </div>
+
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
                         </button>

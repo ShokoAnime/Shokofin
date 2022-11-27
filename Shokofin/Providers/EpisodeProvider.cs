@@ -47,7 +47,7 @@ namespace Shokofin.Providers
                 Info.EpisodeInfo episodeInfo = null;
                 Info.SeriesInfo seriesInfo = null;
                 Info.GroupInfo groupInfo = null;
-                if (info.IsMissingEpisode || info.Path == null) {
+                if (info.IsMissingEpisode || string.IsNullOrEmpty(info.Path)) {
                     // We're unable to fetch the latest metadata for the virtual episode.
                     if (!info.ProviderIds.TryGetValue("Shoko Episode", out var episodeId))
                         return result;
@@ -63,7 +63,8 @@ namespace Shokofin.Providers
                     groupInfo = filterByType.HasValue ? (await ApiManager.GetGroupInfoForSeries(seriesInfo.Id, filterByType.Value)) : null;
                 }
                 else {
-                    (fileInfo, episodeInfo, seriesInfo, groupInfo) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
+                    (fileInfo, seriesInfo, groupInfo) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
+                    episodeInfo = fileInfo?.EpisodeList.FirstOrDefault();
                 }
 
                 // if the episode info is null then the series info and conditionally the group info is also null.
@@ -72,17 +73,10 @@ namespace Shokofin.Providers
                     return result;
                 }
 
-                var fileId = fileInfo?.Id ?? null;
-                result.Item = CreateMetadata(groupInfo, seriesInfo, episodeInfo, fileId, info.MetadataLanguage);
-                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},Group={GroupId})", result.Item.Name, fileId, episodeInfo.Id, seriesInfo.Id, groupInfo?.Id ?? null);
+                result.Item = CreateMetadata(groupInfo, seriesInfo, episodeInfo, fileInfo, info.MetadataLanguage);
+                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},Group={GroupId})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seriesInfo.Id, groupInfo?.Id);
 
                 result.HasMetadata = true;
-
-                if (fileInfo != null) {
-                    var episodeNumberEnd = episodeInfo.AniDB.EpisodeNumber + fileInfo.ExtraEpisodesCount;
-                    if (episodeInfo.AniDB.EpisodeNumber != episodeNumberEnd)
-                        result.Item.IndexNumberEnd = episodeNumberEnd;
-                }
 
                 return result;
             }
@@ -95,10 +89,10 @@ namespace Shokofin.Providers
         public static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, Season season, System.Guid episodeId)
             => CreateMetadata(group, series, episode, null, season.GetPreferredMetadataLanguage(), season, episodeId);
 
-        public static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, string fileId, string metadataLanguage)
-            => CreateMetadata(group, series, episode, fileId, metadataLanguage, null, Guid.Empty);
+        public static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, Info.FileInfo file, string metadataLanguage)
+            => CreateMetadata(group, series, episode, file, metadataLanguage, null, Guid.Empty);
 
-        private static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, string fileId, string metadataLanguage, Season season, System.Guid episodeId)
+        private static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, Info.FileInfo file, string metadataLanguage, Season season, System.Guid episodeId)
         {
             var config = Plugin.Instance.Configuration;
             var mergeFriendly = config.SeriesGrouping == Ordering.GroupType.MergeFriendly && series.TvDB != null && episode.TvDB != null;
@@ -172,6 +166,7 @@ namespace Shokofin.Providers
                         SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
                         SeasonName = season.Name,
                         DateLastSaved = DateTime.UtcNow,
+                        RunTimeTicks = episode.AniDB.Duration.Ticks,
                     };
                     result.PresentationUniqueKey = result.GetPresentationUniqueKey();
                 }
@@ -189,8 +184,6 @@ namespace Shokofin.Providers
                         Overview = description,
                     };
                 }
-
-                result.SetProviderId(MetadataProvider.Tvdb, episode.TvDB.ID.ToString());
             }
             else {
                 if (season != null) {
@@ -212,7 +205,10 @@ namespace Shokofin.Providers
                         SeriesName = season.Series.Name,
                         SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
                         SeasonName = season.Name,
+                        OfficialRating = series.AniDB.Restricted ? "XXX" : null,
+                        CustomRating = series.AniDB.Restricted ? "XXX" : null,
                         DateLastSaved = DateTime.UtcNow,
+                        RunTimeTicks = episode.AniDB.Duration.Ticks,
                     };
                     result.PresentationUniqueKey = result.GetPresentationUniqueKey();
                 }
@@ -227,21 +223,36 @@ namespace Shokofin.Providers
                         AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
                         PremiereDate = episode.AniDB.AirDate,
                         Overview = description,
+                        OfficialRating = series.AniDB.Restricted ? "XXX" : null,
+                        CustomRating = series.AniDB.Restricted ? "XXX" : null,
                         CommunityRating = episode.AniDB.Rating.ToFloat(10),
                     };
                 }
-
-                if (config.SeriesGrouping == Ordering.GroupType.Default && config.AddOtherId && episode.TvDB != null)
-                    result.SetProviderId(MetadataProvider.Tvdb, episode.TvDB.ID.ToString());
             }
 
-            result.SetProviderId("Shoko Episode", episode.Id);
-            if (!string.IsNullOrEmpty(fileId))
-                result.SetProviderId("Shoko File", fileId);
-            if (config.AddAniDBId)
-                result.SetProviderId("AniDB", episode.AniDB.ID.ToString());
+            if (file != null) {
+                var episodeNumberEnd = episodeNumber + file.EpisodeList.Count - 1;
+                if (episode.AniDB.EpisodeNumber != episodeNumberEnd)
+                    result.IndexNumberEnd = episodeNumberEnd;
+            }
+
+            AddProviderIds(result, episodeId: episode.Id, fileId: file?.Id, anidbId: episode.AniDB.Id.ToString(), tvdbId: mergeFriendly || config.SeriesGrouping == Ordering.GroupType.Default ? episode.TvDB?.Id.ToString() : null);
 
             return result;
+        }
+
+        private static void AddProviderIds(IHasProviderIds item, string episodeId, string fileId = null, string anidbId = null, string tvdbId = null, string tmdbId = null)
+        {
+            var config = Plugin.Instance.Configuration;
+            item.SetProviderId("Shoko Episode", episodeId);
+            if (!string.IsNullOrEmpty(fileId))
+                item.SetProviderId("Shoko File", fileId);
+            if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
+                item.SetProviderId("AniDB", anidbId);
+            if (config.AddTvDBId && !string.IsNullOrEmpty(tvdbId) && tvdbId != "0")
+                item.SetProviderId(MetadataProvider.Tvdb, tvdbId);
+            if (Plugin.Instance.Configuration.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")
+                item.SetProviderId(MetadataProvider.Tvdb, tmdbId);
         }
 
         public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo searchInfo, CancellationToken cancellationToken)

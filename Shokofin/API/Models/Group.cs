@@ -1,22 +1,61 @@
-namespace Shokofin.API.Models
+#nullable enable
+namespace Shokofin.API.Models;
+
+public class Group
 {
-    public class Group : BaseModel
+    public string Name { get; set; } = "";
+
+    public int Size { get; set; }
+
+    public GroupIDs IDs { get; set; } = new();
+
+    public string SortName { get; set; } = "";
+
+    public string Description { get; set; } = "";
+
+    public bool HasCustomName { get; set; }
+
+    /// <summary>
+    /// Sizes object, has totals
+    /// </summary>
+    public GroupSizes Sizes { get; set; } = new();
+
+    public class GroupIDs : IDs
     {
-        public GroupIDs IDs { get; set; }
+        public int? DefaultSeries { get; set; }
 
-        public string SortName { get; set; }
+        public int MainSeries { get; set; }
 
-        public string Description { get; set; }
+        public int? ParentGroup { get; set; }
 
-        public bool HasCustomName { get; set; }
+        public int TopLevelGroup { get; set; }
+    }
 
-        public class GroupIDs : IDs
+    /// <summary>
+    /// Downloaded, Watched, Total, etc
+    /// </summary>
+    public class GroupSizes : Series.SeriesSizes
+    {
+        /// <summary>
+        /// Number of direct sub-groups within the group.
+        /// /// </summary>
+        /// <value></value>
+        public int SubGroups { get; set; }
+
+        /// <summary>
+        /// Count of the different series types within the group.
+        /// </summary>
+        public SeriesTypeCounts SeriesTypes { get; set; } = new();
+
+        public class SeriesTypeCounts
         {
-            public int? DefaultSeries { get; set; }
-
-            public int? ParentGroup { get; set; }
-
-            public int TopLevelGroup { get; set; }
+            public int Unknown;
+            public int Other;
+            public int TV;
+            public int TVSpecial;
+            public int Web;
+            public int Movie;
+            public int OVA;
         }
     }
 }

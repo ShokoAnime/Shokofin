@@ -39,7 +39,8 @@ namespace Shokofin.Providers
                 var includeGroup = Plugin.Instance.Configuration.BoxSetGrouping == Ordering.GroupType.ShokoGroup;
                 var config = Plugin.Instance.Configuration;
                 Ordering.GroupFilterType? filterByType = config.BoxSetGrouping == Ordering.GroupType.ShokoGroup ? config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Movies : Ordering.GroupFilterType.Default : null;
-                var (file, episode, series, group) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
+                var (file, series, group) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
+                var episode = file?.EpisodeList.FirstOrDefault();
 
                 // if file is null then series and episode is also null.
                 if (file == null) {
@@ -71,9 +72,7 @@ namespace Shokofin.Providers
                 result.Item.SetProviderId("Shoko Episode", episode.Id);
                 result.Item.SetProviderId("Shoko Series", series.Id);
                 if (config.AddAniDBId)
-                    result.Item.SetProviderId("AniDB", episode.AniDB.ID.ToString());
-                if (config.BoxSetGrouping == Ordering.GroupType.MergeFriendly && episode.TvDB != null && config.BoxSetGrouping != Ordering.GroupType.ShokoGroup)
-                    result.Item.SetProviderId(MetadataProvider.Tvdb, episode.TvDB.ID.ToString());
+                    result.Item.SetProviderId("AniDB", episode.AniDB.Id.ToString());
 
                 result.HasMetadata = true;
 

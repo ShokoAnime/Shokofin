@@ -69,7 +69,9 @@ namespace Shokofin
         private bool ScanDirectory(string partialPath, string fullPath, string libraryType)
         {
             var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
-            var series = ApiManager.GetSeriesInfoByPathSync(fullPath);
+            var series = ApiManager.GetSeriesInfoByPath(fullPath)
+                .GetAwaiter()
+                .GetResult();
 
             // We warn here since we enabled the provider in our library, but we can't find a match for the given folder path.
             if (series == null) {
@@ -80,8 +82,6 @@ namespace Shokofin
             API.Info.GroupInfo group = null;
             // Filter library if we enabled the option.
             if (Plugin.Instance.Configuration.FilterOnLibraryTypes) switch (libraryType) {
-                default:
-                    break;
                 case "tvshows":
                     if (series.AniDB.Type == SeriesType.Movie) {
                         Logger.LogInformation("Library seperatation is enabled, ignoring series. (Series={SeriesId})", series.Id);
@@ -90,7 +90,9 @@ namespace Shokofin
 
                     // If we're using series grouping, pre-load the group now to help reduce load times later.
                     if (includeGroup)
-                        group = ApiManager.GetGroupInfoForSeriesSync(series.Id, Ordering.GroupFilterType.Others);
+                        group = ApiManager.GetGroupInfoForSeries(series.Id, Ordering.GroupFilterType.Others)
+                            .GetAwaiter()
+                            .GetResult();
                     break;
                 case "movies":
                     if (series.AniDB.Type != SeriesType.Movie) {
@@ -100,12 +102,16 @@ namespace Shokofin
 
                     // If we're using series grouping, pre-load the group now to help reduce load times later.
                     if (includeGroup)
-                        group = ApiManager.GetGroupInfoForSeriesSync(series.Id, Ordering.GroupFilterType.Movies);
+                        group = ApiManager.GetGroupInfoForSeries(series.Id, Ordering.GroupFilterType.Movies)
+                            .GetAwaiter()
+                            .GetResult();
                     break;
             }
             // If we're using series grouping, pre-load the group now to help reduce load times later.
             else if (includeGroup)
-                group = ApiManager.GetGroupInfoForSeriesSync(series.Id);
+                group = ApiManager.GetGroupInfoForSeries(series.Id)
+                    .GetAwaiter()
+                    .GetResult();
 
             if (group != null)
                 Logger.LogInformation("Found group {GroupName} (Series={SeriesId},Group={GroupId})", group.Shoko.Name, series.Id, group.Id);
@@ -119,7 +125,9 @@ namespace Shokofin
         {
             var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
             var config = Plugin.Instance.Configuration;
-            var (file, episode, series, _group) = ApiManager.GetFileInfoByPathSync(fullPath, null);
+            var (file, series, _group) = ApiManager.GetFileInfoByPath(fullPath, null)
+                .GetAwaiter()
+                .GetResult();
 
             // We warn here since we enabled the provider in our library, but we can't find a match for the given file path.
             if (file == null) {   
@@ -127,13 +135,14 @@ namespace Shokofin
                 return false;
             }
 
-            Logger.LogInformation("Found episode for {SeriesName} (Series={SeriesId},Episode={EpisodeId},File={FileId})", series.Shoko.Name, series.Id, episode.Id, file.Id);
+            Logger.LogInformation("Found {EpisodeCount} episode(s) for {SeriesName} (Series={SeriesId},File={FileId})", file.EpisodeList.Count, series.Shoko.Name, series.Id, file.Id);
 
             // We're going to post process this file later, but we don't want to include it in our library for now.
-            if (episode.ExtraType != null) {
-                Logger.LogInformation("Episode was assigned an extra type, ignoring episode. (Series={SeriesId},Episode={EpisodeId},File={FileId})", series.Id, episode.Id, file.Id);
+            if (file.ExtraType != null) {
+                Logger.LogInformation("File was assigned an extra type, ignoring file. (Series={SeriesId},File={FileId})", series.Id, file.Id);
                 return true;
             }
+
             return false;
         }
     }

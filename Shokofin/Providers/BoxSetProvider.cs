@@ -76,7 +76,7 @@ namespace Shokofin.Providers
             };
             result.Item.SetProviderId("Shoko Series", series.Id);
             if (Plugin.Instance.Configuration.AddAniDBId)
-                result.Item.SetProviderId("AniDB", series.AniDB.ID.ToString());
+                result.Item.SetProviderId("AniDB", series.AniDB.Id.ToString());
 
             result.HasMetadata = true;
 
@@ -115,7 +115,7 @@ namespace Shokofin.Providers
             result.Item.SetProviderId("Shoko Series", series.Id);
             result.Item.SetProviderId("Shoko Group", group.Id);
             if (config.AddAniDBId)
-                result.Item.SetProviderId("AniDB", series.AniDB.ID.ToString());
+                result.Item.SetProviderId("AniDB", series.AniDB.Id.ToString());
 
             result.HasMetadata = true;
 

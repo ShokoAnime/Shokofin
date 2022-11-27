@@ -104,6 +104,11 @@ async function defaultSubmit(form) {
         config.SynopsisCleanMiscLines = form.querySelector("#MinimalAniDBDescriptions").checked;
         config.SynopsisRemoveSummary = form.querySelector("#MinimalAniDBDescriptions").checked;
     
+        // Provider settings
+        config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
+        config.AddTvDBId = form.querySelector("#AddTvDBId").checked;
+        config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
+
         // Library settings
         config.SeriesGrouping = form.querySelector("#SeriesGrouping").value;
         config.BoxSetGrouping = form.querySelector("#BoxSetGrouping").value;
@@ -123,8 +128,7 @@ async function defaultSubmit(form) {
         config.PublicHost = publicHost;
         config.IgnoredFileExtensions = ignoredFileExtensions;
         form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
-        config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
-        config.AddOtherId = form.querySelector("#AddOtherId").checked;
+        config.MergeQuartSeasons = form.querySelector("#MergeQuartSeasons").checked;
 
         // User settings
         const userId = form.querySelector("#UserSelector").value;
@@ -245,6 +249,11 @@ async function syncSettings(form) {
     config.SynopsisCleanMiscLines = form.querySelector("#MinimalAniDBDescriptions").checked;
     config.SynopsisRemoveSummary = form.querySelector("#MinimalAniDBDescriptions").checked;
 
+    // Provider settings
+    config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
+    config.AddTvDBId = form.querySelector("#AddTvDBId").checked;
+    config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
+
     // Library settings
     config.SeriesGrouping = form.querySelector("#SeriesGrouping").value;
     config.BoxSetGrouping = form.querySelector("#BoxSetGrouping").value;
@@ -264,8 +273,7 @@ async function syncSettings(form) {
     config.PublicHost = publicHost;
     config.IgnoredFileExtensions = ignoredFileExtensions;
     form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
-    config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
-    config.AddOtherId = form.querySelector("#AddOtherId").checked;
+    config.MergeQuartSeasons = form.querySelector("#MergeQuartSeasons").checked;
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
     Dashboard.processPluginConfigurationUpdateResult(result);
@@ -343,6 +351,7 @@ export default function (page) {
             form.querySelector("#ConnectionSection").removeAttribute("hidden");
             form.querySelector("#MetadataSection").removeAttribute("hidden");
             form.querySelector("#MetadataSection").removeAttribute("hidden");
+            form.querySelector("#ProviderSection").removeAttribute("hidden");
             form.querySelector("#LibrarySection").removeAttribute("hidden");
             form.querySelector("#UserSection").removeAttribute("hidden");
             form.querySelector("#TagSection").removeAttribute("hidden");
@@ -356,6 +365,7 @@ export default function (page) {
             form.querySelector("#ConnectionSection").removeAttribute("hidden");
             form.querySelector("#MetadataSection").setAttribute("hidden", "");
             form.querySelector("#MetadataSection").setAttribute("hidden", "");
+            form.querySelector("#ProviderSection").setAttribute("hidden", "");
             form.querySelector("#LibrarySection").setAttribute("hidden", "");
             form.querySelector("#UserSection").setAttribute("hidden", "");
             form.querySelector("#TagSection").setAttribute("hidden", "");
@@ -405,6 +415,11 @@ export default function (page) {
             form.querySelector("#CleanupAniDBDescriptions").checked = config.SynopsisCleanMultiEmptyLines || config.SynopsisCleanLinks;
             form.querySelector("#MinimalAniDBDescriptions").checked = config.SynopsisRemoveSummary || config.SynopsisCleanMiscLines;
 
+            // Provider settings
+            form.querySelector("#AddAniDBId").checked = config.AddAniDBId;
+            form.querySelector("#AddTvDBId").checked = config.AddTvDBId;
+            form.querySelector("#AddTMDBId").checked = config.AddTMDBId;
+
             // Library settings
             form.querySelector("#SeriesGrouping").value = config.SeriesGrouping;
             form.querySelector("#BoxSetGrouping").value = config.BoxSetGrouping;
@@ -426,8 +441,7 @@ export default function (page) {
             // Advanced settings
             form.querySelector("#PublicHost").value = config.PublicHost;
             form.querySelector("#IgnoredFileExtensions").value = config.IgnoredFileExtensions.join(" ");
-            form.querySelector("#AddAniDBId").checked = config.AddAniDBId;
-            form.querySelector("#AddOtherId").checked = config.AddOtherId;
+            form.querySelector("#MergeQuartSeasons").checked = config.MergeQuartSeasons;
 
             if (!config.ApiKey) {
                 Dashboard.alert(Messages.ConnectToShoko);

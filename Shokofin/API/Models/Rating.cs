@@ -1,20 +1,35 @@
-namespace Shokofin.API.Models
-{
-    public class Rating
-    {
-        public decimal Value { get; set; }
-        
-        public int MaxValue { get; set; }
-        
-        public string Source { get; set; }
-        
-        public int Votes { get; set; }
-        
-        public string Type { get; set; }
+#nullable enable
+namespace Shokofin.API.Models;
 
-        public float ToFloat(uint scale = 1)
-        {
-            return (float)((Value * scale) / MaxValue);
-        }
+public class Rating
+{
+    /// <summary>
+    /// The rating value relative to the <see cref="Rating.MaxValue"/>.
+    /// </summary>
+    public decimal Value { get; set; } = 0;
+
+    /// <summary>
+    /// Max value for the rating.
+    /// </summary>
+    public int MaxValue { get; set; } = 0;
+
+    /// <summary>
+    /// AniDB, etc.
+    /// </summary>
+    public string Source { get; set; } = "";
+
+    /// <summary>
+    /// number of votes
+    /// </summary>
+    public int? Votes { get; set; }
+
+    /// <summary>
+    /// for temporary vs permanent, or any other situations that may arise later
+    /// </summary>
+    public string? Type { get; set; }
+
+    public float ToFloat(uint scale = 1)
+    {
+        return (float)((Value * scale) / MaxValue);
     }
 }

@@ -46,7 +46,11 @@ namespace Shokofin.Configuration
 
         public bool AddAniDBId { get; set; }
 
-        public bool AddOtherId { get; set; }
+        public bool AddTvDBId { get; set; }
+
+        public bool AddTMDBId { get; set; }
+
+        public bool MergeQuartSeasons { get; set; }
 
         public TextSourceType DescriptionSource { get; set; }
 
@@ -89,7 +93,9 @@ namespace Shokofin.Configuration
             SynopsisRemoveSummary = true;
             SynopsisCleanMultiEmptyLines = true;
             AddAniDBId = true;
-            AddOtherId = false;
+            AddTvDBId = true;
+            AddTMDBId = true;
+            MergeQuartSeasons = false;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
             DescriptionSource = TextSourceType.Default;
