@@ -64,7 +64,7 @@ public class SeriesInfo
     /// <summary>
     /// A dictionary holding mappings for the previous normal episode for every special episode in a series.
     /// </summary>
-    public Dictionary<EpisodeInfo, EpisodeInfo> SpesialsAnchors;
+    public Dictionary<EpisodeInfo, EpisodeInfo> SpecialsAnchors;
 
     /// <summary>
     /// A pre-filtered list of special episodes without an ExtraType
@@ -141,7 +141,7 @@ public class SeriesInfo
         AlternateEpisodesList = altEpisodesList;
         OthersList = othersList;
         ExtrasList = extrasList;
-        SpesialsAnchors = specialsAnchorDictionary;
+        SpecialsAnchors = specialsAnchorDictionary;
         SpecialsList = specialsList;
     }
 

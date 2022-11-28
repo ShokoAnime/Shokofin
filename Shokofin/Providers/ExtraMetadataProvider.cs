@@ -725,7 +725,7 @@ namespace Shokofin.Providers
             }, true);
 
             if (searchList.Count > 0) {
-                Logger.LogDebug("A virtual or physical episode entry already exists for Episode {EpisodeName}. Ignoreing. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", searchList[0].Name, episodeId, seriesId, groupId);
+                Logger.LogDebug("A virtual or physical episode entry already exists for Episode {EpisodeName}. Ignoring. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", searchList[0].Name, episodeId, seriesId, groupId);
                 return true;
             }
             return false;
@@ -809,7 +809,7 @@ namespace Shokofin.Providers
                     }
                 }
                 else {
-                    Logger.LogInformation("Addding {ExtraType} {VideoName} to parent {ParentName} (Series={SeriesId})", episodeInfo.ExtraType, episodeInfo.Shoko.Name, parent.Name, seriesInfo.Id);
+                    Logger.LogInformation("Adding {ExtraType} {VideoName} to parent {ParentName} (Series={SeriesId})", episodeInfo.ExtraType, episodeInfo.Shoko.Name, parent.Name, seriesInfo.Id);
                     video = new Video {
                         Id = LibraryManager.GetNewItemId($"{parent.Id} {episodeInfo.ExtraType} {episodeInfo.Id}", typeof (Video)),
                         Name = episodeInfo.Shoko.Name,

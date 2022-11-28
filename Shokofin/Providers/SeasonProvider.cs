@@ -84,7 +84,7 @@ namespace Shokofin.Providers
             int offset = 0;
             int seasonNumber = 1;
             API.Info.SeriesInfo series;
-            // All previsouly known seasons
+            // All previously known seasons
             if (info.ProviderIds.TryGetValue("Shoko Series", out var seriesId) && info.ProviderIds.TryGetValue("Shoko Season Offset", out var offsetText) && int.TryParse(offsetText, out offset)) {
                 series = await ApiManager.GetSeriesInfo(seriesId);
 

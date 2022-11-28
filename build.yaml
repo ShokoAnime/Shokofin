@@ -5,7 +5,7 @@ targetAbi: "10.8.0.0"
 owner: "shokoanime"
 overview: "Manage your anime from Jellyfin using metadata from Shoko"
 description: >
-  A plugin to provide metadata from Shoko Server for your locally organised anime library in Jellyfin.
+  A plugin to provide metadata from Shoko Server for your locally organized anime library in Jellyfin.
 category: "Metadata"
 artifacts:
 - "Shokofin.dll"

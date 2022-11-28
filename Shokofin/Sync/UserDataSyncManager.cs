@@ -65,7 +65,7 @@ namespace Shokofin.Sync
 
         #region Export/Scrobble
 
-        internal class SeesionMetadata {
+        internal class SessionMetadata {
             public Guid ItemId;
             public string FileId;
             public SessionInfo Session;
@@ -73,12 +73,12 @@ namespace Shokofin.Sync
             public bool SentPaused;
         }
 
-        private readonly ConcurrentDictionary<Guid, SeesionMetadata> ActiveSessions = new ConcurrentDictionary<Guid, SeesionMetadata>();
+        private readonly ConcurrentDictionary<Guid, SessionMetadata> ActiveSessions = new ConcurrentDictionary<Guid, SessionMetadata>();
 
         public void OnSessionStarted(object sender, SessionEventArgs e)
         {
             if (TryGetUserConfiguration(e.SessionInfo.UserId, out var userConfig) && userConfig.SyncUserDataUnderPlayback) {
-                var sessionMetadata = new SeesionMetadata {
+                var sessionMetadata = new SessionMetadata {
                     ItemId = Guid.Empty,
                     Session = e.SessionInfo,
                     FileId = null,
@@ -89,7 +89,7 @@ namespace Shokofin.Sync
             }
             foreach (var user in e.SessionInfo.AdditionalUsers) {
                 if (TryGetUserConfiguration(e.SessionInfo.UserId, out userConfig) && userConfig.SyncUserDataUnderPlayback) {
-                    var sessionMetadata = new SeesionMetadata {
+                    var sessionMetadata = new SessionMetadata {
                         ItemId = Guid.Empty,
                         Session = e.SessionInfo,
                         FileId = null,
@@ -225,7 +225,7 @@ namespace Shokofin.Sync
             }
         }
 
-        // Updates to favotite state and/or user data.
+        // Updates to favorite state and/or user data.
         private void OnUserRatingSaved(object sender, UserDataSaveEventArgs e)
         {
             if (!TryGetUserConfiguration(e.UserId, out var userConfig))

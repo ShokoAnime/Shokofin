@@ -39,7 +39,7 @@ namespace Shokofin
         /// </summary>
         /// <param name="series">The <see cref="MediaBrowser.Controller.Entities.TV.Series" /> to check for.</param>
         /// <param name="seriesId">The variable to put the id in.</param>
-        /// <returns>True if it successfully retrived the id for the <see cref="MediaBrowser.Controller.Entities.TV.Series" />.</returns>
+        /// <returns>True if it successfully retrieved the id for the <see cref="MediaBrowser.Controller.Entities.TV.Series" />.</returns>
         bool TryGetSeriesIdFor(Series series, out string seriesId);
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace Shokofin
         /// </summary>
         /// <param name="season">The <see cref="MediaBrowser.Controller.Entities.TV.Season" /> to check for.</param>
         /// <param name="seriesId">The variable to put the id in.</param>
-        /// <returns>True if it successfully retrived the id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.</returns>
+        /// <returns>True if it successfully retrieved the id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.</returns>
         bool TryGetSeriesIdFor(Season season, out string seriesId);
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace Shokofin
         /// </summary>
         /// <param name="season">The <see cref="MediaBrowser.Controller.Entities.TV.Season" /> to check for.</param>
         /// <param name="seriesId">The variable to put the id in.</param>
-        /// <returns>True if it successfully retrived the id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.</returns>
+        /// <returns>True if it successfully retrieved the id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.</returns>
         bool TryGetSeriesIdFor(BoxSet boxSet, out string seriesId);
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace Shokofin
         /// </summary>
         /// <param name="season">The <see cref="MediaBrowser.Controller.Entities.TV.Season" /> to check for.</param>
         /// <param name="seriesId">The variable to put the id in.</param>
-        /// <returns>True if it successfully retrived the id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.</returns>
+        /// <returns>True if it successfully retrieved the id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.</returns>
         bool TryGetSeriesIdFor(Movie movie, out string seriesId);
 
         #endregion
