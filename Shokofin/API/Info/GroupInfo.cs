@@ -44,6 +44,15 @@ public class GroupInfo
     {
         var groupId = group.IDs.Shoko.ToString();
 
+        if (seriesList.Count > 0) switch (filterByType) {
+            case Ordering.GroupFilterType.Movies:
+                seriesList = seriesList.Where(s => s.AniDB.Type == SeriesType.Movie).ToList();
+                break;
+            case Ordering.GroupFilterType.Others:
+                seriesList = seriesList.Where(s => s.AniDB.Type != SeriesType.Movie).ToList();
+                break;
+        }
+
         // Order series list
         var orderingType = filterByType == Ordering.GroupFilterType.Movies ? Plugin.Instance.Configuration.MovieOrdering : Plugin.Instance.Configuration.SeasonOrdering;
         switch (orderingType) {

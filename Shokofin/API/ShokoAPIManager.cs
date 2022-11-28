@@ -65,13 +65,15 @@ public class ShokoAPIManager
 
     public Folder FindMediaFolder(string path)
     {
-        Folder? mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
+        var mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
         if (mediaFolder == null) {
             var parent = (Folder?)LibraryManager.FindByPath(Path.GetDirectoryName(path), true);
             if (parent == null)
-                throw new Exception($"Unable to find parent of \"{path}\"");
+                throw new Exception($"Unable to find parent folder for \"{path}\"");
+
             mediaFolder = FindMediaFolder(path, parent, LibraryManager.RootFolder);
         }
+
         return mediaFolder;
     }
 
@@ -82,6 +84,7 @@ public class ShokoAPIManager
         if (mediaFolder != null) {
             return mediaFolder;
         }
+
         mediaFolder = parent;
         while (!mediaFolder.ParentId.Equals(root.Id)) {
             if (mediaFolder.GetParent() == null) {
@@ -89,6 +92,7 @@ public class ShokoAPIManager
             }
             mediaFolder = (Folder)mediaFolder.GetParent();
         }
+
         MediaFolderList.Add(mediaFolder);
         return mediaFolder;
     }
@@ -99,15 +103,18 @@ public class ShokoAPIManager
         if (mediaFolder != null) {
             return fullPath.Substring(mediaFolder.Path.Length);
         }
+
         // Try to get the media folder by loading the parent and navigating upwards till we reach the root.
         var directoryPath = System.IO.Path.GetDirectoryName(fullPath);
         if (string.IsNullOrEmpty(directoryPath)) {
             return fullPath;
         }
+
         mediaFolder = (LibraryManager.FindByPath(directoryPath, true) as Folder);
         if (mediaFolder == null || string.IsNullOrEmpty(mediaFolder?.Path)) {
             return fullPath;
         }
+
         // Look for the root folder for the current item.
         var root = LibraryManager.RootFolder;
         while (!mediaFolder.ParentId.Equals(root.Id)) {
@@ -116,6 +123,7 @@ public class ShokoAPIManager
             }
             mediaFolder = (Folder)mediaFolder.GetParent();
         }
+
         MediaFolderList.Add(mediaFolder);
         return fullPath.Substring(mediaFolder.Path.Length);
     }
@@ -244,6 +252,7 @@ public class ShokoAPIManager
         var key =$"series-path-set-and-episode-ids:${seriesId}";
         if (DataCache.TryGetValue<(HashSet<string>, HashSet<string>)>(key, out var cached))
             return cached;
+
         var pathSet = new HashSet<string>();
         var episodeIds = new HashSet<string>();
         foreach (var file in await APIClient.GetFilesForSeries(seriesId)) {
@@ -254,6 +263,7 @@ public class ShokoAPIManager
             foreach (var episodeXRef in xref.Episodes)
                 episodeIds.Add(episodeXRef.Shoko.ToString());
         }
+
         DataCache.Set(key, (pathSet, episodeIds), DefaultTimeSpan);
         return (pathSet, episodeIds);
     }
@@ -290,7 +300,7 @@ public class ShokoAPIManager
             .ToList();
         if (fileLocations.Count != 1) {
             if (fileLocations.Count == 0)
-                throw new Exception($"I have no idea how this happened, but the path gave a file that doesn't have a mataching file location. See you in #support. (File={fileId})");
+                throw new Exception($"I have no idea how this happened, but the path gave a file that doesn't have a matching file location. See you in #support. (File={fileId})");
 
             Logger.LogWarning("Multiple locations matched the path, picking the first location. (File={FileId})", fileId);
         }
@@ -333,7 +343,7 @@ public class ShokoAPIManager
             return new(fileInfo, seriesInfo, groupInfo);
         }
 
-        throw new Exception("Unable to find the series to use for the file.");
+        throw new Exception($"Unable to find the series to use for the file. (File={fileId})");
     }
 
     public async Task<FileInfo?> GetFileInfo(string fileId, string seriesId)
@@ -342,9 +352,8 @@ public class ShokoAPIManager
             return null;
 
         var cacheKey = $"file:{fileId}:{seriesId}";
-        FileInfo? info = null;
-        if (DataCache.TryGetValue<FileInfo>(cacheKey, out info))
-            return info;
+        if (DataCache.TryGetValue<FileInfo>(cacheKey, out var fileInfo))
+            return fileInfo;
 
         var file = await APIClient.GetFile(fileId);
         return await CreateFileInfo(file, fileId, seriesId);
@@ -353,10 +362,12 @@ public class ShokoAPIManager
     private async Task<FileInfo> CreateFileInfo(File file, string fileId, string seriesId)
     {
         var cacheKey = $"file:{fileId}:{seriesId}";
-        FileInfo? info = null;
-        if (DataCache.TryGetValue<FileInfo>(cacheKey, out info))
-            return info;
+        if (DataCache.TryGetValue<FileInfo>(cacheKey, out var fileInfo))
+            return fileInfo;
 
+        Logger.LogTrace("Creating info object for file. (File={FileId},Series={SeriesId})", fileId, seriesId);
+
+        // Find the cross-references for the selected series.
         var seriesXRef = file.CrossReferences.FirstOrDefault(xref => xref.Series.Shoko.ToString() == seriesId);
         if (seriesXRef == null)
             throw new Exception($"Unable to find any cross-references for the spesified series for the file. (File={fileId},Series={seriesId})");
@@ -377,11 +388,11 @@ public class ShokoAPIManager
             .ThenBy(episode => episode.AniDB.EpisodeNumber)
             .ToList();
 
-        Logger.LogTrace("Creating info object for file. (File={FileId},Series={SeriesId})", fileId, seriesId);
-        info = new FileInfo(file, episodeList, seriesId);
-        DataCache.Set<FileInfo>(cacheKey, info, DefaultTimeSpan);
+        fileInfo = new FileInfo(file, episodeList, seriesId);
+
+        DataCache.Set<FileInfo>(cacheKey, fileInfo, DefaultTimeSpan);
         FileIdToEpisodeIdDictionary.TryAdd(fileId, episodeList.Select(episode => episode.Id).ToList());
-        return info;
+        return fileInfo;
     }
 
     public bool TryGetFileIdForPath(string path, out string? fileId)
@@ -402,24 +413,27 @@ public class ShokoAPIManager
     {
         if (string.IsNullOrEmpty(episodeId))
             return null;
-        if (DataCache.TryGetValue<EpisodeInfo>($"episode:{episodeId}", out var info))
-            return info;
+
+        var key = $"episode:{episodeId}";
+        if (DataCache.TryGetValue<EpisodeInfo>(key, out var episodeInfo))
+            return episodeInfo;
+
         var episode = await APIClient.GetEpisode(episodeId);
         return CreateEpisodeInfo(episode, episodeId);
     }
 
     private EpisodeInfo CreateEpisodeInfo(Episode episode, string episodeId)
     {
-        if (string.IsNullOrEmpty(episodeId))
-            episodeId = episode.IDs.Shoko.ToString();
         var cacheKey = $"episode:{episodeId}";
-        EpisodeInfo? info = null;
-        if (DataCache.TryGetValue<EpisodeInfo>(cacheKey, out info))
-            return info;
+        if (DataCache.TryGetValue<EpisodeInfo>(cacheKey, out var episodeInfo))
+            return episodeInfo;
+
         Logger.LogTrace("Creating info object for episode {EpisodeName}. (Episode={EpisodeId})", episode.Name, episodeId);
-        info = new EpisodeInfo(episode);
-        DataCache.Set<EpisodeInfo>(cacheKey, info, DefaultTimeSpan);
-        return info;
+
+        episodeInfo = new EpisodeInfo(episode);
+
+        DataCache.Set<EpisodeInfo>(cacheKey, episodeInfo, DefaultTimeSpan);
+        return episodeInfo;
     }
 
     public bool TryGetEpisodeIdForPath(string path, out string? episodeId)
@@ -462,6 +476,10 @@ public class ShokoAPIManager
 
     public bool TryGetSeriesIdForEpisodeId(string episodeId, out string? seriesId)
     {
+        if (string.IsNullOrEmpty(episodeId)) {
+            seriesId = null;
+            return false;
+        }
         return EpisodeIdToSeriesIdDictionary.TryGetValue(episodeId, out seriesId);
     }
 
@@ -472,9 +490,7 @@ public class ShokoAPIManager
     {
         var partialPath = StripMediaFolder(path);
         Logger.LogDebug("Looking for series matching {Path}", partialPath);
-        string? seriesId;
-        if (!PathToSeriesIdDictionary.TryGetValue(path, out seriesId))
-        {
+        if (!PathToSeriesIdDictionary.TryGetValue(path, out var seriesId)) {
             var result = await APIClient.GetSeriesPathEndsWith(partialPath);
             Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
             seriesId = result?.FirstOrDefault()?.IDs?.Shoko.ToString();
@@ -486,8 +502,11 @@ public class ShokoAPIManager
             SeriesIdToPathDictionary.TryAdd(seriesId, path);
         }
 
-        if (DataCache.TryGetValue<SeriesInfo>( $"series:{seriesId}", out var info))
+        var key = $"series:{seriesId}";
+        if (DataCache.TryGetValue<SeriesInfo>(key, out var info)) {
+            Logger.LogTrace("Reusing info object for series {SeriesName}. (Series={SeriesId})", info.Shoko.Name, seriesId);
             return info;
+        }
 
         var series = await APIClient.GetSeries(seriesId);
         return await CreateSeriesInfo(series, seriesId);
@@ -497,7 +516,9 @@ public class ShokoAPIManager
     {
         if (string.IsNullOrEmpty(seriesId))
             return null;
-        if (DataCache.TryGetValue<SeriesInfo>( $"series:{seriesId}", out var info))
+
+        var key = $"series:{seriesId}";
+        if (DataCache.TryGetValue<SeriesInfo>(key, out var info))
             return info;
         var series = await APIClient.GetSeries(seriesId);
         return await CreateSeriesInfo(series, seriesId);
@@ -505,11 +526,7 @@ public class ShokoAPIManager
 
     public async Task<SeriesInfo?> GetSeriesInfoForEpisode(string episodeId)
     {
-        string seriesId;
-        if (EpisodeIdToSeriesIdDictionary.ContainsKey(episodeId)) {
-            seriesId = EpisodeIdToSeriesIdDictionary[episodeId];
-        }
-        else {
+        if (!EpisodeIdToSeriesIdDictionary.TryGetValue(episodeId, out var seriesId)) {
             var series = await APIClient.GetSeriesFromEpisode(episodeId);
             if (series == null)
                 return null;
@@ -521,10 +538,10 @@ public class ShokoAPIManager
 
     private async Task<SeriesInfo> CreateSeriesInfo(Series series, string seriesId)
     {
-        SeriesInfo? info = null;
         var cacheKey = $"series:{seriesId}";
-        if (DataCache.TryGetValue<SeriesInfo>(cacheKey, out info))
-            return info;
+        if (DataCache.TryGetValue<SeriesInfo>(cacheKey, out var seriesInfo))
+            return seriesInfo;
+
         Logger.LogTrace("Creating info object for series {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
 
         var episodes = (await APIClient.GetEpisodesFromSeries(seriesId) ?? new())
@@ -535,12 +552,12 @@ public class ShokoAPIManager
         var genres = await GetGenresForSeries(seriesId);
         var tags = await GetTagsForSeries(seriesId);
 
-        info = new SeriesInfo(series, episodes, cast, genres, tags);
+        seriesInfo = new SeriesInfo(series, episodes, cast, genres, tags);
 
         foreach (var episode in episodes)
             EpisodeIdToSeriesIdDictionary[episode.Id] = seriesId;
-        DataCache.Set<SeriesInfo>(cacheKey, info, DefaultTimeSpan);
-        return info;
+        DataCache.Set<SeriesInfo>(cacheKey, seriesInfo, DefaultTimeSpan);
+        return seriesInfo;
     }
 
     public bool TryGetSeriesIdForPath(string path, out string? seriesId)
@@ -563,6 +580,10 @@ public class ShokoAPIManager
 
     public bool TryGetGroupIdForSeriesId(string seriesId, out string? groupId)
     {
+        if (string.IsNullOrEmpty(seriesId)) {
+            groupId = null;
+            return false;
+        }
         return SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out groupId);
     }
 
@@ -574,12 +595,12 @@ public class ShokoAPIManager
         var partialPath = StripMediaFolder(path);
         Logger.LogDebug("Looking for group matching {Path}", partialPath);
 
-        string? seriesId;
-        if (PathToSeriesIdDictionary.TryGetValue(path, out seriesId))
-        {
+        if (PathToSeriesIdDictionary.TryGetValue(path, out var seriesId)) {
             if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
-                if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info))
+                if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info)) {
+                    Logger.LogTrace("Reusing info object for group {GroupName}. (Group={GroupId})", info.Shoko.Name, seriesId);
                     return info;
+                }
 
                 return await GetGroupInfo(groupId, filterByType);
             }
@@ -634,13 +655,10 @@ public class ShokoAPIManager
 
     private async Task<GroupInfo> CreateGroupInfo(Group group, string groupId, Ordering.GroupFilterType filterByType)
     {
-        if (string.IsNullOrEmpty(groupId))
-            groupId = group.IDs.Shoko.ToString();
-
         var cacheKey = $"group:{filterByType}:{groupId}";
-        GroupInfo? groupInfo = null;
-        if (DataCache.TryGetValue<GroupInfo>(cacheKey, out groupInfo))
+        if (DataCache.TryGetValue<GroupInfo>(cacheKey, out var groupInfo))
             return groupInfo;
+
         Logger.LogTrace("Creating info object for group {GroupName}. (Group={GroupId})", group.Name, groupId);
 
         var seriesList = (await APIClient.GetSeriesInGroup(groupId)
@@ -648,26 +666,19 @@ public class ShokoAPIManager
             .Unwrap())
             .Where(s => s != null)
             .ToList();
-        if (seriesList.Count > 0) switch (filterByType) {
-            default:
-                break;
-            case Ordering.GroupFilterType.Movies:
-                seriesList = seriesList.Where(s => s.AniDB.Type == SeriesType.Movie).ToList();
-                break;
-            case Ordering.GroupFilterType.Others:
-                seriesList = seriesList.Where(s => s.AniDB.Type != SeriesType.Movie).ToList();
-                break;
-        }
 
         // Return early if no series matched the filter or if the list was empty.
         if (seriesList.Count == 0) {
             Logger.LogWarning("Creating an empty group info for filter {Filter}! (Group={GroupId})", filterByType.ToString(), groupId);
+
             groupInfo = new GroupInfo(group);
+
             DataCache.Set<GroupInfo>(cacheKey, groupInfo, DefaultTimeSpan);
             return groupInfo;
         }
 
         groupInfo = new GroupInfo(group, seriesList, filterByType);
+
         foreach (var series in seriesList)
             SeriesIdToGroupIdDictionary[series.Id] = groupId;
         DataCache.Set<GroupInfo>(cacheKey, groupInfo, DefaultTimeSpan);
