@@ -74,7 +74,14 @@ public class File
         /// where the <see cref="File"/> lies.
         /// </summary>
         [JsonPropertyName("RelativePath")]
-        public string Path { get; set; } = "";
+        public string RelativePath { get; set; } = "";
+
+        /// <summary>
+        /// The relative path from the base of the <see cref="ImportFolder"/> to
+        /// where the <see cref="File"/> lies, with a leading slash applied at
+        /// the start.
+        /// </summary>
+        public string Path => "/" + RelativePath;
 
         /// <summary>
         /// True if the server can access the the <see cref="Location.Path"/> at
