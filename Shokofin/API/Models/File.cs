@@ -73,7 +73,6 @@ public class File
         /// The relative path from the base of the <see cref="ImportFolder"/> to
         /// where the <see cref="File"/> lies.
         /// </summary>
-        [JsonPropertyName("RelativePath")]
         public string RelativePath { get; set; } = "";
 
         /// <summary>
