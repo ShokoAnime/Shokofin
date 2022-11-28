@@ -28,7 +28,7 @@ public class ShokoAPIManager
 
     private readonly ILibraryManager LibraryManager;
 
-    private readonly List<Folder> MediaFolderList = new List<Folder>();
+    private readonly List<Folder> MediaFolderList = new();
 
     private readonly ConcurrentDictionary<string, string> PathToSeriesIdDictionary = new();
 
@@ -142,15 +142,15 @@ public class ShokoAPIManager
     {
         Logger.LogDebug("Clearing data.");
         DataCache.Dispose();
-        MediaFolderList.Clear();
-        FileIdToEpisodeIdDictionary.Clear();
-        PathToFileIdAndSeriesIdDictionary.Clear();
-        EpisodeIdToSeriesIdDictionary.Clear();
-        PathToEpisodeIdsDictionary.Clear();
         EpisodeIdToEpisodePathDictionary.Clear();
+        EpisodeIdToSeriesIdDictionary.Clear();
+        FileIdToEpisodeIdDictionary.Clear();
+        MediaFolderList.Clear();
+        PathToEpisodeIdsDictionary.Clear();
+        PathToFileIdAndSeriesIdDictionary.Clear();
         PathToSeriesIdDictionary.Clear();
-        SeriesIdToPathDictionary.Clear();
         SeriesIdToGroupIdDictionary.Clear();
+        SeriesIdToPathDictionary.Clear();
         DataCache = (new MemoryCache((new MemoryCacheOptions() {
             ExpirationScanFrequency = ExpirationScanFrequency,
         })));
