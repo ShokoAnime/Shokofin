@@ -84,7 +84,7 @@ namespace Shokofin
             if (Plugin.Instance.Configuration.FilterOnLibraryTypes) switch (libraryType) {
                 case "tvshows":
                     if (series.AniDB.Type == SeriesType.Movie) {
-                        Logger.LogInformation("Library seperatation is enabled, ignoring series. (Series={SeriesId})", series.Id);
+                        Logger.LogInformation("Library separation is enabled, ignoring series. (Series={SeriesId})", series.Id);
                         return true;
                     }
 
@@ -96,7 +96,7 @@ namespace Shokofin
                     break;
                 case "movies":
                     if (series.AniDB.Type != SeriesType.Movie) {
-                        Logger.LogInformation("Library seperatation is enabled, ignoring series. (Series={SeriesId})", series.Id);
+                        Logger.LogInformation("Library separation is enabled, ignoring series. (Series={SeriesId})", series.Id);
                         return true;
                     }
 
