@@ -66,7 +66,7 @@ public class GroupInfo
                 throw new System.Exception("Not implemented yet");
         }
 
-        // Select the targeted id if a group spesify a default series.
+        // Select the targeted id if a group specify a default series.
         int foundIndex = -1;
         int targetId = group.IDs.MainSeries;
         if (targetId != 0)
@@ -89,7 +89,7 @@ public class GroupInfo
 
         // Throw if we can't get a base point for seasons.
         if (foundIndex == -1)
-            throw new System.Exception("Unable to get a base-point for seasions withing the group");
+            throw new System.Exception("Unable to get a base-point for seasons within the group");
 
         var seasonOrderDictionary = new Dictionary<int, SeriesInfo>();
         var seasonNumberBaseDictionary = new Dictionary<SeriesInfo, int>();

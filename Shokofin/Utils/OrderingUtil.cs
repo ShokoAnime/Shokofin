@@ -30,7 +30,7 @@ namespace Shokofin.Utils
             MergeFriendly = 1,
 
             /// <summary>
-            /// Group seris based on Shoko's default group filter.
+            /// Group series based on Shoko's default group filter.
             /// </summary>
             ShokoGroup = 2,
 
@@ -96,7 +96,7 @@ namespace Shokofin.Utils
         /// <summary>
         /// Get index number for a movie in a box-set.
         /// </summary>
-        /// <returns>Absoute index.</returns>
+        /// <returns>Absolute index.</returns>
         public static int GetMovieIndexNumber(GroupInfo group, SeriesInfo series, EpisodeInfo episode)
         {
             switch (Plugin.Instance.Configuration.BoxSetGrouping) {
@@ -240,7 +240,7 @@ namespace Shokofin.Utils
                     byAirdate:
                     // Reset the order if we come from `SpecialOrderType.InBetweenSeasonMixed`.
                     episodeNumber = null;
-                    if (series.SpesialsAnchors.TryGetValue(episode, out var previousEpisode))
+                    if (series.SpecialsAnchors.TryGetValue(episode, out var previousEpisode))
                         episodeNumber = GetEpisodeNumber(group, series, previousEpisode);
 
                     if (episodeNumber.HasValue && episodeNumber.Value < series.EpisodeList.Count) {

@@ -370,7 +370,7 @@ public class ShokoAPIManager
         // Find the cross-references for the selected series.
         var seriesXRef = file.CrossReferences.FirstOrDefault(xref => xref.Series.Shoko.ToString() == seriesId);
         if (seriesXRef == null)
-            throw new Exception($"Unable to find any cross-references for the spesified series for the file. (File={fileId},Series={seriesId})");
+            throw new Exception($"Unable to find any cross-references for the specified series for the file. (File={fileId},Series={seriesId})");
 
         // Find a list of the episode info for each episode linked to the file for the series.
         var episodeList = new List<EpisodeInfo>();
@@ -378,7 +378,7 @@ public class ShokoAPIManager
             var episodeId = episodeXRef.Shoko.ToString();
             var episodeInfo = await GetEpisodeInfo(episodeId);
             if (episodeInfo == null)
-                throw new Exception($"Unable to find episode cross-reference for the spesified series and episode for the file. (File={fileId},Episode={episodeId},Series={seriesId})");
+                throw new Exception($"Unable to find episode cross-reference for the specified series and episode for the file. (File={fileId},Episode={episodeId},Series={seriesId})");
             episodeList.Add(episodeInfo);
         }
 
