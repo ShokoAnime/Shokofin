@@ -92,7 +92,7 @@
                         <legend>
                             <h3>Plugin Compatibility Settings</h3>
                         </legend>
-                        <div class="fieldDescription verticalSection-extrabottompadding">We can optionally set some ids for interopobility with other plugins.</div>
+                        <div class="fieldDescription verticalSection-extrabottompadding">We can optionally set some ids for interoperability with other plugins.</div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="AddAniDBId" />
@@ -144,7 +144,7 @@
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="FilterOnLibraryTypes" />
-                                <span>Enable library seperation</span>
+                                <span>Enable library separation</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">This setting can be used to have one shared root folder on your disk for two libraries in Shoko — one library for movies and one for shows. Enabling this will cause the plugin to actively filter out movies from the show library and everything but movies from the movies library. Also, if you've selected to use Shoko's Group feature to create Series/Seasons then it will also exclude the Movies from within the series — i.e. the "season" for the movie won't appear  — even if they share a group in Shoko.</div>
                         </div>
@@ -290,7 +290,11 @@
                         </div>
                         <div class="inputContainer inputContainer-withDescription">
                             <input is="emby-input" type="text" id="IgnoredFileExtensions" label="Ignored file extensions:" />
-                            <div class="fieldDescription">A space seperated list of file extensions which will be ignored during the library scan.</div>
+                            <div class="fieldDescription">A space separated list of file extensions which will be ignored during the library scan.</div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription">
+                            <input is="emby-input" type="text" id="IgnoredFolders" label="Ignored folder names:" />
+                            <div class="fieldDescription">A coma separated list of folder names which will be ignored during the library scan.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">

@@ -4,12 +4,66 @@ const PluginConfig = {
 
 const Messages = {
     ConnectToShoko: "Please establish a connection to a running instance of Shoko Server before you continue.",
-    InvalidCredentials: "An error occured while trying to authenticating the user using the provided credentials.",
+    InvalidCredentials: "An error occurred while trying to authenticating the user using the provided credentials.",
     UnableToRender: "There was an error loading the page, please refresh once to see if that will fix it.",
 };
 
-function filterIgnoreList(value) {
-    return Array.from(new Set(value.split(/[\s,]+/g).map(str =>  { str = str.trim().toLowerCase(); if (str[0] !== ".") str = "." + str; return str; })));
+/**
+ * Filter out duplicate values and sanitize list.
+ * @param {string} value - Stringified list of values to filter.
+ * @returns {string[]} An array of sanitized and filtered values.
+ */
+ function filterIgnoredExtensions(value) {
+    // We convert to a set to filter out duplicate values.
+    const filteredSet = new Set(
+        value
+            // Split the values at every space, tab, comma.
+            .split(/[\s,]+/g)
+            // Sanitize inputs.
+            .map(str =>  {
+                // Trim the start and end and convert to lower-case.
+                str = str.trim().toLowerCase();
+
+                // Add a dot if it's missing.
+                if (str[0] !== ".")
+                    str = "." + str;
+
+                return str;
+            }),
+        );
+
+    // Filter out empty values.
+    if (filteredSet.has(""))
+        filteredSet.delete("");
+
+    // Convert it back into an array.
+    return Array.from(filteredSet);
+}
+
+/**
+ * Filter out duplicate values and sanitize list.
+ * @param {string} value - Stringified list of values to filter.
+ * @returns {string[]} An array of sanitized and filtered values.
+ */
+ function filterIgnoredFolders(value) {
+    // We convert to a set to filter out duplicate values.
+    const filteredSet = new Set(
+        value
+            // Split the values at every comma.
+            .split("."))
+            // Sanitize inputs.
+            .map(str =>  {
+                // Trim the start and end and convert to lower-case.
+                str = str.trim().toLowerCase();
+                return str;
+            });
+
+    // Filter out empty values.
+    if (filteredSet.has(""))
+        filteredSet.delete("");
+
+    // Convert it back into an array.
+    return Array.from(filteredSet);
 }
 
 async function loadUserConfig(form, userId, config) {
@@ -93,7 +147,8 @@ async function defaultSubmit(form) {
             publicHost = publicHost.slice(0, -1);
             form.querySelector("#PublicHost").value = publicHost;
         }
-        const ignoredFileExtensions = filterIgnoreList(form.querySelector("#IgnoredFileExtensions").value);
+        const ignoredFileExtensions = filterIgnoredExtensions(form.querySelector("#IgnoredFileExtensions").value);
+        const ignoredFolders = filterIgnoredFolders(from.querySelector("#IgnoredFolders").value);
 
         // Metadata settings
         config.TitleMainType = form.querySelector("#TitleMainType").value;
@@ -128,6 +183,8 @@ async function defaultSubmit(form) {
         config.PublicHost = publicHost;
         config.IgnoredFileExtensions = ignoredFileExtensions;
         form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
+        config.IgnoredFolders = ignoredFolders;
+        form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
         config.MergeQuartSeasons = form.querySelector("#MergeQuartSeasons").checked;
 
         // User settings
@@ -238,7 +295,8 @@ async function syncSettings(form) {
         publicHost = publicHost.slice(0, -1);
         form.querySelector("#PublicHost").value = publicHost;
     }
-    const ignoredFileExtensions = filterIgnoreList(form.querySelector("#IgnoredFileExtensions").value);
+    const ignoredFileExtensions = filterIgnoredExtensions(form.querySelector("#IgnoredFileExtensions").value);
+    const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
     // Metadata settings
     config.TitleMainType = form.querySelector("#TitleMainType").value;
@@ -273,6 +331,8 @@ async function syncSettings(form) {
     config.PublicHost = publicHost;
     config.IgnoredFileExtensions = ignoredFileExtensions;
     form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
+    config.IgnoredFolders = ignoredFolders;
+    form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
     config.MergeQuartSeasons = form.querySelector("#MergeQuartSeasons").checked;
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
@@ -341,7 +401,7 @@ export default function (page) {
     const form = page.querySelector("#ShokoConfigForm");
     const userSelector = form.querySelector("#UserSelector");
     // Refresh the view after we changed the settings, so the view reflect the new settings.
-    const refershSettings = (config) => {
+    const refreshSettings = (config) => {
         if (config.ApiKey) {
             form.querySelector("#Host").setAttribute("disabled", "");
             form.querySelector("#Username").setAttribute("disabled", "");
@@ -441,13 +501,14 @@ export default function (page) {
             // Advanced settings
             form.querySelector("#PublicHost").value = config.PublicHost;
             form.querySelector("#IgnoredFileExtensions").value = config.IgnoredFileExtensions.join(" ");
+            form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
             form.querySelector("#MergeQuartSeasons").checked = config.MergeQuartSeasons;
 
             if (!config.ApiKey) {
                 Dashboard.alert(Messages.ConnectToShoko);
             }
 
-            refershSettings(config);
+            refreshSettings(config);
         }
         catch (err) {
             Dashboard.alert(Messages.UnableToRender);
@@ -463,22 +524,22 @@ export default function (page) {
             default:
             case "all-settings":
                 Dashboard.showLoadingMsg();
-                defaultSubmit(form).then(refershSettings).catch(onError);
+                defaultSubmit(form).then(refreshSettings).catch(onError);
                 break;
             case "settings":
                 Dashboard.showLoadingMsg();
-                syncSettings(form).then(refershSettings).catch(onError);
+                syncSettings(form).then(refreshSettings).catch(onError);
                 break;
             case "reset-connection":
                 Dashboard.showLoadingMsg();
-                resetConnectionSettings(form).then(refershSettings).catch(onError);
+                resetConnectionSettings(form).then(refreshSettings).catch(onError);
                 break;
             case "unlink-user":
-                unlinkUser(form).then(refershSettings).catch(onError);
+                unlinkUser(form).then(refreshSettings).catch(onError);
                 break;
             case "user-settings":
                 Dashboard.showLoadingMsg();
-                syncUserSettings(form).then(refershSettings).catch(onError);
+                syncUserSettings(form).then(refreshSettings).catch(onError);
                 break;
         }
         return false;

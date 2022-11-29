@@ -103,7 +103,7 @@ public enum CreatorRoleType
     Music,
 
     /// <summary>
-    /// Responsible for the creation of the source work this show is detrived from.
+    /// Responsible for the creation of the source work this show is derived from.
     /// </summary>
     SourceWork,
 }

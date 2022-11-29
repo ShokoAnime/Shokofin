@@ -6,6 +6,8 @@ using Shokofin.API;
 using Shokofin.API.Models;
 using Shokofin.Utils;
 
+using Path = System.IO.Path;
+
 namespace Shokofin
 {
     public class LibraryScanner : IResolverIgnoreRule
@@ -45,6 +47,11 @@ namespace Shokofin
                 // Enable the scanner if we selected to use the Shoko provider for any metadata type on the current root folder.
                 if (!Lookup.IsEnabledForItem(parent))
                     return false;
+
+                if (fileInfo.IsDirectory &&  Plugin.Instance.IgnoredFolders.Contains(Path.GetFileName(fileInfo.FullName).ToLowerInvariant())) {
+                    Logger.LogDebug("Excluded folder at path {Path}", fileInfo.FullName);
+                    return true;
+                }
 
                 if (!fileInfo.IsDirectory && Plugin.Instance.IgnoredFileExtensions.Contains(fileInfo.Extension.ToLowerInvariant())) {
                     Logger.LogDebug("Skipped excluded file at path {Path}", fileInfo.FullName);

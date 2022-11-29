@@ -4,7 +4,7 @@ A Jellyfin plugin to integrate [Jellyfin](https://jellyfin.org/docs/) with [Shok
 
 ## Read this before installing
 
-The plugin requires Jellyfin version 10.8.`x` and Shoko Server version **4.1.2** or greater to be installed. **It also requires that you have already set up and are using Shoko Server**, and that the directories/folders you intend to use in Jellyfin are **fully indexed** (and optionally managed) by Shoko Server, **otherwise the plugin won't be able to funciton properly** — meaning you won't be able to find metadata about any entries that are not indexed by Shoko Server with this plugin, since the metadata is not available.
+The plugin requires Jellyfin version 10.8.`x` and Shoko Server version **4.1.2** or greater to be installed. **It also requires that you have already set up and are using Shoko Server**, and that the directories/folders you intend to use in Jellyfin are **fully indexed** (and optionally managed) by Shoko Server, **otherwise the plugin won't be able to function properly** — meaning you won't be able to find metadata about any entries that are not indexed by Shoko Server with this plugin, since the metadata is not available.
 
 ## Breaking Changes
 
@@ -18,7 +18,7 @@ If you're upgrading from an older version to version 1.5.0, then be sure to upda
 
 ## Install
 
-There are many ways to install the plugin, but the recomended way is to use the official Jellyfin repository.
+There are many ways to install the plugin, but the recommended way is to use the official Jellyfin repository.
 
 ### Official Repository
 

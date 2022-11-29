@@ -56,7 +56,7 @@ public class File
 
     /// <summary>
     /// Metadata about the location where a file lies, including the import
-    /// folder it belogns to and the relative path from the base of the import
+    /// folder it belongs to and the relative path from the base of the import
     /// folder to where it lies.
     /// </summary>
     public class Location
