@@ -50,7 +50,7 @@ namespace Shokofin
 
                 if (fileInfo.IsDirectory &&  Plugin.Instance.IgnoredFolders.Contains(Path.GetFileName(fileInfo.FullName).ToLowerInvariant())) {
                     Logger.LogDebug("Skipped excluded folder at path {Path}", fileInfo.FullName);
-                    return false;
+                    return true;
                 }
 
                 if (!fileInfo.IsDirectory && Plugin.Instance.IgnoredFileExtensions.Contains(fileInfo.Extension.ToLowerInvariant())) {
