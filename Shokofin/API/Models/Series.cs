@@ -200,7 +200,7 @@ public class Series
     public class SeriesSizes
     {
         /// <summary>
-        /// Counts of each file source type available within the local colleciton
+        /// Counts of each file source type available within the local collection
         /// </summary>
         public FileSourceCounts FileSources { get; set; } = new();
 

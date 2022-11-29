@@ -76,6 +76,8 @@ namespace Shokofin.Configuration
 
         public string[] IgnoredFileExtensions { get; set; }
 
+        public string[] IgnoredFolders { get; set; }
+
         public PluginConfiguration()
         {
             Host = "http://127.0.0.1:8111";
@@ -108,6 +110,7 @@ namespace Shokofin.Configuration
             FilterOnLibraryTypes = false;
             UserList = Array.Empty<UserConfiguration>();
             IgnoredFileExtensions  = new [] { ".nfo", ".jpg", ".jpeg", ".png" };
+            IgnoredFolders = new [] { ".streams", "@Recently-Snapshot" };
         }
     }
 }

@@ -29,7 +29,7 @@ public class Tag
     public int? Weight { get; set; }
 
     /// <summary>
-    /// Source. Anidb, User, etc.
+    /// Source. AniDB, User, etc.
     /// </summary>
     /// <value></value>
     public string Source { get; set; } = "";

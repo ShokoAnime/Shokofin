@@ -51,6 +51,11 @@ namespace Shokofin
                     return false;
                 }
 
+                if (!fileInfo.IsDirectory && Plugin.Instance.IgnoredFolders.Contains(fileInfo.FullName.ToLowerInvariant())) {
+                    Logger.LogDebug("Skipped excluded folder at path {Path}", fileInfo.FullName);
+                    return false;
+                }
+
                 var fullPath = fileInfo.FullName;
                 var mediaFolder = ApiManager.FindMediaFolder(fullPath, parent as Folder, root);
                 var partialPath = fullPath.Substring(mediaFolder.Path.Length);

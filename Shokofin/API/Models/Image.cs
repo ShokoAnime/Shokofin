@@ -60,7 +60,7 @@ public class Image
         => !string.IsNullOrEmpty(LocalPath);
 
     /// <summary>
-    /// The remote path to retrive the image.
+    /// The remote path to retrieve the image.
     /// </summary>
     [JsonIgnore]
     public virtual string Path
