@@ -8,8 +8,62 @@ const Messages = {
     UnableToRender: "There was an error loading the page, please refresh once to see if that will fix it.",
 };
 
-function filterIgnoreList(value) {
-    return Array.from(new Set(value.split(/[\s,]+/g).map(str =>  { str = str.trim().toLowerCase(); if (str[0] !== ".") str = "." + str; return str; })));
+/**
+ * Filter out duplicate values and sanitize list.
+ * @param {string} value - Stringified list of values to filter.
+ * @returns {string[]} An array of sanitized and filtered values.
+ */
+ function filterIgnoredExtensions(value) {
+    // We convert to a set to filter out duplicate values.
+    const filteredSet = new Set(
+        value
+            // Split the values at every space, tab, comma.
+            .split(/[\s,]+/g)
+            // Sanitize inputs.
+            .map(str =>  {
+                // Trim the start and end and convert to lower-case.
+                str = str.trim().toLowerCase();
+
+                // Add a dot if it's missing.
+                if (str[0] !== ".")
+                    str = "." + str;
+
+                return str;
+            }),
+        );
+
+    // Filter out empty values.
+    if (filteredSet.has(""))
+        filteredSet.delete("");
+
+    // Convert it back into an array.
+    return Array.from(filteredSet);
+}
+
+/**
+ * Filter out duplicate values and sanitize list.
+ * @param {string} value - Stringified list of values to filter.
+ * @returns {string[]} An array of sanitized and filtered values.
+ */
+ function filterIgnoredFolders(value) {
+    // We convert to a set to filter out duplicate values.
+    const filteredSet = new Set(
+        value
+            // Split the values at every comma.
+            .split("."))
+            // Sanitize inputs.
+            .map(str =>  {
+                // Trim the start and end and convert to lower-case.
+                str = str.trim().toLowerCase();
+                return str;
+            });
+
+    // Filter out empty values.
+    if (filteredSet.has(""))
+        filteredSet.delete("");
+
+    // Convert it back into an array.
+    return Array.from(filteredSet);
 }
 
 async function loadUserConfig(form, userId, config) {
@@ -93,8 +147,8 @@ async function defaultSubmit(form) {
             publicHost = publicHost.slice(0, -1);
             form.querySelector("#PublicHost").value = publicHost;
         }
-        const ignoredFileExtensions = filterIgnoreList(form.querySelector("#IgnoredFileExtensions").value);
-        const ignoredFolders = filterIgnoreList(from.querySelector("#IgnoredFolders").value);
+        const ignoredFileExtensions = filterIgnoredExtensions(form.querySelector("#IgnoredFileExtensions").value);
+        const ignoredFolders = filterIgnoredFolders(from.querySelector("#IgnoredFolders").value);
 
         // Metadata settings
         config.TitleMainType = form.querySelector("#TitleMainType").value;
@@ -241,9 +295,8 @@ async function syncSettings(form) {
         publicHost = publicHost.slice(0, -1);
         form.querySelector("#PublicHost").value = publicHost;
     }
-    const ignoredFileExtensions = filterIgnoreList(form.querySelector("#IgnoredFileExtensions").value);
-
-    const ignoredFolders = filterIgnoreList(form.querySelector("#IgnoredFolders").value);
+    const ignoredFileExtensions = filterIgnoredExtensions(form.querySelector("#IgnoredFileExtensions").value);
+    const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
     // Metadata settings
     config.TitleMainType = form.querySelector("#TitleMainType").value;
