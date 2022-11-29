@@ -130,7 +130,7 @@ async function defaultSubmit(form) {
         config.IgnoredFileExtensions = ignoredFileExtensions;
         form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
         config.IgnoredFolders = ignoredFolders;
-        form.querySelector("#IgnoredFolders").value = ignoredFolders.join(" ");
+        form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
         config.MergeQuartSeasons = form.querySelector("#MergeQuartSeasons").checked;
 
         // User settings
@@ -279,7 +279,7 @@ async function syncSettings(form) {
     config.IgnoredFileExtensions = ignoredFileExtensions;
     form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
     config.IgnoredFolders = ignoredFolders;
-    form.querySelector("#IgnoredFolders").value = ignoredFolders.join(" ");
+    form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
     config.MergeQuartSeasons = form.querySelector("#MergeQuartSeasons").checked;
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
