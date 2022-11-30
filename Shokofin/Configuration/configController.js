@@ -50,13 +50,14 @@ const Messages = {
     const filteredSet = new Set(
         value
             // Split the values at every comma.
-            .split(","))
+            .split(",")
             // Sanitize inputs.
             .map(str =>  {
                 // Trim the start and end and convert to lower-case.
                 str = str.trim().toLowerCase();
                 return str;
-            });
+            }),
+    );
 
     // Filter out empty values.
     if (filteredSet.has(""))
