@@ -110,7 +110,7 @@ namespace Shokofin.Configuration
             FilterOnLibraryTypes = false;
             UserList = Array.Empty<UserConfiguration>();
             IgnoredFileExtensions  = new [] { ".nfo", ".jpg", ".jpeg", ".png" };
-            IgnoredFolders = new [] { ".streams", "@Recently-Snapshot" };
+            IgnoredFolders = new [] { ".streams", "@recently-snapshot", "$recycle.bin", ".recycle.bin", "#recycle" };
         }
     }
 }
