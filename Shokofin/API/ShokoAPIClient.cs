@@ -192,9 +192,19 @@ public class ShokoAPIClient
         return Get<List<File>>($"/api/v3/Series/{seriesId}/File?includeXRefs=true");
     }
 
-    public Task<File.UserStats> GetFileUserStats(string fileId, string? apiKey = null)
+    public async Task<File.UserStats?> GetFileUserStats(string fileId, string? apiKey = null)
     {
-        return Get<File.UserStats>($"/api/v3/File/{fileId}/UserStats", apiKey);
+        try
+        {
+            return await Get<File.UserStats>($"/api/v3/File/{fileId}/UserStats", apiKey);
+        }
+        catch (ApiException e)
+        {
+            // File user stats were not found.
+            if (e.StatusCode == HttpStatusCode.NotFound && e.Message.Contains("FileUserStats"))
+                return null;
+            throw;
+        }
     }
 
     public Task<File.UserStats> PutFileUserStats(string fileId, File.UserStats userStats, string? apiKey = null)
