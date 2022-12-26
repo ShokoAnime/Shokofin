@@ -232,12 +232,23 @@ public class ShokoAPIManager
     #endregion
     #region Path Set And Local Episode IDs
 
+    /// <summary>
+    /// Get a set of paths that are unique to the series and don't belong to
+    /// any other series.
+    /// </summary>
+    /// <param name="seriesId">Shoko series id.</param>
+    /// <returns>Unique path set for the series</returns>
     public async Task<HashSet<string>> GetPathSetForSeries(string seriesId)
     {
         var (pathSet, _episodeIds) = await GetPathSetAndLocalEpisodeIdsForSeries(seriesId);
         return pathSet;
     }
 
+    /// <summary>
+    /// Get a set of local episode ids for the series.
+    /// </summary>
+    /// <param name="seriesId">Shoko series id.</param>
+    /// <returns>Local episode ids for the series</returns>
     public HashSet<string> GetLocalEpisodeIdsForSeries(string seriesId)
     {
         var (_pathSet, episodeIds) = GetPathSetAndLocalEpisodeIdsForSeries(seriesId)
@@ -488,24 +499,14 @@ public class ShokoAPIManager
 
     public async Task<SeriesInfo?> GetSeriesInfoByPath(string path)
     {
-        var partialPath = StripMediaFolder(path);
-        Logger.LogDebug("Looking for series matching {Path}", partialPath);
-        if (!PathToSeriesIdDictionary.TryGetValue(path, out var seriesId)) {
-            var result = await APIClient.GetSeriesPathEndsWith(partialPath);
-            Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
-            seriesId = result?.FirstOrDefault()?.IDs?.Shoko.ToString();
-
-            if (string.IsNullOrEmpty(seriesId))
-                return null;
-
-            PathToSeriesIdDictionary[path] = seriesId;
-            SeriesIdToPathDictionary.TryAdd(seriesId, path);
-        }
+        var seriesId = await GetSeriesIdForPath(path);
+        if (string.IsNullOrEmpty(seriesId))
+            return null;
 
         var key = $"series:{seriesId}";
-        if (DataCache.TryGetValue<SeriesInfo>(key, out var info)) {
-            Logger.LogTrace("Reusing info object for series {SeriesName}. (Series={SeriesId})", info.Shoko.Name, seriesId);
-            return info;
+        if (DataCache.TryGetValue<SeriesInfo>(key, out var seriesInfo)) {
+            Logger.LogTrace("Reusing info object for series {SeriesName}. (Series={SeriesId})", seriesInfo.Shoko.Name, seriesId);
+            return seriesInfo;
         }
 
         var series = await APIClient.GetSeries(seriesId);
@@ -517,9 +518,12 @@ public class ShokoAPIManager
         if (string.IsNullOrEmpty(seriesId))
             return null;
 
-        var key = $"series:{seriesId}";
-        if (DataCache.TryGetValue<SeriesInfo>(key, out var info))
-            return info;
+        var cachedKey = $"series:{seriesId}";
+        if (DataCache.TryGetValue<SeriesInfo>(cachedKey, out var seriesInfo)) {
+            Logger.LogTrace("Reusing info object for series {SeriesName}. (Series={SeriesId})", seriesInfo.Shoko.Name, seriesId);
+            return seriesInfo;
+        }
+
         var series = await APIClient.GetSeries(seriesId);
         return await CreateSeriesInfo(series, seriesId);
     }
@@ -539,8 +543,10 @@ public class ShokoAPIManager
     private async Task<SeriesInfo> CreateSeriesInfo(Series series, string seriesId)
     {
         var cacheKey = $"series:{seriesId}";
-        if (DataCache.TryGetValue<SeriesInfo>(cacheKey, out var seriesInfo))
+        if (DataCache.TryGetValue<SeriesInfo>(cacheKey, out var seriesInfo)) {
+            Logger.LogTrace("Reusing info object for series {SeriesName}. (Series={SeriesId})", seriesInfo.Shoko.Name, seriesId);
             return seriesInfo;
+        }
 
         Logger.LogTrace("Creating info object for series {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
 
@@ -587,19 +593,51 @@ public class ShokoAPIManager
         return SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out groupId);
     }
 
+    private async Task<string?> GetSeriesIdForPath(string path)
+    {
+        // Reuse cached value.
+        if (PathToSeriesIdDictionary.TryGetValue(path, out var seriesId))
+            return seriesId;
+
+        var partialPath = StripMediaFolder(path);
+        Logger.LogDebug("Looking for series matching {Path}", partialPath);
+        var result = await APIClient.GetSeriesPathEndsWith(partialPath);
+        Logger.LogTrace("Found result with {Count} matches for {Path}", result.Count, partialPath);
+
+        // Retrun the first match where the series unique paths partially match
+        // the input path.
+        foreach (var series in result)
+        {
+            seriesId  = series.IDs.Shoko.ToString();
+            var pathSet = await GetPathSetForSeries(seriesId);
+            foreach (var uniquePath in pathSet)
+            {
+                // Remove the trailing slash before matching.
+                if (!uniquePath[..^1].EndsWith(partialPath))
+                    continue;
+
+                PathToSeriesIdDictionary[path] = seriesId;
+                SeriesIdToPathDictionary.TryAdd(seriesId, path);
+
+                return seriesId;
+            }
+        }
+
+        // In the edge case for series with only files with multiple
+        // cross-refereces we just return the first match.
+        return result.FirstOrDefault()?.IDs.Shoko.ToString();
+    }
+
     #endregion
     #region Group Info
 
     public async Task<GroupInfo?> GetGroupInfoByPath(string path, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
     {
-        var partialPath = StripMediaFolder(path);
-        Logger.LogDebug("Looking for group matching {Path}", partialPath);
-
         if (PathToSeriesIdDictionary.TryGetValue(path, out var seriesId)) {
             if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
-                if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info)) {
-                    Logger.LogTrace("Reusing info object for group {GroupName}. (Group={GroupId})", info.Shoko.Name, seriesId);
-                    return info;
+                if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var groupInfo)) {
+                    Logger.LogTrace("Reusing info object for group {GroupName}. (Series={seriesId},Group={GroupId})", groupInfo.Shoko.Name, seriesId, groupId);
+                    return groupInfo;
                 }
 
                 return await GetGroupInfo(groupId, filterByType);
@@ -607,15 +645,9 @@ public class ShokoAPIManager
         }
         else
         {
-            var result = await APIClient.GetSeriesPathEndsWith(partialPath);
-            Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
-            seriesId = result?.FirstOrDefault()?.IDs?.Shoko.ToString();
-
+            seriesId = await GetSeriesIdForPath(path);
             if (string.IsNullOrEmpty(seriesId))
                 return null;
-
-            PathToSeriesIdDictionary[path] = seriesId;
-            SeriesIdToPathDictionary.TryAdd(seriesId, path);
         }
 
         return await GetGroupInfoForSeries(seriesId, filterByType);
@@ -626,8 +658,10 @@ public class ShokoAPIManager
         if (string.IsNullOrEmpty(groupId))
             return null;
 
-        if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var info))
-            return info;
+        if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var groupInfo)) {
+            Logger.LogTrace("Reusing info object for group {GroupName}. (Group={GroupId})", groupInfo.Shoko.Name, groupId);
+            return groupInfo;
+        }
 
         var group = await APIClient.GetGroup(groupId);
         return await CreateGroupInfo(group, groupId, filterByType);
@@ -644,8 +678,10 @@ public class ShokoAPIManager
                 return null;
 
             groupId = group.IDs.Shoko.ToString();
-            if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var groupInfo))
+            if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var groupInfo)) {
+                Logger.LogTrace("Reusing info object for group {GroupName}. (Series={SeriesId},Group={GroupId})", groupInfo.Shoko.Name, seriesId, groupId);   
                 return groupInfo;
+            }
 
             return await CreateGroupInfo(group, groupId, filterByType);
         }
@@ -656,8 +692,10 @@ public class ShokoAPIManager
     private async Task<GroupInfo> CreateGroupInfo(Group group, string groupId, Ordering.GroupFilterType filterByType)
     {
         var cacheKey = $"group:{filterByType}:{groupId}";
-        if (DataCache.TryGetValue<GroupInfo>(cacheKey, out var groupInfo))
+        if (DataCache.TryGetValue<GroupInfo>(cacheKey, out var groupInfo)) {
+            Logger.LogTrace("Reusing info object for group {GroupName}. (Group={GroupId})", groupInfo.Shoko.Name, groupId);   
             return groupInfo;
+        }
 
         Logger.LogTrace("Creating info object for group {GroupName}. (Group={GroupId})", group.Name, groupId);
 
