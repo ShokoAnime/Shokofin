@@ -256,14 +256,13 @@ namespace Shokofin.Utils
                     // We need to have TvDB/TMDB data in the first place to do this method.
                     if (episode.TvDB == null) {
                         if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirdate;
-                        airsAfterSeasonNumber = seasonNumber;
                         break;
                     }
 
                     episodeNumber = episode.TvDB.AirsBeforeEpisode;
                     if (!episodeNumber.HasValue) {
-                        if (episode.TvDB.AirsAfterSeason.HasValue) {
-                            airsAfterSeasonNumber = seasonNumber;
+                        if (episode.TvDB.AirsBeforeSeason.HasValue) {
+                            airsBeforeSeasonNumber = seasonNumber;
                             break;
                         }
 
@@ -280,7 +279,6 @@ namespace Shokofin.Utils
                     }
 
                     if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirdate;
-                    airsAfterSeasonNumber = seasonNumber;
                     break;
             }
 
