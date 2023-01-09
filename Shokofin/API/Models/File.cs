@@ -80,7 +80,7 @@ public class File
         /// where the <see cref="File"/> lies, with a leading slash applied at
         /// the start.
         /// </summary>
-        public string Path => "/" + RelativePath;
+        public string Path => System.IO.Path.DirectorySeparatorChar + RelativePath;
 
         /// <summary>
         /// True if the server can access the the <see cref="Location.Path"/> at

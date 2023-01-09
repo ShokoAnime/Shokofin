@@ -269,7 +269,7 @@ public class ShokoAPIManager
         foreach (var file in await APIClient.GetFilesForSeries(seriesId)) {
             if (file.CrossReferences.Count == 1)
                 foreach (var fileLocation in file.Locations)
-                    pathSet.Add((Path.GetDirectoryName(fileLocation.Path) ?? "") + "/");
+                    pathSet.Add((Path.GetDirectoryName(fileLocation.Path) ?? "") + Path.DirectorySeparatorChar);
             var xref = file.CrossReferences.First(xref => xref.Series.Shoko.ToString() == seriesId);
             foreach (var episodeXRef in xref.Episodes)
                 episodeIds.Add(episodeXRef.Shoko.ToString());
@@ -317,7 +317,7 @@ public class ShokoAPIManager
         }
 
         // Find the correct series based on the path.
-        var selectedPath = (Path.GetDirectoryName(fileLocations.First().Path) ?? "") + "/";
+        var selectedPath = (Path.GetDirectoryName(fileLocations.First().Path) ?? "") + Path.DirectorySeparatorChar;
         foreach (var seriesXRef in file.CrossReferences) {
             var seriesId = seriesXRef.Series.Shoko.ToString();
 
