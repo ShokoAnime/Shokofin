@@ -80,7 +80,19 @@ public class File
         /// where the <see cref="File"/> lies, with a leading slash applied at
         /// the start.
         /// </summary>
-        public string Path => System.IO.Path.DirectorySeparatorChar + RelativePath;
+        public string Path =>
+            __path != null ? (
+                __path
+             ) : (
+                __path = System.IO.Path.DirectorySeparatorChar + RelativePath
+                    .Replace('/', System.IO.Path.DirectorySeparatorChar)
+                    .Replace('\\', System.IO.Path.DirectorySeparatorChar)
+             );
+
+        /// <summary>
+        /// Cached path for later re-use.
+        /// </summary>
+        private string? __path { get; set; }
 
         /// <summary>
         /// True if the server can access the the <see cref="Location.Path"/> at
