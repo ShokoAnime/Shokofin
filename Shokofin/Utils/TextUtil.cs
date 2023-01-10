@@ -9,6 +9,101 @@ namespace Shokofin.Utils
 {
     public class Text
     {
+        private static HashSet<char> PunctuationMarks = new() {
+            // Common punctuation marks
+            '.',   // period
+            ',',   // comma
+            ';',   // semicolon
+            ':',   // colon
+            '!',   // exclamation point
+            '?',   // question mark
+            '-',   // hyphen
+            '_',   // underscore
+            '(',   // left parenthesis
+            ')',   // right parenthesis
+            '[',   // left bracket
+            ']',   // right bracket
+            '{',   // left brace
+            '}',   // right brace
+            '"',  // double quote
+            '\'',   // single quote
+            '/',   // forward slash
+            '\\',  // backslash
+            '|',   // vertical bar
+            '@',   // at symbol
+            '#',   // pound or hash
+            '$',   // dollar
+            '%',   // percent
+            '^',   // caret
+            '&',   // ampersand
+            '*',   // asterisk
+            '+',   // plus
+            '=',   // equals
+            '<',   // less-than
+            '>',   // greater-than
+            '。',  // Chinese full stop
+            '，',  // Chinese comma
+            '、',  // Chinese enumeration comma
+            '；',  // Chinese semicolon
+            '：',  // Chinese colon
+            '！',  // Chinese exclamation point
+            '？',  // Chinese question mark
+            '“',  // Chinese double quote
+            '”',  // Chinese double quote
+            '‘',  // Chinese single quote
+            '’',  // Chinese single quote
+            '【',  // Chinese left bracket
+            '】',  // Chinese right bracket
+            '《',  // Chinese left angle bracket
+            '》',  // Chinese right angle bracket
+            '（',  // Chinese left parenthesis
+            '）',  // Chinese right parenthesis
+            '－',  // Chinese hyphen
+            '・',  // Japanese middle dot
+
+            // Less common punctuation marks
+            '‽',    // interrobang
+            '❞',   // double question mark
+            '❝',   // double exclamation mark
+            '⁇',   // question mark variation
+            '⁈',   // exclamation mark variation
+            '❕',   // white exclamation mark
+            '❔',   // white question mark
+            '‽',   // interrobang
+            '⁉',   // exclamation mark
+            '‽',   // interrobang
+            '※',   // reference mark
+            '‒',   // figure dash
+            '–',   // en dash
+            '—',   // em dash
+            '⸺',   // two-em dash
+            '⸻',   // three-em dash
+            '⟨',   // left angle bracket
+            '⟩',   // right angle bracket
+            '❮',   // left angle bracket
+            '❯',   // right angle bracket
+            '❬',   // left angle bracket
+            '❭',   // right angle bracket
+            '〈',   // left angle bracket
+            '〉',   // right angle bracket
+            '⌈',   // left angle bracket
+            '⌉',   // right angle bracket
+            '⌊',   // left angle bracket
+            '⌋',   // right angle bracket
+            '⦃',   // left angle bracket
+            '⦄',   // right angle bracket
+            '⦅',   // left angle bracket
+            '⦆',   // right angle bracket
+            '⦇',   // left angle bracket
+            '⦈',   // right angle bracket
+            '⦉',   // left angle bracket
+            '⦊',   // right angle bracket
+            '⦋',   // left angle bracket
+            '⦌',   // right angle bracket
+            '⦍',   // left angle bracket
+            '⦎',   // right angle bracket
+        };
+
         /// <summary>
         /// Where to get text the text from.
         /// </summary>
@@ -93,6 +188,9 @@ namespace Shokofin.Utils
         public static string GetDescription(EpisodeInfo episode)
             => GetDescription(episode.AniDB.Description, episode.TvDB?.Description);
 
+        public static string GetDescription(IEnumerable<EpisodeInfo> episodeList)
+            => JoinText(episodeList.Select(episode => GetDescription(episode)));
+
         private static string GetDescription(string aniDbDescription, string otherDescription)
         {
             string overview;
@@ -170,6 +268,32 @@ namespace Shokofin.Utils
                 GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, Plugin.Instance.Configuration.TitleMainType, outputType, metadataLanguage, originLanguage),
                 GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, Plugin.Instance.Configuration.TitleAlternateType, outputType, metadataLanguage, originLanguage)
             );
+        }
+
+        public static string JoinText(IEnumerable<string> textList)
+        {
+            var filteredList = textList
+                .Where(title => !string.IsNullOrWhiteSpace(title))
+                .Select(title => title.Trim())
+                // We distinct the list because some episode entries contain the **exact** same description.
+                .Distinct()
+                .ToList();
+
+            if (filteredList.Count == 0)
+                return "";
+
+            var index = 1;
+            var outputText = filteredList[0];
+            while (index < filteredList.Count) {
+                var lastChar = outputText[^1];
+                outputText += PunctuationMarks.Contains(lastChar) ? " " : ". ";
+                outputText += filteredList[index++];
+            }
+
+            if (filteredList.Count > 1)
+                outputText.TrimEnd();
+
+            return outputText;
         }
 
         public static string GetEpisodeTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string episodeTitle, string metadataLanguage)
