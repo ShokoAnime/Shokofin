@@ -174,11 +174,17 @@ namespace Shokofin.Sync
                                 Logger.LogInformation("Playback was resumed. (File={FileId})", fileId);
                                 success = await APIClient.ScrobbleFile(fileId, episodeId, "resume", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
                             }
-                            // Scrobble.
-                            else {
+                            // Return early if we're not scrobbling.
+                            else if (!userConfig.SyncUserDataUnderPlaybackLive) {
                                 sessionMetadata.Ticks = ticks;
-                                if (++sessionMetadata.ScrobbleTicks < userConfig.SyncUserDataUnderPlaybackAtEveryXTicks ||
-                                    !userConfig.SyncUserDataUnderPlaybackLive)
+                                return;
+                            }
+                            // Live scrobbling.
+                            else  {
+                                var deltaTicks = Math.Abs(ticks - sessionMetadata.Ticks);
+                                sessionMetadata.Ticks = ticks;
+                                if (deltaTicks == 0 || deltaTicks < userConfig.SyncUserDataUnderPlaybackLiveThreshold &&
+                                    ++sessionMetadata.ScrobbleTicks < userConfig.SyncUserDataUnderPlaybackAtEveryXTicks)
                                     return;
 
                                 Logger.LogInformation("Scrobbled during playback. (File={FileId})", fileId);

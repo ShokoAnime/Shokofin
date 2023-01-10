@@ -43,6 +43,13 @@ namespace Shokofin.Configuration
         public byte SyncUserDataUnderPlaybackAtEveryXTicks { get; set; } = 6;
 
         /// <summary>
+        /// Imminently scrobble if the playtime changes above this threshold
+        /// given in ticks (ticks in a time-span).
+        /// </summary>
+        /// <value></value>
+        public long SyncUserDataUnderPlaybackLiveThreshold { get; set; } = 125000000; // 12.5s
+
+        /// <summary>
         /// Enable syncing user data when an item have been added/updated.
         /// </summary>
         public bool SyncUserDataOnImport { get; set; }

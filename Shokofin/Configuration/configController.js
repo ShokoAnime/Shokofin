@@ -85,7 +85,8 @@ async function loadUserConfig(form, userId, config) {
     form.querySelector("#UserEnableSynchronization").checked = userConfig.EnableSynchronization || false;
     form.querySelector("#SyncUserDataOnImport").checked = userConfig.SyncUserDataOnImport || false;
     form.querySelector("#SyncUserDataAfterPlayback").checked = userConfig.SyncUserDataAfterPlayback || false;
-    form.querySelector("#SyncUserDataUnderPlayback").checked = userConfig.SyncUserDataAfterPlayback && userConfig.SyncUserDataUnderPlayback || false;
+    form.querySelector("#SyncUserDataUnderPlayback").checked = userConfig.SyncUserDataUnderPlayback || false;
+    form.querySelector("#SyncUserDataUnderPlaybackLive").checked = userConfig.SyncUserDataUnderPlaybackLive || false;
     form.querySelector("#SyncRestrictedVideos").checked = userConfig.SyncRestrictedVideos || false;
     form.querySelector("#UserUsername").value = userConfig.Username || "";
     // Synchronization settings
@@ -192,6 +193,7 @@ async function defaultSubmit(form) {
             userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataUnderPlayback").checked;
             userConfig.SyncUserDataUnderPlaybackLive = form.querySelector("#SyncUserDataUnderPlaybackLive").checked;
             userConfig.SyncUserDataUnderPlaybackAtEveryXTicks = 6;
+            userConfig.SyncUserDataUnderPlaybackLiveThreshold = 125000000; // 12.5s
             userConfig.SyncRestrictedVideos = form.querySelector("#SyncRestrictedVideos").checked;
             
             // Only try to save a new token if a token is not already present.
@@ -368,6 +370,7 @@ async function syncUserSettings(form) {
     userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataUnderPlayback").checked;
     userConfig.SyncUserDataUnderPlaybackLive = form.querySelector("#SyncUserDataUnderPlaybackLive").checked;
     userConfig.SyncUserDataUnderPlaybackAtEveryXTicks = 6;
+    userConfig.SyncUserDataUnderPlaybackLiveThreshold = 125000000; // 12.5s
     userConfig.SyncRestrictedVideos = form.querySelector("#SyncRestrictedVideos").checked;
     
     // Only try to save a new token if a token is not already present.
