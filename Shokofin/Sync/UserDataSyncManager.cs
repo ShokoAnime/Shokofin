@@ -70,6 +70,7 @@ namespace Shokofin.Sync
             public string FileId;
             public SessionInfo Session;
             public long Ticks;
+            public byte ScrobbleTicks;
             public bool SentPaused;
         }
 
@@ -146,6 +147,7 @@ namespace Shokofin.Sync
                             sessionMetadata.ItemId = e.Item.Id;
                             sessionMetadata.FileId = fileId;
                             sessionMetadata.Ticks = userData.PlaybackPositionTicks;
+                            sessionMetadata.ScrobbleTicks = 0;
                             sessionMetadata.SentPaused = false;
 
                             Logger.LogInformation("Playback has started. (File={FileId})", fileId);
@@ -166,6 +168,7 @@ namespace Shokofin.Sync
                             // The playback was resumed.
                             else if (sessionMetadata.SentPaused) {
                                 sessionMetadata.Ticks = ticks;
+                                sessionMetadata.ScrobbleTicks = 0;
                                 sessionMetadata.SentPaused = false;
 
                                 Logger.LogInformation("Playback was resumed. (File={FileId})", fileId);
@@ -174,21 +177,26 @@ namespace Shokofin.Sync
                             // Scrobble.
                             else {
                                 sessionMetadata.Ticks = ticks;
+                                if (++sessionMetadata.ScrobbleTicks < userConfig.SyncUserDataUnderPlaybackAtEveryXTicks ||
+                                    !userConfig.SyncUserDataUnderPlaybackLive)
+                                    return;
 
                                 Logger.LogInformation("Scrobbled during playback. (File={FileId})", fileId);
+                                sessionMetadata.ScrobbleTicks = 0;
                                 success = await APIClient.ScrobbleFile(fileId, episodeId, "scrobble", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
                             }
                         }
                         break;
                     }
                     case UserDataSaveReason.PlaybackFinished: {
-                        if (!userConfig.SyncUserDataAfterPlayback)
+                        if (!(userConfig.SyncUserDataAfterPlayback || userConfig.SyncUserDataUnderPlayback))
                             return;
 
                         if (ActiveSessions.TryGetValue(e.UserId, out var sessionMetadata) && sessionMetadata.ItemId == e.Item.Id) {
                             sessionMetadata.ItemId = Guid.Empty;
                             sessionMetadata.FileId = null;
                             sessionMetadata.Ticks = 0;
+                            sessionMetadata.ScrobbleTicks = 0;
                             sessionMetadata.SentPaused = false;
                         }
 

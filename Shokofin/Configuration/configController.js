@@ -109,19 +109,6 @@ async function loadUserConfig(form, userId, config) {
     Dashboard.hideLoadingMsg();
 }
 
-function toggleSyncUnderPlayback(form, checked) {
-    const elem = form.querySelector("#SyncUserDataUnderPlayback");
-    if (checked) {
-        elem.removeAttribute("disabled");
-        elem.classList.remove("disabled");
-    }
-    else {
-        elem.setAttribute("disabled", "");
-        elem.classList.add("disabled");
-        elem.checked = false;
-    }
-}
-
 function getApiKey(username, password, userKey = false) {
     return ApiClient.fetch({
         dataType: "json",
@@ -202,7 +189,9 @@ async function defaultSubmit(form) {
             userConfig.EnableSynchronization = form.querySelector("#UserEnableSynchronization").checked;
             userConfig.SyncUserDataOnImport = form.querySelector("#SyncUserDataOnImport").checked;
             userConfig.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
-            userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked && form.querySelector("#SyncUserDataUnderPlayback").checked;
+            userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataUnderPlayback").checked;
+            userConfig.SyncUserDataUnderPlaybackLive = form.querySelector("#SyncUserDataUnderPlaybackLive").checked;
+            userConfig.SyncUserDataUnderPlaybackAtEveryXTicks = 6;
             userConfig.SyncRestrictedVideos = form.querySelector("#SyncRestrictedVideos").checked;
             
             // Only try to save a new token if a token is not already present.
@@ -376,7 +365,9 @@ async function syncUserSettings(form) {
     userConfig.EnableSynchronization = form.querySelector("#UserEnableSynchronization").checked;
     userConfig.SyncUserDataOnImport = form.querySelector("#SyncUserDataOnImport").checked;
     userConfig.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
-    userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked && form.querySelector("#SyncUserDataUnderPlayback").checked;
+    userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataUnderPlayback").checked;
+    userConfig.SyncUserDataUnderPlaybackLive = form.querySelector("#SyncUserDataUnderPlaybackLive").checked;
+    userConfig.SyncUserDataUnderPlaybackAtEveryXTicks = 6;
     userConfig.SyncRestrictedVideos = form.querySelector("#SyncRestrictedVideos").checked;
     
     // Only try to save a new token if a token is not already present.
@@ -454,10 +445,7 @@ export default function (page) {
         form.querySelector("#SyncUserDataOnImport").disabled = disabled;
         form.querySelector("#SyncUserDataAfterPlayback").disabled = disabled;
         form.querySelector("#SyncUserDataUnderPlayback").disabled = disabled;
-    });
-
-    form.querySelector("#SyncUserDataAfterPlayback").addEventListener("change", function () {
-        toggleSyncUnderPlayback(page, this.checked);
+        form.querySelector("#SyncUserDataUnderPlaybackLive").disabled = disabled;
     });
 
     page.addEventListener("viewshow", async function () {

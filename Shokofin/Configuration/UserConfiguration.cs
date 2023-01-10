@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Shokofin.Configuration
 {
@@ -17,12 +18,38 @@ namespace Shokofin.Configuration
         /// </summary>
         public bool EnableSynchronization { get; set; }
 
+        /// <summary>
+        /// Enable the stop event for syncing after video playback.
+        /// </summary>
         public bool SyncUserDataAfterPlayback { get; set; }
     
+        /// <summary>
+        /// Enable the play/pause/resume(/stop) events for syncing under/during
+        /// video playback.
+        /// </summary>
         public bool SyncUserDataUnderPlayback { get; set; }
 
+        /// <summary>
+        /// Enable the scrobble event for live syncing under/during video
+        /// playback.
+        /// </summary>
+        public bool SyncUserDataUnderPlaybackLive { get; set; }
+
+        /// <summary>
+        /// Number of ticks to skip (1 tick is 10 seconds) before scrobbling to
+        /// shoko.
+        /// </summary>
+        [Range(1, 250)]
+        public byte SyncUserDataUnderPlaybackAtEveryXTicks { get; set; } = 6;
+
+        /// <summary>
+        /// Enable syncing user data when an item have been added/updated.
+        /// </summary>
         public bool SyncUserDataOnImport { get; set; }
-        
+
+        /// <summary>
+        /// Enabling user data sync. for restricted videos (H).
+        /// </summary>
         public bool SyncRestrictedVideos { get; set; }
 
         /// <summary>

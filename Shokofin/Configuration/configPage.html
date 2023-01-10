@@ -213,9 +213,16 @@
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="SyncUserDataUnderPlayback" />
-                                    <span>Sync watch-state during playback</span>
+                                    <span>Sync watch-state events during playback</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">Enabling this setting will sync-back back the watch-state to Shoko during playback. "Sync watch-state after playback" must be enabled first to enable this setting.</div>
+                                <div class="fieldDescription checkboxFieldDescription">Enabling this setting will sync-back back the watch-state to Shoko on every play/pause/resume/stop events during playback.</div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="SyncUserDataUnderPlaybackLive" />
+                                    <span>Sync watch-state live during playback</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">Enabling this setting will sync-back back the watch-state to Shoko live during playback.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
