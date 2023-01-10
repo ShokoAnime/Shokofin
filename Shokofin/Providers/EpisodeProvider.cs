@@ -99,12 +99,37 @@ namespace Shokofin.Providers
 
             string displayTitle, alternateTitle;
             string defaultEpisodeTitle = mergeFriendly ? episode.TvDB.Title : episode.Shoko.Name;
-            if (series.AniDB.Type == SeriesType.Movie && (episode.AniDB.Type == EpisodeType.Normal || episode.AniDB.Type == EpisodeType.Special)) {
-                string defaultSeriesTitle = mergeFriendly ? series.TvDB.Title : series.Shoko.Name;
-                ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, defaultSeriesTitle, defaultEpisodeTitle, metadataLanguage);
+            if (config.TitleAddForMultipleEpisodes && file != null && file.EpisodeList.Count > 1) {
+                var displayTitles = new List<string>(file.EpisodeList.Count);
+                var alternateTitles = new List<string>(file.EpisodeList.Count);
+                for (var index = 0; index > file.EpisodeList.Count; index++)
+                {
+                    var episodeInfo = file.EpisodeList[index];
+                    if (series.AniDB.Type == SeriesType.Movie && (episodeInfo.AniDB.Type == EpisodeType.Normal || episodeInfo.AniDB.Type == EpisodeType.Special)) {
+                        string defaultSeriesTitle = mergeFriendly ? series.TvDB.Title : series.Shoko.Name;
+                        var ( dTitle, aTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episodeInfo.AniDB.Titles, defaultSeriesTitle, defaultEpisodeTitle, metadataLanguage);
+                        displayTitles[index] = dTitle;
+                        alternateTitles[index] = aTitle;
+                    }
+                    else {
+                        var ( dTitle, aTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episodeInfo.AniDB.Titles, defaultEpisodeTitle, metadataLanguage);
+                        displayTitles[index] = dTitle;
+                        alternateTitles[index] = aTitle;
+                    }
+                }
+                // TODO: Get a language spesific seperator, and/or create language spesific contatination rules (e.g. use "and" for the last title in English, etc.)
+                displayTitle = string.Join(", ", displayTitles.Where(title => !string.IsNullOrWhiteSpace(title)));
+                alternateTitle = string.Join(", ", alternateTitles.Where(title => !string.IsNullOrWhiteSpace(title)));
             }
             else {
-                ( displayTitle, alternateTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, defaultEpisodeTitle, metadataLanguage);
+                if (series.AniDB.Type == SeriesType.Movie && (episode.AniDB.Type == EpisodeType.Normal || episode.AniDB.Type == EpisodeType.Special)) {
+                    string defaultSeriesTitle = mergeFriendly ? series.TvDB.Title : series.Shoko.Name;
+                    ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, defaultSeriesTitle, defaultEpisodeTitle, metadataLanguage);
+                }
+                else {
+                    ( displayTitle, alternateTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, defaultEpisodeTitle, metadataLanguage);
+                }
+                
             }
 
             var episodeNumber = Ordering.GetEpisodeNumber(group, series, episode);

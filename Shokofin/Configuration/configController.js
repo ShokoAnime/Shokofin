@@ -154,6 +154,7 @@ async function defaultSubmit(form) {
         // Metadata settings
         config.TitleMainType = form.querySelector("#TitleMainType").value;
         config.TitleAlternateType = form.querySelector("#TitleAlternateType").value;
+        config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
         config.DescriptionSource = form.querySelector("#DescriptionSource").value;
         config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
         config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
@@ -302,6 +303,7 @@ async function syncSettings(form) {
     // Metadata settings
     config.TitleMainType = form.querySelector("#TitleMainType").value;
     config.TitleAlternateType = form.querySelector("#TitleAlternateType").value;
+    config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
     config.DescriptionSource = form.querySelector("#DescriptionSource").value;
     config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
     config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
@@ -472,6 +474,7 @@ export default function (page) {
             // Metadata settings
             form.querySelector("#TitleMainType").value = config.TitleMainType;
             form.querySelector("#TitleAlternateType").value = config.TitleAlternateType;
+            form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes || true;
             form.querySelector("#DescriptionSource").value = config.DescriptionSource;
             form.querySelector("#CleanupAniDBDescriptions").checked = config.SynopsisCleanMultiEmptyLines || config.SynopsisCleanLinks;
             form.querySelector("#MinimalAniDBDescriptions").checked = config.SynopsisRemoveSummary || config.SynopsisCleanMiscLines;

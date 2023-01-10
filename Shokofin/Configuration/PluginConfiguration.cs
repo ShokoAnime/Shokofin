@@ -17,7 +17,7 @@ namespace Shokofin.Configuration
         public string PublicHost { get; set; }
 
         [JsonIgnore]
-        public virtual string PrettyHost 
+        public virtual string PrettyHost
             => string.IsNullOrEmpty(PublicHost) ? Host : PublicHost;
 
         public string Username { get; set; }
@@ -31,10 +31,12 @@ namespace Shokofin.Configuration
         public bool HidePlotTags { get; set; }
 
         public bool HideAniDbTags { get; set; }
-        
+
         public bool HideSettingTags { get; set; }
-        
+
         public bool HideProgrammingTags { get; set; }
+
+        public bool TitleAddForMultipleEpisodes { get; set; }
 
         public bool SynopsisCleanLinks { get; set; }
 
@@ -90,6 +92,7 @@ namespace Shokofin.Configuration
             HideAniDbTags = true;
             HideSettingTags = false;
             HideProgrammingTags = true;
+            TitleAddForMultipleEpisodes = true;
             SynopsisCleanLinks = true;
             SynopsisCleanMiscLines = true;
             SynopsisRemoveSummary = true;
