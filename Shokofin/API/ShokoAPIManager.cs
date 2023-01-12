@@ -604,7 +604,7 @@ public class ShokoAPIManager
         var result = await APIClient.GetSeriesPathEndsWith(partialPath);
         Logger.LogTrace("Found result with {Count} matches for {Path}", result.Count, partialPath);
 
-        // Retrun the first match where the series unique paths partially match
+        // Return the first match where the series unique paths partially match
         // the input path.
         foreach (var series in result)
         {
@@ -624,7 +624,7 @@ public class ShokoAPIManager
         }
 
         // In the edge case for series with only files with multiple
-        // cross-refereces we just return the first match.
+        // cross-references we just return the first match.
         return result.FirstOrDefault()?.IDs.Shoko.ToString();
     }
 
