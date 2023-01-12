@@ -96,6 +96,7 @@ namespace Shokofin.Providers
         {
             var config = Plugin.Instance.Configuration;
             var maybeMergeFriendly = config.SeriesGrouping == Ordering.GroupType.MergeFriendly && series.TvDB != null;
+            var mergeFriendly = maybeMergeFriendly && episode.TvDB != null;
 
             string displayTitle, alternateTitle, description;
             if (config.TitleAddForMultipleEpisodes && file != null && file.EpisodeList.Count > 1) {
@@ -105,7 +106,7 @@ namespace Shokofin.Providers
                 {
                     string defaultEpisodeTitle = maybeMergeFriendly && episodeInfo.TvDB != null ? episodeInfo.TvDB.Title : episodeInfo.Shoko.Name;
                     if (series.AniDB.Type == SeriesType.Movie && (episodeInfo.AniDB.Type == EpisodeType.Normal || episodeInfo.AniDB.Type == EpisodeType.Special)) {
-                        string defaultSeriesTitle = maybeMergeFriendly ? series.TvDB.Title : series.Shoko.Name;
+                        string defaultSeriesTitle = maybeMergeFriendly && episodeInfo.TvDB != null ? series.TvDB.Title : series.Shoko.Name;
                         var ( dTitle, aTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episodeInfo.AniDB.Titles, defaultSeriesTitle, defaultEpisodeTitle, metadataLanguage);
                         displayTitles.Add(dTitle);
                         alternateTitles.Add(aTitle);
@@ -121,9 +122,9 @@ namespace Shokofin.Providers
                 description = Text.GetDescription(file.EpisodeList);
             }
             else {
-                string defaultEpisodeTitle = maybeMergeFriendly && episode.TvDB != null ? episode.TvDB.Title : episode.Shoko.Name;
+                string defaultEpisodeTitle = mergeFriendly ? episode.TvDB.Title : episode.Shoko.Name;
                 if (series.AniDB.Type == SeriesType.Movie && (episode.AniDB.Type == EpisodeType.Normal || episode.AniDB.Type == EpisodeType.Special)) {
-                    string defaultSeriesTitle = maybeMergeFriendly ? series.TvDB.Title : series.Shoko.Name;
+                    string defaultSeriesTitle = mergeFriendly ? series.TvDB.Title : series.Shoko.Name;
                     ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, defaultSeriesTitle, defaultEpisodeTitle, metadataLanguage);
                 }
                 else {
@@ -169,7 +170,7 @@ namespace Shokofin.Providers
 
             Episode result;
             var (airsBeforeEpisodeNumber, airsBeforeSeasonNumber, airsAfterSeasonNumber) = Ordering.GetSpecialPlacement(group, series, episode);
-            if (maybeMergeFriendly && episode.TvDB != null) {
+            if (mergeFriendly) {
                 if (season != null) {
                     result = new Episode {
                         Name = displayTitle,
@@ -260,7 +261,7 @@ namespace Shokofin.Providers
                     result.IndexNumberEnd = episodeNumberEnd;
             }
 
-            AddProviderIds(result, episodeId: episode.Id, fileId: file?.Id, anidbId: episode.AniDB.Id.ToString(), tvdbId: (maybeMergeFriendly && episode.TvDB != null) || config.SeriesGrouping == Ordering.GroupType.Default ? episode.TvDB?.Id.ToString() : null);
+            AddProviderIds(result, episodeId: episode.Id, fileId: file?.Id, anidbId: episode.AniDB.Id.ToString(), tvdbId: mergeFriendly || config.SeriesGrouping == Ordering.GroupType.Default ? episode.TvDB?.Id.ToString() : null);
 
             return result;
         }
