@@ -59,13 +59,6 @@
                             </select>
                             <div class="fieldDescription selectFieldDescription">How to select the alternate title for each item. The plugin will fallback to the default title if no title can be found in the target language.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="TitleAddForMultipleEpisodes" />
-                                <span>Add all titles for multi-episode entries.</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Will add the title for every episode in multi-episode entries to the episode title.</div>
-                        </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="DescriptionSource">Description source:</label>
                             <select is="emby-select" id="DescriptionSource" name="DescriptionSource" class="emby-select-withcolor emby-select">
@@ -76,6 +69,13 @@
                                 <option value="PreferOther">Prefer TvDB/TMDB if available, otherwise use AniDB</option>
                             </select>
                             <div class="fieldDescription selectFieldDescription">How to select the description to use for each item.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="TitleAddForMultipleEpisodes" />
+                                <span>Add all metadata for multi-episode entries.</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Will add the title and description for every episode in a multi-episode entry.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
