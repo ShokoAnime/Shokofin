@@ -35,6 +35,8 @@ namespace Shokofin.Configuration
         public bool HideSettingTags { get; set; }
 
         public bool HideProgrammingTags { get; set; }
+        
+        public bool HideUnverifiedTags { get; set; }
 
         public bool TitleAddForMultipleEpisodes { get; set; }
 
@@ -92,6 +94,7 @@ namespace Shokofin.Configuration
             HideAniDbTags = true;
             HideSettingTags = false;
             HideProgrammingTags = true;
+            HideUnverifiedTags = true;
             TitleAddForMultipleEpisodes = true;
             SynopsisCleanLinks = true;
             SynopsisCleanMiscLines = true;

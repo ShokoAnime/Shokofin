@@ -161,7 +161,10 @@ public class ShokoAPIManager
 
     private async Task<string[]> GetTagsForSeries(string seriesId)
     {
-        return (await APIClient.GetSeriesTags(seriesId, GetTagFilter()))?.Select(SelectTagName).ToArray() ?? new string[0];
+        return (await APIClient.GetSeriesTags(seriesId, GetTagFilter()))
+            .Where(KeepTag)
+            .Select(SelectTagName)
+            .ToArray();
     }
 
     /// <summary>
@@ -176,7 +179,6 @@ public class ShokoAPIManager
         if (config.HideAniDbTags) filter |= (1 << 0);
         if (config.HideArtStyleTags) filter |= (1 << 1);
         if (config.HideMiscTags) filter |= (1 << 3);
-        if (config.HidePlotTags) filter |= (1 << 4);
         if (config.HideSettingTags) filter |= (1 << 5);
         if (config.HideProgrammingTags) filter |= (1 << 6);
 
@@ -186,7 +188,9 @@ public class ShokoAPIManager
     public async Task<string[]> GetGenresForSeries(string seriesId)
     {
         // The following magic number is the filter value to allow only genres in the returned list.
-        var genreSet = (await APIClient.GetSeriesTags(seriesId, 2147483776))?.Select(SelectTagName).ToHashSet() ?? new();
+        var genreSet = (await APIClient.GetSeriesTags(seriesId, 2147483776))
+            .Select(SelectTagName)
+            .ToHashSet();
         var sourceGenre = await GetSourceGenre(seriesId);
         genreSet.Add(sourceGenre);
         return genreSet.ToArray();
@@ -222,6 +226,19 @@ public class ShokoAPIManager
             "ultra jump" => "Original Work",
             _ => "Original Work",
         };
+    }
+
+    private bool KeepTag(Tag tag)
+    {
+        // Filter out unverified tags.
+        if (Plugin.Instance.Configuration.HideUnverifiedTags && tag.IsVerified.HasValue && !tag.IsVerified.Value)
+            return false;
+
+        // Filter out any and all spoiler tags.
+        if (Plugin.Instance.Configuration.HidePlotTags && !(tag.IsLocalSpoiler ?? tag.IsSpoiler))
+            return false;
+
+        return true;
     }
 
     private string SelectTagName(Tag tag)

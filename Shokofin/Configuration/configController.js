@@ -162,6 +162,7 @@ async function defaultSubmit(form) {
         config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
     
         // Tag settings
+        config.HideUnverifiedTags = form.querySelector("#HideUnverifiedTags").checked;
         config.HideArtStyleTags = form.querySelector("#HideArtStyleTags").checked;
         config.HideMiscTags = form.querySelector("#HideMiscTags").checked;
         config.HidePlotTags = form.querySelector("#HidePlotTags").checked;
@@ -314,6 +315,7 @@ async function syncSettings(form) {
     config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
 
     // Tag settings
+    config.HideUnverifiedTags = form.querySelector("#HideUnverifiedTags").checked;
     config.HideArtStyleTags = form.querySelector("#HideArtStyleTags").checked;
     config.HideMiscTags = form.querySelector("#HideMiscTags").checked;
     config.HidePlotTags = form.querySelector("#HidePlotTags").checked;
@@ -486,6 +488,7 @@ export default function (page) {
             userSelector.innerHTML += users.map((user) => `<option value="${user.Id}">${user.Name}</option>`);
 
             // Tag settings
+            form.querySelector("#HideUnverifiedTags").checked = config.HideUnverifiedTags;
             form.querySelector("#HideArtStyleTags").checked = config.HideArtStyleTags;
             form.querySelector("#HideMiscTags").checked = config.HideMiscTags;
             form.querySelector("#HidePlotTags").checked = config.HidePlotTags;
