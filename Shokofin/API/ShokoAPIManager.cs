@@ -235,7 +235,7 @@ public class ShokoAPIManager
             return false;
 
         // Filter out any and all spoiler tags.
-        if (Plugin.Instance.Configuration.HidePlotTags && !(tag.IsLocalSpoiler ?? tag.IsSpoiler))
+        if (Plugin.Instance.Configuration.HidePlotTags && (tag.IsLocalSpoiler ?? tag.IsSpoiler))
             return false;
 
         return true;
