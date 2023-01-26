@@ -67,7 +67,7 @@ public class ShokoAPIManager : IDisposable
     {
         var mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
         if (mediaFolder == null) {
-            var parent = (Folder?)LibraryManager.FindByPath(Path.GetDirectoryName(path), true);
+            var parent = LibraryManager.FindByPath(Path.GetDirectoryName(path), true) as Folder;
             if (parent == null)
                 throw new Exception($"Unable to find parent folder for \"{path}\"");
 
