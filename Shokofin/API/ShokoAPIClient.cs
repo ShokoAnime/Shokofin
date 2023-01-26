@@ -178,17 +178,17 @@ public class ShokoAPIClient : IDisposable
 
     public Task<File> GetFile(string id)
     {
-        return Get<File>($"/api/v3/File/{id}?includeXRefs=true");
+        return Get<File>($"/api/v3/File/{id}?includeXRefs=true&includeDataFrom=AniDB");
     }
 
-    public Task<List<File>> GetFileByPath(string filename)
+    public Task<List<File>> GetFileByPath(string path)
     {
-        return Get<List<File>>($"/api/v3/File/PathEndsWith/{Uri.EscapeDataString(filename)}");
+        return Get<List<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(path)}&includeDataFrom=AniDB&limit=1");
     }
 
     public Task<List<File>> GetFilesForSeries(string seriesId)
     {
-        return Get<List<File>>($"/api/v3/Series/{seriesId}/File?includeXRefs=true");
+        return Get<List<File>>($"/api/v3/Series/{seriesId}/File?includeXRefs=true&includeDataFrom=AniDB");
     }
 
     public async Task<File.UserStats?> GetFileUserStats(string fileId, string? apiKey = null)
@@ -233,27 +233,27 @@ public class ShokoAPIClient : IDisposable
 
     public Task<Episode> GetEpisode(string id)
     {
-        return Get<Episode>($"/api/v3/Episode/{id}?includeDataFrom=AniDB&includeDataFrom=TvDB");
+        return Get<Episode>($"/api/v3/Episode/{id}?includeDataFrom=AniDB,TvDB");
     }
 
     public Task<List<Episode>> GetEpisodesFromSeries(string seriesId)
     {
-        return Get<List<Episode>>($"/api/v3/Series/{seriesId}/Episode?includeMissing=true&includeDataFrom=AniDB&includeDataFrom=TvDB");
+        return Get<List<Episode>>($"/api/v3/Series/{seriesId}/Episode?includeMissing=true&includeDataFrom=AniDB,TvDB");
     }
 
     public Task<Series> GetSeries(string id)
     {
-        return Get<Series>($"/api/v3/Series/{id}?includeDataFrom=AniDB&includeDataFrom=TvDB");
+        return Get<Series>($"/api/v3/Series/{id}?includeDataFrom=AniDB,TvDB");
     }
 
     public Task<Series> GetSeriesFromEpisode(string id)
     {
-        return Get<Series>($"/api/v3/Episode/{id}/Series?includeDataFrom=AniDB&includeDataFrom=TvDB");
+        return Get<Series>($"/api/v3/Episode/{id}/Series?includeDataFrom=AniDB,TvDB");
     }
 
     public Task<List<Series>> GetSeriesInGroup(string groupID, int filterID = 0)
     {
-        return Get<List<Series>>($"/api/v3/Filter/{filterID}/Group/{groupID}/Series?includeMissing=true&includeIgnored=false&includeDataFrom=AniDB&includeDataFrom=TvDB");
+        return Get<List<Series>>($"/api/v3/Filter/{filterID}/Group/{groupID}/Series?includeMissing=true&includeIgnored=false&includeDataFrom=AniDB,TvDB");
     }
 
     public Task<List<Role>> GetSeriesCast(string id)

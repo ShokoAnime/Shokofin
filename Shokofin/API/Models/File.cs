@@ -49,6 +49,9 @@ public class File
     [JsonPropertyName("Updated")]
     public DateTime LastUpdatedAt { get; set; }
 
+    [JsonPropertyName("AniDB")]
+    public AniDB? AniDBData { get; set; }
+
     /// <summary>
     /// The size of the file in bytes.
     /// </summary>
@@ -100,6 +103,86 @@ public class File
         /// </summary>
         [JsonPropertyName("Accessible")]
         public bool IsAccessible { get; set; } = false;
+    }
+
+    /// <summary>
+    /// AniDB_File info
+    /// </summary>
+    public class AniDB
+    {
+        /// <summary>
+        /// The AniDB File ID.
+        /// </summary>
+        [JsonPropertyName("ID")]
+        public int Id { get; set; }
+
+        /// <summary>
+        /// Blu-ray, DVD, LD, TV, etc..
+        /// </summary>
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public FileSource Source { get; set; }
+
+        /// <summary>
+        /// The Release Group. This is usually set, but sometimes is set as "raw/unknown"
+        /// </summary>
+        public AniDBReleaseGroup ReleaseGroup { get; set; } = new();
+
+        /// <summary>
+        /// The file's version, Usually 1, sometimes more when there are edits released later
+        /// </summary>
+        public int Version { get; set; }
+
+        /// <summary>
+        /// The original FileName. Useful for when you obtained from a shady source or when you renamed it without thinking. 
+        /// </summary>
+        public string OriginalFileName { get; set; } = "";
+
+        /// <summary>
+        /// Is the file marked as deprecated. Generally, yes if there's a V2, and this isn't it
+        /// </summary>
+        public bool IsDeprecated { get; set; }
+
+        /// <summary>
+        /// Mostly applicable to hentai, but on occasion a TV release is censored enough to earn this.
+        /// </summary>
+        public bool? IsCensored { get; set; }
+
+        /// <summary>
+        /// Does the file have chapters. This may be wrong, since it was only added in AVDump2 (a more recent version at that)
+        /// </summary>
+        [JsonPropertyName("Chaptered")]
+        public bool IsChaptered { get; set; }
+
+        /// <summary>
+        /// The file's release date. This is probably not filled in
+        /// </summary>
+        [JsonPropertyName("ReleaseDate")]
+        public DateTime? ReleasedAt { get; set; }
+
+        /// <summary>
+        /// When we last got data on this file
+        /// </summary>
+        [JsonPropertyName("Updated")]
+        public DateTime LastUpdatedAt { get; set; }
+    }
+
+    public class AniDBReleaseGroup
+    {
+        /// <summary>
+        /// The AniDB Release Group ID.
+        /// /// </summary>
+        [JsonPropertyName("ID")]
+        public int Id { get; set; }
+
+        /// <summary>
+        /// The release group's Name (Unlimited Translation Works)
+        /// </summary>
+        public string Name { get; set; } = "";
+
+        /// <summary>
+        /// The release group's Name (UTW)
+        /// </summary>
+        public string ShortName { get; set; } = "";
     }
 
     /// <summary>

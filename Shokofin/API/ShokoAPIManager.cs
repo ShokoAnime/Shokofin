@@ -320,20 +320,23 @@ public class ShokoAPIManager : IDisposable
 
         // Strip the path and search for a match.
         var partialPath = StripMediaFolder(path);
-        Logger.LogDebug("Looking for file matching {Path}", partialPath);
         var result = await APIClient.GetFileByPath(partialPath);
-        Logger.LogTrace("Found result with {Count} matches for {Path}", result?.Count ?? 0, partialPath);
+        Logger.LogDebug("Looking for a match for {Path}", partialPath);
 
         // Check if we found a match.
         var file = result?.FirstOrDefault();
         if (file == null || file.CrossReferences.Count == 0)
+        {
+            Logger.LogTrace("Found no match for {Path}", partialPath);
             return (null, null, null);
+        }
 
         // Find the file locations matching the given path.
         var fileId = file.Id.ToString();
         var fileLocations = file.Locations
             .Where(location => location.Path.EndsWith(partialPath))
             .ToList();
+        Logger.LogTrace("Found a file match for {Path} (File={FileId})", partialPath, file.Id.ToString());
         if (fileLocations.Count != 1) {
             if (fileLocations.Count == 0)
                 throw new Exception($"I have no idea how this happened, but the path gave a file that doesn't have a matching file location. See you in #support. (File={fileId})");
