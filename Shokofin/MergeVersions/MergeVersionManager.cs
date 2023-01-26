@@ -316,39 +316,37 @@ public class MergeVersionsManager
                 .First();
         }
 
-        var alternateVersionsOfPrimary = primaryVersion.LinkedAlternateVersions.ToList();
-
-        foreach (var video in videos.Where(i => !i.Id.Equals(primaryVersion.Id)))
+        // Add any videos not already linked to the primary version to the list.
+        var alternateVersionsOfPrimary = primaryVersion.LinkedAlternateVersions
+            .ToList();
+        foreach (var video in videos.Where(v => !v.Id.Equals(primaryVersion.Id)))
         {
             video.SetPrimaryVersionId(primaryVersion.Id.ToString("N", CultureInfo.InvariantCulture));
-
-            await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
-
-            if (!alternateVersionsOfPrimary.Any(i => string.Equals(i.Path, video.Path, StringComparison.OrdinalIgnoreCase)))
-            {
+            if (!alternateVersionsOfPrimary.Any(i => string.Equals(i.Path, video.Path, StringComparison.OrdinalIgnoreCase))) {
                 alternateVersionsOfPrimary.Add(new() {
                     Path = video.Path,
                     ItemId = video.Id,
                 });
             }
 
-            foreach (var linkedItem in video.LinkedAlternateVersions)
-            {
+            foreach (var linkedItem in video.LinkedAlternateVersions) {
                 if (!alternateVersionsOfPrimary.Any(i => string.Equals(i.Path, linkedItem.Path, StringComparison.OrdinalIgnoreCase)))
-                {
                     alternateVersionsOfPrimary.Add(linkedItem);
-                }
             }
 
+            // Reset the linked alternate versions for the linked videos.
             if (video.LinkedAlternateVersions.Length > 0)
-            {
                 video.LinkedAlternateVersions = Array.Empty<LinkedChild>();
-                await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
-            }
+
+            // Save the changes back to the repository.
+            await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
+                .ConfigureAwait(false);
         }
 
-        primaryVersion.LinkedAlternateVersions = alternateVersionsOfPrimary.ToArray();
-        await primaryVersion.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
+        primaryVersion.LinkedAlternateVersions = alternateVersionsOfPrimary
+            .ToArray();
+        await primaryVersion.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -362,19 +360,30 @@ public class MergeVersionsManager
     {
         // Find the primary video.
         if (video.LinkedAlternateVersions.Length == 0)
+        {
+            // Ensure we're not running on an unlinked item.
+            if (string.IsNullOrEmpty(video.PrimaryVersionId))
+                return;
+
+            // Make sure the primary video still exists before we proceed.
             video = LibraryManager.GetItemById(video.PrimaryVersionId) as Video;
+            if (video == null)
+                return;
+        }
 
         // Remove the link for every linked video.
         foreach (var linkedVideo in video.GetLinkedAlternateVersions())
         {
             linkedVideo.SetPrimaryVersionId(null);
             linkedVideo.LinkedAlternateVersions = Array.Empty<LinkedChild>();
-            await linkedVideo.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
+            await linkedVideo.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
+                .ConfigureAwait(false);
         }
 
         // Remove the link for the primary video.
         video.SetPrimaryVersionId(null);
         video.LinkedAlternateVersions = Array.Empty<LinkedChild>();
-        await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
+        await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
+            .ConfigureAwait(false);
     }
 }
