@@ -17,48 +17,22 @@ namespace Shokofin.Utils
             ':',   // colon
             '!',   // exclamation point
             '?',   // question mark
-            '-',   // hyphen
-            '_',   // underscore
-            '(',   // left parenthesis
             ')',   // right parenthesis
-            '[',   // left bracket
             ']',   // right bracket
-            '{',   // left brace
             '}',   // right brace
             '"',  // double quote
             '\'',   // single quote
-            '/',   // forward slash
-            '\\',  // backslash
-            '|',   // vertical bar
-            '@',   // at symbol
-            '#',   // pound or hash
-            '$',   // dollar
-            '%',   // percent
-            '^',   // caret
-            '&',   // ampersand
-            '*',   // asterisk
-            '+',   // plus
-            '=',   // equals
-            '<',   // less-than
-            '>',   // greater-than
-            '。',  // Chinese full stop
             '，',  // Chinese comma
             '、',  // Chinese enumeration comma
-            '；',  // Chinese semicolon
-            '：',  // Chinese colon
             '！',  // Chinese exclamation point
             '？',  // Chinese question mark
             '“',  // Chinese double quote
             '”',  // Chinese double quote
             '‘',  // Chinese single quote
             '’',  // Chinese single quote
-            '【',  // Chinese left bracket
             '】',  // Chinese right bracket
-            '《',  // Chinese left angle bracket
             '》',  // Chinese right angle bracket
-            '（',  // Chinese left parenthesis
             '）',  // Chinese right parenthesis
-            '－',  // Chinese hyphen
             '・',  // Japanese middle dot
 
             // Less common punctuation marks
@@ -73,34 +47,17 @@ namespace Shokofin.Utils
             '⁉',   // exclamation mark
             '‽',   // interrobang
             '※',   // reference mark
-            '‒',   // figure dash
-            '–',   // en dash
-            '—',   // em dash
-            '⸺',   // two-em dash
-            '⸻',   // three-em dash
-            '⟨',   // left angle bracket
             '⟩',   // right angle bracket
-            '❮',   // left angle bracket
             '❯',   // right angle bracket
-            '❬',   // left angle bracket
             '❭',   // right angle bracket
-            '〈',   // left angle bracket
             '〉',   // right angle bracket
-            '⌈',   // left angle bracket
             '⌉',   // right angle bracket
-            '⌊',   // left angle bracket
             '⌋',   // right angle bracket
-            '⦃',   // left angle bracket
             '⦄',   // right angle bracket
-            '⦅',   // left angle bracket
             '⦆',   // right angle bracket
-            '⦇',   // left angle bracket
             '⦈',   // right angle bracket
-            '⦉',   // left angle bracket
             '⦊',   // right angle bracket
-            '⦋',   // left angle bracket
             '⦌',   // right angle bracket
-            '⦍',   // left angle bracket
             '⦎',   // right angle bracket
         };
 
