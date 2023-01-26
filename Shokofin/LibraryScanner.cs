@@ -40,7 +40,7 @@ namespace Shokofin
         {
             // Everything in the root folder is ignored by us.
             var root = LibraryManager.RootFolder;
-            if (fileInfo == null || parent == null || root == null || parent == root || !(parent is Folder) || fileInfo.FullName.StartsWith(root.Path))
+            if (fileInfo == null || parent == null || root == null || parent == root || !(parent is Folder parentFolder) || fileInfo.FullName.StartsWith(root.Path))
                 return false;
 
             try {
@@ -59,10 +59,10 @@ namespace Shokofin
                 }
 
                 var fullPath = fileInfo.FullName;
-                var mediaFolder = ApiManager.FindMediaFolder(fullPath, parent as Folder, root);
+                var mediaFolder = ApiManager.FindMediaFolder(fullPath, parentFolder, root);
                 var partialPath = fullPath.Substring(mediaFolder.Path.Length);
                 if (fileInfo.IsDirectory)
-                    return ScanDirectory(partialPath, fullPath, LibraryManager.GetInheritedContentType(parent));
+                    return ScanDirectory(partialPath, fullPath, LibraryManager.GetInheritedContentType(parentFolder));
                 else
                     return ScanFile(partialPath, fullPath);
             }
