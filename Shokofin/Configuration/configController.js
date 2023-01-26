@@ -421,6 +421,7 @@ export default function (page) {
             form.querySelector("#UserSection").removeAttribute("hidden");
             form.querySelector("#TagSection").removeAttribute("hidden");
             form.querySelector("#AdvancedSection").removeAttribute("hidden");
+            form.querySelector("#ExperimentalSection").removeAttribute("hidden");
         }
         else {
             form.querySelector("#Host").removeAttribute("disabled");
@@ -435,6 +436,7 @@ export default function (page) {
             form.querySelector("#UserSection").setAttribute("hidden", "");
             form.querySelector("#TagSection").setAttribute("hidden", "");
             form.querySelector("#AdvancedSection").setAttribute("hidden", "");
+            form.querySelector("#ExperimentalSection").setAttribute("hidden", "");
         }
 
         const userId = form.querySelector("#UserSelector").value;
