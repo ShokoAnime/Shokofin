@@ -288,6 +288,6 @@ public class ShokoAPIClient : IDisposable
 
     public Task<ListResult<Series.AniDB>> SeriesSearch(string query)
     {
-        return Get<ListResult<Series.AniDB>>($"/api/v3/Series/AniDB/Search/{Uri.EscapeDataString(query)}?local=true&includeTitles=true&pageSize=0");
+        return Get<ListResult<Series.AniDB>>($"/api/v3/Series/AniDB/Search?query={Uri.EscapeDataString(query ?? "")}&local=true&includeTitles=true&pageSize=0");
     }
 }
