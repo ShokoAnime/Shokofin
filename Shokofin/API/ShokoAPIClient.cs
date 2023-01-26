@@ -26,9 +26,9 @@ public class ShokoAPIClient : IDisposable
         _httpClient.Timeout = TimeSpan.FromMinutes(10);
         Logger = logger;
     }
-    
+
     #region Base Implementation
-    
+
     public void Dispose()
     {
         _httpClient.Dispose();
@@ -158,6 +158,8 @@ public class ShokoAPIClient : IDisposable
         }
     }
 
+    #endregion Base Implementation
+
     public async Task<ApiKey?> GetApiKey(string username, string password, bool forUser = false)
     {
         var postData = JsonSerializer.Serialize(new Dictionary<string, string>
@@ -172,16 +174,6 @@ public class ShokoAPIClient : IDisposable
             return (await JsonSerializer.DeserializeAsync<ApiKey>(response.Content.ReadAsStreamAsync().Result));
 
         return null;
-    }
-
-    public Task<Episode> GetEpisode(string id)
-    {
-        return Get<Episode>($"/api/v3/Episode/{id}?includeDataFrom=AniDB&includeDataFrom=TvDB");
-    }
-
-    public Task<List<Episode>> GetEpisodesFromSeries(string seriesId)
-    {
-        return Get<List<Episode>>($"/api/v3/Series/{seriesId}/Episode?includeMissing=true&includeDataFrom=AniDB&includeDataFrom=TvDB");
     }
 
     public Task<File> GetFile(string id)
@@ -237,6 +229,16 @@ public class ShokoAPIClient : IDisposable
             return await ScrobbleFile(fileId, episodeId, eventName, watched, apiKey);
         var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress.Value).TotalMilliseconds)}&watched={watched}", HttpMethod.Patch, apiKey);
         return response != null && (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent);
+    }
+
+    public Task<Episode> GetEpisode(string id)
+    {
+        return Get<Episode>($"/api/v3/Episode/{id}?includeDataFrom=AniDB&includeDataFrom=TvDB");
+    }
+
+    public Task<List<Episode>> GetEpisodesFromSeries(string seriesId)
+    {
+        return Get<List<Episode>>($"/api/v3/Series/{seriesId}/Episode?includeMissing=true&includeDataFrom=AniDB&includeDataFrom=TvDB");
     }
 
     public Task<Series> GetSeries(string id)
