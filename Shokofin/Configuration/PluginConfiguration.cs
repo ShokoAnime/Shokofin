@@ -54,8 +54,6 @@ namespace Shokofin.Configuration
 
         public bool AddTMDBId { get; set; }
 
-        public bool MergeQuartSeasons { get; set; }
-
         public TextSourceType DescriptionSource { get; set; }
 
         public SeriesAndBoxSetGroupType SeriesGrouping { get; set; }
@@ -82,6 +80,18 @@ namespace Shokofin.Configuration
 
         public string[] IgnoredFolders { get; set; }
 
+        #region Experimental features
+
+        public bool EXPERIMENTAL_AutoMergeVersions { get; set; }
+
+        public bool EXPERIMENTAL_SplitThenMergeMovies { get; set; }
+
+        public bool EXPERIMENTAL_SplitThenMergeEpisodes { get; set; }
+
+        public bool EXPERIMENTAL_MergeSeasons { get; set; }
+
+        #endregion
+
         public PluginConfiguration()
         {
             Host = "http://127.0.0.1:8111";
@@ -103,7 +113,6 @@ namespace Shokofin.Configuration
             AddAniDBId = true;
             AddTvDBId = true;
             AddTMDBId = true;
-            MergeQuartSeasons = false;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
             DescriptionSource = TextSourceType.Default;
@@ -117,6 +126,10 @@ namespace Shokofin.Configuration
             UserList = Array.Empty<UserConfiguration>();
             IgnoredFileExtensions  = new [] { ".nfo", ".jpg", ".jpeg", ".png" };
             IgnoredFolders = new [] { ".streams", "@recently-snapshot" };
+            EXPERIMENTAL_AutoMergeVersions = false;
+            EXPERIMENTAL_SplitThenMergeMovies = true;
+            EXPERIMENTAL_SplitThenMergeEpisodes = false;
+            EXPERIMENTAL_MergeSeasons = false;
         }
     }
 }

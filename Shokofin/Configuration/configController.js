@@ -176,7 +176,10 @@ async function defaultSubmit(form) {
         form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
         config.IgnoredFolders = ignoredFolders;
         form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
-        config.MergeQuartSeasons = form.querySelector("#MergeQuartSeasons").checked;
+        config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
+        config.EXPERIMENTAL_SplitThenMergeMovies = form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked;
+        config.EXPERIMENTAL_SplitThenMergeEpisodes = form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked;
+        config.EXPERIMENTAL_MergeSeasons = form.querySelector("#EXPERIMENTAL_MergeSeasons").checked;
 
         // User settings
         const userId = form.querySelector("#UserSelector").value;
@@ -329,7 +332,10 @@ async function syncSettings(form) {
     form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
     config.IgnoredFolders = ignoredFolders;
     form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
-    config.MergeQuartSeasons = form.querySelector("#MergeQuartSeasons").checked;
+    config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
+    config.EXPERIMENTAL_SplitThenMergeMovies = form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked;
+    config.EXPERIMENTAL_SplitThenMergeEpisodes = form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked;
+    config.EXPERIMENTAL_MergeSeasons = form.querySelector("#EXPERIMENTAL_MergeSeasons").checked;
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
     Dashboard.processPluginConfigurationUpdateResult(result);
@@ -500,7 +506,10 @@ export default function (page) {
             form.querySelector("#PublicHost").value = config.PublicHost;
             form.querySelector("#IgnoredFileExtensions").value = config.IgnoredFileExtensions.join(" ");
             form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
-            form.querySelector("#MergeQuartSeasons").checked = config.MergeQuartSeasons;
+            form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked = config.EXPERIMENTAL_AutoMergeVersions || false;
+            form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked = config.EXPERIMENTAL_SplitThenMergeMovies || true;
+            form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked = config.EXPERIMENTAL_SplitThenMergeEpisodes || false;
+            form.querySelector("#EXPERIMENTAL_MergeSeasons").checked = config.EXPERIMENTAL_MergeSeasons || false;
 
             if (!config.ApiKey) {
                 Dashboard.alert(Messages.ConnectToShoko);

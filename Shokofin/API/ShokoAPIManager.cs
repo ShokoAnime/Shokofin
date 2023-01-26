@@ -20,7 +20,7 @@ using Path = System.IO.Path;
 #nullable enable
 namespace Shokofin.API;
 
-public class ShokoAPIManager
+public class ShokoAPIManager : IDisposable
 {
     private readonly ILogger<ShokoAPIManager> Logger;
 
@@ -138,9 +138,9 @@ public class ShokoAPIManager
     #endregion
     #region Clear
 
-    public void Clear()
+    public void Dispose()
     {
-        Logger.LogDebug("Clearing data.");
+        Logger.LogDebug("Disposing data…");
         DataCache.Dispose();
         EpisodeIdToEpisodePathDictionary.Clear();
         EpisodeIdToSeriesIdDictionary.Clear();
@@ -151,9 +151,17 @@ public class ShokoAPIManager
         PathToSeriesIdDictionary.Clear();
         SeriesIdToGroupIdDictionary.Clear();
         SeriesIdToPathDictionary.Clear();
+    }
+
+    public void Clear()
+    {
+        Logger.LogDebug("Clearing data…");
+        Dispose();
+        Logger.LogDebug("Initialising new cache…");
         DataCache = (new MemoryCache((new MemoryCacheOptions() {
             ExpirationScanFrequency = ExpirationScanFrequency,
         })));
+        Logger.LogDebug("Cleanup complete.");
     }
 
     #endregion

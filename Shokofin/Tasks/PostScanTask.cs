@@ -1,5 +1,6 @@
 using MediaBrowser.Controller.Library;
 using Shokofin.API;
+using Shokofin.MergeVersions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,16 +9,24 @@ namespace Shokofin.Tasks
 {
     public class PostScanTask : ILibraryPostScanTask
     {
-        private ShokoAPIManager ApiManager;
+        private readonly ShokoAPIManager ApiManager;
 
-        public PostScanTask(ShokoAPIManager apiManager)
+        private readonly MergeVersionsManager VersionsManager;
+
+        public PostScanTask(ShokoAPIManager apiManager, MergeVersionsManager versionsManager)
         {
             ApiManager = apiManager;
+            VersionsManager = versionsManager;
         }
 
         public async Task Run(IProgress<double> progress, CancellationToken token)
         {
-            await ApiManager.PostProcess(progress, token).ConfigureAwait(false);
+            // Merge versions now if the setting is enabled.
+            if (Plugin.Instance.Configuration.EXPERIMENTAL_AutoMergeVersions)
+                await VersionsManager.MergeAll(progress, token, true);
+
+            // Clear the cache now, since we don't need it anymore.
+            ApiManager.Clear();
         }
     }
 }

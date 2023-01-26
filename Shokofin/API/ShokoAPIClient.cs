@@ -14,7 +14,7 @@ namespace Shokofin.API;
 /// <summary>
 /// All API calls to Shoko needs to go through this gateway.
 /// </summary>
-public class ShokoAPIClient
+public class ShokoAPIClient : IDisposable
 {
     private readonly HttpClient _httpClient;
 
@@ -25,6 +25,13 @@ public class ShokoAPIClient
         _httpClient = (new HttpClient());
         _httpClient.Timeout = TimeSpan.FromMinutes(10);
         Logger = logger;
+    }
+    
+    #region Base Implementation
+    
+    public void Dispose()
+    {
+        _httpClient.Dispose();
     }
 
     private Task<ReturnType> Get<ReturnType>(string url, string? apiKey = null)

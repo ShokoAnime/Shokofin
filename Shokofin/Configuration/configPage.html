@@ -318,12 +318,32 @@
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="MergeQuartSeasons" />
-                                <span>Automatically merge quart seasons</span>
+                                <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_AutoMergeVersions" />
+                                <span>Automatically merge multiple versions</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enable at your own risk</div>
+                            <div class="fieldDescription checkboxFieldDescription"><div>Merge multiple versions of the same item together. Only applies to items with a Shoko ID set.</div><div><strong>Warning:</strong> Enable at your own risk.</div></div>
                         </div>
-
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_SplitThenMergeMovies" />
+                                <span>Always split existing versions of movies before merging multiple versions</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription"><div>Always split existing merged items before starting the merge.</div><div><strong>Warning:</strong> Enable at your own risk.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What is this setting for?</summary>Enabling this setting will probably make the plugin do a lot of unneeded work on 99.5% of all movies, but will help for the last 0.5% that actually need it. An example is ensuring multiple parts of a movie series are not merged because they contain the same shok series id.</details></div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_SplitThenMergeEpisodes" />
+                                <span>Always split existing versions of episodes before merging multiple versions</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription"><div>Always split existing merged items before starting the merge.</div><div><strong>Warning:</strong> Enable at your own risk.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What is this setting for?</summary>Enabling this setting will probably make the plugin do a lot of unneeded work on 99.5% of all movies, but will help for the last 0.5% that actually need it.</details></div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_MergeSeasons" />
+                                <span>Automatically merge cour seasons</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription"><div>Coming soon&trade; to a media library near you.</div><div><strong>Warning:</strong> Enable at your own risk.</div></div>
+                        </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
                         </button>
