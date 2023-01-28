@@ -153,7 +153,7 @@
                                 <input is="emby-checkbox" type="checkbox" id="FilterOnLibraryTypes" />
                                 <span>Enable library separation</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">This setting can be used to have one shared root folder on your disk for two libraries in Shoko — one library for movies and one for shows. Enabling this will cause the plugin to actively filter out movies from the show library and everything but movies from the movies library. Also, if you've selected to use Shoko's Group feature to create Series/Seasons then it will also exclude the Movies from within the series — i.e. the "season" for the movie won't appear  — even if they share a group in Shoko.</div>
+                            <div class="fieldDescription checkboxFieldDescription">This setting can be used to have one shared root folder on your disk for two libraries in Shoko — one library for movies and one for shows. Enabling this will cause the plugin to actively filter out movies from the show library and everything but movies from the movies library. Also, if you've selected to use Shoko's Group feature to create Series/Seasons then it will also exclude the Movies from within the series — i.e. the "season" for the movie won't appear — even if they share a group in Shoko.</div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="SpecialsPlacement">Specials placement within seasons:</label>
@@ -337,14 +337,14 @@
                                 <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_SplitThenMergeMovies" />
                                 <span>Always split existing versions of movies before merging multiple versions</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription"><div>Always split existing merged items before starting the merge.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What is this setting for?</summary>Enabling this setting will probably make the plugin do a lot of unneeded work on 99.5% of all movies, but will help for the last 0.5% that actually need it. An example is ensuring multiple parts of a movie series are not merged because they contain the same shok series id.</details></div>
+                            <div class="fieldDescription checkboxFieldDescription"><div>Always split existing merged items before starting the merge.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What is this setting for?</summary>Enabling this setting will make sure there will be no merge conflicts by splitting up all the existing merged versions. It will probably also make the plugin do a lot of unneeded work 99.5% of the time, but will help for the last 0.5% that actually need this to be done before every merge. An example is ensuring multiple parts of a movie series (e.g. "Part 1", "Part 2", etc.) are not merged in core Jellyfin because they contain the same Shoko Series Id.</details></div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_SplitThenMergeEpisodes" />
                                 <span>Always split existing versions of episodes before merging multiple versions</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription"><div>Always split existing merged items before starting the merge.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What is this setting for?</summary>Enabling this setting will probably make the plugin do a lot of unneeded work on 99.5% of all movies, but will help for the last 0.5% that actually need it.</details></div>
+                            <div class="fieldDescription checkboxFieldDescription"><div>Always split existing merged items before starting the merge.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What is this setting for?</summary>Enabling this setting will make sure there will be no merge conflicts by splitting up all the existing merged versions. It will probably also make the plugin do a lot of unneeded work 99.5% of the time, but will help for the last 0.5% that actually need this to be done before every merge.</details></div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">

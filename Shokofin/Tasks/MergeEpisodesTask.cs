@@ -41,7 +41,7 @@ namespace Shokofin.Tasks
         /// <returns>Task.</returns>
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
-            await VersionsManager.MergeEpisodes(progress, cancellationToken, false);
+            await VersionsManager.MergeAllEpisodes(progress, cancellationToken);
         }
 
         /// <inheritdoc />

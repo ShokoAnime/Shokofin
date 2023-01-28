@@ -41,7 +41,7 @@ namespace Shokofin.Tasks
         /// <returns>Task.</returns>
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
-            await VersionsManager.SplitMovies(progress, cancellationToken);
+            await VersionsManager.SplitAllMovies(progress, cancellationToken);
         }
 
         /// <inheritdoc />

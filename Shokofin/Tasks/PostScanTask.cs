@@ -23,7 +23,7 @@ namespace Shokofin.Tasks
         {
             // Merge versions now if the setting is enabled.
             if (Plugin.Instance.Configuration.EXPERIMENTAL_AutoMergeVersions)
-                await VersionsManager.MergeAll(progress, token, true);
+                await VersionsManager.MergeAll(progress, token);
 
             // Clear the cache now, since we don't need it anymore.
             ApiManager.Clear();
