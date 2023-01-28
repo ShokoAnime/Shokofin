@@ -302,8 +302,8 @@ public class MergeVersionsManager
         // of additional episodes.
         var episodes = GetEpisodesFromLibrary();
         var duplicationGroups = episodes
-            .GroupBy(x => x.ProviderIds["Shoko Episode"])
-            .Where(x => x.Count() > 1)
+            .GroupBy(e => $"{e.ProviderIds["Shoko Episode"]}-{(e.IndexNumberEnd ?? e.IndexNumber ?? 1) - (e.IndexNumber ?? 1)}")
+            .Where(e => e.Count() > 1)
             .ToList();
         double currentCount = 0d;
         double totalGroups = duplicationGroups.Count;
@@ -373,8 +373,8 @@ public class MergeVersionsManager
         // Merge episodes with more than one version (again), and with the same
         // number of additional episodes.
         var duplicationGroups = episodes
-            .GroupBy(x => x.ProviderIds["Shoko Episode"])
-            .Where(x => x.Count() > 1)
+            .GroupBy(e => $"{e.ProviderIds["Shoko Episode"]}-{(e.IndexNumberEnd ?? e.IndexNumber ?? 1) - (e.IndexNumber ?? 1)}")
+            .Where(e => e.Count() > 1)
             .ToList();
         currentCount = 0d;
         totalCount = duplicationGroups.Count;
