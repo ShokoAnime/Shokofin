@@ -169,14 +169,14 @@ namespace Shokofin.Providers
             }
 
             Episode result;
-            var (airsBeforeEpisodeNumber, airsBeforeSeasonNumber, airsAfterSeasonNumber) = Ordering.GetSpecialPlacement(group, series, episode);
+            var (airsBeforeEpisodeNumber, airsBeforeSeasonNumber, airsAfterSeasonNumber, isSpecial) = Ordering.GetSpecialPlacement(group, series, episode);
             if (mergeFriendly) {
                 if (season != null) {
                     result = new Episode {
                         Name = displayTitle,
                         OriginalTitle = alternateTitle,
                         IndexNumber = episodeNumber,
-                        ParentIndexNumber = airsAfterSeasonNumber.HasValue || airsBeforeSeasonNumber.HasValue ? 0 : seasonNumber,
+                        ParentIndexNumber = isSpecial ? 0 : seasonNumber,
                         AirsAfterSeasonNumber = airsAfterSeasonNumber,
                         AirsBeforeEpisodeNumber = airsBeforeEpisodeNumber,
                         AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
@@ -200,7 +200,7 @@ namespace Shokofin.Providers
                         Name = displayTitle,
                         OriginalTitle = alternateTitle,
                         IndexNumber = episodeNumber,
-                        ParentIndexNumber = airsAfterSeasonNumber.HasValue || airsBeforeSeasonNumber.HasValue ? 0 : seasonNumber,
+                        ParentIndexNumber = isSpecial ? 0 : seasonNumber,
                         AirsAfterSeasonNumber = airsAfterSeasonNumber,
                         AirsBeforeEpisodeNumber = airsBeforeEpisodeNumber,
                         AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
@@ -216,7 +216,7 @@ namespace Shokofin.Providers
                         Name = displayTitle,
                         OriginalTitle = alternateTitle,
                         IndexNumber = episodeNumber,
-                        ParentIndexNumber = airsAfterSeasonNumber.HasValue || airsBeforeSeasonNumber.HasValue ? 0 : seasonNumber,
+                        ParentIndexNumber = isSpecial ? 0 : seasonNumber,
                         AirsAfterSeasonNumber = airsAfterSeasonNumber,
                         AirsBeforeEpisodeNumber = airsBeforeEpisodeNumber,
                         AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
@@ -242,7 +242,7 @@ namespace Shokofin.Providers
                         Name = displayTitle,
                         OriginalTitle = alternateTitle,
                         IndexNumber = episodeNumber,
-                        ParentIndexNumber = airsAfterSeasonNumber.HasValue || airsBeforeSeasonNumber.HasValue ? 0 : seasonNumber,
+                        ParentIndexNumber = isSpecial ? 0 : seasonNumber,
                         AirsAfterSeasonNumber = airsAfterSeasonNumber,
                         AirsBeforeEpisodeNumber = airsBeforeEpisodeNumber,
                         AirsBeforeSeasonNumber = airsBeforeSeasonNumber,

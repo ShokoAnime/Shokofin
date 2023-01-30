@@ -216,16 +216,26 @@ namespace Shokofin.Utils
             }
         }
 
-        public static (int?, int?, int?) GetSpecialPlacement(GroupInfo group, SeriesInfo series, EpisodeInfo episode)
+        public static (int?, int?, int?, bool) GetSpecialPlacement(GroupInfo group, SeriesInfo series, EpisodeInfo episode)
         {
             var order = Plugin.Instance.Configuration.SpecialsPlacement;
-            if (order == SpecialOrderType.Excluded)
-                return (null, null, null);
+
+            // Return early if we want to exclude them from the normal seasons.
+            if (order == SpecialOrderType.Excluded) {
+                // Check if this should go in the specials season.
+                var isSpecial = Plugin.Instance.Configuration.SeriesGrouping == GroupType.MergeFriendly && episode.TvDB != null ? (
+                    episode.TvDB.SeasonNumber == 0
+                ) : (
+                    episode.AniDB.Type == EpisodeType.Special
+                );
+
+                return (null, null, null, isSpecial);
+            }
 
             // Abort if episode is not a TvDB special or AniDB special
             var allowOtherData = order == SpecialOrderType.InBetweenSeasonByOtherData || order == SpecialOrderType.InBetweenSeasonMixed;
             if (allowOtherData  ? !(episode?.TvDB?.SeasonNumber == 0 || episode.AniDB.Type == EpisodeType.Special) : episode.AniDB.Type != EpisodeType.Special)
-                return (null, null, null);
+                return (null, null, null, false);
 
             int? episodeNumber = null;
             int seasonNumber = GetSeasonNumber(group, series, episode);
@@ -282,7 +292,7 @@ namespace Shokofin.Utils
                     break;
             }
 
-            return (airsBeforeEpisodeNumber, airsBeforeSeasonNumber, airsAfterSeasonNumber);
+            return (airsBeforeEpisodeNumber, airsBeforeSeasonNumber, airsAfterSeasonNumber, true);
         }
 
         /// <summary>
