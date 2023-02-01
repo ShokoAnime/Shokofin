@@ -61,6 +61,11 @@ namespace Shokofin.Utils
             '⦎',   // right angle bracket
         };
 
+        private static HashSet<string> IgnoredSubTitles = new() {
+            "Complete Movie",
+            "OVA",
+        };
+
         /// <summary>
         /// Where to get text the text from.
         /// </summary>
@@ -315,7 +320,7 @@ namespace Shokofin.Utils
                     if (outputType == DisplayTitleType.SubTitle)
                         return title;
                     // Ignore sub-title of movie if it strictly equals the text below.
-                    if (title != "Complete Movie" && !string.IsNullOrEmpty(title?.Trim()))
+                    if (!string.IsNullOrWhiteSpace(title) && !IgnoredSubTitles.Contains(title))
                         titleBuilder?.Append($": {title}");
                     return titleBuilder?.ToString() ?? "";
                 }

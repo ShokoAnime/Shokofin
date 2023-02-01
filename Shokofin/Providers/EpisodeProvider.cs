@@ -104,9 +104,14 @@ namespace Shokofin.Providers
                 var alternateTitles = new List<string>(file.EpisodeList.Count);
                 foreach (var episodeInfo in file.EpisodeList)
                 {
-                    string defaultEpisodeTitle = maybeMergeFriendly && episodeInfo.TvDB != null ? episodeInfo.TvDB.Title : episodeInfo.Shoko.Name;
-                    if (series.AniDB.Type == SeriesType.Movie && (episodeInfo.AniDB.Type == EpisodeType.Normal || episodeInfo.AniDB.Type == EpisodeType.Special)) {
-                        string defaultSeriesTitle = maybeMergeFriendly && episodeInfo.TvDB != null ? series.TvDB.Title : series.Shoko.Name;
+                    string defaultEpisodeTitle = episodeInfo.Shoko.Name;
+                    if (
+                        // Movies
+                        (series.AniDB.Type == SeriesType.Movie && (episodeInfo.AniDB.Type == EpisodeType.Normal || episodeInfo.AniDB.Type == EpisodeType.Special)) ||
+                        // OVAs
+                        (series.AniDB.Type == SeriesType.OVA && episodeInfo.AniDB.Type == EpisodeType.Normal && episodeInfo.AniDB.EpisodeNumber == 1 && episodeInfo.Shoko.Name == "OVA")
+                    ) {
+                        string defaultSeriesTitle = series.Shoko.Name;
                         var ( dTitle, aTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episodeInfo.AniDB.Titles, defaultSeriesTitle, defaultEpisodeTitle, metadataLanguage);
                         displayTitles.Add(dTitle);
                         alternateTitles.Add(aTitle);
