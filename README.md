@@ -8,9 +8,9 @@ A Jellyfin plugin to integrate [Jellyfin](https://jellyfin.org/docs/) with
 **This plugin requires that you have already set up and are using Shoko
 Server**, and that the directories/folders you intend to use in Jellyfin are
 **fully indexed** (and optionally managed) by Shoko Server. **Otherwise, the
-plugin won't be able to function properly**; meaning, the plugin won't be able
-to any find metadata about any entries that are not indexed by Shoko Server with
-this plugin, since there is no metadata to get.
+plugin won't be able to function properly**, meaning, the plugin won't be able
+to any find metadata about any entries that are not indexed by Shoko Server
+since there is no metadata to find.
 
 ### What Is Shoko?
 
@@ -35,6 +35,7 @@ Learn more about Shoko at https://shokoanime.com/.
     - [X] Optional customisable alternate/original title for items
 
     - [X] Customisable description source for items
+
       Choose between AniDB, TvDB, or a mix of the two.
 
     - [X] Support optionally adding titles and descriptions for all episodes for
@@ -101,6 +102,10 @@ Learn more about Shoko at https://shokoanime.com/.
     Tidying up the UI if you have multiple versions of the same episode or
     movie.
 
+      - [X] Auto merge after library scan (if enabled).
+
+      - [X] Manual merge/split tasks
+
   - [X] Support optionally setting other provider ids Shoko knows about (e.g.
     AniDB, TvDB, TMDB, etc.) on some item types when an ID is available for
     the items in Shoko.
@@ -131,7 +136,7 @@ Learn more about Shoko at https://shokoanime.com/.
     - [ ] Deleting an missing episode item marks the episode as hidden/ignored
       in Shoko.
 
-  - [ ] Optionally react to Show/File update events sent from Shoko.
+  - [ ] Optionally react to events sent from Shoko.
 
     Coming soon™-ish
 
@@ -142,12 +147,14 @@ Learn more about Shoko at https://shokoanime.com/.
 
     - [X] During import.
 
-    - [X] Player events (play/pause/resumve/stop)
+    - [X] Player events (play/pause/resumve/stop events)
 
-    - [X] After playback (stop)
+    - [X] After playback (stop event)
 
     - [X] Live scrobbling (every 1 minute during playback after the last
-      play/resume event)
+      play/resume event or when jumping)
+
+  - [X] Import and export user data tasks
 
 ## Install
 
