@@ -293,7 +293,6 @@ namespace Shokofin.Sync
                     EnableImages = false
                 },
                 SourceTypes = new SourceType[] { SourceType.Library },
-                HasChapterImages = false,
                 IsVirtualItem = false,
             })
                 .OfType<Video>()
