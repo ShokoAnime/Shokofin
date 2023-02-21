@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Dto;
@@ -22,6 +24,8 @@ namespace Shokofin.Sync
 
         private readonly IUserDataManager UserDataManager;
 
+        private readonly IUserManager UserManager;
+
         private readonly ILibraryManager LibraryManager;
 
         private readonly ISessionManager SessionManager;
@@ -32,9 +36,10 @@ namespace Shokofin.Sync
 
         private readonly IIdLookup Lookup;
 
-        public UserDataSyncManager(IUserDataManager userDataManager, ILibraryManager libraryManager, ISessionManager sessionManager, ILogger<UserDataSyncManager> logger, ShokoAPIClient apiClient, IIdLookup lookup)
+        public UserDataSyncManager(IUserDataManager userDataManager, IUserManager userManager, ILibraryManager libraryManager, ISessionManager sessionManager, ILogger<UserDataSyncManager> logger, ShokoAPIClient apiClient, IIdLookup lookup)
         {
             UserDataManager = userDataManager;
+            UserManager = userManager;
             LibraryManager = libraryManager;
             SessionManager = sessionManager;
             Logger = logger;
@@ -232,6 +237,11 @@ namespace Shokofin.Sync
                         Logger.LogInformation("Failed to sync watch state with Shoko. (File={FileId})", fileId);
                     }
                 }
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized) {
+                TryGetUserConfiguration(e.UserId, out var userConfig);
+                if (userConfig is not null)
+                    Logger.LogError(ex, "Invalid or expired API token used. In the plugin settings, please reset the connection to Shoko Server in the user settings section (Jellyfin User={Username})", UserManager.GetUserById(userConfig.UserId).Username);
             }
             catch (Exception ex) {
                 Logger.LogError(ex, "Threw unexpectedly; {ErrorMessage}", ex.Message);
@@ -444,7 +454,14 @@ namespace Shokofin.Sync
                 return;
             }
             var localUserStats = UserDataManager.GetUserData(userConfig.UserId, video);
-            var remoteUserStats = await APIClient.GetFileUserStats(fileId, userConfig.Token);
+            UserStats remoteUserStats;
+            try {
+                remoteUserStats = await APIClient.GetFileUserStats(fileId, userConfig.Token);
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized) {
+                Logger.LogError(ex, "Invalid or expired API token used. In the plugin settings, please reset the connection to Shoko Server in the user settings section (Jellyfin User={Username})", UserManager.GetUserById(userConfig.UserId).Username);
+                return;
+            }
             bool isInSync = UserDataEqualsFileUserStats(localUserStats, remoteUserStats);
             Logger.LogInformation("{SyncDirection} user data for video {VideoName}. (File={FileId},Episode={EpisodeId},Local={HaveLocal},Remote={HaveRemote},InSync={IsInSync})", direction.ToString(), video.Name, fileId, episodeId, localUserStats != null, remoteUserStats != null, isInSync);
             if (isInSync)
