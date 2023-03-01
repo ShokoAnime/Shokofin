@@ -449,100 +449,99 @@ namespace Shokofin.Sync
 
         private async Task SyncVideo(Video video, UserConfiguration userConfig, SyncDirection direction, string fileId, string episodeId)
         {
-            if (!userConfig.SyncRestrictedVideos && video.CustomRating == "XXX") {
-                Logger.LogTrace("Skipped {SyncDirection} user data for video {VideoName}. (File={FileId},Episode={EpisodeId})", direction.ToString(), video.Name, fileId, episodeId);
-                return;
-            }
-            var localUserStats = UserDataManager.GetUserData(userConfig.UserId, video);
-            UserStats remoteUserStats;
             try {
-                remoteUserStats = await APIClient.GetFileUserStats(fileId, userConfig.Token);
+                if (!userConfig.SyncRestrictedVideos && video.CustomRating == "XXX") {
+                    Logger.LogTrace("Skipped {SyncDirection} user data for video {VideoName}. (File={FileId},Episode={EpisodeId})", direction.ToString(), video.Name, fileId, episodeId);
+                    return;
+                }
+                var localUserStats = UserDataManager.GetUserData(userConfig.UserId, video);
+                var remoteUserStats = await APIClient.GetFileUserStats(fileId, userConfig.Token);
+                bool isInSync = UserDataEqualsFileUserStats(localUserStats, remoteUserStats);
+                Logger.LogInformation("{SyncDirection} user data for video {VideoName}. (File={FileId},Episode={EpisodeId},Local={HaveLocal},Remote={HaveRemote},InSync={IsInSync})", direction.ToString(), video.Name, fileId, episodeId, localUserStats != null, remoteUserStats != null, isInSync);
+                if (isInSync)
+                    return;
+
+                switch (direction)
+                {
+                    case SyncDirection.Export:
+                        // Abort since there are no local stats to export.
+                        if (localUserStats == null)
+                            break;
+                        // Export the local stats if there is no remote stats or if the local stats are newer.
+                        if (remoteUserStats == null)
+                        {
+                            remoteUserStats = localUserStats.ToFileUserStats();
+                            // Don't sync if the local state is considered empty and there is no remote state.
+                            if (remoteUserStats.IsEmpty)
+                                break;
+                            remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
+                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, fileId, episodeId);
+                        }
+                        else if (localUserStats.LastPlayedDate.HasValue && localUserStats.LastPlayedDate.Value > remoteUserStats.LastUpdatedAt) {
+                            remoteUserStats = localUserStats.ToFileUserStats();
+                            remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
+                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, fileId, episodeId);
+                        }
+                        break;
+                    case SyncDirection.Import:
+                        // Abort since there are no remote stats to import.
+                        if (remoteUserStats == null)
+                            break;
+                        // Create a new local stats entry if there is no local entry.
+                        if (localUserStats == null)
+                        {
+                            UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats = remoteUserStats.ToUserData(video, userConfig.UserId), UserDataSaveReason.Import, CancellationToken.None);
+                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, fileId, episodeId);
+                        }
+                        // Else merge the remote stats into the local stats entry.
+                        else if ((!localUserStats.LastPlayedDate.HasValue || remoteUserStats.LastUpdatedAt > localUserStats.LastPlayedDate.Value))
+                        {
+                            UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
+                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, fileId, episodeId);
+                        }
+                        break;
+                    default:
+                    case SyncDirection.Sync: {
+                        // Export if there is local stats but no remote stats.
+                        if (localUserStats == null && remoteUserStats != null)
+                            goto case SyncDirection.Import;
+
+                        // Try to import of there is no local stats ubt there are remote stats.
+                        else if (remoteUserStats == null && localUserStats != null)
+                            goto case SyncDirection.Export;
+
+                        // Abort if there are no local or remote stats.
+                        else if (remoteUserStats == null && localUserStats == null)
+                            break;
+
+                        // Try to import if we're unable to read the last played timestamp.
+                        if (!localUserStats.LastPlayedDate.HasValue)
+                            goto case SyncDirection.Import;
+
+                        // Abort if the stats are in sync.
+                        if (isInSync || localUserStats.LastPlayedDate.Value == remoteUserStats.LastUpdatedAt)
+                            break;
+
+                        // Export if the local state is fresher then the remote state.
+                        if (localUserStats.LastPlayedDate.Value > remoteUserStats.LastUpdatedAt)
+                        {
+                            remoteUserStats = localUserStats.ToFileUserStats();
+                            remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
+                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, fileId, episodeId);
+                        }
+                        // Else import if the remote state is fresher then the local state.
+                        else if (localUserStats.LastPlayedDate.Value < remoteUserStats.LastUpdatedAt)
+                        {
+                            UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
+                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, fileId, episodeId);
+                        }
+                        break;
+                    }
+                }
             }
             catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized) {
-                Logger.LogError(ex, "Invalid or expired API token used. In the plugin settings, please reset the connection to Shoko Server in the user settings section (Jellyfin User={Username})", UserManager.GetUserById(userConfig.UserId).Username);
-                return;
-            }
-            bool isInSync = UserDataEqualsFileUserStats(localUserStats, remoteUserStats);
-            Logger.LogInformation("{SyncDirection} user data for video {VideoName}. (File={FileId},Episode={EpisodeId},Local={HaveLocal},Remote={HaveRemote},InSync={IsInSync})", direction.ToString(), video.Name, fileId, episodeId, localUserStats != null, remoteUserStats != null, isInSync);
-            if (isInSync)
-                return;
-
-            switch (direction)
-            {
-                case SyncDirection.Export:
-                    // Abort since there are no local stats to export.
-                    if (localUserStats == null)
-                        break;
-                    // Export the local stats if there is no remote stats or if the local stats are newer.
-                    if (remoteUserStats == null)
-                    {
-                        remoteUserStats = localUserStats.ToFileUserStats();
-                        // Don't sync if the local state is considered empty and there is no remote state.
-                        if (remoteUserStats.IsEmpty)
-                            break;
-                        remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
-                        Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, fileId, episodeId);
-                    }
-                    else if (localUserStats.LastPlayedDate.HasValue && localUserStats.LastPlayedDate.Value > remoteUserStats.LastUpdatedAt) {
-                        remoteUserStats = localUserStats.ToFileUserStats();
-                        remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
-                        Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, fileId, episodeId);
-                    }
-                    break;
-                case SyncDirection.Import:
-                    // Abort since there are no remote stats to import.
-                    if (remoteUserStats == null)
-                        break;
-                    // Create a new local stats entry if there is no local entry.
-                    if (localUserStats == null)
-                    {
-                        UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats = remoteUserStats.ToUserData(video, userConfig.UserId), UserDataSaveReason.Import, CancellationToken.None);
-                        Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, fileId, episodeId);
-                    }
-                    // Else merge the remote stats into the local stats entry.
-                    else if ((!localUserStats.LastPlayedDate.HasValue || remoteUserStats.LastUpdatedAt > localUserStats.LastPlayedDate.Value))
-                    {
-                        UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
-                        Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, fileId, episodeId);
-                    }
-                    break;
-                default:
-                case SyncDirection.Sync: {
-                    // Export if there is local stats but no remote stats.
-                    if (localUserStats == null && remoteUserStats != null)
-                        goto case SyncDirection.Import;
-
-                    // Try to import of there is no local stats ubt there are remote stats.
-                    else if (remoteUserStats == null && localUserStats != null)
-                        goto case SyncDirection.Export;
-
-                    // Abort if there are no local or remote stats.
-                    else if (remoteUserStats == null && localUserStats == null)
-                        break;
-
-                    // Try to import if we're unable to read the last played timestamp.
-                    if (!localUserStats.LastPlayedDate.HasValue)
-                        goto case SyncDirection.Import;
-
-                    // Abort if the stats are in sync.
-                    if (isInSync || localUserStats.LastPlayedDate.Value == remoteUserStats.LastUpdatedAt)
-                        break;
-
-                    // Export if the local state is fresher then the remote state.
-                    if (localUserStats.LastPlayedDate.Value > remoteUserStats.LastUpdatedAt)
-                    {
-                        remoteUserStats = localUserStats.ToFileUserStats();
-                        remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
-                        Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, fileId, episodeId);
-                    }
-                    // Else import if the remote state is fresher then the local state.
-                    else if (localUserStats.LastPlayedDate.Value < remoteUserStats.LastUpdatedAt)
-                    {
-                        UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
-                        Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, fileId, episodeId);
-                    }
-                    break;
-                }
+                Logger.LogError(ex, "I{Message} (Username={Username},Id={UserId})", ex.Message, UserManager.GetUserById(userConfig.UserId)?.Username, userConfig.UserId);
+                throw;
             }
         }
 
