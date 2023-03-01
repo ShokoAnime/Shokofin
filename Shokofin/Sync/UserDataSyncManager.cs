@@ -239,9 +239,9 @@ namespace Shokofin.Sync
                 }
             }
             catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized) {
-                TryGetUserConfiguration(e.UserId, out var userConfig);
-                if (userConfig is not null)
-                    Logger.LogError(ex, "Invalid or expired API token used. In the plugin settings, please reset the connection to Shoko Server in the user settings section (Jellyfin User={Username})", UserManager.GetUserById(userConfig.UserId).Username);
+                if (TryGetUserConfiguration(e.UserId, out var userConfig))
+                    Logger.LogError(ex, "I{Message} (Username={Username},Id={UserId})", ex.Message, UserManager.GetUserById(userConfig.UserId)?.Username, userConfig.UserId);
+                return;
             }
             catch (Exception ex) {
                 Logger.LogError(ex, "Threw unexpectedly; {ErrorMessage}", ex.Message);
