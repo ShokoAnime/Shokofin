@@ -92,7 +92,7 @@ public class ShokoAPIClient : IDisposable
                 requestMessage.Headers.Add("apikey", apiKey);
                 var response = await _httpClient.SendAsync(requestMessage);
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
-                    throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection in the plugin settings.", null, HttpStatusCode.Unauthorized);
+                    throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection or deleting and re-adding the user in the plugin settings.", null, HttpStatusCode.Unauthorized);
                 Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
                 return response;
             }
@@ -146,7 +146,7 @@ public class ShokoAPIClient : IDisposable
                 requestMessage.Headers.Add("apikey", apiKey);
                 var response = await _httpClient.SendAsync(requestMessage);
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
-                    throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection in the plugin settings.", null, HttpStatusCode.Unauthorized);
+                    throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection or deleting and re-adding the user in the plugin settings.", null, HttpStatusCode.Unauthorized);
                 Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
                 return response;
             }
