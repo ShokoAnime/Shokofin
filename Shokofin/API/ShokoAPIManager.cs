@@ -578,7 +578,7 @@ public class ShokoAPIManager : IDisposable
 
         Logger.LogTrace("Creating info object for series {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
 
-        var episodes = (await APIClient.GetEpisodesFromSeries(seriesId) ?? new())
+        var episodes = (await APIClient.GetEpisodesFromSeries(seriesId) ?? new()).List
             .Select(e => CreateEpisodeInfo(e, e.IDs.Shoko.ToString()))
             .OrderBy(e => e.AniDB.AirDate)
             .ToList();
