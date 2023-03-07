@@ -74,7 +74,17 @@ public class SeriesInfo
     /// </summary>
     public List<EpisodeInfo> SpecialsList;
 
-    public SeriesInfo(Series series, List<EpisodeInfo> episodes, IEnumerable<Role> cast, string[] genres, string[] tags)
+    /// <summary>
+    /// Related series data available in Shoko.
+    /// </summary>
+    public List<Relation> Relations;
+
+    /// <summary>
+    /// Map of related series with type.
+    /// </summary>
+    public Dictionary<string, RelationType> RelationMap;
+
+    public SeriesInfo(Series series, List<EpisodeInfo> episodes, List<Role> cast, List<Relation> relations, string[] genres, string[] tags)
     {
         var seriesId = series.IDs.Shoko.ToString();
         var studios = cast
@@ -85,6 +95,8 @@ public class SeriesInfo
             .Select(RoleToPersonInfo)
             .OfType<PersonInfo>()
             .ToArray();
+        var relationMap = relations
+            .ToDictionary(r => r.RelatedIDs.Shoko!.Value.ToString(), r => r.Type);
         var specialsAnchorDictionary = new Dictionary<EpisodeInfo, EpisodeInfo>();
         var specialsList = new List<EpisodeInfo>();
         var episodesList = new List<EpisodeInfo>();
@@ -143,6 +155,8 @@ public class SeriesInfo
         ExtrasList = extrasList;
         SpecialsAnchors = specialsAnchorDictionary;
         SpecialsList = specialsList;
+        Relations = relations;
+        RelationMap = relationMap;
     }
 
     private string? GetImagePath(Image image)

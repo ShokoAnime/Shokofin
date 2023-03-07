@@ -176,6 +176,9 @@ async function defaultSubmit(form) {
         form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
         config.IgnoredFolders = ignoredFolders;
         form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
+
+        // Experimental settings
+        config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
         config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
         config.EXPERIMENTAL_SplitThenMergeMovies = form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked;
         config.EXPERIMENTAL_SplitThenMergeEpisodes = form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked;
@@ -332,6 +335,9 @@ async function syncSettings(form) {
     form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
     config.IgnoredFolders = ignoredFolders;
     form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
+
+    // Experimental settings
+    config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
     config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
     config.EXPERIMENTAL_SplitThenMergeMovies = form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked;
     config.EXPERIMENTAL_SplitThenMergeEpisodes = form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked;
@@ -508,6 +514,9 @@ export default function (page) {
             form.querySelector("#PublicHost").value = config.PublicHost;
             form.querySelector("#IgnoredFileExtensions").value = config.IgnoredFileExtensions.join(" ");
             form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
+
+            // Experimental settings
+            form.querySelector("#SeasonOrdering").value = config.SeasonOrdering;
             form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked = config.EXPERIMENTAL_AutoMergeVersions || false;
             form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked = config.EXPERIMENTAL_SplitThenMergeMovies || true;
             form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked = config.EXPERIMENTAL_SplitThenMergeEpisodes || false;

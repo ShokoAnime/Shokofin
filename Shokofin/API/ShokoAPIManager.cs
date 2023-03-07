@@ -583,10 +583,11 @@ public class ShokoAPIManager : IDisposable
             .OrderBy(e => e.AniDB.AirDate)
             .ToList();
         var cast = await APIClient.GetSeriesCast(seriesId);
+        var relations = await APIClient.GetSeriesRelations(seriesId);
         var genres = await GetGenresForSeries(seriesId);
         var tags = await GetTagsForSeries(seriesId);
 
-        seriesInfo = new SeriesInfo(series, episodes, cast, genres, tags);
+        seriesInfo = new SeriesInfo(series, episodes, cast, relations, genres, tags);
 
         foreach (var episode in episodes)
             EpisodeIdToSeriesIdDictionary[episode.Id] = seriesId;

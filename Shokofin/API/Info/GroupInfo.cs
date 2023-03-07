@@ -61,9 +61,9 @@ public class GroupInfo
             case Ordering.OrderType.ReleaseDate:
                 seriesList = seriesList.OrderBy(s => s?.AniDB?.AirDate ?? System.DateTime.MaxValue).ToList();
                 break;
-            // Should not be selectable unless a user fiddles with DevTools in the browser to select the option.
             case Ordering.OrderType.Chronological:
-                throw new System.Exception("Not implemented yet");
+                seriesList.Sort(new SeriesInfoRelationComparer());
+                break;
         }
 
         // Select the targeted id if a group specify a default series.

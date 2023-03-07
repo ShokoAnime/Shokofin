@@ -261,6 +261,11 @@ public class ShokoAPIClient : IDisposable
         return Get<List<Role>>($"/api/v3/Series/{id}/Cast");
     }
 
+    public Task<List<Relation>> GetSeriesRelations(string id)
+    {
+        return Get<List<Relation>>($"/api/v3/Series/{id}/Relations");
+    }
+
     public Task<Images> GetSeriesImages(string id)
     {
         return Get<Images>($"/api/v3/Series/{id}/Images");
