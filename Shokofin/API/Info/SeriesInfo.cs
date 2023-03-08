@@ -96,6 +96,7 @@ public class SeriesInfo
             .OfType<PersonInfo>()
             .ToArray();
         var relationMap = relations
+            .Where(r => r.RelatedIDs.Shoko.HasValue)
             .ToDictionary(r => r.RelatedIDs.Shoko!.Value.ToString(), r => r.Type);
         var specialsAnchorDictionary = new Dictionary<EpisodeInfo, EpisodeInfo>();
         var specialsList = new List<EpisodeInfo>();
