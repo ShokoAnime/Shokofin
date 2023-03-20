@@ -216,6 +216,7 @@ namespace Shokofin.Providers
                 }
             }
             else {
+                var rating = series.AniDB.Restricted && series.AniDB.Type != SeriesType.TV ? "XXX" : null;
                 if (season != null) {
                     result = new Episode {
                         Name = displayTitle,
@@ -235,8 +236,8 @@ namespace Shokofin.Providers
                         SeriesName = season.Series.Name,
                         SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
                         SeasonName = season.Name,
-                        OfficialRating = series.AniDB.Restricted ? "XXX" : null,
-                        CustomRating = series.AniDB.Restricted ? "XXX" : null,
+                        OfficialRating = rating,
+                        CustomRating = rating,
                         DateLastSaved = DateTime.UtcNow,
                         RunTimeTicks = episode.AniDB.Duration.Ticks,
                     };
@@ -253,8 +254,8 @@ namespace Shokofin.Providers
                         AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
                         PremiereDate = episode.AniDB.AirDate,
                         Overview = description,
-                        OfficialRating = series.AniDB.Restricted ? "XXX" : null,
-                        CustomRating = series.AniDB.Restricted ? "XXX" : null,
+                        OfficialRating = rating,
+                        CustomRating = rating,
                         CommunityRating = episode.AniDB.Rating.ToFloat(10),
                     };
                 }
