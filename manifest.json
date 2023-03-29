@@ -2,12 +2,20 @@
     {
         "guid": "5216ccbf-d24a-4eb3-8a7e-7da4230b7052",
         "name": "Shoko",
-        "description": "A plugin to provide metadata from Shoko Server for your locally organised anime library in Jellyfin.\n",
+        "description": "A plugin to provide metadata from Shoko Server for your locally organized anime library in Jellyfin.\n",
         "overview": "Manage your anime from Jellyfin using metadata from Shoko",
         "owner": "shokoanime",
         "category": "Metadata",
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
+            {
+                "version": "3.0.0.0",
+                "changelog": "NA\n",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.0/shoko_3.0.0.0.zip",
+                "checksum": "c02b32abb548eb3d2153ac957ad88f80",
+                "timestamp": "2023-03-29T17:54:57Z"
+            },
             {
                 "version": "2.0.1.0",
                 "changelog": "NA\n",
