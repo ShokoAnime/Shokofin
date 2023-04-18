@@ -1,6 +1,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using Shokofin.API.Models;
 using Shokofin.Utils;
 
@@ -40,7 +41,7 @@ public class GroupInfo
         DefaultSeries = null;
     }
 
-    public GroupInfo(Group group, List<SeriesInfo> seriesList, Ordering.GroupFilterType filterByType)
+    public GroupInfo(Group group, List<SeriesInfo> seriesList, Ordering.GroupFilterType filterByType, ILogger logger)
     {
         var groupId = group.IDs.Shoko.ToString();
 
@@ -87,9 +88,12 @@ public class GroupInfo
             }
         }
 
-        // Throw if we can't get a base point for seasons.
+        // Fallback to the first series if we can't get a base point for seasons.
         if (foundIndex == -1)
-            throw new System.Exception("Unable to get a base-point for seasons within the group");
+        {
+            logger.LogWarning("Unable to get a base-point for seasons within the group for the filter, so falling back to the first series in the group. This is most likely due to library separation being enabled. (Filter={FilterByType},Group={GroupID})", filterByType.ToString(), groupId);
+            foundIndex = 0;
+        }
 
         var seasonOrderDictionary = new Dictionary<int, SeriesInfo>();
         var seasonNumberBaseDictionary = new Dictionary<SeriesInfo, int>();
@@ -127,7 +131,7 @@ public class GroupInfo
         SeriesList = seriesList;
         SeasonNumberBaseDictionary = seasonNumberBaseDictionary;
         SeasonOrderDictionary = seasonOrderDictionary;
-        DefaultSeries = seriesList[foundIndex];
+        DefaultSeries = seriesList.Count > 0 ? seriesList[foundIndex] : null;
     }
 
     public SeriesInfo? GetSeriesInfoBySeasonNumber(int seasonNumber) {

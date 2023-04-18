@@ -744,7 +744,7 @@ public class ShokoAPIManager : IDisposable
             return groupInfo;
         }
 
-        groupInfo = new GroupInfo(group, seriesList, filterByType);
+        groupInfo = new GroupInfo(group, seriesList, filterByType, Logger);
 
         foreach (var series in seriesList)
             SeriesIdToGroupIdDictionary[series.Id] = groupId;
