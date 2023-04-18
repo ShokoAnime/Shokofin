@@ -145,15 +145,41 @@ public class Series
         /// </summary>
         public new int EpisodeCount { get; set; }
 
+        [JsonIgnore]
+        private DateTime? _airDate { get; set; } = null;
+
         /// <summary>
         /// Air date (2013-02-27, shut up avael). Anything without an air date is going to be missing a lot of info.
         /// </summary>
-        public DateTime? AirDate { get; set; }
+        public DateTime? AirDate
+        {
+            get
+            {
+                return _airDate;
+            }
+            set
+            {
+                _airDate = value.HasValue && (value.Value == DateTime.UnixEpoch || value.Value == DateTime.MinValue || value.Value == DateTime.MaxValue) ? null : value;
+            }
+        }
+
+        [JsonIgnore]
+        private DateTime? _endDate { get; set; } = null;
 
         /// <summary>
         /// End date, can be omitted. Omitted means that it's still airing (2013-02-27)
         /// </summary>
-        public DateTime? EndDate { get; set; }
+        public DateTime? EndDate
+        {
+            get
+            {
+                return _endDate;
+            }
+            set
+            {
+                _endDate = value.HasValue && (value.Value == DateTime.UnixEpoch || value.Value == DateTime.MinValue || value.Value == DateTime.MaxValue) ? null : value;
+            }
+        }
     }
 
     public class TvDB
