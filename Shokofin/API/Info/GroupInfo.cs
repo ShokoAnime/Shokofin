@@ -69,21 +69,14 @@ public class GroupInfo
 
         // Select the targeted id if a group specify a default series.
         int foundIndex = -1;
-        int targetId = group.IDs.MainSeries;
-        if (targetId != 0)
-            foundIndex = seriesList.FindIndex(s => s.Shoko.IDs.Shoko == targetId);
-        // Else select the default series as first-to-be-released.
-        else switch (orderingType) {
-            // The list is already sorted by release date, so just return the first index.
+        switch (orderingType) {
             case Ordering.OrderType.ReleaseDate:
                 foundIndex = 0;
                 break;
-            // We don't know how Shoko may have sorted it, so just find the earliest series
             case Ordering.OrderType.Default:
-            // We can't be sure that the the series in the list was _released_ chronologically, so find the earliest series, and use that as a base.
             case Ordering.OrderType.Chronological: {
-                var earliestSeries = seriesList.Aggregate((cur, nxt) => (cur == null || (nxt.AniDB.AirDate ?? System.DateTime.MaxValue) < (cur.AniDB.AirDate ?? System.DateTime.MaxValue)) ? nxt : cur);
-                foundIndex = seriesList.FindIndex(s => s == earliestSeries);
+                int targetId = group.IDs.MainSeries;
+                foundIndex = seriesList.FindIndex(s => s.Shoko.IDs.Shoko == targetId);
                 break;
             }
         }
