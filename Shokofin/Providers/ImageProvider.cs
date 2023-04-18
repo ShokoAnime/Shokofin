@@ -42,7 +42,6 @@ namespace Shokofin.Providers
         {
             var list = new List<RemoteImageInfo>();
             try {
-
                 var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Utils.Ordering.GroupFilterType.Others : Utils.Ordering.GroupFilterType.Default;
                 switch (item) {
                     case Episode episode: {
@@ -57,10 +56,21 @@ namespace Shokofin.Providers
                     }
                     case Series series: {
                         if (Lookup.TryGetSeriesIdFor(series, out var seriesId)) {
-                            var seriesImages = await ApiClient.GetSeriesImages(seriesId);
-                            if (seriesImages != null) {
-                                AddImagesForSeries(ref list, seriesImages);
+                            if (Plugin.Instance.Configuration.SeriesGrouping == Utils.Ordering.GroupType.ShokoGroup) {
+                                var images = series.GetSeasons(null, new(true))
+                                    .Cast<Season>()
+                                    .AsParallel()
+                                    .SelectMany(season => GetImages(season, cancellationToken).Result)
+                                    .DistinctBy(image => image.Url)
+                                    .ToList();
                                 Logger.LogInformation("Getting {Count} images for series {SeriesName} (Series={SeriesId})", list.Count, series.Name, seriesId);
+                            }
+                            else {
+                                var seriesImages = await ApiClient.GetSeriesImages(seriesId);
+                                if (seriesImages != null) {
+                                    AddImagesForSeries(ref list, seriesImages);
+                                    Logger.LogInformation("Getting {Count} images for series {SeriesName} (Series={SeriesId})", list.Count, series.Name, seriesId);
+                                }
                             }
                         }
                         break;
