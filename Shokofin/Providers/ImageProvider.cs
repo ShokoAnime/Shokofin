@@ -57,7 +57,7 @@ namespace Shokofin.Providers
                     case Series series: {
                         if (Lookup.TryGetSeriesIdFor(series, out var seriesId)) {
                             if (Plugin.Instance.Configuration.SeriesGrouping == Utils.Ordering.GroupType.ShokoGroup) {
-                                var images = series.GetSeasons(null, new(true))
+                                list = series.GetSeasons(null, new(true))
                                     .Cast<Season>()
                                     .AsParallel()
                                     .SelectMany(season => GetImages(season, cancellationToken).Result)
