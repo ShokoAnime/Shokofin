@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -274,6 +275,16 @@ public class ShokoAPIClient : IDisposable
     public Task<List<Series>> GetSeriesPathEndsWith(string dirname)
     {
         return Get<List<Series>>($"/api/v3/Series/PathEndsWith/{Uri.EscapeDataString(dirname)}");
+    }
+
+    public async Task<Series?> GetSeriesByName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return null;
+
+        // Return the first (and hopefully only) exact match on the full title.
+        var results = await Get<List<SeriesSearchResult>>($"/api/v3/Series/Search?query={Uri.EscapeDataString(name)}&limit=10&fuzzy=false");
+        return results?.FirstOrDefault(series => series.ExactMatch && series.Index == 0 && series.LengthDifference == 0 && string.Equals(name, series.Match, StringComparison.Ordinal));
     }
 
     public Task<List<Tag>> GetSeriesTags(string id, ulong filter = 0)

@@ -32,6 +32,8 @@ public class ShokoAPIManager : IDisposable
 
     private readonly ConcurrentDictionary<string, string> PathToSeriesIdDictionary = new();
 
+    private readonly ConcurrentDictionary<string, string> NameToSeriesIdDictionary = new();
+
     private readonly ConcurrentDictionary<string, List<string>> PathToEpisodeIdsDictionary = new();
 
     private readonly ConcurrentDictionary<string, (string, string)> PathToFileIdAndSeriesIdDictionary = new();
@@ -149,6 +151,7 @@ public class ShokoAPIManager : IDisposable
         PathToEpisodeIdsDictionary.Clear();
         PathToFileIdAndSeriesIdDictionary.Clear();
         PathToSeriesIdDictionary.Clear();
+        NameToSeriesIdDictionary.Clear();
         SeriesIdToGroupIdDictionary.Clear();
         SeriesIdToPathDictionary.Clear();
     }
@@ -525,6 +528,22 @@ public class ShokoAPIManager : IDisposable
     #endregion
     #region Series Info
 
+    public async Task<SeriesInfo?> GetSeriesInfoByName(string name)
+    {
+        var seriesId = await GetSeriesIdForName(name);
+        if (string.IsNullOrEmpty(seriesId))
+            return null;
+
+        var key = $"series:{seriesId}";
+        if (DataCache.TryGetValue<SeriesInfo>(key, out var seriesInfo)) {
+            Logger.LogTrace("Reusing info object for series {SeriesName}. (Series={SeriesId})", seriesInfo.Shoko.Name, seriesId);
+            return seriesInfo;
+        }
+
+        var series = await APIClient.GetSeries(seriesId);
+        return await CreateSeriesInfo(series, seriesId);
+    }
+
     public async Task<SeriesInfo?> GetSeriesInfoByPath(string path)
     {
         var seriesId = await GetSeriesIdForPath(path);
@@ -622,6 +641,24 @@ public class ShokoAPIManager : IDisposable
         return SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out groupId);
     }
 
+    private async Task<string?> GetSeriesIdForName(string name)
+    {
+        // Reuse cached value.
+        if (NameToSeriesIdDictionary.TryGetValue(name, out var seriesId))
+            return seriesId;
+
+        Logger.LogDebug("Looking for series matching name {Name}", name);
+        var series = await APIClient.GetSeriesByName(name);
+        Logger.LogTrace("Found {Count} exact matches for name {Name}", series == null ? 0 : 1, name);
+        if (series == null)
+            return null;
+
+        seriesId = series.IDs.Shoko.ToString();
+        NameToSeriesIdDictionary[name] = seriesId;
+        SeriesIdToPathDictionary.TryAdd(seriesId, name);
+        return seriesId;
+    }
+
     private async Task<string?> GetSeriesIdForPath(string path)
     {
         // Reuse cached value.
@@ -629,9 +666,9 @@ public class ShokoAPIManager : IDisposable
             return seriesId;
 
         var partialPath = StripMediaFolder(path);
-        Logger.LogDebug("Looking for series matching {Path}", partialPath);
+        Logger.LogDebug("Looking for series matching path {Path}", partialPath);
         var result = await APIClient.GetSeriesPathEndsWith(partialPath);
-        Logger.LogTrace("Found result with {Count} matches for {Path}", result.Count, partialPath);
+        Logger.LogTrace("Found {Count} matches for path {Path}", result.Count, partialPath);
 
         // Return the first match where the series unique paths partially match
         // the input path.
@@ -659,6 +696,28 @@ public class ShokoAPIManager : IDisposable
 
     #endregion
     #region Group Info
+
+    public async Task<GroupInfo?> GetGroupInfoBySeriesName(string seriesName, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    {
+        if (NameToSeriesIdDictionary.TryGetValue(seriesName, out var seriesId)) {
+            if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
+                if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var groupInfo)) {
+                    Logger.LogTrace("Reusing info object for group {GroupName}. (Series={seriesId},Group={GroupId})", groupInfo.Shoko.Name, seriesId, groupId);
+                    return groupInfo;
+                }
+
+                return await GetGroupInfo(groupId, filterByType);
+            }
+        }
+        else
+        {
+            seriesId = await GetSeriesIdForName(seriesName);
+            if (string.IsNullOrEmpty(seriesId))
+                return null;
+        }
+
+        return await GetGroupInfoForSeries(seriesId, filterByType);
+    }
 
     public async Task<GroupInfo?> GetGroupInfoByPath(string path, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
     {

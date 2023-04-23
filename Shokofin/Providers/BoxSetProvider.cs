@@ -50,10 +50,25 @@ namespace Shokofin.Providers
         public async Task<MetadataResult<BoxSet>> GetDefaultMetadata(BoxSetInfo info, CancellationToken cancellationToken)
         {
             var result = new MetadataResult<BoxSet>();
-            var series = await ApiManager.GetSeriesInfoByPath(info.Path);
+
+            // First try to re-use any existing series id.
+            API.Info.SeriesInfo series = null;
+            if (info.ProviderIds.TryGetValue("Shoko Series", out var seriesId))
+                series = await ApiManager.GetSeriesInfo(seriesId);
+
+            // Then try to look ir up by path.
+            if (series == null)
+                series = await ApiManager.GetSeriesInfoByPath(info.Path);
+
+            // Then try to look it up using the name.
+            if (series == null) {
+                var boxSetName = GetBoxSetName(info);
+                if (boxSetName != null)
+                    series = await ApiManager.GetSeriesInfoByName(boxSetName);
+            }
 
             if (series == null) {
-                    Logger.LogWarning("Unable to find movie box-set info for path {Path}", info.Path);
+                    Logger.LogWarning("Unable to find movie box-set info for name {Name} and path {Path}", info.Name, info.Path);
                 return result;
             }
 
@@ -88,9 +103,25 @@ namespace Shokofin.Providers
             var result = new MetadataResult<BoxSet>();
             var config = Plugin.Instance.Configuration;
             Ordering.GroupFilterType filterByType = config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Movies : Ordering.GroupFilterType.Default;
-            var group = await ApiManager.GetGroupInfoByPath(info.Path, filterByType);
+
+            // First try to re-use any existing group id.
+            API.Info.GroupInfo group = null;
+            if (info.ProviderIds.TryGetValue("Shoko Group", out var groupId))
+                group = await ApiManager.GetGroupInfo(groupId, filterByType);
+
+            // Then try to look ir up by path.
+            if (group == null)
+                group = await ApiManager.GetGroupInfoByPath(info.Path, filterByType);
+
+            // Then try to look it up using the name.
             if (group == null) {
-                    Logger.LogWarning("Unable to find movie box-set info for path {Path}", info.Path);
+                var boxSetName = GetBoxSetName(info);
+                if (boxSetName != null)
+                    group = await ApiManager.GetGroupInfoBySeriesName(boxSetName, filterByType);
+            }
+
+            if (group == null) {
+                    Logger.LogWarning("Unable to find movie box-set info for name {Name} and path {Path}", info.Name, info.Path);
                 return result;
             }
 
@@ -124,6 +155,20 @@ namespace Shokofin.Providers
                 result.AddPerson(person);
 
             return result;
+        }
+
+        private static string GetBoxSetName(BoxSetInfo info)
+        {
+            if (string.IsNullOrWhiteSpace(info.Name))
+                return null;
+
+            var name = info.Name.Trim();
+            if (name.EndsWith("[boxset]"))
+                name = name[..^8].TrimEnd();
+            if (string.IsNullOrWhiteSpace(name))
+                return null;
+
+            return name;
         }
 
         public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(BoxSetInfo searchInfo, CancellationToken cancellationToken)

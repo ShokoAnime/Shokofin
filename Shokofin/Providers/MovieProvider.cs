@@ -48,6 +48,7 @@ namespace Shokofin.Providers
                     return result;
                 }
 
+                var collectionName = GetCollectionName(series, group, info.MetadataLanguage);
                 var ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, series.Shoko.Name, episode.Shoko.Name, info.MetadataLanguage);
                 Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", displayTitle, file.Id, episode.Id, series.Id);
 
@@ -60,6 +61,7 @@ namespace Shokofin.Providers
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
                     PremiereDate = episode.AniDB.AirDate,
+                    CollectionName = collectionName,
                     // Use the file description if collection contains more than one movie and the file is not the main entry, otherwise use the collection description.
                     Overview = (isMultiEntry && !isMainEntry ? Text.GetDescription(episode) : Text.GetDescription(series)),
                     ProductionYear = episode.AniDB.AirDate?.Year,
@@ -86,6 +88,17 @@ namespace Shokofin.Providers
                 Logger.LogError(e, $"Threw unexpectedly; {e.Message}");
                 return new MetadataResult<Movie>();
             }
+        }
+
+        private static string GetCollectionName(API.Info.SeriesInfo series, API.Info.GroupInfo group, string metadataLanguage)
+        {
+            return (Plugin.Instance.Configuration.BoxSetGrouping) switch {
+                Ordering.GroupType.ShokoGroup =>
+                    Text.GetSeriesTitle(group.DefaultSeries.AniDB.Titles, group.DefaultSeries.Shoko.Name, metadataLanguage),
+                Ordering.GroupType.ShokoSeries =>
+                    Text.GetSeriesTitle(series.AniDB.Titles, series.Shoko.Name, metadataLanguage),
+                _ => null,
+            };
         }
 
 
