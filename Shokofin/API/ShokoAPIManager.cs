@@ -582,6 +582,7 @@ public class ShokoAPIManager : IDisposable
             if (series == null)
                 return null;
             seriesId = series.IDs.Shoko.ToString();
+            return await CreateSeriesInfo(series, seriesId);
         }
 
         return await GetSeriesInfo(seriesId);
