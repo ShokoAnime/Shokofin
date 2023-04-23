@@ -97,6 +97,8 @@ public class Episode
 
     public class EpisodeIDs : IDs
     {
+        public int Series { get; set; }
+
         public int AniDB { get; set; }
 
         public List<int> TvDB { get; set; } = new();
