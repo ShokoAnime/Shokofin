@@ -22,6 +22,14 @@ namespace Shokofin
         /// <returns>True if the plugin is enabled for the <see cref="MediaBrowser.Controller.Entities.BaseItem" /></returns>
         bool IsEnabledForItem(BaseItem item);
 
+        /// <summary>
+        /// Check if the plugin is enabled for <see cref="MediaBrowser.Controller.Entities.BaseItem" >the item</see>.
+        /// </summary>
+        /// <param name="item">The <see cref="MediaBrowser.Controller.Entities.BaseItem" /> to check.</param>
+        /// <param name="onlyProvider">True if the plugin is the only metadata provider enabled for the item.</param>
+        /// <returns>True if the plugin is enabled for the <see cref="MediaBrowser.Controller.Entities.BaseItem" /></returns>
+        bool IsEnabledForItem(BaseItem item, out bool onlyProvider);
+
         #endregion
         #region Group Id
 
@@ -111,7 +119,10 @@ namespace Shokofin
 
         private readonly HashSet<string> AllowedTypes = new HashSet<string>() { nameof(Series), nameof(Episode), nameof(Movie) };
 
-        public bool IsEnabledForItem(BaseItem item)
+        public bool IsEnabledForItem(BaseItem item) =>
+            IsEnabledForItem(item, out var _bool);
+
+        public bool IsEnabledForItem(BaseItem item, out bool singleProvider)
         {
             var reItem = item switch {
                 Series s => s,
@@ -119,11 +130,31 @@ namespace Shokofin
                 Episode e => e.Series,
                 _ => item,
             };
-            if (reItem == null)
+            if (reItem == null) {
+                singleProvider = false;
                 return false;
+            }
+
             var libraryOptions = LibraryManager.GetLibraryOptions(reItem);
-            return libraryOptions != null &&
-                libraryOptions.TypeOptions.Any(o => AllowedTypes.Contains(o.Type) && o.MetadataFetchers.Contains(Plugin.MetadataProviderName));
+            if (libraryOptions == null) {
+                singleProvider = false;
+                return false;
+            }
+
+            var isEnabled = false;
+            singleProvider = true;
+            foreach (var options in libraryOptions.TypeOptions) {
+                if (!AllowedTypes.Contains(options.Type))
+                    continue;
+                var isEnabledForType = options.MetadataFetchers.Contains(Plugin.MetadataProviderName);
+                if (isEnabledForType) {
+                    if (!isEnabled)
+                        isEnabled = true;
+                    if (options.MetadataFetchers.Length > 1 && singleProvider)
+                        singleProvider = false;
+                }
+            }
+            return isEnabled;
         }
 
         #endregion

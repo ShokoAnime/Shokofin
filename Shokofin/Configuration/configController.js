@@ -137,7 +137,9 @@ async function defaultSubmit(form) {
             form.querySelector("#PublicHost").value = publicHost;
         }
         const ignoredFileExtensions = filterIgnoredExtensions(form.querySelector("#IgnoredFileExtensions").value);
-        const ignoredFolders = filterIgnoredFolders(from.querySelector("#IgnoredFolders").value);
+        const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
+        const filteringModeRaw = form.querySelector("#LibraryFilteringMode").value;
+        const filteringMode = filteringModeRaw === "true" ? true : filteringModeRaw === "false" ? false : null;
 
         // Metadata settings
         config.TitleMainType = form.querySelector("#TitleMainType").value;
@@ -155,6 +157,7 @@ async function defaultSubmit(form) {
         config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
 
         // Library settings
+        config.LibraryFilteringMode = filteringMode;
         config.SeriesGrouping = form.querySelector("#SeriesGrouping").value;
         config.BoxSetGrouping = form.querySelector("#BoxSetGrouping").value;
         config.FilterOnLibraryTypes = form.querySelector("#FilterOnLibraryTypes").checked;
@@ -171,6 +174,7 @@ async function defaultSubmit(form) {
         config.HideProgrammingTags = form.querySelector("#HideProgrammingTags").checked;
     
         // Advanced settings
+        config.SentryEnabled = form.querySelector("#SentryEnabled").checked;
         config.PublicHost = publicHost;
         config.IgnoredFileExtensions = ignoredFileExtensions;
         form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
@@ -288,6 +292,19 @@ async function resetConnectionSettings(form) {
     return config;
 }
 
+async function disableSentry(form) {
+    const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
+    form.querySelector("#SentryEnabled").checked = false;
+
+    // Connection settings
+    config.SentryEnabled = false;
+
+    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
+    Dashboard.processPluginConfigurationUpdateResult(result);
+
+    return config;
+}
+
 async function syncSettings(form) {
     const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
     let publicHost = form.querySelector("#PublicHost").value;
@@ -297,6 +314,8 @@ async function syncSettings(form) {
     }
     const ignoredFileExtensions = filterIgnoredExtensions(form.querySelector("#IgnoredFileExtensions").value);
     const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
+    const filteringModeRaw = form.querySelector("#LibraryFilteringMode").value;
+    const filteringMode = filteringModeRaw === "true" ? true : filteringModeRaw === "false" ? false : null;
 
     // Metadata settings
     config.TitleMainType = form.querySelector("#TitleMainType").value;
@@ -314,6 +333,7 @@ async function syncSettings(form) {
     config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
 
     // Library settings
+    config.LibraryFilteringMode = filteringMode;
     config.SeriesGrouping = form.querySelector("#SeriesGrouping").value;
     config.BoxSetGrouping = form.querySelector("#BoxSetGrouping").value;
     config.FilterOnLibraryTypes = form.querySelector("#FilterOnLibraryTypes").checked;
@@ -330,6 +350,7 @@ async function syncSettings(form) {
     config.HideProgrammingTags = form.querySelector("#HideProgrammingTags").checked;
 
     // Advanced settings
+    config.SentryEnabled = form.querySelector("#SentryEnabled").checked;
     config.PublicHost = publicHost;
     config.IgnoredFileExtensions = ignoredFileExtensions;
     form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
@@ -413,14 +434,29 @@ export default function (page) {
     const userSelector = form.querySelector("#UserSelector");
     // Refresh the view after we changed the settings, so the view reflect the new settings.
     const refreshSettings = (config) => {
-        if (config.ApiKey) {
+        if (config.SentryEnabled == null) {
+            form.querySelector("#Host").removeAttribute("disabled");
+            form.querySelector("#Username").removeAttribute("disabled");
+            form.querySelector("#ConsentSection").removeAttribute("hidden");
+            form.querySelector("#ConnectionSetContainer").setAttribute("hidden", "");
+            form.querySelector("#ConnectionResetContainer").setAttribute("hidden", "");
+            form.querySelector("#ConnectionSection").setAttribute("hidden", "");
+            form.querySelector("#MetadataSection").setAttribute("hidden", "");
+            form.querySelector("#ProviderSection").setAttribute("hidden", "");
+            form.querySelector("#LibrarySection").setAttribute("hidden", "");
+            form.querySelector("#UserSection").setAttribute("hidden", "");
+            form.querySelector("#TagSection").setAttribute("hidden", "");
+            form.querySelector("#AdvancedSection").setAttribute("hidden", "");
+            form.querySelector("#ExperimentalSection").setAttribute("hidden", "");
+        }
+        else if (config.ApiKey) {
             form.querySelector("#Host").setAttribute("disabled", "");
             form.querySelector("#Username").setAttribute("disabled", "");
             form.querySelector("#Password").value = "";
+            form.querySelector("#ConsentSection").setAttribute("hidden", "");
             form.querySelector("#ConnectionSetContainer").setAttribute("hidden", "");
             form.querySelector("#ConnectionResetContainer").removeAttribute("hidden");
             form.querySelector("#ConnectionSection").removeAttribute("hidden");
-            form.querySelector("#MetadataSection").removeAttribute("hidden");
             form.querySelector("#MetadataSection").removeAttribute("hidden");
             form.querySelector("#ProviderSection").removeAttribute("hidden");
             form.querySelector("#LibrarySection").removeAttribute("hidden");
@@ -432,10 +468,10 @@ export default function (page) {
         else {
             form.querySelector("#Host").removeAttribute("disabled");
             form.querySelector("#Username").removeAttribute("disabled");
+            form.querySelector("#ConsentSection").setAttribute("hidden", "");
             form.querySelector("#ConnectionSetContainer").removeAttribute("hidden");
             form.querySelector("#ConnectionResetContainer").setAttribute("hidden", "");
             form.querySelector("#ConnectionSection").removeAttribute("hidden");
-            form.querySelector("#MetadataSection").setAttribute("hidden", "");
             form.querySelector("#MetadataSection").setAttribute("hidden", "");
             form.querySelector("#ProviderSection").setAttribute("hidden", "");
             form.querySelector("#LibrarySection").setAttribute("hidden", "");
@@ -492,6 +528,7 @@ export default function (page) {
             form.querySelector("#AddTMDBId").checked = config.AddTMDBId;
 
             // Library settings
+            form.querySelector("#LibraryFilteringMode").value = `${config.LibraryFilteringMode || null}`;
             form.querySelector("#SeriesGrouping").value = config.SeriesGrouping;
             form.querySelector("#BoxSetGrouping").value = config.BoxSetGrouping;
             form.querySelector("#FilterOnLibraryTypes").checked = config.FilterOnLibraryTypes;
@@ -511,6 +548,7 @@ export default function (page) {
             form.querySelector("#HideProgrammingTags").checked = config.HideProgrammingTags;
 
             // Advanced settings
+            form.querySelector("#SentryEnabled").checked = config.SentryEnabled == null ? true : config.SentryEnabled;
             form.querySelector("#PublicHost").value = config.PublicHost;
             form.querySelector("#IgnoredFileExtensions").value = config.IgnoredFileExtensions.join(" ");
             form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
@@ -559,6 +597,9 @@ export default function (page) {
                 Dashboard.showLoadingMsg();
                 syncUserSettings(form).then(refreshSettings).catch(onError);
                 break;
+            case "disable-sentry":
+                Dashboard.showLoadingMsg();
+                disableSentry(form).then(refreshSettings).catch(onError);
         }
         return false;
     });

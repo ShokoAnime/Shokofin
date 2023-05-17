@@ -41,8 +41,9 @@ namespace Shokofin.Providers
                         return await GetShokoGroupedMetadata(info, cancellationToken);
                 }
             }
-            catch (Exception e) {
-                Logger.LogError(e, $"Threw unexpectedly; {e.Message}");
+            catch (Exception ex) {
+                Logger.LogError(ex, $"Threw unexpectedly; {ex.Message}");
+                Plugin.Instance.CaptureException(ex);
                 return new MetadataResult<BoxSet>();
             }
         }

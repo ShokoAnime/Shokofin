@@ -16,20 +16,30 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: master
+
+      - name: Replace Sentry DSN key
+        shell: pwsh
+        run: ./.github/workflows/ReplaceSentryDSN.ps1 -dsn ${{ secrets.SENTRY_DSN }}
+
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x
+
       - name: Restore nuget packages
         run: dotnet restore Shokofin/Shokofin.csproj
+
       - name: Setup python
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
+
       - name: Install JPRM
         run: python -m pip install jprm
+
       - name: Run JPRM
         run: python build_plugin.py --version=${GITHUB_REF#refs/*/}
+
       - name: Update release
         uses: svenstaro/upload-release-action@v2
         with:
@@ -37,6 +47,7 @@ jobs:
           file: ./artifacts/shoko_*.zip
           tag: ${{ github.ref }}
           file_glob: true
+
       - name: Update manifest
         uses: stefanzweifel/git-auto-commit-action@v4
         with:

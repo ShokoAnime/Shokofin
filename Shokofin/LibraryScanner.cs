@@ -45,7 +45,7 @@ namespace Shokofin
 
             try {
                 // Enable the scanner if we selected to use the Shoko provider for any metadata type on the current root folder.
-                if (!Lookup.IsEnabledForItem(parent))
+                if (!Lookup.IsEnabledForItem(parent, out var onlyProvider))
                     return false;
 
                 if (fileInfo.IsDirectory &&  Plugin.Instance.IgnoredFolders.Contains(Path.GetFileName(fileInfo.FullName).ToLowerInvariant())) {
@@ -61,19 +61,21 @@ namespace Shokofin
                 var fullPath = fileInfo.FullName;
                 var mediaFolder = ApiManager.FindMediaFolder(fullPath, parentFolder, root);
                 var partialPath = fullPath.Substring(mediaFolder.Path.Length);
+                var skipValue = Plugin.Instance.Configuration.LibraryFilteringMode ?? onlyProvider;
                 if (fileInfo.IsDirectory)
-                    return ScanDirectory(partialPath, fullPath, LibraryManager.GetInheritedContentType(parentFolder));
+                    return ScanDirectory(partialPath, fullPath, LibraryManager.GetInheritedContentType(parentFolder), skipValue);
                 else
-                    return ScanFile(partialPath, fullPath);
+                    return ScanFile(partialPath, fullPath, skipValue);
             }
-            catch (System.Exception e) {
-                if (!(e is System.Net.Http.HttpRequestException && e.Message.Contains("Connection refused")))
-                    Logger.LogError(e, $"Threw unexpectedly - {e.Message}");
+            catch (System.Exception ex) {
+                if (!(ex is System.Net.Http.HttpRequestException && ex.Message.Contains("Connection refused")))
+                    Logger.LogError(ex, $"Threw unexpectedly - {ex.Message}");
+                Plugin.Instance.CaptureException(ex);
                 return false;
             }
         }
 
-        private bool ScanDirectory(string partialPath, string fullPath, string libraryType)
+        private bool ScanDirectory(string partialPath, string fullPath, string libraryType, bool skipValue)
         {
             var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
             var series = ApiManager.GetSeriesInfoByPath(fullPath)
@@ -83,7 +85,7 @@ namespace Shokofin
             // We warn here since we enabled the provider in our library, but we can't find a match for the given folder path.
             if (series == null) {
                 Logger.LogWarning("Skipped unknown folder at path {Path}", partialPath);
-                return false;
+                return skipValue;
             }
 
             API.Info.GroupInfo group = null;
@@ -128,7 +130,7 @@ namespace Shokofin
             return false;
         }
 
-        private bool ScanFile(string partialPath, string fullPath)
+        private bool ScanFile(string partialPath, string fullPath, bool skipValue)
         {
             var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
             var config = Plugin.Instance.Configuration;
@@ -139,7 +141,7 @@ namespace Shokofin
             // We warn here since we enabled the provider in our library, but we can't find a match for the given file path.
             if (file == null) {   
                 Logger.LogWarning("Skipped unknown file at path {Path}", partialPath);
-                return false;
+                return skipValue;
             }
 
             Logger.LogInformation("Found {EpisodeCount} episode(s) for {SeriesName} (Series={SeriesId},File={FileId})", file.EpisodeList.Count, series.Shoko.Name, series.Id, file.Id);

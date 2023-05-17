@@ -19,6 +19,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Replace Sentry DSN key
+        shell: pwsh
+        run: ./.github/workflows/ReplaceSentryDSN.ps1 -dsn ${{ secrets.SENTRY_DSN }}
+
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:

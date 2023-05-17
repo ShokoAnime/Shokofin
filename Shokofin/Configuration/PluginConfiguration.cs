@@ -80,6 +80,10 @@ namespace Shokofin.Configuration
 
         public string[] IgnoredFolders { get; set; }
 
+        public bool? SentryEnabled { get; set; }
+
+        public bool? LibraryFilteringMode { get; set; }
+
         #region Experimental features
 
         public bool EXPERIMENTAL_AutoMergeVersions { get; set; }
@@ -126,6 +130,8 @@ namespace Shokofin.Configuration
             UserList = Array.Empty<UserConfiguration>();
             IgnoredFileExtensions  = new [] { ".nfo", ".jpg", ".jpeg", ".png" };
             IgnoredFolders = new [] { ".streams", "@recently-snapshot" };
+            SentryEnabled = null;
+            LibraryFilteringMode = null;
             EXPERIMENTAL_AutoMergeVersions = false;
             EXPERIMENTAL_SplitThenMergeMovies = true;
             EXPERIMENTAL_SplitThenMergeEpisodes = false;

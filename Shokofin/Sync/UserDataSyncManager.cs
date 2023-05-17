@@ -240,11 +240,12 @@ namespace Shokofin.Sync
             }
             catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized) {
                 if (TryGetUserConfiguration(e.UserId, out var userConfig))
-                    Logger.LogError(ex, "I{Message} (Username={Username},Id={UserId})", ex.Message, UserManager.GetUserById(userConfig.UserId)?.Username, userConfig.UserId);
+                    Logger.LogError(ex, "{Message} (Username={Username},Id={UserId})", ex.Message, UserManager.GetUserById(userConfig.UserId)?.Username, userConfig.UserId);
                 return;
             }
             catch (Exception ex) {
                 Logger.LogError(ex, "Threw unexpectedly; {ErrorMessage}", ex.Message);
+                Plugin.Instance.CaptureException(ex);
                 return;
             }
         }
