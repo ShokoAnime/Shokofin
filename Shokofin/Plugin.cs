@@ -52,7 +52,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         if (IsSentryEnabled) {
             if (SentryReference != null && SentryConfiguration.DSN.StartsWith("https://")) {
                 SentryReference = SentrySdk.Init(options => {
-                    var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0.0";
+                    var version = Assembly.GetAssembly(typeof(Plugin))?.GetName().Version?.ToString() ?? "0.0.0.0";
                     var environment = version.EndsWith(".0") ? "stable" : "dev";
                     var release = string.Join(".", version.Split(".").Take(3));
                     var revision = version.Split(".").Last();
