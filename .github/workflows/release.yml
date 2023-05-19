@@ -1,4 +1,4 @@
-name: Release
+name: Stable Release
 
 on:
   release:
@@ -15,21 +15,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          ref: master
+          ref: ${{ github.ref }}
+          fetch-depth: 0
 
       - name: Replace Sentry DSN key
         shell: pwsh
         run: ./.github/workflows/ReplaceSentryDSN.ps1 -dsn ${{ secrets.SENTRY_DSN }}
 
-      - name: Setup dotnet
+      - name: Get release version
+        id: currenttag
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        with:
+          fallback: 1.0.0
+
+      - name: Setup .Net
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x
 
-      - name: Restore nuget packages
+      - name: Restore Nuget Packages
         run: dotnet restore Shokofin/Shokofin.csproj
 
-      - name: Setup python
+      - name: Setup Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
@@ -38,9 +45,9 @@ jobs:
         run: python -m pip install jprm
 
       - name: Run JPRM
-        run: python build_plugin.py --version=${GITHUB_REF#refs/*/}
+        run: python build_plugin.py --version=${{ steps.currenttag.outputs.tag }}
 
-      - name: Update release
+      - name: Update Release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -48,9 +55,21 @@ jobs:
           tag: ${{ github.ref }}
           file_glob: true
 
-      - name: Update manifest
+      - name: Update Stable Manifest
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           branch: master
-          commit_message: Update repo manifest
+          commit_message: "misc: update stable manifest"
           file_pattern: manifest.json
+          skip_fetch: true
+
+      - name: Push Sentry release "${{ steps.currenttag.outputs.tag }}"
+        uses: getsentry/action-release@v1.2.1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          # SENTRY_URL: https://sentry.io/
+        with:
+          environment: 'stable'
+          version: ${{ steps.currenttag.outputs.tag }}

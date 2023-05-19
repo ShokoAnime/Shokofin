@@ -2,13 +2,22 @@
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <OutputType>Library</OutputType>
+        <!-- Update the sentry version here. -->
+        <SentryVersion>3.31.0</SentryVersion>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Jellyfin.Controller" Version="10.8.0" />
-      <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
-      <PackageReference Include="Sentry" Version="3.31.0" />
+        <PackageReference Include="Jellyfin.Controller" Version="10.8.0" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+        <PackageReference Include="Sentry" Version="$(SentryVersion)" />
     </ItemGroup>
+
+    <Target Name="CopySentryDLLToOutputPath" AfterTargets="Build">
+        <ItemGroup>
+            <SentryPackage Include="$(NuGetPackageRoot)\sentry\$(SentryVersion)\lib\$(TargetFramework)\Sentry.dll" />
+        </ItemGroup>
+        <Copy SourceFiles="@(SentryPackage)" DestinationFolder="$(OutputPath)" />
+    </Target>
 
     <ItemGroup>
         <None Remove="Configuration\configController.js" />
@@ -16,5 +25,4 @@
         <EmbeddedResource Include="Configuration\configController.js" />
         <EmbeddedResource Include="Configuration\configPage.html" />
     </ItemGroup>
-
 </Project>

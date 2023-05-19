@@ -50,22 +50,25 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     private void RefreshSentry()
     {
         if (IsSentryEnabled) {
-            if (SentryReference != null && SentryConfiguration.DSN.StartsWith("https://")) {
+            if (SentryReference == null && SentryConfiguration.DSN.StartsWith("https://")) {
                 SentryReference = SentrySdk.Init(options => {
-                    var version = Assembly.GetAssembly(typeof(Plugin))?.GetName().Version?.ToString() ?? "0.0.0.0";
-                    var environment = version.EndsWith(".0") ? "stable" : "dev";
-                    var release = string.Join(".", version.Split(".").Take(3));
-                    var revision = version.Split(".").Last();
+                    var release = Assembly.GetAssembly(typeof(Plugin))?.GetName().Version?.ToString() ?? "1.0.0.0";
+                    var environment = release.EndsWith(".0") ? "stable" : "dev";
+
+                    // Cut off the build number for stable releases.
+                    if (environment == "stable")
+                        release = release[..^2];
 
                     // Assign the DSN key and release version.
                     options.Dsn = SentryConfiguration.DSN;
                     options.Environment = environment;
                     options.Release = release;
                     options.AutoSessionTracking = false;
-                    
-                    // Add the dev revision if we're not on stable.
-                    if (environment != "stable")
-                        options.DefaultTags.Add("release.revision", revision);
+
+                    // Disable auto-exception captures.
+                    options.DisableUnobservedTaskExceptionCapture();
+                    options.DisableAppDomainUnhandledExceptionCapture();
+                    options.CaptureFailedRequests = false;
                 });
 
                 SentrySdk.StartSession();
