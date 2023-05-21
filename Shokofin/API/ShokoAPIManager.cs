@@ -28,6 +28,8 @@ public class ShokoAPIManager : IDisposable
 
     private readonly ILibraryManager LibraryManager;
 
+    private readonly object MediaFolderListLock = new();
+
     private readonly List<Folder> MediaFolderList = new();
 
     private readonly ConcurrentDictionary<string, string> PathToSeriesIdDictionary = new();
@@ -67,7 +69,10 @@ public class ShokoAPIManager : IDisposable
 
     public Folder FindMediaFolder(string path)
     {
-        var mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
+        Folder? mediaFolder = null;
+        lock (MediaFolderListLock) {
+            mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
+        }
         if (mediaFolder == null) {
             var parent = LibraryManager.FindByPath(Path.GetDirectoryName(path), true) as Folder;
             if (parent == null)
@@ -81,7 +86,10 @@ public class ShokoAPIManager : IDisposable
 
     public Folder FindMediaFolder(string path, Folder parent, Folder root)
     {
-        var mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
+        Folder? mediaFolder = null;
+        lock (MediaFolderListLock) {
+            mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
+        }
         // Look for the root folder for the current item.
         if (mediaFolder != null) {
             return mediaFolder;
@@ -95,13 +103,18 @@ public class ShokoAPIManager : IDisposable
             mediaFolder = (Folder)mediaFolder.GetParent();
         }
 
-        MediaFolderList.Add(mediaFolder);
+        lock (MediaFolderListLock) {
+            MediaFolderList.Add(mediaFolder);
+        }
         return mediaFolder;
     }
 
     public string StripMediaFolder(string fullPath)
     {
-        var mediaFolder = MediaFolderList.FirstOrDefault((folder) => fullPath.StartsWith(folder.Path + Path.DirectorySeparatorChar));
+        Folder? mediaFolder = null;
+        lock (MediaFolderListLock) {
+            mediaFolder = MediaFolderList.FirstOrDefault((folder) => fullPath.StartsWith(folder.Path + Path.DirectorySeparatorChar));
+        }
         if (mediaFolder != null) {
             return fullPath.Substring(mediaFolder.Path.Length);
         }
@@ -126,7 +139,9 @@ public class ShokoAPIManager : IDisposable
             mediaFolder = (Folder)mediaFolder.GetParent();
         }
 
-        MediaFolderList.Add(mediaFolder);
+        lock (MediaFolderListLock) {
+            MediaFolderList.Add(mediaFolder);
+        }
         return fullPath.Substring(mediaFolder.Path.Length);
     }
 
@@ -147,7 +162,9 @@ public class ShokoAPIManager : IDisposable
         EpisodeIdToEpisodePathDictionary.Clear();
         EpisodeIdToSeriesIdDictionary.Clear();
         FileIdToEpisodeIdDictionary.Clear();
-        MediaFolderList.Clear();
+        lock (MediaFolderListLock) {
+            MediaFolderList.Clear();
+        }
         PathToEpisodeIdsDictionary.Clear();
         PathToFileIdAndSeriesIdDictionary.Clear();
         PathToSeriesIdDictionary.Clear();
