@@ -65,6 +65,10 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
                     options.Release = release;
                     options.AutoSessionTracking = false;
 
+                    // Additional tags for easier filtering in Sentry.
+                    var jellyfinRelease = Assembly.GetAssembly(typeof(Jellyfin.Data.Entities.Preference))?.GetName().Version?.ToString() ?? "0.0.0.0";
+                    options.DefaultTags.Add("jellyfin.release", jellyfinRelease);
+
                     // Disable auto-exception captures.
                     options.DisableUnobservedTaskExceptionCapture();
                     options.DisableAppDomainUnhandledExceptionCapture();
