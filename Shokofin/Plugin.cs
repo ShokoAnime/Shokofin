@@ -69,6 +69,18 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
                     options.DisableUnobservedTaskExceptionCapture();
                     options.DisableAppDomainUnhandledExceptionCapture();
                     options.CaptureFailedRequests = false;
+
+                    // Filter exceptions.
+                    options.AddExceptionFilter(new SentryExceptionFilter(ex =>
+                    {
+                        if (ex.Message == "Unable to call the API before an connection is established to Shoko Server!")
+                            return true;
+
+                        // If we need more filtering in the future then add them
+                        // above this comment.
+
+                        return false;
+                    }));
                 });
 
                 SentrySdk.StartSession();
@@ -122,5 +134,23 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
                 EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configController.js",
             }
         };
+    }
+
+    /// <summary>
+    /// An IException filter class to convert a function to a filter. It's weird
+    /// they don't have a method that just accepts a pure function and converts
+    /// it internally, but oh well. ¯\_(ツ)_/¯
+    /// </summary>
+    private class SentryExceptionFilter : Sentry.Extensibility.IExceptionFilter
+    {
+        private Func<Exception, bool> _action;
+
+        public SentryExceptionFilter(Func<Exception, bool> action)
+        {
+            _action = action;
+        }
+
+        public bool Filter(Exception ex) =>
+            _action(ex);
     }
 }
