@@ -92,12 +92,16 @@ namespace Shokofin
                 // Check the sub-directories if we have a <Show>/<Season>/<Episodes> structure.
                 if (partialPath[1..].Split(Path.DirectorySeparatorChar).Length == 1) {
                     var entries = FileSystem.GetDirectories(fullPath, false).ToList();
+                    Logger.LogDebug("Unable to find series for {Path}, trying {DirCount} sub-directories.", entries.Count, partialPath);
                     foreach (var entry in entries) {
                         series = ApiManager.GetSeriesInfoByPath(entry.FullName)
                             .GetAwaiter()
                             .GetResult();
                         if (series != null)
+                        {
+                            Logger.LogDebug("Found series {SeriesName} for sub-directory of path {Path} (Series={SeriesId})", series.Shoko.Name, partialPath, series.Id);
                             break;
+                        }
                     }
                 }
                 if (series == null) {
