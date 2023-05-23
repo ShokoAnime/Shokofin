@@ -89,8 +89,8 @@ namespace Shokofin
 
             // We inform/warn here since we enabled the provider in our library, but we can't find a match for the given folder path.
             if (series == null) {
-                // Check the sub-directories if we have a <Show>/<Season>/<Episodes> structure.
-                if (partialPath[1..].Split(Path.DirectorySeparatorChar).Length == 1) {
+                // If we're in strict mode, then check the sub-directories if we have a <Show>/<Season>/<Episodes> structure.
+                if (shouldIgnore && partialPath[1..].Split(Path.DirectorySeparatorChar).Length == 1) {
                     var entries = FileSystem.GetDirectories(fullPath, false).ToList();
                     Logger.LogDebug("Unable to find series for {Path}, trying {DirCount} sub-directories.", entries.Count, partialPath);
                     foreach (var entry in entries) {
