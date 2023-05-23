@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Reflection;
+using System.Threading.Tasks;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
+using Shokofin.API.Models;
 using Shokofin.Configuration;
 using Sentry;
-using System.Reflection;
 
 #nullable enable
 namespace Shokofin;
@@ -77,8 +80,19 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
                     // Filter exceptions.
                     options.AddExceptionFilter(new SentryExceptionFilter(ex =>
                     {
-                        if (ex.Message == "Unable to call the API before an connection is established to Shoko Server!")
-                            return true;
+                        switch (ex) {
+                            // Ignore any and all http request exceptions and
+                            // task cancellation exceptions.
+                            case TaskCanceledException:
+                            case HttpRequestException:
+                                return true;
+
+                            case ApiException apiEx:
+                                // Server is not ready to accept requests yet.
+                                if (ex.Message.Contains("The Server is not running."))
+                                    return true;
+                                break;
+                        }
 
                         // If we need more filtering in the future then add them
                         // above this comment.

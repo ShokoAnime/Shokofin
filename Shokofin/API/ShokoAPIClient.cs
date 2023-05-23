@@ -59,7 +59,7 @@ public class ShokoAPIClient : IDisposable
         // Check if we have a key to use.
         if (string.IsNullOrEmpty(apiKey)) {
             _httpClient.DefaultRequestHeaders.Clear();
-            throw new Exception("Unable to call the API before an connection is established to Shoko Server!");
+            throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
         }
 
         try {
@@ -129,7 +129,7 @@ public class ShokoAPIClient : IDisposable
         // Check if we have a key to use.
         if (string.IsNullOrEmpty(apiKey)) {
             _httpClient.DefaultRequestHeaders.Clear();
-            throw new Exception("Unable to call the API before an connection is established to Shoko Server!");
+            throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
         }
 
         try {
