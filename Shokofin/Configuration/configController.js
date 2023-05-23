@@ -528,7 +528,7 @@ export default function (page) {
             form.querySelector("#AddTMDBId").checked = config.AddTMDBId;
 
             // Library settings
-            form.querySelector("#LibraryFilteringMode").value = `${config.LibraryFilteringMode || null}`;
+            form.querySelector("#LibraryFilteringMode").value = `${config.LibraryFilteringMode != null ? config.LibraryFilteringMode : null}`;
             form.querySelector("#SeriesGrouping").value = config.SeriesGrouping;
             form.querySelector("#BoxSetGrouping").value = config.BoxSetGrouping;
             form.querySelector("#FilterOnLibraryTypes").checked = config.FilterOnLibraryTypes;
