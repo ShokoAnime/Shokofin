@@ -199,29 +199,9 @@ namespace Shokofin.Providers
         }
         
 
-        public async Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo info, CancellationToken cancellationToken)
+        public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo info, CancellationToken cancellationToken)
         {
-            try {
-                var searchResults = await ApiClient.SeriesSearch(info.Name).ContinueWith((e) => e.Result.List);
-                Logger.LogInformation($"Series search returned {searchResults.Count} results.");
-                return searchResults.Select(series => {
-                    var seriesId = (series?.ShokoId ?? 0).ToString();
-                    var imageUrl = series?.Poster.IsAvailable ?? false ? series.Poster.ToPrettyURLString() : null;
-                    var parsedSeries = new RemoteSearchResult {
-                        Name = Text.GetSeriesTitle(series.Titles, series.Title, info.MetadataLanguage),
-                        SearchProviderName = Name,
-                        ImageUrl = imageUrl,
-                        Overview = Text.SanitizeTextSummary(series.Description),
-                    };
-                    AddProviderIds(parsedSeries, seriesId: seriesId, groupId: null, anidbId: series.Id.ToString(), tvdbId: null);
-                    return parsedSeries;
-                });
-            }
-            catch (Exception ex) {
-                Logger.LogError(ex, $"Threw unexpectedly; {ex.Message}");
-                Plugin.Instance.CaptureException(ex);
-                return new List<RemoteSearchResult>();
-            }
+            return Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
         }
 
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)

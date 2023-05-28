@@ -58,7 +58,6 @@ public class ShokoAPIClient : IDisposable
 
         // Check if we have a key to use.
         if (string.IsNullOrEmpty(apiKey)) {
-            _httpClient.DefaultRequestHeaders.Clear();
             throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
         }
 
@@ -128,7 +127,6 @@ public class ShokoAPIClient : IDisposable
 
         // Check if we have a key to use.
         if (string.IsNullOrEmpty(apiKey)) {
-            _httpClient.DefaultRequestHeaders.Clear();
             throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
         }
 
@@ -300,10 +298,5 @@ public class ShokoAPIClient : IDisposable
     public Task<Group> GetGroupFromSeries(string id)
     {
         return Get<Group>($"/api/v3/Series/{id}/Group");
-    }
-
-    public Task<ListResult<Series.AniDB>> SeriesSearch(string query)
-    {
-        return Get<ListResult<Series.AniDB>>($"/api/v3/Series/AniDB/Search?query={Uri.EscapeDataString(query ?? "")}&local=true&includeTitles=true&pageSize=0");
     }
 }

@@ -289,8 +289,7 @@ namespace Shokofin.Providers
 
         public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo searchInfo, CancellationToken cancellationToken)
         {
-            // Isn't called from anywhere. If it is called, I don't know from where.
-            throw new NotImplementedException();
+            return Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
         }
 
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
