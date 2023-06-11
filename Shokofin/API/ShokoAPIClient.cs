@@ -199,8 +199,11 @@ public class ShokoAPIClient : IDisposable
         catch (ApiException e)
         {
             // File user stats were not found.
-            if (e.StatusCode == HttpStatusCode.NotFound && e.Message.Contains("FileUserStats"))
+            if (e.StatusCode == HttpStatusCode.NotFound) {
+                if (!e.Message.Contains("FileUserStats"))
+                    Logger.LogWarning("Unable to find user stats for a file that doesn't exist. (File={FileID})", fileId);
                 return null;
+            }
             throw;
         }
     }
