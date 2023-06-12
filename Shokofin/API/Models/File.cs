@@ -259,7 +259,7 @@ public class File
         /// </summary>
         public virtual bool IsEmpty
         {
-            get => ResumePosition == null && WatchedCount == 0 && WatchedCount == 0;
+            get => ResumePosition == null && LastWatchedAt == null && WatchedCount == 0;
         }
     }
 }

@@ -567,26 +567,18 @@ namespace Shokofin.Sync
             if (localUserStats.IsEmpty && remoteUserStats.IsEmpty)
                 return true;
 
-            TimeSpan? resumePosition = new TimeSpan(localUserData.PlaybackPositionTicks);
-            if (Math.Floor(resumePosition.Value.TotalMilliseconds) == 0d)
-                resumePosition = null;
-            if (resumePosition != remoteUserStats.ResumePosition)
+            var resumePosition = localUserStats.ResumePosition;
+            if (localUserStats.ResumePosition != remoteUserStats.ResumePosition)
                 return false;
 
-            if (localUserData.PlayCount != remoteUserStats.WatchedCount)
+            if (localUserStats.WatchedCount != remoteUserStats.WatchedCount)
                 return false;
 
             var played = remoteUserStats.LastWatchedAt.HasValue;
             if (localUserData.Played != played)
                 return false;
 
-            var lastWatchedAt = localUserData.Played && !resumePosition.HasValue ? localUserData.LastPlayedDate : null;
-            if (lastWatchedAt.HasValue != remoteUserStats.LastWatchedAt.HasValue || lastWatchedAt.HasValue && lastWatchedAt != remoteUserStats.LastWatchedAt)
-                return false;
-
-            var isUpdated = resumePosition.HasValue || localUserData.Played;
-            var lastUpdatedAt = isUpdated ? localUserData.LastPlayedDate : null;
-            if (isUpdated && (!lastUpdatedAt.HasValue || lastUpdatedAt.Value != remoteUserStats.LastUpdatedAt))
+            if (localUserStats.LastUpdatedAt != remoteUserStats.LastUpdatedAt)
                 return false;
 
             return true;

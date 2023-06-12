@@ -21,7 +21,7 @@ public static class SyncExtensions
             WatchedCount = userData.PlayCount,
         };
     }
-    
+
     public static UserItemData MergeWithFileUserStats(this UserItemData userData, File.UserStats userStats)
     {
         userData.Played = userStats.LastWatchedAt.HasValue;
@@ -30,7 +30,7 @@ public static class SyncExtensions
         userData.LastPlayedDate = userStats.ResumePosition.HasValue ? userStats.LastUpdatedAt : userStats.LastWatchedAt ?? userStats.LastUpdatedAt;
         return userData;
     }
-    
+
     public static UserItemData ToUserData(this File.UserStats userStats, Video video, Guid userId)
     {
         return new UserItemData
