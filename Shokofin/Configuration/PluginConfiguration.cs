@@ -74,6 +74,12 @@ namespace Shokofin.Configuration
 
         public DisplayLanguageType TitleAlternateType { get; set; }
 
+        /// <summary>
+        /// Allow choosing any title in the selected language if no official
+        /// title is available.
+        /// </summary>
+        public bool TitleAllowAny { get; set; }
+
         public UserConfiguration[] UserList { get; set; }
 
         public string[] IgnoredFileExtensions { get; set; }
@@ -119,6 +125,7 @@ namespace Shokofin.Configuration
             AddTMDBId = true;
             TitleMainType = DisplayLanguageType.Default;
             TitleAlternateType = DisplayLanguageType.Origin;
+            TitleAllowAny = false;
             DescriptionSource = TextSourceType.Default;
             SeriesGrouping = SeriesAndBoxSetGroupType.Default;
             SeasonOrdering = OrderType.Default;

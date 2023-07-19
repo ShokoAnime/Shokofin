@@ -1,8 +1,8 @@
 using Shokofin.API.Info;
 using Shokofin.API.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Shokofin.Utils
@@ -122,6 +122,11 @@ namespace Shokofin.Utils
             /// Don't display a title.
             /// </summary>
             Ignore = 4,
+
+            /// <summary>
+            /// Use the main title for the series.
+            /// </summary>
+            Main = 5,
         }
 
         /// <summary>
@@ -224,11 +229,10 @@ namespace Shokofin.Utils
         {
             // Don't process anything if the series titles are not provided.
             if (seriesTitles == null)
-                return ( null, null );
-            var originLanguage = GuessOriginLanguage(seriesTitles);
+                return (null, null);
             return (
-                GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, Plugin.Instance.Configuration.TitleMainType, outputType, metadataLanguage, originLanguage),
-                GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, Plugin.Instance.Configuration.TitleAlternateType, outputType, metadataLanguage, originLanguage)
+                GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, Plugin.Instance.Configuration.TitleMainType, outputType, metadataLanguage),
+                GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, Plugin.Instance.Configuration.TitleAlternateType, outputType, metadataLanguage)
             );
         }
 
@@ -267,64 +271,81 @@ namespace Shokofin.Utils
         public static string GetMovieTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, string metadataLanguage)
             => GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, DisplayTitleType.FullTitle, metadataLanguage);
 
-        public static string GetTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, DisplayTitleType outputType, string metadataLanguage, params string[] originLanguages)
-            => GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, Plugin.Instance.Configuration.TitleMainType, outputType, metadataLanguage, originLanguages);
+        public static string GetTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, DisplayTitleType outputType, string metadataLanguage)
+            => GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, Plugin.Instance.Configuration.TitleMainType, outputType, metadataLanguage);
 
-        public static string GetTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, DisplayLanguageType languageType, DisplayTitleType outputType, string displayLanguage, params string[] originLanguages)
+        public static string GetTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, DisplayLanguageType languageType, DisplayTitleType outputType, string displayLanguage)
         {
             // Don't process anything if the series titles are not provided.
             if (seriesTitles == null)
                 return null;
-            // Guess origin language if not provided.
-            if (originLanguages.Length == 0)
-                originLanguages = GuessOriginLanguage(seriesTitles);
+            var mainTitleLanguage = GetMainLanguage(seriesTitles);
+            var originLanguages = GuessOriginLanguage(mainTitleLanguage);
             switch (languageType) {
                 // 'Ignore' will always return null, and all other values will also return null.
                 default:
                 case DisplayLanguageType.Ignore:
                     return null;
                 // Let Shoko decide the title.
-                case DisplayLanguageType.Default:
-                    return __GetTitle(null, null, seriesTitle, episodeTitle, outputType);
+                case DisplayLanguageType.Default: 
+                    return ConstructTitle(() => seriesTitle, () => episodeTitle, outputType);
                 // Display in metadata-preferred language, or fallback to default.
-                case DisplayLanguageType.MetadataPreferred:
-                    var title = __GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, outputType, displayLanguage);
+                case DisplayLanguageType.MetadataPreferred: {
+                    var allowAny = Plugin.Instance.Configuration.TitleAllowAny;
+                    var getSeriesTitle =  () => GetTitleByTypeAndLanguage(seriesTitles, TitleType.Official, displayLanguage) ?? (allowAny ? GetTitleByLanguages(seriesTitles, displayLanguage) : null) ?? seriesTitle;
+                    var getEpisodeTitle = () => GetTitleByLanguages(episodeTitles, displayLanguage) ?? episodeTitle;
+                    var title = ConstructTitle(getSeriesTitle, getEpisodeTitle, outputType);
                     if (string.IsNullOrEmpty(title))
                         goto case DisplayLanguageType.Default;
                     return title;
-                // Display in origin language without fallback.
-                case DisplayLanguageType.Origin:
-                    return __GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, outputType, originLanguages);
+                }
+                // Display in origin language.
+                case DisplayLanguageType.Origin: {
+                    var allowAny = Plugin.Instance.Configuration.TitleAllowAny;
+                    var getSeriesTitle = () => GetTitleByTypeAndLanguage(seriesTitles, TitleType.Official, originLanguages) ?? (allowAny ? GetTitleByLanguages(seriesTitles, originLanguages) : null) ?? seriesTitle;
+                    var getEpisodeTitle = () => GetTitleByLanguages(episodeTitles, originLanguages) ?? episodeTitle;
+                    return ConstructTitle(getSeriesTitle, getEpisodeTitle, outputType);
+                }
+                // Display the main title.
+                case DisplayLanguageType.Main: {
+                    var getSeriesTitle = () => GetTitleByType(seriesTitles, TitleType.Main) ?? seriesTitle;
+                    var getEpisodeTitle = () => GetTitleByLanguages(episodeTitles, "en", mainTitleLanguage) ?? episodeTitle;
+                    return ConstructTitle(getSeriesTitle, getEpisodeTitle, outputType);
+                }
             }
         }
 
-        private static string __GetTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, DisplayTitleType outputType, params string[] languageCandidates)
+        private static string ConstructTitle(Func<string> getSeriesTitle, Func<string> getEpisodeTitle, DisplayTitleType outputType)
         {
-            // Lazy init string builder when/if we need it.
-            StringBuilder titleBuilder = null;
             switch (outputType) {
+                // Return series title.
+                case DisplayTitleType.MainTitle:
+                    return getSeriesTitle()?.Trim();
+                // Return episode title.
+                case DisplayTitleType.SubTitle:
+                    return getEpisodeTitle()?.Trim();
+                // Return combined series and episode title.
+                case DisplayTitleType.FullTitle: {
+                    var mainTitle = getSeriesTitle()?.Trim();
+                    var subTitle = getEpisodeTitle()?.Trim();
+                    // Include sub-title if it does not strictly equals any ignored sub titles.
+                    if (!string.IsNullOrWhiteSpace(subTitle) && !IgnoredSubTitles.Contains(mainTitle))
+                        return $"{mainTitle}: {subTitle}";
+                    return mainTitle;
+                }
                 default:
                     return null;
-                case DisplayTitleType.MainTitle:
-                case DisplayTitleType.FullTitle: {
-                    string title = (GetTitleByTypeAndLanguage(seriesTitles, TitleType.Official, languageCandidates) ?? seriesTitle)?.Trim();
-                    // Return series title.
-                    if (outputType == DisplayTitleType.MainTitle)
-                        return title;
-                    titleBuilder = new StringBuilder(title);
-                    goto case DisplayTitleType.SubTitle;
-                }
-                case DisplayTitleType.SubTitle: {
-                    string title = (GetTitleByLanguages(episodeTitles, languageCandidates) ?? episodeTitle)?.Trim();
-                    // Return episode title.
-                    if (outputType == DisplayTitleType.SubTitle)
-                        return title;
-                    // Ignore sub-title of movie if it strictly equals the text below.
-                    if (!string.IsNullOrWhiteSpace(title) && !IgnoredSubTitles.Contains(title))
-                        titleBuilder?.Append($": {title}");
-                    return titleBuilder?.ToString() ?? "";
-                }
             }
+        }
+
+        public static string GetTitleByType(IEnumerable<Title> titles, TitleType type)
+        {
+            if (titles != null) {
+                string title = titles.FirstOrDefault(s => s.Type == type)?.Value;
+                if (title != null)
+                    return title;
+            }
+            return null;
         }
 
         public static string GetTitleByTypeAndLanguage(IEnumerable<Title> titles, TitleType type, params string[] langs)
@@ -348,23 +369,28 @@ namespace Shokofin.Utils
         }
 
         /// <summary>
+        /// Get the main title language from the series list.
+        /// </summary>
+        /// <param name="titles">Series title list.</param>
+        /// <returns></returns>
+        private static string GetMainLanguage(IEnumerable<Title> titles) {
+            return titles.FirstOrDefault(t => t?.Type == TitleType.Main)?.LanguageCode ?? titles.FirstOrDefault()?.LanguageCode ?? "x-other";
+        }
+
+        /// <summary>
         /// Guess the origin language based on the main title.
         /// </summary>
+        /// <param name="titles">Series title list.</param>
         /// <returns></returns>
-        private static string[] GuessOriginLanguage(IEnumerable<Title> titles)
+        private static string[] GuessOriginLanguage(string langCode)
         {
-            string langCode = titles.FirstOrDefault(t => t?.Type == TitleType.Main)?.LanguageCode;
-            // Guess the origin language based on the main title.
-            switch (langCode) {
-                case null: // fallback
-                case "x-other":
-                case "x-jat":
-                    return new string[] { "ja" };
-                case "x-zht":
-                    return new string[] { "zn-hans", "zn-hant", "zn-c-mcm", "zn" };
-                default:
-                    return new string[] { langCode };
-            }
+            // Guess the origin language based on the main title language.
+            return langCode switch {
+                "x-other" => new string[] { "ja" },
+                "x-jat" => new string[] { "ja" },
+                "x-zht" => new string[] { "zn-hans", "zn-hant", "zn-c-mcm", "zn" },
+                _ => new string[] { langCode },
+            };
         }
     }
 }

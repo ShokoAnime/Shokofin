@@ -58,6 +58,7 @@
                                 <option value="Default">Let Shoko decide the title</option>
                                 <option value="MetadataPreferred">Use the preferred library metadata language</option>
                                 <option value="Origin">Use the language from country of origin</option>
+                                <option value="Main">Use the main title on AniDB</option>
                             </select>
                             <div class="fieldDescription selectFieldDescription">How to select the main title for each item. The plugin will fallback to the default title if no title can be found in the target language.</div>
                         </div>
@@ -67,6 +68,7 @@
                                 <option value="Default">Let Shoko decide the title</option>
                                 <option value="MetadataPreferred">Use the preferred library metadata language</option>
                                 <option value="Origin">Use the language from country of origin</option>
+                                <option value="Main">Use the main title on AniDB</option>
                                 <option value="Ignore">Do not use alternate titles</option>
                             </select>
                             <div class="fieldDescription selectFieldDescription">How to select the alternate title for each item. The plugin will fallback to the default title if no title can be found in the target language.</div>
@@ -81,6 +83,13 @@
                                 <option value="PreferOther">Prefer TvDB/TMDB if available, otherwise use AniDB</option>
                             </select>
                             <div class="fieldDescription selectFieldDescription">How to select the description to use for each item.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="TitleAllowAny" />
+                                <span>Allow any title in selected language.</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Will add any title in the selected language if no official title is found.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
