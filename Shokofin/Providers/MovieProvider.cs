@@ -74,7 +74,7 @@ namespace Shokofin.Providers
                 result.Item.SetProviderId("Shoko Episode", episode.Id);
                 result.Item.SetProviderId("Shoko Series", series.Id);
                 if (config.AddAniDBId)
-                    result.Item.SetProviderId("AniDB", episode.AniDB.Id.ToString());
+                    result.Item.SetProviderId("AniDB", series.AniDB.Id.ToString());
 
                 result.HasMetadata = true;
 
