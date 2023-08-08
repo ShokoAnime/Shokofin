@@ -1,3 +1,12 @@
+# Late nights thoughts
+
+**Disclaimer**: This file is all about some late night thoughts about how I
+envision the plugin to work, and now how it is working currently. The parts
+around the seasons and down are completely different from how it currently is,
+and the changes below the episode cannot be implemented yet because of lacking
+api data… for now. The data is available in Shoko, just not exposed in the
+"correct" way in the v3 api yet.
+
 Collection → Shoko Group
 
 An object holding information about the shoko group that may contain sub-groups
@@ -157,10 +166,15 @@ destroyed or when the links are otherwise no longer needed.
 
 **Properties**
 
+- `ID` (string) — An unique ID for this file location, even among other copies
+  of the file location.
+
+  In the format `<fileId>-<seriesId>-<episodeIds>.<fileExt>`.
+
 - `Path` (string) — The full path of the file location.
 
-- `IsSymbolic` (boolean) — Indicates the file location is a symbolic link leading
-  to the physical file, and not the physical file itself.
+- `IsCopy` (boolean) — Indicates the file location is a symbolic link managed
+  by the plugin.
 
 - `File` (ShokoFile) — The primary Shoko File to use for file info.
 
