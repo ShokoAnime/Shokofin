@@ -17,7 +17,7 @@ since there is no metadata to find.
 Shoko is an anime cataloging program designed to automate the cataloging of your
 collection regardless of the size and amount of files you have. Unlike other
 anime cataloging programs which make you manually add your series or link the
-files to them, Shoko removes the tedious, time consuming and boring task of
+files to them, Shoko removes the tedious, time-consuming and boring task of
 having to manually add every file and manually input the file information. You
 have better things to do with your time like actually watching the series in
 your collection so let Shoko handle all the heavy lifting.
@@ -91,10 +91,10 @@ Learn more about Shoko at https://shokoanime.com/.
       mapped to the normal seasons, or if they are strictly kept in season zero.
 
     - [X] Extra features. The plugin will map specials stored in Shoko such as
-      interviews, etc. as extra featues, and all other specials as episodes in
+      interviews, etc. as extra features, and all other specials as episodes in
       season zero.
 
-  - [X] Map OPs/EDs to Theme Videos so they can be displayed as background video
+  - [X] Map OPs/EDs to Theme Videos, so they can be displayed as background video
     while you browse your library.
 
   - [X] Support merging multi-version episodes/movies into a single entry.
@@ -106,7 +106,7 @@ Learn more about Shoko at https://shokoanime.com/.
 
       - [X] Manual merge/split tasks
 
-  - [X] Support optionally setting other provider ids Shoko knows about (e.g.
+  - [X] Support optionally setting other provider IDs Shoko knows about (e.g.
     AniDB, TvDB, TMDB, etc.) on some item types when an ID is available for
     the items in Shoko.
 
@@ -116,8 +116,10 @@ Learn more about Shoko at https://shokoanime.com/.
       following TvDB (to-be replaced with TMDB soon™-ish), and using Shoko's
       groups feature.
 
-      _For the best compatibility it is **strongly** adviced **not** to use
-      "season" folders with anime as it limits which grouping you can use._
+      _For the best compatibility it is **strongly** advised **not** to use
+      "season" folders with anime as it limits which grouping you can use, you
+      can still create "seasons" in the UI using Shoko's groups or using the
+      TvDB/TMDB compatibility mode._
 
     - [X] Optionally create Box-Sets for your Movies…
 
@@ -128,12 +130,12 @@ Learn more about Shoko at https://shokoanime.com/.
     - [X] Supports separating your on-disc library into a two Show and Movie
       libraries.
 
-      _provided you apply the workaround to do it_.
+      _Provided you apply the workaround to do it_.
 
   - [/] Automatically populates all missing episodes not in your collection, so
     you can see at a glance what you are missing out on.
 
-    - [ ] Deleting an missing episode item marks the episode as hidden/ignored
+    - [ ] Deleting a missing episode item marks the episode as hidden/ignored
       in Shoko.
 
   - [ ] Optionally react to events sent from Shoko.
@@ -142,12 +144,12 @@ Learn more about Shoko at https://shokoanime.com/.
 
 - [X] User data
 
-  - [X] Able to sync the watch data to/from Shoko on a per user basis in
+  - [X] Able to sync the watch data to/from Shoko on a per-user basis in
     multiple ways. And Shoko can further sync the to/from other linked services.
 
     - [X] During import.
 
-    - [X] Player events (play/pause/resumve/stop events)
+    - [X] Player events (play/pause/resume/stop events)
 
     - [X] After playback (stop event)
 
