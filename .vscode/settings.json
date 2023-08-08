@@ -2,5 +2,6 @@
   "editor.tabSize": 4,
   "files.trimTrailingWhitespace": false,
   "files.trimFinalNewlines": false,
-  "files.insertFinalNewline": false
+  "files.insertFinalNewline": false,
+  "dotnet.defaultSolution": "Shokofin.sln"
 }
