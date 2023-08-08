@@ -21,7 +21,7 @@ namespace Shokofin
             => null;
 
         public virtual string UrlFormatString
-            => $"{Plugin.Instance.Configuration.PrettyHost}/webui/group/{{0}}";
+            => $"{Plugin.Instance.Configuration.PrettyHost}/webui/collection/group/{{0}}";
     }
 
     public class ShokoSeriesExternalId : IExternalId
@@ -39,7 +39,7 @@ namespace Shokofin
             => null;
 
         public virtual string UrlFormatString
-            => $"{Plugin.Instance.Configuration.PrettyHost}/webui/series/{{0}}";
+            => $"{Plugin.Instance.Configuration.PrettyHost}/webui/collection/series/{{0}}";
     }
 
     public class ShokoEpisodeExternalId : IExternalId
@@ -57,7 +57,7 @@ namespace Shokofin
             => null;
 
         public virtual string UrlFormatString
-            => $"{Plugin.Instance.Configuration.PrettyHost}/webui/episode/{{0}}";
+            => $"{Plugin.Instance.Configuration.PrettyHost}/webui/redirect/episode/{{0}}";
     }
 
     public class ShokoFileExternalId : IExternalId
