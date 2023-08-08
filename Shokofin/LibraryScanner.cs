@@ -41,7 +41,7 @@ namespace Shokofin
         /// <param name="fileInfo"></param>
         /// <param name="parent"></param>
         /// <returns>True if the entry should be ignored.</returns>
-        public bool ShouldIgnore(MediaBrowser.Model.IO.FileSystemMetadata fileInfo, BaseItem parent)
+        public bool ShouldIgnore(FileSystemMetadata fileInfo, BaseItem parent)
         {
             // Everything in the root folder is ignored by us.
             var root = LibraryManager.RootFolder;
@@ -74,37 +74,39 @@ namespace Shokofin
             }
             catch (System.Exception ex) {
                 if (!(ex is System.Net.Http.HttpRequestException && ex.Message.Contains("Connection refused")))
-                    Logger.LogError(ex, $"Threw unexpectedly - {ex.Message}");
-                Plugin.Instance.CaptureException(ex);
+                {
+                    Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+                    Plugin.Instance.CaptureException(ex);
+                }
                 return false;
             }
         }
 
         private bool ScanDirectory(string partialPath, string fullPath, string libraryType, bool shouldIgnore)
         {
-            var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
-            var series = ApiManager.GetSeriesInfoByPath(fullPath)
+            var preloadShow = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
+            var season = ApiManager.GetSeasonInfoByPath(fullPath)
                 .GetAwaiter()
                 .GetResult();
 
             // We inform/warn here since we enabled the provider in our library, but we can't find a match for the given folder path.
-            if (series == null) {
+            if (season == null) {
                 // If we're in strict mode, then check the sub-directories if we have a <Show>/<Season>/<Episodes> structure.
                 if (shouldIgnore && partialPath[1..].Split(Path.DirectorySeparatorChar).Length == 1) {
                     var entries = FileSystem.GetDirectories(fullPath, false).ToList();
-                    Logger.LogDebug("Unable to find series for {Path}, trying {DirCount} sub-directories.", entries.Count, partialPath);
+                    Logger.LogDebug("Unable to find shoko series for {Path}, trying {DirCount} sub-directories.", entries.Count, partialPath);
                     foreach (var entry in entries) {
-                        series = ApiManager.GetSeriesInfoByPath(entry.FullName)
+                        season = ApiManager.GetSeasonInfoByPath(entry.FullName)
                             .GetAwaiter()
                             .GetResult();
-                        if (series != null)
+                        if (season != null)
                         {
-                            Logger.LogDebug("Found series {SeriesName} for sub-directory of path {Path} (Series={SeriesId})", series.Shoko.Name, partialPath, series.Id);
+                            Logger.LogDebug("Found shoko series {SeriesName} for sub-directory of path {Path} (Series={SeriesId})", season.Shoko.Name, partialPath, season.Id);
                             break;
                         }
                     }
                 }
-                if (series == null) {
+                if (season == null) {
                     if (shouldIgnore)
                         Logger.LogInformation("Ignored unknown folder at path {Path}", partialPath);
                     else
@@ -113,53 +115,51 @@ namespace Shokofin
                 }
             }
 
-            API.Info.GroupInfo group = null;
+            API.Info.ShowInfo show = null;
             // Filter library if we enabled the option.
             if (Plugin.Instance.Configuration.FilterOnLibraryTypes) switch (libraryType) {
                 case "tvshows":
-                    if (series.AniDB.Type == SeriesType.Movie) {
-                        Logger.LogInformation("Library separation is enabled, ignoring series. (Series={SeriesId})", series.Id);
+                    if (season.AniDB.Type == SeriesType.Movie) {
+                        Logger.LogInformation("Library separation is enabled, ignoring series. (Series={SeriesId})", season.Id);
                         return true;
                     }
 
                     // If we're using series grouping, pre-load the group now to help reduce load times later.
-                    if (includeGroup)
-                        group = ApiManager.GetGroupInfoForSeries(series.Id, Ordering.GroupFilterType.Others)
+                    if (preloadShow)
+                        show = ApiManager.GetShowInfoForSeries(season.Id, Ordering.GroupFilterType.Others)
                             .GetAwaiter()
                             .GetResult();
                     break;
                 case "movies":
-                    if (series.AniDB.Type != SeriesType.Movie) {
-                        Logger.LogInformation("Library separation is enabled, ignoring series. (Series={SeriesId})", series.Id);
+                    if (season.AniDB.Type != SeriesType.Movie) {
+                        Logger.LogInformation("Library separation is enabled, ignoring series. (Series={SeriesId})", season.Id);
                         return true;
                     }
 
                     // If we're using series grouping, pre-load the group now to help reduce load times later.
-                    if (includeGroup)
-                        group = ApiManager.GetGroupInfoForSeries(series.Id, Ordering.GroupFilterType.Movies)
+                    if (preloadShow)
+                        show = ApiManager.GetShowInfoForSeries(season.Id, Ordering.GroupFilterType.Movies)
                             .GetAwaiter()
                             .GetResult();
                     break;
             }
             // If we're using series grouping, pre-load the group now to help reduce load times later.
-            else if (includeGroup)
-                group = ApiManager.GetGroupInfoForSeries(series.Id)
+            else if (preloadShow)
+                show = ApiManager.GetShowInfoForSeries(season.Id)
                     .GetAwaiter()
                     .GetResult();
 
-            if (group != null)
-                Logger.LogInformation("Found group {GroupName} (Series={SeriesId},Group={GroupId})", group.Shoko.Name, series.Id, group.Id);
+            if (show != null)
+                Logger.LogInformation("Found shoko group {GroupName} (Series={SeriesId},Group={GroupId})", show.Name, season.Id, show.Id);
             else
-                Logger.LogInformation("Found series {SeriesName} (Series={SeriesId})", series.Shoko.Name, series.Id);
+                Logger.LogInformation("Found shoko series {SeriesName} (Series={SeriesId})", season.Shoko.Name, season.Id);
 
             return false;
         }
 
         private bool ScanFile(string partialPath, string fullPath, bool shouldIgnore)
         {
-            var includeGroup = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
-            var config = Plugin.Instance.Configuration;
-            var (file, series, _group) = ApiManager.GetFileInfoByPath(fullPath, null)
+            var (file, series, _) = ApiManager.GetFileInfoByPath(fullPath, null)
                 .GetAwaiter()
                 .GetResult();
 
@@ -172,7 +172,7 @@ namespace Shokofin
                 return shouldIgnore;
             }
 
-            Logger.LogInformation("Found {EpisodeCount} episode(s) for {SeriesName} (Series={SeriesId},File={FileId})", file.EpisodeList.Count, series.Shoko.Name, series.Id, file.Id);
+            Logger.LogInformation("Found {EpisodeCount} shoko episode(s) for {SeriesName} (Series={SeriesId},File={FileId})", file.EpisodeList.Count, series.Shoko.Name, series.Id, file.Id);
 
             // We're going to post process this file later, but we don't want to include it in our library for now.
             if (file.ExtraType != null) {

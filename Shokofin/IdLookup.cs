@@ -31,11 +31,6 @@ namespace Shokofin
         bool IsEnabledForItem(BaseItem item, out bool isSoleProvider);
 
         #endregion
-        #region Group Id
-
-        bool TryGetGroupIdFromSeriesId(string seriesId, out string groupId);
-
-        #endregion
         #region Series Id
 
         bool TryGetSeriesIdFor(string path, out string seriesId);
@@ -117,10 +112,10 @@ namespace Shokofin
 
         #region Base Item
 
-        private readonly HashSet<string> AllowedTypes = new HashSet<string>() { nameof(Series), nameof(Episode), nameof(Movie) };
+        private readonly HashSet<string> AllowedTypes = new() { nameof(Series), nameof(Episode), nameof(Movie) };
 
         public bool IsEnabledForItem(BaseItem item) =>
-            IsEnabledForItem(item, out var _bool);
+            IsEnabledForItem(item, out var _);
 
         public bool IsEnabledForItem(BaseItem item, out bool isSoleProvider)
         {
@@ -158,14 +153,6 @@ namespace Shokofin
         }
 
         #endregion
-        #region Group Id
-
-        public bool TryGetGroupIdFromSeriesId(string seriesId, out string groupId)
-        {
-            return ApiManager.TryGetGroupIdForSeriesId(seriesId, out groupId);
-        }
-
-        #endregion
         #region Series Id
 
         public bool TryGetSeriesIdFor(string path, out string seriesId)
@@ -186,14 +173,8 @@ namespace Shokofin
 
             if (TryGetSeriesIdFor(series.Path, out seriesId)) {
                 // Set the "Shoko Group" and "Shoko Series" provider ids for the series, since it haven't been set again. It doesn't matter if it's not saved to the database, since we only need it while running the following code.
-                if (TryGetGroupIdFromSeriesId(seriesId, out var groupId)) {
-                    var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
-                    var groupInfo = ApiManager.GetGroupInfo(groupId, filterByType)
-                        .GetAwaiter()
-                        .GetResult();
-                    seriesId = groupInfo.DefaultSeries.Id;
-
-                    SeriesProvider.AddProviderIds(series, seriesId, groupInfo.Id);
+                if (ApiManager.TryGetGroupIdForSeriesId(seriesId, out var groupId, out seriesId)) {
+                    SeriesProvider.AddProviderIds(series, seriesId, groupId);
                 }
                 // Same as above, but only set the "Shoko Series" id.
                 else {
@@ -236,12 +217,8 @@ namespace Shokofin
             }
 
             if (TryGetSeriesIdFor(boxSet.Path, out seriesId)) {
-                if (TryGetGroupIdFromSeriesId(seriesId, out var groupId)) {
-                    var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
-                    var groupInfo = ApiManager.GetGroupInfo(groupId, filterByType)
-                        .GetAwaiter()
-                        .GetResult();
-                    seriesId = groupInfo.DefaultSeries.Id;
+                if (ApiManager.TryGetGroupIdForSeriesId(seriesId, out var _, out var defaultSeriesId)) {
+                    seriesId = defaultSeriesId;
                 }
                 return true;
             }

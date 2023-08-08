@@ -8,11 +8,13 @@ using Shokofin.Utils;
 #nullable enable
 namespace Shokofin.API.Info;
 
-public class GroupInfo
+public class ShowInfo
 {
-    public string Id;
+    public string? Id;
 
-    public Group Shoko;
+    public string Name;
+
+    public bool IsStandalone;
 
     public string[] Tags;
 
@@ -20,28 +22,68 @@ public class GroupInfo
 
     public string[] Studios;
 
-    public List<SeriesInfo> SeriesList;
+    public List<SeasonInfo> SeasonList;
 
-    public Dictionary<int, SeriesInfo> SeasonOrderDictionary;
+    public Dictionary<int, SeasonInfo> SeasonOrderDictionary;
 
-    public Dictionary<SeriesInfo, int> SeasonNumberBaseDictionary;
+    public Dictionary<SeasonInfo, int> SeasonNumberBaseDictionary;
 
-    public SeriesInfo? DefaultSeries;
+    public SeasonInfo? DefaultSeason;
 
-    public GroupInfo(Group group)
+    public ShowInfo(Series series)
     {
-        Id = group.IDs.Shoko.ToString();
-        Shoko = group;
-        Tags = new string[0];
-        Genres = new string[0];
-        Studios = new string[0];
-        SeriesList = new();
+        Id = null;
+        Name = series.Name;
+        IsStandalone = true;
+        Tags = System.Array.Empty<string>();
+        Genres = System.Array.Empty<string>();
+        Studios = System.Array.Empty<string>();
+        SeasonList = new();
         SeasonNumberBaseDictionary = new();
         SeasonOrderDictionary = new();
-        DefaultSeries = null;
+        DefaultSeason = null;
     }
 
-    public GroupInfo(Group group, List<SeriesInfo> seriesList, Ordering.GroupFilterType filterByType, ILogger logger)
+    public ShowInfo(Group group)
+    {
+        Id = group.IDs.Shoko.ToString();
+        Name = group.Name;
+        IsStandalone = false;
+        Tags = System.Array.Empty<string>();
+        Genres = System.Array.Empty<string>();
+        Studios = System.Array.Empty<string>();
+        SeasonList = new();
+        SeasonNumberBaseDictionary = new();
+        SeasonOrderDictionary = new();
+        DefaultSeason = null;
+    }
+
+    public ShowInfo(SeasonInfo seasonInfo)
+    {
+        var seasonOrderDictionary = new Dictionary<int, SeasonInfo>();
+        var seasonNumberBaseDictionary = new Dictionary<SeasonInfo, int>();
+        var offset = 0;
+        if (seasonInfo.AlternateEpisodesList.Count > 0)
+            offset++;
+        if (seasonInfo.OthersList.Count > 0)
+            offset++;
+        seasonNumberBaseDictionary.Add(seasonInfo, 1);
+        seasonOrderDictionary.Add(1, seasonInfo);
+        for (var i = 0; i < offset; i++)
+            seasonOrderDictionary.Add(i + 2, seasonInfo);
+
+        Name = seasonInfo.Shoko.Name;
+        IsStandalone = true;
+        Tags = seasonInfo.Tags;
+        Genres = seasonInfo.Genres;
+        Studios = seasonInfo.Studios;
+        SeasonList = new() { seasonInfo };
+        SeasonNumberBaseDictionary = seasonNumberBaseDictionary;
+        SeasonOrderDictionary = seasonOrderDictionary;
+        DefaultSeason = seasonInfo;
+    }
+
+    public ShowInfo(Group group, List<SeasonInfo> seriesList, Ordering.GroupFilterType filterByType, ILogger logger)
     {
         var groupId = group.IDs.Shoko.ToString();
 
@@ -88,16 +130,16 @@ public class GroupInfo
             foundIndex = 0;
         }
 
-        var seasonOrderDictionary = new Dictionary<int, SeriesInfo>();
-        var seasonNumberBaseDictionary = new Dictionary<SeriesInfo, int>();
+        var seasonOrderDictionary = new Dictionary<int, SeasonInfo>();
+        var seasonNumberBaseDictionary = new Dictionary<SeasonInfo, int>();
         var positiveSeasonNumber = 1;
         var negativeSeasonNumber = -1;
-        foreach (var (seriesInfo, index) in seriesList.Select((s, i) => (s, i))) {
+        foreach (var (seasonInfo, index) in seriesList.Select((s, i) => (s, i))) {
             int seasonNumber;
             var offset = 0;
-            if (seriesInfo.AlternateEpisodesList.Count > 0)
+            if (seasonInfo.AlternateEpisodesList.Count > 0)
                 offset++;
-            if (seriesInfo.OthersList.Count > 0)
+            if (seasonInfo.OthersList.Count > 0)
                 offset++;
 
             // Series before the default series get a negative season number
@@ -110,27 +152,28 @@ public class GroupInfo
                 positiveSeasonNumber += offset + 1;
             }
 
-            seasonNumberBaseDictionary.Add(seriesInfo, seasonNumber);
-            seasonOrderDictionary.Add(seasonNumber, seriesInfo);
+            seasonNumberBaseDictionary.Add(seasonInfo, seasonNumber);
+            seasonOrderDictionary.Add(seasonNumber, seasonInfo);
             for (var i = 0; i < offset; i++)
-                seasonOrderDictionary.Add(seasonNumber + (index < foundIndex ? -(i + 1) :  (i + 1)), seriesInfo);
+                seasonOrderDictionary.Add(seasonNumber + (index < foundIndex ? -(i + 1) :  (i + 1)), seasonInfo);
         }
 
         Id = groupId;
-        Shoko = group;
+        Name = seriesList.Count > 0 ? seriesList[foundIndex].Shoko.Name : group.Name;
+        IsStandalone = false;
         Tags = seriesList.SelectMany(s => s.Tags).Distinct().ToArray();
         Genres = seriesList.SelectMany(s => s.Genres).Distinct().ToArray();
         Studios = seriesList.SelectMany(s => s.Studios).Distinct().ToArray();
-        SeriesList = seriesList;
+        SeasonList = seriesList;
         SeasonNumberBaseDictionary = seasonNumberBaseDictionary;
         SeasonOrderDictionary = seasonOrderDictionary;
-        DefaultSeries = seriesList.Count > 0 ? seriesList[foundIndex] : null;
+        DefaultSeason = seriesList.Count > 0 ? seriesList[foundIndex] : null;
     }
 
-    public SeriesInfo? GetSeriesInfoBySeasonNumber(int seasonNumber) {
-        if (seasonNumber == 0 || !(SeasonOrderDictionary.TryGetValue(seasonNumber, out var seriesInfo) && seriesInfo != null))
+    public SeasonInfo? GetSeriesInfoBySeasonNumber(int seasonNumber) {
+        if (seasonNumber == 0 || !(SeasonOrderDictionary.TryGetValue(seasonNumber, out var seasonInfo) && seasonInfo != null))
             return null;
 
-        return seriesInfo;
+        return seasonInfo;
     }
 }

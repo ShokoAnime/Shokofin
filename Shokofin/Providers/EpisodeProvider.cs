@@ -45,8 +45,8 @@ namespace Shokofin.Providers
                 // Fetch the episode, series and group info (and file info, but that's not really used (yet))
                 Info.FileInfo fileInfo = null;
                 Info.EpisodeInfo episodeInfo = null;
-                Info.SeriesInfo seriesInfo = null;
-                Info.GroupInfo groupInfo = null;
+                Info.SeasonInfo seasonInfo = null;
+                Info.ShowInfo showInfo = null;
                 if (info.IsMissingEpisode || string.IsNullOrEmpty(info.Path)) {
                     // We're unable to fetch the latest metadata for the virtual episode.
                     if (!info.ProviderIds.TryGetValue("Shoko Episode", out var episodeId))
@@ -56,14 +56,14 @@ namespace Shokofin.Providers
                     if (episodeInfo == null)
                         return result;
 
-                    seriesInfo = await ApiManager.GetSeriesInfoForEpisode(episodeId);
-                    if (seriesInfo == null)
+                    seasonInfo = await ApiManager.GetSeasonInfoForEpisode(episodeId);
+                    if (seasonInfo == null)
                         return result;
 
-                    groupInfo = filterByType.HasValue ? (await ApiManager.GetGroupInfoForSeries(seriesInfo.Id, filterByType.Value)) : null;
+                    showInfo = filterByType.HasValue ? (await ApiManager.GetShowInfoForSeries(seasonInfo.Id, filterByType.Value)) : null;
                 }
                 else {
-                    (fileInfo, seriesInfo, groupInfo) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
+                    (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
                     episodeInfo = fileInfo?.EpisodeList.FirstOrDefault();
                 }
 
@@ -73,27 +73,27 @@ namespace Shokofin.Providers
                     return result;
                 }
 
-                result.Item = CreateMetadata(groupInfo, seriesInfo, episodeInfo, fileInfo, info.MetadataLanguage);
-                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},Group={GroupId})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seriesInfo.Id, groupInfo?.Id);
+                result.Item = CreateMetadata(showInfo, seasonInfo, episodeInfo, fileInfo, info.MetadataLanguage);
+                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},Group={GroupId})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seasonInfo.Id, showInfo?.Id);
 
                 result.HasMetadata = true;
 
                 return result;
             }
             catch (Exception ex) {
-                Logger.LogError(ex, $"Threw unexpectedly; {ex.Message}");
+                Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
                 Plugin.Instance.CaptureException(ex);
                 return new MetadataResult<Episode>();
             }
         }
 
-        public static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, Season season, System.Guid episodeId)
+        public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Season season, System.Guid episodeId)
             => CreateMetadata(group, series, episode, null, season.GetPreferredMetadataLanguage(), season, episodeId);
 
-        public static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, Info.FileInfo file, string metadataLanguage)
+        public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo file, string metadataLanguage)
             => CreateMetadata(group, series, episode, file, metadataLanguage, null, Guid.Empty);
 
-        private static Episode CreateMetadata(Info.GroupInfo group, Info.SeriesInfo series, Info.EpisodeInfo episode, Info.FileInfo file, string metadataLanguage, Season season, System.Guid episodeId)
+        private static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo file, string metadataLanguage, Season season, System.Guid episodeId)
         {
             var config = Plugin.Instance.Configuration;
             var maybeMergeFriendly = config.SeriesGrouping == Ordering.GroupType.MergeFriendly && series.TvDB != null;
@@ -283,18 +283,14 @@ namespace Shokofin.Providers
                 item.SetProviderId("AniDB", anidbId);
             if (config.AddTvDBId && !string.IsNullOrEmpty(tvdbId) && tvdbId != "0")
                 item.SetProviderId(MetadataProvider.Tvdb, tvdbId);
-            if (Plugin.Instance.Configuration.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")
-                item.SetProviderId(MetadataProvider.Tvdb, tmdbId);
+            if (config.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")
+                item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
         }
 
         public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo searchInfo, CancellationToken cancellationToken)
-        {
-            return Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
-        }
+            => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
 
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
-        }
+            => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
     }
 }

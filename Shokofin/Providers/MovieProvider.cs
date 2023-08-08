@@ -85,17 +85,17 @@ namespace Shokofin.Providers
                 return result;
             }
             catch (Exception ex) {
-                Logger.LogError(ex, $"Threw unexpectedly; {ex.Message}");
+                Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
                 Plugin.Instance.CaptureException(ex);
                 return new MetadataResult<Movie>();
             }
         }
 
-        private static string GetCollectionName(API.Info.SeriesInfo series, API.Info.GroupInfo group, string metadataLanguage)
+        private static string GetCollectionName(API.Info.SeasonInfo series, API.Info.ShowInfo group, string metadataLanguage)
         {
-            return (Plugin.Instance.Configuration.BoxSetGrouping) switch {
+            return Plugin.Instance.Configuration.BoxSetGrouping switch {
                 Ordering.GroupType.ShokoGroup =>
-                    Text.GetSeriesTitle(group.DefaultSeries.AniDB.Titles, group.DefaultSeries.Shoko.Name, metadataLanguage),
+                    Text.GetSeriesTitle(group.DefaultSeason.AniDB.Titles, group.DefaultSeason.Shoko.Name, metadataLanguage),
                 Ordering.GroupType.ShokoSeries =>
                     Text.GetSeriesTitle(series.AniDB.Titles, series.Shoko.Name, metadataLanguage),
                 _ => null,
@@ -104,13 +104,9 @@ namespace Shokofin.Providers
 
 
         public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MovieInfo searchInfo, CancellationToken cancellationToken)
-        {
-            return Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
-        }
+            => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
 
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
-        }
+            => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
     }
 }

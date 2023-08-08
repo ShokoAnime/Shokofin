@@ -39,29 +39,29 @@ namespace Shokofin.Providers
                             return new MetadataResult<Season>();
 
                         if (info.IndexNumber.Value == 1)
-                            return await GetShokoGroupedMetadata(info, cancellationToken);
+                            return await GetShokoGroupedMetadata(info);
 
-                        return GetDefaultMetadata(info, cancellationToken);
+                        return GetDefaultMetadata(info);
                     case Ordering.GroupType.MergeFriendly:
                         if (!info.IndexNumber.HasValue)
                             return new MetadataResult<Season>();
 
-                        return GetDefaultMetadata(info, cancellationToken);
+                        return GetDefaultMetadata(info);
                     case Ordering.GroupType.ShokoGroup:
                         if (info.IndexNumber.HasValue && info.IndexNumber.Value == 0)
-                            return GetDefaultMetadata(info, cancellationToken);
+                            return GetDefaultMetadata(info);
 
-                        return await GetShokoGroupedMetadata(info, cancellationToken);
+                        return await GetShokoGroupedMetadata(info);
                 }
             }
             catch (Exception ex) {
-                Logger.LogError(ex, $"Threw unexpectedly; {ex.Message}");
+                Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
                 Plugin.Instance.CaptureException(ex);
                 return new MetadataResult<Season>();
             }
         }
 
-        private MetadataResult<Season> GetDefaultMetadata(SeasonInfo info, CancellationToken cancellationToken)
+        private static MetadataResult<Season> GetDefaultMetadata(SeasonInfo info)
         {
             var result = new MetadataResult<Season>();
 
@@ -78,70 +78,70 @@ namespace Shokofin.Providers
             return result;
         }
 
-        private async Task<MetadataResult<Season>> GetShokoGroupedMetadata(SeasonInfo info, CancellationToken cancellationToken)
+        private async Task<MetadataResult<Season>> GetShokoGroupedMetadata(SeasonInfo info)
         {
             var result = new MetadataResult<Season>();
 
             int offset = 0;
             int seasonNumber = 1;
-            API.Info.SeriesInfo series;
+            API.Info.SeasonInfo season;
             // All previously known seasons
             if (info.ProviderIds.TryGetValue("Shoko Series", out var seriesId) && info.ProviderIds.TryGetValue("Shoko Season Offset", out var offsetText) && int.TryParse(offsetText, out offset)) {
-                series = await ApiManager.GetSeriesInfo(seriesId);
+                season = await ApiManager.GetSeasonInfoForSeries(seriesId);
 
-                if (series == null) {
+                if (season == null) {
                     Logger.LogWarning("Unable to find series info for Season. (Series={SeriesId})", seriesId);
                     return result;
                 }
 
                 if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {
                     var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
-                    var group = await ApiManager.GetGroupInfoForSeries(seriesId, filterByType);
-                    if (group == null) {
-                        Logger.LogWarning("Unable to find group info for Season. (Series={SeriesId})", series.Id);
+                    var show = await ApiManager.GetShowInfoForSeries(seriesId, filterByType);
+                    if (show == null) {
+                        Logger.LogWarning("Unable to find group info for Season. (Series={SeriesId})", season.Id);
                         return result;
                     }
 
-                    if (!group.SeasonNumberBaseDictionary.TryGetValue(series, out seasonNumber)) {
-                        Logger.LogWarning("Unable to find season number for Season. (Series={SeriesId},Group={GroupId})", series.Id, group.Id);
+                    if (!show.SeasonNumberBaseDictionary.TryGetValue(season, out seasonNumber)) {
+                        Logger.LogWarning("Unable to find season number for Season. (Series={SeriesId},Group={GroupId})", season.Id, show.Id);
                         return result;
                     }
                     seasonNumber = seasonNumber < 0 ? seasonNumber - offset : seasonNumber + offset;
 
-                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, group.Shoko.Name, series.Id, group.Id);
+                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, show.Name, season.Id, show.Id);
                 }
                 else {
                     seasonNumber += offset;
 
-                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId})", seasonNumber, series.Shoko.Name, series.Id);
+                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId})", seasonNumber, season.Shoko.Name, season.Id);
                 }
             }
             // New physical seasons
             else if (info.Path != null) {
-                series = await ApiManager.GetSeriesInfoByPath(info.Path);
+                season = await ApiManager.GetSeasonInfoByPath(info.Path);
 
-                if (series == null) {
+                if (season == null) {
                     Logger.LogWarning("Unable to find series info for Season by path {Path}.", info.Path);
                     return result;
                 }
 
                 if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {
                     var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
-                    var group = await ApiManager.GetGroupInfoForSeries(series.Id, filterByType);
-                    if (group == null) {
-                        Logger.LogWarning("Unable to find group info for Season by path {Path}. (Series={SeriesId})", info.Path, series.Id);
+                    var show = await ApiManager.GetShowInfoForSeries(season.Id, filterByType);
+                    if (show == null) {
+                        Logger.LogWarning("Unable to find group info for Season by path {Path}. (Series={SeriesId})", info.Path, season.Id);
                         return result;
                     }
 
-                    if (!group.SeasonNumberBaseDictionary.TryGetValue(series, out seasonNumber)) {
-                        Logger.LogWarning("Unable to find season number for Season by path {Path}. (Series={SeriesId},Group={GroupId})", info.Path, series.Id, group.Id);
+                    if (!show.SeasonNumberBaseDictionary.TryGetValue(season, out seasonNumber)) {
+                        Logger.LogWarning("Unable to find season number for Season by path {Path}. (Series={SeriesId},Group={GroupId})", info.Path, season.Id, show.Id);
                         return result;
                     }
 
-                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, group.Shoko.Name, series.Id, group.Id);
+                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, show.Name, season.Id, show.Id);
                 }
                 else {
-                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId})", seasonNumber, series.Shoko.Name, series.Id);
+                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId})", seasonNumber, season.Shoko.Name, season.Id);
                 }
             }
             // New virtual seasons
@@ -149,31 +149,31 @@ namespace Shokofin.Providers
                 seasonNumber = info.IndexNumber.Value;
                 if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {
                     var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
-                    var group = await ApiManager.GetGroupInfoForSeries(seriesId, filterByType);
-                    if (group == null) {
+                    var show = await ApiManager.GetShowInfoForSeries(seriesId, filterByType);
+                    if (show == null) {
                         Logger.LogWarning("Unable to find group info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
                         return result;
                     }
 
-                    series = group.GetSeriesInfoBySeasonNumber(seasonNumber);
-                    if (series == null || !group.SeasonNumberBaseDictionary.TryGetValue(series, out var baseSeasonNumber)) {
-                        Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Group={GroupId})", seasonNumber, group.Id);
+                    season = show.GetSeriesInfoBySeasonNumber(seasonNumber);
+                    if (season == null || !show.SeasonNumberBaseDictionary.TryGetValue(season, out var baseSeasonNumber)) {
+                        Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Group={GroupId})", seasonNumber, show.Id);
                         return result;
                     }
                     offset = Math.Abs(seasonNumber - baseSeasonNumber);
 
-                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, group.Shoko.Name, series.Id, group.Id);
+                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, show.Name, season.Id, show.Id);
                 }
                 else {
-                    series = await ApiManager.GetSeriesInfo(seriesId);
+                    season = await ApiManager.GetSeasonInfoForSeries(seriesId);
                     offset = seasonNumber - 1;
 
-                    if (series == null) {
+                    if (season == null) {
                         Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
                         return result;
                     }
 
-                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId})", seasonNumber, series.Shoko.Name, series.Id);
+                    Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId})", seasonNumber, season.Shoko.Name, season.Id);
                 }
             }
             // Everything else.
@@ -182,27 +182,27 @@ namespace Shokofin.Providers
                 return result;
             }
 
-            result.Item = CreateMetadata(series, seasonNumber, offset, info.MetadataLanguage);
+            result.Item = CreateMetadata(season, seasonNumber, offset, info.MetadataLanguage);
 
             result.HasMetadata = true;
 
             result.ResetPeople();
-            foreach (var person in series.Staff)
+            foreach (var person in season.Staff)
                 result.AddPerson(person);
 
             return result;
         }
 
-        public static Season CreateMetadata(Info.SeriesInfo seriesInfo, int seasonNumber, int offset, string metadataLanguage)
-            => CreateMetadata(seriesInfo, seasonNumber, offset, metadataLanguage, null, Guid.Empty);
+        public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, string metadataLanguage)
+            => CreateMetadata(seasonInfo, seasonNumber, offset, metadataLanguage, null, Guid.Empty);
 
-        public static Season CreateMetadata(Info.SeriesInfo seriesInfo, int seasonNumber, int offset, Series series, System.Guid seasonId)
-            => CreateMetadata(seriesInfo, seasonNumber, offset, series.GetPreferredMetadataLanguage(), series, seasonId);
+        public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, Series series, System.Guid seasonId)
+            => CreateMetadata(seasonInfo, seasonNumber, offset, series.GetPreferredMetadataLanguage(), series, seasonId);
 
-        public static Season CreateMetadata(Info.SeriesInfo seriesInfo, int seasonNumber, int offset, string metadataLanguage, Series series, System.Guid seasonId)
+        public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, string metadataLanguage, Series series, System.Guid seasonId)
         {
-            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(seriesInfo.AniDB.Titles, seriesInfo.Shoko.Name, metadataLanguage);
-            var sortTitle = $"S{seasonNumber} - {seriesInfo.Shoko.Name}";
+            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(seasonInfo.AniDB.Titles, seasonInfo.Shoko.Name, metadataLanguage);
+            var sortTitle = $"S{seasonNumber} - {seasonInfo.Shoko.Name}";
 
             if (offset > 0) {
                 string type = "";
@@ -211,7 +211,7 @@ namespace Shokofin.Providers
                         break;
                     case -1:
                     case 1:
-                        if (seriesInfo.AlternateEpisodesList.Count > 0)
+                        if (seasonInfo.AlternateEpisodesList.Count > 0)
                             type = "Alternate Stories";
                         else
                             type = "Other Episodes";
@@ -235,14 +235,14 @@ namespace Shokofin.Providers
                     ForcedSortName = sortTitle,
                     Id = seasonId,
                     IsVirtualItem = true,
-                    Overview = Text.GetDescription(seriesInfo),
-                    PremiereDate = seriesInfo.AniDB.AirDate,
-                    EndDate = seriesInfo.AniDB.EndDate,
-                    ProductionYear = seriesInfo.AniDB.AirDate?.Year,
-                    Tags = seriesInfo.Tags.ToArray(),
-                    Genres = seriesInfo.Genres.ToArray(),
-                    Studios = seriesInfo.Studios.ToArray(),
-                    CommunityRating = seriesInfo.AniDB.Rating?.ToFloat(10),
+                    Overview = Text.GetDescription(seasonInfo),
+                    PremiereDate = seasonInfo.AniDB.AirDate,
+                    EndDate = seasonInfo.AniDB.EndDate,
+                    ProductionYear = seasonInfo.AniDB.AirDate?.Year,
+                    Tags = seasonInfo.Tags.ToArray(),
+                    Genres = seasonInfo.Genres.ToArray(),
+                    Studios = seasonInfo.Studios.ToArray(),
+                    CommunityRating = seasonInfo.AniDB.Rating?.ToFloat(10),
                     SeriesId = series.Id,
                     SeriesName = series.Name,
                     SeriesPresentationUniqueKey = series.GetPresentationUniqueKey(),
@@ -257,20 +257,20 @@ namespace Shokofin.Providers
                     IndexNumber = seasonNumber,
                     SortName = sortTitle,
                     ForcedSortName = sortTitle,
-                    Overview = Text.GetDescription(seriesInfo),
-                    PremiereDate = seriesInfo.AniDB.AirDate,
-                    EndDate = seriesInfo.AniDB.EndDate,
-                    ProductionYear = seriesInfo.AniDB.AirDate?.Year,
-                    Tags = seriesInfo.Tags.ToArray(),
-                    Genres = seriesInfo.Genres.ToArray(),
-                    Studios = seriesInfo.Studios.ToArray(),
-                    CommunityRating = seriesInfo.AniDB.Rating?.ToFloat(10),
+                    Overview = Text.GetDescription(seasonInfo),
+                    PremiereDate = seasonInfo.AniDB.AirDate,
+                    EndDate = seasonInfo.AniDB.EndDate,
+                    ProductionYear = seasonInfo.AniDB.AirDate?.Year,
+                    Tags = seasonInfo.Tags.ToArray(),
+                    Genres = seasonInfo.Genres.ToArray(),
+                    Studios = seasonInfo.Studios.ToArray(),
+                    CommunityRating = seasonInfo.AniDB.Rating?.ToFloat(10),
                 };
             }
-            season.ProviderIds.Add("Shoko Series", seriesInfo.Id);
+            season.ProviderIds.Add("Shoko Series", seasonInfo.Id);
             season.ProviderIds.Add("Shoko Season Offset", offset.ToString());
             if (Plugin.Instance.Configuration.AddAniDBId)
-                season.ProviderIds.Add("AniDB", seriesInfo.AniDB.Id.ToString());
+                season.ProviderIds.Add("AniDB", seasonInfo.AniDB.Id.ToString());
 
             return season;
         }
@@ -285,22 +285,15 @@ namespace Shokofin.Providers
             return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
         }
 
-        private string GetSeasonName(int seasonNumber, string seasonName)
-        {
-            switch (seasonNumber) {
-                case 127:
-                    return "Misc.";
-                case 126:
-                    return "Credits";
-                case 125:
-                    return "Trailers";
-                case 124:
-                    return "Others";
-                case 123:
-                    return "Unknown";
-                default:
-                    return seasonName;
-            }
-        }
+        private static string GetSeasonName(int seasonNumber, string seasonName)
+            => seasonNumber switch
+            {
+                127 => "Misc.",
+                126 => "Credits",
+                125 => "Trailers",
+                124 => "Others",
+                123 => "Unknown",
+                _ => seasonName,
+            };
     }
 }

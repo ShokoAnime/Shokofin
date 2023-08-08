@@ -255,7 +255,7 @@ public class ShokoAPIClient : IDisposable
 
     public Task<List<Series>> GetSeriesInGroup(string groupID, int filterID = 0)
     {
-        return Get<List<Series>>($"/api/v3/Filter/{filterID}/Group/{groupID}/Series?includeMissing=true&includeIgnored=false&includeDataFrom=AniDB,TvDB");
+        return Get<List<Series>>($"/api/v3/Filter/{filterID}/Group/{groupID}/Series?recursive=false&includeMissing=true&includeIgnored=false&includeDataFrom=AniDB,TvDB");
     }
 
     public Task<List<Role>> GetSeriesCast(string id)
@@ -296,6 +296,11 @@ public class ShokoAPIClient : IDisposable
     public Task<Group> GetGroup(string id)
     {
         return Get<Group>($"/api/v3/Group/{id}");
+    }
+
+    public Task<List<Group>> GetGroupsInGroup(string id)
+    {
+        return Get<List<Group>>($"/api/v3/Group/{id}/Group?includeEmpty=true");
     }
 
     public Task<Group> GetGroupFromSeries(string id)

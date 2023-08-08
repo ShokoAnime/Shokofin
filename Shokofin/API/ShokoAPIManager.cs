@@ -38,11 +38,13 @@ public class ShokoAPIManager : IDisposable
 
     private readonly ConcurrentDictionary<string, List<string>> PathToEpisodeIdsDictionary = new();
 
-    private readonly ConcurrentDictionary<string, (string, string)> PathToFileIdAndSeriesIdDictionary = new();
+    private readonly ConcurrentDictionary<string, (string FileId, string SeriesId)> PathToFileIdAndSeriesIdDictionary = new();
 
     private readonly ConcurrentDictionary<string, string> SeriesIdToPathDictionary = new();
 
-    private readonly ConcurrentDictionary<string, string> SeriesIdToGroupIdDictionary = new();
+    private readonly ConcurrentDictionary<string, (string? GroupId, string DefaultSeriesId)> SeriesIdToGroupIdDictionary = new();
+
+    private readonly ConcurrentDictionary<string, string?> SeriesIdToCollectionIdDictionary = new();
 
     private readonly ConcurrentDictionary<string, string> EpisodeIdToEpisodePathDictionary = new();
 
@@ -61,9 +63,9 @@ public class ShokoAPIManager : IDisposable
         ExpirationScanFrequency = ExpirationScanFrequency,
     });
 
-    private static readonly System.TimeSpan ExpirationScanFrequency = new System.TimeSpan(0, 25, 0);
+    private static readonly TimeSpan ExpirationScanFrequency = new(0, 25, 0);
 
-    private static readonly System.TimeSpan DefaultTimeSpan = new System.TimeSpan(1, 30, 0);
+    private static readonly TimeSpan DefaultTimeSpan = new(1, 30, 0);
 
     #region Ignore rule
 
@@ -170,6 +172,7 @@ public class ShokoAPIManager : IDisposable
         PathToSeriesIdDictionary.Clear();
         NameToSeriesIdDictionary.Clear();
         SeriesIdToGroupIdDictionary.Clear();
+        SeriesIdToCollectionIdDictionary.Clear();
         SeriesIdToPathDictionary.Clear();
     }
 
@@ -199,16 +202,16 @@ public class ShokoAPIManager : IDisposable
     /// Get the tag filter
     /// </summary>
     /// <returns></returns>
-    private ulong GetTagFilter()
+    private static ulong GetTagFilter()
     {
         var config = Plugin.Instance.Configuration;
         ulong filter = 132L; // We exclude genres and source by default
 
-        if (config.HideAniDbTags) filter |= (1 << 0);
-        if (config.HideArtStyleTags) filter |= (1 << 1);
-        if (config.HideMiscTags) filter |= (1 << 3);
-        if (config.HideSettingTags) filter |= (1 << 5);
-        if (config.HideProgrammingTags) filter |= (1 << 6);
+        if (config.HideAniDbTags) filter |= 1 << 0;
+        if (config.HideArtStyleTags) filter |= 1 << 1;
+        if (config.HideMiscTags) filter |= 1 << 3;
+        if (config.HideSettingTags) filter |= 1 << 5;
+        if (config.HideProgrammingTags) filter |= 1 << 6;
 
         return filter;
     }
@@ -285,7 +288,7 @@ public class ShokoAPIManager : IDisposable
     /// <returns>Unique path set for the series</returns>
     public async Task<HashSet<string>> GetPathSetForSeries(string seriesId)
     {
-        var (pathSet, _episodeIds) = await GetPathSetAndLocalEpisodeIdsForSeries(seriesId);
+        var (pathSet, _) = await GetPathSetAndLocalEpisodeIdsForSeries(seriesId);
         return pathSet;
     }
 
@@ -296,7 +299,7 @@ public class ShokoAPIManager : IDisposable
     /// <returns>Local episode ids for the series</returns>
     public HashSet<string> GetLocalEpisodeIdsForSeries(string seriesId)
     {
-        var (_pathSet, episodeIds) = GetPathSetAndLocalEpisodeIdsForSeries(seriesId)
+        var (_, episodeIds) = GetPathSetAndLocalEpisodeIdsForSeries(seriesId)
             .GetAwaiter()
             .GetResult();
         return episodeIds;
@@ -327,15 +330,15 @@ public class ShokoAPIManager : IDisposable
     #endregion
     #region File Info
 
-    public async Task<(FileInfo?, SeriesInfo?, GroupInfo?)> GetFileInfoByPath(string path, Ordering.GroupFilterType? filterGroupByType)
+    public async Task<(FileInfo?, SeasonInfo?, ShowInfo?)> GetFileInfoByPath(string path, Ordering.GroupFilterType? filterGroupByType)
     {
         // Use pointer for fast lookup.
         if (PathToFileIdAndSeriesIdDictionary.ContainsKey(path)) {
             var (fI, sI) = PathToFileIdAndSeriesIdDictionary[path];
             var fileInfo = await GetFileInfo(fI, sI);
-            var seriesInfo = await GetSeriesInfo(sI);
-            var groupInfo = filterGroupByType.HasValue ? await GetGroupInfoForSeries(sI, filterGroupByType.Value) : null;
-            return new(fileInfo, seriesInfo, groupInfo);
+            var seasonInfo = await GetSeasonInfoForSeries(sI);
+            var showInfo = filterGroupByType.HasValue ? await GetShowInfoForSeries(sI, filterGroupByType.Value) : null;
+            return new(fileInfo, seasonInfo, showInfo);
         }
 
         // Strip the path and search for a match.
@@ -374,17 +377,17 @@ public class ShokoAPIManager : IDisposable
             if (!pathSet.Contains(selectedPath))
                 continue;
 
-            // Find the group info.
-            GroupInfo? groupInfo = null;
+            // Find the show info.
+            ShowInfo? showInfo = null;
             if (filterGroupByType.HasValue) {
-                groupInfo =  await GetGroupInfoForSeries(seriesId, filterGroupByType.Value);
-                if (groupInfo == null)
+                showInfo =  await GetShowInfoForSeries(seriesId, filterGroupByType.Value);
+                if (showInfo == null)
                     return (null, null, null);
             }
 
-            // Find the series info.
-            var seriesInfo = await GetSeriesInfo(seriesId);
-            if (seriesInfo == null)
+            // Find the season info.
+            var seasonInfo = await GetSeasonInfoForSeries(seriesId);
+            if (seasonInfo == null)
                 return (null, null, null);
 
             // Find the file info for the series.
@@ -399,7 +402,7 @@ public class ShokoAPIManager : IDisposable
             PathToEpisodeIdsDictionary.TryAdd(path, fileInfo.EpisodeList.Select(episode => episode.Id).ToList());
 
             // Return the result.
-            return new(fileInfo, seriesInfo, groupInfo);
+            return new(fileInfo, seasonInfo, showInfo);
         }
 
         throw new Exception($"Unable to find the series to use for the file. (File={fileId})");
@@ -457,7 +460,7 @@ public class ShokoAPIManager : IDisposable
     public bool TryGetFileIdForPath(string path, out string? fileId)
     {
         if (!string.IsNullOrEmpty(path) && PathToFileIdAndSeriesIdDictionary.TryGetValue(path, out var pair)) {
-            fileId = pair.Item1;
+            fileId = pair.FileId;
             return true;
         }
 
@@ -543,56 +546,56 @@ public class ShokoAPIManager : IDisposable
     }
 
     #endregion
-    #region Series Info
+    #region Season Info
 
-    public async Task<SeriesInfo?> GetSeriesInfoByName(string name)
+    public async Task<SeasonInfo?> GetSeasonInfoBySeriesName(string seriesName)
     {
-        var seriesId = await GetSeriesIdForName(name);
+        var seriesId = await GetSeriesIdForName(seriesName);
         if (string.IsNullOrEmpty(seriesId))
             return null;
 
-        var key = $"series:{seriesId}";
-        if (DataCache.TryGetValue<SeriesInfo>(key, out var seriesInfo)) {
-            Logger.LogTrace("Reusing info object for series {SeriesName}. (Series={SeriesId})", seriesInfo.Shoko.Name, seriesId);
-            return seriesInfo;
+        var key = $"season:{seriesId}";
+        if (DataCache.TryGetValue<SeasonInfo>(key, out var seasonInfo)) {
+            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId);
+            return seasonInfo;
         }
 
         var series = await APIClient.GetSeries(seriesId);
         return await CreateSeriesInfo(series, seriesId);
     }
 
-    public async Task<SeriesInfo?> GetSeriesInfoByPath(string path)
+    public async Task<SeasonInfo?> GetSeasonInfoByPath(string path)
     {
         var seriesId = await GetSeriesIdForPath(path);
         if (string.IsNullOrEmpty(seriesId))
             return null;
 
-        var key = $"series:{seriesId}";
-        if (DataCache.TryGetValue<SeriesInfo>(key, out var seriesInfo)) {
-            Logger.LogTrace("Reusing info object for series {SeriesName}. (Series={SeriesId})", seriesInfo.Shoko.Name, seriesId);
-            return seriesInfo;
+        var key = $"season:{seriesId}";
+        if (DataCache.TryGetValue<SeasonInfo>(key, out var seasonInfo)) {
+            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId);
+            return seasonInfo;
         }
 
         var series = await APIClient.GetSeries(seriesId);
         return await CreateSeriesInfo(series, seriesId);
     }
 
-    public async Task<SeriesInfo?> GetSeriesInfo(string seriesId)
+    public async Task<SeasonInfo?> GetSeasonInfoForSeries(string seriesId)
     {
         if (string.IsNullOrEmpty(seriesId))
             return null;
 
-        var cachedKey = $"series:{seriesId}";
-        if (DataCache.TryGetValue<SeriesInfo>(cachedKey, out var seriesInfo)) {
-            Logger.LogTrace("Reusing info object for series {SeriesName}. (Series={SeriesId})", seriesInfo.Shoko.Name, seriesId);
-            return seriesInfo;
+        var cachedKey = $"season:{seriesId}";
+        if (DataCache.TryGetValue<SeasonInfo>(cachedKey, out var seasonInfo)) {
+            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId);
+            return seasonInfo;
         }
 
         var series = await APIClient.GetSeries(seriesId);
         return await CreateSeriesInfo(series, seriesId);
     }
 
-    public async Task<SeriesInfo?> GetSeriesInfoForEpisode(string episodeId)
+    public async Task<SeasonInfo?> GetSeasonInfoForEpisode(string episodeId)
     {
         if (!EpisodeIdToSeriesIdDictionary.TryGetValue(episodeId, out var seriesId)) {
             var series = await APIClient.GetSeriesFromEpisode(episodeId);
@@ -602,18 +605,18 @@ public class ShokoAPIManager : IDisposable
             return await CreateSeriesInfo(series, seriesId);
         }
 
-        return await GetSeriesInfo(seriesId);
+        return await GetSeasonInfoForSeries(seriesId);
     }
 
-    private async Task<SeriesInfo> CreateSeriesInfo(Series series, string seriesId)
+    private async Task<SeasonInfo> CreateSeriesInfo(Series series, string seriesId)
     {
-        var cacheKey = $"series:{seriesId}";
-        if (DataCache.TryGetValue<SeriesInfo>(cacheKey, out var seriesInfo)) {
-            Logger.LogTrace("Reusing info object for series {SeriesName}. (Series={SeriesId})", seriesInfo.Shoko.Name, seriesId);
-            return seriesInfo;
+        var cacheKey = $"season:{seriesId}";
+        if (DataCache.TryGetValue<SeasonInfo>(cacheKey, out var seasonInfo)) {
+            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId);
+            return seasonInfo;
         }
 
-        Logger.LogTrace("Creating info object for series {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
+        Logger.LogTrace("Creating info object for season {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
 
         var episodes = (await APIClient.GetEpisodesFromSeries(seriesId) ?? new()).List
             .Select(e => CreateEpisodeInfo(e, e.IDs.Shoko.ToString()))
@@ -624,13 +627,16 @@ public class ShokoAPIManager : IDisposable
         var genres = await GetGenresForSeries(seriesId);
         var tags = await GetTagsForSeries(seriesId);
 
-        seriesInfo = new SeriesInfo(series, episodes, cast, relations, genres, tags);
+        seasonInfo = new SeasonInfo(series, episodes, cast, relations, genres, tags);
 
         foreach (var episode in episodes)
             EpisodeIdToSeriesIdDictionary[episode.Id] = seriesId;
-        DataCache.Set<SeriesInfo>(cacheKey, seriesInfo, DefaultTimeSpan);
-        return seriesInfo;
+        DataCache.Set<SeasonInfo>(cacheKey, seasonInfo, DefaultTimeSpan);
+        return seasonInfo;
     }
+
+    #endregion
+    #region Series Helpers
 
     public bool TryGetSeriesIdForPath(string path, out string? seriesId)
     {
@@ -650,13 +656,16 @@ public class ShokoAPIManager : IDisposable
         return SeriesIdToPathDictionary.TryGetValue(seriesId, out path);
     }
 
-    public bool TryGetGroupIdForSeriesId(string seriesId, out string? groupId)
+    public bool TryGetGroupIdForSeriesId(string seriesId, out string? groupId, out string? defaultSeriesId)
     {
-        if (string.IsNullOrEmpty(seriesId)) {
+        if (string.IsNullOrEmpty(seriesId) || !SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var tuple)) {
             groupId = null;
+            defaultSeriesId = null;
             return false;
         }
-        return SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out groupId);
+        groupId = tuple.GroupId;
+        defaultSeriesId = tuple.DefaultSeriesId;
+        return true;
     }
 
     private async Task<string?> GetSeriesIdForName(string name)
@@ -665,7 +674,7 @@ public class ShokoAPIManager : IDisposable
         if (NameToSeriesIdDictionary.TryGetValue(name, out var seriesId))
             return seriesId;
 
-        Logger.LogDebug("Looking for series matching name {Name}", name);
+        Logger.LogDebug("Looking for shoko series matching name {Name}", name);
         var series = await APIClient.GetSeriesByName(name);
         Logger.LogTrace("Found {Count} exact matches for name {Name}", series == null ? 0 : 1, name);
         if (series == null)
@@ -684,7 +693,7 @@ public class ShokoAPIManager : IDisposable
             return seriesId;
 
         var partialPath = StripMediaFolder(path);
-        Logger.LogDebug("Looking for series matching path {Path}", partialPath);
+        Logger.LogDebug("Looking for shoko series matching path {Path}", partialPath);
         var result = await APIClient.GetSeriesPathEndsWith(partialPath);
         Logger.LogTrace("Found {Count} matches for path {Path}", result.Count, partialPath);
 
@@ -713,40 +722,16 @@ public class ShokoAPIManager : IDisposable
     }
 
     #endregion
-    #region Group Info
+    #region Show Info
 
-    public async Task<GroupInfo?> GetGroupInfoBySeriesName(string seriesName, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
-    {
-        if (NameToSeriesIdDictionary.TryGetValue(seriesName, out var seriesId)) {
-            if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
-                if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var groupInfo)) {
-                    Logger.LogTrace("Reusing info object for group {GroupName}. (Series={seriesId},Group={GroupId})", groupInfo.Shoko.Name, seriesId, groupId);
-                    return groupInfo;
-                }
-
-                return await GetGroupInfo(groupId, filterByType);
-            }
-        }
-        else
-        {
-            seriesId = await GetSeriesIdForName(seriesName);
-            if (string.IsNullOrEmpty(seriesId))
-                return null;
-        }
-
-        return await GetGroupInfoForSeries(seriesId, filterByType);
-    }
-
-    public async Task<GroupInfo?> GetGroupInfoByPath(string path, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    public async Task<ShowInfo?> GetShowInfoByPath(string path, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
     {
         if (PathToSeriesIdDictionary.TryGetValue(path, out var seriesId)) {
-            if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
-                if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var groupInfo)) {
-                    Logger.LogTrace("Reusing info object for group {GroupName}. (Series={seriesId},Group={GroupId})", groupInfo.Shoko.Name, seriesId, groupId);
-                    return groupInfo;
-                }
+            if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var tuple)) {
+                if (string.IsNullOrEmpty(tuple.GroupId))
+                    return await GetOrCreateShowInfoForStandaloneSeries(seriesId, filterByType);
 
-                return await GetGroupInfo(groupId, filterByType);
+                return await GetShowInfoForGroup(tuple.GroupId, filterByType);
             }
         }
         else
@@ -756,54 +741,55 @@ public class ShokoAPIManager : IDisposable
                 return null;
         }
 
-        return await GetGroupInfoForSeries(seriesId, filterByType);
+        return await GetShowInfoForSeries(seriesId, filterByType);
     }
 
-    public async Task<GroupInfo?> GetGroupInfo(string groupId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
-    {
-        if (string.IsNullOrEmpty(groupId))
-            return null;
-
-        if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var groupInfo)) {
-            Logger.LogTrace("Reusing info object for group {GroupName}. (Group={GroupId})", groupInfo.Shoko.Name, groupId);
-            return groupInfo;
-        }
-
-        var group = await APIClient.GetGroup(groupId);
-        return await CreateGroupInfo(group, groupId, filterByType);
-    }
-
-    public async Task<GroupInfo?> GetGroupInfoForSeries(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    public async Task<ShowInfo?> GetShowInfoForSeries(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
     {
         if (string.IsNullOrEmpty(seriesId))
             return null;
 
-        if (!SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var groupId)) {
-            var group = await APIClient.GetGroupFromSeries(seriesId);
-            if (group == null)
-                return null;
+        if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var tuple)) {
+            if (string.IsNullOrEmpty(tuple.GroupId))
+                return await GetOrCreateShowInfoForStandaloneSeries(seriesId, filterByType);
 
-            groupId = group.IDs.Shoko.ToString();
-            if (DataCache.TryGetValue<GroupInfo>($"group:{filterByType}:{groupId}", out var groupInfo)) {
-                Logger.LogTrace("Reusing info object for group {GroupName}. (Series={SeriesId},Group={GroupId})", groupInfo.Shoko.Name, seriesId, groupId);   
-                return groupInfo;
-            }
-
-            return await CreateGroupInfo(group, groupId, filterByType);
+            return await GetShowInfoForGroup(tuple.GroupId, filterByType);
         }
 
-        return await GetGroupInfo(groupId, filterByType);
+        var group = await APIClient.GetGroupFromSeries(seriesId);
+        if (group == null)
+            return null;
+
+        // Create a standalone group for each series in a group with sub-groups.
+        if (group.Sizes.SubGroups > 0)
+            return await GetOrCreateShowInfoForStandaloneSeries(seriesId, filterByType);
+
+        return await CreateShowInfo(group, group.IDs.Shoko.ToString(), filterByType);
     }
 
-    private async Task<GroupInfo> CreateGroupInfo(Group group, string groupId, Ordering.GroupFilterType filterByType)
+    private async Task<ShowInfo?> GetShowInfoForGroup(string groupId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
     {
-        var cacheKey = $"group:{filterByType}:{groupId}";
-        if (DataCache.TryGetValue<GroupInfo>(cacheKey, out var groupInfo)) {
-            Logger.LogTrace("Reusing info object for group {GroupName}. (Group={GroupId})", groupInfo.Shoko.Name, groupId);   
-            return groupInfo;
+        if (string.IsNullOrEmpty(groupId))
+            return null;
+
+        if (DataCache.TryGetValue<ShowInfo>($"show:{filterByType}:by-group-id:{groupId}", out var showInfo)) {
+            Logger.LogTrace("Reusing info object for show {GroupName}. (Group={GroupId})", showInfo.Name, groupId);
+            return showInfo;
         }
 
-        Logger.LogTrace("Creating info object for group {GroupName}. (Group={GroupId})", group.Name, groupId);
+        var group = await APIClient.GetGroup(groupId);
+        return await CreateShowInfo(group, groupId, filterByType);
+    }
+
+    private async Task<ShowInfo> CreateShowInfo(Group group, string groupId, Ordering.GroupFilterType filterByType)
+    {
+        var cacheKey = $"show:{filterByType}:by-group-id:{groupId}";
+        if (DataCache.TryGetValue<ShowInfo>(cacheKey, out var showInfo)) {
+            Logger.LogTrace("Reusing info object for show {GroupName}. (Group={GroupId})", showInfo.Name, groupId);   
+            return showInfo;
+        }
+
+        Logger.LogTrace("Creating info object for show {GroupName}. (Group={GroupId})", group.Name, groupId);
 
         var seriesList = (await APIClient.GetSeriesInGroup(groupId)
             .ContinueWith(task => Task.WhenAll(task.Result.Select(s => CreateSeriesInfo(s, s.IDs.Shoko.ToString()))))
@@ -813,20 +799,177 @@ public class ShokoAPIManager : IDisposable
 
         // Return early if no series matched the filter or if the list was empty.
         if (seriesList.Count == 0) {
-            Logger.LogWarning("Creating an empty group info for filter {Filter}! (Group={GroupId})", filterByType.ToString(), groupId);
+            Logger.LogWarning("Creating an empty show info for filter {Filter}! (Group={GroupId})", filterByType.ToString(), groupId);
 
-            groupInfo = new GroupInfo(group);
+            showInfo = new ShowInfo(group);
 
-            DataCache.Set<GroupInfo>(cacheKey, groupInfo, DefaultTimeSpan);
-            return groupInfo;
+            DataCache.Set<ShowInfo>(cacheKey, showInfo, DefaultTimeSpan);
+            return showInfo;
         }
 
-        groupInfo = new GroupInfo(group, seriesList, filterByType, Logger);
+        showInfo = new ShowInfo(group, seriesList, filterByType, Logger);
 
         foreach (var series in seriesList)
-            SeriesIdToGroupIdDictionary[series.Id] = groupId;
-        DataCache.Set<GroupInfo>(cacheKey, groupInfo, DefaultTimeSpan);
-        return groupInfo;
+            SeriesIdToGroupIdDictionary[series.Id] = (groupId, showInfo.DefaultSeason!.Id);
+        DataCache.Set<ShowInfo>(cacheKey, showInfo, DefaultTimeSpan);
+        return showInfo;
+    }
+
+    private async Task<ShowInfo?> GetOrCreateShowInfoForStandaloneSeries(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    {
+        var cacheKey = $"show:{filterByType}:by-series-id:{seriesId}";
+        if (DataCache.TryGetValue<ShowInfo>(cacheKey, out var showInfo)) {
+            Logger.LogTrace("Reusing info object for show {GroupName}. (Series={SeriesId})", showInfo.Name, seriesId);
+            return showInfo;
+        }
+
+        var seasonInfo = await GetSeasonInfoForSeries(seriesId);
+        if (seasonInfo == null)
+            return null;
+
+        var shouldAbort = filterByType switch {
+            Ordering.GroupFilterType.Movies => seasonInfo.AniDB.Type != SeriesType.Movie,
+            Ordering.GroupFilterType.Others => seasonInfo.AniDB.Type == SeriesType.Movie,
+            _ => false,
+        };
+        if (shouldAbort) {
+            Logger.LogWarning("Creating an empty show info for filter {Filter}! (Series={SeriesId})", filterByType.ToString(), seriesId);
+
+            showInfo = new ShowInfo(seasonInfo.Shoko);
+
+            DataCache.Set<ShowInfo>(cacheKey, showInfo, DefaultTimeSpan);
+            return showInfo;
+        }
+
+        showInfo = new ShowInfo(seasonInfo);
+        SeriesIdToGroupIdDictionary[seriesId] = (null, seriesId);
+        DataCache.Set<ShowInfo>(cacheKey, showInfo, DefaultTimeSpan);
+        return showInfo;
+    }
+
+    #endregion
+    #region Collection Info
+
+    public async Task<CollectionInfo?> GetCollectionInfoByPath(string path, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    {
+        if (PathToSeriesIdDictionary.TryGetValue(path, out var seriesId)) {
+            if (SeriesIdToCollectionIdDictionary.TryGetValue(seriesId, out var groupId)) {
+                if (string.IsNullOrEmpty(groupId))
+                    return null;
+
+                return await GetCollectionInfoForGroup(groupId, filterByType);
+            }
+        }
+        else
+        {
+            seriesId = await GetSeriesIdForPath(path);
+            if (string.IsNullOrEmpty(seriesId))
+                return null;
+        }
+
+        return await GetCollectionInfoForGroup(seriesId, filterByType);
+    }
+
+    public async Task<CollectionInfo?> GetCollectionInfoBySeriesName(string seriesName, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    {
+        if (NameToSeriesIdDictionary.TryGetValue(seriesName, out var seriesId)) {
+            if (SeriesIdToCollectionIdDictionary.TryGetValue(seriesId, out var groupId)) {
+                if (string.IsNullOrEmpty(groupId))
+                    return null;
+
+                return await GetCollectionInfoForGroup(groupId, filterByType);
+            }
+        }
+        else
+        {
+            seriesId = await GetSeriesIdForName(seriesName);
+            if (string.IsNullOrEmpty(seriesId))
+                return null;
+        }
+
+        return await GetCollectionInfoForSeries(seriesId, filterByType);
+    }
+
+    public async Task<CollectionInfo?> GetCollectionInfoForGroup(string groupId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    {
+        if (string.IsNullOrEmpty(groupId))
+            return null;
+
+        if (DataCache.TryGetValue<CollectionInfo>($"collection:{filterByType}:by-group-id:{groupId}", out var seasonInfo)) {
+            Logger.LogTrace("Reusing info object for collection {GroupName}. (Group={GroupId})", seasonInfo.Name, groupId);
+            return seasonInfo;
+        }
+
+        var group = await APIClient.GetGroup(groupId);
+        return await CreateCollectionInfo(group, groupId, filterByType);
+    }
+
+    public async Task<CollectionInfo?> GetCollectionInfoForSeries(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    {
+        if (string.IsNullOrEmpty(seriesId))
+            return null;
+
+        if (SeriesIdToCollectionIdDictionary.TryGetValue(seriesId, out var groupId)) {
+            if (string.IsNullOrEmpty(groupId))
+                return null;
+
+            return await GetCollectionInfoForGroup(groupId, filterByType);
+        }
+
+        var group = await APIClient.GetGroupFromSeries(seriesId);
+        if (group == null)
+            return null;
+
+        return await CreateCollectionInfo(group, group.IDs.Shoko.ToString(), filterByType);
+    }
+
+    private async Task<CollectionInfo?> CreateCollectionInfo(Group group, string groupId, Ordering.GroupFilterType filterByType)
+    {
+        // Only create a collection 
+        if (group.Sizes.SubGroups == 0)
+            return null;
+
+        var cacheKey = $"collection:{filterByType}:by-group-id:{groupId}";
+        if (DataCache.TryGetValue<CollectionInfo>(cacheKey, out var collectionInfo)) {
+            Logger.LogTrace("Reusing info object for collection {GroupName}. (Group={GroupId})", collectionInfo.Name, groupId);   
+            return collectionInfo;
+        }
+
+        Logger.LogTrace("Creating info object for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
+
+        var groups = await APIClient.GetGroupsInGroup(groupId);
+        var multiSeasonShows = await Task.WhenAll(groups
+                    .Where(group => group.Sizes.SubGroups == 0)
+                    .Select(group => CreateShowInfo(group, group.IDs.Shoko.ToString(groupId), filterByType)));
+        var singleSeasonShows = (await APIClient.GetSeriesInGroup(groupId)
+            .ContinueWith(task => Task.WhenAll(task.Result.Select(s => GetOrCreateShowInfoForStandaloneSeries(s.IDs.Shoko.ToString(), filterByType))))
+            .Unwrap())
+            .OfType<ShowInfo>()
+            .ToList();
+        var showList = multiSeasonShows.Concat(singleSeasonShows).ToList();
+        var groupList = groups
+            .Where(group => group.Sizes.SubGroups > 0)
+            .Select(s => CreateCollectionInfo(s, s.IDs.Shoko.ToString(), filterByType))
+            .OfType<CollectionInfo>()
+            .ToList();
+
+        // Return early if no series matched the filter or if the list was empty.
+        if (showList.Count == 0 && groupList.Count == 0) {
+            Logger.LogWarning("Creating an empty collection info for filter {Filter}! (Group={GroupId})", filterByType.ToString(), groupId);
+
+            collectionInfo = new CollectionInfo(group);
+
+            DataCache.Set<CollectionInfo>(cacheKey, collectionInfo, DefaultTimeSpan);
+            return collectionInfo;
+        }
+
+        collectionInfo = new CollectionInfo(group, showList, groupList, filterByType);
+
+        foreach (var showInfo in showList)
+            foreach (var seasonInfo in showInfo.SeasonList)
+                SeriesIdToCollectionIdDictionary[seasonInfo.Id] = groupId;
+        DataCache.Set<CollectionInfo>(cacheKey, collectionInfo, DefaultTimeSpan);
+        return collectionInfo;
     }
 
     #endregion

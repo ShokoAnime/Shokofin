@@ -8,7 +8,7 @@ using PersonType = MediaBrowser.Model.Entities.PersonType;
 #nullable enable
 namespace Shokofin.API.Info;
 
-public class SeriesInfo
+public class SeasonInfo
 {
     public string Id;
 
@@ -84,7 +84,7 @@ public class SeriesInfo
     /// </summary>
     public Dictionary<string, RelationType> RelationMap;
 
-    public SeriesInfo(Series series, List<EpisodeInfo> episodes, List<Role> cast, List<Relation> relations, string[] genres, string[] tags)
+    public SeasonInfo(Series series, List<EpisodeInfo> episodes, List<Role> cast, List<Relation> relations, string[] genres, string[] tags)
     {
         var seriesId = series.IDs.Shoko.ToString();
         var studios = cast
@@ -160,59 +160,55 @@ public class SeriesInfo
         RelationMap = relationMap;
     }
 
-    private string? GetImagePath(Image image)
-    {
-        return image != null && image.IsAvailable ? image.ToURLString() : null;
-    }
+    private static string? GetImagePath(Image image)
+        => image != null && image.IsAvailable ? image.ToURLString() : null;
 
-    private PersonInfo? RoleToPersonInfo(Role role)
-    {
-        switch (role.Type) {
-                default:
-                    return null;
-                case CreatorRoleType.Director:
-                    return new PersonInfo {
-                        Type = PersonType.Director,
-                        Name = role.Staff.Name,
-                        Role = role.Name,
-                        ImageUrl = GetImagePath(role.Staff.Image),
-                    };
-                case CreatorRoleType.Producer:
-                    return new PersonInfo {
-                        Type = PersonType.Producer,
-                        Name = role.Staff.Name,
-                        Role = role.Name,
-                        ImageUrl = GetImagePath(role.Staff.Image),
-                    };
-                case CreatorRoleType.Music:
-                    return new PersonInfo {
-                        Type = PersonType.Lyricist,
-                        Name = role.Staff.Name,
-                        Role = role.Name,
-                        ImageUrl = GetImagePath(role.Staff.Image),
-                    };
-                case CreatorRoleType.SourceWork:
-                    return new PersonInfo {
-                        Type = PersonType.Writer,
-                        Name = role.Staff.Name,
-                        Role = role.Name,
-                        ImageUrl = GetImagePath(role.Staff.Image),
-                    };
-                case CreatorRoleType.SeriesComposer:
-                    return new PersonInfo {
-                        Type = PersonType.Composer,
-                        Name = role.Staff.Name,
-                        ImageUrl = GetImagePath(role.Staff.Image),
-                    };
-                case CreatorRoleType.Seiyuu:
-                    return new PersonInfo {
-                        Type = PersonType.Actor,
-                        Name = role.Staff.Name,
-                        // The character will always be present if the role is a VA.
-                        // We make it a conditional check since otherwise will the compiler complain.
-                        Role = role.Character?.Name ?? "",
-                        ImageUrl = GetImagePath(role.Staff.Image),
-                    };
-            }
-    }
+    private static PersonInfo? RoleToPersonInfo(Role role)
+        => role.Type switch
+        {
+            CreatorRoleType.Director => new PersonInfo
+            {
+                Type = PersonType.Director,
+                Name = role.Staff.Name,
+                Role = role.Name,
+                ImageUrl = GetImagePath(role.Staff.Image),
+            },
+            CreatorRoleType.Producer => new PersonInfo
+            {
+                Type = PersonType.Producer,
+                Name = role.Staff.Name,
+                Role = role.Name,
+                ImageUrl = GetImagePath(role.Staff.Image),
+            },
+            CreatorRoleType.Music => new PersonInfo
+            {
+                Type = PersonType.Lyricist,
+                Name = role.Staff.Name,
+                Role = role.Name,
+                ImageUrl = GetImagePath(role.Staff.Image),
+            },
+            CreatorRoleType.SourceWork => new PersonInfo
+            {
+                Type = PersonType.Writer,
+                Name = role.Staff.Name,
+                Role = role.Name,
+                ImageUrl = GetImagePath(role.Staff.Image),
+            },
+            CreatorRoleType.SeriesComposer => new PersonInfo
+            {
+                Type = PersonType.Composer,
+                Name = role.Staff.Name,
+                ImageUrl = GetImagePath(role.Staff.Image),
+            },
+            CreatorRoleType.Seiyuu => new PersonInfo
+            {
+                Type = PersonType.Actor,
+                Name = role.Staff.Name,
+                // The character will always be present if the role is a VA.
+                // We make it a conditional check since otherwise will the compiler complain.
+                Role = role.Character?.Name ?? "",
+                ImageUrl = GetImagePath(role.Staff.Image),
+            },
+            _ => null,
+        };
 }

@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Utils;
 
+#nullable enable
 namespace Shokofin.Providers
 {
     public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>
@@ -34,142 +35,118 @@ namespace Shokofin.Providers
         public async Task<MetadataResult<BoxSet>> GetMetadata(BoxSetInfo info, CancellationToken cancellationToken)
         {
             try {
-                switch (Plugin.Instance.Configuration.BoxSetGrouping) {
-                    default:
-                        return await GetDefaultMetadata(info, cancellationToken);
-                    case Ordering.GroupType.ShokoGroup:
-                        return await GetShokoGroupedMetadata(info, cancellationToken);
-                }
+                return Plugin.Instance.Configuration.BoxSetGrouping switch
+                {
+                    Ordering.GroupType.ShokoGroup => await GetShokoGroupedMetadata(info),
+                    _ => await GetDefaultMetadata(info),
+                };
             }
             catch (Exception ex) {
-                Logger.LogError(ex, $"Threw unexpectedly; {ex.Message}");
+                Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
                 Plugin.Instance.CaptureException(ex);
                 return new MetadataResult<BoxSet>();
             }
         }
 
-        public async Task<MetadataResult<BoxSet>> GetDefaultMetadata(BoxSetInfo info, CancellationToken cancellationToken)
+        public async Task<MetadataResult<BoxSet>> GetDefaultMetadata(BoxSetInfo info)
         {
             var result = new MetadataResult<BoxSet>();
 
             // First try to re-use any existing series id.
-            API.Info.SeriesInfo series = null;
+            API.Info.SeasonInfo? season = null;
             if (info.ProviderIds.TryGetValue("Shoko Series", out var seriesId))
-                series = await ApiManager.GetSeriesInfo(seriesId);
+                season = await ApiManager.GetSeasonInfoForSeries(seriesId);
 
             // Then try to look ir up by path.
-            if (series == null)
-                series = await ApiManager.GetSeriesInfoByPath(info.Path);
+            if (season == null)
+                season = await ApiManager.GetSeasonInfoByPath(info.Path);
 
             // Then try to look it up using the name.
-            if (series == null) {
-                var boxSetName = GetBoxSetName(info);
-                if (boxSetName != null)
-                    series = await ApiManager.GetSeriesInfoByName(boxSetName);
-            }
+            if (season == null && TryGetBoxSetName(info, out var boxSetName))
+                season = await ApiManager.GetSeasonInfoBySeriesName(boxSetName);
 
-            if (series == null) {
+            if (season == null) {
                     Logger.LogWarning("Unable to find movie box-set info for name {Name} and path {Path}", info.Name, info.Path);
                 return result;
             }
 
-            if (series.EpisodeList.Count <= 1) {
-                Logger.LogWarning("Series did not contain multiple movies! Skipping path {Path} (Series={SeriesId})", info.Path, series.Id);
+            if (season.EpisodeList.Count <= 1) {
+                Logger.LogWarning("Series did not contain multiple movies! Skipping path {Path} (Series={SeriesId})", info.Path, season.Id);
                 return result;
             }
 
-            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.AniDB.Title, info.MetadataLanguage);
+            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(season.AniDB.Titles, season.AniDB.Title, info.MetadataLanguage);
 
             result.Item = new BoxSet {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
-                Overview = Text.GetDescription(series),
-                PremiereDate = series.AniDB.AirDate,
-                EndDate = series.AniDB.EndDate,
-                ProductionYear = series.AniDB.AirDate?.Year,
-                Tags = series.Tags.ToArray(),
-                CommunityRating = series.AniDB.Rating.ToFloat(10),
+                Overview = Text.GetDescription(season),
+                PremiereDate = season.AniDB.AirDate,
+                EndDate = season.AniDB.EndDate,
+                ProductionYear = season.AniDB.AirDate?.Year,
+                Tags = season.Tags.ToArray(),
+                CommunityRating = season.AniDB.Rating.ToFloat(10),
             };
-            result.Item.SetProviderId("Shoko Series", series.Id);
+            result.Item.SetProviderId("Shoko Series", season.Id);
             if (Plugin.Instance.Configuration.AddAniDBId)
-                result.Item.SetProviderId("AniDB", series.AniDB.Id.ToString());
+                result.Item.SetProviderId("AniDB", season.AniDB.Id.ToString());
 
             result.HasMetadata = true;
 
             return result;
         }
 
-        private async Task<MetadataResult<BoxSet>> GetShokoGroupedMetadata(BoxSetInfo info, CancellationToken cancellationToken)
+        private async Task<MetadataResult<BoxSet>> GetShokoGroupedMetadata(BoxSetInfo info)
         {
             var result = new MetadataResult<BoxSet>();
             var config = Plugin.Instance.Configuration;
             Ordering.GroupFilterType filterByType = config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Movies : Ordering.GroupFilterType.Default;
 
             // First try to re-use any existing group id.
-            API.Info.GroupInfo group = null;
+            API.Info.CollectionInfo? collection = null;
             if (info.ProviderIds.TryGetValue("Shoko Group", out var groupId))
-                group = await ApiManager.GetGroupInfo(groupId, filterByType);
+                collection = await ApiManager.GetCollectionInfoForGroup(groupId, filterByType);
 
-            // Then try to look ir up by path.
-            if (group == null)
-                group = await ApiManager.GetGroupInfoByPath(info.Path, filterByType);
+            // Then try to look it up by path.
+            if (collection == null)
+                collection = await ApiManager.GetCollectionInfoByPath(info.Path, filterByType);
 
             // Then try to look it up using the name.
-            if (group == null) {
-                var boxSetName = GetBoxSetName(info);
-                if (boxSetName != null)
-                    group = await ApiManager.GetGroupInfoBySeriesName(boxSetName, filterByType);
-            }
+            if (collection == null && TryGetBoxSetName(info, out var boxSetName))
+                collection = await ApiManager.GetCollectionInfoBySeriesName(boxSetName, filterByType);
 
-            if (group == null) {
-                    Logger.LogWarning("Unable to find movie box-set info for name {Name} and path {Path}", info.Name, info.Path);
+            if (collection == null) {
+                Logger.LogWarning("Unable to find collection info for name {Name} and path {Path}", info.Name, info.Path);
                 return result;
             }
-
-            var series = group.DefaultSeries;
-
-            if (group.SeriesList.Count <= 1 && series.EpisodeList.Count <= 1 && series.AlternateEpisodesList.Count == 0) {
-                Logger.LogWarning("Group did not contain multiple movies! Skipping path {Path} (Series={SeriesId},Group={GroupId})", info.Path, group.Id, series.Id);
-                return result;
-            }
-            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, series.Shoko.Name, info.MetadataLanguage);
 
             result.Item = new BoxSet {
-                Name = displayTitle,
-                OriginalTitle = alternateTitle,
-                Overview = Text.GetDescription(series),
-                PremiereDate = series.AniDB.AirDate,
-                EndDate = series.AniDB.EndDate,
-                ProductionYear = series.AniDB.AirDate?.Year,
-                Tags = group.Tags.ToArray(),
-                CommunityRating = (float)((series.AniDB.Rating.Value * 10) / series.AniDB.Rating.MaxValue)
+                Name = collection.Name,
+                Overview = collection.Shoko.Description,
             };
-            result.Item.SetProviderId("Shoko Series", series.Id);
-            result.Item.SetProviderId("Shoko Group", group.Id);
-            if (config.AddAniDBId)
-                result.Item.SetProviderId("AniDB", series.AniDB.Id.ToString());
-
+            result.Item.SetProviderId("Shoko Group", collection.Id);
             result.HasMetadata = true;
-
-            result.ResetPeople();
-            foreach (var person in series.Staff)
-                result.AddPerson(person);
 
             return result;
         }
 
-        private static string GetBoxSetName(BoxSetInfo info)
+        private static bool TryGetBoxSetName(BoxSetInfo info, out string boxSetName)
         {
-            if (string.IsNullOrWhiteSpace(info.Name))
-                return null;
+            if (string.IsNullOrWhiteSpace(info.Name)) {
+                boxSetName = string.Empty;
+                return false;
+            }
 
             var name = info.Name.Trim();
             if (name.EndsWith("[boxset]"))
                 name = name[..^8].TrimEnd();
-            if (string.IsNullOrWhiteSpace(name))
-                return null;
+            if (string.IsNullOrWhiteSpace(name)) {
+                boxSetName = string.Empty;
+                return false;
+            }
 
-            return name;
+            boxSetName = name;
+            return true;
         }
 
         public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(BoxSetInfo searchInfo, CancellationToken cancellationToken)

@@ -23,17 +23,14 @@ namespace Shokofin.Providers
 
         private readonly ILogger<SeriesProvider> Logger;
 
-        private readonly ShokoAPIClient ApiClient;
-
         private readonly ShokoAPIManager ApiManager;
 
         private readonly IFileSystem FileSystem;
 
-        public SeriesProvider(IHttpClientFactory httpClientFactory, ILogger<SeriesProvider> logger, ShokoAPIClient apiClient, ShokoAPIManager apiManager, IFileSystem fileSystem)
+        public SeriesProvider(IHttpClientFactory httpClientFactory, ILogger<SeriesProvider> logger, ShokoAPIManager apiManager, IFileSystem fileSystem)
         {
             Logger = logger;
             HttpClientFactory = httpClientFactory;
-            ApiClient = apiClient;
             ApiManager = apiManager;
             FileSystem = fileSystem;
         }
@@ -41,140 +38,139 @@ namespace Shokofin.Providers
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             try {
-                switch (Plugin.Instance.Configuration.SeriesGrouping) {
-                    default:
-                        return await GetDefaultMetadata(info, cancellationToken);
-                    case Ordering.GroupType.ShokoGroup:
-                        return await GetShokoGroupedMetadata(info, cancellationToken);
-                }
+                return Plugin.Instance.Configuration.SeriesGrouping switch
+                {
+                    Ordering.GroupType.ShokoGroup => await GetShokoGroupedMetadata(info),
+                    _ => await GetDefaultMetadata(info),
+                };
             }
             catch (Exception ex) {
-                Logger.LogError(ex, $"Threw unexpectedly; {ex.Message}");
+                Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
                 Plugin.Instance.CaptureException(ex);
                 return new MetadataResult<Series>();
             }
         }
 
-        private async Task<MetadataResult<Series>> GetDefaultMetadata(SeriesInfo info, CancellationToken cancellationToken)
+        private async Task<MetadataResult<Series>> GetDefaultMetadata(SeriesInfo info)
         {
             var result = new MetadataResult<Series>();
-            var series = await ApiManager.GetSeriesInfoByPath(info.Path);
-            if (series == null) {
+            var season = await ApiManager.GetSeasonInfoByPath(info.Path);
+            if (season == null) {
                 // Look for the "season" directories to probe for the series information
                 var entries = FileSystem.GetDirectories(info.Path, false);
                 foreach (var entry in entries) {
-                    series = await ApiManager.GetSeriesInfoByPath(entry.FullName);
-                    if (series != null)
+                    season = await ApiManager.GetSeasonInfoByPath(entry.FullName);
+                    if (season != null)
                         break;
                 }
-                if (series == null) {
+                if (season == null) {
                     Logger.LogWarning("Unable to find series info for path {Path}", info.Path);
                     return result;
                 }
             }
 
-            var mergeFriendly = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly && series.TvDB != null;
+            var mergeFriendly = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly && season.TvDB != null;
 
-            var defaultSeriesTitle = mergeFriendly ? series.TvDB.Title : series.Shoko.Name;
-            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, defaultSeriesTitle, info.MetadataLanguage);
-            Logger.LogInformation("Found series {SeriesName} (Series={SeriesId})", displayTitle, series.Id);
+            var defaultSeriesTitle = mergeFriendly ? season.TvDB.Title : season.Shoko.Name;
+            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(season.AniDB.Titles, defaultSeriesTitle, info.MetadataLanguage);
+            Logger.LogInformation("Found series {SeriesName} (Series={SeriesId})", displayTitle, season.Id);
 
             if (mergeFriendly) {
                 result.Item = new Series {
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
-                    Overview = Text.GetDescription(series),
-                    PremiereDate = series.TvDB.AirDate,
-                    EndDate = series.TvDB.EndDate,
-                    ProductionYear = series.TvDB.AirDate?.Year,
-                    Status = series.TvDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                    Tags = series.Tags.ToArray(),
-                    Genres = series.Genres.ToArray(),
-                    Studios = series.Studios.ToArray(),
-                    CommunityRating = series.TvDB.Rating?.ToFloat(10),
+                    Overview = Text.GetDescription(season),
+                    PremiereDate = season.TvDB.AirDate,
+                    EndDate = season.TvDB.EndDate,
+                    ProductionYear = season.TvDB.AirDate?.Year,
+                    Status = season.TvDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
+                    Tags = season.Tags.ToArray(),
+                    Genres = season.Genres.ToArray(),
+                    Studios = season.Studios.ToArray(),
+                    CommunityRating = season.TvDB.Rating?.ToFloat(10),
                 };
             }
             else {
                 result.Item = new Series {
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
-                    Overview = Text.GetDescription(series),
-                    PremiereDate = series.AniDB.AirDate,
-                    EndDate = series.AniDB.EndDate,
-                    ProductionYear = series.AniDB.AirDate?.Year,
-                    Status = series.AniDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                    Tags = series.Tags.ToArray(),
-                    Genres = series.Genres.ToArray(),
-                    Studios = series.Studios.ToArray(),
-                    OfficialRating = series.AniDB.Restricted ? "XXX" : null,
-                    CustomRating = series.AniDB.Restricted ? "XXX" : null,
-                    CommunityRating = series.AniDB.Rating.ToFloat(10),
+                    Overview = Text.GetDescription(season),
+                    PremiereDate = season.AniDB.AirDate,
+                    EndDate = season.AniDB.EndDate,
+                    ProductionYear = season.AniDB.AirDate?.Year,
+                    Status = season.AniDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
+                    Tags = season.Tags.ToArray(),
+                    Genres = season.Genres.ToArray(),
+                    Studios = season.Studios.ToArray(),
+                    OfficialRating = season.AniDB.Restricted ? "XXX" : null,
+                    CustomRating = season.AniDB.Restricted ? "XXX" : null,
+                    CommunityRating = season.AniDB.Rating.ToFloat(10),
                 };
             }
-            AddProviderIds(result.Item, seriesId: series.Id, anidbId: series.AniDB.Id.ToString(), tvdbId: mergeFriendly ? series.TvDB.Id.ToString() : null, tmdbId: series.Shoko.IDs.TMDB.FirstOrDefault().ToString());
+            AddProviderIds(result.Item, seriesId: season.Id, anidbId: season.AniDB.Id.ToString(), tvdbId: mergeFriendly ? season.TvDB.Id.ToString() : null, tmdbId: season.Shoko.IDs.TMDB.FirstOrDefault().ToString());
 
             result.HasMetadata = true;
 
             result.ResetPeople();
-            foreach (var person in series.Staff)
+            foreach (var person in season.Staff)
                 result.AddPerson(person);
 
             return result;
         }
 
-        private async Task<MetadataResult<Series>> GetShokoGroupedMetadata(SeriesInfo info, CancellationToken cancellationToken)
+        private async Task<MetadataResult<Series>> GetShokoGroupedMetadata(SeriesInfo info)
         {
             var result = new MetadataResult<Series>();
             var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
-            var group = await ApiManager.GetGroupInfoByPath(info.Path, filterLibrary);
-            if (group == null) {
+            var show = await ApiManager.GetShowInfoByPath(info.Path, filterLibrary);
+            if (show == null) {
                 // Look for the "season" directories to probe for the group information
                 var entries = FileSystem.GetDirectories(info.Path, false);
                 foreach (var entry in entries) {
-                    group = await ApiManager.GetGroupInfoByPath(entry.FullName, filterLibrary);
-                    if (group != null)
+                    show = await ApiManager.GetShowInfoByPath(entry.FullName, filterLibrary);
+                    if (show != null)
                         break;
                 }
-                if (group == null) {
+                if (show == null) {
                     Logger.LogWarning("Unable to find group info for path {Path}", info.Path);
                     return result;
                 }
             }
 
-            var series = group.DefaultSeries;
-            var premiereDate = group.SeriesList
+            var season = show.DefaultSeason;
+            var premiereDate = show.SeasonList
                 .Select(s => s.AniDB.AirDate)
                 .Where(s => s != null)
                 .OrderBy(s => s)
                 .FirstOrDefault();
-            var endDate = group.SeriesList.Any(s => s.AniDB.EndDate == null) ? null : group.SeriesList
+            var endDate = show.SeasonList.Any(s => s.AniDB.EndDate == null) ? null : show.SeasonList
                 .Select(s => s.AniDB.AirDate)
                 .OrderBy(s => s)
                 .LastOrDefault();
-            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(series.AniDB.Titles, group.Shoko.Name, info.MetadataLanguage);
-            Logger.LogInformation("Found series {SeriesName} (Series={SeriesId},Group={GroupId})", displayTitle, series.Id, group.Id);
+            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(season.AniDB.Titles, show.Name, info.MetadataLanguage);
+            Logger.LogInformation("Found series {SeriesName} (Series={SeriesId},Group={GroupId})", displayTitle, season.Id, show.Id);
 
             result.Item = new Series {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
-                Overview = Text.GetDescription(series),
+                Overview = Text.GetDescription(season),
                 PremiereDate = premiereDate,
                 ProductionYear = premiereDate?.Year,
                 EndDate = endDate,
                 Status = endDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                Tags = group.Tags.ToArray(),
-                Genres = group.Genres.ToArray(),
-                Studios = group.Studios.ToArray(),
-                OfficialRating = series.AniDB.Restricted ? "XXX" : null,
-                CustomRating = series.AniDB.Restricted ? "XXX" : null,
-                CommunityRating = series.AniDB.Rating.ToFloat(10),
+                Tags = show.Tags.ToArray(),
+                Genres = show.Genres.ToArray(),
+                Studios = show.Studios.ToArray(),
+                OfficialRating = season.AniDB.Restricted ? "XXX" : null,
+                CustomRating = season.AniDB.Restricted ? "XXX" : null,
+                CommunityRating = season.AniDB.Rating.ToFloat(10),
             };
-            AddProviderIds(result.Item, seriesId: series.Id, groupId: group.Id, anidbId: series.AniDB.Id.ToString());
+            AddProviderIds(result.Item, seriesId: season.Id, groupId: show.Id, anidbId: season.AniDB.Id.ToString());
 
             result.HasMetadata = true;
 
             result.ResetPeople();
-            foreach (var person in series.Staff)
+            foreach (var person in season.Staff)
                 result.AddPerson(person);
 
             return result;
@@ -187,26 +183,22 @@ namespace Shokofin.Providers
             if (string.IsNullOrEmpty(tvdbId))
                 item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{seriesId}");
 
+            var config = Plugin.Instance.Configuration;
             item.SetProviderId("Shoko Series", seriesId);
             if (!string.IsNullOrEmpty(groupId))
                 item.SetProviderId("Shoko Group", groupId);
-            if (Plugin.Instance.Configuration.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
+            if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
                 item.SetProviderId("AniDB", anidbId);
-            if (Plugin.Instance.Configuration.AddTvDBId &&!string.IsNullOrEmpty(tvdbId) && tvdbId != "0")
+            if (config.AddTvDBId &&!string.IsNullOrEmpty(tvdbId) && tvdbId != "0")
                 item.SetProviderId(MetadataProvider.Tvdb, tvdbId);
-            if (Plugin.Instance.Configuration.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")
-                item.SetProviderId(MetadataProvider.Tvdb, tmdbId);
+            if (config.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")
+                item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
         }
-        
 
         public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo info, CancellationToken cancellationToken)
-        {
-            return Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
-        }
+            => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
 
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
-        }
+            => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
     }
 }

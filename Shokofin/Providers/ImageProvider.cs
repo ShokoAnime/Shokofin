@@ -109,18 +109,18 @@ namespace Shokofin.Providers
                 return list;
             }
             catch (Exception ex) {
-                Logger.LogError(ex, $"Threw unexpectedly; {ex.Message}");
+                Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
                 Plugin.Instance.CaptureException(ex);
                 return list;
             }
         }
 
-        private void AddImagesForEpisode(ref List<RemoteImageInfo> list, API.Info.EpisodeInfo episodeInfo)
+        private static void AddImagesForEpisode(ref List<RemoteImageInfo> list, API.Info.EpisodeInfo episodeInfo)
         {
             AddImage(ref list, ImageType.Primary, episodeInfo?.TvDB?.Thumbnail);
         }
 
-        private void AddImagesForSeries(ref List<RemoteImageInfo> list, API.Models.Images images)
+        private static void AddImagesForSeries(ref List<RemoteImageInfo> list, API.Models.Images images)
         {
             foreach (var image in images.Posters.OrderByDescending(image => image.IsDefault))
                 AddImage(ref list, ImageType.Primary, image);
@@ -130,7 +130,7 @@ namespace Shokofin.Providers
                 AddImage(ref list, ImageType.Banner, image);
         }
 
-        private void AddImage(ref List<RemoteImageInfo> list, ImageType imageType, API.Models.Image image)
+        private static void AddImage(ref List<RemoteImageInfo> list, ImageType imageType, API.Models.Image image)
         {
             if (image == null || !image.IsAvailable)
                 return;
@@ -145,18 +145,12 @@ namespace Shokofin.Providers
         }
 
         public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
-        {
-            return new[] { ImageType.Primary, ImageType.Backdrop, ImageType.Banner };
-        }
+            => new[] { ImageType.Primary, ImageType.Backdrop, ImageType.Banner };
 
         public bool Supports(BaseItem item)
-        {
-            return item is Series || item is Season || item is Episode || item is Movie || item is BoxSet;
-        }
+            => item is Series or Season or Episode or Movie or BoxSet;
 
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
-        }
+            => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
     }
 }

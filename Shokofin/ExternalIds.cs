@@ -9,7 +9,7 @@ namespace Shokofin
     public class ShokoGroupExternalId : IExternalId
     {
         public bool Supports(IHasProviderIds item)
-            => item is Series || item is BoxSet;
+            => item is Series or BoxSet;
 
         public string ProviderName
             => "Shoko Group";
@@ -27,7 +27,7 @@ namespace Shokofin
     public class ShokoSeriesExternalId : IExternalId
     {
         public bool Supports(IHasProviderIds item)
-            => item is Series || item is Season || item is Movie || item is BoxSet;
+            => item is Series or Season or Movie;
 
         public string ProviderName
             => "Shoko Series";
@@ -45,7 +45,7 @@ namespace Shokofin
     public class ShokoEpisodeExternalId : IExternalId
     {
         public bool Supports(IHasProviderIds item)
-            => item is Episode || item is Movie;
+            => item is Episode or Movie;
 
         public string ProviderName
             => "Shoko Episode";
@@ -63,7 +63,7 @@ namespace Shokofin
     public class ShokoFileExternalId : IExternalId
     {
         public bool Supports(IHasProviderIds item)
-            => item is Episode || item is Movie;
+            => item is Episode or Movie;
 
         public string ProviderName
             => "Shoko File";

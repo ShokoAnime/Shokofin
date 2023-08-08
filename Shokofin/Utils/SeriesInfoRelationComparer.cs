@@ -7,7 +7,7 @@ using Shokofin.API.Models;
 #nullable enable
 namespace Shokofin.Utils;
 
-public class SeriesInfoRelationComparer : IComparer<SeriesInfo>
+public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
 {
     protected static Dictionary<RelationType, int> RelationPriority = new() {
         { RelationType.Prequel, 1 },
@@ -25,7 +25,7 @@ public class SeriesInfoRelationComparer : IComparer<SeriesInfo>
         { RelationType.SharedCharacters, 99 },
     };
 
-    public int Compare(SeriesInfo? a, SeriesInfo? b)
+    public int Compare(SeasonInfo? a, SeasonInfo? b)
     {
         // Check for `null` since `IComparer<T>` expects `T` to be nullable.
         if (a == null && b == null)
@@ -50,7 +50,7 @@ public class SeriesInfoRelationComparer : IComparer<SeriesInfo>
         return CompareAirDates(a.AniDB.AirDate, b.AniDB.AirDate);
     }
 
-    private int CompareDirectRelations(SeriesInfo a, SeriesInfo b)
+    private int CompareDirectRelations(SeasonInfo a, SeasonInfo b)
     {
         // We check from both sides because one of the entries may be outdated,
         // so the relation may only present on one of the entries.
@@ -70,7 +70,7 @@ public class SeriesInfoRelationComparer : IComparer<SeriesInfo>
         return 0;
     }
     
-    private int CompareIndirectRelations(SeriesInfo a, SeriesInfo b)
+    private int CompareIndirectRelations(SeasonInfo a, SeasonInfo b)
     {
         var xRelations = a.Relations
             .Where(r => RelationPriority.ContainsKey(r.Type))
