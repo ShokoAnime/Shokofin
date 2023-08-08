@@ -84,7 +84,6 @@ namespace Shokofin
 
         private bool ScanDirectory(string partialPath, string fullPath, string libraryType, bool shouldIgnore)
         {
-            var preloadShow = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
             var season = ApiManager.GetSeasonInfoByPath(fullPath)
                 .GetAwaiter()
                 .GetResult();
@@ -125,10 +124,9 @@ namespace Shokofin
                     }
 
                     // If we're using series grouping, pre-load the group now to help reduce load times later.
-                    if (preloadShow)
-                        show = ApiManager.GetShowInfoForSeries(season.Id, Ordering.GroupFilterType.Others)
-                            .GetAwaiter()
-                            .GetResult();
+                    show = ApiManager.GetShowInfoForSeries(season.Id, Ordering.GroupFilterType.Others)
+                        .GetAwaiter()
+                        .GetResult();
                     break;
                 case "movies":
                     if (season.AniDB.Type != SeriesType.Movie) {
@@ -137,14 +135,13 @@ namespace Shokofin
                     }
 
                     // If we're using series grouping, pre-load the group now to help reduce load times later.
-                    if (preloadShow)
-                        show = ApiManager.GetShowInfoForSeries(season.Id, Ordering.GroupFilterType.Movies)
-                            .GetAwaiter()
-                            .GetResult();
+                    show = ApiManager.GetShowInfoForSeries(season.Id, Ordering.GroupFilterType.Movies)
+                        .GetAwaiter()
+                        .GetResult();
                     break;
             }
             // If we're using series grouping, pre-load the group now to help reduce load times later.
-            else if (preloadShow)
+            else
                 show = ApiManager.GetShowInfoForSeries(season.Id)
                     .GetAwaiter()
                     .GetResult();
