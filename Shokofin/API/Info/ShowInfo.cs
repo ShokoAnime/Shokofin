@@ -60,17 +60,13 @@ public class ShowInfo
 
     public ShowInfo(SeasonInfo seasonInfo)
     {
-        var seasonOrderDictionary = new Dictionary<int, SeasonInfo>();
-        var seasonNumberBaseDictionary = new Dictionary<SeasonInfo, int>();
-        var offset = 0;
+        var seasonNumberBaseDictionary = new Dictionary<SeasonInfo, int>() { { seasonInfo, 1 } };
+        var seasonOrderDictionary = new Dictionary<int, SeasonInfo>() { { 1, seasonInfo } };
+        var seasonNumberOffset = 1;
         if (seasonInfo.AlternateEpisodesList.Count > 0)
-            offset++;
+            seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
         if (seasonInfo.OthersList.Count > 0)
-            offset++;
-        seasonNumberBaseDictionary.Add(seasonInfo, 1);
-        seasonOrderDictionary.Add(1, seasonInfo);
-        for (var i = 0; i < offset; i++)
-            seasonOrderDictionary.Add(i + 2, seasonInfo);
+            seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
 
         Name = seasonInfo.Shoko.Name;
         IsStandalone = true;
@@ -132,30 +128,14 @@ public class ShowInfo
 
         var seasonOrderDictionary = new Dictionary<int, SeasonInfo>();
         var seasonNumberBaseDictionary = new Dictionary<SeasonInfo, int>();
-        var positiveSeasonNumber = 1;
-        var negativeSeasonNumber = -1;
+        var seasonNumberOffset = 0;
         foreach (var (seasonInfo, index) in seriesList.Select((s, i) => (s, i))) {
-            int seasonNumber;
-            var offset = 0;
+            seasonNumberBaseDictionary.Add(seasonInfo, ++seasonNumberOffset);
+            seasonOrderDictionary.Add(seasonNumberOffset, seasonInfo);
             if (seasonInfo.AlternateEpisodesList.Count > 0)
-                offset++;
+                seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
             if (seasonInfo.OthersList.Count > 0)
-                offset++;
-
-            // Series before the default series get a negative season number
-            if (index < foundIndex) {
-                seasonNumber = negativeSeasonNumber;
-                negativeSeasonNumber -= offset + 1;
-            }
-            else {
-                seasonNumber = positiveSeasonNumber;
-                positiveSeasonNumber += offset + 1;
-            }
-
-            seasonNumberBaseDictionary.Add(seasonInfo, seasonNumber);
-            seasonOrderDictionary.Add(seasonNumber, seasonInfo);
-            for (var i = 0; i < offset; i++)
-                seasonOrderDictionary.Add(seasonNumber + (index < foundIndex ? -(i + 1) :  (i + 1)), seasonInfo);
+                seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
         }
 
         Id = groupId;
