@@ -458,7 +458,7 @@ namespace Shokofin.Sync
                 var localUserStats = UserDataManager.GetUserData(userConfig.UserId, video);
                 var remoteUserStats = await APIClient.GetFileUserStats(fileId, userConfig.Token);
                 bool isInSync = UserDataEqualsFileUserStats(localUserStats, remoteUserStats);
-                Logger.LogInformation("{SyncDirection} user data for video {VideoName}. (File={FileId},Episode={EpisodeId},Local={HaveLocal},Remote={HaveRemote},InSync={IsInSync})", direction.ToString(), video.Name, fileId, episodeId, localUserStats != null, remoteUserStats != null, isInSync);
+                Logger.LogInformation("{SyncDirection} user data for video {VideoName}. (User={UserId},File={FileId},Episode={EpisodeId},Local={HaveLocal},Remote={HaveRemote},InSync={IsInSync})", direction.ToString(), video.Name, userConfig.UserId, fileId, episodeId, localUserStats != null, remoteUserStats != null, isInSync);
                 if (isInSync)
                     return;
 
@@ -476,12 +476,12 @@ namespace Shokofin.Sync
                             if (remoteUserStats.IsEmpty)
                                 break;
                             remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
-                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, fileId, episodeId);
+                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, userConfig.UserId, fileId, episodeId);
                         }
                         else if (localUserStats.LastPlayedDate.HasValue && localUserStats.LastPlayedDate.Value > remoteUserStats.LastUpdatedAt) {
                             remoteUserStats = localUserStats.ToFileUserStats();
                             remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
-                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, fileId, episodeId);
+                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, userConfig.UserId, fileId, episodeId);
                         }
                         break;
                     case SyncDirection.Import:
@@ -492,13 +492,13 @@ namespace Shokofin.Sync
                         if (localUserStats == null)
                         {
                             UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats = remoteUserStats.ToUserData(video, userConfig.UserId), UserDataSaveReason.Import, CancellationToken.None);
-                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, fileId, episodeId);
+                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, episodeId);
                         }
                         // Else merge the remote stats into the local stats entry.
                         else if ((!localUserStats.LastPlayedDate.HasValue || remoteUserStats.LastUpdatedAt > localUserStats.LastPlayedDate.Value))
                         {
                             UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
-                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, fileId, episodeId);
+                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, episodeId);
                         }
                         break;
                     default:
@@ -528,20 +528,20 @@ namespace Shokofin.Sync
                         {
                             remoteUserStats = localUserStats.ToFileUserStats();
                             remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
-                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, fileId, episodeId);
+                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, userConfig.UserId, fileId, episodeId);
                         }
                         // Else import if the remote state is fresher then the local state.
                         else if (localUserStats.LastPlayedDate.Value < remoteUserStats.LastUpdatedAt)
                         {
                             UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
-                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, fileId, episodeId);
+                            Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, episodeId);
                         }
                         break;
                     }
                 }
             }
             catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.Unauthorized) {
-                Logger.LogError(ex, "I{Message} (Username={Username},Id={UserId})", ex.Message, UserManager.GetUserById(userConfig.UserId)?.Username, userConfig.UserId);
+                Logger.LogError(ex, "{Message} (Username={Username},Id={UserId})", ex.Message, UserManager.GetUserById(userConfig.UserId)?.Username, userConfig.UserId);
                 throw;
             }
         }
