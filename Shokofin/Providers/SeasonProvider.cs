@@ -276,14 +276,10 @@ namespace Shokofin.Providers
         }
 
         public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeasonInfo searchInfo, CancellationToken cancellationToken)
-        {
-            return Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
-        }
+            => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
 
         public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        {
-            return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
-        }
+            => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 
         private static string GetSeasonName(int seasonNumber, string seasonName)
             => seasonNumber switch
