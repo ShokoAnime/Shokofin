@@ -204,6 +204,7 @@ async function defaultSubmit(form) {
             userConfig.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
             userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataUnderPlayback").checked;
             userConfig.SyncUserDataUnderPlaybackLive = form.querySelector("#SyncUserDataUnderPlaybackLive").checked;
+            userConfig.SyncUserDataInitialSkipEventCount = 3;
             userConfig.SyncUserDataUnderPlaybackAtEveryXTicks = 6;
             userConfig.SyncUserDataUnderPlaybackLiveThreshold = 125000000; // 12.5s
             userConfig.SyncRestrictedVideos = form.querySelector("#SyncRestrictedVideos").checked;

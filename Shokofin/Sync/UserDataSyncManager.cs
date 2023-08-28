@@ -71,12 +71,32 @@ namespace Shokofin.Sync
         #region Export/Scrobble
 
         internal class SessionMetadata {
+            private readonly ILogger Logger;
+            
             public Guid ItemId;
             public string FileId;
             public SessionInfo Session;
             public long Ticks;
             public byte ScrobbleTicks;
             public bool SentPaused;
+            public int SkipCount;
+
+            public SessionMetadata(ILogger logger)
+            {
+                Logger = logger;
+            }
+
+            public bool  ShouldSendEvent(bool isPauseOrResumeEvent = false)
+            {
+                if (SkipCount == 0)
+                    return true;
+
+                if (!isPauseOrResumeEvent && SkipCount > 0)
+                    SkipCount--;
+
+                Logger.LogDebug("Scrobble event was skipped. (File={FileId})", FileId);
+                return false;
+            }
         }
 
         private readonly ConcurrentDictionary<Guid, SessionMetadata> ActiveSessions = new ConcurrentDictionary<Guid, SessionMetadata>();
@@ -84,7 +104,7 @@ namespace Shokofin.Sync
         public void OnSessionStarted(object sender, SessionEventArgs e)
         {
             if (TryGetUserConfiguration(e.SessionInfo.UserId, out var userConfig) && userConfig.SyncUserDataUnderPlayback) {
-                var sessionMetadata = new SessionMetadata {
+                var sessionMetadata = new SessionMetadata(Logger) {
                     ItemId = Guid.Empty,
                     Session = e.SessionInfo,
                     FileId = null,
@@ -95,7 +115,7 @@ namespace Shokofin.Sync
             }
             foreach (var user in e.SessionInfo.AdditionalUsers) {
                 if (TryGetUserConfiguration(e.SessionInfo.UserId, out userConfig) && userConfig.SyncUserDataUnderPlayback) {
-                    var sessionMetadata = new SessionMetadata {
+                    var sessionMetadata = new SessionMetadata(Logger) {
                         ItemId = Guid.Empty,
                         Session = e.SessionInfo,
                         FileId = null,
@@ -148,15 +168,17 @@ namespace Shokofin.Sync
                             return;
 
                         // The active video changed, so send a start event.
-                        if (!Guid.Equals(sessionMetadata.ItemId, itemId)) {
+                        if (sessionMetadata.ItemId != itemId) {
                             sessionMetadata.ItemId = e.Item.Id;
                             sessionMetadata.FileId = fileId;
                             sessionMetadata.Ticks = userData.PlaybackPositionTicks;
                             sessionMetadata.ScrobbleTicks = 0;
                             sessionMetadata.SentPaused = false;
+                            sessionMetadata.SkipCount = userConfig.SyncUserDataInitialSkipEventCount;
 
                             Logger.LogInformation("Playback has started. (File={FileId})", fileId);
-                            success = await APIClient.ScrobbleFile(fileId, episodeId, "play", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
+                            if (sessionMetadata.ShouldSendEvent())
+                                success = await APIClient.ScrobbleFile(fileId, episodeId, "play", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
                         }
                         else {
                             long ticks = sessionMetadata.Session.PlayState.PositionTicks ?? userData.PlaybackPositionTicks;
@@ -168,7 +190,8 @@ namespace Shokofin.Sync
                                 sessionMetadata.SentPaused = true;
 
                                 Logger.LogInformation("Playback was paused. (File={FileId})", fileId);
-                                success = await APIClient.ScrobbleFile(fileId, episodeId, "pause", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
+                                if (sessionMetadata.ShouldSendEvent(true))
+                                    success = await APIClient.ScrobbleFile(fileId, episodeId, "pause", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
                             }
                             // The playback was resumed.
                             else if (sessionMetadata.SentPaused) {
@@ -177,7 +200,8 @@ namespace Shokofin.Sync
                                 sessionMetadata.SentPaused = false;
 
                                 Logger.LogInformation("Playback was resumed. (File={FileId})", fileId);
-                                success = await APIClient.ScrobbleFile(fileId, episodeId, "resume", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
+                                if (sessionMetadata.ShouldSendEvent(true))
+                                    success = await APIClient.ScrobbleFile(fileId, episodeId, "resume", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
                             }
                             // Return early if we're not scrobbling.
                             else if (!userConfig.SyncUserDataUnderPlaybackLive) {
@@ -194,7 +218,8 @@ namespace Shokofin.Sync
 
                                 Logger.LogInformation("Scrobbled during playback. (File={FileId})", fileId);
                                 sessionMetadata.ScrobbleTicks = 0;
-                                success = await APIClient.ScrobbleFile(fileId, episodeId, "scrobble", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
+                                if (sessionMetadata.ShouldSendEvent())
+                                    success = await APIClient.ScrobbleFile(fileId, episodeId, "scrobble", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
                             }
                         }
                         break;
@@ -203,19 +228,24 @@ namespace Shokofin.Sync
                         if (!(userConfig.SyncUserDataAfterPlayback || userConfig.SyncUserDataUnderPlayback))
                             return;
 
+                        var shouldSendEvent = true;
                         if (ActiveSessions.TryGetValue(e.UserId, out var sessionMetadata) && sessionMetadata.ItemId == e.Item.Id) {
+                            shouldSendEvent = sessionMetadata.ShouldSendEvent();
+
                             sessionMetadata.ItemId = Guid.Empty;
                             sessionMetadata.FileId = null;
                             sessionMetadata.Ticks = 0;
                             sessionMetadata.ScrobbleTicks = 0;
                             sessionMetadata.SentPaused = false;
+                            sessionMetadata.SkipCount = -1;
                         }
 
                         Logger.LogInformation("Playback has ended. (File={FileId})", fileId);
-                        if (!userData.Played && userData.PlaybackPositionTicks > 0)
-                            success = await APIClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userConfig.Token).ConfigureAwait(false);
-                        else
-                            success = await APIClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
+                        if (shouldSendEvent)
+                            if (!userData.Played && userData.PlaybackPositionTicks > 0)
+                                success = await APIClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userConfig.Token).ConfigureAwait(false);
+                            else
+                                success = await APIClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
                         break;
                     }
                     case UserDataSaveReason.TogglePlayed:

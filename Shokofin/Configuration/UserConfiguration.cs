@@ -36,6 +36,14 @@ namespace Shokofin.Configuration
         public bool SyncUserDataUnderPlaybackLive { get; set; }
 
         /// <summary>
+        /// Number of playback events to skip before starting to send the events
+        /// to Shoko. This is to prevent accidentially updating user watch data
+        /// when a user miss clicked on a video.
+        /// </summary>
+        [Range(0, 200)]
+        public byte SyncUserDataInitialSkipEventCount { get; set; } = 3;
+
+        /// <summary>
         /// Number of ticks to skip (1 tick is 10 seconds) before scrobbling to
         /// shoko.
         /// </summary>
