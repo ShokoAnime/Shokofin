@@ -95,7 +95,7 @@ namespace Shokofin.Sync
                     SkipCount--;
 
                 Logger.LogDebug("Scrobble event was skipped. (File={FileId})", FileId);
-                return false;
+                return SkipCount == 0;
             }
         }
 
@@ -159,7 +159,7 @@ namespace Shokofin.Sync
                 var itemId = e.Item.Id;
                 var userData = e.UserData;
                 var config = Plugin.Instance.Configuration;
-                bool? success = false;
+                bool? success = null;
                 switch (e.SaveReason) {
                     // case UserDataSaveReason.PlaybackStart: // The progress event is sent at the same time, so this event is not needed.
                     case UserDataSaveReason.PlaybackProgress: {
@@ -230,7 +230,7 @@ namespace Shokofin.Sync
 
                         var shouldSendEvent = true;
                         if (ActiveSessions.TryGetValue(e.UserId, out var sessionMetadata) && sessionMetadata.ItemId == e.Item.Id) {
-                            shouldSendEvent = sessionMetadata.ShouldSendEvent();
+                            shouldSendEvent = sessionMetadata.ShouldSendEvent(true);
 
                             sessionMetadata.ItemId = Guid.Empty;
                             sessionMetadata.FileId = null;
