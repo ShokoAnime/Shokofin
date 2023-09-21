@@ -103,7 +103,7 @@ namespace Shokofin.Sync
 
         public void OnSessionStarted(object sender, SessionEventArgs e)
         {
-            if (TryGetUserConfiguration(e.SessionInfo.UserId, out var userConfig) && userConfig.SyncUserDataUnderPlayback) {
+            if (TryGetUserConfiguration(e.SessionInfo.UserId, out var userConfig) && (userConfig.SyncUserDataUnderPlayback || userConfig.SyncUserDataAfterPlayback)) {
                 var sessionMetadata = new SessionMetadata(Logger) {
                     ItemId = Guid.Empty,
                     Session = e.SessionInfo,
@@ -114,7 +114,7 @@ namespace Shokofin.Sync
                 ActiveSessions.TryAdd(e.SessionInfo.UserId, sessionMetadata);
             }
             foreach (var user in e.SessionInfo.AdditionalUsers) {
-                if (TryGetUserConfiguration(e.SessionInfo.UserId, out userConfig) && userConfig.SyncUserDataUnderPlayback) {
+                if (TryGetUserConfiguration(e.SessionInfo.UserId, out userConfig) && (userConfig.SyncUserDataUnderPlayback || userConfig.SyncUserDataAfterPlayback)) {
                     var sessionMetadata = new SessionMetadata(Logger) {
                         ItemId = Guid.Empty,
                         Session = e.SessionInfo,
@@ -177,7 +177,7 @@ namespace Shokofin.Sync
                             sessionMetadata.SkipCount = userConfig.SyncUserDataInitialSkipEventCount;
 
                             Logger.LogInformation("Playback has started. (File={FileId})", fileId);
-                            if (sessionMetadata.ShouldSendEvent())
+                            if (sessionMetadata.ShouldSendEvent() && userConfig.SyncUserDataUnderPlayback)
                                 success = await APIClient.ScrobbleFile(fileId, episodeId, "play", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
                         }
                         else {
@@ -190,7 +190,7 @@ namespace Shokofin.Sync
                                 sessionMetadata.SentPaused = true;
 
                                 Logger.LogInformation("Playback was paused. (File={FileId})", fileId);
-                                if (sessionMetadata.ShouldSendEvent(true))
+                                if (sessionMetadata.ShouldSendEvent(true) && userConfig.SyncUserDataUnderPlayback )
                                     success = await APIClient.ScrobbleFile(fileId, episodeId, "pause", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
                             }
                             // The playback was resumed.
@@ -200,7 +200,7 @@ namespace Shokofin.Sync
                                 sessionMetadata.SentPaused = false;
 
                                 Logger.LogInformation("Playback was resumed. (File={FileId})", fileId);
-                                if (sessionMetadata.ShouldSendEvent(true))
+                                if (sessionMetadata.ShouldSendEvent(true) && userConfig.SyncUserDataUnderPlayback )
                                     success = await APIClient.ScrobbleFile(fileId, episodeId, "resume", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
                             }
                             // Return early if we're not scrobbling.
@@ -216,10 +216,11 @@ namespace Shokofin.Sync
                                     ++sessionMetadata.ScrobbleTicks < userConfig.SyncUserDataUnderPlaybackAtEveryXTicks)
                                     return;
 
-                                Logger.LogInformation("Scrobbled during playback. (File={FileId})", fileId);
+                                Logger.LogInformation("Playback is running. (File={FileId})", fileId);
                                 sessionMetadata.ScrobbleTicks = 0;
-                                if (sessionMetadata.ShouldSendEvent())
+                                if (sessionMetadata.ShouldSendEvent() && userConfig.SyncUserDataUnderPlayback ) {
                                     success = await APIClient.ScrobbleFile(fileId, episodeId, "scrobble", sessionMetadata.Ticks, userConfig.Token).ConfigureAwait(false);
+                                }
                             }
                         }
                         break;
