@@ -68,7 +68,7 @@ namespace Shokofin.Providers
                         PremiereDate = season.TvDB.AirDate,
                         EndDate = season.TvDB.EndDate,
                         ProductionYear = season.TvDB.AirDate?.Year,
-                        Status = season.TvDB.EndDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
+                        Status = !season.TvDB.EndDate.HasValue || season.TvDB.EndDate.Value > DateTime.UtcNow ? SeriesStatus.Continuing : SeriesStatus.Ended,
                         Tags = season.Tags.ToArray(),
                         Genres = season.Genres.ToArray(),
                         Studios = season.Studios.ToArray(),
@@ -93,7 +93,7 @@ namespace Shokofin.Providers
                         PremiereDate = premiereDate,
                         ProductionYear = premiereDate?.Year,
                         EndDate = endDate,
-                        Status = endDate == null ? SeriesStatus.Continuing : SeriesStatus.Ended,
+                        Status = !endDate.HasValue || endDate.Value > DateTime.UtcNow ? SeriesStatus.Continuing : SeriesStatus.Ended,
                         Tags = show.Tags.ToArray(),
                         Genres = show.Genres.ToArray(),
                         Studios = show.Studios.ToArray(),
@@ -103,7 +103,6 @@ namespace Shokofin.Providers
                     };
                     AddProviderIds(result.Item, season.Id, show.Id, season.AniDB.Id.ToString());
                 }
-
 
                 result.HasMetadata = true;
 
