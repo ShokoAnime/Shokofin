@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -42,15 +43,20 @@ namespace Shokofin.Providers
                 var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
                 var show = await ApiManager.GetShowInfoByPath(info.Path, filterLibrary);
                 if (show == null) {
-                    // Look for the "season" directories to probe for the group information
-                    var entries = FileSystem.GetDirectories(info.Path, false);
-                    foreach (var entry in entries) {
-                        show = await ApiManager.GetShowInfoByPath(entry.FullName, filterLibrary);
-                        if (show != null)
-                            break;
+                    try {
+                        // Look for the "season" directories to probe for the group information
+                        var entries = FileSystem.GetDirectories(info.Path, false);
+                        foreach (var entry in entries) {
+                            show = await ApiManager.GetShowInfoByPath(entry.FullName, filterLibrary);
+                            if (show != null)
+                                break;
+                        }
+                        if (show == null) {
+                            Logger.LogWarning("Unable to find show info for path {Path}", info.Path);
+                            return result;
+                        }
                     }
-                    if (show == null) {
-                        Logger.LogWarning("Unable to find show info for path {Path}", info.Path);
+                    catch (DirectoryNotFoundException) {
                         return result;
                     }
                 }

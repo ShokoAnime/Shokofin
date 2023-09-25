@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
@@ -7,8 +8,6 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Models;
 using Shokofin.Utils;
-
-using Path = System.IO.Path;
 
 namespace Shokofin
 {
@@ -92,18 +91,21 @@ namespace Shokofin
             if (season == null) {
                 // If we're in strict mode, then check the sub-directories if we have a <Show>/<Season>/<Episodes> structure.
                 if (shouldIgnore && partialPath[1..].Split(Path.DirectorySeparatorChar).Length == 1) {
-                    var entries = FileSystem.GetDirectories(fullPath, false).ToList();
-                    Logger.LogDebug("Unable to find shoko series for {Path}, trying {DirCount} sub-directories.", entries.Count, partialPath);
-                    foreach (var entry in entries) {
-                        season = ApiManager.GetSeasonInfoByPath(entry.FullName)
-                            .GetAwaiter()
-                            .GetResult();
-                        if (season != null)
-                        {
-                            Logger.LogDebug("Found shoko series {SeriesName} for sub-directory of path {Path} (Series={SeriesId})", season.Shoko.Name, partialPath, season.Id);
-                            break;
+                    try {
+                        var entries = FileSystem.GetDirectories(fullPath, false).ToList();
+                        Logger.LogDebug("Unable to find shoko series for {Path}, trying {DirCount} sub-directories.", partialPath, entries.Count);
+                        foreach (var entry in entries) {
+                            season = ApiManager.GetSeasonInfoByPath(entry.FullName)
+                                .GetAwaiter()
+                                .GetResult();
+                            if (season != null)
+                            {
+                                Logger.LogDebug("Found shoko series {SeriesName} for sub-directory of path {Path} (Series={SeriesId})", season.Shoko.Name, partialPath, season.Id);
+                                break;
+                            }
                         }
                     }
+                    catch (DirectoryNotFoundException) { }
                 }
                 if (season == null) {
                     if (shouldIgnore)
