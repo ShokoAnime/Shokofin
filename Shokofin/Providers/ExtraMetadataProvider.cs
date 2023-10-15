@@ -494,7 +494,7 @@ namespace Shokofin.Providers
                 foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
                     existingEpisodes.Add(episodeId);
                 foreach (var episodeInfo in seasonInfo.EpisodeList) {
-                    var episodeParentIndex = Ordering.GetSeasonNumber(showInfo, seasonInfo, episodeInfo);
+                    var episodeParentIndex = episodeInfo.IsSpecial ? 0 : Ordering.GetSeasonNumber(showInfo, seasonInfo, episodeInfo);
                     if (episodeParentIndex != seasonNumber)
                         continue;
 

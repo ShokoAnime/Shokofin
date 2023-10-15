@@ -233,8 +233,7 @@ namespace Shokofin.Utils
             }
 
             // Abort if episode is not a TvDB special or AniDB special
-            var allowOtherData = order == SpecialOrderType.InBetweenSeasonByOtherData || order == SpecialOrderType.InBetweenSeasonMixed;
-            if (allowOtherData  ? !(episode?.TvDB?.SeasonNumber == 0 || episode.AniDB.Type == EpisodeType.Special) : episode.AniDB.Type != EpisodeType.Special)
+            if (!episode.IsSpecial)
                 return (null, null, null, false);
 
             int? episodeNumber = null;
@@ -310,7 +309,7 @@ namespace Shokofin.Utils
                     return episode.AniDB.Type switch
                     {
                         EpisodeType.Normal => 1,
-                        EpisodeType.Special => 0,
+                        EpisodeType.Special => 1,
                         EpisodeType.Unknown => 123,
                         EpisodeType.Other => 124,
                         EpisodeType.Trailer => 125,
