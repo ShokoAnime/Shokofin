@@ -421,6 +421,8 @@ public class ShokoAPIManager : IDisposable
         return await CreateFileInfo(file, fileId, seriesId);
     }
 
+    private static readonly EpisodeType[] EpisodePickOrder = { EpisodeType.Special, EpisodeType.Normal, EpisodeType.Other };
+
     private async Task<FileInfo> CreateFileInfo(File file, string fileId, string seriesId)
     {
         var cacheKey = $"file:{fileId}:{seriesId}";
@@ -441,16 +443,21 @@ public class ShokoAPIManager : IDisposable
             var episodeInfo = await GetEpisodeInfo(episodeId);
             if (episodeInfo == null)
                 throw new Exception($"Unable to find episode cross-reference for the specified series and episode for the file. (File={fileId},Episode={episodeId},Series={seriesId})");
+            if (episodeInfo.Shoko.IsHidden) {
+                Logger.LogDebug("Skipped hidden episode linked to file. (File={FileId},Episode={EpisodeId},Series={SeriesId})", fileId, episodeId, seriesId);
+                continue;
+            }
             episodeList.Add(episodeInfo);
         }
 
-        // Order the episodes.
-        episodeList = episodeList
-            .OrderBy(episode => episode.AniDB.Type)
-            .ThenBy(episode => episode.AniDB.EpisodeNumber)
+        // Group and order the episodes.
+        var groupedEpisodeLists = episodeList
+            .GroupBy(episode => episode.AniDB.Type)
+            .OrderByDescending(a => EpisodePickOrder.IndexOf(a.Key))
+            .Select(epList => epList.OrderBy(episode => episode.AniDB.EpisodeNumber).ToList())
             .ToList();
 
-        fileInfo = new FileInfo(file, episodeList, seriesId);
+        fileInfo = new FileInfo(file, groupedEpisodeLists, seriesId);
 
         DataCache.Set<FileInfo>(cacheKey, fileInfo, DefaultTimeSpan);
         FileIdToEpisodeIdDictionary.TryAdd(fileId, episodeList.Select(episode => episode.Id).ToList());
@@ -620,6 +627,7 @@ public class ShokoAPIManager : IDisposable
 
         var episodes = (await APIClient.GetEpisodesFromSeries(seriesId) ?? new()).List
             .Select(e => CreateEpisodeInfo(e, e.IDs.Shoko.ToString()))
+            .Where(e => !e.Shoko.IsHidden)
             .OrderBy(e => e.AniDB.AirDate)
             .ToList();
         var cast = await APIClient.GetSeriesCast(seriesId);

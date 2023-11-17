@@ -21,6 +21,11 @@ public class Episode
     public TimeSpan Duration { get; set; }
 
     /// <summary>
+    /// Indicates the episode is hidden.
+    /// </summary>
+    public bool IsHidden { get; set; }
+
+    /// <summary>
     /// Number of files 
     /// </summary>
     /// <value></value>
