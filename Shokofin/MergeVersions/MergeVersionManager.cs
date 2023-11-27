@@ -80,7 +80,6 @@ public class MergeVersionsManager
         episodeProgress.RegisterAction(value => {
             episodeProgressValue = value / 2d;
             progress?.Report(movieProgressValue + episodeProgressValue);
-            progress?.Report(50d + (value / 2d));
         });
         var episodeTask = MergeAllEpisodes(episodeProgress, cancellationToken);
 
