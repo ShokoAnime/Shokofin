@@ -67,22 +67,16 @@ public class Image
         => $"/api/v3/Image/{Source.ToString()}/{Type.ToString()}/{ID}";
     
     /// <summary>
-    /// Get an URL to download the image on the backend.
+    /// Get an URL to both download the image on the backend and preview it for
+    /// the clients.
     /// </summary>
+    /// <remarks>
+    /// May or may not work 100% depending on how the servers and clients are
+    /// set up, but better than nothing.
+    /// </remarks>
     /// <returns>The image URL</returns>
     public string ToURLString()
-    {
-        return string.Concat(Plugin.Instance.Configuration.Host, Path);
-    }
-
-    /// <summary>
-    /// Get an URL to display the image in the clients.
-    /// </summary>
-    /// <returns>The image URL</returns>
-    public string ToPrettyURLString()
-    {
-        return string.Concat(Plugin.Instance.Configuration.PrettyHost, Path);
-    }
+        => string.Concat(Plugin.Instance.Configuration.PrettyHost, Path);
 }
 
 /// <summary>
