@@ -309,7 +309,7 @@ namespace Shokofin.Utils
                 // Display the main title.
                 case DisplayLanguageType.Main: {
                     var getSeriesTitle = () => GetTitleByType(seriesTitles, TitleType.Main) ?? seriesTitle;
-                    var getEpisodeTitle = () => GetTitleByLanguages(episodeTitles, "en", mainTitleLanguage) ?? episodeTitle;
+                    var getEpisodeTitle = () => episodeTitle;
                     return ConstructTitle(getSeriesTitle, getEpisodeTitle, outputType);
                 }
             }
