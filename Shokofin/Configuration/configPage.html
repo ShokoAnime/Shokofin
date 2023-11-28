@@ -72,16 +72,26 @@
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Add a number to the title of each specials episode</div>
                         </div>
-                        <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="DescriptionSource">Description source:</label>
-                            <select is="emby-select" id="DescriptionSource" name="DescriptionSource" class="emby-select-withcolor emby-select">
-                                <option value="Default">Use default source for selected Series/Season grouping</option>
-                                <option value="OnlyAniDb">Only use AniDB</option>
-                                <option value="PreferAniDb">Prefer AniDB if available, otherwise use TvDB/TMDB</option>
-                                <option value="OnlyOther">Only use TvDB/TMDB</option>
-                                <option value="PreferOther">Prefer TvDB/TMDB if available, otherwise use AniDB</option>
-                            </select>
-                            <div class="fieldDescription selectFieldDescription">How to select the description to use for each item.</div>
+                        <div id="descriptionSource" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Description source:</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem descriptionSourceItem sortableOption" data-descriptionsource="AniDB">
+                                    <label class="listItemCheckboxContainer"><input class="chkDescriptionSource" type="checkbox" is="emby-checkbox" data-descriptionsource="AniDB"><span></span></label>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB</h3></div>
+                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable"><span class="material-icons keyboard_arrow_down" aria-hidden="true"></span></button>
+                                </div>
+                                <div class="listItem descriptionSourceItem sortableOption" data-descriptionsource="TVDB">
+                                    <label class="listItemCheckboxContainer"><input class="chkDescriptionSource" type="checkbox" is="emby-checkbox" data-descriptionsource="TVDB"><span></span></label>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">TVDB</h3></div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                </div>
+                                <div class="listItem descriptionSourceItem sortableOption" data-descriptionsource="TMDB">
+                                    <label class="listItemCheckboxContainer"><input class="chkDescriptionSource" type="checkbox" is="emby-checkbox" data-descriptionsource="TMDB"><span></span></label>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB</h3></div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">How to select the description to use for each item.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
