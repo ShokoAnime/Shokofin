@@ -314,7 +314,7 @@ public class ShokoAPIManager : IDisposable
 
         var pathSet = new HashSet<string>();
         var episodeIds = new HashSet<string>();
-        foreach (var file in await APIClient.GetFilesForSeries(seriesId)) {
+        foreach (var file in (await APIClient.GetFilesForSeries(seriesId) ?? new ()).List) {
             if (file.CrossReferences.Count == 1)
                 foreach (var fileLocation in file.Locations)
                     pathSet.Add((Path.GetDirectoryName(fileLocation.Path) ?? "") + Path.DirectorySeparatorChar);
