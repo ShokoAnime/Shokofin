@@ -187,7 +187,7 @@ public class ShokoAPIClient : IDisposable
 
     public Task<List<File>> GetFilesForSeries(string seriesId)
     {
-        return Get<List<File>>($"/api/v3/Series/{seriesId}/File?includeXRefs=true&includeDataFrom=AniDB");
+        return Get<List<File>>($"/api/v3/Series/{seriesId}/File?include=XRefs&includeDataFrom=AniDB");
     }
 
     public async Task<File.UserStats?> GetFileUserStats(string fileId, string? apiKey = null)
