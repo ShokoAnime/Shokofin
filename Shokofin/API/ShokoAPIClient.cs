@@ -177,7 +177,7 @@ public class ShokoAPIClient : IDisposable
 
     public Task<File> GetFile(string id)
     {
-        return Get<File>($"/api/v3/File/{id}?includeXRefs=true&includeDataFrom=AniDB");
+        return Get<File>($"/api/v3/File/{id}?include=XRefs&includeDataFrom=AniDB");
     }
 
     public Task<List<File>> GetFileByPath(string path)
