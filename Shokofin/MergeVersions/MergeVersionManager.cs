@@ -292,7 +292,7 @@ public class MergeVersionsManager
     /// complete.</returns>
     public async Task MergeAllEpisodes(IProgress<double> progress, CancellationToken cancellationToken)
     {
-        if (Plugin.Instance.Configuration.EXPERIMENTAL_SplitThenMergeMovies) {
+        if (Plugin.Instance.Configuration.EXPERIMENTAL_SplitThenMergeEpisodes) {
             await SplitAndMergeAllEpisodes(progress, cancellationToken);
             return;
         }
