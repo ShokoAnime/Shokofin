@@ -87,6 +87,7 @@ async function loadUserConfig(form, userId, config) {
     form.querySelector("#SyncUserDataAfterPlayback").checked = userConfig.SyncUserDataAfterPlayback || false;
     form.querySelector("#SyncUserDataUnderPlayback").checked = userConfig.SyncUserDataUnderPlayback || false;
     form.querySelector("#SyncUserDataUnderPlaybackLive").checked = userConfig.SyncUserDataUnderPlaybackLive || false;
+    form.querySelector("#SyncUserDataInitialSkipEventCount").checked = userConfig.SyncUserDataInitialSkipEventCount === 2;
     form.querySelector("#SyncRestrictedVideos").checked = userConfig.SyncRestrictedVideos || false;
     form.querySelector("#UserUsername").value = userConfig.Username || "";
     // Synchronization settings
@@ -204,7 +205,7 @@ async function defaultSubmit(form) {
             userConfig.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
             userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataUnderPlayback").checked;
             userConfig.SyncUserDataUnderPlaybackLive = form.querySelector("#SyncUserDataUnderPlaybackLive").checked;
-            userConfig.SyncUserDataInitialSkipEventCount = 2;
+            userConfig.SyncUserDataInitialSkipEventCount = form.querySelector("#SyncUserDataInitialSkipEventCount").checked ? 2 : 0;
             userConfig.SyncUserDataUnderPlaybackAtEveryXTicks = 6;
             userConfig.SyncUserDataUnderPlaybackLiveThreshold = 125000000; // 12.5s
             userConfig.SyncRestrictedVideos = form.querySelector("#SyncRestrictedVideos").checked;
@@ -407,6 +408,7 @@ async function syncUserSettings(form) {
     userConfig.SyncUserDataAfterPlayback = form.querySelector("#SyncUserDataAfterPlayback").checked;
     userConfig.SyncUserDataUnderPlayback = form.querySelector("#SyncUserDataUnderPlayback").checked;
     userConfig.SyncUserDataUnderPlaybackLive = form.querySelector("#SyncUserDataUnderPlaybackLive").checked;
+    userConfig.SyncUserDataInitialSkipEventCount = form.querySelector("#SyncUserDataInitialSkipEventCount").checked ? 2 : 0;
     userConfig.SyncUserDataUnderPlaybackAtEveryXTicks = 6;
     userConfig.SyncUserDataUnderPlaybackLiveThreshold = 125000000; // 12.5s
     userConfig.SyncRestrictedVideos = form.querySelector("#SyncRestrictedVideos").checked;
@@ -504,6 +506,7 @@ export default function (page) {
         form.querySelector("#SyncUserDataAfterPlayback").disabled = disabled;
         form.querySelector("#SyncUserDataUnderPlayback").disabled = disabled;
         form.querySelector("#SyncUserDataUnderPlaybackLive").disabled = disabled;
+        form.querySelector("#SyncUserDataInitialSkipEventCount").disabled = disabled;
     });
 
     page.addEventListener("viewshow", async function () {

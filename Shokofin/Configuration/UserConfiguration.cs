@@ -41,7 +41,7 @@ namespace Shokofin.Configuration
         /// when a user miss clicked on a video.
         /// </summary>
         [Range(0, 200)]
-        public byte SyncUserDataInitialSkipEventCount { get; set; } = 2;
+        public byte SyncUserDataInitialSkipEventCount { get; set; } = 0;
 
         /// <summary>
         /// Number of ticks to skip (1 tick is 10 seconds) before scrobbling to

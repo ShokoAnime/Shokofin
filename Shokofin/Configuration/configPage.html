@@ -271,6 +271,13 @@
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="SyncUserDataInitialSkipEventCount" />
+                                    <span>Lazy sync watch-state events with shoko</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">Enabling this setting will add a safe buffer of 10 seconds of playback before the plugin will start the sync-back to shoko. This will prevent accidential clicks and/or previews from marking the file as watched in shoko, and will also keep them more in sync with jellyfin, since it's closer to how Jellyfin handles the watch-state internally.</div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="SyncRestrictedVideos" />
                                     <span>Sync watch-state for restricted videos</span>
                                 </label>
