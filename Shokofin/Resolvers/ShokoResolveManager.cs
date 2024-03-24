@@ -154,7 +154,7 @@ public class ShokoResolveManager
                             return (sourceLocation: string.Empty, symbolicLink: string.Empty);
                         var fileName = $"shoko-file-{file.Id}{Path.GetExtension(sourceLocation)}";
                         var showFolder = $"shoko-series-{season.Id}";
-                        var isGrouped = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup || Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroupPlus;
+                        var isGrouped = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
                         switch (filterType) {
                             case Ordering.GroupFilterType.Movies: {
                                 var isMovieSeason = season.AniDB.Type == SeriesType.Movie;
