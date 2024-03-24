@@ -69,34 +69,29 @@ public class ShokoAPIManager : IDisposable
 
     #region Ignore rule
 
-    public Folder FindMediaFolder(string path)
+    public static string GetVirtualRootForMediaFolder(Folder mediaFolder)
+        => Path.Combine(Plugin.Instance.VirtualRoot, mediaFolder.Id.ToString());
+
+    public (Folder mediaFolder, string partialPath) FindMediaFolder(string path, Folder parent, Folder root)
     {
         Folder? mediaFolder = null;
+        if (path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar)) {
+            var mediaFolderId = Guid.Parse(path[(Plugin.Instance.VirtualRoot.Length + 1)..].Split(Path.DirectorySeparatorChar).First());
+            mediaFolder = LibraryManager.GetItemById(mediaFolderId) as Folder;
+            if (mediaFolder != null) {
+                var mediaRootVirtualPath = GetVirtualRootForMediaFolder(mediaFolder);
+                return (mediaFolder, path[mediaRootVirtualPath.Length..]);
+            }
+            return (root, path);
+        }
         lock (MediaFolderListLock) {
             mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
         }
-        if (mediaFolder == null) {
-            var parent = LibraryManager.FindByPath(Path.GetDirectoryName(path), true) as Folder;
-            if (parent == null)
-                throw new Exception($"Unable to find parent folder for \"{path}\"");
-
-            mediaFolder = FindMediaFolder(path, parent, LibraryManager.RootFolder);
-        }
-
-        return mediaFolder;
-    }
-
-    public Folder FindMediaFolder(string path, Folder parent, Folder root)
-    {
-        Folder? mediaFolder = null;
-        lock (MediaFolderListLock) {
-            mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
-        }
-        // Look for the root folder for the current item.
         if (mediaFolder != null) {
-            return mediaFolder;
+            return (mediaFolder, path[mediaFolder.Path.Length..]);
         }
 
+        // Look for the root folder for the current item.
         mediaFolder = parent;
         while (!mediaFolder.ParentId.Equals(root.Id)) {
             if (mediaFolder.GetParent() == null) {
@@ -108,7 +103,7 @@ public class ShokoAPIManager : IDisposable
         lock (MediaFolderListLock) {
             MediaFolderList.Add(mediaFolder);
         }
-        return mediaFolder;
+        return (mediaFolder, path[mediaFolder.Path.Length..]);
     }
 
     public string StripMediaFolder(string fullPath)
@@ -145,13 +140,6 @@ public class ShokoAPIManager : IDisposable
             MediaFolderList.Add(mediaFolder);
         }
         return fullPath.Substring(mediaFolder.Path.Length);
-    }
-
-    public bool IsInMixedLibrary(ItemLookupInfo info)
-    {
-        var mediaFolder = FindMediaFolder(info.Path);
-        var type = LibraryManager.GetInheritedContentType(mediaFolder);
-        return !string.IsNullOrEmpty(type) && type == "mixed";
     }
 
     #endregion

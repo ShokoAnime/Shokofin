@@ -10,11 +10,12 @@ namespace Shokofin
         /// <inheritdoc />
         public void RegisterServices(IServiceCollection serviceCollection)
         {
-            serviceCollection.AddSingleton<Shokofin.API.ShokoAPIClient>();
-            serviceCollection.AddSingleton<Shokofin.API.ShokoAPIManager>();
+            serviceCollection.AddSingleton<API.ShokoAPIClient>();
+            serviceCollection.AddSingleton<API.ShokoAPIManager>();
             serviceCollection.AddSingleton<IIdLookup, IdLookup>();
-            serviceCollection.AddSingleton<Shokofin.Sync.UserDataSyncManager>();
-            serviceCollection.AddSingleton<Shokofin.MergeVersions.MergeVersionsManager>();
+            serviceCollection.AddSingleton<Sync.UserDataSyncManager>();
+            serviceCollection.AddSingleton<MergeVersions.MergeVersionsManager>();
+            serviceCollection.AddSingleton<Resolvers.ShokoResolveManager>();
         }
     }
 }

@@ -384,6 +384,13 @@
                             <h3>Experimental Settings</h3>
                         </legend>
                         <div class="fieldDescription verticalSection-extrabottompadding">Any features/settings in this section is still considered to be in an experimental state. <strong>You can enable them, but at the risk if them messing up your library.</strong></div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_EnableResolver" />
+                                <span>Enable Custom Resolver</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription"><div>Enables the custom resolver for the plugin.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What is this setting for?</summary>Enabling this setting should in theory make it so you won't have to think about file structure imcompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links instead. <strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong></details></div>
+                        </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="SeasonOrdering">Season ordering:</label>
                             <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select">

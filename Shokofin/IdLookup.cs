@@ -112,7 +112,7 @@ namespace Shokofin
 
         #region Base Item
 
-        private readonly HashSet<string> AllowedTypes = new() { nameof(Series), nameof(Episode), nameof(Movie) };
+        private readonly HashSet<string> AllowedTypes = new() { nameof(Series), nameof(Season), nameof(Episode), nameof(Movie) };
 
         public bool IsEnabledForItem(BaseItem item) =>
             IsEnabledForItem(item, out var _);

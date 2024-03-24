@@ -42,7 +42,6 @@ namespace Shokofin.Providers
         {
             var list = new List<RemoteImageInfo>();
             try {
-                var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Utils.Ordering.GroupFilterType.Others : Utils.Ordering.GroupFilterType.Default;
                 switch (item) {
                     case Episode episode: {
                         if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId)) {

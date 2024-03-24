@@ -185,6 +185,7 @@ async function defaultSubmit(form) {
 
         // Experimental settings
         config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
+        config.EXPERIMENTAL_EnableResolver = form.querySelector("#EXPERIMENTAL_EnableResolver").checked;
         config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
         config.EXPERIMENTAL_SplitThenMergeMovies = form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked;
         config.EXPERIMENTAL_SplitThenMergeEpisodes = form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked;
@@ -363,6 +364,7 @@ async function syncSettings(form) {
 
     // Experimental settings
     config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
+    config.EXPERIMENTAL_EnableResolver = form.querySelector("#EXPERIMENTAL_EnableResolver").checked;
     config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
     config.EXPERIMENTAL_SplitThenMergeMovies = form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked;
     config.EXPERIMENTAL_SplitThenMergeEpisodes = form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked;
@@ -562,6 +564,7 @@ export default function (page) {
 
             // Experimental settings
             form.querySelector("#SeasonOrdering").value = config.SeasonOrdering;
+            form.querySelector("#EXPERIMENTAL_EnableResolver").checked = config.EXPERIMENTAL_EnableResolver || false;
             form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked = config.EXPERIMENTAL_AutoMergeVersions || false;
             form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked = config.EXPERIMENTAL_SplitThenMergeMovies || true;
             form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked = config.EXPERIMENTAL_SplitThenMergeEpisodes || false;

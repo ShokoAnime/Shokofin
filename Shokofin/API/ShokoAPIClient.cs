@@ -190,6 +190,12 @@ public class ShokoAPIClient : IDisposable
         return Get<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB");
     }
 
+    public async Task<IReadOnlyList<File>> GetFilesForImportFolder(int importFolderId)
+    {
+        var listResult = await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?pageSize=0&includeXRefs=true");
+        return listResult.List;
+    }
+
     public async Task<File.UserStats?> GetFileUserStats(string fileId, string? apiKey = null)
     {
         try

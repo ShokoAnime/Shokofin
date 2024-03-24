@@ -92,6 +92,8 @@ namespace Shokofin.Configuration
 
         #region Experimental features
 
+        public bool EXPERIMENTAL_EnableResolver { get; set; }
+
         public bool EXPERIMENTAL_AutoMergeVersions { get; set; }
 
         public bool EXPERIMENTAL_SplitThenMergeMovies { get; set; }
@@ -139,6 +141,7 @@ namespace Shokofin.Configuration
             IgnoredFolders = new [] { ".streams", "@recently-snapshot" };
             SentryEnabled = null;
             LibraryFilteringMode = null;
+            EXPERIMENTAL_EnableResolver = false;
             EXPERIMENTAL_AutoMergeVersions = false;
             EXPERIMENTAL_SplitThenMergeMovies = true;
             EXPERIMENTAL_SplitThenMergeEpisodes = false;
