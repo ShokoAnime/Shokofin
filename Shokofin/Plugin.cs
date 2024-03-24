@@ -18,12 +18,15 @@ namespace Shokofin;
 
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
-    public static string MetadataProviderName = "Shoko";
+    public const string MetadataProviderName = "Shoko";
 
-    public override string Name => "Shoko";
+    public override string Name => MetadataProviderName;
 
     public override Guid Id => Guid.Parse("5216ccbf-d24a-4eb3-8a7e-7da4230b7052");
 
+    /// <summary>
+    /// "Virtual" File System Root Directory.
+    /// </summary>
     public string VirtualRoot => Path.Combine(DataFolderPath, "VFS");
 
     public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
@@ -153,7 +156,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             {
                 Name = "ShokoController.js",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configController.js",
-            }
+            },
         };
     }
 

@@ -169,9 +169,9 @@ public class ShokoAPIManager : IDisposable
         Logger.LogDebug("Clearing data…");
         Dispose();
         Logger.LogDebug("Initialising new cache…");
-        DataCache = (new MemoryCache((new MemoryCacheOptions() {
+        DataCache = new MemoryCache(new MemoryCacheOptions() {
             ExpirationScanFrequency = ExpirationScanFrequency,
-        })));
+        });
         Logger.LogDebug("Cleanup complete.");
     }
 
@@ -302,7 +302,7 @@ public class ShokoAPIManager : IDisposable
 
         var pathSet = new HashSet<string>();
         var episodeIds = new HashSet<string>();
-        foreach (var file in (await APIClient.GetFilesForSeries(seriesId) ?? new ()).List) {
+        foreach (var file in await APIClient.GetFilesForSeries(seriesId)) {
             if (file.CrossReferences.Count == 1)
                 foreach (var fileLocation in file.Locations)
                     pathSet.Add((Path.GetDirectoryName(fileLocation.Path) ?? "") + Path.DirectorySeparatorChar);
@@ -318,15 +318,56 @@ public class ShokoAPIManager : IDisposable
     #endregion
     #region File Info
 
-    public async Task<(FileInfo?, SeasonInfo?, ShowInfo?)> GetFileInfoByPath(string path, Ordering.GroupFilterType? filterGroupByType)
+    internal void AddFileLookupIds(string path, string fileId, string seriesId, IEnumerable<string> episodeIds)
+    {
+        PathToFileIdAndSeriesIdDictionary.TryAdd(path, (fileId, seriesId));
+        PathToEpisodeIdsDictionary.TryAdd(path, episodeIds.ToList());
+    }
+
+    public async Task<(FileInfo?, SeasonInfo?, ShowInfo?)> GetFileInfoByPath(string path, Ordering.GroupFilterType filterGroupByType)
     {
         // Use pointer for fast lookup.
         if (PathToFileIdAndSeriesIdDictionary.ContainsKey(path)) {
             var (fI, sI) = PathToFileIdAndSeriesIdDictionary[path];
             var fileInfo = await GetFileInfo(fI, sI);
+            if (fileInfo == null)
+                return (null, null, null);
+
             var seasonInfo = await GetSeasonInfoForSeries(sI);
-            var showInfo = filterGroupByType.HasValue ? await GetShowInfoForSeries(sI, filterGroupByType.Value) : null;
+            if (seasonInfo == null)
+                return (null, null, null);
+
+            var showInfo = await GetShowInfoForSeries(sI, filterGroupByType);
+            if (showInfo == null)
+                return (null, null, null);
+
             return new(fileInfo, seasonInfo, showInfo);
+        }
+
+        // Fast-path for VFS.
+        if (path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar)) {
+            var (seriesSegment, fileSegment) = Path.GetFileNameWithoutExtension(path).Split('[').TakeLast(2).Select(a => a.Split(']').First()).ToList();
+            if (!int.TryParse(seriesSegment.Split('-').LastOrDefault(), out var seriesIdRaw))
+                return (null, null, null);
+            if (!int.TryParse(fileSegment.Split('-').LastOrDefault(), out var fileIdRaw))
+                return (null, null, null);
+
+            var sI = seriesIdRaw.ToString();
+            var fI = fileIdRaw.ToString();
+            var fileInfo = await GetFileInfo(fI, sI);
+            if (fileInfo == null)
+                return (null, null, null);
+
+            var seasonInfo = await GetSeasonInfoForSeries(sI);
+            if (seasonInfo == null)
+                return (null, null, null);
+
+            var showInfo = await GetShowInfoForSeries(sI, filterGroupByType);
+            if (showInfo == null)
+                return (null, null, null);
+
+            AddFileLookupIds(path, fI, sI, fileInfo.EpisodeList.Select(episode => episode.Id));
+            return (fileInfo, seasonInfo, showInfo);
         }
 
         // Strip the path and search for a match.
@@ -366,12 +407,9 @@ public class ShokoAPIManager : IDisposable
                 continue;
 
             // Find the show info.
-            ShowInfo? showInfo = null;
-            if (filterGroupByType.HasValue) {
-                showInfo =  await GetShowInfoForSeries(seriesId, filterGroupByType.Value);
-                if (showInfo == null)
-                    return (null, null, null);
-            }
+            var showInfo =  await GetShowInfoForSeries(seriesId, filterGroupByType);
+            if (showInfo == null || showInfo.SeasonList.Count == 0)
+                return (null, null, null);
 
             // Find the season info.
             var seasonInfo = await GetSeasonInfoForSeries(seriesId);
@@ -386,8 +424,7 @@ public class ShokoAPIManager : IDisposable
                 EpisodeIdToEpisodePathDictionary.TryAdd(episodeInfo.Id, path);
 
             // Add pointers for faster lookup.
-            PathToFileIdAndSeriesIdDictionary.TryAdd(path, (fileId, seriesId));
-            PathToEpisodeIdsDictionary.TryAdd(path, fileInfo.EpisodeList.Select(episode => episode.Id).ToList());
+            AddFileLookupIds(path, fileId, seriesId, fileInfo.EpisodeList.Select(episode => episode.Id));
 
             // Return the result.
             return new(fileInfo, seasonInfo, showInfo);
@@ -626,7 +663,7 @@ public class ShokoAPIManager : IDisposable
         seasonInfo = new SeasonInfo(series, episodes, cast, relations, genres, tags);
 
         foreach (var episode in episodes)
-            EpisodeIdToSeriesIdDictionary[episode.Id] = seriesId;
+            EpisodeIdToSeriesIdDictionary.TryAdd(episode.Id, seriesId);
         DataCache.Set<SeasonInfo>(cacheKey, seasonInfo, DefaultTimeSpan);
         return seasonInfo;
     }
@@ -688,6 +725,19 @@ public class ShokoAPIManager : IDisposable
         if (PathToSeriesIdDictionary.TryGetValue(path, out var seriesId))
             return seriesId;
 
+        // Fast-path for VFS.
+        if (path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar)) {
+            var seriesSegment = Path.GetFileName(path).Split('[').Last().Split(']').First();
+            if (!int.TryParse(seriesSegment.Split('-').LastOrDefault(), out var seriesIdRaw))
+                return null;
+
+            seriesId = seriesIdRaw.ToString();
+            PathToSeriesIdDictionary[path] = seriesId;
+            SeriesIdToPathDictionary.TryAdd(seriesId, path);
+
+            return seriesId;
+        }
+
         var partialPath = StripMediaFolder(path);
         Logger.LogDebug("Looking for shoko series matching path {Path}", partialPath);
         var result = await APIClient.GetSeriesPathEndsWith(partialPath);
@@ -720,7 +770,7 @@ public class ShokoAPIManager : IDisposable
     #endregion
     #region Show Info
 
-    public async Task<ShowInfo?> GetShowInfoByPath(string path, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    public async Task<ShowInfo?> GetShowInfoByPath(string path, Ordering.GroupFilterType filterByType)
     {
         if (PathToSeriesIdDictionary.TryGetValue(path, out var seriesId)) {
             if (SeriesIdToGroupIdDictionary.TryGetValue(seriesId, out var tuple)) {
@@ -740,7 +790,24 @@ public class ShokoAPIManager : IDisposable
         return await GetShowInfoForSeries(seriesId, filterByType);
     }
 
-    public async Task<ShowInfo?> GetShowInfoForSeries(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    public async Task<ShowInfo?> GetShowInfoForEpisode(string episodeId, Ordering.GroupFilterType filterByType)
+    {
+        if (string.IsNullOrEmpty(episodeId))
+            return null;
+
+        if (EpisodeIdToSeriesIdDictionary.TryGetValue(episodeId, out var seriesId))
+            return await GetShowInfoForSeries(seriesId, filterByType);
+
+        var series = await APIClient.GetSeriesFromEpisode(episodeId);
+        if (series == null)
+            return null;
+
+        seriesId = series.IDs.Shoko.ToString();
+        EpisodeIdToSeriesIdDictionary.TryAdd(episodeId, seriesId);
+        return await GetShowInfoForSeries(seriesId, filterByType);
+    }
+
+    public async Task<ShowInfo?> GetShowInfoForSeries(string seriesId, Ordering.GroupFilterType filterByType)
     {
         if (string.IsNullOrEmpty(seriesId))
             return null;
@@ -764,7 +831,7 @@ public class ShokoAPIManager : IDisposable
         return await CreateShowInfo(group, group.IDs.Shoko.ToString(), filterByType);
     }
 
-    private async Task<ShowInfo?> GetShowInfoForGroup(string groupId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    private async Task<ShowInfo?> GetShowInfoForGroup(string groupId, Ordering.GroupFilterType filterByType)
     {
         if (string.IsNullOrEmpty(groupId))
             return null;
@@ -812,7 +879,7 @@ public class ShokoAPIManager : IDisposable
         return showInfo;
     }
 
-    private async Task<ShowInfo?> GetOrCreateShowInfoForStandaloneSeries(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    private async Task<ShowInfo?> GetOrCreateShowInfoForStandaloneSeries(string seriesId, Ordering.GroupFilterType filterByType)
     {
         var cacheKey = $"show:{filterByType}:by-series-id:{seriesId}";
         if (DataCache.TryGetValue<ShowInfo>(cacheKey, out var showInfo)) {
@@ -847,7 +914,7 @@ public class ShokoAPIManager : IDisposable
     #endregion
     #region Collection Info
 
-    public async Task<CollectionInfo?> GetCollectionInfoByPath(string path, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    public async Task<CollectionInfo?> GetCollectionInfoByPath(string path, Ordering.GroupFilterType filterByType)
     {
         if (PathToSeriesIdDictionary.TryGetValue(path, out var seriesId)) {
             if (SeriesIdToCollectionIdDictionary.TryGetValue(seriesId, out var groupId)) {
@@ -867,7 +934,7 @@ public class ShokoAPIManager : IDisposable
         return await GetCollectionInfoForGroup(seriesId, filterByType);
     }
 
-    public async Task<CollectionInfo?> GetCollectionInfoBySeriesName(string seriesName, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    public async Task<CollectionInfo?> GetCollectionInfoBySeriesName(string seriesName, Ordering.GroupFilterType filterByType)
     {
         if (NameToSeriesIdDictionary.TryGetValue(seriesName, out var seriesId)) {
             if (SeriesIdToCollectionIdDictionary.TryGetValue(seriesId, out var groupId)) {
@@ -887,7 +954,7 @@ public class ShokoAPIManager : IDisposable
         return await GetCollectionInfoForSeries(seriesId, filterByType);
     }
 
-    public async Task<CollectionInfo?> GetCollectionInfoForGroup(string groupId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    public async Task<CollectionInfo?> GetCollectionInfoForGroup(string groupId, Ordering.GroupFilterType filterByType)
     {
         if (string.IsNullOrEmpty(groupId))
             return null;
@@ -901,7 +968,7 @@ public class ShokoAPIManager : IDisposable
         return await CreateCollectionInfo(group, groupId, filterByType);
     }
 
-    public async Task<CollectionInfo?> GetCollectionInfoForSeries(string seriesId, Ordering.GroupFilterType filterByType = Ordering.GroupFilterType.Default)
+    public async Task<CollectionInfo?> GetCollectionInfoForSeries(string seriesId, Ordering.GroupFilterType filterByType)
     {
         if (string.IsNullOrEmpty(seriesId))
             return null;

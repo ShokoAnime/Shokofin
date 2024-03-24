@@ -39,4 +39,30 @@ public static class StringExtensions
         forth = list.Count > 3 ? list[3] : "";
         fifth = list.Count > 4 ? list[4] : "";
     }
+
+    public static string Join(this IEnumerable<string> list, char separator)
+        => string.Join(separator, list);
+
+    public static string Join(this IEnumerable<string> list, string? separator)
+        => string.Join(separator, list);
+
+    public static string Join(this IEnumerable<string> list, char separator, int startIndex, int count)
+        => string.Join(separator, list, startIndex, count);
+
+    public static string Join(this IEnumerable<string> list, string? separator, int startIndex, int count)
+        => string.Join(separator, list, startIndex, count);
+
+    public static string ReplaceInvalidPathCharacters(this string path)
+        => path
+            .Replace(@"*", "\u1F7AF") // 🞯 (LIGHT FIVE SPOKED ASTERISK)
+            .Replace(@"|", "\uFF5C") // ｜ (FULLWIDTH VERTICAL LINE)
+            .Replace(@"\", "\u29F9") // ⧹ (BIG REVERSE SOLIDUS)
+            .Replace(@"/", "\u29F8") // ⧸ (BIG SOLIDUS)
+            .Replace(@":", "\u0589") // ։ (ARMENIAN FULL STOP)
+            .Replace("\"", "\u2033") // ″ (DOUBLE PRIME)
+            .Replace(@">", "\u203a") // › (SINGLE RIGHT-POINTING ANGLE QUOTATION MARK)
+            .Replace(@"<", "\u2039") // ‹ (SINGLE LEFT-POINTING ANGLE QUOTATION MARK)
+            .Replace(@"?", "\uff1f") // ？ (FULL WIDTH QUESTION MARK)
+            .Replace(@".", "\u2024") // ․ (ONE DOT LEADER)
+            .Trim();
 }

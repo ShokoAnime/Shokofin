@@ -36,10 +36,7 @@ namespace Shokofin.Providers
             try {
                 var result = new MetadataResult<Movie>();
 
-                var includeGroup = Plugin.Instance.Configuration.BoxSetGrouping == Ordering.GroupType.ShokoGroup;
-                var config = Plugin.Instance.Configuration;
-                Ordering.GroupFilterType? filterByType = config.BoxSetGrouping == Ordering.GroupType.ShokoGroup ? config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Movies : Ordering.GroupFilterType.Default : null;
-                var (file, series, group) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
+                var (file, series, _) = await ApiManager.GetFileInfoByPath(info.Path, Ordering.GroupFilterType.Movies);
                 var episode = file?.EpisodeList.FirstOrDefault();
 
                 // if file is null then series and episode is also null.
@@ -48,7 +45,6 @@ namespace Shokofin.Providers
                     return result;
                 }
 
-                var collectionName = GetCollectionName(series, group, info.MetadataLanguage);
                 var ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, series.Shoko.Name, episode.Shoko.Name, info.MetadataLanguage);
                 Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", displayTitle, file.Id, episode.Id, series.Id);
 
@@ -57,13 +53,11 @@ namespace Shokofin.Providers
                 var rating = isMultiEntry ? episode.AniDB.Rating.ToFloat(10) : series.AniDB.Rating.ToFloat(10);
 
                 result.Item = new Movie {
-                    IndexNumber = Ordering.GetMovieIndexNumber(group, series, episode),
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
                     PremiereDate = episode.AniDB.AirDate,
-                    CollectionName = collectionName,
                     // Use the file description if collection contains more than one movie and the file is not the main entry, otherwise use the collection description.
-                    Overview = (isMultiEntry && !isMainEntry ? Text.GetDescription(episode) : Text.GetDescription(series)),
+                    Overview = isMultiEntry && !isMainEntry ? Text.GetDescription(episode) : Text.GetDescription(series),
                     ProductionYear = episode.AniDB.AirDate?.Year,
                     Tags = series.Tags.ToArray(),
                     Genres = series.Genres.ToArray(),
@@ -73,8 +67,6 @@ namespace Shokofin.Providers
                 result.Item.SetProviderId("Shoko File", file.Id);
                 result.Item.SetProviderId("Shoko Episode", episode.Id);
                 result.Item.SetProviderId("Shoko Series", series.Id);
-                if (config.AddAniDBId)
-                    result.Item.SetProviderId("AniDB", series.AniDB.Id.ToString());
 
                 result.HasMetadata = true;
 
@@ -90,18 +82,6 @@ namespace Shokofin.Providers
                 return new MetadataResult<Movie>();
             }
         }
-
-        private static string GetCollectionName(API.Info.SeasonInfo series, API.Info.ShowInfo group, string metadataLanguage)
-        {
-            return Plugin.Instance.Configuration.BoxSetGrouping switch {
-                Ordering.GroupType.ShokoGroup =>
-                    Text.GetSeriesTitle(group.DefaultSeason.AniDB.Titles, group.DefaultSeason.Shoko.Name, metadataLanguage),
-                Ordering.GroupType.ShokoSeries =>
-                    Text.GetSeriesTitle(series.AniDB.Titles, series.Shoko.Name, metadataLanguage),
-                _ => null,
-            };
-        }
-
 
         public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MovieInfo searchInfo, CancellationToken cancellationToken)
             => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());

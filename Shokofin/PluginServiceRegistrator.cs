@@ -15,6 +15,7 @@ namespace Shokofin
             serviceCollection.AddSingleton<IIdLookup, IdLookup>();
             serviceCollection.AddSingleton<Sync.UserDataSyncManager>();
             serviceCollection.AddSingleton<MergeVersions.MergeVersionsManager>();
+            serviceCollection.AddSingleton<Collections.CollectionManager>();
             serviceCollection.AddSingleton<Resolvers.ShokoResolveManager>();
         }
     }

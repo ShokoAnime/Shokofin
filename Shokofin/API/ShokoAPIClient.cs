@@ -185,9 +185,10 @@ public class ShokoAPIClient : IDisposable
         return Get<List<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(path)}&includeDataFrom=AniDB&limit=1");
     }
 
-    public Task<ListResult<File>> GetFilesForSeries(string seriesId)
+    public async Task<IReadOnlyList<File>> GetFilesForSeries(string seriesId)
     {
-        return Get<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB");
+        var listResult = await Get<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB");
+        return listResult.List;
     }
 
     public async Task<IReadOnlyList<File>> GetFilesForImportFolder(int importFolderId)

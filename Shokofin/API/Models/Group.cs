@@ -22,8 +22,6 @@ public class Group
 
     public class GroupIDs : IDs
     {
-        public int? DefaultSeries { get; set; }
-
         public int MainSeries { get; set; }
 
         public int? ParentGroup { get; set; }

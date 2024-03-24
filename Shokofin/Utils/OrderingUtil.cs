@@ -1,4 +1,5 @@
 using System.Linq;
+using MediaBrowser.Model.Entities;
 using Shokofin.API.Info;
 using Shokofin.API.Models;
 
@@ -38,6 +39,12 @@ namespace Shokofin.Utils
             /// Group movies based on Shoko's series.
             /// </summary>
             ShokoSeries = 3,
+            
+            /// <summary>
+            /// Group both movies and shows into collections based on shoko's
+            /// groups.
+            /// </summary>
+            ShokoGroupPlus = 4,
         }
 
         /// <summary>
@@ -78,7 +85,7 @@ namespace Shokofin.Utils
             AfterSeason = 2,
 
             /// <summary>
-            /// Use a mix of <see cref="Shokofin.Utils.Ordering.SpecialOrderType.InBetweenSeasonByOtherData" /> and <see cref="Shokofin.Utils.Ordering.SpecialOrderType.InBetweenSeasonByAirDate" />.
+            /// Use a mix of <see cref="InBetweenSeasonByOtherData" /> and <see cref="InBetweenSeasonByAirDate" />.
             /// </summary>
             InBetweenSeasonMixed = 3,
 
@@ -93,67 +100,12 @@ namespace Shokofin.Utils
             InBetweenSeasonByOtherData = 5,
         }
 
-        /// <summary>
-        /// Get index number for a movie in a box-set.
-        /// </summary>
-        /// <returns>Absolute index.</returns>
-        public static int GetMovieIndexNumber(ShowInfo group, SeasonInfo series, EpisodeInfo episode)
-        {
-            switch (Plugin.Instance.Configuration.BoxSetGrouping) {
-                default:
-                case GroupType.Default:
-                    return 1;
-                case GroupType.ShokoSeries:
-                    return episode.AniDB.EpisodeNumber;
-                case GroupType.ShokoGroup: {
-                    int offset = 0;
-                    foreach (SeasonInfo s in group.SeasonList) {
-                        var sizes = s.Shoko.Sizes.Total;
-                        if (s != series) {
-                            if (episode.AniDB.Type == EpisodeType.Special) {
-                                var index = series.SpecialsList.FindIndex(e => string.Equals(e.Id, episode.Id));
-                                if (index == -1)
-                                    throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
-                                return offset - (index + 1);
-                            }
-                            switch (episode.AniDB.Type) {
-                                case EpisodeType.Normal:
-                                    // offset += 0; // it's not needed, so it's just here as a comment instead.
-                                    break;
-                                case EpisodeType.Special:
-                                    offset += sizes?.Episodes ?? 0;
-                                    goto case EpisodeType.Normal;
-                                case EpisodeType.Unknown:
-                                    offset += sizes?.Specials ?? 0;
-                                    goto case EpisodeType.Special;
-                                // Add them to the bottom of the list if we didn't filter them out properly.
-                                case EpisodeType.Parody:
-                                    offset += sizes?.Others ?? 0;
-                                    goto case EpisodeType.Unknown;
-                                case EpisodeType.OpeningSong:
-                                    offset += sizes?.Parodies ?? 0;
-                                    goto case EpisodeType.Parody;
-                                case EpisodeType.Trailer:
-                                    offset += sizes?.Credits ?? 0;
-                                    goto case EpisodeType.OpeningSong;
-                                default:
-                                    offset += sizes?.Trailers ?? 0;
-                                    goto case EpisodeType.Trailer;
-                            }
-                            return offset + episode.AniDB.EpisodeNumber;
-                        }
-                        else {
-                            if (episode.AniDB.Type == EpisodeType.Special) {
-                                offset -= series.SpecialsList.Count;
-                            }
-                            offset += (sizes?.Episodes ?? 0) + (sizes?.Parodies ?? 0) + (sizes?.Others ?? 0);
-                        }
-                    }
-                    break;
-                }
-            }
-            return 0;
-        }
+        public static GroupFilterType GetGroupFilterTypeForCollection(string collectionType)
+            => collectionType switch {
+                CollectionType.Movies => GroupFilterType.Movies,
+                CollectionType.TvShows => Plugin.Instance.Configuration.FilterOnLibraryTypes ? GroupFilterType.Others : GroupFilterType.Default,
+                _ => GroupFilterType.Others,
+            };
 
         /// <summary>
         /// Get index number for an episode in a series.
@@ -169,7 +121,7 @@ namespace Shokofin.Utils
                         var index = series.SpecialsList.FindIndex(e => string.Equals(e.Id, episode.Id));
                         if (index == -1)
                             throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Series={series.Id},Episode={episode.Id})");
-                        return (index + 1);
+                        return index + 1;
                     }
                     return episode.AniDB.EpisodeNumber;
                 case GroupType.MergeFriendly: {
@@ -181,14 +133,14 @@ namespace Shokofin.Utils
                 case GroupType.ShokoGroup: {
                     int offset = 0;
                     if (episode.AniDB.Type == EpisodeType.Special) {
-                        var seriesIndex = group.SeasonList.FindIndex(s => string.Equals(s.Id, series.Id));
-                        if (seriesIndex == -1)
+                        var seasonIndex = group.SeasonList.FindIndex(s => string.Equals(s.Id, series.Id));
+                        if (seasonIndex == -1)
                             throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
                         var index = series.SpecialsList.FindIndex(e => string.Equals(e.Id, episode.Id));
                         if (index == -1)
                             throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
-                        offset = group.SeasonList.GetRange(0, seriesIndex).Aggregate(0, (count, series) => count + series.SpecialsList.Count);
-                        return offset + (index + 1);
+                        offset = group.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.SpecialsList.Count);
+                        return offset + index + 1;
                     }
                     var sizes = series.Shoko.Sizes.Total;
                     switch (episode.AniDB.Type) {
@@ -332,7 +284,6 @@ namespace Shokofin.Utils
                     if (!group.SeasonNumberBaseDictionary.TryGetValue(series, out var seasonNumber))
                         throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id})");
 
-
                     var offset = 0;
                     switch (episode.AniDB.Type) {
                         default:
@@ -347,7 +298,7 @@ namespace Shokofin.Utils
                         }
                     }
 
-                    return seasonNumber + (seasonNumber < 0 ? -offset : offset);
+                    return seasonNumber + offset;
                 }
             }
         }
@@ -384,7 +335,7 @@ namespace Shokofin.Utils
                         return ExtraType.Clip;
                     // Music videos
                     if (title.Contains("music video", System.StringComparison.OrdinalIgnoreCase))
-                        return ExtraType.Clip;
+                        return ExtraType.ThemeVideo;
                     // Behind the Scenes
                     if (title.Contains("making of", System.StringComparison.CurrentCultureIgnoreCase))
                         return ExtraType.BehindTheScenes;

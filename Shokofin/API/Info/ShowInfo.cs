@@ -12,9 +12,14 @@ public class ShowInfo
 {
     public string? Id;
 
+    public string? ParentId;
+
     public string Name;
 
-    public bool IsStandalone;
+    public bool IsStandalone =>
+        Shoko == null;
+
+    public Group? Shoko;
 
     public string[] Tags;
 
@@ -33,8 +38,8 @@ public class ShowInfo
     public ShowInfo(Series series)
     {
         Id = null;
+        ParentId = series.IDs.ParentGroup.ToString();
         Name = series.Name;
-        IsStandalone = true;
         Tags = System.Array.Empty<string>();
         Genres = System.Array.Empty<string>();
         Studios = System.Array.Empty<string>();
@@ -48,7 +53,8 @@ public class ShowInfo
     {
         Id = group.IDs.Shoko.ToString();
         Name = group.Name;
-        IsStandalone = false;
+        Shoko = group;
+        ParentId = group.IDs.ParentGroup?.ToString();
         Tags = System.Array.Empty<string>();
         Genres = System.Array.Empty<string>();
         Studios = System.Array.Empty<string>();
@@ -68,8 +74,9 @@ public class ShowInfo
         if (seasonInfo.OthersList.Count > 0)
             seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
 
+        Id = null;
+        ParentId = seasonInfo.Shoko.IDs.ParentGroup.ToString();
         Name = seasonInfo.Shoko.Name;
-        IsStandalone = true;
         Tags = seasonInfo.Tags;
         Genres = seasonInfo.Genres;
         Studios = seasonInfo.Studios;
@@ -140,7 +147,8 @@ public class ShowInfo
 
         Id = groupId;
         Name = seriesList.Count > 0 ? seriesList[foundIndex].Shoko.Name : group.Name;
-        IsStandalone = false;
+        Shoko = group;
+        ParentId = group.IDs.ParentGroup?.ToString();
         Tags = seriesList.SelectMany(s => s.Tags).Distinct().ToArray();
         Genres = seriesList.SelectMany(s => s.Genres).Distinct().ToArray();
         Studios = seriesList.SelectMany(s => s.Studios).Distinct().ToArray();
@@ -151,6 +159,9 @@ public class ShowInfo
     }
 
     public SeasonInfo? GetSeriesInfoBySeasonNumber(int seasonNumber) {
+        if (Plugin.Instance.Configuration.SeriesGrouping is Ordering.GroupType.Default && seasonNumber is 123 or 124)
+            return SeasonList.FirstOrDefault();
+
         if (seasonNumber == 0 || !(SeasonOrderDictionary.TryGetValue(seasonNumber, out var seasonInfo) && seasonInfo != null))
             return null;
 

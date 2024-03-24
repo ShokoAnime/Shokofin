@@ -38,6 +38,7 @@ namespace Shokofin.Providers
                 return Plugin.Instance.Configuration.BoxSetGrouping switch
                 {
                     Ordering.GroupType.ShokoGroup => await GetShokoGroupedMetadata(info),
+                    Ordering.GroupType.ShokoGroupPlus => await GetShokoGroupedMetadata(info),
                     _ => await GetDefaultMetadata(info),
                 };
             }

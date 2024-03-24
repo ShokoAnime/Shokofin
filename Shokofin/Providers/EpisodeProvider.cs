@@ -40,7 +40,7 @@ namespace Shokofin.Providers
             try {
                 var result = new MetadataResult<Episode>();
                 var config = Plugin.Instance.Configuration;
-                Ordering.GroupFilterType? filterByType = config.SeriesGrouping == Ordering.GroupType.ShokoGroup ? config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default : null;
+                var filterByType = config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
 
                 // Fetch the episode, series and group info (and file info, but that's not really used (yet))
                 Info.FileInfo fileInfo = null;
@@ -60,7 +60,9 @@ namespace Shokofin.Providers
                     if (seasonInfo == null)
                         return result;
 
-                    showInfo = filterByType.HasValue ? (await ApiManager.GetShowInfoForSeries(seasonInfo.Id, filterByType.Value)) : null;
+                    showInfo = await ApiManager.GetShowInfoForSeries(seasonInfo.Id, filterByType);
+                    if (showInfo == null || showInfo.SeasonList.Count == 0)
+                        return result;
                 }
                 else {
                     (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);

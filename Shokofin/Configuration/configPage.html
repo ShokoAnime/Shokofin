@@ -185,13 +185,14 @@
                             <div class="fieldDescription selectFieldDescription"><div>Determines how to group Series together and divide them into Seasons.</div><div><strong>Warning:</strong> Modifying this setting requires the deletion and re-creation of any libraries using this plugin.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">Why can't I just refresh all metadata?</summary>Currently, refreshing and replacing all metadata does not remove all the metadata stored by Jellyfin. Additionally, if two or more show's entries have been merged, they cannot then be unmerged. Recreation of the library is the only way to ensure that you do not have mixed metadata in your libraries.</details><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What data is kept when recreating the libraries?</summary>The user data for each file is still kept after deleting a library. User data includes any ratings, play history, watch status and the last selected audio/subtitle track for a file.</details></div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="BoxSetGrouping">Box-set/Movie grouping:</label>
+                            <label class="selectLabel" for="BoxSetGrouping">Collections:</label>
                             <select is="emby-select" id="BoxSetGrouping" name="BoxSetGrouping" class="emby-select-withcolor emby-select">
-                                <option value="Default" selected>Do not create Box-sets for Movies</option>
-                                <option value="ShokoSeries">Create Box-sets based upon Shoko's Series entries</option>
-                                <option value="ShokoGroup">Create Box-sets based upon Shoko's Groups and Series entries</option>
+                                <option value="Default" selected>Do not create Collections</option>
+                                <option value="ShokoSeries">Create Collections for Movies based upon Shoko's Series entries</option>
+                                <option value="ShokoGroup">Create Collections for Movies based upon Shoko's Groups and Series entries</option>
+                                <option value="ShokoGroupPlus">Create Collections for Movies and Series based upon Shoko's Groups and Series entries</option>
                             </select>
-                            <div class="fieldDescription">Determines how to group Movies together into Box-sets.</div>
+                            <div class="fieldDescription">Determines how to group entities into Collections.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
@@ -387,9 +388,9 @@
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_EnableResolver" />
-                                <span>Enable Custom Resolver</span>
+                                <span>Virtual File System</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription"><div>Enables the custom resolver for the plugin.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What is this setting for?</summary>Enabling this setting should in theory make it so you won't have to think about file structure imcompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links instead. <strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong></details></div>
+                            <div class="fieldDescription checkboxFieldDescription"><div>Enables the use of the Virtual File System for any media libraries managed by the plugin.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What does it do?</summary>Enabling this setting should in theory make it so you won't have to think about file structure imcompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links managed by the plugin instead of your actual file structure.<strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong></details></div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="SeasonOrdering">Season ordering:</label>

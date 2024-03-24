@@ -91,7 +91,7 @@ namespace Shokofin.Providers
 
         private void OnLibraryManagerItemAdded(object sender, ItemChangeEventArgs e)
         {
-            if (e == null || e.Item == null || e.Parent == null || !(e.UpdateReason.HasFlag(ItemUpdateType.MetadataImport) || e.UpdateReason.HasFlag(ItemUpdateType.MetadataDownload)))
+            if (e == null || e.Item == null || e.Parent == null || e.UpdateReason.HasFlag(ItemUpdateType.None))
                 return;
 
             switch (e.Item) {
@@ -171,7 +171,7 @@ namespace Shokofin.Providers
 
         private void OnLibraryManagerItemUpdated(object sender, ItemChangeEventArgs e)
         {
-            if (e == null || e.Item == null || e.Parent == null || !(e.UpdateReason.HasFlag(ItemUpdateType.MetadataImport) || e.UpdateReason.HasFlag(ItemUpdateType.MetadataDownload)))
+            if (e == null || e.Item == null || e.Parent == null || e.UpdateReason.HasFlag(ItemUpdateType.None))
                 return;
 
             switch (e.Item) {
@@ -253,7 +253,7 @@ namespace Shokofin.Providers
 
         private void OnLibraryManagerItemRemoved(object sender, ItemChangeEventArgs e)
         {
-            if (e == null || e.Item == null || e.Parent == null || !(e.UpdateReason.HasFlag(ItemUpdateType.MetadataImport) || e.UpdateReason.HasFlag(ItemUpdateType.MetadataDownload)))
+            if (e == null || e.Item == null || e.Parent == null)
                 return;
 
             if (e.Item.IsVirtualItem)
@@ -267,11 +267,8 @@ namespace Shokofin.Providers
 
                     RemoveExtras(series, seriesId);
 
-                    if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {
-                        foreach (var season in series.Children.OfType<Season>()) {
-                            OnLibraryManagerItemRemoved(this, new ItemChangeEventArgs { Item = season, Parent = series, UpdateReason = ItemUpdateType.None });
-                        }
-                    }
+                    foreach (var season in series.Children.OfType<Season>())
+                        OnLibraryManagerItemRemoved(this, new ItemChangeEventArgs { Item = season, Parent = series, UpdateReason = ItemUpdateType.None });
 
                     return;
                 }
@@ -305,154 +302,71 @@ namespace Shokofin.Providers
         private void UpdateSeries(Series series, string seriesId)
         {
             // Provide metadata for a series using Shoko's Group feature
-            if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup) {
-                var showInfo = ApiManager.GetShowInfoForSeries(seriesId, Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default)
-                    .GetAwaiter()
-                    .GetResult();
-                if (showInfo == null) {
-                    Logger.LogWarning("Unable to find group info for series. (Series={SeriesID})", seriesId);
-                    return;
-                }
+            var showInfo = ApiManager.GetShowInfoForSeries(seriesId, Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default)
+                .GetAwaiter()
+                .GetResult();
+            if (showInfo == null || showInfo.SeasonList.Count == 0) {
+                Logger.LogWarning("Unable to find show info for series. (Series={SeriesID})", seriesId);
+                return;
+            }
 
-                // Get the existing seasons and episode ids
-                var (seasons, episodeIds) = GetExistingSeasonsAndEpisodeIds(series);
+            // Get the existing seasons and episode ids
+            var (seasons, episodeIds) = GetExistingSeasonsAndEpisodeIds(series);
 
-                // Add missing seasons
-                foreach (var (seasonNumber, season) in CreateMissingSeasons(showInfo, series, seasons))
-                    seasons.TryAdd(seasonNumber, season);
+            // Add missing seasons
+            foreach (var (seasonNumber, season) in CreateMissingSeasons(showInfo, series, seasons))
+                seasons.TryAdd(seasonNumber, season);
 
-                // Handle specials when grouped.
-                if (seasons.TryGetValue(0, out var zeroSeason)) {
-                    foreach (var seasonInfo in showInfo.SeasonList) {
-                        foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
-                            episodeIds.Add(episodeId);
-                        foreach (var episodeInfo in seasonInfo.SpecialsList) {
-                            if (episodeIds.Contains(episodeInfo.Id))
-                                continue;
-
-                            AddVirtualEpisode(showInfo, seasonInfo, episodeInfo, zeroSeason);
-                        }
-                    }
-                }
-
-                // Add missing episodes
-                foreach (var pair in showInfo.SeasonOrderDictionary) {
-                    var seasonNumber= pair.Key;
-                    if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
-                        continue;
-
-                    var seasonInfo = pair.Value;
+            // Handle specials when grouped.
+            if (seasons.TryGetValue(0, out var zeroSeason)) {
+                foreach (var seasonInfo in showInfo.SeasonList) {
                     foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
                         episodeIds.Add(episodeId);
-                    foreach (var episodeInfo in seasonInfo.EpisodeList) {
+
+                    foreach (var episodeInfo in seasonInfo.SpecialsList) {
                         if (episodeIds.Contains(episodeInfo.Id))
                             continue;
 
-                        AddVirtualEpisode(showInfo, seasonInfo, episodeInfo, season);
+                        AddVirtualEpisode(showInfo, seasonInfo, episodeInfo, zeroSeason);
                     }
                 }
-
-                // We add the extras to the season if we're using Shoko Groups.
-                AddExtras(series, showInfo.DefaultSeason);
-
-                foreach (var pair in showInfo.SeasonOrderDictionary) {
-                    if (!seasons.TryGetValue(pair.Key, out var season) || season == null)
-                        continue;
-
-                    AddExtras(season, pair.Value);
-                }
             }
-            // Provide metadata for other series
-            else {
-                var seasonInfo = ApiManager.GetSeasonInfoForSeries(seriesId)
-                    .GetAwaiter()
-                    .GetResult();
-                if (seasonInfo == null) {
-                    Logger.LogWarning("Unable to find series info. (Series={SeriesID})", seriesId);
-                    return;
-                }
 
-                // Get the existing seasons and episode ids
-                var (seasons, episodeIds) = GetExistingSeasonsAndEpisodeIds(series);
+            // Add missing episodes
+            foreach (var (seasonNumber, seasonInfo) in showInfo.SeasonOrderDictionary) {
+                if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
+                    continue;
 
-                // Compute the season numbers for each episode in the series in advance, since we need to filter out the missing seasons
-                var episodeInfoToSeasonNumberDirectory = seasonInfo.RawEpisodeList.ToDictionary(e => e, e => Ordering.GetSeasonNumber(null, seasonInfo, e));
-
-                // Add missing seasons
-                var allKnownSeasonNumbers = episodeInfoToSeasonNumberDirectory.Values.Distinct().ToList();
-                foreach (var (seasonNumber, season) in CreateMissingSeasons(seasonInfo, series, seasons, allKnownSeasonNumbers))
-                    seasons.Add(seasonNumber, season);
-
-                // Add missing episodes
                 foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
                     episodeIds.Add(episodeId);
-                foreach (var episodeInfo in seasonInfo.RawEpisodeList) {
-                    if (episodeInfo.ExtraType != null)
-                        continue;
 
+                foreach (var episodeInfo in seasonInfo.EpisodeList) {
                     if (episodeIds.Contains(episodeInfo.Id))
                         continue;
 
-                    var seasonNumber = episodeInfoToSeasonNumberDirectory[episodeInfo];
-                    if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
-                        continue;
-
-                    AddVirtualEpisode(null, seasonInfo, episodeInfo, season);
+                    AddVirtualEpisode(showInfo, seasonInfo, episodeInfo, season);
                 }
+            }
 
-                // We add the extras to the series if not.
-                AddExtras(series, seasonInfo);
+            AddExtras(series, showInfo.DefaultSeason);
+
+            foreach (var (seasonNumber, seasonInfo) in showInfo.SeasonOrderDictionary) {
+                if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
+                    continue;
+
+                AddExtras(season, seasonInfo);
             }
         }
 
         private void UpdateSeason(Season season, Series series, string seriesId, bool deleted = false)
         {
             var seasonNumber = season.IndexNumber!.Value;
-            var seriesGrouping = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
-            Info.ShowInfo showInfo = null;
-            Info.SeasonInfo seasonInfo = null;
-            // Provide metadata for a season using Shoko's Group feature
-            if (seriesGrouping) {
-                showInfo = ApiManager.GetShowInfoForSeries(seriesId, Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default)
-                    .GetAwaiter()
-                    .GetResult();
-                if (showInfo == null) {
-                    Logger.LogWarning("Unable to find group info for series. (Series={SeriesId})", seriesId);
-                    return;
-                }
-
-                if (seasonNumber == 0) {
-                    if (deleted) {
-                        season = AddVirtualSeason(0, series);
-                    }
-                }
-                else {
-                    seasonInfo = showInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
-                    if (seasonInfo == null) {
-                        Logger.LogWarning("Unable to find series info for Season {SeasonNumber:00} in group for series. (Group={GroupId})", seasonNumber, showInfo.Id);
-                        return;
-                    }
-
-                    if (deleted) {
-                        var offset = seasonNumber - showInfo.SeasonNumberBaseDictionary[seasonInfo];
-                        season = AddVirtualSeason(seasonInfo, offset, seasonNumber, series);
-                    }
-                }
-            }
-            // Provide metadata for other seasons
-            else {
-                seasonInfo = ApiManager.GetSeasonInfoForSeries(seriesId)
-                    .GetAwaiter()
-                    .GetResult();
-                if (seasonInfo == null) {
-                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber:00}. (Series={SeriesId})", seasonNumber, seriesId);
-                    return;
-                }
-
-                if (deleted) {
-                    var mergeFriendly = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly && seasonInfo.TvDB != null;
-                    season = seasonNumber == 1 && (!mergeFriendly) ? AddVirtualSeason(seasonInfo, 0, 1, series) : AddVirtualSeason(seasonNumber, series);
-                }
+            var showInfo = ApiManager.GetShowInfoForSeries(seriesId, Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default)
+                .GetAwaiter()
+                .GetResult();
+            if (showInfo == null || showInfo.SeasonList.Count == 0) {
+                Logger.LogWarning("Unable to find show info for season. (Series={SeriesId})", seriesId);
+                return;
             }
 
             // Get a hash-set of existing episodes – both physical and virtual – to exclude when adding new virtual episodes.
@@ -465,35 +379,39 @@ namespace Shokofin.Providers
                     existingEpisodes.Add(episodeId);
             }
 
-            // Handle specials when grouped.
+            // Special handling of specials (pun intended).
             if (seasonNumber == 0) {
-                if (seriesGrouping) {
-                    foreach (var sI in showInfo.SeasonList) {
-                        foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(sI.Id))
-                            existingEpisodes.Add(episodeId);
-                        foreach (var episodeInfo in sI.SpecialsList) {
-                            if (existingEpisodes.Contains(episodeInfo.Id))
-                                continue;
+                if (deleted) 
+                    season = AddVirtualSeason(0, series);
 
-                            AddVirtualEpisode(showInfo, sI, episodeInfo, season);
-                        }
-                    }
-                }
-                else {
-                    foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
+                foreach (var sI in showInfo.SeasonList) {
+                    foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(sI.Id))
                         existingEpisodes.Add(episodeId);
-                    foreach (var episodeInfo in seasonInfo.SpecialsList) {
+
+                    foreach (var episodeInfo in sI.SpecialsList) {
                         if (existingEpisodes.Contains(episodeInfo.Id))
                             continue;
 
-                        AddVirtualEpisode(showInfo, seasonInfo, episodeInfo, season);
+                        AddVirtualEpisode(showInfo, sI, episodeInfo, season);
                     }
                 }
             }
+            // Every other "season".
             else {
+                var seasonInfo = showInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
+                if (seasonInfo == null) {
+                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber:00} in group for series. (Group={GroupId})", seasonNumber, showInfo.Id);
+                    return;
+                }
+
+                var offset = seasonNumber - showInfo.SeasonNumberBaseDictionary[seasonInfo];
+                if (deleted)
+                    season = AddVirtualSeason(seasonInfo, offset, seasonNumber, series);
+
                 foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
                     existingEpisodes.Add(episodeId);
-                foreach (var episodeInfo in seasonInfo.EpisodeList) {
+
+                foreach (var episodeInfo in seasonInfo.EpisodeList.Concat(seasonInfo.AlternateEpisodesList).Concat(seasonInfo.OthersList)) {
                     var episodeParentIndex = episodeInfo.IsSpecial ? 0 : Ordering.GetSeasonNumber(showInfo, seasonInfo, episodeInfo);
                     if (episodeParentIndex != seasonNumber)
                         continue;
@@ -504,8 +422,7 @@ namespace Shokofin.Providers
                     AddVirtualEpisode(showInfo, seasonInfo, episodeInfo, season);
                 }
 
-                // We add the extras to the season if we're using Shoko Groups.
-                if (seriesGrouping) {
+                if (offset == 0) {
                     AddExtras(season, seasonInfo);
                 }
             }
@@ -513,16 +430,17 @@ namespace Shokofin.Providers
 
         private void UpdateEpisode(Episode episode, string episodeId)
         {
-            Info.ShowInfo showInfo = null;
-            Info.SeasonInfo seasonInfo = ApiManager.GetSeasonInfoForEpisode(episodeId)
-                .GetAwaiter()
-                .GetResult();
-            Info.EpisodeInfo episodeInfo = seasonInfo.EpisodeList.FirstOrDefault(e => e.Id == episodeId);
-            if (Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup)
-                showInfo = ApiManager.GetShowInfoForSeries(seasonInfo.Id, Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default)
+            var showInfo = ApiManager.GetShowInfoForEpisode(episodeId, Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default)
                     .GetAwaiter()
                     .GetResult();
-
+            if (showInfo == null || showInfo.SeasonList.Count == 0) {
+                Logger.LogWarning("Unable to find show info for episode. (Episode={EpisodeId})", episode);
+                return;
+            }
+            var seasonInfo = ApiManager.GetSeasonInfoForEpisode(episodeId)
+                .GetAwaiter()
+                .GetResult();
+            var episodeInfo = seasonInfo.EpisodeList.FirstOrDefault(e => e.Id == episodeId);
             var episodeIds = ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id);
             if (!episodeIds.Contains(episodeId))
                 AddVirtualEpisode(showInfo, seasonInfo, episodeInfo, episode.Season);
@@ -769,7 +687,7 @@ namespace Shokofin.Providers
         #endregion
         #region Extras
 
-        private void AddExtras(Folder parent, Info.SeasonInfo seasonInfo)
+        private void AddExtras(BaseItem parent, Info.SeasonInfo seasonInfo)
         {
             if (seasonInfo.ExtrasList.Count == 0)
                 return;
@@ -780,15 +698,9 @@ namespace Shokofin.Providers
                 if (!Lookup.TryGetPathForEpisodeId(episodeInfo.Id, out var episodePath))
                     continue;
 
-                switch (episodeInfo.ExtraType) {
-                    default:
-                        break;
-                    case MediaBrowser.Model.Entities.ExtraType.ThemeSong:
-                    case MediaBrowser.Model.Entities.ExtraType.ThemeVideo:
-                        if (!parent.SupportsThemeMedia)
-                            continue;
-                        break;
-                }
+                if (episodeInfo.ExtraType is MediaBrowser.Model.Entities.ExtraType.ThemeSong or MediaBrowser.Model.Entities.ExtraType.ThemeVideo &&
+                    !parent.SupportsThemeMedia)
+                    continue;
 
                 var item = LibraryManager.FindByPath(episodePath, false);
                 if (item != null && item is Video video) {
@@ -798,7 +710,7 @@ namespace Shokofin.Providers
                     video.ExtraType = episodeInfo.ExtraType;
                     video.ProviderIds.TryAdd("Shoko Episode", episodeInfo.Id);
                     video.ProviderIds.TryAdd("Shoko Series", seasonInfo.Id);
-                    LibraryManager.UpdateItemAsync(video, null, ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
+                    LibraryManager.UpdateItemAsync(video, null, ItemUpdateType.None, CancellationToken.None).ConfigureAwait(false);
                     if (!parent.ExtraIds.Contains(video.Id)) {
                         needsUpdate = true;
                         extraIds.Add(video.Id);
@@ -829,7 +741,7 @@ namespace Shokofin.Providers
             }
         }
 
-        public void RemoveExtras(Folder parent, string seriesId)
+        public void RemoveExtras(BaseItem parent, string seriesId)
         {
             var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
                 IsVirtualItem = false,

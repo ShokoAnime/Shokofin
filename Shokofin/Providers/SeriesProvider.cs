@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
@@ -27,20 +28,25 @@ namespace Shokofin.Providers
         private readonly ShokoAPIManager ApiManager;
 
         private readonly IFileSystem FileSystem;
+        
+        private readonly ILibraryManager LibraryManager;
 
-        public SeriesProvider(IHttpClientFactory httpClientFactory, ILogger<SeriesProvider> logger, ShokoAPIManager apiManager, IFileSystem fileSystem)
+        public SeriesProvider(IHttpClientFactory httpClientFactory, ILogger<SeriesProvider> logger, ShokoAPIManager apiManager, IFileSystem fileSystem, ILibraryManager libraryManager)
         {
             Logger = logger;
             HttpClientFactory = httpClientFactory;
             ApiManager = apiManager;
             FileSystem = fileSystem;
+            LibraryManager = libraryManager;
         }
 
         public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
         {
             try {
                 var result = new MetadataResult<Series>();
-                var filterLibrary = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
+                var baseItem = LibraryManager.FindByPath(info.Path, true);
+                var collectionType = LibraryManager.GetInheritedContentType(baseItem);
+                var filterLibrary = collectionType == CollectionType.TvShows && !Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Default : Ordering.GroupFilterType.Others;
                 var show = await ApiManager.GetShowInfoByPath(info.Path, filterLibrary);
                 if (show == null) {
                     try {
