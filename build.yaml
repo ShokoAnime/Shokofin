@@ -8,7 +8,6 @@ description: >
   A plugin to provide metadata from Shoko Server for your locally organized anime library in Jellyfin.
 category: "Metadata"
 artifacts:
-- "Sentry.dll"
 - "Shokofin.dll"
 changelog: >
   NA
