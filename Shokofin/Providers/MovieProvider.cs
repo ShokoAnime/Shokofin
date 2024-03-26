@@ -36,7 +36,7 @@ namespace Shokofin.Providers
             try {
                 var result = new MetadataResult<Movie>();
 
-                var (file, series, _) = await ApiManager.GetFileInfoByPath(info.Path, Ordering.GroupFilterType.Movies);
+                var (file, season, _) = await ApiManager.GetFileInfoByPath(info.Path);
                 var episode = file?.EpisodeList.FirstOrDefault();
 
                 // if file is null then series and episode is also null.
@@ -45,33 +45,33 @@ namespace Shokofin.Providers
                     return result;
                 }
 
-                var ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, series.Shoko.Name, episode.Shoko.Name, info.MetadataLanguage);
-                Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", displayTitle, file.Id, episode.Id, series.Id);
+                var ( displayTitle, alternateTitle ) = Text.GetMovieTitles(season.AniDB.Titles, episode.AniDB.Titles, season.Shoko.Name, episode.Shoko.Name, info.MetadataLanguage);
+                Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", displayTitle, file.Id, episode.Id, season.Id);
 
-                bool isMultiEntry = series.Shoko.Sizes.Total.Episodes > 1;
+                bool isMultiEntry = season.Shoko.Sizes.Total.Episodes > 1;
                 bool isMainEntry = episode.AniDB.Type == API.Models.EpisodeType.Normal && episode.Shoko.Name.Trim() == "Complete Movie";
-                var rating = isMultiEntry ? episode.AniDB.Rating.ToFloat(10) : series.AniDB.Rating.ToFloat(10);
+                var rating = isMultiEntry ? episode.AniDB.Rating.ToFloat(10) : season.AniDB.Rating.ToFloat(10);
 
                 result.Item = new Movie {
                     Name = displayTitle,
                     OriginalTitle = alternateTitle,
                     PremiereDate = episode.AniDB.AirDate,
                     // Use the file description if collection contains more than one movie and the file is not the main entry, otherwise use the collection description.
-                    Overview = isMultiEntry && !isMainEntry ? Text.GetDescription(episode) : Text.GetDescription(series),
+                    Overview = isMultiEntry && !isMainEntry ? Text.GetDescription(episode) : Text.GetDescription(season),
                     ProductionYear = episode.AniDB.AirDate?.Year,
-                    Tags = series.Tags.ToArray(),
-                    Genres = series.Genres.ToArray(),
-                    Studios = series.Studios.ToArray(),
+                    Tags = season.Tags.ToArray(),
+                    Genres = season.Genres.ToArray(),
+                    Studios = season.Studios.ToArray(),
                     CommunityRating = rating,
                 };
                 result.Item.SetProviderId("Shoko File", file.Id);
                 result.Item.SetProviderId("Shoko Episode", episode.Id);
-                result.Item.SetProviderId("Shoko Series", series.Id);
+                result.Item.SetProviderId("Shoko Series", season.Id);
 
                 result.HasMetadata = true;
 
                 result.ResetPeople();
-                foreach (var person in series.Staff)
+                foreach (var person in season.Staff)
                     result.AddPerson(person);
 
                 return result;

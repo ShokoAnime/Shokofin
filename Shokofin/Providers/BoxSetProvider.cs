@@ -35,10 +35,9 @@ namespace Shokofin.Providers
         public async Task<MetadataResult<BoxSet>> GetMetadata(BoxSetInfo info, CancellationToken cancellationToken)
         {
             try {
-                return Plugin.Instance.Configuration.BoxSetGrouping switch
+                return Plugin.Instance.Configuration.CollectionGrouping switch
                 {
-                    Ordering.GroupType.ShokoGroup => await GetShokoGroupedMetadata(info),
-                    Ordering.GroupType.ShokoGroupPlus => await GetShokoGroupedMetadata(info),
+                    Ordering.CollectionCreationType.ShokoGroup => await GetShokoGroupedMetadata(info),
                     _ => await GetDefaultMetadata(info),
                 };
             }
@@ -53,18 +52,10 @@ namespace Shokofin.Providers
             var result = new MetadataResult<BoxSet>();
 
             // First try to re-use any existing series id.
-            API.Info.SeasonInfo? season = null;
-            if (info.ProviderIds.TryGetValue("Shoko Series", out var seriesId))
-                season = await ApiManager.GetSeasonInfoForSeries(seriesId);
+            if (!info.ProviderIds.TryGetValue("Shoko Series", out var seriesId))
+                return result;
 
-            // Then try to look ir up by path.
-            if (season == null)
-                season = await ApiManager.GetSeasonInfoByPath(info.Path);
-
-            // Then try to look it up using the name.
-            if (season == null && TryGetBoxSetName(info, out var boxSetName))
-                season = await ApiManager.GetSeasonInfoBySeriesName(boxSetName);
-
+            var season = await ApiManager.GetSeasonInfoForSeries(seriesId);
             if (season == null) {
                     Logger.LogWarning("Unable to find movie box-set info for name {Name} and path {Path}", info.Name, info.Path);
                 return result;
@@ -98,23 +89,12 @@ namespace Shokofin.Providers
 
         private async Task<MetadataResult<BoxSet>> GetShokoGroupedMetadata(BoxSetInfo info)
         {
+            // Filter out all manually created collections. We don't help those.
             var result = new MetadataResult<BoxSet>();
-            var config = Plugin.Instance.Configuration;
-            Ordering.GroupFilterType filterByType = config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Movies : Ordering.GroupFilterType.Default;
+            if (!info.ProviderIds.TryGetValue("Shoko Group", out var groupId))
+                return result;
 
-            // First try to re-use any existing group id.
-            API.Info.CollectionInfo? collection = null;
-            if (info.ProviderIds.TryGetValue("Shoko Group", out var groupId))
-                collection = await ApiManager.GetCollectionInfoForGroup(groupId, filterByType);
-
-            // Then try to look it up by path.
-            if (collection == null)
-                collection = await ApiManager.GetCollectionInfoByPath(info.Path, filterByType);
-
-            // Then try to look it up using the name.
-            if (collection == null && TryGetBoxSetName(info, out var boxSetName))
-                collection = await ApiManager.GetCollectionInfoBySeriesName(boxSetName, filterByType);
-
+            var collection = await ApiManager.GetCollectionInfoForGroup(groupId);
             if (collection == null) {
                 Logger.LogWarning("Unable to find collection info for name {Name} and path {Path}", info.Name, info.Path);
                 return result;

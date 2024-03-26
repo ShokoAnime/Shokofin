@@ -67,6 +67,7 @@ public class ShokoResolveManager
 
     private void OnLibraryManagerItemRemoved(object? sender, ItemChangeEventArgs e)
     {
+        // Remove the VFS directory for any media library folders when they're removed.
         var root = LibraryManager.RootFolder;
         if (e.Item != null && root != null && e.Item != root && e.Item is Folder folder && folder.ParentId == Guid.Empty  && !string.IsNullOrEmpty(folder.Path) && !folder.Path.StartsWith(root.Path)) {
             DataCache.Remove(folder.Id.ToString());
@@ -214,80 +215,69 @@ public class ShokoResolveManager
     {
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
-        var filterType = Ordering.GetGroupFilterTypeForCollection(collectionType);
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId);
         if (season == null)
             return (sourceLocation: string.Empty, symbolicLink: string.Empty);
-        var isMovieSeason = season.AniDB.Type == SeriesType.Movie;
+
+        var show = await ApiManager.GetShowInfoForSeries(seriesId);
+        if (show == null)
+            return (sourceLocation: string.Empty, symbolicLink: string.Empty);
+
+        var file = await ApiManager.GetFileInfo(fileId, seriesId);
+        var episode = file?.EpisodeList.FirstOrDefault();
+        if (file == null || episode == null)
+            return (sourceLocation: string.Empty, symbolicLink: string.Empty);
+
+        // In the off-chance that we accidentially ended up with two
+        // instances of the season while fetching in parallel, then we're
+        // switching to the correct reference of the season for the show
+        // we're doing. Let's just hope we won't have to also need to switch
+        // the episode…
+        season = show.SeasonList.FirstOrDefault(s => s.Id == seriesId);
+        episode = season?.RawEpisodeList.FirstOrDefault(e => e.Id == episode.Id);
+
+        if (season == null || episode == null)
+            return (sourceLocation: string.Empty, symbolicLink: string.Empty);
+        var showName = show.DefaultSeason.AniDB.Title?.ReplaceInvalidPathCharacters();
+        if (string.IsNullOrEmpty(showName))
+            showName = $"Shoko Series {show.Id}";
+        else if (show.DefaultSeason.AniDB.AirDate.HasValue)
+            showName += $" ({show.DefaultSeason.AniDB.AirDate.Value.Year})";
+
+        var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
+        var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
+        var isSpecial = episode.IsSpecial;
+
+        var paths = new List<string>()
+        {
+            vfsPath,
+            $"{showName} [shoko-series-{show.Id}]",
+            $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}",
+        };
+        var episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber}";
+        if (file.ExtraType != null)
+        {
+            episodeName = episode.AniDB.Titles.FirstOrDefault(t => t.LanguageCode == "en")?.Value ?? $"Episode {episode.AniDB.Type} {episode.AniDB.EpisodeNumber}";
+            var extrasFolder = file.ExtraType switch {
+                ExtraType.BehindTheScenes => "behind the scenes",
+                ExtraType.Clip => "clips",
+                ExtraType.DeletedScene => "deleted scene",
+                ExtraType.Interview => "interviews",
+                ExtraType.Sample => "samples",
+                ExtraType.Scene => "scenes",
+                ExtraType.ThemeSong => "theme-music",
+                ExtraType.ThemeVideo => "backdrops",
+                ExtraType.Trailer => "trailers",
+                ExtraType.Unknown => "others",
+                _ => "extras",
+            };
+            paths.Add(extrasFolder);
+        }
+
+        var isMovieSeason = season.Type == SeriesType.Movie;
         switch (collectionType) {
-            default: {
-                if (isMovieSeason && collectionType == null)
-                    goto case CollectionType.Movies;
-
-                var show = await ApiManager.GetShowInfoForSeries(seriesId, filterType);
-                if (show == null)
-                    return (sourceLocation: string.Empty, symbolicLink: string.Empty);
-
-                var file = await ApiManager.GetFileInfo(fileId, seriesId);
-                var episode = file?.EpisodeList.FirstOrDefault();
-                if (file == null || episode == null)
-                    return (sourceLocation: string.Empty, symbolicLink: string.Empty);
-
-                // In the off-chance that we accidentially ended up with two
-                // instances of the season while fetching in parallel, then we're
-                // switching to the correct reference of the season for the show
-                // we're doing. Let's just hope we won't have to also need to switch
-                // the episode…
-                season = show.SeasonList.FirstOrDefault(s => s.Id == seriesId);
-                episode = season?.RawEpisodeList.FirstOrDefault(e => e.Id == episode.Id);
-                if (season == null || episode == null)
-                    return (sourceLocation: string.Empty, symbolicLink: string.Empty);
-
-                var defaultSeason = show.DefaultSeason ?? season;
-                var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
-                var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
-                var (_, _, _, isSpecial) = Ordering.GetSpecialPlacement(show, season, episode);
-
-                var showName = defaultSeason.AniDB.Title?.ReplaceInvalidPathCharacters();
-                if (string.IsNullOrEmpty(showName))
-                    showName = $"Shoko Series {defaultSeason.Id}";
-                if (defaultSeason.AniDB.AirDate.HasValue)
-                    showName += $" ({defaultSeason.AniDB.AirDate.Value.Year})";
-
-                var episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber}";
-                var paths = new List<string>()
-                {
-                    vfsPath,
-                    $"{showName} [shoko-series-{defaultSeason.Id}]",
-                    $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}",
-                };
-                if (file.ExtraType != null)
-                {
-                    episodeName = episode.AniDB.Titles.FirstOrDefault(t => t.LanguageCode == "en")?.Value ?? $"Episode {episode.AniDB.Type} {episode.AniDB.EpisodeNumber}";
-                    var extrasFolder = file.ExtraType switch {
-                        ExtraType.BehindTheScenes => "behind the scenes",
-                        ExtraType.Clip => "clips",
-                        ExtraType.DeletedScene => "deleted scene",
-                        ExtraType.Interview => "interviews",
-                        ExtraType.Sample => "samples",
-                        ExtraType.Scene => "scenes",
-                        ExtraType.ThemeSong => "theme-music",
-                        ExtraType.ThemeVideo => "backdrops",
-                        ExtraType.Trailer => "trailers",
-                        ExtraType.Unknown => "others",
-                        _ => "extras",
-                    };
-                    paths.Add(extrasFolder);
-                }
-
-                var fileName = $"{episodeName} [shoko-series-{seriesId}] [shoko-file-{fileId}{Path.GetExtension(sourceLocation)}]";
-                paths.Add(fileName);
-                var symbolicLink = Path.Combine(paths.ToArray());
-                ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, episodeIds);
-                return (sourceLocation, symbolicLink);
-            }
             case CollectionType.TvShows: {
-                if (isMovieSeason && Plugin.Instance.Configuration.FilterOnLibraryTypes)
+                if (isMovieSeason && Plugin.Instance.Configuration.SeparateMovies)
                     return (sourceLocation: string.Empty, symbolicLink: string.Empty);
 
                 goto default;
@@ -296,9 +286,20 @@ public class ShokoResolveManager
                 if (!isMovieSeason)
                     return (sourceLocation: string.Empty, symbolicLink: string.Empty);
 
-                var fileName = $"Movie File [shoko-series-{seriesId}] [shoko-file-{fileId}{Path.GetExtension(sourceLocation)}]";
-                var symbolicLink = Path.Combine(vfsPath, $"Shoko Series {seriesId} [shoko-series-{seriesId}]", fileName);
+                // Remove the season directory from the path.
+                paths.RemoveAt(2);
 
+                paths.Add( $"Movie [shoko-series-{seriesId}] [shoko-file-{fileId}{Path.GetExtension(sourceLocation)}]");
+                var symbolicLink = Path.Combine(paths.ToArray());
+                ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, episodeIds);
+                return (sourceLocation, symbolicLink);
+            }
+            default: {
+                if (isMovieSeason && collectionType == null)
+                    goto case CollectionType.Movies;
+
+                paths.Add($"{episodeName} [shoko-series-{seriesId}] [shoko-file-{fileId}{Path.GetExtension(sourceLocation)}]");
+                var symbolicLink = Path.Combine(paths.ToArray());
                 ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, episodeIds);
                 return (sourceLocation, symbolicLink);
             }
@@ -309,7 +310,7 @@ public class ShokoResolveManager
 
     #region Ignore Rule
 
-    public bool ShouldFilterItem(Folder? parent, FileSystemMetadata fileInfo)
+    public async Task<bool> ShouldFilterItem(Folder? parent, FileSystemMetadata fileInfo)
     {
         // Everything in the root folder is ignored by us.
         var root = LibraryManager.RootFolder;
@@ -338,13 +339,12 @@ public class ShokoResolveManager
             var fullPath = fileInfo.FullName;
             var (mediaFolder, partialPath) = ApiManager.FindMediaFolder(fullPath, parent, root);
 
-            var shouldIgnore = Plugin.Instance.Configuration.LibraryFilteringMode ?? Plugin.Instance.Configuration.EXPERIMENTAL_EnableResolver || isSoleProvider;
+            var shouldIgnore = Plugin.Instance.Configuration.LibraryFilteringMode ?? Plugin.Instance.Configuration.VirtualFileSystem || isSoleProvider;
             var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
-            var filterType = Ordering.GetGroupFilterTypeForCollection(collectionType);
             if (fileInfo.IsDirectory)
-                return ScanDirectory(partialPath, fullPath, collectionType, filterType, shouldIgnore);
+                return await ScanDirectory(partialPath, fullPath, collectionType, shouldIgnore);
             else
-                return ScanFile(partialPath, fullPath, filterType, shouldIgnore);
+                return await ScanFile(partialPath, fullPath, shouldIgnore);
         }
         catch (Exception ex) {
             if (!(ex is System.Net.Http.HttpRequestException && ex.Message.Contains("Connection refused")))
@@ -355,11 +355,9 @@ public class ShokoResolveManager
         }
     }
 
-    private bool ScanDirectory(string partialPath, string fullPath, string? collectionType, Ordering.GroupFilterType filterType, bool shouldIgnore)
+    private async Task<bool> ScanDirectory(string partialPath, string fullPath, string? collectionType, bool shouldIgnore)
     {
-        var season = ApiManager.GetSeasonInfoByPath(fullPath)
-            .GetAwaiter()
-            .GetResult();
+        var season = await ApiManager.GetSeasonInfoByPath(fullPath);
 
         // We inform/warn here since we enabled the provider in our library, but we can't find a match for the given folder path.
         if (season == null) {
@@ -369,9 +367,7 @@ public class ShokoResolveManager
                     var entries = FileSystem.GetDirectories(fullPath, false).ToList();
                     Logger.LogDebug("Unable to find shoko series for {Path}, trying {DirCount} sub-directories.", partialPath, entries.Count);
                     foreach (var entry in entries) {
-                        season = ApiManager.GetSeasonInfoByPath(entry.FullName)
-                            .GetAwaiter()
-                            .GetResult();
+                        season = await ApiManager.GetSeasonInfoByPath(entry.FullName);
                         if (season != null)
                         {
                             Logger.LogDebug("Found shoko series {SeriesName} for sub-directory of path {Path} (Series={SeriesId})", season.Shoko.Name, partialPath, season.Id);
@@ -391,10 +387,10 @@ public class ShokoResolveManager
         }
 
         // Filter library if we enabled the option.
-        var isMovieSeason = season.AniDB.Type == SeriesType.Movie;
+        var isMovieSeason = season.Type == SeriesType.Movie;
         switch (collectionType) {
             case CollectionType.TvShows:
-                if (isMovieSeason && Plugin.Instance.Configuration.FilterOnLibraryTypes) {
+                if (isMovieSeason && Plugin.Instance.Configuration.SeparateMovies) {
                     Logger.LogInformation("Found movie in show library and library separation is enabled, ignoring shoko series. (Series={SeriesId})", season.Id);
                     return true;
                 }
@@ -407,23 +403,18 @@ public class ShokoResolveManager
                 break;
         }
 
-        var show = ApiManager.GetShowInfoForSeries(season.Id, filterType)
-                .GetAwaiter()
-                .GetResult()!;
-
-        if (!string.IsNullOrEmpty(show.Id))
-            Logger.LogInformation("Found shoko group {GroupName} (Series={SeriesId},Group={GroupId})", show.Name, season.Id, show.Id);
+        var show = await ApiManager.GetShowInfoForSeries(season.Id)!;
+        if (!string.IsNullOrEmpty(show!.GroupId))
+            Logger.LogInformation("Found shoko group {GroupName} (Series={SeriesId},Group={GroupId})", show.Name, season.Id, show.GroupId);
         else
             Logger.LogInformation("Found shoko series {SeriesName} (Series={SeriesId})", season.Shoko.Name, season.Id);
 
         return false;
     }
 
-    private bool ScanFile(string partialPath, string fullPath, Ordering.GroupFilterType filterType, bool shouldIgnore)
+    private async Task<bool> ScanFile(string partialPath, string fullPath, bool shouldIgnore)
     {
-        var (file, season, _) = ApiManager.GetFileInfoByPath(fullPath, filterType)
-            .GetAwaiter()
-            .GetResult();
+        var (file, season, _) = await ApiManager.GetFileInfoByPath(fullPath);
 
         // We inform/warn here since we enabled the provider in our library, but we can't find a match for the given file path.
         if (file == null || season == null) {
@@ -451,13 +442,12 @@ public class ShokoResolveManager
 
     public BaseItem? ResolveSingle(Folder? parent, string? collectionType, FileSystemMetadata fileInfo)
     {
-        // Disable resolver.
-        if (!Plugin.Instance.Configuration.EXPERIMENTAL_EnableResolver)
+        if (!Plugin.Instance.Configuration.VirtualFileSystem)
             return null;
 
-        // Everything in the root folder is ignored by us.
         var root = LibraryManager.RootFolder;
-        if (!(collectionType == CollectionType.TvShows || collectionType == CollectionType.Movies || collectionType == null) || fileInfo == null || parent == null || root == null || parent == root || fileInfo.FullName.StartsWith(root.Path))
+        if (!(collectionType == CollectionType.TvShows || collectionType == CollectionType.Movies || collectionType == null) ||
+            fileInfo == null || parent == null || root == null || parent == root || fileInfo.FullName.StartsWith(root.Path))
             return null;
 
         try {
@@ -505,12 +495,12 @@ public class ShokoResolveManager
 
     public MultiItemResolverResult? ResolveMultiple(Folder? parent, string? collectionType, List<FileSystemMetadata> fileInfoList)
     {
-        // Disable resolver.
-        if (!Plugin.Instance.Configuration.EXPERIMENTAL_EnableResolver)
+        if (!Plugin.Instance.Configuration.VirtualFileSystem)
             return null;
 
         var root = LibraryManager.RootFolder;
-        if (!(collectionType == CollectionType.TvShows || collectionType == CollectionType.Movies || collectionType == null) || root == null || parent == null || parent == root)
+        if (!(collectionType == CollectionType.TvShows || collectionType == CollectionType.Movies || collectionType == null) ||
+            root == null || parent == null || parent == root)
             return null;
 
         try {
@@ -525,7 +515,6 @@ public class ShokoResolveManager
                 if (string.IsNullOrEmpty(vfsPath))
                     return null;
 
-                var filterType = Ordering.GetGroupFilterTypeForCollection(collectionType);
                 var items = FileSystem.GetDirectories(vfsPath)
                     .AsParallel()
                     .SelectMany(dirInfo => {
@@ -538,7 +527,7 @@ public class ShokoResolveManager
                         if (season == null)
                             return Array.Empty<BaseItem>();
 
-                        if ((collectionType == CollectionType.Movies || collectionType == null) && season.AniDB.Type == SeriesType.Movie) {
+                        if ((collectionType == CollectionType.Movies || collectionType == null) && season.Type == SeriesType.Movie) {
                             return FileSystem.GetFiles(dirInfo.FullName)
                                 .AsParallel()
                                 .Select(fileInfo => {

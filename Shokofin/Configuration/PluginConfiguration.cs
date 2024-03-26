@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 using TextSourceType = Shokofin.Utils.Text.TextSourceType;
 using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
-using SeriesAndBoxSetGroupType = Shokofin.Utils.Ordering.GroupType;
+using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
 
@@ -56,17 +56,21 @@ namespace Shokofin.Configuration
 
         public TextSourceType DescriptionSource { get; set; }
 
+        public bool VirtualFileSystem { get; set; }
+
+        public bool UseGroupsForShows { get; set; }
+
+        public bool SeparateMovies { get; set; }
+
         public OrderType SeasonOrdering { get; set; }
 
         public bool MarkSpecialsWhenGrouped { get; set; }
 
         public SpecialOrderType SpecialsPlacement { get; set; }
 
-        public SeriesAndBoxSetGroupType BoxSetGrouping { get; set; }
+        public CollectionCreationType CollectionGrouping { get; set; }
 
         public OrderType MovieOrdering { get; set; }
-
-        public bool FilterOnLibraryTypes { get; set; }
 
         public DisplayLanguageType TitleMainType { get; set; }
 
@@ -87,8 +91,6 @@ namespace Shokofin.Configuration
         public bool? LibraryFilteringMode { get; set; }
 
         #region Experimental features
-
-        public bool EXPERIMENTAL_EnableResolver { get; set; }
 
         public bool EXPERIMENTAL_AutoMergeVersions { get; set; }
 
@@ -125,17 +127,18 @@ namespace Shokofin.Configuration
             TitleAlternateType = DisplayLanguageType.Origin;
             TitleAllowAny = false;
             DescriptionSource = TextSourceType.Default;
+            VirtualFileSystem = true;
+            UseGroupsForShows = true;
+            SeparateMovies = true;
             SeasonOrdering = OrderType.Default;
             SpecialsPlacement = SpecialOrderType.AfterSeason;
             MarkSpecialsWhenGrouped = true;
-            BoxSetGrouping = SeriesAndBoxSetGroupType.Default;
+            CollectionGrouping = CollectionCreationType.None;
             MovieOrdering = OrderType.Default;
-            FilterOnLibraryTypes = false;
             UserList = Array.Empty<UserConfiguration>();
             IgnoredFileExtensions  = new [] { ".nfo", ".jpg", ".jpeg", ".png" };
             IgnoredFolders = new [] { ".streams", "@recently-snapshot" };
             LibraryFilteringMode = null;
-            EXPERIMENTAL_EnableResolver = false;
             EXPERIMENTAL_AutoMergeVersions = false;
             EXPERIMENTAL_SplitThenMergeMovies = true;
             EXPERIMENTAL_SplitThenMergeEpisodes = false;

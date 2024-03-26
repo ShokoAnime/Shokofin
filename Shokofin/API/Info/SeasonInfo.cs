@@ -18,6 +18,8 @@ public class SeasonInfo
 
     public Series.TvDB? TvDB;
 
+    public SeriesType Type;
+
     public string[] Tags;
 
     public string[] Genres;
@@ -145,6 +147,7 @@ public class SeasonInfo
         Shoko = series;
         AniDB = series.AniDBEntity;
         TvDB = series.TvDBEntityList.FirstOrDefault();
+        Type = series.AniDBEntity.Type;
         Tags = tags;
         Genres = genres;
         Studios = studios;

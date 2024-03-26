@@ -21,7 +21,9 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver, IResolverIgnoreR
     }
 
     public bool ShouldIgnore(FileSystemMetadata fileInfo, BaseItem parent)
-        => ResolveManager.ShouldFilterItem(parent as Folder, fileInfo);
+        => ResolveManager.ShouldFilterItem(parent as Folder, fileInfo)
+            .GetAwaiter()
+            .GetResult();
 
     public BaseItem? ResolvePath(ItemResolveArgs args)
         => ResolveManager.ResolveSingle(args.Parent, args.CollectionType, args.FileInfo);

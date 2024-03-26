@@ -1,6 +1,8 @@
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using MediaBrowser.Controller.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API.Models;
 using Shokofin.Utils;
@@ -10,61 +12,109 @@ namespace Shokofin.API.Info;
 
 public class ShowInfo
 {
-    public string? Id;
+    /// <summary>
+    /// Main Shoko Series Id.
+    /// </summary>
+    public string Id;
 
-    public string? ParentId;
+    /// <summary>
+    /// Main Shoko Group Id.
+    /// </summary>
+    public string? GroupId;
 
+    /// <summary>
+    /// Shoko Group Id used for Collection Support.
+    /// </summary>
+    public string? CollectionId;
+
+    /// <summary>
+    /// The main name of the show.
+    /// </summary>
     public string Name;
 
+    /// <summary>
+    /// Indicates this is a standalone show without a group attached to it.
+    /// </summary>
     public bool IsStandalone =>
         Shoko == null;
 
+    /// <summary>
+    /// The Shoko Group, if this is not a standalone show entry.
+    /// </summary>
     public Group? Shoko;
 
+    /// <summary>
+    /// First premiere date of the show.
+    /// </summary>
+    public DateTime? PremiereDate =>
+        SeasonList
+            .Select(s => s.AniDB.AirDate)
+            .Where(s => s != null)
+            .OrderBy(s => s)
+            .FirstOrDefault();
+
+    /// <summary>
+    /// Ended date of the show.
+    /// </summary>
+    public DateTime? EndDate => 
+        SeasonList.Any(s => s.AniDB.EndDate == null) ? null : SeasonList
+            .Select(s => s.AniDB.AirDate)
+            .OrderBy(s => s)
+            .LastOrDefault();
+
+    /// <summary>
+    /// Overall content rating of the show.
+    /// </summary>
+    public string? ContentRating =>
+        DefaultSeason.AniDB.Restricted ? "XXX" : null;
+
+    /// <summary>
+    /// Overall community rating of the show.
+    /// </summary>
+    public float CommunityRating =>
+        (float)(SeasonList.Aggregate(0f, (total, seasonInfo) => total + seasonInfo.AniDB.Rating.ToFloat(10)) / SeasonList.Count);
+
+    /// <summary>
+    /// All tags from across all seasons.
+    /// </summary>
     public string[] Tags;
 
+    /// <summary>
+    /// All genres from across all seasons.
+    /// </summary>
     public string[] Genres;
 
+    /// <summary>
+    /// All studios from across all seasons.
+    /// </summary>
     public string[] Studios;
 
+    /// <summary>
+    /// All staff from across all seasons.
+    /// </summary>
+    public PersonInfo[] Staff;
+
+    /// <summary>
+    /// All seasons.
+    /// </summary>
     public List<SeasonInfo> SeasonList;
 
+    /// <summary>
+    /// The season order dictionary.
+    /// </summary>
     public Dictionary<int, SeasonInfo> SeasonOrderDictionary;
 
+    /// <summary>
+    /// The season number base-number dictionary.
+    /// </summary>
     public Dictionary<SeasonInfo, int> SeasonNumberBaseDictionary;
 
-    public SeasonInfo? DefaultSeason;
+    /// <summary>
+    /// The default season for the show.
+    /// </summary>
+    public SeasonInfo DefaultSeason;
 
-    public ShowInfo(Series series)
-    {
-        Id = null;
-        ParentId = series.IDs.ParentGroup.ToString();
-        Name = series.Name;
-        Tags = System.Array.Empty<string>();
-        Genres = System.Array.Empty<string>();
-        Studios = System.Array.Empty<string>();
-        SeasonList = new();
-        SeasonNumberBaseDictionary = new();
-        SeasonOrderDictionary = new();
-        DefaultSeason = null;
-    }
-
-    public ShowInfo(Group group)
-    {
-        Id = group.IDs.Shoko.ToString();
-        Name = group.Name;
-        Shoko = group;
-        ParentId = group.IDs.ParentGroup?.ToString();
-        Tags = System.Array.Empty<string>();
-        Genres = System.Array.Empty<string>();
-        Studios = System.Array.Empty<string>();
-        SeasonList = new();
-        SeasonNumberBaseDictionary = new();
-        SeasonOrderDictionary = new();
-        DefaultSeason = null;
-    }
-
-    public ShowInfo(SeasonInfo seasonInfo)
+    public ShowInfo(SeasonInfo seasonInfo, string? groupId = null)
     {
         var seasonNumberBaseDictionary = new Dictionary<SeasonInfo, int>() { { seasonInfo, 1 } };
         var seasonOrderDictionary = new Dictionary<int, SeasonInfo>() { { 1, seasonInfo } };
@@ -74,41 +124,34 @@ public class ShowInfo
         if (seasonInfo.OthersList.Count > 0)
             seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
 
-        Id = null;
-        ParentId = seasonInfo.Shoko.IDs.ParentGroup.ToString();
+        Id = seasonInfo.Id;
+        GroupId = groupId ?? seasonInfo.Shoko.IDs.ParentGroup.ToString();
+        CollectionId = seasonInfo.Shoko.IDs.ParentGroup.ToString();
         Name = seasonInfo.Shoko.Name;
         Tags = seasonInfo.Tags;
         Genres = seasonInfo.Genres;
         Studios = seasonInfo.Studios;
+        Staff = seasonInfo.Staff;
         SeasonList = new() { seasonInfo };
         SeasonNumberBaseDictionary = seasonNumberBaseDictionary;
         SeasonOrderDictionary = seasonOrderDictionary;
         DefaultSeason = seasonInfo;
     }
 
-    public ShowInfo(Group group, List<SeasonInfo> seriesList, Ordering.GroupFilterType filterByType, ILogger logger)
+    public ShowInfo(Group group, List<SeasonInfo> seasonList, ILogger logger, bool useGroupIdForCollection)
     {
         var groupId = group.IDs.Shoko.ToString();
 
-        if (seriesList.Count > 0) switch (filterByType) {
-            case Ordering.GroupFilterType.Movies:
-                seriesList = seriesList.Where(s => s.AniDB.Type == SeriesType.Movie).ToList();
-                break;
-            case Ordering.GroupFilterType.Others:
-                seriesList = seriesList.Where(s => s.AniDB.Type != SeriesType.Movie).ToList();
-                break;
-        }
-
         // Order series list
-        var orderingType = filterByType == Ordering.GroupFilterType.Movies ? Plugin.Instance.Configuration.MovieOrdering : Plugin.Instance.Configuration.SeasonOrdering;
+        var orderingType = Plugin.Instance.Configuration.SeasonOrdering;
         switch (orderingType) {
             case Ordering.OrderType.Default:
                 break;
             case Ordering.OrderType.ReleaseDate:
-                seriesList = seriesList.OrderBy(s => s?.AniDB?.AirDate ?? System.DateTime.MaxValue).ToList();
+                seasonList = seasonList.OrderBy(s => s?.AniDB?.AirDate ?? DateTime.MaxValue).ToList();
                 break;
             case Ordering.OrderType.Chronological:
-                seriesList.Sort(new SeriesInfoRelationComparer());
+                seasonList.Sort(new SeriesInfoRelationComparer());
                 break;
         }
 
@@ -121,7 +164,7 @@ public class ShowInfo
             case Ordering.OrderType.Default:
             case Ordering.OrderType.Chronological: {
                 int targetId = group.IDs.MainSeries;
-                foundIndex = seriesList.FindIndex(s => s.Shoko.IDs.Shoko == targetId);
+                foundIndex = seasonList.FindIndex(s => s.Shoko.IDs.Shoko == targetId);
                 break;
             }
         }
@@ -129,14 +172,15 @@ public class ShowInfo
         // Fallback to the first series if we can't get a base point for seasons.
         if (foundIndex == -1)
         {
-            logger.LogWarning("Unable to get a base-point for seasons within the group for the filter, so falling back to the first series in the group. This is most likely due to library separation being enabled. (Filter={FilterByType},Group={GroupID})", filterByType.ToString(), groupId);
+            logger.LogWarning("Unable to get a base-point for seasons within the group for the filter, so falling back to the first series in the group. This is most likely due to library separation being enabled. (Group={GroupID})", groupId);
             foundIndex = 0;
         }
 
+        var defaultSeason = seasonList[foundIndex];
         var seasonOrderDictionary = new Dictionary<int, SeasonInfo>();
         var seasonNumberBaseDictionary = new Dictionary<SeasonInfo, int>();
         var seasonNumberOffset = 0;
-        foreach (var (seasonInfo, index) in seriesList.Select((s, i) => (s, i))) {
+        foreach (var (seasonInfo, index) in seasonList.Select((s, i) => (s, i))) {
             seasonNumberBaseDictionary.Add(seasonInfo, ++seasonNumberOffset);
             seasonOrderDictionary.Add(seasonNumberOffset, seasonInfo);
             if (seasonInfo.AlternateEpisodesList.Count > 0)
@@ -145,17 +189,19 @@ public class ShowInfo
                 seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
         }
 
-        Id = groupId;
-        Name = seriesList.Count > 0 ? seriesList[foundIndex].Shoko.Name : group.Name;
+        Id = defaultSeason.Id;
+        GroupId = groupId;
+        Name = group.Name;
         Shoko = group;
-        ParentId = group.IDs.ParentGroup?.ToString();
-        Tags = seriesList.SelectMany(s => s.Tags).Distinct().ToArray();
-        Genres = seriesList.SelectMany(s => s.Genres).Distinct().ToArray();
-        Studios = seriesList.SelectMany(s => s.Studios).Distinct().ToArray();
-        SeasonList = seriesList;
+        CollectionId = useGroupIdForCollection ? groupId : group.IDs.ParentGroup?.ToString();
+        Tags = seasonList.SelectMany(s => s.Tags).Distinct().ToArray();
+        Genres = seasonList.SelectMany(s => s.Genres).Distinct().ToArray();
+        Studios = seasonList.SelectMany(s => s.Studios).Distinct().ToArray();
+        Staff = seasonList.SelectMany(s => s.Staff).DistinctBy(p => new { p.Type, p.Name, p.Role }).ToArray();
+        SeasonList = seasonList;
         SeasonNumberBaseDictionary = seasonNumberBaseDictionary;
         SeasonOrderDictionary = seasonOrderDictionary;
-        DefaultSeason = seriesList.Count > 0 ? seriesList[foundIndex] : null;
+        DefaultSeason = defaultSeason;
     }
 
     public SeasonInfo? GetSeriesInfoBySeasonNumber(int seasonNumber) {

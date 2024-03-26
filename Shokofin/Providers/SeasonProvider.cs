@@ -33,18 +33,17 @@ namespace Shokofin.Providers
         public async Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
         {
             try {
-                if (!info.IndexNumber.HasValue || info.IndexNumber.HasValue && info.IndexNumber.Value == 0)
-                    return null;
-
                 var result = new MetadataResult<Season>();
-                var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
+                if (!info.IndexNumber.HasValue || info.IndexNumber.HasValue && info.IndexNumber.Value == 0)
+                    return result;
+
                 if (!info.SeriesProviderIds.TryGetValue("Shoko Series", out var seriesId) || !info.IndexNumber.HasValue) {
                     Logger.LogDebug("Unable refresh Season {SeasonNumber} {SeasonName}", info.IndexNumber, info.Name);
                     return result;
                 }
 
                 var seasonNumber = info.IndexNumber.Value;
-                var showInfo = await ApiManager.GetShowInfoForSeries(seriesId, filterByType);
+                var showInfo = await ApiManager.GetShowInfoForSeries(seriesId);
                 if (showInfo == null) {
                     Logger.LogWarning("Unable to find show info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
                     return result;
@@ -52,11 +51,11 @@ namespace Shokofin.Providers
 
                 var seasonInfo = showInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
                 if (seasonInfo == null || !showInfo.SeasonNumberBaseDictionary.TryGetValue(seasonInfo, out var baseSeasonNumber)) {
-                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Series={SeriesId},Group={GroupId})", seasonNumber, seriesId, showInfo.Id);
+                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Series={SeriesId},Group={GroupId})", seasonNumber, seriesId, showInfo.GroupId);
                     return result;
                 }
 
-                Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, showInfo.Name, seriesId, showInfo.Id);
+                Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, showInfo.Name, seriesId, showInfo.GroupId);
 
                 var offset = Math.Abs(seasonNumber - baseSeasonNumber);
 

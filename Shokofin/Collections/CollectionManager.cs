@@ -41,19 +41,14 @@ public class CollectionManager
     {
         try
         {
-            switch (Plugin.Instance.Configuration.BoxSetGrouping)
+            switch (Plugin.Instance.Configuration.CollectionGrouping)
             {
                 default:
-                case Ordering.GroupType.Default:
-                case Ordering.GroupType.MergeFriendly:
                     break;
-                case Ordering.GroupType.ShokoSeries:
+                case Ordering.CollectionCreationType.ShokoSeries:
                     await ReconstructMovieSeriesCollections(progress, cancellationToken);
                     break;
-                case Ordering.GroupType.ShokoGroup:
-                    await ReconstructMovieGroupCollections(progress, cancellationToken);
-                    break;
-                case Ordering.GroupType.ShokoGroupPlus:
+                case Ordering.CollectionCreationType.ShokoGroup:
                     await ReconstructSharedCollections(progress, cancellationToken);
                     break;
             }
@@ -78,14 +73,13 @@ public class CollectionManager
 
         // create a tree-map of how it's supposed to be.
         var config = Plugin.Instance.Configuration;
-        var filterByType = config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Movies : Ordering.GroupFilterType.Default;
         var movieDict = new Dictionary<Movie, (FileInfo, SeasonInfo, ShowInfo)>();
         foreach (var movie in movies)
         {
             if (!Lookup.TryGetEpisodeIdsFor(movie, out var episodeIds))
                 continue;
 
-            var (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(movie.Path, filterByType);
+            var (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(movie.Path);
             if (fileInfo == null || seasonInfo == null || showInfo == null)
                 continue;
 
@@ -101,7 +95,7 @@ public class CollectionManager
                 seriesDict.Values
                     .Select(seasonInfo => seasonInfo.Shoko.IDs.ParentGroup.ToString())
                     .Distinct()
-                    .Select(groupId => ApiManager.GetCollectionInfoForGroup(groupId, Ordering.GroupFilterType.Default))
+                    .Select(groupId => ApiManager.GetCollectionInfoForGroup(groupId))
             )
             .ContinueWith(task => task.Result.ToDictionary(x => x!.Id, x => x!));
 
@@ -118,7 +112,7 @@ public class CollectionManager
 
             while (!currentGroup.IsTopLevel && !finalGroups.ContainsKey(currentGroup.ParentId!))
             {
-                currentGroup = await ApiManager.GetCollectionInfoForGroup(currentGroup.ParentId!, Ordering.GroupFilterType.Default);
+                currentGroup = await ApiManager.GetCollectionInfoForGroup(currentGroup.ParentId!);
                 if (currentGroup == null)
                     break;
                 finalGroups.Add(currentGroup.Id, currentGroup);
@@ -197,14 +191,13 @@ public class CollectionManager
 
         // create a tree-map of how it's supposed to be.
         var config = Plugin.Instance.Configuration;
-        var filterByType = config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Movies : Ordering.GroupFilterType.Default;
         var movieDict = new Dictionary<Movie, (FileInfo, SeasonInfo, ShowInfo)>();
         foreach (var movie in movies)
         {
             if (!Lookup.TryGetEpisodeIdsFor(movie, out var episodeIds))
                 continue;
 
-            var (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(movie.Path, filterByType);
+            var (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(movie.Path);
             if (fileInfo == null || seasonInfo == null || showInfo == null)
                 continue;
 
@@ -220,7 +213,7 @@ public class CollectionManager
                 seriesDict.Values
                     .Select(seasonInfo => seasonInfo.Shoko.IDs.ParentGroup.ToString())
                     .Distinct()
-                    .Select(groupId => ApiManager.GetCollectionInfoForGroup(groupId, Ordering.GroupFilterType.Default))
+                    .Select(groupId => ApiManager.GetCollectionInfoForGroup(groupId))
             )
             .ContinueWith(task => task.Result.ToDictionary(x => x!.Id, x => x!));
 
@@ -237,7 +230,7 @@ public class CollectionManager
 
             while (!currentGroup.IsTopLevel && !finalGroups.ContainsKey(currentGroup.ParentId!))
             {
-                currentGroup = await ApiManager.GetCollectionInfoForGroup(currentGroup.ParentId!, Ordering.GroupFilterType.Default);
+                currentGroup = await ApiManager.GetCollectionInfoForGroup(currentGroup.ParentId!);
                 if (currentGroup == null)
                     break;
                 finalGroups.Add(currentGroup.Id, currentGroup);

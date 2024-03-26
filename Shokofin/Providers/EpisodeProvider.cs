@@ -40,7 +40,6 @@ namespace Shokofin.Providers
             try {
                 var result = new MetadataResult<Episode>();
                 var config = Plugin.Instance.Configuration;
-                var filterByType = config.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
 
                 // Fetch the episode, series and group info (and file info, but that's not really used (yet))
                 Info.FileInfo fileInfo = null;
@@ -60,12 +59,12 @@ namespace Shokofin.Providers
                     if (seasonInfo == null)
                         return result;
 
-                    showInfo = await ApiManager.GetShowInfoForSeries(seasonInfo.Id, filterByType);
+                    showInfo = await ApiManager.GetShowInfoForSeries(seasonInfo.Id);
                     if (showInfo == null || showInfo.SeasonList.Count == 0)
                         return result;
                 }
                 else {
-                    (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(info.Path, filterByType);
+                    (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(info.Path);
                     episodeInfo = fileInfo?.EpisodeList.FirstOrDefault();
                 }
 
@@ -76,7 +75,7 @@ namespace Shokofin.Providers
                 }
 
                 result.Item = CreateMetadata(showInfo, seasonInfo, episodeInfo, fileInfo, info.MetadataLanguage);
-                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},Group={GroupId})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seasonInfo.Id, showInfo?.Id);
+                Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},Group={GroupId})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seasonInfo.Id, showInfo?.GroupId);
 
                 result.HasMetadata = true;
 
@@ -106,7 +105,7 @@ namespace Shokofin.Providers
                     string defaultEpisodeTitle = episodeInfo.Shoko.Name;
                     if (
                         // Movies
-                        (series.AniDB.Type == SeriesType.Movie && (episodeInfo.AniDB.Type == EpisodeType.Normal || episodeInfo.AniDB.Type == EpisodeType.Special)) ||
+                        (series.Type == SeriesType.Movie && (episodeInfo.AniDB.Type == EpisodeType.Normal || episodeInfo.AniDB.Type == EpisodeType.Special)) ||
                         // OVAs
                         (series.AniDB.Type == SeriesType.OVA && episodeInfo.AniDB.Type == EpisodeType.Normal && episodeInfo.AniDB.EpisodeNumber == 1 && episodeInfo.Shoko.Name == "OVA")
                     ) {
@@ -127,7 +126,12 @@ namespace Shokofin.Providers
             }
             else {
                 string defaultEpisodeTitle = episode.Shoko.Name;
-                if (series.AniDB.Type == SeriesType.Movie && (episode.AniDB.Type == EpisodeType.Normal || episode.AniDB.Type == EpisodeType.Special)) {
+                if (
+                    // Movies
+                    (series.Type == SeriesType.Movie && (episode.AniDB.Type == EpisodeType.Normal || episode.AniDB.Type == EpisodeType.Special)) ||
+                    // OVAs
+                    (series.AniDB.Type == SeriesType.OVA && episode.AniDB.Type == EpisodeType.Normal && episode.AniDB.EpisodeNumber == 1 && episode.Shoko.Name == "OVA")
+                ) {
                     string defaultSeriesTitle = series.Shoko.Name;
                     ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, defaultSeriesTitle, defaultEpisodeTitle, metadataLanguage);
                 }
@@ -136,9 +140,6 @@ namespace Shokofin.Providers
                 }
                 description = Text.GetDescription(episode);
             }
-
-            var episodeNumber = Ordering.GetEpisodeNumber(group, series, episode);
-            var seasonNumber = Ordering.GetSeasonNumber(group, series, episode);
 
             if (config.MarkSpecialsWhenGrouped) switch (episode.AniDB.Type) {
                 case EpisodeType.Unknown:
@@ -172,9 +173,11 @@ namespace Shokofin.Providers
                     break;
             }
 
-            Episode result;
+            var episodeNumber = Ordering.GetEpisodeNumber(group, series, episode);
+            var seasonNumber = Ordering.GetSeasonNumber(group, series, episode);
             var (airsBeforeEpisodeNumber, airsBeforeSeasonNumber, airsAfterSeasonNumber, isSpecial) = Ordering.GetSpecialPlacement(group, series, episode);
-            var rating = series.AniDB.Restricted && series.AniDB.Type != SeriesType.TV ? "XXX" : null;
+
+            Episode result;
             if (season != null) {
                 result = new Episode {
                     Name = displayTitle,
@@ -194,8 +197,7 @@ namespace Shokofin.Providers
                     SeriesName = season.Series.Name,
                     SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
                     SeasonName = season.Name,
-                    OfficialRating = rating,
-                    CustomRating = rating,
+                    OfficialRating = group.ContentRating,
                     DateLastSaved = DateTime.UtcNow,
                     RunTimeTicks = episode.AniDB.Duration.Ticks,
                 };
@@ -212,8 +214,7 @@ namespace Shokofin.Providers
                     AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
                     PremiereDate = episode.AniDB.AirDate,
                     Overview = description,
-                    OfficialRating = rating,
-                    CustomRating = rating,
+                    OfficialRating = group.ContentRating,
                     CommunityRating = episode.AniDB.Rating.ToFloat(10),
                 };
             }

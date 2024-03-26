@@ -149,8 +149,11 @@ namespace Shokofin.Utils
             FullTitle = 3,
         }
 
-        public static string GetDescription(SeasonInfo series)
-            => GetDescription(series.AniDB.Description, series.TvDB?.Description);
+        public static string GetDescription(ShowInfo show)
+            => GetDescription(show.DefaultSeason);
+
+        public static string GetDescription(SeasonInfo season)
+            => GetDescription(season.AniDB.Description, season.TvDB?.Description);
 
         public static string GetDescription(EpisodeInfo episode)
             => GetDescription(episode.AniDB.Description, episode.TvDB?.Description);

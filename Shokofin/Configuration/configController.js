@@ -159,10 +159,10 @@ async function defaultSubmit(form) {
         config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
 
         // Library settings
+        config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
         config.LibraryFilteringMode = filteringMode;
-        config.SeriesGrouping = form.querySelector("#SeriesGrouping").value;
-        config.BoxSetGrouping = form.querySelector("#BoxSetGrouping").value;
-        config.FilterOnLibraryTypes = form.querySelector("#FilterOnLibraryTypes").checked;
+        config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
+        config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
         config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
         config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
     
@@ -184,7 +184,6 @@ async function defaultSubmit(form) {
 
         // Experimental settings
         config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
-        config.EXPERIMENTAL_EnableResolver = form.querySelector("#EXPERIMENTAL_EnableResolver").checked;
         config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
         config.EXPERIMENTAL_SplitThenMergeMovies = form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked;
         config.EXPERIMENTAL_SplitThenMergeEpisodes = form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked;
@@ -324,10 +323,10 @@ async function syncSettings(form) {
     config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
 
     // Library settings
+    config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
     config.LibraryFilteringMode = filteringMode;
-    config.SeriesGrouping = form.querySelector("#SeriesGrouping").value;
-    config.BoxSetGrouping = form.querySelector("#BoxSetGrouping").value;
-    config.FilterOnLibraryTypes = form.querySelector("#FilterOnLibraryTypes").checked;
+    config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
+    config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
     config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
     config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
 
@@ -349,7 +348,6 @@ async function syncSettings(form) {
 
     // Experimental settings
     config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
-    config.EXPERIMENTAL_EnableResolver = form.querySelector("#EXPERIMENTAL_EnableResolver").checked;
     config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
     config.EXPERIMENTAL_SplitThenMergeMovies = form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked;
     config.EXPERIMENTAL_SplitThenMergeEpisodes = form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked;
@@ -481,6 +479,10 @@ export default function (page) {
         form.querySelector("#SyncUserDataInitialSkipEventCount").disabled = disabled;
     });
 
+    form.querySelector("#VirtualFileSystem").addEventListener("change", function () {
+        form.querySelector("#LibraryFilteringMode").disabled = this.checked;
+    });
+
     page.addEventListener("viewshow", async function () {
         Dashboard.showLoadingMsg();
         try {
@@ -507,10 +509,10 @@ export default function (page) {
             form.querySelector("#AddTMDBId").checked = config.AddTMDBId;
 
             // Library settings
+            form.querySelector("#VirtualFileSystem").checked = config.VirtualFileSystem || true;
             form.querySelector("#LibraryFilteringMode").value = `${config.LibraryFilteringMode != null ? config.LibraryFilteringMode : null}`;
-            form.querySelector("#SeriesGrouping").value = config.SeriesGrouping;
-            form.querySelector("#BoxSetGrouping").value = config.BoxSetGrouping;
-            form.querySelector("#FilterOnLibraryTypes").checked = config.FilterOnLibraryTypes;
+            form.querySelector("#CollectionGrouping").value = config.CollectionGrouping;
+            form.querySelector("#SeparateMovies").checked = config.SeparateMovies || true;
             form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
 
@@ -533,7 +535,6 @@ export default function (page) {
 
             // Experimental settings
             form.querySelector("#SeasonOrdering").value = config.SeasonOrdering;
-            form.querySelector("#EXPERIMENTAL_EnableResolver").checked = config.EXPERIMENTAL_EnableResolver || false;
             form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked = config.EXPERIMENTAL_AutoMergeVersions || false;
             form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked = config.EXPERIMENTAL_SplitThenMergeMovies || true;
             form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked = config.EXPERIMENTAL_SplitThenMergeEpisodes || false;

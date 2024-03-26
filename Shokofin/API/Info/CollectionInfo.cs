@@ -22,18 +22,7 @@ public class CollectionInfo
 
     public IReadOnlyList<CollectionInfo> SubCollections;
 
-    public CollectionInfo(Group group)
-    {
-        Id = group.IDs.Shoko.ToString();
-        ParentId = group.IDs.ParentGroup?.ToString();
-        IsTopLevel = group.IDs.TopLevelGroup == group.IDs.Shoko;
-        Name = group.Name;
-        Shoko = group;
-        Shows = new List<ShowInfo>();
-        SubCollections = new List<CollectionInfo>();
-    }
-
-    public CollectionInfo(Group group, List<ShowInfo> shows, List<CollectionInfo> subCollections, Ordering.GroupFilterType filterByType)
+    public CollectionInfo(Group group, List<ShowInfo> shows, List<CollectionInfo> subCollections)
     {
         Id = group.IDs.Shoko.ToString();
         ParentId = group.IDs.ParentGroup?.ToString();

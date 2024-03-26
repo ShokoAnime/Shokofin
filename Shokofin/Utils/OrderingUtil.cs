@@ -9,42 +9,26 @@ namespace Shokofin.Utils
 {
     public class Ordering
     {
-        public enum GroupFilterType {
-            Default = 0,
-            Movies = 1,
-            Others = 2,
-        }
-
         /// <summary>
         /// Group series or movie box-sets
         /// </summary>
-        public enum GroupType
+        public enum CollectionCreationType
         {
             /// <summary>
             /// No grouping. All series will have their own entry.
             /// </summary>
-            Default = 0,
-
-            /// <summary>
-            /// Don't group, but make series merge-friendly by using the season numbers from TvDB.
-            /// </summary>
-            MergeFriendly = 1,
-
-            /// <summary>
-            /// Group series based on Shoko's default group filter.
-            /// </summary>
-            ShokoGroup = 2,
+            None = 0,
 
             /// <summary>
             /// Group movies based on Shoko's series.
             /// </summary>
-            ShokoSeries = 3,
-            
+            ShokoSeries = 1,
+
             /// <summary>
             /// Group both movies and shows into collections based on shoko's
             /// groups.
             /// </summary>
-            ShokoGroupPlus = 4,
+            ShokoGroup = 2,
         }
 
         /// <summary>
@@ -99,13 +83,6 @@ namespace Shokofin.Utils
             /// </summary>
             InBetweenSeasonByOtherData = 5,
         }
-
-        public static GroupFilterType GetGroupFilterTypeForCollection(string collectionType)
-            => collectionType switch {
-                CollectionType.Movies => GroupFilterType.Movies,
-                CollectionType.TvShows => Plugin.Instance.Configuration.FilterOnLibraryTypes ? GroupFilterType.Others : GroupFilterType.Default,
-                _ => GroupFilterType.Others,
-            };
 
         /// <summary>
         /// Get index number for an episode in a series.

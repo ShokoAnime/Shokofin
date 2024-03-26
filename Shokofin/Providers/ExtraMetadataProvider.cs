@@ -51,6 +51,7 @@ namespace Shokofin.Providers
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             LibraryManager.ItemAdded -= OnLibraryManagerItemAdded;
             LibraryManager.ItemUpdated -= OnLibraryManagerItemUpdated;
             LibraryManager.ItemRemoved -= OnLibraryManagerItemRemoved;
@@ -262,10 +263,8 @@ namespace Shokofin.Providers
             switch (e.Item) {
                 // Clean up after removing a series.
                 case Series series: {
-                    if (!Lookup.TryGetSeriesIdFor(series, out var seriesId))
+                    if (!Lookup.TryGetSeriesIdFor(series, out var _))
                         return;
-
-                    RemoveExtras(series, seriesId);
 
                     foreach (var season in series.Children.OfType<Season>())
                         OnLibraryManagerItemRemoved(this, new ItemChangeEventArgs { Item = season, Parent = series, UpdateReason = ItemUpdateType.None });
@@ -278,10 +277,7 @@ namespace Shokofin.Providers
                     if (!(Lookup.TryGetSeriesIdFor(season.Series, out var seriesId) && (e.Parent is Series series)))
                         return;
 
-                    if (e.UpdateReason == ItemUpdateType.None)
-                        RemoveExtras(season, seriesId);
-                    else
-                        UpdateSeason(season, series, seriesId, true);
+                    UpdateSeason(season, series, seriesId, true);
 
                     return;
                 }
@@ -302,7 +298,7 @@ namespace Shokofin.Providers
         private void UpdateSeries(Series series, string seriesId)
         {
             // Provide metadata for a series using Shoko's Group feature
-            var showInfo = ApiManager.GetShowInfoForSeries(seriesId, Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default)
+            var showInfo = ApiManager.GetShowInfoForSeries(seriesId)
                 .GetAwaiter()
                 .GetResult();
             if (showInfo == null || showInfo.SeasonList.Count == 0) {
@@ -347,21 +343,12 @@ namespace Shokofin.Providers
                     AddVirtualEpisode(showInfo, seasonInfo, episodeInfo, season);
                 }
             }
-
-            AddExtras(series, showInfo.DefaultSeason);
-
-            foreach (var (seasonNumber, seasonInfo) in showInfo.SeasonOrderDictionary) {
-                if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
-                    continue;
-
-                AddExtras(season, seasonInfo);
-            }
         }
 
         private void UpdateSeason(Season season, Series series, string seriesId, bool deleted = false)
         {
             var seasonNumber = season.IndexNumber!.Value;
-            var showInfo = ApiManager.GetShowInfoForSeries(seriesId, Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default)
+            var showInfo = ApiManager.GetShowInfoForSeries(seriesId)
                 .GetAwaiter()
                 .GetResult();
             if (showInfo == null || showInfo.SeasonList.Count == 0) {
@@ -400,7 +387,7 @@ namespace Shokofin.Providers
             else {
                 var seasonInfo = showInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
                 if (seasonInfo == null) {
-                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber:00} in group for series. (Group={GroupId})", seasonNumber, showInfo.Id);
+                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber:00} in group for series. (Group={GroupId})", seasonNumber, showInfo.GroupId);
                     return;
                 }
 
@@ -421,16 +408,12 @@ namespace Shokofin.Providers
 
                     AddVirtualEpisode(showInfo, seasonInfo, episodeInfo, season);
                 }
-
-                if (offset == 0) {
-                    AddExtras(season, seasonInfo);
-                }
             }
         }
 
         private void UpdateEpisode(Episode episode, string episodeId)
         {
-            var showInfo = ApiManager.GetShowInfoForEpisode(episodeId, Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default)
+            var showInfo = ApiManager.GetShowInfoForEpisode(episodeId)
                     .GetAwaiter()
                     .GetResult();
             if (showInfo == null || showInfo.SeasonList.Count == 0) {
@@ -633,9 +616,9 @@ namespace Shokofin.Providers
             return false;
         }
 
-        private void AddVirtualEpisode(Info.ShowInfo showInfo, Info.SeasonInfo seasonInfo, Info.EpisodeInfo episodeInfo, MediaBrowser.Controller.Entities.TV.Season season)
+        private void AddVirtualEpisode(Info.ShowInfo showInfo, Info.SeasonInfo seasonInfo, Info.EpisodeInfo episodeInfo, Season season)
         {
-            var groupId = showInfo?.Id ?? null;
+            var groupId = showInfo?.GroupId ?? null;
             if (EpisodeExists(episodeInfo.Id, seasonInfo.Id, groupId))
                 return;
 
@@ -670,84 +653,6 @@ namespace Shokofin.Providers
 
             if (existingVirtualItems.Count > 0)
                 Logger.LogInformation("Removed {Count:00} duplicate episodes for episode {EpisodeName}. (Episode={EpisodeId})", existingVirtualItems.Count, episode.Name, episodeId);
-        }
-
-        #endregion
-        #region Extras
-
-        private void AddExtras(BaseItem parent, Info.SeasonInfo seasonInfo)
-        {
-            if (seasonInfo.ExtrasList.Count == 0)
-                return;
-
-            var needsUpdate = false;
-            var extraIds = new List<Guid>();
-            foreach (var episodeInfo in seasonInfo.ExtrasList) {
-                if (!Lookup.TryGetPathForEpisodeId(episodeInfo.Id, out var episodePath))
-                    continue;
-
-                if (episodeInfo.ExtraType is MediaBrowser.Model.Entities.ExtraType.ThemeSong or MediaBrowser.Model.Entities.ExtraType.ThemeVideo &&
-                    !parent.SupportsThemeMedia)
-                    continue;
-
-                var item = LibraryManager.FindByPath(episodePath, false);
-                if (item != null && item is Video video) {
-                    video.ParentId = Guid.Empty;
-                    video.OwnerId = parent.Id;
-                    video.Name = episodeInfo.Shoko.Name;
-                    video.ExtraType = episodeInfo.ExtraType;
-                    video.ProviderIds.TryAdd("Shoko Episode", episodeInfo.Id);
-                    video.ProviderIds.TryAdd("Shoko Series", seasonInfo.Id);
-                    LibraryManager.UpdateItemAsync(video, null, ItemUpdateType.None, CancellationToken.None).ConfigureAwait(false);
-                    if (!parent.ExtraIds.Contains(video.Id)) {
-                        needsUpdate = true;
-                        extraIds.Add(video.Id);
-                    }
-                }
-                else {
-                    Logger.LogInformation("Adding {ExtraType} {VideoName} to parent {ParentName} (Series={SeriesId})", episodeInfo.ExtraType, episodeInfo.Shoko.Name, parent.Name, seasonInfo.Id);
-                    video = new Video {
-                        Id = LibraryManager.GetNewItemId($"{parent.Id} {episodeInfo.ExtraType} {episodeInfo.Id}", typeof (Video)),
-                        Name = episodeInfo.Shoko.Name,
-                        Path = episodePath,
-                        ExtraType = episodeInfo.ExtraType,
-                        ParentId = Guid.Empty,
-                        OwnerId = parent.Id,
-                        DateCreated = DateTime.UtcNow,
-                        DateModified = DateTime.UtcNow,
-                    };
-                    video.ProviderIds.Add("Shoko Episode", episodeInfo.Id);
-                    video.ProviderIds.Add("Shoko Series", seasonInfo.Id);
-                    LibraryManager.CreateItem(video, null);
-                    needsUpdate = true;
-                    extraIds.Add(video.Id);
-                }
-            }
-            if (needsUpdate) {
-                parent.ExtraIds = parent.ExtraIds.Concat(extraIds).Distinct().ToArray();
-                LibraryManager.UpdateItemAsync(parent, parent.GetParent(), ItemUpdateType.None, CancellationToken.None).ConfigureAwait(false);
-            }
-        }
-
-        public void RemoveExtras(BaseItem parent, string seriesId)
-        {
-            var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
-                IsVirtualItem = false,
-                IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Video },
-                HasOwnerId = true,
-                HasAnyProviderId = new Dictionary<string, string> { ["Shoko Series"] = seriesId},
-                DtoOptions = new DtoOptions(true),
-            }, true);
-
-            var deleteOptions = new DeleteOptions {
-                DeleteFileLocation = false,
-            };
-
-            foreach (var video in searchList)
-                LibraryManager.DeleteItem(video, deleteOptions);
-
-            if (searchList.Count > 0)
-                Logger.LogInformation("Removed {Count:00} extras from parent {ParentName}. (Series={SeriesId})", searchList.Count, parent.Name, seriesId);
         }
 
         #endregion

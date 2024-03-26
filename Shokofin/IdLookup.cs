@@ -173,8 +173,8 @@ namespace Shokofin
 
             if (TryGetSeriesIdFor(series.Path, out seriesId)) {
                 // Set the "Shoko Group" and "Shoko Series" provider ids for the series, since it haven't been set again. It doesn't matter if it's not saved to the database, since we only need it while running the following code.
-                if (ApiManager.TryGetGroupIdForSeriesId(seriesId, out var groupId, out seriesId)) {
-                    SeriesProvider.AddProviderIds(series, seriesId, groupId);
+                if (ApiManager.TryGetDefaultSeriesIdForSeriesId(seriesId, out var defaultSeriesId)) {
+                    SeriesProvider.AddProviderIds(series, defaultSeriesId);
                 }
                 // Same as above, but only set the "Shoko Series" id.
                 else {
@@ -217,7 +217,7 @@ namespace Shokofin
             }
 
             if (TryGetSeriesIdFor(boxSet.Path, out seriesId)) {
-                if (ApiManager.TryGetGroupIdForSeriesId(seriesId, out var _, out var defaultSeriesId)) {
+                if (ApiManager.TryGetDefaultSeriesIdForSeriesId(seriesId, out var defaultSeriesId)) {
                     seriesId = defaultSeriesId;
                 }
                 return true;
