@@ -155,7 +155,6 @@ async function defaultSubmit(form) {
     
         // Provider settings
         config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
-        config.AddTvDBId = form.querySelector("#AddTvDBId").checked;
         config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
 
         // Library settings
@@ -319,7 +318,6 @@ async function syncSettings(form) {
 
     // Provider settings
     config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
-    config.AddTvDBId = form.querySelector("#AddTvDBId").checked;
     config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
 
     // Library settings
@@ -503,7 +501,6 @@ export default function (page) {
 
             // Provider settings
             form.querySelector("#AddAniDBId").checked = config.AddAniDBId;
-            form.querySelector("#AddTvDBId").checked = config.AddTvDBId;
             form.querySelector("#AddTMDBId").checked = config.AddTMDBId;
 
             // Library settings

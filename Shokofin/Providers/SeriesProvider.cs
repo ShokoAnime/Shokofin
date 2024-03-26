@@ -96,12 +96,11 @@ namespace Shokofin.Providers
             }
         }
 
-        public static void AddProviderIds(IHasProviderIds item, string seriesId, string groupId = null, string anidbId = null, string tvdbId = null, string tmdbId = null)
+        public static void AddProviderIds(IHasProviderIds item, string seriesId, string groupId = null, string anidbId = null, string tmdbId = null)
         {
-            // NOTE: These next two lines will remain here till _someone_ fix the series merging for providers other then TvDB and ImDB in Jellyfin.
+            // NOTE: These next line will remain here till _someone_ fix the series merging for providers other then TvDB and ImDB in Jellyfin.
             // NOTE: #2 Will fix this once JF 10.9 is out, as it contains a change that will help in this situation.
-            if (string.IsNullOrEmpty(tvdbId))
-                item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{seriesId}");
+            item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{seriesId}");
 
             var config = Plugin.Instance.Configuration;
             item.SetProviderId("Shoko Series", seriesId);
@@ -109,8 +108,6 @@ namespace Shokofin.Providers
                 item.SetProviderId("Shoko Group", groupId);
             if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
                 item.SetProviderId("AniDB", anidbId);
-            if (config.AddTvDBId &&!string.IsNullOrEmpty(tvdbId) && tvdbId != "0")
-                item.SetProviderId(MetadataProvider.Tvdb, tvdbId);
             if (config.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")
                 item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
         }

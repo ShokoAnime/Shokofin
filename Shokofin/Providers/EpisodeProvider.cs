@@ -230,7 +230,7 @@ namespace Shokofin.Providers
             return result;
         }
 
-        private static void AddProviderIds(IHasProviderIds item, string episodeId, string fileId = null, string anidbId = null, string tvdbId = null, string tmdbId = null)
+        private static void AddProviderIds(IHasProviderIds item, string episodeId, string fileId = null, string anidbId = null, string tmdbId = null)
         {
             var config = Plugin.Instance.Configuration;
             item.SetProviderId("Shoko Episode", episodeId);
@@ -238,8 +238,6 @@ namespace Shokofin.Providers
                 item.SetProviderId("Shoko File", fileId);
             if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
                 item.SetProviderId("AniDB", anidbId);
-            if (config.AddTvDBId && !string.IsNullOrEmpty(tvdbId) && tvdbId != "0")
-                item.SetProviderId(MetadataProvider.Tvdb, tvdbId);
             if (config.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")
                 item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
         }
