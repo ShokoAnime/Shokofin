@@ -82,8 +82,6 @@ namespace Shokofin.Configuration
 
         public UserConfiguration[] UserList { get; set; }
 
-        public string[] IgnoredFileExtensions { get; set; }
-
         public string[] IgnoredFolders { get; set; }
 
         public bool? LibraryFilteringMode { get; set; }
@@ -133,7 +131,6 @@ namespace Shokofin.Configuration
             CollectionGrouping = CollectionCreationType.None;
             MovieOrdering = OrderType.Default;
             UserList = Array.Empty<UserConfiguration>();
-            IgnoredFileExtensions  = new [] { ".nfo", ".jpg", ".jpeg", ".png" };
             IgnoredFolders = new [] { ".streams", "@recently-snapshot" };
             LibraryFilteringMode = null;
             EXPERIMENTAL_AutoMergeVersions = false;

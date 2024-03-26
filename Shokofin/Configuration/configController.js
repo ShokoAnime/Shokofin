@@ -13,38 +13,6 @@ const Messages = {
  * @param {string} value - Stringified list of values to filter.
  * @returns {string[]} An array of sanitized and filtered values.
  */
- function filterIgnoredExtensions(value) {
-    // We convert to a set to filter out duplicate values.
-    const filteredSet = new Set(
-        value
-            // Split the values at every space, tab, comma.
-            .split(/[\s,]+/g)
-            // Sanitize inputs.
-            .map(str =>  {
-                // Trim the start and end and convert to lower-case.
-                str = str.trim().toLowerCase();
-
-                // Add a dot if it's missing.
-                if (str[0] !== ".")
-                    str = "." + str;
-
-                return str;
-            }),
-        );
-
-    // Filter out empty values.
-    if (filteredSet.has(""))
-        filteredSet.delete("");
-
-    // Convert it back into an array.
-    return Array.from(filteredSet);
-}
-
-/**
- * Filter out duplicate values and sanitize list.
- * @param {string} value - Stringified list of values to filter.
- * @returns {string[]} An array of sanitized and filtered values.
- */
  function filterIgnoredFolders(value) {
     // We convert to a set to filter out duplicate values.
     const filteredSet = new Set(
@@ -137,7 +105,6 @@ async function defaultSubmit(form) {
             publicHost = publicHost.slice(0, -1);
             form.querySelector("#PublicHost").value = publicHost;
         }
-        const ignoredFileExtensions = filterIgnoredExtensions(form.querySelector("#IgnoredFileExtensions").value);
         const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
         const filteringModeRaw = form.querySelector("#LibraryFilteringMode").value;
         const filteringMode = filteringModeRaw === "true" ? true : filteringModeRaw === "false" ? false : null;
@@ -176,8 +143,6 @@ async function defaultSubmit(form) {
     
         // Advanced settings
         config.PublicHost = publicHost;
-        config.IgnoredFileExtensions = ignoredFileExtensions;
-        form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
         config.IgnoredFolders = ignoredFolders;
         form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
 
@@ -300,7 +265,6 @@ async function syncSettings(form) {
         publicHost = publicHost.slice(0, -1);
         form.querySelector("#PublicHost").value = publicHost;
     }
-    const ignoredFileExtensions = filterIgnoredExtensions(form.querySelector("#IgnoredFileExtensions").value);
     const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
     const filteringModeRaw = form.querySelector("#LibraryFilteringMode").value;
     const filteringMode = filteringModeRaw === "true" ? true : filteringModeRaw === "false" ? false : null;
@@ -339,8 +303,6 @@ async function syncSettings(form) {
 
     // Advanced settings
     config.PublicHost = publicHost;
-    config.IgnoredFileExtensions = ignoredFileExtensions;
-    form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
     config.IgnoredFolders = ignoredFolders;
     form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
 
@@ -477,6 +439,12 @@ export default function (page) {
 
     form.querySelector("#VirtualFileSystem").addEventListener("change", function () {
         form.querySelector("#LibraryFilteringMode").disabled = this.checked;
+        if (this.checked) {
+            form.querySelector("#LibraryFilteringModeContainer").setAttribute("hidden", "");
+        }
+        else {
+            form.querySelector("#LibraryFilteringModeContainer").removeAttribute("hidden");
+        }
     });
 
     page.addEventListener("viewshow", async function () {
@@ -525,7 +493,6 @@ export default function (page) {
 
             // Advanced settings
             form.querySelector("#PublicHost").value = config.PublicHost;
-            form.querySelector("#IgnoredFileExtensions").value = config.IgnoredFileExtensions.join(" ");
             form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
 
             // Experimental settings

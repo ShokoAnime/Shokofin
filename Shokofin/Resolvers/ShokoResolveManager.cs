@@ -312,9 +312,11 @@ public class ShokoResolveManager
 
     public async Task<bool> ShouldFilterItem(Folder? parent, FileSystemMetadata fileInfo)
     {
-        // Everything in the root folder is ignored by us.
+        if (parent == null || fileInfo == null)
+            return false;
+
         var root = LibraryManager.RootFolder;
-        if (fileInfo == null || parent == null || root == null || parent == root || fileInfo.FullName.StartsWith(root.Path))
+        if (root == null || parent == root)
             return false;
 
         try {
@@ -326,12 +328,12 @@ public class ShokoResolveManager
             if (!Lookup.IsEnabledForItem(parent, out var isSoleProvider))
                 return false;
 
-            if (fileInfo.IsDirectory &&  Plugin.Instance.IgnoredFolders.Contains(Path.GetFileName(fileInfo.FullName).ToLowerInvariant())) {
+            if (fileInfo.IsDirectory && Plugin.Instance.IgnoredFolders.Contains(Path.GetFileName(fileInfo.FullName).ToLowerInvariant())) {
                 Logger.LogDebug("Excluded folder at path {Path}", fileInfo.FullName);
                 return true;
             }
 
-            if (!fileInfo.IsDirectory && Plugin.Instance.IgnoredFileExtensions.Contains(fileInfo.Extension.ToLowerInvariant())) {
+            if (!fileInfo.IsDirectory && !_namingOptions.VideoFileExtensions.Contains(fileInfo.Extension.ToLowerInvariant())) {
                 Logger.LogDebug("Skipped excluded file at path {Path}", fileInfo.FullName);
                 return false;
             }
@@ -445,9 +447,11 @@ public class ShokoResolveManager
         if (!Plugin.Instance.Configuration.VirtualFileSystem)
             return null;
 
+        if (!(collectionType == CollectionType.TvShows || collectionType == CollectionType.Movies || collectionType == null) || parent == null || fileInfo == null)
+            return null;
+
         var root = LibraryManager.RootFolder;
-        if (!(collectionType == CollectionType.TvShows || collectionType == CollectionType.Movies || collectionType == null) ||
-            fileInfo == null || parent == null || root == null || parent == root || fileInfo.FullName.StartsWith(root.Path))
+        if (root == null || parent == root)
             return null;
 
         try {
@@ -498,9 +502,11 @@ public class ShokoResolveManager
         if (!Plugin.Instance.Configuration.VirtualFileSystem)
             return null;
 
+        if (!(collectionType == CollectionType.TvShows || collectionType == CollectionType.Movies || collectionType == null) || parent == null)
+            return null;
+
         var root = LibraryManager.RootFolder;
-        if (!(collectionType == CollectionType.TvShows || collectionType == CollectionType.Movies || collectionType == null) ||
-            root == null || parent == null || parent == root)
+        if (root == null || parent == root)
             return null;
 
         try {

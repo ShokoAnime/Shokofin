@@ -131,56 +131,9 @@
                         <legend>
                             <h3>Library Settings</h3>
                         </legend>
-                        <div class="fieldDescription verticalSection-extrabottompadding">If you wish to set the Series/Grouping setting below to "Don't group Series into Seasons", you must disable "Automatically merge series that are spread across multiple folders" in the settings for all Libraries that depend on Shokofin for their metadata.<br>On the other hand, if you want to have Series and Grouping be determined by Shoko, or TvDB/TMDB - you must enable the "Automatically merge series that are spread across multiple folders" setting for all Libraries that use Shokofin for their metadata.<br>See the settings under each individual Library here: <a href="#!/library.html">Library Settings</a></div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="VirtualFileSystem" />
-                                <span>Virtual File System (VFS)</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">
-                                <div>Enables the use of the Virtual File System for any media libraries managed by the plugin.</div>
-                                <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does it do?</summary>
-                                    Enabling this setting should in theory make it so you won't have to think about file structure imcompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links managed by the plugin instead of your actual file structure.<strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
-                                </details>
-                            </div>
-                        </div>
+                        <div class="fieldDescription verticalSection-extrabottompadding">Everything related to how the plugin manages the library.</div>
                         <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="LibraryFilteringMode">Filtering mode:</label>
-                            <select is="emby-select" id="LibraryFilteringMode" name="LibraryFilteringMode" class="emby-select-withcolor emby-select" disabled>
-                                <option value="true" selected>Strict</option>
-                                <option value="null">Auto</option>
-                                <option value="false">Unrestricted</option>
-                            </select>
-                            <div class="fieldDescription">
-                                <div>Choose how the plugin filters out videos in your library. This option only applies if the VFS is not used.</div>
-                                <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does strict filtering entail?</summary>
-                                    Strict filtering means the plugin will filter out any and all unrecognized videos from the active library.
-                                </details>
-                                <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does strict filtering entail?</summary>
-                                    Strict filtering means the plugin will filter out any and all unrecognized videos from the active library.
-                                </details>
-                                <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does auto filtering entail?</summary>
-                                    Auto filtering means the plugin will only filter out unrecognized videos if no other metadata provider is enabled, otherwise it will leave them in the library.
-                                </details>
-                                <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does unrestricted filtering entail?</summary>
-                                    Unrestricted filtering means the plugin will not filter out anything from the active library.
-                                </details>
-                            </div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="SeparateMovies" />
-                                <span>Separate Movies From Shows</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">This filters out Movies from the Shows in your library.</div>
-                        </div>
-                        <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="CollectionGrouping">Collections:</label>
+                            <label class="selectLabel" for="CollectionGrouping">Create collections:</label>
                             <select is="emby-select" id="CollectionGrouping" name="CollectionGrouping" class="emby-select-withcolor emby-select">
                                 <option value="None" selected>Do not create Collections</option>
                                 <option value="ShokoSeries">Create Collections for Movies based upon Shoko's Series entries</option>
@@ -201,8 +154,51 @@
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VirtualFileSystem" />
+                                <span>Virtual File System&trade; (VFS)</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                <div>Enables the use of the Virtual File System&trade; for any media libraries managed by the plugin.</div>
+                                <details style="margin-top: 0.5em">
+                                    <summary style="margin-bottom: 0.25em">What does this mean?</summary>
+                                    Enabling this setting should in theory make it so you won't have to think about file structure imcompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links managed by the plugin instead of your actual file structure.<strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
+                                </details>
+                            </div>
+                        </div>
+                        <div id="LibraryFilteringModeContainer" class="selectContainer selectContainer-withDescription" hidden>
+                            <label class="selectLabel" for="LibraryFilteringMode">Filtering mode:</label>
+                            <select is="emby-select" id="LibraryFilteringMode" name="LibraryFilteringMode" class="emby-select-withcolor emby-select" disabled>
+                                <option value="true" selected>Strict</option>
+                                <option value="null">Auto</option>
+                                <option value="false">Unrestricted</option>
+                            </select>
+                            <div class="fieldDescription">
+                                <div>Choose how the plugin filters out videos in your library. This option only applies if the VFS is not used.</div>
+                                <details style="margin-top: 0.5em">
+                                    <summary style="margin-bottom: 0.25em">What does strict filtering entail?</summary>
+                                    Strict filtering means the plugin will filter out any and all unrecognized videos from the active library.
+                                </details>
+                                <details style="margin-top: 0.5em">
+                                    <summary style="margin-bottom: 0.25em">What does auto filtering entail?</summary>
+                                    Auto filtering means the plugin will only filter out unrecognized videos if no other metadata provider is enabled, otherwise it will leave them in the library.
+                                </details>
+                                <details style="margin-top: 0.5em">
+                                    <summary style="margin-bottom: 0.25em">What does unrestricted filtering entail?</summary>
+                                    Unrestricted filtering means the plugin will not filter out anything from the active library.
+                                </details>
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="SeparateMovies" />
+                                <span>Separate movies from shows</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">This filters out movies from the shows in your library. Disable this if you want your movies to show up as episodes within seasons of your shows instead.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
-                                <span>Mark Specials</span>
+                                <span>Mark specials</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Add a number to the title of each Special episode</div>
                         </div>
@@ -347,10 +343,6 @@
                         <div class="inputContainer inputContainer-withDescription">
                             <input is="emby-input" type="text" id="PublicHost" label="Public Shoko host URL:" />
                             <div class="fieldDescription">This is the public URL leading to where Shoko is running. It is used to redirect to Shoko if you click on a Shoko ID in the UI if Shoko and/or Jellyfin is running within a container. It should include both the protocol and the IP/DNS name.</div>
-                        </div>
-                        <div class="inputContainer inputContainer-withDescription">
-                            <input is="emby-input" type="text" id="IgnoredFileExtensions" label="Ignored file extensions:" />
-                            <div class="fieldDescription">A space separated list of file extensions which will be ignored during the library scan.</div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription">
                             <input is="emby-input" type="text" id="IgnoredFolders" label="Ignored folder names:" />

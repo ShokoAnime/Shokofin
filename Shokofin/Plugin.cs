@@ -32,19 +32,15 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         Instance = this;
         ConfigurationChanged += OnConfigChanged;
-        IgnoredFileExtensions = this.Configuration.IgnoredFileExtensions.ToHashSet();
-        IgnoredFolders = this.Configuration.IgnoredFolders.ToHashSet();
+        IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
     }
 
     public void OnConfigChanged(object? sender, BasePluginConfiguration e)
     {
         if (e is not PluginConfiguration config)
             return;
-        IgnoredFileExtensions = config.IgnoredFileExtensions.ToHashSet();
         IgnoredFolders = config.IgnoredFolders.ToHashSet();
     }
-
-    public HashSet<string> IgnoredFileExtensions;
 
     public HashSet<string> IgnoredFolders;
 
