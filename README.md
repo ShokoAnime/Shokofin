@@ -65,17 +65,17 @@ Learn more about Shoko at https://shokoanime.com/.
 
     - [ ] Studio provider for image and details
 
-- [/] Library integration
+- [X] Library integration
 
-  - [/] Support for different library types
+  - [X] Support for different library types
 
     - [X] Show library
 
     - [X] Movie library
 
-    - [ ] Mixed show/movie library.
+    - [X] Mixed show/movie library¹.
 
-      Coming soon™-ish
+      ¹ _You need at least one movie in your library for this to currently work as expected. This is an issue with Jellyfin 10.8._
 
   - [/] Supports adding local trailers
 
