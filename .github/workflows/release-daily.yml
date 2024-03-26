@@ -16,10 +16,6 @@ jobs:
           ref: ${{ github.ref }}
           fetch-depth: 0
 
-      - name: Replace Sentry DSN key
-        shell: pwsh
-        run: ./.github/workflows/ReplaceSentryDSN.ps1 -dsn ${{ secrets.SENTRY_DSN }}
-
       - name: Get previous release version
         id: previoustag
         uses: "WyriHaximus/github-action-get-previous-tag@v1"
@@ -63,14 +59,3 @@ jobs:
           commit_message: "misc: update unstable manifest"
           file_pattern: manifest-unstable.json
           skip_fetch: true
-
-      - name: Push Sentry release "${{ env.NEW_VERSION }}"
-        uses: getsentry/action-release@v1.2.1
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-          # SENTRY_URL: https://sentry.io/
-        with:
-          environment: 'dev'
-          version: ${{ env.NEW_VERSION }}
