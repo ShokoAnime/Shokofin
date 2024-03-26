@@ -11,7 +11,6 @@ using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using Shokofin.API.Models;
 using Shokofin.Configuration;
-using Sentry;
 
 #nullable enable
 namespace Shokofin;
@@ -33,107 +32,17 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         Instance = this;
         ConfigurationChanged += OnConfigChanged;
-        RefreshSentry();
         IgnoredFileExtensions = this.Configuration.IgnoredFileExtensions.ToHashSet();
         IgnoredFolders = this.Configuration.IgnoredFolders.ToHashSet();
     }
 
-    ~Plugin()
-    {
-        if (SentryReference != null) {
-            SentrySdk.EndSession();
-            SentryReference.Dispose();
-            SentryReference = null;
-        }
-    }
-
     public void OnConfigChanged(object? sender, BasePluginConfiguration e)
     {
-        if (!(e is PluginConfiguration config))
+        if (e is not PluginConfiguration config)
             return;
-        RefreshSentry();
         IgnoredFileExtensions = config.IgnoredFileExtensions.ToHashSet();
         IgnoredFolders = config.IgnoredFolders.ToHashSet();
     }
-
-    private void RefreshSentry()
-    {
-        if (IsSentryEnabled) {
-            if (SentryReference == null && SentryConfiguration.DSN.StartsWith("https://")) {
-                SentryReference = SentrySdk.Init(options => {
-                    var release = Assembly.GetAssembly(typeof(Plugin))?.GetName().Version?.ToString() ?? "1.0.0.0";
-                    var environment = release.EndsWith(".0") ? "stable" : "dev";
-
-                    // Cut off the build number for stable releases.
-                    if (environment == "stable")
-                        release = release[..^2];
-
-                    // Assign the DSN key and release version.
-                    options.Dsn = SentryConfiguration.DSN;
-                    options.Environment = environment;
-                    options.Release = release;
-                    options.AutoSessionTracking = false;
-
-                    // Additional tags for easier filtering in Sentry.
-                    var jellyfinRelease = Assembly.GetAssembly(typeof(Jellyfin.Data.Entities.Preference))?.GetName().Version?.ToString() ?? "0.0.0.0";
-                    options.DefaultTags.Add("jellyfin.release", jellyfinRelease);
-
-                    // Disable auto-exception captures.
-                    options.DisableUnobservedTaskExceptionCapture();
-                    options.DisableAppDomainUnhandledExceptionCapture();
-                    options.CaptureFailedRequests = false;
-
-                    // Filter exceptions.
-                    options.AddExceptionFilter(new SentryExceptionFilter(ex =>
-                    {
-                        switch (ex) {
-                            // Ignore any and all http request exceptions and
-                            // task cancellation exceptions.
-                            case TaskCanceledException:
-                            case HttpRequestException:
-                                return true;
-
-                            case ApiException apiEx:
-                                // Server is not ready to accept requests yet.
-                                if (ex.Message.Contains("The Server is not running."))
-                                    return true;
-                                break;
-                        }
-
-                        // If we need more filtering in the future then add them
-                        // above this comment.
-
-                        return false;
-                    }));
-                });
-
-                SentrySdk.StartSession();
-            }
-        }
-        else {
-            if (SentryReference != null) 
-            {
-                SentrySdk.EndSession();
-                SentryReference.Dispose();
-                SentryReference = null;
-            }
-        }
-    }
-
-    public bool IsSentryEnabled
-    {
-        get => Configuration.SentryEnabled ?? true;
-    }
-
-    public void CaptureException(Exception ex)
-    {
-        if (SentryReference == null)
-            return;
-
-        SentrySdk.CaptureException(ex);
-    }
-
-    private IDisposable? SentryReference { get; set; }
 
     public HashSet<string> IgnoredFileExtensions;
 
@@ -158,23 +67,5 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
                 EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configController.js",
             },
         };
-    }
-
-    /// <summary>
-    /// An IException filter class to convert a function to a filter. It's weird
-    /// they don't have a method that just accepts a pure function and converts
-    /// it internally, but oh well. ¯\_(ツ)_/¯
-    /// </summary>
-    private class SentryExceptionFilter : Sentry.Extensibility.IExceptionFilter
-    {
-        private Func<Exception, bool> _action;
-
-        public SentryExceptionFilter(Func<Exception, bool> action)
-        {
-            _action = action;
-        }
-
-        public bool Filter(Exception ex) =>
-            _action(ex);
     }
 }

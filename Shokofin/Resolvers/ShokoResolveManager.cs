@@ -351,7 +351,6 @@ public class ShokoResolveManager
             if (!(ex is System.Net.Http.HttpRequestException && ex.Message.Contains("Connection refused")))
             {
                 Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
-                Plugin.Instance.CaptureException(ex);
             }
             return false;
         }
@@ -500,7 +499,6 @@ public class ShokoResolveManager
             if (!(ex is System.Net.Http.HttpRequestException && ex.Message.Contains("Connection refused")))
             {
                 Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
-                Plugin.Instance.CaptureException(ex);
             }
             return null;
         }
@@ -595,7 +593,6 @@ public class ShokoResolveManager
             if (!(ex is System.Net.Http.HttpRequestException && ex.Message.Contains("Connection refused")))
             {
                 Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
-                Plugin.Instance.CaptureException(ex);
             }
             return null;
         }

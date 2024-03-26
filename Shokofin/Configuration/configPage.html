@@ -7,18 +7,6 @@
                         <h2 class="sectionTitle">Shoko</h2>
                         <a is="emby-linkbutton" rel="noopener noreferrer" class="raised button-alt headerHelpButton emby-button" target="_blank" href="https://docs.shokoanime.com/shokofin/configuration/">Help</a>
                     </div>
-                    <fieldset id="ConsentSection" class="verticalSection verticalSection-extrabottompadding" hidden>
-                        <legend>
-                            <h3>Improve Plugin Stability</h3>
-                        </legend>
-                        <div class="fieldDescription verticalSection-extrabottompadding">By enabling Sentry crash-reporting, you're helping us fix bugs and enhance the plugin's functionality. When a crash happens, Sentry collects data about the error, which may include paths to your videos involved in the operation. While some users may consider these paths sensitive, we want to assure you that this data is used strictly for diagnostic purposes.<br/><br/>Please be aware that enabling crash reporting is entirely optional. You are in control and can choose to enable or disable the feature at any time.<br/><br/>By choosing to enable this feature, you're not just improving your own experience but also helping us refine the plugin for all users. Your support is greatly appreciated.</div>
-                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Yes, Enable Crash Reporting</span>
-                        </button>
-                        <button is="emby-button" type="submit" name="disable-sentry" class="raised block emby-button">
-                            <span>No, Disable Crash Reporting</span>
-                        </button>
-                    </fieldset>
                     <fieldset id="ConnectionSection" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
                             <h3>Connection Settings</h3>
@@ -357,13 +345,6 @@
                         <legend>
                             <h3>Advanced Settings</h3>
                         </legend>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="SentryEnabled" />
-                                <span>Enable Crash Reporting.</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Improve the plugin's stability by allowing Sentry to report any crashes, which helps us improve the plugin's stability. This may include paths to your videos involved in the operation, which some users may consider sensitive. We assure you that this data is used solely for diagnostic purposes. Participation is entirely optional but greatly appreciated.</div>
-                        </div>
                         <div class="inputContainer inputContainer-withDescription">
                             <input is="emby-input" type="text" id="PublicHost" label="Public Shoko host URL:" />
                             <div class="fieldDescription">This is the public URL leading to where Shoko is running. It is used to redirect to Shoko if you click on a Shoko ID in the UI if Shoko and/or Jellyfin is running within a container. It should include both the protocol and the IP/DNS name.</div>

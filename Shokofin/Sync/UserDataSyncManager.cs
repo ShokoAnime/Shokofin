@@ -276,7 +276,6 @@ namespace Shokofin.Sync
             }
             catch (Exception ex) {
                 Logger.LogError(ex, "Threw unexpectedly; {ErrorMessage}", ex.Message);
-                Plugin.Instance.CaptureException(ex);
                 return;
             }
         }

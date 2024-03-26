@@ -56,7 +56,6 @@ namespace Shokofin.Providers
             }
             catch (Exception ex) {
                 Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
-                Plugin.Instance.CaptureException(ex);
                 return new MetadataResult<Season>();
             }
         }

@@ -57,7 +57,6 @@ namespace Shokofin.Web
             }
             catch (Exception ex) {
                 Logger.LogError(ex, "Failed to create an API-key for user {Username} — unable to complete the request.", body.username);
-                Plugin.Instance.CaptureException(ex);
                 return new StatusCodeResult(StatusCodes.Status500InternalServerError);
             }
         }

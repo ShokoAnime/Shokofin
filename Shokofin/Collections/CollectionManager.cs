@@ -61,7 +61,6 @@ public class CollectionManager
         catch (Exception ex)
         {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
-            Plugin.Instance.CaptureException(ex);
         }
     }
 

@@ -176,7 +176,6 @@ async function defaultSubmit(form) {
         config.HideProgrammingTags = form.querySelector("#HideProgrammingTags").checked;
     
         // Advanced settings
-        config.SentryEnabled = form.querySelector("#SentryEnabled").checked;
         config.PublicHost = publicHost;
         config.IgnoredFileExtensions = ignoredFileExtensions;
         form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
@@ -296,19 +295,6 @@ async function resetConnectionSettings(form) {
     return config;
 }
 
-async function disableSentry(form) {
-    const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
-    form.querySelector("#SentryEnabled").checked = false;
-
-    // Connection settings
-    config.SentryEnabled = false;
-
-    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
-    Dashboard.processPluginConfigurationUpdateResult(result);
-
-    return config;
-}
-
 async function syncSettings(form) {
     const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
     let publicHost = form.querySelector("#PublicHost").value;
@@ -355,7 +341,6 @@ async function syncSettings(form) {
     config.HideProgrammingTags = form.querySelector("#HideProgrammingTags").checked;
 
     // Advanced settings
-    config.SentryEnabled = form.querySelector("#SentryEnabled").checked;
     config.PublicHost = publicHost;
     config.IgnoredFileExtensions = ignoredFileExtensions;
     form.querySelector("#IgnoredFileExtensions").value = ignoredFileExtensions.join(" ");
@@ -441,22 +426,7 @@ export default function (page) {
     const userSelector = form.querySelector("#UserSelector");
     // Refresh the view after we changed the settings, so the view reflect the new settings.
     const refreshSettings = (config) => {
-        if (config.SentryEnabled == null) {
-            form.querySelector("#Host").removeAttribute("disabled");
-            form.querySelector("#Username").removeAttribute("disabled");
-            form.querySelector("#ConsentSection").removeAttribute("hidden");
-            form.querySelector("#ConnectionSetContainer").setAttribute("hidden", "");
-            form.querySelector("#ConnectionResetContainer").setAttribute("hidden", "");
-            form.querySelector("#ConnectionSection").setAttribute("hidden", "");
-            form.querySelector("#MetadataSection").setAttribute("hidden", "");
-            form.querySelector("#ProviderSection").setAttribute("hidden", "");
-            form.querySelector("#LibrarySection").setAttribute("hidden", "");
-            form.querySelector("#UserSection").setAttribute("hidden", "");
-            form.querySelector("#TagSection").setAttribute("hidden", "");
-            form.querySelector("#AdvancedSection").setAttribute("hidden", "");
-            form.querySelector("#ExperimentalSection").setAttribute("hidden", "");
-        }
-        else if (config.ApiKey) {
+        if (config.ApiKey) {
             form.querySelector("#Host").setAttribute("disabled", "");
             form.querySelector("#Username").setAttribute("disabled", "");
             form.querySelector("#Password").value = "";
@@ -557,7 +527,6 @@ export default function (page) {
             form.querySelector("#HideProgrammingTags").checked = config.HideProgrammingTags;
 
             // Advanced settings
-            form.querySelector("#SentryEnabled").checked = config.SentryEnabled == null ? true : config.SentryEnabled;
             form.querySelector("#PublicHost").value = config.PublicHost;
             form.querySelector("#IgnoredFileExtensions").value = config.IgnoredFileExtensions.join(" ");
             form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
@@ -607,9 +576,6 @@ export default function (page) {
                 Dashboard.showLoadingMsg();
                 syncUserSettings(form).then(refreshSettings).catch(onError);
                 break;
-            case "disable-sentry":
-                Dashboard.showLoadingMsg();
-                disableSentry(form).then(refreshSettings).catch(onError);
         }
         return false;
     });
