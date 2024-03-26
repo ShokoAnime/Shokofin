@@ -68,53 +68,34 @@ namespace Shokofin.Providers
                 }
 
                 var season = show.DefaultSeason;
-                var mergeFriendly = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly && season.TvDB != null;
-                var defaultSeriesTitle = mergeFriendly ? season.TvDB.Title : season.Shoko.Name;
+                var defaultSeriesTitle = season.Shoko.Name;
                 var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(season.AniDB.Titles, show.Name, info.MetadataLanguage);
                 Logger.LogInformation("Found series {SeriesName} (Series={SeriesId},Group={GroupId})", displayTitle, season.Id, show.Id);
-                if (mergeFriendly) {
-                    result.Item = new Series {
-                        Name = displayTitle,
-                        OriginalTitle = alternateTitle,
-                        Overview = Text.GetDescription(season),
-                        PremiereDate = season.TvDB.AirDate,
-                        EndDate = season.TvDB.EndDate,
-                        ProductionYear = season.TvDB.AirDate?.Year,
-                        Status = !season.TvDB.EndDate.HasValue || season.TvDB.EndDate.Value > DateTime.UtcNow ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                        Tags = season.Tags.ToArray(),
-                        Genres = season.Genres.ToArray(),
-                        Studios = season.Studios.ToArray(),
-                        CommunityRating = season.TvDB.Rating?.ToFloat(10),
-                    };
-                    AddProviderIds(result.Item, season.Id, show.Id, season.AniDB.Id.ToString(), season.TvDB.Id.ToString(), season.Shoko.IDs.TMDB.FirstOrDefault().ToString());
-                }
-                else {
-                    var premiereDate = show.SeasonList
-                        .Select(s => s.AniDB.AirDate)
-                        .Where(s => s != null)
-                        .OrderBy(s => s)
-                        .FirstOrDefault();
-                    var endDate = show.SeasonList.Any(s => s.AniDB.EndDate == null) ? null : show.SeasonList
-                        .Select(s => s.AniDB.AirDate)
-                        .OrderBy(s => s)
-                        .LastOrDefault();
-                    result.Item = new Series {
-                        Name = displayTitle,
-                        OriginalTitle = alternateTitle,
-                        Overview = Text.GetDescription(season),
-                        PremiereDate = premiereDate,
-                        ProductionYear = premiereDate?.Year,
-                        EndDate = endDate,
-                        Status = !endDate.HasValue || endDate.Value > DateTime.UtcNow ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                        Tags = show.Tags.ToArray(),
-                        Genres = show.Genres.ToArray(),
-                        Studios = show.Studios.ToArray(),
-                        OfficialRating = season.AniDB.Restricted ? "XXX" : null,
-                        CustomRating = season.AniDB.Restricted ? "XXX" : null,
-                        CommunityRating = mergeFriendly ? season.TvDB.Rating.ToFloat(10) : season.AniDB.Rating.ToFloat(10),
-                    };
-                    AddProviderIds(result.Item, season.Id, show.Id, season.AniDB.Id.ToString());
-                }
+                var premiereDate = show.SeasonList
+                    .Select(s => s.AniDB.AirDate)
+                    .Where(s => s != null)
+                    .OrderBy(s => s)
+                    .FirstOrDefault();
+                var endDate = show.SeasonList.Any(s => s.AniDB.EndDate == null) ? null : show.SeasonList
+                    .Select(s => s.AniDB.AirDate)
+                    .OrderBy(s => s)
+                    .LastOrDefault();
+                result.Item = new Series {
+                    Name = displayTitle,
+                    OriginalTitle = alternateTitle,
+                    Overview = Text.GetDescription(season),
+                    PremiereDate = premiereDate,
+                    ProductionYear = premiereDate?.Year,
+                    EndDate = endDate,
+                    Status = !endDate.HasValue || endDate.Value > DateTime.UtcNow ? SeriesStatus.Continuing : SeriesStatus.Ended,
+                    Tags = show.Tags.ToArray(),
+                    Genres = show.Genres.ToArray(),
+                    Studios = show.Studios.ToArray(),
+                    OfficialRating = season.AniDB.Restricted ? "XXX" : null,
+                    CustomRating = season.AniDB.Restricted ? "XXX" : null,
+                    CommunityRating = season.AniDB.Rating.ToFloat(10),
+                };
+                AddProviderIds(result.Item, season.Id, show.Id, season.AniDB.Id.ToString());
 
                 result.HasMetadata = true;
 

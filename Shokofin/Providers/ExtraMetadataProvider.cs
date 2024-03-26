@@ -473,18 +473,6 @@ namespace Shokofin.Providers
 
         #region Seasons
 
-        private IEnumerable<(int, Season)> CreateMissingSeasons(Info.SeasonInfo seasonInfo, Series series, Dictionary<int, Season> existingSeasons, List<int> allSeasonNumbers)
-        {
-            var missingSeasonNumbers = allSeasonNumbers.Except(existingSeasons.Keys).ToList();
-            var mergeFriendly = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.MergeFriendly && seasonInfo.TvDB != null;
-            foreach (var seasonNumber in missingSeasonNumbers) {
-                var season = seasonNumber == 1 && !mergeFriendly ? AddVirtualSeason(seasonInfo, 0, 1, series) : AddVirtualSeason(seasonNumber, series);
-                if (season == null)
-                    continue;
-                yield return (seasonNumber, season);
-            }
-        }
-
         private IEnumerable<(int, Season)> CreateMissingSeasons(Info.ShowInfo showInfo, Series series, Dictionary<int, Season> seasons)
         {
             bool hasSpecials = false;

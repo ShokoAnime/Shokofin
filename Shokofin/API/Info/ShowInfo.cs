@@ -159,9 +159,6 @@ public class ShowInfo
     }
 
     public SeasonInfo? GetSeriesInfoBySeasonNumber(int seasonNumber) {
-        if (Plugin.Instance.Configuration.SeriesGrouping is Ordering.GroupType.Default && seasonNumber is 123 or 124)
-            return SeasonList.FirstOrDefault();
-
         if (seasonNumber == 0 || !(SeasonOrderDictionary.TryGetValue(seasonNumber, out var seasonInfo) && seasonInfo != null))
             return null;
 

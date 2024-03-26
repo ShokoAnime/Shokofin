@@ -824,7 +824,7 @@ public class ShokoAPIManager : IDisposable
             return null;
 
         // Create a standalone group for each series in a group with sub-groups.
-        var onlyStandalone = Plugin.Instance.Configuration.SeriesGrouping != Ordering.GroupType.ShokoGroup;
+        var onlyStandalone = Plugin.Instance.Configuration.BoxSetGrouping != Ordering.GroupType.ShokoGroup;
         if (onlyStandalone || group.Sizes.SubGroups > 0)
             return await GetOrCreateShowInfoForStandaloneSeries(seriesId, filterByType);
 
@@ -1001,7 +1001,7 @@ public class ShokoAPIManager : IDisposable
 
         Logger.LogTrace("Creating info object for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
 
-        var onlyStandalone = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
+        var onlyStandalone = Plugin.Instance.Configuration.BoxSetGrouping == Ordering.GroupType.ShokoGroup;
         var groups = await APIClient.GetGroupsInGroup(groupId);
         var multiSeasonShows = await Task.WhenAll(groups
                     .Where(group => !onlyStandalone && group.Sizes.SubGroups == 0)

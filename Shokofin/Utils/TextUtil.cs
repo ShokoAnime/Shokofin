@@ -163,24 +163,18 @@ namespace Shokofin.Utils
             string overview;
             switch (Plugin.Instance.Configuration.DescriptionSource) {
                 default:
-                    switch (Plugin.Instance.Configuration.SeriesGrouping) {
-                        default:
-                            goto preferAniDb;
-                        case Ordering.GroupType.MergeFriendly:
-                            goto preferOther;
-                    }
-                case TextSourceType.PreferOther:
-                    preferOther: overview = otherDescription ?? "";
-                    if (string.IsNullOrEmpty(overview))
-                        goto case TextSourceType.OnlyAniDb;
-                    break;
                 case TextSourceType.PreferAniDb:
-                    preferAniDb: overview = Text.SanitizeTextSummary(aniDbDescription);
+                    overview = SanitizeTextSummary(aniDbDescription);
                     if (string.IsNullOrEmpty(overview))
                         goto case TextSourceType.OnlyOther;
                     break;
+                case TextSourceType.PreferOther:
+                    overview = otherDescription ?? "";
+                    if (string.IsNullOrEmpty(overview))
+                        goto case TextSourceType.OnlyAniDb;
+                    break;
                 case TextSourceType.OnlyAniDb:
-                    overview = Text.SanitizeTextSummary(aniDbDescription);
+                    overview = SanitizeTextSummary(aniDbDescription);
                     break;
                 case TextSourceType.OnlyOther:
                     overview = otherDescription ?? "";

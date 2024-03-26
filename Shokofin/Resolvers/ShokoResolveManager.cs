@@ -218,7 +218,6 @@ public class ShokoResolveManager
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId);
         if (season == null)
             return (sourceLocation: string.Empty, symbolicLink: string.Empty);
-        var isGrouped = Plugin.Instance.Configuration.SeriesGrouping == Ordering.GroupType.ShokoGroup;
         var isMovieSeason = season.AniDB.Type == SeriesType.Movie;
         switch (collectionType) {
             default: {

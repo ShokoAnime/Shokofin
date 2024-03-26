@@ -162,16 +162,6 @@
                                 </details>
                             </div>
                         </div>
-                        
-                        <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="SeriesGrouping">Series/Season grouping:</label>
-                            <select is="emby-select" id="SeriesGrouping" name="SeriesGrouping" class="emby-select-withcolor emby-select">
-                                <option value="Default" selected>Do not group Series into Seasons</option>
-                                <option value="MergeFriendly">Group series into Seasons using the TvDB/TMDB data stored in Shoko</option>
-                                <option value="ShokoGroup">Group series into Seasons based on Shoko's Groups</option>
-                            </select>
-                            <div class="fieldDescription selectFieldDescription"><div>Determines how to group Series together and divide them into Seasons.</div><div><strong>Warning:</strong> Modifying this setting requires the deletion and re-creation of any libraries using this plugin.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">Why can't I just refresh all metadata?</summary>Currently, refreshing and replacing all metadata does not remove all the metadata stored by Jellyfin. Additionally, if two or more show's entries have been merged, they cannot then be unmerged. Recreation of the library is the only way to ensure that you do not have mixed metadata in your libraries.</details><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What data is kept when recreating the libraries?</summary>The user data for each file is still kept after deleting a library. User data includes any ratings, play history, watch status and the last selected audio/subtitle track for a file.</details></div>
-                        </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="BoxSetGrouping">Collections:</label>
                             <select is="emby-select" id="BoxSetGrouping" name="BoxSetGrouping" class="emby-select-withcolor emby-select">
@@ -185,7 +175,7 @@
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="FilterOnLibraryTypes" />
-                                <span>Enable library separation</span>
+                                <span>Library separation</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">This setting can be used to have one shared root folder on your disk for two libraries in Shoko — one library for movies and one for shows. Enabling this will cause the plugin to actively filter out movies from the show library and everything but movies from the movies library. Also, if you've selected to use Shoko's Group feature to create Series/Seasons then it will also exclude the Movies from within the series — i.e. the "season" for the movie won't appear — even if they share a group in Shoko.</div>
                         </div>

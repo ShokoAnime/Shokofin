@@ -97,9 +97,6 @@ namespace Shokofin.Providers
         private static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo file, string metadataLanguage, Season season, System.Guid episodeId)
         {
             var config = Plugin.Instance.Configuration;
-            var maybeMergeFriendly = config.SeriesGrouping == Ordering.GroupType.MergeFriendly && series.TvDB != null;
-            var mergeFriendly = maybeMergeFriendly && episode.TvDB != null;
-
             string displayTitle, alternateTitle, description;
             if (config.TitleAddForMultipleEpisodes && file != null && file.EpisodeList.Count > 1) {
                 var displayTitles = new List<string>(file.EpisodeList.Count);
@@ -129,9 +126,9 @@ namespace Shokofin.Providers
                 description = Text.GetDescription(file.EpisodeList);
             }
             else {
-                string defaultEpisodeTitle = mergeFriendly ? episode.TvDB.Title : episode.Shoko.Name;
+                string defaultEpisodeTitle = episode.Shoko.Name;
                 if (series.AniDB.Type == SeriesType.Movie && (episode.AniDB.Type == EpisodeType.Normal || episode.AniDB.Type == EpisodeType.Special)) {
-                    string defaultSeriesTitle = mergeFriendly ? series.TvDB.Title : series.Shoko.Name;
+                    string defaultSeriesTitle = series.Shoko.Name;
                     ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, defaultSeriesTitle, defaultEpisodeTitle, metadataLanguage);
                 }
                 else {
@@ -177,90 +174,48 @@ namespace Shokofin.Providers
 
             Episode result;
             var (airsBeforeEpisodeNumber, airsBeforeSeasonNumber, airsAfterSeasonNumber, isSpecial) = Ordering.GetSpecialPlacement(group, series, episode);
-            if (mergeFriendly) {
-                if (season != null) {
-                    result = new Episode {
-                        Name = displayTitle,
-                        OriginalTitle = alternateTitle,
-                        IndexNumber = episodeNumber,
-                        ParentIndexNumber = isSpecial ? 0 : seasonNumber,
-                        AirsAfterSeasonNumber = airsAfterSeasonNumber,
-                        AirsBeforeEpisodeNumber = airsBeforeEpisodeNumber,
-                        AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
-                        Id = episodeId,
-                        IsVirtualItem = true,
-                        SeasonId = season.Id,
-                        SeriesId = season.Series.Id,
-                        Overview = description,
-                        CommunityRating = episode.TvDB.Rating?.ToFloat(10),
-                        PremiereDate = episode.TvDB.AirDate,
-                        SeriesName = season.Series.Name,
-                        SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
-                        SeasonName = season.Name,
-                        DateLastSaved = DateTime.UtcNow,
-                        RunTimeTicks = episode.AniDB.Duration.Ticks,
-                    };
-                    result.PresentationUniqueKey = result.GetPresentationUniqueKey();
-                }
-                else {
-                    result = new Episode {
-                        Name = displayTitle,
-                        OriginalTitle = alternateTitle,
-                        IndexNumber = episodeNumber,
-                        ParentIndexNumber = isSpecial ? 0 : seasonNumber,
-                        AirsAfterSeasonNumber = airsAfterSeasonNumber,
-                        AirsBeforeEpisodeNumber = airsBeforeEpisodeNumber,
-                        AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
-                        CommunityRating = episode.TvDB.Rating?.ToFloat(10),
-                        PremiereDate = episode.TvDB.AirDate,
-                        Overview = description,
-                    };
-                }
+            var rating = series.AniDB.Restricted && series.AniDB.Type != SeriesType.TV ? "XXX" : null;
+            if (season != null) {
+                result = new Episode {
+                    Name = displayTitle,
+                    OriginalTitle = alternateTitle,
+                    IndexNumber = episodeNumber,
+                    ParentIndexNumber = isSpecial ? 0 : seasonNumber,
+                    AirsAfterSeasonNumber = airsAfterSeasonNumber,
+                    AirsBeforeEpisodeNumber = airsBeforeEpisodeNumber,
+                    AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
+                    Id = episodeId,
+                    IsVirtualItem = true,
+                    SeasonId = season.Id,
+                    SeriesId = season.Series.Id,
+                    Overview = description,
+                    CommunityRating = episode.AniDB.Rating.ToFloat(10),
+                    PremiereDate = episode.AniDB.AirDate,
+                    SeriesName = season.Series.Name,
+                    SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
+                    SeasonName = season.Name,
+                    OfficialRating = rating,
+                    CustomRating = rating,
+                    DateLastSaved = DateTime.UtcNow,
+                    RunTimeTicks = episode.AniDB.Duration.Ticks,
+                };
+                result.PresentationUniqueKey = result.GetPresentationUniqueKey();
             }
             else {
-                var rating = series.AniDB.Restricted && series.AniDB.Type != SeriesType.TV ? "XXX" : null;
-                if (season != null) {
-                    result = new Episode {
-                        Name = displayTitle,
-                        OriginalTitle = alternateTitle,
-                        IndexNumber = episodeNumber,
-                        ParentIndexNumber = isSpecial ? 0 : seasonNumber,
-                        AirsAfterSeasonNumber = airsAfterSeasonNumber,
-                        AirsBeforeEpisodeNumber = airsBeforeEpisodeNumber,
-                        AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
-                        Id = episodeId,
-                        IsVirtualItem = true,
-                        SeasonId = season.Id,
-                        SeriesId = season.Series.Id,
-                        Overview = description,
-                        CommunityRating = episode.AniDB.Rating.ToFloat(10),
-                        PremiereDate = episode.AniDB.AirDate,
-                        SeriesName = season.Series.Name,
-                        SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
-                        SeasonName = season.Name,
-                        OfficialRating = rating,
-                        CustomRating = rating,
-                        DateLastSaved = DateTime.UtcNow,
-                        RunTimeTicks = episode.AniDB.Duration.Ticks,
-                    };
-                    result.PresentationUniqueKey = result.GetPresentationUniqueKey();
-                }
-                else {
-                    result = new Episode {
-                        Name = displayTitle,
-                        OriginalTitle = alternateTitle,
-                        IndexNumber = episodeNumber,
-                        ParentIndexNumber = isSpecial ? 0 : seasonNumber,
-                        AirsAfterSeasonNumber = airsAfterSeasonNumber,
-                        AirsBeforeEpisodeNumber = airsBeforeEpisodeNumber,
-                        AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
-                        PremiereDate = episode.AniDB.AirDate,
-                        Overview = description,
-                        OfficialRating = rating,
-                        CustomRating = rating,
-                        CommunityRating = episode.AniDB.Rating.ToFloat(10),
-                    };
-                }
+                result = new Episode {
+                    Name = displayTitle,
+                    OriginalTitle = alternateTitle,
+                    IndexNumber = episodeNumber,
+                    ParentIndexNumber = isSpecial ? 0 : seasonNumber,
+                    AirsAfterSeasonNumber = airsAfterSeasonNumber,
+                    AirsBeforeEpisodeNumber = airsBeforeEpisodeNumber,
+                    AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
+                    PremiereDate = episode.AniDB.AirDate,
+                    Overview = description,
+                    OfficialRating = rating,
+                    CustomRating = rating,
+                    CommunityRating = episode.AniDB.Rating.ToFloat(10),
+                };
             }
 
             if (file != null) {
@@ -269,7 +224,7 @@ namespace Shokofin.Providers
                     result.IndexNumberEnd = episodeNumberEnd;
             }
 
-            AddProviderIds(result, episodeId: episode.Id, fileId: file?.Id, anidbId: episode.AniDB.Id.ToString(), tvdbId: mergeFriendly || config.SeriesGrouping == Ordering.GroupType.Default ? episode.TvDB?.Id.ToString() : null);
+            AddProviderIds(result, episodeId: episode.Id, fileId: file?.Id, anidbId: episode.AniDB.Id.ToString());
 
             return result;
         }

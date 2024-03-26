@@ -33,83 +33,45 @@ namespace Shokofin.Providers
         public async Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
         {
             try {
-                switch (Plugin.Instance.Configuration.SeriesGrouping) {
-                    default:
-                        if (!info.IndexNumber.HasValue)
-                            return new MetadataResult<Season>();
+                if (!info.IndexNumber.HasValue || info.IndexNumber.HasValue && info.IndexNumber.Value == 0)
+                    return null;
 
-                        if (info.IndexNumber.Value == 1)
-                            return await GetShokoGroupedMetadata(info);
-
-                        return GetDefaultMetadata(info);
-                    case Ordering.GroupType.MergeFriendly:
-                        if (!info.IndexNumber.HasValue)
-                            return new MetadataResult<Season>();
-
-                        return GetDefaultMetadata(info);
-                    case Ordering.GroupType.ShokoGroup:
-                        if (info.IndexNumber.HasValue && info.IndexNumber.Value == 0)
-                            return GetDefaultMetadata(info);
-
-                        return await GetShokoGroupedMetadata(info);
+                var result = new MetadataResult<Season>();
+                var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
+                if (!info.SeriesProviderIds.TryGetValue("Shoko Series", out var seriesId) || !info.IndexNumber.HasValue) {
+                    Logger.LogDebug("Unable refresh Season {SeasonNumber} {SeasonName}", info.IndexNumber, info.Name);
+                    return result;
                 }
+
+                var seasonNumber = info.IndexNumber.Value;
+                var showInfo = await ApiManager.GetShowInfoForSeries(seriesId, filterByType);
+                if (showInfo == null) {
+                    Logger.LogWarning("Unable to find show info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
+                    return result;
+                }
+
+                var seasonInfo = showInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
+                if (seasonInfo == null || !showInfo.SeasonNumberBaseDictionary.TryGetValue(seasonInfo, out var baseSeasonNumber)) {
+                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Series={SeriesId},Group={GroupId})", seasonNumber, seriesId, showInfo.Id);
+                    return result;
+                }
+
+                Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, showInfo.Name, seriesId, showInfo.Id);
+
+                var offset = Math.Abs(seasonNumber - baseSeasonNumber);
+
+                result.Item = CreateMetadata(seasonInfo, seasonNumber, offset, info.MetadataLanguage);
+                result.HasMetadata = true;
+                result.ResetPeople();
+                foreach (var person in seasonInfo.Staff)
+                    result.AddPerson(person);
+
+                return result;
             }
             catch (Exception ex) {
                 Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
                 return new MetadataResult<Season>();
             }
-        }
-
-        private static MetadataResult<Season> GetDefaultMetadata(SeasonInfo info)
-        {
-            var result = new MetadataResult<Season>();
-
-            var seasonName = GetSeasonName(info.IndexNumber.Value, info.Name);
-            result.Item = new Season {
-                Name = seasonName,
-                IndexNumber = info.IndexNumber,
-                SortName = seasonName,
-                ForcedSortName = seasonName
-            };
-
-            result.HasMetadata = true;
-
-            return result;
-        }
-
-        private async Task<MetadataResult<Season>> GetShokoGroupedMetadata(SeasonInfo info)
-        {
-            var result = new MetadataResult<Season>();
-            var filterByType = Plugin.Instance.Configuration.FilterOnLibraryTypes ? Ordering.GroupFilterType.Others : Ordering.GroupFilterType.Default;
-            if (!info.SeriesProviderIds.TryGetValue("Shoko Series", out var seriesId) || !info.IndexNumber.HasValue) {
-                Logger.LogDebug("Unable refresh Season {SeasonNumber} {SeasonName}", info.IndexNumber, info.Name);
-                return result;
-            }
-
-            var seasonNumber = info.IndexNumber.Value;
-            var showInfo = await ApiManager.GetShowInfoForSeries(seriesId, filterByType);
-            if (showInfo == null) {
-                Logger.LogWarning("Unable to find show info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
-                return result;
-            }
-
-            var seasonInfo = showInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
-            if (seasonInfo == null || !showInfo.SeasonNumberBaseDictionary.TryGetValue(seasonInfo, out var baseSeasonNumber)) {
-                Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Series={SeriesId},Group={GroupId})", seasonNumber, seriesId, showInfo.Id);
-                return result;
-            }
-
-            Logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (Series={SeriesId},Group={GroupId})", seasonNumber, showInfo.Name, seriesId, showInfo.Id);
-
-            var offset = Math.Abs(seasonNumber - baseSeasonNumber);
-
-            result.Item = CreateMetadata(seasonInfo, seasonNumber, offset, info.MetadataLanguage);
-            result.HasMetadata = true;
-            result.ResetPeople();
-            foreach (var person in seasonInfo.Staff)
-                result.AddPerson(person);
-
-            return result;
         }
 
         public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, string metadataLanguage)

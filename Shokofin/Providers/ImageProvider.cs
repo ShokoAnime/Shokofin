@@ -60,16 +60,14 @@ namespace Shokofin.Providers
                                 AddImagesForSeries(ref list, seriesImages);
                             }
                             // Also attach any images linked to the "seasons" (AKA series within the group).
-                            if (Plugin.Instance.Configuration.SeriesGrouping == Utils.Ordering.GroupType.ShokoGroup) {
-                                list =  list
-                                    .Concat(
-                                        series.GetSeasons(null, new(true))
-                                            .Cast<Season>()
-                                            .SelectMany(season => GetImages(season, cancellationToken).Result)
-                                    )
-                                    .DistinctBy(image => image.Url)
-                                    .ToList();
-                            }
+                            list =  list
+                                .Concat(
+                                    series.GetSeasons(null, new(true))
+                                        .Cast<Season>()
+                                        .SelectMany(season => GetImages(season, cancellationToken).Result)
+                                )
+                                .DistinctBy(image => image.Url)
+                                .ToList();
                             Logger.LogInformation("Getting {Count} images for series {SeriesName} (Series={SeriesId})", list.Count, series.Name, seriesId);
                         }
                         break;

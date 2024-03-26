@@ -113,59 +113,39 @@ namespace Shokofin.Utils
         /// <returns>Absolute index.</returns>
         public static int GetEpisodeNumber(ShowInfo group, SeasonInfo series, EpisodeInfo episode)
         {
-            switch (Plugin.Instance.Configuration.SeriesGrouping)
-            {
-                default:
-                case GroupType.Default:
-                    if (episode.AniDB.Type == EpisodeType.Special) {
-                        var index = series.SpecialsList.FindIndex(e => string.Equals(e.Id, episode.Id));
-                        if (index == -1)
-                            throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Series={series.Id},Episode={episode.Id})");
-                        return index + 1;
-                    }
-                    return episode.AniDB.EpisodeNumber;
-                case GroupType.MergeFriendly: {
-                    var episodeNumber = episode?.TvDB?.EpisodeNumber;
-                    if (episodeNumber.HasValue)
-                        return episodeNumber.Value;
-                    goto case GroupType.Default;
-                }
-                case GroupType.ShokoGroup: {
-                    int offset = 0;
-                    if (episode.AniDB.Type == EpisodeType.Special) {
-                        var seasonIndex = group.SeasonList.FindIndex(s => string.Equals(s.Id, series.Id));
-                        if (seasonIndex == -1)
-                            throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
-                        var index = series.SpecialsList.FindIndex(e => string.Equals(e.Id, episode.Id));
-                        if (index == -1)
-                            throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
-                        offset = group.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.SpecialsList.Count);
-                        return offset + index + 1;
-                    }
-                    var sizes = series.Shoko.Sizes.Total;
-                    switch (episode.AniDB.Type) {
-                        case EpisodeType.Other:
-                        case EpisodeType.Unknown:
-                        case EpisodeType.Normal:
-                            // offset += 0; // it's not needed, so it's just here as a comment instead.
-                            break;
-                        // Add them to the bottom of the list if we didn't filter them out properly.
-                        case EpisodeType.Parody:
-                            offset += sizes?.Episodes ?? 0;
-                            goto case EpisodeType.Normal;
-                        case EpisodeType.OpeningSong:
-                            offset += sizes?.Parodies ?? 0;
-                            goto case EpisodeType.Parody;
-                        case EpisodeType.Trailer:
-                            offset += sizes?.Credits ?? 0;
-                            goto case EpisodeType.OpeningSong;
-                        default:
-                            offset += sizes?.Trailers ?? 0;
-                            goto case EpisodeType.Trailer;
-                    }
-                    return offset + episode.AniDB.EpisodeNumber;
-                }
+            int offset = 0;
+            if (episode.AniDB.Type == EpisodeType.Special) {
+                var seasonIndex = group.SeasonList.FindIndex(s => string.Equals(s.Id, series.Id));
+                if (seasonIndex == -1)
+                    throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
+                var index = series.SpecialsList.FindIndex(e => string.Equals(e.Id, episode.Id));
+                if (index == -1)
+                    throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
+                offset = group.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.SpecialsList.Count);
+                return offset + index + 1;
             }
+            var sizes = series.Shoko.Sizes.Total;
+            switch (episode.AniDB.Type) {
+                case EpisodeType.Other:
+                case EpisodeType.Unknown:
+                case EpisodeType.Normal:
+                    // offset += 0; // it's not needed, so it's just here as a comment instead.
+                    break;
+                // Add them to the bottom of the list if we didn't filter them out properly.
+                case EpisodeType.Parody:
+                    offset += sizes?.Episodes ?? 0;
+                    goto case EpisodeType.Normal;
+                case EpisodeType.OpeningSong:
+                    offset += sizes?.Parodies ?? 0;
+                    goto case EpisodeType.Parody;
+                case EpisodeType.Trailer:
+                    offset += sizes?.Credits ?? 0;
+                    goto case EpisodeType.OpeningSong;
+                default:
+                    offset += sizes?.Trailers ?? 0;
+                    goto case EpisodeType.Trailer;
+            }
+            return offset + episode.AniDB.EpisodeNumber;
         }
 
         public static (int?, int?, int?, bool) GetSpecialPlacement(ShowInfo group, SeasonInfo series, EpisodeInfo episode)
@@ -175,13 +155,7 @@ namespace Shokofin.Utils
             // Return early if we want to exclude them from the normal seasons.
             if (order == SpecialOrderType.Excluded) {
                 // Check if this should go in the specials season.
-                var isSpecial = Plugin.Instance.Configuration.SeriesGrouping == GroupType.MergeFriendly && episode.TvDB != null ? (
-                    episode.TvDB.SeasonNumber == 0
-                ) : (
-                    episode.AniDB.Type == EpisodeType.Special
-                );
-
-                return (null, null, null, isSpecial);
+                return (null, null, null, episode.IsSpecial);
             }
 
             // Abort if episode is not a TvDB special or AniDB special
@@ -255,52 +229,24 @@ namespace Shokofin.Utils
         /// <returns></returns>
         public static int GetSeasonNumber(ShowInfo group, SeasonInfo series, EpisodeInfo episode)
         {
-            switch (Plugin.Instance.Configuration.SeriesGrouping) {
+            if (!group.SeasonNumberBaseDictionary.TryGetValue(series, out var seasonNumber))
+                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id})");
+
+            var offset = 0;
+            switch (episode.AniDB.Type) {
                 default:
-                case GroupType.Default:
-                    return episode.AniDB.Type switch
-                    {
-                        EpisodeType.Normal => 1,
-                        EpisodeType.Special => 1,
-                        EpisodeType.Unknown => 123,
-                        EpisodeType.Other => 124,
-                        EpisodeType.Trailer => 125,
-                        EpisodeType.ThemeSong => 126,
-                        _ => 127,
-                    };
-                case GroupType.MergeFriendly: {
-                    int? seasonNumber = null;
-                    if (episode.TvDB != null) {
-                        if (episode.TvDB.SeasonNumber == 0)
-                            seasonNumber = episode.TvDB.AirsAfterSeason ?? episode.TvDB.AirsBeforeSeason ?? 1;
-                        else
-                            seasonNumber = episode.TvDB.SeasonNumber;
-                    }
-                    if (!seasonNumber.HasValue)
-                        goto case GroupType.Default;
-                    return seasonNumber.Value;
+                    break;
+                case EpisodeType.Unknown: {
+                    offset = 1;
+                    break;
                 }
-                case GroupType.ShokoGroup: {
-                    if (!group.SeasonNumberBaseDictionary.TryGetValue(series, out var seasonNumber))
-                        throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id})");
-
-                    var offset = 0;
-                    switch (episode.AniDB.Type) {
-                        default:
-                            break;
-                        case EpisodeType.Unknown: {
-                            offset = 1;
-                            break;
-                        }
-                        case EpisodeType.Other: {
-                            offset = series.AlternateEpisodesList.Count > 0 ? 2 : 1;
-                            break;
-                        }
-                    }
-
-                    return seasonNumber + offset;
+                case EpisodeType.Other: {
+                    offset = series.AlternateEpisodesList.Count > 0 ? 2 : 1;
+                    break;
                 }
             }
+
+            return seasonNumber + offset;
         }
 
         /// <summary>

@@ -56,8 +56,6 @@ namespace Shokofin.Configuration
 
         public TextSourceType DescriptionSource { get; set; }
 
-        public SeriesAndBoxSetGroupType SeriesGrouping { get; set; }
-
         public OrderType SeasonOrdering { get; set; }
 
         public bool MarkSpecialsWhenGrouped { get; set; }
@@ -127,7 +125,6 @@ namespace Shokofin.Configuration
             TitleAlternateType = DisplayLanguageType.Origin;
             TitleAllowAny = false;
             DescriptionSource = TextSourceType.Default;
-            SeriesGrouping = SeriesAndBoxSetGroupType.Default;
             SeasonOrdering = OrderType.Default;
             SpecialsPlacement = SpecialOrderType.AfterSeason;
             MarkSpecialsWhenGrouped = true;
