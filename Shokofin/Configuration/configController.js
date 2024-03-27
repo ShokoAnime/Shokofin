@@ -450,12 +450,12 @@ export default function (page) {
     });
 
     form.querySelector("#UseGroupsForShows").addEventListener("change", function () {
-        form.querySelector("#SeasonOrdering").disabled = this.checked;
+        form.querySelector("#SeasonOrdering").disabled = !this.checked;
         if (this.checked) {
-            form.querySelector("#SeasonOrderingContainer").setAttribute("hidden", "");
+            form.querySelector("#SeasonOrderingContainer").removeAttribute("hidden");
         }
         else {
-            form.querySelector("#SeasonOrderingContainer").removeAttribute("hidden");
+            form.querySelector("#SeasonOrderingContainer").setAttribute("hidden", "");
         }
     });
 
@@ -495,12 +495,12 @@ export default function (page) {
             }
             form.querySelector("#UseGroupsForShows").checked = config.UseGroupsForShows || false;
             form.querySelector("#SeasonOrdering").value = config.SeasonOrdering;
-            form.querySelector("#SeasonOrdering").disabled = form.querySelector("#UseGroupsForShows").checked;
+            form.querySelector("#SeasonOrdering").disabled = !form.querySelector("#UseGroupsForShows").checked;
             if (form.querySelector("#UseGroupsForShows").checked) {
-                form.querySelector("#SeasonOrderingContainer").setAttribute("hidden", "");
+                form.querySelector("#SeasonOrderingContainer").removeAttribute("hidden");
             }
             else {
-                form.querySelector("#SeasonOrderingContainer").removeAttribute("hidden");
+                form.querySelector("#SeasonOrderingContainer").setAttribute("hidden", "");
             }
             form.querySelector("#CollectionGrouping").value = config.CollectionGrouping;
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies || true;
