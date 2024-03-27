@@ -2,14 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Reflection;
-using System.Threading.Tasks;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using Shokofin.API.Models;
+using Microsoft.Extensions.Logging;
 using Shokofin.Configuration;
 
 #nullable enable
@@ -23,16 +20,20 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     public override Guid Id => Guid.Parse("5216ccbf-d24a-4eb3-8a7e-7da4230b7052");
 
+    private readonly ILogger<Plugin> Logger;
+
     /// <summary>
     /// "Virtual" File System Root Directory.
     /// </summary>
     public string VirtualRoot => Path.Combine(DataFolderPath, "VFS");
 
-    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer)
+    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
     {
         Instance = this;
         ConfigurationChanged += OnConfigChanged;
         IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
+        Logger = logger;
+        Logger.LogInformation("Virtual File System Location; {Path}", VirtualRoot);
     }
 
     public void OnConfigChanged(object? sender, BasePluginConfiguration e)
