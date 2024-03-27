@@ -114,7 +114,7 @@ public class ShowInfo
     /// </summary>
     public SeasonInfo DefaultSeason;
 
-    public ShowInfo(SeasonInfo seasonInfo, string? groupId = null)
+    public ShowInfo(SeasonInfo seasonInfo, string? collectionId = null)
     {
         var seasonNumberBaseDictionary = new Dictionary<SeasonInfo, int>() { { seasonInfo, 1 } };
         var seasonOrderDictionary = new Dictionary<int, SeasonInfo>() { { 1, seasonInfo } };
@@ -125,8 +125,8 @@ public class ShowInfo
             seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
 
         Id = seasonInfo.Id;
-        GroupId = groupId ?? seasonInfo.Shoko.IDs.ParentGroup.ToString();
-        CollectionId = seasonInfo.Shoko.IDs.ParentGroup.ToString();
+        GroupId = seasonInfo.Shoko.IDs.ParentGroup.ToString();
+        CollectionId = collectionId ?? seasonInfo.Shoko.IDs.ParentGroup.ToString();
         Name = seasonInfo.Shoko.Name;
         Tags = seasonInfo.Tags;
         Genres = seasonInfo.Genres;

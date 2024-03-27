@@ -825,7 +825,7 @@ public class ShokoAPIManager : IDisposable
         return showInfo;
     }
 
-    private ShowInfo GetOrCreateShowInfoForSeasonInfo(SeasonInfo seasonInfo, string? groupId = null)
+    private ShowInfo GetOrCreateShowInfoForSeasonInfo(SeasonInfo seasonInfo, string? collectionId = null)
     {
         var cacheKey = $"show:by-series-id:{seasonInfo.Id}";
         if (DataCache.TryGetValue<ShowInfo>(cacheKey, out var showInfo)) {
@@ -833,7 +833,7 @@ public class ShokoAPIManager : IDisposable
             return showInfo;
         }
 
-        showInfo = new ShowInfo(seasonInfo, groupId);
+        showInfo = new ShowInfo(seasonInfo, collectionId);
         SeriesIdToDefaultSeriesIdDictionary[seasonInfo.Id] = showInfo.Id;
         if (!string.IsNullOrEmpty(showInfo.CollectionId))
             SeriesIdToCollectionIdDictionary[seasonInfo.Id] = showInfo.CollectionId;
