@@ -123,7 +123,7 @@ namespace Shokofin.Configuration
             TitleAllowAny = false;
             DescriptionSource = TextSourceType.Default;
             VirtualFileSystem = true;
-            UseGroupsForShows = true;
+            UseGroupsForShows = false;
             SeparateMovies = true;
             SeasonOrdering = OrderType.Default;
             SpecialsPlacement = SpecialOrderType.AfterSeason;

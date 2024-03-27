@@ -127,6 +127,8 @@ async function defaultSubmit(form) {
         // Library settings
         config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
         config.LibraryFilteringMode = filteringMode;
+        config.UseGroupsForShows = form.querySelector("#UseGroupsForShows").checked;
+        config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
         config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
         config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
         config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
@@ -147,7 +149,6 @@ async function defaultSubmit(form) {
         form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
 
         // Experimental settings
-        config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
         config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
         config.EXPERIMENTAL_SplitThenMergeMovies = form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked;
         config.EXPERIMENTAL_SplitThenMergeEpisodes = form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked;
@@ -287,6 +288,8 @@ async function syncSettings(form) {
     // Library settings
     config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
     config.LibraryFilteringMode = filteringMode;
+    config.UseGroupsForShows = form.querySelector("#UseGroupsForShows").checked;
+    config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
     config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
     config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
     config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
@@ -307,7 +310,6 @@ async function syncSettings(form) {
     form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
 
     // Experimental settings
-    config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
     config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
     config.EXPERIMENTAL_SplitThenMergeMovies = form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked;
     config.EXPERIMENTAL_SplitThenMergeEpisodes = form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked;
@@ -447,6 +449,16 @@ export default function (page) {
         }
     });
 
+    form.querySelector("#UseGroupsForShows").addEventListener("change", function () {
+        form.querySelector("#SeasonOrdering").disabled = this.checked;
+        if (this.checked) {
+            form.querySelector("#SeasonOrderingContainer").setAttribute("hidden", "");
+        }
+        else {
+            form.querySelector("#SeasonOrderingContainer").removeAttribute("hidden");
+        }
+    });
+
     page.addEventListener("viewshow", async function () {
         Dashboard.showLoadingMsg();
         try {
@@ -474,6 +486,22 @@ export default function (page) {
             // Library settings
             form.querySelector("#VirtualFileSystem").checked = config.VirtualFileSystem || true;
             form.querySelector("#LibraryFilteringMode").value = `${config.LibraryFilteringMode != null ? config.LibraryFilteringMode : null}`;
+            form.querySelector("#LibraryFilteringMode").disabled = form.querySelector("#VirtualFileSystem").checked || true;
+            if (form.querySelector("#VirtualFileSystem").checked) {
+                form.querySelector("#LibraryFilteringModeContainer").setAttribute("hidden", "");
+            }
+            else {
+                form.querySelector("#LibraryFilteringModeContainer").removeAttribute("hidden");
+            }
+            form.querySelector("#UseGroupsForShows").checked = config.UseGroupsForShows || false;
+            form.querySelector("#SeasonOrdering").value = config.SeasonOrdering;
+            form.querySelector("#SeasonOrdering").disabled = form.querySelector("#UseGroupsForShows").checked;
+            if (form.querySelector("#UseGroupsForShows").checked) {
+                form.querySelector("#SeasonOrderingContainer").setAttribute("hidden", "");
+            }
+            else {
+                form.querySelector("#SeasonOrderingContainer").removeAttribute("hidden");
+            }
             form.querySelector("#CollectionGrouping").value = config.CollectionGrouping;
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies || true;
             form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
@@ -496,7 +524,6 @@ export default function (page) {
             form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
 
             // Experimental settings
-            form.querySelector("#SeasonOrdering").value = config.SeasonOrdering;
             form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked = config.EXPERIMENTAL_AutoMergeVersions || false;
             form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked = config.EXPERIMENTAL_SplitThenMergeMovies || true;
             form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked = config.EXPERIMENTAL_SplitThenMergeEpisodes || false;

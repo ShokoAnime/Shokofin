@@ -190,6 +190,42 @@
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="UseGroupsForShows" />
+                                <span>Use shoko groups for shows</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                <div>This will use Shoko's group feature to group together AniDB anime entries into show entries.</div>
+                                <details style="margin-top: 0.5em">
+                                    <summary style="margin-bottom: 0.25em">Pre-requirements for use.</summary>
+                                    To make the most out of this feature you first need to configure your grouping in Shoko Server. You can
+                                    either enable auto-grouping in the settings, or manually craft your own grouping structure, or a
+                                    combination of the two where new series gets automatically assigned to a fitting group and you can
+                                    override the placement if you feel it should belong elsewhere instead. For more infomation look up the
+                                    <a href="https://docs.shokoanime.com/server/management">Shoko docs</a> on how to manage your groups.
+                                </details>
+                                <details style="margin-top: 0.5em">
+                                    <summary style="margin-bottom: 0.25em">Can I use this with collections?</summary>
+                                    Yes! You can use this with collections enabled, but that entails that you've configured a multi-layered
+                                    structure for your groups. Because the first group layer will be used for the shows, except if 1) the group
+                                    contains both movies and shows, and 2) you've sepeatated the movies from the shows. In that case the
+                                    then the first layer of groups will also be used to generate a collection for your movie(s) and show
+                                    within the first layer. Also, the auto-grouping only acts on a single layer, and you need to use Shoko
+                                    Desktop (or in the future, the Web UI) to create your nested structure. For more infomation look up the
+                                    <a href="https://docs.shokoanime.com/server/management">Shoko docs</a> on how to manage your groups.
+                                </details>
+                            </div>
+                        </div>
+                        <div id="SeasonOrderingContainer" class="selectContainer selectContainer-withDescription" hidden>
+                            <label class="selectLabel" for="SeasonOrdering">Season ordering:</label>
+                            <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select" disabled>
+                                <option value="Default" selected>Let Shoko decide.</option>
+                                <option value="ReleaseDate">Order seasons by release date.</option>
+                                <option value="Chronological">Order seasons in chronological order.</option>
+                            </select>
+                            <div class="fieldDescription">Determines how to order seasons within each show using the Shoko groups.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="SeparateMovies" />
                                 <span>Separate movies from shows</span>
                             </label>
@@ -357,15 +393,6 @@
                             <h3>Experimental Settings</h3>
                         </legend>
                         <div class="fieldDescription verticalSection-extrabottompadding">Any features/settings in this section is still considered to be in an experimental state. <strong>You can enable them, but at the risk if them messing up your library.</strong></div>
-                        <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="SeasonOrdering">Season ordering:</label>
-                            <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select">
-                                <option value="Default" selected>Let Shoko decide.</option>
-                                <option value="ReleaseDate">Order season by release date.</option>
-                                <option value="Chronological">Order seasons in chronological order.</option>
-                            </select>
-                            <div class="fieldDescription">Determines how to order Seasons within Shows.</div>
-                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_AutoMergeVersions" />
