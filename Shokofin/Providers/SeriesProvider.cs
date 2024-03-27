@@ -60,10 +60,7 @@ namespace Shokofin.Providers
                     }
                 }
 
-                var season = show.DefaultSeason;
-                var defaultSeriesTitle = show.Name;
-                var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(season.AniDB.Titles, show.Name, info.MetadataLanguage);
-                Logger.LogInformation("Found series {SeriesName} (Series={SeriesId},Group={GroupId})", displayTitle, show.Id, show.GroupId);
+                var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(show.DefaultSeason.AniDB.Titles, show.Name, info.MetadataLanguage);
                 var premiereDate = show.PremiereDate;
                 var endDate = show.EndDate;
                 result.Item = new Series {
@@ -86,7 +83,9 @@ namespace Shokofin.Providers
                 foreach (var person in show.Staff)
                     result.AddPerson(person);
 
-                AddProviderIds(result.Item, show.Id, show.GroupId, season.AniDB.Id.ToString());
+                AddProviderIds(result.Item, show.Id, show.GroupId, show.DefaultSeason.AniDB.Id.ToString());
+
+                Logger.LogInformation("Found series {SeriesName} (Series={SeriesId},Group={GroupId})", displayTitle, show.Id, show.GroupId);
 
                 return result;
             }
