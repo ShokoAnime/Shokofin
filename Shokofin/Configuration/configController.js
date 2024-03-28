@@ -490,7 +490,7 @@ export default function (page) {
             form.querySelector("#TitleMainType").value = config.TitleMainType;
             form.querySelector("#TitleAlternateType").value = config.TitleAlternateType;
             form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
-            form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes || true;
+            form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null ? config.TitleAddForMultipleEpisodes : true;
             form.querySelector("#DescriptionSource").value = config.DescriptionSource;
             form.querySelector("#CleanupAniDBDescriptions").checked = config.SynopsisCleanMultiEmptyLines || config.SynopsisCleanLinks;
             form.querySelector("#MinimalAniDBDescriptions").checked = config.SynopsisRemoveSummary || config.SynopsisCleanMiscLines;
@@ -500,9 +500,9 @@ export default function (page) {
             form.querySelector("#AddTMDBId").checked = config.AddTMDBId;
 
             // Library settings
-            form.querySelector("#VirtualFileSystem").checked = config.VirtualFileSystem || true;
+            form.querySelector("#VirtualFileSystem").checked = config.VirtualFileSystem != null ? config.VirtualFileSystem : true;
             form.querySelector("#LibraryFilteringMode").value = `${config.LibraryFilteringMode != null ? config.LibraryFilteringMode : null}`;
-            form.querySelector("#LibraryFilteringMode").disabled = form.querySelector("#VirtualFileSystem").checked || true;
+            form.querySelector("#LibraryFilteringMode").disabled = form.querySelector("#VirtualFileSystem").checked;
             if (form.querySelector("#VirtualFileSystem").checked) {
                 form.querySelector("#LibraryFilteringModeContainer").setAttribute("hidden", "");
             }
@@ -518,8 +518,8 @@ export default function (page) {
             else {
                 form.querySelector("#SeasonOrderingContainer").setAttribute("hidden", "");
             }
-            form.querySelector("#CollectionGrouping").value = config.CollectionGrouping;
-            form.querySelector("#SeparateMovies").checked = config.SeparateMovies || true;
+            form.querySelector("#CollectionGrouping").value = config.CollectionGrouping || "Default";
+            form.querySelector("#SeparateMovies").checked = config.SeparateMovies != null ? config.SeparateMovies : true;
             form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
 
@@ -541,7 +541,7 @@ export default function (page) {
 
             // Experimental settings
             form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked = config.EXPERIMENTAL_AutoMergeVersions || false;
-            form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked = config.EXPERIMENTAL_SplitThenMergeMovies || true;
+            form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked = config.EXPERIMENTAL_SplitThenMergeMovies != null ? config.EXPERIMENTAL_SplitThenMergeMovies : true;
             form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked = config.EXPERIMENTAL_SplitThenMergeEpisodes || false;
             form.querySelector("#EXPERIMENTAL_MergeSeasons").checked = config.EXPERIMENTAL_MergeSeasons || false;
 
