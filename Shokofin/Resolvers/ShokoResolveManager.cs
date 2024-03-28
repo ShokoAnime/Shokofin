@@ -158,8 +158,10 @@ public class ShokoResolveManager
 
     private async Task<IReadOnlyList<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)>> GetImportFolderFiles(int importFolderId, string importFolderSubPath, string mediaFolderPath)
     {
-        Logger.LogDebug("Looking for recognised files within media folder… (ImportFolder={FolderId},RelativePath={RelativePath})", importFolderId, importFolderSubPath);
+        Logger.LogDebug("Looking up recognised files for media folder… (ImportFolder={FolderId},RelativePath={RelativePath})", importFolderId, importFolderSubPath);
+        var start = DateTime.UtcNow;
         var allFilesForImportFolder = (await ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath))
+            .AsParallel()
             .SelectMany(file =>
             {
                 var location = file.Locations
@@ -169,21 +171,26 @@ public class ShokoResolveManager
                     return Array.Empty<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)>();
 
                 var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
-                if (!File.Exists(sourceLocation))
-                    return Array.Empty<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)>();
-
                 return file.CrossReferences
                     .Select(xref => (sourceLocation, fileId: file.Id.ToString(), seriesId: xref.Series.Shoko.ToString(), episodeIds: xref.Episodes.Select(e => e.Shoko.ToString()).ToArray()));
             })
             .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation))
             .ToList();
-        Logger.LogDebug("Found {FileCount} files to use within media folder at {Path} (ImportFolder={FolderId},RelativePath={RelativePath})", allFilesForImportFolder.Count, mediaFolderPath, importFolderId, importFolderSubPath);
+        var timeSpent = start - DateTime.UtcNow;
+        Logger.LogDebug(
+            "Found ≤{FileCount} files to potentially use within media folder at {Path} in {TimeSpan} (ImportFolder={FolderId},RelativePath={RelativePath})",
+            allFilesForImportFolder.Count,
+            mediaFolderPath,
+            timeSpent,
+            importFolderId,
+            importFolderSubPath
+        );
         return allFilesForImportFolder;
     }
 
     private async Task GenerateSymbolicLinks(Folder mediaFolder, IReadOnlyList<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)> files)
     {
-        Logger.LogInformation("Found {FileCount} recognised files to potentially use within media folder at {Path}", files.Count, mediaFolder.Path);
+        Logger.LogInformation("Creating structure for ≤{FileCount} files to potentially use within media folder at {Path}", files.Count, mediaFolder.Path);
 
         var start = DateTime.UtcNow;
         var skipped = 0;
@@ -196,6 +203,9 @@ public class ShokoResolveManager
                 await semaphore.WaitAsync();
 
                 try {
+                    if (!File.Exists(tuple.sourceLocation))
+                        return;
+
                     var (sourceLocation, symbolicLink) = await GenerateLocationForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId, tuple.episodeIds);
                     // Skip any source files we weren't meant to have in the library.
                     if (string.IsNullOrEmpty(sourceLocation))
