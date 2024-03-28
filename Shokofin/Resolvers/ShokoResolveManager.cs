@@ -185,6 +185,7 @@ public class ShokoResolveManager
     {
         Logger.LogInformation("Found {FileCount} recognised files to potentially use within media folder at {Path}", files.Count, mediaFolder.Path);
 
+        var start = DateTime.UtcNow;
         var skipped = 0;
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
@@ -232,12 +233,14 @@ public class ShokoResolveManager
             CleanupDirectoryStructure(symbolicLink);
         }
 
+        var timeSpent = start - DateTime.UtcNow;
         Logger.LogInformation(
-            "Created {CreatedCount}, skipped {SkippedCount}, and removed {RemovedCount} symbolic links for media folder at {Path}",
+            "Created {CreatedCount}, skipped {SkippedCount}, and removed {RemovedCount} symbolic links for media folder at {Path} in {TimeSpan}",
             allPathsForVFS.Count - skipped,
             skipped,
             toBeRemoved.Count,
-            mediaFolder.Path
+            mediaFolder.Path,
+            timeSpent
         );
     }
 
