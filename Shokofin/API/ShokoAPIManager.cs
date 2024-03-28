@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Shokofin.API.Info;
 using Shokofin.API.Models;
+using Shokofin.Utils;
 
 using Path = System.IO.Path;
 
@@ -54,7 +55,7 @@ public class ShokoAPIManager : IDisposable
         LibraryManager = libraryManager;
     }
 
-    private IMemoryCache DataCache = new MemoryCache(new MemoryCacheOptions() {
+    private GuardedMemoryCache DataCache = new(new MemoryCacheOptions() {
         ExpirationScanFrequency = ExpirationScanFrequency,
     });
 
@@ -165,7 +166,7 @@ public class ShokoAPIManager : IDisposable
         SeriesIdToPathDictionary.Clear();
         if (restore) {
             Logger.LogDebug("Initialising new cache…");
-            DataCache = new MemoryCache(new MemoryCacheOptions() {
+            DataCache = new(new MemoryCacheOptions() {
                 ExpirationScanFrequency = ExpirationScanFrequency,
             });
         }
@@ -512,18 +513,17 @@ public class ShokoAPIManager : IDisposable
     }
 
     private EpisodeInfo CreateEpisodeInfo(Episode episode, string episodeId)
-    {
-        var cacheKey = $"episode:{episodeId}";
-        if (DataCache.TryGetValue<EpisodeInfo>(cacheKey, out var episodeInfo))
-            return episodeInfo;
+        => DataCache.GetOrCreate(
+            $"episode:{episodeId}",
+            (cachedEntry) => {
+                Logger.LogTrace("Creating info object for episode {EpisodeName}. (Episode={EpisodeId})", episode.Name, episodeId);
 
-        Logger.LogTrace("Creating info object for episode {EpisodeName}. (Episode={EpisodeId})", episode.Name, episodeId);
-
-        episodeInfo = new EpisodeInfo(episode);
-
-        DataCache.Set<EpisodeInfo>(cacheKey, episodeInfo, DefaultTimeSpan);
-        return episodeInfo;
-    }
+                return new EpisodeInfo(episode);
+            },
+            new() {
+                AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
+            }
+        );
 
     public bool TryGetEpisodeIdForPath(string path, out string? episodeId)
     {
@@ -619,33 +619,33 @@ public class ShokoAPIManager : IDisposable
         return await GetSeasonInfoForSeries(seriesId);
     }
 
-    private async Task<SeasonInfo> CreateSeasonInfo(Series series, string seriesId)
-    {
-        var cacheKey = $"season:{seriesId}";
-        if (DataCache.TryGetValue<SeasonInfo>(cacheKey, out var seasonInfo)) {
-            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId);
-            return seasonInfo;
-        }
+    private Task<SeasonInfo> CreateSeasonInfo(Series series, string seriesId)
+        => DataCache.GetOrCreateAsync(
+            $"season:{seriesId}",
+            (seasonInfo) => Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId),
+            async (cachedEntry) => {
+                Logger.LogTrace("Creating info object for season {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
 
-        Logger.LogTrace("Creating info object for season {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
+                var episodes = (await APIClient.GetEpisodesFromSeries(seriesId) ?? new()).List
+                    .Select(e => CreateEpisodeInfo(e, e.IDs.Shoko.ToString()))
+                    .Where(e => !e.Shoko.IsHidden)
+                    .OrderBy(e => e.AniDB.AirDate)
+                    .ToList();
+                var cast = await APIClient.GetSeriesCast(seriesId);
+                var relations = await APIClient.GetSeriesRelations(seriesId);
+                var genres = await GetGenresForSeries(seriesId);
+                var tags = await GetTagsForSeries(seriesId);
 
-        var episodes = (await APIClient.GetEpisodesFromSeries(seriesId) ?? new()).List
-            .Select(e => CreateEpisodeInfo(e, e.IDs.Shoko.ToString()))
-            .Where(e => !e.Shoko.IsHidden)
-            .OrderBy(e => e.AniDB.AirDate)
-            .ToList();
-        var cast = await APIClient.GetSeriesCast(seriesId);
-        var relations = await APIClient.GetSeriesRelations(seriesId);
-        var genres = await GetGenresForSeries(seriesId);
-        var tags = await GetTagsForSeries(seriesId);
+                var seasonInfo = new SeasonInfo(series, episodes, cast, relations, genres, tags);
 
-        seasonInfo = new SeasonInfo(series, episodes, cast, relations, genres, tags);
-
-        foreach (var episode in episodes)
-            EpisodeIdToSeriesIdDictionary.TryAdd(episode.Id, seriesId);
-        DataCache.Set<SeasonInfo>(cacheKey, seasonInfo, DefaultTimeSpan);
-        return seasonInfo;
-    }
+                foreach (var episode in episodes)
+                    EpisodeIdToSeriesIdDictionary.TryAdd(episode.Id, seriesId);
+                return seasonInfo;
+            },
+            new() {
+                AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
+            }
+        );
 
     #endregion
     #region Series Helpers
@@ -781,64 +781,65 @@ public class ShokoAPIManager : IDisposable
         return await CreateShowInfoForGroup(group, group.IDs.Shoko.ToString());
     }
 
-    private async Task<ShowInfo?> CreateShowInfoForGroup(Group group, string groupId)
-    {
-        var cacheKey = $"show:by-group-id:{groupId}";
-        if (DataCache.TryGetValue<ShowInfo?>(cacheKey, out var showInfo)) {
-            Logger.LogTrace("Reusing info object for show {GroupName}. (Group={GroupId})", showInfo?.Name, groupId);   
-            return showInfo;
-        }
+    private Task<ShowInfo?> CreateShowInfoForGroup(Group group, string groupId)
+        => DataCache.GetOrCreateAsync(
+            $"show:by-group-id:{groupId}",
+            (showInfo) => Logger.LogTrace("Reusing info object for show {GroupName}. (Group={GroupId})", showInfo?.Name, groupId),
+            async (cachedEntry) => {
+                Logger.LogTrace("Creating info object for show {GroupName}. (Group={GroupId})", group.Name, groupId);
 
-        Logger.LogTrace("Creating info object for show {GroupName}. (Group={GroupId})", group.Name, groupId);
+                var seasonList = (await APIClient.GetSeriesInGroup(groupId)
+                    .ContinueWith(task => Task.WhenAll(task.Result.Select(s => CreateSeasonInfo(s, s.IDs.Shoko.ToString()))))
+                    .Unwrap())
+                    .Where(s => s != null)
+                    .ToList();
 
-        var seasonList = (await APIClient.GetSeriesInGroup(groupId)
-            .ContinueWith(task => Task.WhenAll(task.Result.Select(s => CreateSeasonInfo(s, s.IDs.Shoko.ToString()))))
-            .Unwrap())
-            .Where(s => s != null)
-            .ToList();
+                var length = seasonList.Count;
+                if (Plugin.Instance.Configuration.SeparateMovies) {
+                    seasonList = seasonList.Where(s => s.Type != SeriesType.Movie).ToList();
 
-        var length = seasonList.Count;
-        if (Plugin.Instance.Configuration.SeparateMovies) {
-            seasonList = seasonList.Where(s => s.Type != SeriesType.Movie).ToList();
+                    // Return early if no series matched the filter or if the list was empty.
+                    if (seasonList.Count == 0) {
+                        Logger.LogWarning("Creating an empty show info for filter! (Group={GroupId})", groupId);
 
-            // Return early if no series matched the filter or if the list was empty.
-            if (seasonList.Count == 0) {
-                Logger.LogWarning("Creating an empty show info for filter! (Group={GroupId})", groupId);
+                        cachedEntry.AbsoluteExpirationRelativeToNow = DefaultTimeSpan;
+                        return null;
+                    }
+                }
 
-                showInfo = null;
+                var showInfo = new ShowInfo(group, seasonList, Logger, length != seasonList.Count);
 
-                DataCache.Set(cacheKey, showInfo, DefaultTimeSpan);
+                foreach (var seasonInfo in seasonList) {
+                    SeriesIdToDefaultSeriesIdDictionary[seasonInfo.Id] = showInfo.Id;
+                    if (!string.IsNullOrEmpty(showInfo.CollectionId))
+                        SeriesIdToCollectionIdDictionary[seasonInfo.Id] = showInfo.CollectionId;
+                }
+
                 return showInfo;
+            },
+            new() {
+                AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
             }
-        }
+        );
 
-        showInfo = new ShowInfo(group, seasonList, Logger, length != seasonList.Count);
-
-        foreach (var seasonInfo in seasonList) {
-            SeriesIdToDefaultSeriesIdDictionary[seasonInfo.Id] = showInfo.Id;
-            if (!string.IsNullOrEmpty(showInfo.CollectionId))
-                SeriesIdToCollectionIdDictionary[seasonInfo.Id] = showInfo.CollectionId;
-        }
-
-        DataCache.Set(cacheKey, showInfo, DefaultTimeSpan);
-        return showInfo;
-    }
 
     private ShowInfo GetOrCreateShowInfoForSeasonInfo(SeasonInfo seasonInfo, string? collectionId = null)
-    {
-        var cacheKey = $"show:by-series-id:{seasonInfo.Id}";
-        if (DataCache.TryGetValue<ShowInfo>(cacheKey, out var showInfo)) {
-            Logger.LogTrace("Reusing info object for show {GroupName}. (Series={SeriesId})", showInfo.Name, seasonInfo.Id);
-            return showInfo;
-        }
+        => DataCache.GetOrCreate(
+            $"show:by-series-id:{seasonInfo.Id}",
+            (showInfo) => Logger.LogTrace("Reusing info object for show {GroupName}. (Series={SeriesId})", showInfo.Name, seasonInfo.Id),
+            (cachedEntry) => {
+                Logger.LogTrace("Creating info object for show {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seasonInfo.Id);
 
-        showInfo = new ShowInfo(seasonInfo, collectionId);
-        SeriesIdToDefaultSeriesIdDictionary[seasonInfo.Id] = showInfo.Id;
-        if (!string.IsNullOrEmpty(showInfo.CollectionId))
-            SeriesIdToCollectionIdDictionary[seasonInfo.Id] = showInfo.CollectionId;
-        showInfo = DataCache.Set(cacheKey, showInfo, DefaultTimeSpan);
-        return showInfo;
-    }
+                var showInfo = new ShowInfo(seasonInfo, collectionId);
+                SeriesIdToDefaultSeriesIdDictionary[seasonInfo.Id] = showInfo.Id;
+                if (!string.IsNullOrEmpty(showInfo.CollectionId))
+                    SeriesIdToCollectionIdDictionary[seasonInfo.Id] = showInfo.CollectionId;
+                return showInfo;
+            },
+            new() {
+                AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
+            }
+        );
 
     #endregion
     #region Collection Info
@@ -848,9 +849,9 @@ public class ShokoAPIManager : IDisposable
         if (string.IsNullOrEmpty(groupId))
             return null;
 
-        if (DataCache.TryGetValue<CollectionInfo>($"collection:by-group-id:{groupId}", out var seasonInfo)) {
-            Logger.LogTrace("Reusing info object for collection {GroupName}. (Group={GroupId})", seasonInfo.Name, groupId);
-            return seasonInfo;
+        if (DataCache.TryGetValue<CollectionInfo>($"collection:by-group-id:{groupId}", out var collectionInfo)) {
+            Logger.LogTrace("Reusing info object for collection {GroupName}. (Group={GroupId})", collectionInfo.Name, groupId);
+            return collectionInfo;
         }
 
         var group = await APIClient.GetGroup(groupId);
@@ -876,54 +877,54 @@ public class ShokoAPIManager : IDisposable
         return await CreateCollectionInfo(group, group.IDs.Shoko.ToString());
     }
 
-    private async Task<CollectionInfo> CreateCollectionInfo(Group group, string groupId)
-    {
-        var cacheKey = $"collection:by-group-id:{groupId}";
-        if (DataCache.TryGetValue<CollectionInfo>(cacheKey, out var collectionInfo)) {
-            Logger.LogTrace("Reusing info object for collection {GroupName}. (Group={GroupId})", collectionInfo.Name, groupId);   
-            return collectionInfo;
-        }
+    private Task<CollectionInfo> CreateCollectionInfo(Group group, string groupId)
+        => DataCache.GetOrCreateAsync(
+            $"collection:by-group-id:{groupId}",
+            (collectionInfo) => Logger.LogTrace("Reusing info object for collection {GroupName}. (Group={GroupId})", collectionInfo.Name, groupId),
+            async (cachedEntry) => {
+                Logger.LogTrace("Creating info object for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
+                Logger.LogTrace("Fetching show info objects for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
 
-        Logger.LogTrace("Creating info object for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
+                var showGroupIds = new HashSet<string>();
+                var collectionIds = new HashSet<string>();
+                var showDict = new Dictionary<string, ShowInfo>();
+                foreach (var series in await APIClient.GetSeriesInGroup(groupId, recursive: true)) {
+                    var showInfo = await GetShowInfoForSeries(series.IDs.Shoko.ToString());
+                    if (showInfo == null)
+                        continue;
 
-        Logger.LogTrace("Fetching show info objects for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
-        var showGroupIds = new HashSet<string>();
-        var collectionIds = new HashSet<string>();
-        var showDict = new Dictionary<string, ShowInfo>();
-        foreach (var series in await APIClient.GetSeriesInGroup(groupId, recursive: true)) {
-            var showInfo = await GetShowInfoForSeries(series.IDs.Shoko.ToString());
-            if (showInfo == null)
-                continue;
+                    if (!string.IsNullOrEmpty(showInfo.GroupId))
+                        showGroupIds.Add(showInfo.GroupId);
 
-            if (!string.IsNullOrEmpty(showInfo.GroupId))
-                showGroupIds.Add(showInfo.GroupId);
+                    if (string.IsNullOrEmpty(showInfo.CollectionId))
+                        continue;
 
-            if (string.IsNullOrEmpty(showInfo.CollectionId))
-                continue;
+                    collectionIds.Add(showInfo.CollectionId);
+                    if (showInfo.CollectionId == groupId)
+                        showDict.TryAdd(showInfo.Id, showInfo);
+                }
 
-            collectionIds.Add(showInfo.CollectionId);
-            if (showInfo.CollectionId == groupId)
-                showDict.TryAdd(showInfo.Id, showInfo);
-        }
+                var groupList = new List<CollectionInfo>();
+                if (group.Sizes.SubGroups > 0) {
+                    Logger.LogTrace("Fetching sub-collection info objects for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
+                    foreach (var subGroup in await APIClient.GetGroupsInGroup(groupId)) {
+                        if (showGroupIds.Contains(subGroup.IDs.Shoko.ToString()) && !collectionIds.Contains(subGroup.IDs.Shoko.ToString()))
+                            continue;
+                        var subCollectionInfo = await CreateCollectionInfo(subGroup, subGroup.IDs.Shoko.ToString());
 
-        var groupList = new List<CollectionInfo>();
-        if (group.Sizes.SubGroups > 0) {
-            Logger.LogTrace("Fetching sub-collection info objects for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
-            foreach (var subGroup in await APIClient.GetGroupsInGroup(groupId)) {
-                if (showGroupIds.Contains(subGroup.IDs.Shoko.ToString()) && !collectionIds.Contains(subGroup.IDs.Shoko.ToString()))
-                    continue;
-                var subCollectionInfo = await CreateCollectionInfo(subGroup, subGroup.IDs.Shoko.ToString());
+                        groupList.Add(subCollectionInfo);
+                    }
+                }
 
-                groupList.Add(subCollectionInfo);
+                Logger.LogTrace("Finalising info object for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
+                var showList = showDict.Values.ToList();
+                var collectionInfo = new CollectionInfo(group, showList, groupList);
+                return collectionInfo;
+            },
+            new() {
+                AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
             }
-        }
-
-        Logger.LogTrace("Finalising info object for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
-        var showList = showDict.Values.ToList();
-        collectionInfo = new CollectionInfo(group, showList, groupList);
-        DataCache.Set<CollectionInfo>(cacheKey, collectionInfo, DefaultTimeSpan);
-        return collectionInfo;
-    }
+        );
 
     #endregion
 }

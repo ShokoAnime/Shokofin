@@ -18,7 +18,6 @@ using Shokofin.API;
 using Shokofin.API.Models;
 using Shokofin.Utils;
 
-using ApiFile = Shokofin.API.Models.File;
 using File = System.IO.File;
 using TvSeries = MediaBrowser.Controller.Entities.TV.Series;
 
@@ -41,7 +40,7 @@ public class ShokoResolveManager
 
     private readonly NamingOptions _namingOptions;
 
-    private IMemoryCache DataCache = new MemoryCache(new MemoryCacheOptions() {
+    private GuardedMemoryCache DataCache = new(new MemoryCacheOptions() {
         ExpirationScanFrequency = ExpirationScanFrequency,
     });
 
@@ -73,7 +72,7 @@ public class ShokoResolveManager
         DataCache.Dispose();
         if (restore) {
             Logger.LogDebug("Initialising new cache…");
-            DataCache = new MemoryCache(new MemoryCacheOptions() {
+            DataCache = new(new MemoryCacheOptions() {
                 ExpirationScanFrequency = ExpirationScanFrequency,
             });
         }
@@ -102,63 +101,65 @@ public class ShokoResolveManager
 
     private async Task<string?> GenerateStructureForFolder(Folder mediaFolder, string folderPath)
     {
-        if (DataCache.TryGetValue<string?>(folderPath, out var vfsPath) || DataCache.TryGetValue(mediaFolder.Path, out vfsPath))
+        // Return early if we've already generated the structure from the import folder itself.
+        if (DataCache.TryGetValue<string?>(mediaFolder.Path, out var vfsPath))
             return vfsPath;
 
-        Logger.LogInformation("Looking for match for folder at {Path}.", folderPath);
+        return await DataCache.GetOrCreateAsync(folderPath, async (cachedEntry) => {
+            Logger.LogInformation("Looking for match for folder at {Path}.", folderPath);
 
-        // Check if we should introduce the VFS for the media folder.
-        var allPaths = FileSystem.GetFilePaths(folderPath, true)
-            .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
-            .Take(100)
-            .ToList();
-        int importFolderId = 0;
-        string importFolderSubPath = string.Empty;
-        foreach (var path in allPaths) {
-            var partialPath = path[mediaFolder.Path.Length..];
-            var partialFolderPath = path[folderPath.Length..];
-            var files = ApiClient.GetFileByPath(partialPath)
-                .GetAwaiter()
-                .GetResult();
-            var file = files.FirstOrDefault();
-            if (file == null)
-                continue;
-
-            var fileId = file.Id.ToString();
-            var fileLocations = file.Locations
-                .Where(location => location.Path.EndsWith(partialFolderPath))
+            // Check if we should introduce the VFS for the media folder.
+            var allPaths = FileSystem.GetFilePaths(folderPath, true)
+                .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+                .Take(100)
                 .ToList();
-            if (fileLocations.Count == 0)
-                continue;
+            int importFolderId = 0;
+            string importFolderSubPath = string.Empty;
+            foreach (var path in allPaths) {
+                var partialPath = path[mediaFolder.Path.Length..];
+                var partialFolderPath = path[folderPath.Length..];
+                var files = ApiClient.GetFileByPath(partialPath)
+                    .GetAwaiter()
+                    .GetResult();
+                var file = files.FirstOrDefault();
+                if (file == null)
+                    continue;
 
-            var fileLocation = fileLocations[0];
-            importFolderId = fileLocation.ImportFolderId;
-            importFolderSubPath = fileLocation.Path[..^partialFolderPath.Length];
-            break;
-        }
+                var fileId = file.Id.ToString();
+                var fileLocations = file.Locations
+                    .Where(location => location.Path.EndsWith(partialFolderPath))
+                    .ToList();
+                if (fileLocations.Count == 0)
+                    continue;
 
-        if (importFolderId == 0) {
-            Logger.LogWarning("Failed to find a match for folder at {Path} after {Amount} attempts.", folderPath, allPaths.Count);
+                var fileLocation = fileLocations[0];
+                importFolderId = fileLocation.ImportFolderId;
+                importFolderSubPath = fileLocation.Path[..^partialFolderPath.Length];
+                break;
+            }
 
-            DataCache.Set<string?>(folderPath, null, DefaultTTL);
-            return null;
-        }
+            if (importFolderId == 0) {
+                Logger.LogWarning("Failed to find a match for folder at {Path} after {Amount} attempts.", folderPath, allPaths.Count);
 
-        Logger.LogInformation("Found a match for folder at {Path} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path})", folderPath, importFolderId, importFolderSubPath, mediaFolder.Path);
+                cachedEntry.AbsoluteExpirationRelativeToNow = DefaultTTL;
+                return null;
+            }
 
-        vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
-        DataCache.Set(folderPath, vfsPath, DefaultTTL);
-        var allFiles = await GetImportFolderFiles(importFolderId, importFolderSubPath, folderPath);
-        await GenerateSymbolicLinks(mediaFolder, allFiles);
+            Logger.LogInformation("Found a match for folder at {Path} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path})", folderPath, importFolderId, importFolderSubPath, mediaFolder.Path);
 
-        return vfsPath;
+            vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
+            var allFiles = await GetImportFolderFiles(importFolderId, importFolderSubPath, folderPath);
+            await GenerateSymbolicLinks(mediaFolder, allFiles);
+
+            cachedEntry.AbsoluteExpirationRelativeToNow = DefaultTTL;
+            return vfsPath;
+        });
     }
 
     private async Task<IReadOnlyList<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)>> GetImportFolderFiles(int importFolderId, string importFolderSubPath, string mediaFolderPath)
     {
         Logger.LogDebug("Looking for recognised files within media folder… (ImportFolder={FolderId},RelativePath={RelativePath})", importFolderId, importFolderSubPath);
-        var allFilesForImportFolder = (await ApiClient.GetFilesForImportFolder(importFolderId))
-            .AsParallel()
+        var allFilesForImportFolder = (await ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath))
             .SelectMany(file =>
             {
                 var location = file.Locations
@@ -190,7 +191,6 @@ public class ShokoResolveManager
         var allPathsForVFS = new ConcurrentBag<(string sourceLocation, string symbolicLink)>();
         var semaphore = new SemaphoreSlim(10);
         await Task.WhenAll(files
-            .AsParallel()
             .Select(async (tuple) => {
                 await semaphore.WaitAsync();
 
