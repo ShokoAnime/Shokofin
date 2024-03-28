@@ -508,7 +508,8 @@ public class ShokoResolveManager
                 return null;
 
             if (parent.Id == mediaFolder.Id && fileInfo.IsDirectory) {
-                if (!int.TryParse(fileInfo.Name.Split('-').LastOrDefault(), out var seriesId))
+                var seriesSegment = fileInfo.Name.Split('[').Last().Split(']').First();
+                if (!int.TryParse(seriesSegment.Split('-').LastOrDefault(), out var seriesId))
                     return null;
 
                 return new TvSeries()
