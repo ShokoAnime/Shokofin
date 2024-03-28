@@ -89,8 +89,9 @@ public class ShokoResolveManager
             DataCache.Remove(folder.Id.ToString());
             var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(folder);
             if (Directory.Exists(vfsPath)) {
-                Logger.LogDebug("Removing VFS directory for folder");
+                Logger.LogInformation("Removing VFS directory for folder at {Path}", folder.Path);
                 Directory.Delete(vfsPath, true);
+                Logger.LogInformation("Removed VFS directory for folder at {Path}", folder.Path);
             }
         }
     }
@@ -99,38 +100,12 @@ public class ShokoResolveManager
 
     #region Generate Structure
 
-    private async Task<IReadOnlyList<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)>> GetImportFolderFiles(int importFolderId, string importFolderSubPath, string mediaFolderPath)
-    {
-        Logger.LogDebug("Looking for recognised files within media folder… (ImportFolder={FolderId},RelativePath={RelativePath})", importFolderId, importFolderSubPath);
-        var allFilesForImportFolder = (await ApiClient.GetFilesForImportFolder(importFolderId))
-            .AsParallel()
-            .SelectMany(file =>
-            {
-                var location = file.Locations
-                    .Where(location => location.ImportFolderId == importFolderId && (importFolderSubPath.Length == 0 || location.Path.StartsWith(importFolderSubPath)))
-                    .FirstOrDefault();
-                if (location == null || file.CrossReferences.Count == 0)
-                    return Array.Empty<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)>();
-
-                var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
-                if (!File.Exists(sourceLocation))
-                    return Array.Empty<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)>();
-
-                return file.CrossReferences
-                    .Select(xref => (sourceLocation, fileId: file.Id.ToString(), seriesId: xref.Series.Shoko.ToString(), episodeIds: xref.Episodes.Select(e => e.Shoko.ToString()).ToArray()));
-            })
-            .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation))
-            .ToList();
-        Logger.LogDebug("Found {FileCount} files to use within media folder at {Path} (ImportFolder={FolderId},RelativePath={RelativePath})", allFilesForImportFolder.Count, mediaFolderPath, importFolderId, importFolderSubPath);
-        return allFilesForImportFolder;
-    }
-
     private async Task<string?> GenerateStructureForFolder(Folder mediaFolder, string folderPath)
     {
         if (DataCache.TryGetValue<string?>(folderPath, out var vfsPath) || DataCache.TryGetValue(mediaFolder.Path, out vfsPath))
             return vfsPath;
 
-        Logger.LogDebug("Looking for match for folder at {Path}.", folderPath);
+        Logger.LogInformation("Looking for match for folder at {Path}.", folderPath);
 
         // Check if we should introduce the VFS for the media folder.
         var allPaths = FileSystem.GetFilePaths(folderPath, true)
@@ -163,13 +138,13 @@ public class ShokoResolveManager
         }
 
         if (importFolderId == 0) {
-            Logger.LogDebug("Failed to find a match for folder at {Path} after {Amount} attempts.", folderPath, allPaths.Count);
+            Logger.LogWarning("Failed to find a match for folder at {Path} after {Amount} attempts.", folderPath, allPaths.Count);
 
             DataCache.Set<string?>(folderPath, null, DefaultTTL);
             return null;
         }
 
-        Logger.LogDebug("Found a match for folder at {Path} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path})", folderPath, importFolderId, importFolderSubPath, mediaFolder.Path);
+        Logger.LogInformation("Found a match for folder at {Path} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path})", folderPath, importFolderId, importFolderSubPath, mediaFolder.Path);
 
         vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         DataCache.Set(folderPath, vfsPath, DefaultTTL);
@@ -179,8 +154,36 @@ public class ShokoResolveManager
         return vfsPath;
     }
 
-    private async Task GenerateSymbolicLinks(Folder mediaFolder, IEnumerable<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)> files)
+    private async Task<IReadOnlyList<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)>> GetImportFolderFiles(int importFolderId, string importFolderSubPath, string mediaFolderPath)
     {
+        Logger.LogDebug("Looking for recognised files within media folder… (ImportFolder={FolderId},RelativePath={RelativePath})", importFolderId, importFolderSubPath);
+        var allFilesForImportFolder = (await ApiClient.GetFilesForImportFolder(importFolderId))
+            .AsParallel()
+            .SelectMany(file =>
+            {
+                var location = file.Locations
+                    .Where(location => location.ImportFolderId == importFolderId && (importFolderSubPath.Length == 0 || location.Path.StartsWith(importFolderSubPath)))
+                    .FirstOrDefault();
+                if (location == null || file.CrossReferences.Count == 0)
+                    return Array.Empty<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)>();
+
+                var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
+                if (!File.Exists(sourceLocation))
+                    return Array.Empty<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)>();
+
+                return file.CrossReferences
+                    .Select(xref => (sourceLocation, fileId: file.Id.ToString(), seriesId: xref.Series.Shoko.ToString(), episodeIds: xref.Episodes.Select(e => e.Shoko.ToString()).ToArray()));
+            })
+            .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation))
+            .ToList();
+        Logger.LogDebug("Found {FileCount} files to use within media folder at {Path} (ImportFolder={FolderId},RelativePath={RelativePath})", allFilesForImportFolder.Count, mediaFolderPath, importFolderId, importFolderSubPath);
+        return allFilesForImportFolder;
+    }
+
+    private async Task GenerateSymbolicLinks(Folder mediaFolder, IReadOnlyList<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)> files)
+    {
+        Logger.LogInformation("Found {FileCount} recognised files to potentially use within media folder at {Path}", files.Count, mediaFolder.Path);
+
         var skipped = 0;
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
@@ -229,22 +232,13 @@ public class ShokoResolveManager
             CleanupDirectoryStructure(symbolicLink);
         }
 
-        Logger.LogDebug(
+        Logger.LogInformation(
             "Created {CreatedCount}, skipped {SkippedCount}, and removed {RemovedCount} symbolic links for media folder at {Path}",
             allPathsForVFS.Count - skipped,
             skipped,
             toBeRemoved.Count,
             mediaFolder.Path
         );
-    }
-
-    private static void CleanupDirectoryStructure(string? path)
-    {
-        path = Path.GetDirectoryName(path);
-        while (!string.IsNullOrEmpty(path) && Directory.Exists(path) && !Directory.EnumerateFileSystemEntries(path).Any()) {
-            Directory.Delete(path);
-            path = Path.GetDirectoryName(path);
-        }
     }
 
     private async Task<(string sourceLocation, string symbolicLink)> GenerateLocationForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId, string[] episodeIds)
@@ -333,6 +327,15 @@ public class ShokoResolveManager
                 ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, episodeIds);
                 return (sourceLocation, symbolicLink);
             }
+        }
+    }
+
+    private static void CleanupDirectoryStructure(string? path)
+    {
+        path = Path.GetDirectoryName(path);
+        while (!string.IsNullOrEmpty(path) && Directory.Exists(path) && !Directory.EnumerateFileSystemEntries(path).Any()) {
+            Directory.Delete(path);
+            path = Path.GetDirectoryName(path);
         }
     }
 
