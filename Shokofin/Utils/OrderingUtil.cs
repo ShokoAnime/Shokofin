@@ -91,7 +91,7 @@ public class Ordering
     public static int GetEpisodeNumber(ShowInfo group, SeasonInfo series, EpisodeInfo episode)
     {
         int offset = 0;
-        if (episode.ExtraType == null) {
+        if (episode.ExtraType != null) {
             var seasonIndex = group.SeasonList.FindIndex(s => string.Equals(s.Id, series.Id));
             if (seasonIndex == -1)
                 throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
