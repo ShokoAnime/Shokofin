@@ -30,6 +30,10 @@
                             <div class="fieldDescription">Establish a connection to Shoko Server using the provided credentials.</div>
                         </div>
                         <div id="ConnectionResetContainer" hidden>
+                            <div class="inputContainer inputContainer-withDescription">
+                                <input is="emby-input" type="text" id="ServerVersion" label="Server Version:" disabled readonly value="Unknown Version" />
+                                <div class="fieldDescription">The version of Shoko Server we're connected to.</div>
+                            </div>
                             <button is="emby-button" type="submit" name="reset-connection" class="raised block emby-button">
                                 <span>Reset Connection</span>
                             </button>
@@ -160,7 +164,9 @@
                                 <div>Enables the use of the Virtual File System&trade; for any media libraries managed by the plugin.</div>
                                 <details style="margin-top: 0.5em">
                                     <summary style="margin-bottom: 0.25em">What does this mean?</summary>
-                                    Enabling this setting should in theory make it so you won't have to think about file structure imcompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links managed by the plugin instead of your actual file structure.<strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
+                                    Enabling this setting should in theory make it so you won't have to think about file structure incompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links managed by the plugin instead of your actual file structure.
+                                    &nbsp;
+                                    <strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
                                 </details>
                             </div>
                         </div>
@@ -206,7 +212,7 @@
                                     <summary style="margin-bottom: 0.25em">Can I use this with collections?</summary>
                                     Yes! You can use this with collections enabled, but that entails that you've configured a multi-layered
                                     structure for your groups. Because the first group layer will be used for the shows, except if 1) the group
-                                    contains both movies and shows, and 2) you've sepeatated the movies from the shows. In that case the
+                                    contains both movies and shows, and 2) you've separated the movies from the shows. In that case the
                                     then the first layer of groups will also be used to generate a collection for your movie(s) and show
                                     within the first layer. Also, the auto-grouping only acts on a single layer, and you need to use Shoko
                                     Desktop (or in the future, the Web UI) to create your nested structure. For more infomation look up the

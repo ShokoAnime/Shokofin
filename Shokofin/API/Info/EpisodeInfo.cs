@@ -23,6 +23,7 @@ public class EpisodeInfo
     {
         get
         {
+            if (ExtraType != null) return false;
             var order = Plugin.Instance.Configuration.SpecialsPlacement;
             var allowOtherData = order == SpecialOrderType.InBetweenSeasonByOtherData || order == SpecialOrderType.InBetweenSeasonMixed;
             return allowOtherData  ? (TvDB?.SeasonNumber == 0 || AniDB.Type == EpisodeType.Special) : AniDB.Type == EpisodeType.Special;

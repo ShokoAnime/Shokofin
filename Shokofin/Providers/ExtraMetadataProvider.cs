@@ -277,7 +277,8 @@ namespace Shokofin.Providers
                     if (!(Lookup.TryGetSeriesIdFor(season.Series, out var seriesId) && (e.Parent is Series series)))
                         return;
 
-                    UpdateSeason(season, series, seriesId, true);
+                    if (season.IndexNumber.HasValue)
+                        UpdateSeason(season, series, seriesId, true);
 
                     return;
                 }
@@ -391,7 +392,7 @@ namespace Shokofin.Providers
                     return;
                 }
 
-                var offset = seasonNumber - showInfo.SeasonNumberBaseDictionary[seasonInfo];
+                var offset = seasonNumber - showInfo.SeasonNumberBaseDictionary[seasonInfo.Id];
                 if (deleted)
                     season = AddVirtualSeason(seasonInfo, offset, seasonNumber, series);
 
@@ -464,7 +465,7 @@ namespace Shokofin.Providers
                     continue;
                 if (pair.Value.SpecialsList.Count > 0)
                     hasSpecials = true;
-                var offset = pair.Key - showInfo.SeasonNumberBaseDictionary[pair.Value];
+                var offset = pair.Key - showInfo.SeasonNumberBaseDictionary[pair.Value.Id];
                 var season = AddVirtualSeason(pair.Value, offset, pair.Key, series);
                 if (season == null)
                     continue;

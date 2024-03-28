@@ -9,7 +9,7 @@ namespace Shokofin.Utils;
 
 public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
 {
-    protected static Dictionary<RelationType, int> RelationPriority = new() {
+    private static readonly Dictionary<RelationType, int> RelationPriority = new() {
         { RelationType.Prequel, 1 },
         { RelationType.MainStory, 2 },
         { RelationType.FullStory, 3 },

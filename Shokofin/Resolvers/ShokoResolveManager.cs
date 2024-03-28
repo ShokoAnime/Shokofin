@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Emby.Naming.Common;
 using MediaBrowser.Controller.Entities;
@@ -39,9 +41,11 @@ public class ShokoResolveManager
 
     private readonly NamingOptions _namingOptions;
 
-    private readonly IMemoryCache DataCache = new MemoryCache(new MemoryCacheOptions() {
-        ExpirationScanFrequency = TimeSpan.FromMinutes(50),
+    private IMemoryCache DataCache = new MemoryCache(new MemoryCacheOptions() {
+        ExpirationScanFrequency = ExpirationScanFrequency,
     });
+
+    private static readonly TimeSpan ExpirationScanFrequency = new(0, 25, 0);
 
     private static readonly TimeSpan DefaultTTL = TimeSpan.FromMinutes(60);
 
@@ -60,7 +64,19 @@ public class ShokoResolveManager
     ~ShokoResolveManager()
     {
         LibraryManager.ItemRemoved -= OnLibraryManagerItemRemoved;
+        Clear(false);
+    }
+
+    public void Clear(bool restore = true)
+    {
+        Logger.LogDebug("Clearing data…");
         DataCache.Dispose();
+        if (restore) {
+            Logger.LogDebug("Initialising new cache…");
+            DataCache = new MemoryCache(new MemoryCacheOptions() {
+                ExpirationScanFrequency = ExpirationScanFrequency,
+            });
+        }
     }
 
     #region Changes Tracking
@@ -126,10 +142,10 @@ public class ShokoResolveManager
         foreach (var path in allPaths) {
             var partialPath = path[mediaFolder.Path.Length..];
             var partialFolderPath = path[folderPath.Length..];
-            var file = ApiClient.GetFileByPath(partialPath)
+            var files = ApiClient.GetFileByPath(partialPath)
                 .GetAwaiter()
-                .GetResult()
-                .FirstOrDefault();
+                .GetResult();
+            var file = files.FirstOrDefault();
             if (file == null)
                 continue;
 
@@ -146,7 +162,7 @@ public class ShokoResolveManager
             break;
         }
 
-        if (importFolderId != 0) {
+        if (importFolderId == 0) {
             Logger.LogDebug("Failed to find a match for folder at {Path} after {Amount} attempts.", folderPath, allPaths.Count);
 
             DataCache.Set<string?>(folderPath, null, DefaultTTL);
@@ -165,31 +181,44 @@ public class ShokoResolveManager
 
     private async Task GenerateSymbolicLinks(Folder mediaFolder, IEnumerable<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)> files)
     {
-        var allPathsForVFS = (await Task.WhenAll(files.AsParallel().Select((tuple) => GenerateLocationForFile(mediaFolder, tuple.sourceLocation, tuple.fileId, tuple.seriesId, tuple.episodeIds)).ToList()))
-            .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation))
-            .OrderBy(tuple => tuple.sourceLocation)
-            .ThenBy(tuple => tuple.symbolicLink)
-            .ToList();
-
         var skipped = 0;
-        var created = 0;
-        foreach (var (sourceLocation, symbolicLink) in allPathsForVFS) {
-            if (File.Exists(symbolicLink)) {
-                skipped++;
-                continue;
-            }
-
-            var symbolicDirectory = Path.GetDirectoryName(symbolicLink);
-            if (!string.IsNullOrEmpty(symbolicDirectory) && !Directory.Exists(symbolicDirectory))
-                Directory.CreateDirectory(symbolicDirectory);
-
-            created++;
-            File.CreateSymbolicLink(symbolicLink, sourceLocation);
-
-            // TODO: Check for subtitle files.
-        }
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
-        var toBeRemoved = FileSystem.GetFilePaths(vfsPath, true)
+        var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
+        var allPathsForVFS = new ConcurrentBag<(string sourceLocation, string symbolicLink)>();
+        var semaphore = new SemaphoreSlim(10);
+        await Task.WhenAll(files
+            .AsParallel()
+            .Select(async (tuple) => {
+                await semaphore.WaitAsync();
+
+                try {
+                    var (sourceLocation, symbolicLink) = await GenerateLocationForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId, tuple.episodeIds);
+                    // Skip any source files we weren't meant to have in the library.
+                    if (string.IsNullOrEmpty(sourceLocation))
+                        return;
+
+                    if (File.Exists(symbolicLink)) {
+                        skipped++;
+                        allPathsForVFS.Add((sourceLocation, symbolicLink));
+                        return;
+                    }
+
+                    // TODO: Check for subtitle files.
+
+                    var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
+                    if (!Directory.Exists(symbolicDirectory))
+                        Directory.CreateDirectory(symbolicDirectory);
+
+                    allPathsForVFS.Add((sourceLocation, symbolicLink));
+                    File.CreateSymbolicLink(symbolicLink, sourceLocation);
+                }
+                finally {
+                    semaphore.Release();
+                }
+            })
+            .ToList());
+
+        var toBeRemoved = FileSystem.GetFilePaths(ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder), true)
             .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
             .Except(allPathsForVFS.Select(tuple => tuple.symbolicLink).ToHashSet())
             .ToList();
@@ -197,24 +226,29 @@ public class ShokoResolveManager
             // TODO: Check for subtitle files.
 
             File.Delete(symbolicLink);
-            var symbolicDirectory = Path.GetDirectoryName(symbolicLink);
-            if (!string.IsNullOrEmpty(symbolicDirectory) && Directory.Exists(symbolicDirectory) && !Directory.EnumerateFileSystemEntries(symbolicDirectory).Any())
-                Directory.Delete(symbolicDirectory);
+            CleanupDirectoryStructure(symbolicLink);
         }
 
         Logger.LogDebug(
             "Created {CreatedCount}, skipped {SkippedCount}, and removed {RemovedCount} symbolic links for media folder at {Path}",
-            created,
+            allPathsForVFS.Count - skipped,
             skipped,
             toBeRemoved.Count,
             mediaFolder.Path
         );
     }
 
-    private async Task<(string sourceLocation, string symbolicLink)> GenerateLocationForFile(Folder mediaFolder, string sourceLocation, string fileId, string seriesId, string[] episodeIds)
+    private static void CleanupDirectoryStructure(string? path)
     {
-        var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
-        var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
+        path = Path.GetDirectoryName(path);
+        while (!string.IsNullOrEmpty(path) && Directory.Exists(path) && !Directory.EnumerateFileSystemEntries(path).Any()) {
+            Directory.Delete(path);
+            path = Path.GetDirectoryName(path);
+        }
+    }
+
+    private async Task<(string sourceLocation, string symbolicLink)> GenerateLocationForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId, string[] episodeIds)
+    {
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId);
         if (season == null)
             return (sourceLocation: string.Empty, symbolicLink: string.Empty);
@@ -244,20 +278,12 @@ public class ShokoResolveManager
         else if (show.DefaultSeason.AniDB.AirDate.HasValue)
             showName += $" ({show.DefaultSeason.AniDB.AirDate.Value.Year})";
 
-        var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
-        var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
         var isSpecial = episode.IsSpecial;
-
-        var paths = new List<string>()
-        {
-            vfsPath,
-            $"{showName} [shoko-series-{show.Id}]",
-            $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}",
-        };
-        var episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber}";
+        var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
+        var paths = new List<string>() { vfsPath, $"{showName} [shoko-series-{show.Id}]", $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}" };
+        var episodeName = episode.AniDB.Titles.FirstOrDefault(t => t.LanguageCode == "en")?.Value ?? $"Episode {episode.AniDB.Type} {episode.AniDB.EpisodeNumber}";
         if (file.ExtraType != null)
         {
-            episodeName = episode.AniDB.Titles.FirstOrDefault(t => t.LanguageCode == "en")?.Value ?? $"Episode {episode.AniDB.Type} {episode.AniDB.EpisodeNumber}";
             var extrasFolder = file.ExtraType switch {
                 ExtraType.BehindTheScenes => "behind the scenes",
                 ExtraType.Clip => "clips",
@@ -272,6 +298,10 @@ public class ShokoResolveManager
                 _ => "extras",
             };
             paths.Add(extrasFolder);
+        }
+        else {
+            var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
+            episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber}";
         }
 
         var isMovieSeason = season.Type == SeriesType.Movie;
@@ -295,7 +325,7 @@ public class ShokoResolveManager
                 return (sourceLocation, symbolicLink);
             }
             default: {
-                if (isMovieSeason && collectionType == null)
+                if (isMovieSeason && collectionType == null && Plugin.Instance.Configuration.SeparateMovies)
                     goto case CollectionType.Movies;
 
                 paths.Add($"{episodeName} [shoko-series-{seriesId}] [shoko-file-{fileId}{Path.GetExtension(sourceLocation)}]");
@@ -316,7 +346,7 @@ public class ShokoResolveManager
             return false;
 
         var root = LibraryManager.RootFolder;
-        if (root == null || parent == root)
+        if (root == null || parent == root || parent.ParentId == root.Id)
             return false;
 
         try {
@@ -442,7 +472,7 @@ public class ShokoResolveManager
 
     #region Resolvers
 
-    public BaseItem? ResolveSingle(Folder? parent, string? collectionType, FileSystemMetadata fileInfo)
+    public async Task<BaseItem?> ResolveSingle(Folder? parent, string? collectionType, FileSystemMetadata fileInfo)
     {
         if (!Plugin.Instance.Configuration.VirtualFileSystem)
             return null;
@@ -467,10 +497,10 @@ public class ShokoResolveManager
             if (!fullPath.StartsWith(Plugin.Instance.VirtualRoot))
                 return null;
 
-            var searchPath = Path.Combine(mediaFolder.Path, parent.Path[(mediaFolder.Path.Length + 1)..].Split(Path.DirectorySeparatorChar).Skip(1).Join(Path.DirectorySeparatorChar));
-            var vfsPath = GenerateStructureForFolder(mediaFolder, searchPath)
-                .GetAwaiter()
-                .GetResult();
+            var searchPath = mediaFolder.Path != parent.Path
+                ? Path.Combine(mediaFolder.Path, parent.Path[(mediaFolder.Path.Length + 1)..].Split(Path.DirectorySeparatorChar).Skip(1).Join(Path.DirectorySeparatorChar))
+                : mediaFolder.Path;
+            var vfsPath = await GenerateStructureForFolder(mediaFolder, searchPath);
             if (string.IsNullOrEmpty(vfsPath))
                 return null;
 
@@ -497,7 +527,7 @@ public class ShokoResolveManager
         }
     }
 
-    public MultiItemResolverResult? ResolveMultiple(Folder? parent, string? collectionType, List<FileSystemMetadata> fileInfoList)
+    public async Task<MultiItemResolverResult?> ResolveMultiple(Folder? parent, string? collectionType, List<FileSystemMetadata> fileInfoList)
     {
         if (!Plugin.Instance.Configuration.VirtualFileSystem)
             return null;
@@ -514,17 +544,17 @@ public class ShokoResolveManager
                 return null;
 
             // Redirect children of a VFS managed media folder to the VFS.
-            if (parent.GetParent() == root) {
-                var vfsPath = GenerateStructureForFolder(parent, parent.Path)
-                    .GetAwaiter()
-                    .GetResult();
+            if (parent.ParentId == root.Id) {
+                var vfsPath = await GenerateStructureForFolder(parent, parent.Path);
                 if (string.IsNullOrEmpty(vfsPath))
                     return null;
 
+                var createMovies = collectionType == CollectionType.Movies || (collectionType == null && Plugin.Instance.Configuration.SeparateMovies);
                 var items = FileSystem.GetDirectories(vfsPath)
                     .AsParallel()
                     .SelectMany(dirInfo => {
-                        if (!int.TryParse(dirInfo.Name.Split('-').LastOrDefault(), out var seriesId))
+                        var seriesSegment = dirInfo.Name.Split('[').Last().Split(']').First();
+                        if (!int.TryParse(seriesSegment.Split('-').LastOrDefault(), out var seriesId))
                             return Array.Empty<BaseItem>();
 
                         var season = ApiManager.GetSeasonInfoForSeries(seriesId.ToString())
@@ -533,7 +563,7 @@ public class ShokoResolveManager
                         if (season == null)
                             return Array.Empty<BaseItem>();
 
-                        if ((collectionType == CollectionType.Movies || collectionType == null) && season.Type == SeriesType.Movie) {
+                        if (createMovies && season.Type == SeriesType.Movie) {
                             return FileSystem.GetFiles(dirInfo.FullName)
                                 .AsParallel()
                                 .Select(fileInfo => {
@@ -541,7 +571,7 @@ public class ShokoResolveManager
                                         return null;
 
                                     // This will hopefully just re-use the pre-cached entries from the cache, but it may
-                                    // also get it from remote if the cache was empty for whatever reason.
+                                    // also get it from remote if the cache was emptied for whatever reason.
                                     var file = ApiManager.GetFileInfo(fileId.ToString(), seriesId.ToString())
                                         .GetAwaiter()
                                         .GetResult();
@@ -578,6 +608,7 @@ public class ShokoResolveManager
                     fileInfoList.Clear();
                     fileInfoList.AddRange(items.Select(s => FileSystem.GetFileSystemInfo(s.Path)));
                 }
+
                 return new() { Items = items.Where(i => i is Movie).ToList(), ExtraFiles = items.OfType<TvSeries>().Select(s => FileSystem.GetFileSystemInfo(s.Path)).ToList() };
             }
 

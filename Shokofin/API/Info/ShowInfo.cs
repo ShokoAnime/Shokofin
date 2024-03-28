@@ -107,7 +107,7 @@ public class ShowInfo
     /// <summary>
     /// The season number base-number dictionary.
     /// </summary>
-    public Dictionary<SeasonInfo, int> SeasonNumberBaseDictionary;
+    public Dictionary<string, int> SeasonNumberBaseDictionary;
 
     /// <summary>
     /// The default season for the show.
@@ -116,7 +116,7 @@ public class ShowInfo
 
     public ShowInfo(SeasonInfo seasonInfo, string? collectionId = null)
     {
-        var seasonNumberBaseDictionary = new Dictionary<SeasonInfo, int>() { { seasonInfo, 1 } };
+        var seasonNumberBaseDictionary = new Dictionary<string, int>() { { seasonInfo.Id, 1 } };
         var seasonOrderDictionary = new Dictionary<int, SeasonInfo>() { { 1, seasonInfo } };
         var seasonNumberOffset = 1;
         if (seasonInfo.AlternateEpisodesList.Count > 0)
@@ -178,10 +178,10 @@ public class ShowInfo
 
         var defaultSeason = seasonList[foundIndex];
         var seasonOrderDictionary = new Dictionary<int, SeasonInfo>();
-        var seasonNumberBaseDictionary = new Dictionary<SeasonInfo, int>();
+        var seasonNumberBaseDictionary = new Dictionary<string, int>();
         var seasonNumberOffset = 0;
         foreach (var (seasonInfo, index) in seasonList.Select((s, i) => (s, i))) {
-            seasonNumberBaseDictionary.Add(seasonInfo, ++seasonNumberOffset);
+            seasonNumberBaseDictionary.Add(seasonInfo.Id, ++seasonNumberOffset);
             seasonOrderDictionary.Add(seasonNumberOffset, seasonInfo);
             if (seasonInfo.AlternateEpisodesList.Count > 0)
                 seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);

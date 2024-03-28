@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace Shokofin.Utils
 {
-    public class Text
+    public static class Text
     {
         private static HashSet<char> PunctuationMarks = new() {
             // Common punctuation marks

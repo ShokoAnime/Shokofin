@@ -149,7 +149,6 @@ public class ShokoAPIManager : IDisposable
     public void Clear(bool restore = true)
     {
         Logger.LogDebug("Clearing data…");
-        Logger.LogDebug("Disposing data…");
         DataCache.Dispose();
         EpisodeIdToEpisodePathDictionary.Clear();
         EpisodeIdToSeriesIdDictionary.Clear();

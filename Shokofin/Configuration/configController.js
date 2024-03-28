@@ -97,7 +97,7 @@ function getApiKey(username, password, userKey = false) {
 }
 
 async function defaultSubmit(form) {
-    const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
+    let config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
 
     if (config.ApiKey !== "") {
         let publicHost = form.querySelector("#PublicHost").value;
@@ -230,9 +230,10 @@ async function defaultSubmit(form) {
         const password = form.querySelector("#Password").value;
         try {
             const response = await getApiKey(username, password);
+            config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
             config.Username = username;
             config.ApiKey = response.apikey;
-        
+
             let result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
             Dashboard.processPluginConfigurationUpdateResult(result);
         }
@@ -252,6 +253,7 @@ async function resetConnectionSettings(form) {
     
     // Connection settings
     config.ApiKey = "";
+    config.HostVersion = null;
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
     Dashboard.processPluginConfigurationUpdateResult(result);
@@ -386,6 +388,20 @@ export default function (page) {
     const userSelector = form.querySelector("#UserSelector");
     // Refresh the view after we changed the settings, so the view reflect the new settings.
     const refreshSettings = (config) => {
+        if (config.HostVersion) {
+            let version = `Version ${config.HostVersion.Version}`;
+            const extraDetails = [
+                config.HostVersion.ReleaseChannel || "",
+                config.HostVersion.
+                Commit ? config.HostVersion.Commit.slice(0, 7) : "",
+            ].filter(s => s).join(", ");
+            if (extraDetails)
+                version += ` (${extraDetails})`;
+            form.querySelector("#ServerVersion").value = version;
+        }
+        else {
+            form.querySelector("#ServerVersion").value = "Version N/A";
+        }
         if (config.ApiKey) {
             form.querySelector("#Host").setAttribute("disabled", "");
             form.querySelector("#Username").setAttribute("disabled", "");

@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Shokofin.API.Models;
 
@@ -21,81 +22,110 @@ public class ShokoAPIClient : IDisposable
 
     private readonly ILogger<ShokoAPIClient> Logger;
 
+    private static DateTime? ServerCommitDate =>
+        Plugin.Instance.Configuration.HostVersion?.ReleaseDate;
+
+    private static readonly DateTime StableCutOffDate = DateTime.Parse("2023-12-16T00:00:00.000Z");
+
+    private static bool UseStableAPI =>
+        ServerCommitDate.HasValue && ServerCommitDate.Value < StableCutOffDate;
+
+    private IMemoryCache _cache = new MemoryCache(new MemoryCacheOptions() {
+        ExpirationScanFrequency = ExpirationScanFrequency,
+    });
+
+    private static readonly TimeSpan ExpirationScanFrequency = new(0, 25, 0);
+
+    private static readonly TimeSpan DefaultTimeSpan = new(1, 30, 0);
+
     public ShokoAPIClient(ILogger<ShokoAPIClient> logger)
     {
-        _httpClient = (new HttpClient());
-        _httpClient.Timeout = TimeSpan.FromMinutes(10);
+        _httpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromMinutes(10),
+        };
         Logger = logger;
     }
 
     #region Base Implementation
 
+    public void Clear(bool restore = true)
+    {
+        Logger.LogDebug("Clearing data…");
+        _cache.Dispose();
+        if (restore) {
+            Logger.LogDebug("Initialising new cache…");
+            _cache = new MemoryCache(new MemoryCacheOptions() {
+                ExpirationScanFrequency = ExpirationScanFrequency,
+            });
+        }
+    }
+
     public void Dispose()
     {
+        GC.SuppressFinalize(this);
         _httpClient.Dispose();
+        Clear(false);
     }
 
     private Task<ReturnType> Get<ReturnType>(string url, string? apiKey = null)
         => Get<ReturnType>(url, HttpMethod.Get, apiKey);
 
-    private async Task<ReturnType> Get<ReturnType>(string url, HttpMethod method, string? apiKey = null)
+    private Task<ReturnType> Get<ReturnType>(string url, HttpMethod method, string? apiKey = null)
     {
-        var response = await Get(url, method, apiKey);
-        if (response.StatusCode != HttpStatusCode.OK)
-            throw ApiException.FromResponse(response);
-        var responseStream = await response.Content.ReadAsStreamAsync();
-        var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream);
-        if (value == null)
-            throw new ApiException(response.StatusCode, nameof(ShokoAPIClient), "Unexpected null return value.");
-        return value;
+        var defaultKey = apiKey == null;
+        var key = $"apiKey={(defaultKey ? "default" : apiKey)},method={method},url={url},value";
+        return  _cache.GetOrCreate(key, async (cachedEntry) => {
+            var response = await Get(url, method, apiKey);
+            if (response.StatusCode != HttpStatusCode.OK)
+                throw ApiException.FromResponse(response);
+            var responseStream = await response.Content.ReadAsStreamAsync();
+            responseStream.Seek(0, System.IO.SeekOrigin.Begin);
+            var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream) ??
+                throw new ApiException(response.StatusCode, nameof(ShokoAPIClient), "Unexpected null return value.");
+            return value;
+        });
     }
 
     private async Task<HttpResponseMessage> Get(string url, HttpMethod method, string? apiKey = null)
     {
         // Use the default key if no key was provided.
-        if (apiKey == null)
-            apiKey = Plugin.Instance.Configuration.ApiKey;
+        var defaultKey = apiKey == null;
+        apiKey ??= Plugin.Instance.Configuration.ApiKey;
 
         // Check if we have a key to use.
-        if (string.IsNullOrEmpty(apiKey)) {
+        if (string.IsNullOrEmpty(apiKey))
             throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
+
+        var version = Plugin.Instance.Configuration.HostVersion;
+        if (version == null)
+        {
+            version = await GetVersion()
+                ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
+
+            Plugin.Instance.Configuration.HostVersion = version;
+            Plugin.Instance.SaveConfiguration();
         }
 
         try {
-            Logger.LogTrace("Trying to get {URL}", url);
-            var remoteUrl = string.Concat(Plugin.Instance.Configuration.Host, url);
+            var key = $"apiKey={(defaultKey ? "default" : apiKey)},method={method},url={url},httpRequest";
+            return await _cache.GetOrCreateAsync(key, async (cachedEntry) => {
+                if (cachedEntry.Value is HttpResponseMessage message)
+                    return message;
 
-            // Because Shoko Server don't support HEAD requests, we spoof it instead.
-            if (method == HttpMethod.Head) {
-                var real = await _httpClient.GetAsync(remoteUrl, HttpCompletionOption.ResponseHeadersRead);
-                var fake = new HttpResponseMessage(real.StatusCode);
-                fake.ReasonPhrase = real.ReasonPhrase;
-                fake.RequestMessage = real.RequestMessage;
-                if (fake.RequestMessage != null)
-                    fake.RequestMessage.Method = HttpMethod.Head;
-                fake.Version = real.Version;
-                fake.Content = (new StringContent(String.Empty));
-                fake.Content.Headers.Clear();
-                foreach (var pair in real.Content.Headers) {
-                    fake.Content.Headers.Add(pair.Key, pair.Value);
-                }
-                fake.Headers.Clear();
-                foreach (var pair in real.Headers) {
-                    fake.Headers.Add(pair.Key, pair.Value);
-                }
-                real.Dispose();
-                return fake;
-            }
+                Logger.LogTrace("Trying to get {URL}", url);
+                var remoteUrl = string.Concat(Plugin.Instance.Configuration.Host, url);
 
-            using (var requestMessage = new HttpRequestMessage(method, remoteUrl)) {
-                requestMessage.Content = (new StringContent(""));
+                using var requestMessage = new HttpRequestMessage(method, remoteUrl);
+                requestMessage.Content = new StringContent(string.Empty);
                 requestMessage.Headers.Add("apikey", apiKey);
                 var response = await _httpClient.SendAsync(requestMessage);
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
                     throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection or deleting and re-adding the user in the plugin settings.", null, HttpStatusCode.Unauthorized);
                 Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
+                cachedEntry.SlidingExpiration = DefaultTimeSpan;
                 return response;
-            }
+            });
         }
         catch (HttpRequestException ex)
         {
@@ -109,12 +139,11 @@ public class ShokoAPIClient : IDisposable
 
     private async Task<ReturnType> Post<Type, ReturnType>(string url, HttpMethod method, Type body, string? apiKey = null)
     {
-        var response = await Post<Type>(url, method, body, apiKey);
+        var response = await Post(url, method, body, apiKey);
         if (response.StatusCode != HttpStatusCode.OK)
             throw ApiException.FromResponse(response);
         var responseStream = await response.Content.ReadAsStreamAsync();
-        var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream);
-        if (value == null)
+        var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream) ??
             throw new ApiException(response.StatusCode, nameof(ShokoAPIClient), "Unexpected null return value.");
         return value;
     }
@@ -122,12 +151,20 @@ public class ShokoAPIClient : IDisposable
     private async Task<HttpResponseMessage> Post<Type>(string url, HttpMethod method, Type body, string? apiKey = null)
     {
         // Use the default key if no key was provided.
-        if (apiKey == null)
-            apiKey = Plugin.Instance.Configuration.ApiKey;
+        apiKey ??= Plugin.Instance.Configuration.ApiKey;
 
         // Check if we have a key to use.
-        if (string.IsNullOrEmpty(apiKey)) {
+        if (string.IsNullOrEmpty(apiKey))
             throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
+
+        var version = Plugin.Instance.Configuration.HostVersion;
+        if (version == null)
+        {
+            version = await GetVersion()
+                ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
+
+            Plugin.Instance.Configuration.HostVersion = version;
+            Plugin.Instance.SaveConfiguration();
         }
 
         try {
@@ -161,6 +198,16 @@ public class ShokoAPIClient : IDisposable
 
     public async Task<ApiKey?> GetApiKey(string username, string password, bool forUser = false)
     {
+        var version = Plugin.Instance.Configuration.HostVersion;
+        if (version == null)
+        {
+            version = await GetVersion()
+                ?? throw new HttpRequestException("Unable to connect to Shoko Server to read the version.", null, HttpStatusCode.BadGateway);
+
+            Plugin.Instance.Configuration.HostVersion = version;
+            Plugin.Instance.SaveConfiguration();
+        }
+
         var postData = JsonSerializer.Serialize(new Dictionary<string, string>
         {
             {"user", username},
@@ -170,13 +217,34 @@ public class ShokoAPIClient : IDisposable
         var apiBaseUrl = Plugin.Instance.Configuration.Host;
         var response = await _httpClient.PostAsync($"{apiBaseUrl}/api/auth", new StringContent(postData, Encoding.UTF8, "application/json"));
         if (response.StatusCode == HttpStatusCode.OK)
-            return (await JsonSerializer.DeserializeAsync<ApiKey>(response.Content.ReadAsStreamAsync().Result));
+            return await JsonSerializer.DeserializeAsync<ApiKey>(response.Content.ReadAsStreamAsync().Result);
+
+        return null;
+    }
+
+    public async Task<ComponentVersion?> GetVersion()
+    {
+        var apiBaseUrl = Plugin.Instance.Configuration.Host;
+        var response = await _httpClient.GetAsync($"{apiBaseUrl}/api/v3/Init/Version");
+        if (response.StatusCode == HttpStatusCode.OK) {
+            try {
+                var componentVersionSet = await JsonSerializer.DeserializeAsync<ComponentVersionSet>(response.Content.ReadAsStreamAsync().Result);
+                return componentVersionSet?.Server;
+            }
+            catch (Exception e) {
+                Logger.LogTrace("Unable to connect to Shoko Server to read the version. Exception; {e}", e.Message);
+                return null;
+            }
+        }
 
         return null;
     }
 
     public Task<File> GetFile(string id)
     {
+        if (UseStableAPI)
+            return Get<File>($"/api/v3/File/{id}?includeXRefs=true&includeDataFrom=AniDB");
+
         return Get<File>($"/api/v3/File/{id}?include=XRefs&includeDataFrom=AniDB");
     }
 
@@ -187,6 +255,9 @@ public class ShokoAPIClient : IDisposable
 
     public async Task<IReadOnlyList<File>> GetFilesForSeries(string seriesId)
     {
+        if (UseStableAPI)
+            return await Get<List<File>>($"/api/v3/Series/{seriesId}/File?&includeXRefs=true&includeDataFrom=AniDB");
+
         var listResult = await Get<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB");
         return listResult.List;
     }

@@ -50,7 +50,7 @@ namespace Shokofin.Providers
                 }
 
                 var seasonInfo = showInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
-                if (seasonInfo == null || !showInfo.SeasonNumberBaseDictionary.TryGetValue(seasonInfo, out var baseSeasonNumber)) {
+                if (seasonInfo == null || !showInfo.SeasonNumberBaseDictionary.TryGetValue(seasonInfo.Id, out var baseSeasonNumber)) {
                     Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Series={SeriesId},Group={GroupId})", seasonNumber, seriesId, showInfo.GroupId);
                     return result;
                 }
