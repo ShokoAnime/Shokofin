@@ -176,7 +176,7 @@ public class ShokoResolveManager
             })
             .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation))
             .ToList();
-        var timeSpent = start - DateTime.UtcNow;
+        var timeSpent = DateTime.UtcNow - start;
         Logger.LogDebug(
             "Found ≤{FileCount} files to potentially use within media folder at {Path} in {TimeSpan} (ImportFolder={FolderId},RelativePath={RelativePath})",
             allFilesForImportFolder.Count,
@@ -243,7 +243,7 @@ public class ShokoResolveManager
             CleanupDirectoryStructure(symbolicLink);
         }
 
-        var timeSpent = start - DateTime.UtcNow;
+        var timeSpent = DateTime.UtcNow - start;
         Logger.LogInformation(
             "Created {CreatedCount}, skipped {SkippedCount}, and removed {RemovedCount} symbolic links for media folder at {Path} in {TimeSpan}",
             allPathsForVFS.Count - skipped,
