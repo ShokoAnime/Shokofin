@@ -60,6 +60,8 @@ public class PluginConfiguration : BasePluginConfiguration
 
     public bool VirtualFileSystem { get; set; }
 
+    public int VirtualFileSystemThreads { get; set; }
+
     public bool UseGroupsForShows { get; set; }
 
     public bool SeparateMovies { get; set; }
@@ -128,6 +130,7 @@ public class PluginConfiguration : BasePluginConfiguration
         TitleAllowAny = false;
         DescriptionSource = TextSourceType.Default;
         VirtualFileSystem = true;
+        VirtualFileSystemThreads = 10;
         UseGroupsForShows = false;
         SeparateMovies = false;
         SeasonOrdering = OrderType.Default;

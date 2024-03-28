@@ -197,7 +197,7 @@ public class ShokoResolveManager
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
         var allPathsForVFS = new ConcurrentBag<(string sourceLocation, string symbolicLink)>();
-        var semaphore = new SemaphoreSlim(10);
+        var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VirtualFileSystemThreads);
         await Task.WhenAll(files
             .Select(async (tuple) => {
                 await semaphore.WaitAsync();
