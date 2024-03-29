@@ -203,28 +203,31 @@ public class ShokoResolveManager
                 await semaphore.WaitAsync();
 
                 try {
+                    // Skip any source files we that we cannot find.
                     if (!File.Exists(tuple.sourceLocation))
                         return;
 
-                    var (sourceLocation, symbolicLink) = await GenerateLocationForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId, tuple.episodeIds);
+                    var (sourceLocation, symbolicLinks) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId, tuple.episodeIds);
                     // Skip any source files we weren't meant to have in the library.
                     if (string.IsNullOrEmpty(sourceLocation))
                         return;
 
-                    if (File.Exists(symbolicLink)) {
-                        skipped++;
+                    foreach (var symbolicLink in symbolicLinks) {
+                        if (File.Exists(symbolicLink)) {
+                            skipped++;
+                            allPathsForVFS.Add((sourceLocation, symbolicLink));
+                            return;
+                        }
+
+                        // TODO: Check for subtitle files.
+
+                        var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
+                        if (!Directory.Exists(symbolicDirectory))
+                            Directory.CreateDirectory(symbolicDirectory);
+
                         allPathsForVFS.Add((sourceLocation, symbolicLink));
-                        return;
+                        File.CreateSymbolicLink(symbolicLink, sourceLocation);
                     }
-
-                    // TODO: Check for subtitle files.
-
-                    var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
-                    if (!Directory.Exists(symbolicDirectory))
-                        Directory.CreateDirectory(symbolicDirectory);
-
-                    allPathsForVFS.Add((sourceLocation, symbolicLink));
-                    File.CreateSymbolicLink(symbolicLink, sourceLocation);
                 }
                 finally {
                     semaphore.Release();
@@ -240,6 +243,7 @@ public class ShokoResolveManager
             // TODO: Check for subtitle files.
 
             File.Delete(symbolicLink);
+
             CleanupDirectoryStructure(symbolicLink);
         }
 
@@ -254,93 +258,91 @@ public class ShokoResolveManager
         );
     }
 
-    private async Task<(string sourceLocation, string symbolicLink)> GenerateLocationForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId, string[] episodeIds)
+    private async Task<(string sourceLocation, string[] symbolicLinks)> GenerateLocationsForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId, string[] episodeIds)
     {
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId);
         if (season == null)
-            return (sourceLocation: string.Empty, symbolicLink: string.Empty);
+            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
+
+        var isMovieSeason = season.Type == SeriesType.Movie;
+        var shouldAbort = collectionType switch {
+            CollectionType.TvShows => isMovieSeason && Plugin.Instance.Configuration.SeparateMovies,
+            CollectionType.Movies => !isMovieSeason,
+            _ => false,
+        };
+        if (shouldAbort)
+            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
 
         var show = await ApiManager.GetShowInfoForSeries(seriesId);
         if (show == null)
-            return (sourceLocation: string.Empty, symbolicLink: string.Empty);
+            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
 
         var file = await ApiManager.GetFileInfo(fileId, seriesId);
         var episode = file?.EpisodeList.FirstOrDefault();
         if (file == null || episode == null)
-            return (sourceLocation: string.Empty, symbolicLink: string.Empty);
-
-        // In the off-chance that we accidentially ended up with two
-        // instances of the season while fetching in parallel, then we're
-        // switching to the correct reference of the season for the show
-        // we're doing. Let's just hope we won't have to also need to switch
-        // the episode…
-        season = show.SeasonList.FirstOrDefault(s => s.Id == seriesId);
-        episode = season?.RawEpisodeList.FirstOrDefault(e => e.Id == episode.Id);
+            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
 
         if (season == null || episode == null)
-            return (sourceLocation: string.Empty, symbolicLink: string.Empty);
+            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
+
+        var isSpecial = episode.IsSpecial;
+        var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
+        var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
         var showName = show.DefaultSeason.AniDB.Title?.ReplaceInvalidPathCharacters();
         if (string.IsNullOrEmpty(showName))
             showName = $"Shoko Series {show.Id}";
         else if (show.DefaultSeason.AniDB.AirDate.HasValue)
             showName += $" ({show.DefaultSeason.AniDB.AirDate.Value.Year})";
 
-        var isSpecial = episode.IsSpecial;
-        var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
-        var paths = new List<string>() { vfsPath, $"{showName} [shoko-series-{show.Id}]", $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}" };
-        var episodeName = episode.AniDB.Titles.FirstOrDefault(t => t.LanguageCode == "en")?.Value ?? $"Episode {episode.AniDB.Type} {episode.AniDB.EpisodeNumber}";
-        if (file.ExtraType != null)
-        {
-            var extrasFolder = file.ExtraType switch {
-                ExtraType.BehindTheScenes => "behind the scenes",
-                ExtraType.Clip => "clips",
-                ExtraType.DeletedScene => "deleted scene",
-                ExtraType.Interview => "interviews",
-                ExtraType.Sample => "samples",
-                ExtraType.Scene => "scenes",
-                ExtraType.ThemeSong => "theme-music",
-                ExtraType.ThemeVideo => "backdrops",
-                ExtraType.Trailer => "trailers",
-                ExtraType.Unknown => "others",
-                _ => "extras",
-            };
-            paths.Add(extrasFolder);
+        var folders = new List<string>();
+        var episodeName = (episode.AniDB.Titles.FirstOrDefault(t => t.LanguageCode == "en")?.Value ?? $"Episode {episode.AniDB.Type} {episodeNumber}").ReplaceInvalidPathCharacters();
+        var extrasFolder = file.ExtraType switch {
+            ExtraType.BehindTheScenes => "behind the scenes",
+            ExtraType.Clip => "clips",
+            ExtraType.DeletedScene => "deleted scene",
+            ExtraType.Interview => "interviews",
+            ExtraType.Sample => "samples",
+            ExtraType.Scene => "scenes",
+            ExtraType.ThemeSong => "theme-music",
+            ExtraType.ThemeVideo => "backdrops",
+            ExtraType.Trailer => "trailers",
+            ExtraType.Unknown => "others",
+            null => null,
+            _ => "extras",
+        };
+
+        if (isMovieSeason && collectionType != CollectionType.TvShows) {
+            if (!string.IsNullOrEmpty(extrasFolder))
+            {
+                foreach (var episodeInfo in season.EpisodeList)
+                    folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}] [shoko-episode-{episodeInfo.Id}]", extrasFolder));
+            }
+            else {
+                folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}] [shoko-episode-{episode.Id}]"));
+                episodeName = "Movie";
+            }
         }
         else {
-            var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
-            episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber}";
-        }
-
-        var isMovieSeason = season.Type == SeriesType.Movie;
-        switch (collectionType) {
-            case CollectionType.TvShows: {
-                if (isMovieSeason && Plugin.Instance.Configuration.SeparateMovies)
-                    return (sourceLocation: string.Empty, symbolicLink: string.Empty);
-
-                goto default;
+            var seasonName = $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}";
+            if (!string.IsNullOrEmpty(extrasFolder))
+            {
+                folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}]", extrasFolder));
+                folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}]", seasonName, extrasFolder));
             }
-            case CollectionType.Movies: {
-                if (!isMovieSeason)
-                    return (sourceLocation: string.Empty, symbolicLink: string.Empty);
-
-                // Remove the season directory from the path.
-                paths.RemoveAt(2);
-
-                paths.Add( $"Movie [shoko-series-{seriesId}] [shoko-file-{fileId}{Path.GetExtension(sourceLocation)}]");
-                var symbolicLink = Path.Combine(paths.ToArray());
-                ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, episodeIds);
-                return (sourceLocation, symbolicLink);
-            }
-            default: {
-                if (isMovieSeason && collectionType == null && Plugin.Instance.Configuration.SeparateMovies)
-                    goto case CollectionType.Movies;
-
-                paths.Add($"{episodeName} [shoko-series-{seriesId}] [shoko-file-{fileId}{Path.GetExtension(sourceLocation)}]");
-                var symbolicLink = Path.Combine(paths.ToArray());
-                ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, episodeIds);
-                return (sourceLocation, symbolicLink);
+            else {
+                folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}]", seasonName));
+                episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber}";
             }
         }
+
+        var fileName = $"{episodeName} [shoko-series-{seriesId}] [shoko-file-{fileId}]{Path.GetExtension(sourceLocation)}";
+        var symbolicLinks = folders
+            .Select(folderPath => Path.Combine(folderPath, fileName))
+            .ToArray();
+
+        foreach (var symbolicLink in symbolicLinks)
+            ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, episodeIds);
+        return (sourceLocation, symbolicLinks);
     }
 
     private static void CleanupDirectoryStructure(string? path)
