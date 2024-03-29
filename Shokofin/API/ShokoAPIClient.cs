@@ -44,7 +44,7 @@ public class ShokoAPIClient : IDisposable
 
     private static readonly TimeSpan ExpirationScanFrequency = new(0, 25, 0);
 
-    private static readonly TimeSpan DefaultTimeSpan = new(1, 30, 0);
+    private static readonly TimeSpan DefaultTimeSpan = new(2, 30, 0);
 
     public ShokoAPIClient(ILogger<ShokoAPIClient> logger)
     {
