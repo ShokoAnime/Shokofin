@@ -63,7 +63,7 @@ jobs:
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "CHANGELOG<<$EOF" >> "$GITHUB_OUTPUT"
-          git log $PREVIOUS_COMMIT..$NEXT_COMMIT --pretty=format:"%B%n" >> "$GITHUB_OUTPUT"
+          git log $PREVIOUS_COMMIT..$NEXT_COMMIT --pretty=format:"- %BENDOFCOMMIT" | grep -v "misc: update unstable manifest" | awk 'BEGIN{RS="ENDOFCOMMIT";ORS=""}{print $0}' | head -c -2 >> "$GITHUB_OUTPUT"
           echo "" >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
 
