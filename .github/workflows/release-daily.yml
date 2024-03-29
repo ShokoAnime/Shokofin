@@ -63,7 +63,7 @@ jobs:
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "CHANGELOG<<$EOF" >> "$GITHUB_OUTPUT"
-          git log $PREVIOUS_COMMIT..$NEXT_COMMIT --pretty=format:"%BENDOFCOMMIT" | grep -v "misc: update unstable manifest" | awk 'BEGIN{RS="ENDOFCOMMIT";ORS=""}{print $0}' | head -c -2 >> "$GITHUB_OUTPUT"
+          git log $PREVIOUS_COMMIT..$NEXT_COMMIT --pretty=format:"%B" | grep -v "misc: update unstable manifest" | head -c -2 >> "$GITHUB_OUTPUT"
           echo "" >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
 
@@ -98,6 +98,8 @@ jobs:
         run: python -m pip install jprm
 
       - name: Run JPRM
+        env:
+          CHANGELOG: ${{ needs.current_info.outputs.changelog }}
         run: python build_plugin.py --version=${{ needs.current_info.outputs.version }} --prerelease=True
 
       - name: Create Pre-Release
