@@ -21,7 +21,6 @@ jobs:
         uses: actions/checkout@master
         with:
           ref: "${{ github.sha }}"
-          submodules: recursive
           fetch-depth: 0 # This is set to download the full git history for the repo
 
       - name: Get Current Version
@@ -30,6 +29,8 @@ jobs:
         with:
           branch: true
           increment: build
+          prefix: v
+          prefixRegex: "[vV]?"
 
       - name: Get Commit Date (as ISO8601)
         id: commit_date_iso8601
