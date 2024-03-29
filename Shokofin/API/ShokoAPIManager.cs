@@ -345,10 +345,10 @@ public class ShokoAPIManager : IDisposable
 
         // Fast-path for VFS.
         if (path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar)) {
-            var (seriesSegment, fileSegment) = Path.GetFileNameWithoutExtension(path).Split('[').TakeLast(2).Select(a => a.Split(']').First()).ToList();
-            if (!int.TryParse(seriesSegment.Split('-').LastOrDefault(), out var seriesIdRaw))
+            var fileName = Path.GetFileNameWithoutExtension(path);
+            if (!int.TryParse(fileName.GetAttributeValue("shoko-series"), out var seriesIdRaw))
                 return (null, null, null);
-            if (!int.TryParse(fileSegment.Split('-').LastOrDefault(), out var fileIdRaw))
+            if (!int.TryParse(fileName.GetAttributeValue("shoko-file"), out var fileIdRaw))
                 return (null, null, null);
 
             var sI = seriesIdRaw.ToString();
@@ -686,8 +686,8 @@ public class ShokoAPIManager : IDisposable
 
         // Fast-path for VFS.
         if (path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar)) {
-            var seriesSegment = Path.GetFileName(path).Split('[').Last().Split(']').First();
-            if (!int.TryParse(seriesSegment.Split('-').LastOrDefault(), out var seriesIdRaw))
+            var seriesSegment = Path.GetFileName(path).GetAttributeValue("shoko-series");
+            if (!int.TryParse(seriesSegment, out var seriesIdRaw))
                 return null;
 
             seriesId = seriesIdRaw.ToString();

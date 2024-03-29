@@ -595,8 +595,8 @@ public class ShokoResolveManager
                 return null;
 
             if (parent.Id == mediaFolder.Id && fileInfo.IsDirectory) {
-                var seriesSegment = fileInfo.Name.Split('[').Last().Split(']').First();
-                if (!int.TryParse(seriesSegment.Split('-').LastOrDefault(), out var seriesId))
+                var seriesSegment = fileInfo.Name.GetAttributeValue("shoko-series");
+                if (!int.TryParse(seriesSegment, out var seriesId))
                     return null;
 
                 return new TvSeries()
@@ -644,8 +644,8 @@ public class ShokoResolveManager
                 var items = FileSystem.GetDirectories(vfsPath)
                     .AsParallel()
                     .SelectMany(dirInfo => {
-                        var seriesSegment = dirInfo.Name.Split('[').Last().Split(']').First();
-                        if (!int.TryParse(seriesSegment.Split('-').LastOrDefault(), out var seriesId))
+                        var seriesSegment = dirInfo.Name.GetAttributeValue("shoko-series");
+                        if (!int.TryParse(seriesSegment, out var seriesId))
                             return Array.Empty<BaseItem>();
 
                         var season = ApiManager.GetSeasonInfoForSeries(seriesId.ToString())
@@ -659,7 +659,7 @@ public class ShokoResolveManager
                             return FileSystem.GetFiles(dirInfo.FullName)
                                 .AsParallel()
                                 .Select(fileInfo => {
-                                    if (!int.TryParse(Path.GetFileNameWithoutExtension(fileInfo.Name).Split('[').LastOrDefault()?.Split(']').FirstOrDefault()?.Split('-').LastOrDefault(), out var fileId))
+                                    if (!int.TryParse(fileInfo.Name.GetAttributeValue("shoko-file"), out var fileId))
                                         return null;
 
                                     // This will hopefully just re-use the pre-cached entries from the cache, but it may
