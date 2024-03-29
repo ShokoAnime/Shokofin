@@ -5,22 +5,59 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  current_info:
     runs-on: ubuntu-latest
+
+    name: Current Information
+
+    outputs:
+      version: ${{ steps.release_info.outputs.version }}
+      date: ${{ steps.commit_date_iso8601.outputs.date }}
+      sha: ${{ github.sha }}
+      sha_short: ${{ steps.commit_info.outputs.sha }}
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@master
+        with:
+          ref: "${{ github.sha }}"
+          submodules: recursive
+          fetch-depth: 0 # This is set to download the full git history for the repo
+
+      - name: Get Current Version
+        id: release_info
+        uses: revam/gh-action-get-tag-and-version@v1
+        with:
+          branch: true
+          increment: build
+
+      - name: Get Commit Date (as ISO8601)
+        id: commit_date_iso8601
+        shell: bash
+        run: |
+          echo "date=$(git --no-pager show -s --format=%aI ${{ github.sha }})" >> "$GITHUB_OUTPUT"
+
+      - id: commit_info
+        name: Shorten Commit Hash
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const sha = context.sha.substring(0, 7);
+            core.setOutput("sha", sha);
+
+  build_plugin:
+    runs-on: ubuntu-latest
+
+    needs:
+      - current_info
+
     name: Build & Release (Unstable)
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@master
         with:
           ref: ${{ github.ref }}
-          fetch-depth: 0
-
-      - name: Get previous release version
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-        with:
-          fallback: 1.0.0
 
       - name: Setup .Net
         uses: actions/setup-dotnet@v1
@@ -39,13 +76,14 @@ jobs:
         run: python -m pip install jprm
 
       - name: Run JPRM
-        run: echo "NEW_VERSION=$(python build_plugin.py --version=${{ steps.previoustag.outputs.tag }} --prerelease=True)" >> $GITHUB_ENV
+        run: python build_plugin.py --version=${{ needs.current_info.outputs.version }} --prerelease=True
 
       - name: Create Pre-Release
         uses: softprops/action-gh-release@v1
         with:
           files: ./artifacts/shoko_*.zip
-          tag_name: ${{ env.NEW_VERSION }}
+          name: "Shokofin Unstable ${{ needs.current_info.outputs.version }}"
+          tag_name: ${{ needs.current_info.outputs.version }}
           prerelease: true
           fail_on_unmatched_files: true
           generate_release_notes: true
@@ -59,3 +97,30 @@ jobs:
           commit_message: "misc: update unstable manifest"
           file_pattern: manifest-unstable.json
           skip_fetch: true
+
+  discord-notify:
+    runs-on: ubuntu-latest
+
+    name: Send notifications about the new daily build
+
+    needs:
+      - current_info
+      - build_plugin
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@master
+        with:
+          ref: "${{ github.sha }}"
+          submodules: recursive
+
+      - name: Notify Discord Users
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          nodetail: true
+          title: New Unstable Shokofin Build!
+          description: |
+            **Version**: `${{ needs.current_info.outputs.version }}`
+
+            Update your plugin using the [unstable manifest](https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/manifest-unstable.json) or through downloading the release from [GitHub Releases](https://github.com/ShokoAnime/Shokofin/releases/tag/${{ needs.current_info.outputs.version }})!

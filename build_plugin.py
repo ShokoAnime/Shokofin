@@ -15,12 +15,6 @@ os.mkdir(artifact_dir)
 
 if prerelease:
   jellyfin_repo_file="./manifest-unstable.json"
-  version_list = version.split('.')
-  if len(version_list) == 3:
-    version_list.append('1')
-  else:
-    version_list[3] = str(int(version_list[3]) + 1)
-  version = '.'.join(version_list)
 else:
   jellyfin_repo_file="./manifest.json"
 
@@ -29,7 +23,5 @@ jellyfin_repo_url="https://github.com/ShokoAnime/Shokofin/releases/download"
 zipfile=os.popen('jprm --verbosity=debug plugin build "." --output="%s" --version="%s" --dotnet-framework="net6.0"' % (artifact_dir, version)).read().strip()
 
 os.system('jprm repo add --url=%s %s %s' % (jellyfin_repo_url, jellyfin_repo_file, zipfile))
-
-os.system('sed -i "s/shoko\//%s\//" %s' % (version, jellyfin_repo_file))
 
 print(version)
