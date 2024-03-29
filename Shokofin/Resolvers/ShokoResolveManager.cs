@@ -6,11 +6,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Emby.Naming.Common;
+using Emby.Naming.ExternalFiles;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Resolvers;
 using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -40,6 +42,8 @@ public class ShokoResolveManager
 
     private readonly NamingOptions _namingOptions;
 
+    private readonly ExternalPathParser ExternalPathParser;
+
     private GuardedMemoryCache DataCache = new(new MemoryCacheOptions() {
         ExpirationScanFrequency = ExpirationScanFrequency,
     });
@@ -48,7 +52,16 @@ public class ShokoResolveManager
 
     private static readonly TimeSpan DefaultTTL = TimeSpan.FromMinutes(60);
 
-    public ShokoResolveManager(ShokoAPIManager apiManager, ShokoAPIClient apiClient, IIdLookup lookup, ILibraryManager libraryManager, IFileSystem fileSystem, ILogger<ShokoResolveManager> logger, NamingOptions namingOptions)
+    public ShokoResolveManager(
+        ShokoAPIManager apiManager,
+        ShokoAPIClient apiClient,
+        IIdLookup lookup,
+        ILibraryManager libraryManager,
+        IFileSystem fileSystem,
+        ILogger<ShokoResolveManager> logger,
+        ILocalizationManager localizationManager,
+        NamingOptions namingOptions
+    )
     {
         ApiManager = apiManager;
         ApiClient = apiClient;
@@ -57,6 +70,7 @@ public class ShokoResolveManager
         FileSystem = fileSystem;
         Logger = logger;
         _namingOptions = namingOptions;
+        ExternalPathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Subtitle);
         LibraryManager.ItemRemoved += OnLibraryManagerItemRemoved;
     }
 
@@ -212,6 +226,8 @@ public class ShokoResolveManager
                     if (string.IsNullOrEmpty(sourceLocation))
                         return;
 
+                    var sourcePrefix = Path.GetFileNameWithoutExtension(sourceLocation);
+                    var subtitleLinks = FindSubtitlesForPath(sourceLocation);
                     foreach (var symbolicLink in symbolicLinks) {
                         if (File.Exists(symbolicLink)) {
                             skipped++;
@@ -219,14 +235,21 @@ public class ShokoResolveManager
                             return;
                         }
 
-                        // TODO: Check for subtitle files.
-
                         var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
                         if (!Directory.Exists(symbolicDirectory))
                             Directory.CreateDirectory(symbolicDirectory);
 
                         allPathsForVFS.Add((sourceLocation, symbolicLink));
                         File.CreateSymbolicLink(symbolicLink, sourceLocation);
+
+                        if (subtitleLinks.Count > 0)
+                        {
+                            var destinationPrefix = Path.GetFileNameWithoutExtension(symbolicLink);
+                            foreach (var (source, dest) in subtitleLinks.Select(path => (path, destinationPrefix + path[sourcePrefix.Length..]))) {
+                                allPathsForVFS.Add((source, dest));
+                                File.CreateSymbolicLink(dest, source);
+                            }
+                        }
                     }
                 }
                 finally {
@@ -240,9 +263,12 @@ public class ShokoResolveManager
             .Except(allPathsForVFS.Select(tuple => tuple.symbolicLink).ToHashSet())
             .ToList();
         foreach (var symbolicLink in toBeRemoved) {
-            // TODO: Check for subtitle files.
+            var subtitleLinks = FindSubtitlesForPath(symbolicLink);
 
             File.Delete(symbolicLink);
+
+            foreach (var subtitleLink in subtitleLinks)
+                File.Delete(symbolicLink);
 
             CleanupDirectoryStructure(symbolicLink);
         }
@@ -352,6 +378,37 @@ public class ShokoResolveManager
             Directory.Delete(path);
             path = Path.GetDirectoryName(path);
         }
+    }
+    
+    private IReadOnlyList<string> FindSubtitlesForPath(string sourcePath)
+    {
+        var externalPaths = new List<string>();
+        var folderPath = Path.GetDirectoryName(sourcePath);
+        if (string.IsNullOrEmpty(folderPath) || !FileSystem.DirectoryExists(folderPath))
+            return externalPaths;
+
+        var files = FileSystem.GetFilePaths(folderPath)
+            .ToList();
+        files.Remove(sourcePath);
+
+        if (files.Count == 0)
+            return externalPaths;
+
+        var sourcePrefix = Path.GetFileNameWithoutExtension(sourcePath);
+        foreach (var file in files) {
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
+            if (
+                fileNameWithoutExtension.Length >= sourcePrefix.Length &&
+                sourcePrefix.Equals(fileNameWithoutExtension[..sourcePrefix.Length], StringComparison.OrdinalIgnoreCase) &&
+                (fileNameWithoutExtension.Length == sourcePrefix.Length || _namingOptions.MediaFlagDelimiters.Contains(fileNameWithoutExtension[sourcePrefix.Length]))
+            ) {
+                var externalPathInfo = ExternalPathParser.ParseFile(file, fileNameWithoutExtension[sourcePrefix.Length..].ToString());
+                if (externalPathInfo != null && !string.IsNullOrEmpty(externalPathInfo.Path))
+                    externalPaths.Add(externalPathInfo.Path);
+            }
+        }
+
+        return externalPaths;
     }
 
     #endregion
