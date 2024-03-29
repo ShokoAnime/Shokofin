@@ -227,6 +227,7 @@ public class ShokoResolveManager
                         return;
 
                     var sourcePrefix = Path.GetFileNameWithoutExtension(sourceLocation);
+                    var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
                     var subtitleLinks = FindSubtitlesForPath(sourceLocation);
                     foreach (var symbolicLink in symbolicLinks) {
                         if (File.Exists(symbolicLink)) {
@@ -242,12 +243,13 @@ public class ShokoResolveManager
                         allPathsForVFS.Add((sourceLocation, symbolicLink));
                         File.CreateSymbolicLink(symbolicLink, sourceLocation);
 
-                        if (subtitleLinks.Count > 0)
-                        {
-                            var destinationPrefix = Path.GetFileNameWithoutExtension(symbolicLink);
-                            foreach (var (source, dest) in subtitleLinks.Select(path => (path, destinationPrefix + path[sourcePrefix.Length..]))) {
-                                allPathsForVFS.Add((source, dest));
-                                File.CreateSymbolicLink(dest, source);
+                        if (subtitleLinks.Count > 0) {
+                            var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
+                            foreach (var subtitleSource in subtitleLinks) {
+                                var extName = subtitleSource[sourcePrefixLength..];
+                                var subtitleLink = Path.Combine(symbolicDirectory, symbolicName + extName);
+                                allPathsForVFS.Add((subtitleSource, subtitleLink));
+                                File.CreateSymbolicLink(subtitleLink, subtitleSource);
                             }
                         }
                     }
@@ -338,8 +340,7 @@ public class ShokoResolveManager
         };
 
         if (isMovieSeason && collectionType != CollectionType.TvShows) {
-            if (!string.IsNullOrEmpty(extrasFolder))
-            {
+            if (!string.IsNullOrEmpty(extrasFolder)) {
                 foreach (var episodeInfo in season.EpisodeList)
                     folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}] [shoko-episode-{episodeInfo.Id}]", extrasFolder));
             }
@@ -350,8 +351,7 @@ public class ShokoResolveManager
         }
         else {
             var seasonName = $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}";
-            if (!string.IsNullOrEmpty(extrasFolder))
-            {
+            if (!string.IsNullOrEmpty(extrasFolder)) {
                 folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}]", extrasFolder));
                 folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}]", seasonName, extrasFolder));
             }
