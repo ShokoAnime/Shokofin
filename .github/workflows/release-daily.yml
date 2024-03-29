@@ -15,6 +15,7 @@ jobs:
       date: ${{ steps.commit_date_iso8601.outputs.date }}
       sha: ${{ github.sha }}
       sha_short: ${{ steps.commit_info.outputs.sha }}
+      changelog: ${{ steps.generate_changelog.outputs.CHANGELOG }}
 
     steps:
       - name: Checkout master
@@ -22,6 +23,14 @@ jobs:
         with:
           ref: "${{ github.sha }}"
           fetch-depth: 0 # This is set to download the full git history for the repo
+
+      - name: Get Previous Version
+        id: previous_release_info
+        uses: revam/gh-action-get-tag-and-version@v1
+        with:
+          branch: true
+          prefix: v
+          prefixRegex: "[vV]?"
 
       - name: Get Current Version
         id: release_info
@@ -45,6 +54,18 @@ jobs:
           script: |
             const sha = context.sha.substring(0, 7);
             core.setOutput("sha", sha);
+
+      - name: Generate Changelog
+        id: generate_changelog
+        env:
+          PREVIOUS_COMMIT: ${{ steps.previous_release_info.outputs.commit }}
+          NEXT_COMMIT: ${{ github.sha }}
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "CHANGELOG<<$EOF" >> "$GITHUB_OUTPUT"
+          git log $PREVIOUS_COMMIT..$NEXT_COMMIT --pretty=format:"%s" >> "$GITHUB_OUTPUT"
+          echo "" >> "$GITHUB_OUTPUT"
+          echo "$EOF" >> "$GITHUB_OUTPUT"
 
   build_plugin:
     runs-on: ubuntu-latest
@@ -113,7 +134,6 @@ jobs:
         uses: actions/checkout@master
         with:
           ref: "${{ github.sha }}"
-          submodules: recursive
 
       - name: Notify Discord Users
         uses: sarisia/actions-status-discord@v1
@@ -122,6 +142,9 @@ jobs:
           nodetail: true
           title: New Unstable Shokofin Build!
           description: |
-            **Version**: `${{ needs.current_info.outputs.version }}`
+            **Version**: `${{ needs.current_info.outputs.version }}` (`${{ needs.current_info.outputs.sha_short }}`)
 
             Update your plugin using the [unstable manifest](https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/manifest-unstable.json) or through downloading the release from [GitHub Releases](https://github.com/ShokoAnime/Shokofin/releases/tag/${{ needs.current_info.outputs.version }})!
+
+            **Changes since last build**:
+            ${{ needs.current_info.outputs.changelog }}
