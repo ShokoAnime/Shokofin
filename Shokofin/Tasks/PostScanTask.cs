@@ -1,11 +1,12 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using MediaBrowser.Common.Progress;
 using MediaBrowser.Controller.Library;
 using Shokofin.API;
 using Shokofin.Collections;
 using Shokofin.MergeVersions;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using Shokofin.Resolvers;
 
 #nullable enable
 namespace Shokofin.Tasks;
@@ -14,13 +15,19 @@ public class PostScanTask : ILibraryPostScanTask
 {
     private readonly ShokoAPIManager ApiManager;
 
+    private readonly ShokoAPIClient ApiClient;
+
+    private readonly ShokoResolveManager ResolveManager;
+
     private readonly MergeVersionsManager VersionsManager;
 
     private readonly CollectionManager CollectionManager;
 
-    public PostScanTask(ShokoAPIManager apiManager, MergeVersionsManager versionsManager, CollectionManager collectionManager)
+    public PostScanTask(ShokoAPIManager apiManager, ShokoAPIClient apiClient, ShokoResolveManager resolveManager, MergeVersionsManager versionsManager, CollectionManager collectionManager)
     {
         ApiManager = apiManager;
+        ApiClient = apiClient;
+        ResolveManager = resolveManager;
         VersionsManager = versionsManager;
         CollectionManager = collectionManager;
     }
@@ -49,6 +56,8 @@ public class PostScanTask : ILibraryPostScanTask
         }
 
         // Clear the cache now, since we don't need it anymore.
+        ApiClient.Clear();
         ApiManager.Clear();
+        ResolveManager.Clear();
     }
 }
