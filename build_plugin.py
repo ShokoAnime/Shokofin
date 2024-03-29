@@ -35,7 +35,9 @@ with open(build_file, 'w') as file:
 
 zipfile=os.popen('jprm --verbosity=debug plugin build "." --output="%s" --version="%s" --dotnet-framework="net6.0"' % (artifact_dir, version)).read().strip()
 
-os.system('jprm repo add --url=%s %s %s' % (jellyfin_repo_url, jellyfin_repo_file, zipfile))
+jellyfin_plugin_release_url=f'{jellyfin_repo_url}/{version}/shoko_{version}.zip'
+
+os.system('jprm repo add --plugin-url=%s %s %s' % (jellyfin_plugin_release_url, jellyfin_repo_file, zipfile))
 
 # Compact the unstable manifest after building, so it only contains the last 5 versions.
 if prerelease:
