@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.59",
+                "changelog": "misc: manually amends broken links in unstable manifest\n\nfix: forces version specific release url in manifest",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.59/shoko_3.0.1.59.zip",
+                "checksum": "e5e2bfba77cf5414b774bdec246be68d",
+                "timestamp": "2024-03-29T21:30:32Z"
+            },
+            {
                 "version": "3.0.1.58",
                 "changelog": "refactor: overdose on `.ConfigureAwait(false)`\n\n- Use `.ConfigureAwait(false)` where-ever we can. It sped up\n  the discovery phase by 30 seconds over multiple runs, so I\n  think it should be okay to commit this now.\n\nmisc: better tracking of subtitle files\n\n- Add better tracking of the link generation for subtitle files.\n\nmisc: change default cache expire\n\n- change the cache expire time from 1h30m to 2h30m to\n  better accomodate a typical initial scan based on my testing.\n\nfix: fix vfs link creation\n\n- fix the faulty behaviour of alternatingly skipping and creating\n  symlinks because of an accidental early return.\n\nmisc: add changelog to manifest releases\n\n[skip ci]\n\nmisc: add changelog to GH pre-releases\n\n[skip ci]",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.55/shoko_3.0.1.55.zip",
                 "checksum": "82036927eba09ef9b1cd153ff4903bd3",
                 "timestamp": "2024-03-29T05:18:42Z"
-            },
-            {
-                "version": "3.0.1.54",
-                "changelog": "NA\n",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.54/shoko_3.0.1.54.zip",
-                "checksum": "c67234ab9f6fe1d6598d1cc30d9901ee",
-                "timestamp": "2024-03-29T05:12:38Z"
             }
         ]
     }
