@@ -128,8 +128,10 @@ public class ShokoResolveManager
                 .Take(100)
                 .ToList();
             int importFolderId = 0;
+            var attempts = 0;
             string importFolderSubPath = string.Empty;
             foreach (var path in allPaths) {
+                attempts++;
                 var partialPath = path[mediaFolder.Path.Length..];
                 var partialFolderPath = path[folderPath.Length..];
                 var files = ApiClient.GetFileByPath(partialPath)
@@ -159,7 +161,7 @@ public class ShokoResolveManager
                 return null;
             }
 
-            Logger.LogInformation("Found a match for folder at {Path} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path})", folderPath, importFolderId, importFolderSubPath, mediaFolder.Path);
+            Logger.LogInformation("Found a match for folder at {Path} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path},Attempts={Attempts})", folderPath, importFolderId, importFolderSubPath, mediaFolder.Path, attempts);
 
             vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
             var allFiles = await GetImportFolderFiles(importFolderId, importFolderSubPath, folderPath);
