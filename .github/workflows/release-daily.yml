@@ -106,6 +106,11 @@ jobs:
           files: ./artifacts/shoko_*.zip
           name: "Shokofin Unstable ${{ needs.current_info.outputs.version }}"
           tag_name: ${{ needs.current_info.outputs.version }}
+          body: |
+            Update your plugin using the [unstable manifest](https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/manifest-unstable.json) or by downloading the release from [GitHub Releases](https://github.com/ShokoAnime/Shokofin/releases/tag/${{ needs.current_info.outputs.version }}) and installing it manually!
+
+            **Changes since last build**:
+            ${{ needs.current_info.outputs.changelog }}
           prerelease: true
           fail_on_unmatched_files: true
           generate_release_notes: true
@@ -139,7 +144,7 @@ jobs:
           description: |
             **Version**: `${{ needs.current_info.outputs.version }}` (`${{ needs.current_info.outputs.sha_short }}`)
 
-            Update your plugin using the [unstable manifest](https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/manifest-unstable.json) or through downloading the release from [GitHub Releases](https://github.com/ShokoAnime/Shokofin/releases/tag/${{ needs.current_info.outputs.version }})!
+            Update your plugin using the [unstable manifest](https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/manifest-unstable.json) or by downloading the release from [GitHub Releases](https://github.com/ShokoAnime/Shokofin/releases/tag/${{ needs.current_info.outputs.version }}) and installing it manually!
 
             **Changes since last build**:
             ${{ needs.current_info.outputs.changelog }}
