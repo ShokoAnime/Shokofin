@@ -322,7 +322,11 @@ public class ShokoResolveManager
         if (string.IsNullOrEmpty(showName))
             showName = $"Shoko Series {show.Id}";
         else if (show.DefaultSeason.AniDB.AirDate.HasValue)
-            showName += $" ({show.DefaultSeason.AniDB.AirDate.Value.Year})";
+        {
+            var yearText = $" ({show.DefaultSeason.AniDB.AirDate.Value.Year})";
+            if (!showName.EndsWith(yearText))
+                showName += yearText;
+        }
 
         var folders = new List<string>();
         var episodeName = (episode.AniDB.Titles.FirstOrDefault(t => t.LanguageCode == "en")?.Value ?? $"Episode {episode.AniDB.Type} {episodeNumber}").ReplaceInvalidPathCharacters();
