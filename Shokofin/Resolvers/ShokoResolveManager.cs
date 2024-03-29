@@ -232,26 +232,27 @@ public class ShokoResolveManager
                     var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
                     var subtitleLinks = FindSubtitlesForPath(sourceLocation);
                     foreach (var symbolicLink in symbolicLinks) {
-                        if (File.Exists(symbolicLink)) {
-                            skipped++;
-                            allPathsForVFS.Add((sourceLocation, symbolicLink));
-                            return;
-                        }
-
                         var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
                         if (!Directory.Exists(symbolicDirectory))
                             Directory.CreateDirectory(symbolicDirectory);
 
                         allPathsForVFS.Add((sourceLocation, symbolicLink));
-                        File.CreateSymbolicLink(symbolicLink, sourceLocation);
+                        if (!File.Exists(symbolicLink))
+                            File.CreateSymbolicLink(symbolicLink, sourceLocation);
+                        else
+                            skipped++;
 
                         if (subtitleLinks.Count > 0) {
                             var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
                             foreach (var subtitleSource in subtitleLinks) {
                                 var extName = subtitleSource[sourcePrefixLength..];
                                 var subtitleLink = Path.Combine(symbolicDirectory, symbolicName + extName);
+
                                 allPathsForVFS.Add((subtitleSource, subtitleLink));
-                                File.CreateSymbolicLink(subtitleLink, subtitleSource);
+                                if (!File.Exists(subtitleLink))
+                                    File.CreateSymbolicLink(subtitleLink, subtitleSource);
+                                else
+                                    skipped++;
                             }
                         }
                     }
