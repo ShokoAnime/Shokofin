@@ -134,9 +134,7 @@ public class ShokoResolveManager
                 attempts++;
                 var partialPath = path[mediaFolder.Path.Length..];
                 var partialFolderPath = path[folderPath.Length..];
-                var files = ApiClient.GetFileByPath(partialPath)
-                    .GetAwaiter()
-                    .GetResult();
+                var files = await ApiClient.GetFileByPath(partialPath).ConfigureAwait(false);
                 var file = files.FirstOrDefault();
                 if (file == null)
                     continue;
@@ -164,8 +162,8 @@ public class ShokoResolveManager
             Logger.LogInformation("Found a match for folder at {Path} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path},Attempts={Attempts})", folderPath, importFolderId, importFolderSubPath, mediaFolder.Path, attempts);
 
             vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
-            var allFiles = await GetImportFolderFiles(importFolderId, importFolderSubPath, folderPath);
-            await GenerateSymbolicLinks(mediaFolder, allFiles);
+            var allFiles = await GetImportFolderFiles(importFolderId, importFolderSubPath, folderPath).ConfigureAwait(false);
+            await GenerateSymbolicLinks(mediaFolder, allFiles).ConfigureAwait(false);
 
             cachedEntry.AbsoluteExpirationRelativeToNow = DefaultTTL;
             return vfsPath;
@@ -176,7 +174,7 @@ public class ShokoResolveManager
     {
         Logger.LogDebug("Looking up recognised files for media folder… (ImportFolder={FolderId},RelativePath={RelativePath})", importFolderId, importFolderSubPath);
         var start = DateTime.UtcNow;
-        var allFilesForImportFolder = (await ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath))
+        var allFilesForImportFolder = (await ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath).ConfigureAwait(false))
             .AsParallel()
             .SelectMany(file =>
             {
@@ -218,14 +216,14 @@ public class ShokoResolveManager
         var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VirtualFileSystemThreads);
         await Task.WhenAll(files
             .Select(async (tuple) => {
-                await semaphore.WaitAsync();
+                await semaphore.WaitAsync().ConfigureAwait(false);
 
                 try {
                     // Skip any source files we that we cannot find.
                     if (!File.Exists(tuple.sourceLocation))
                         return;
 
-                    var (sourceLocation, symbolicLinks) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId, tuple.episodeIds);
+                    var (sourceLocation, symbolicLinks) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId, tuple.episodeIds).ConfigureAwait(false);
                     // Skip any source files we weren't meant to have in the library.
                     if (string.IsNullOrEmpty(sourceLocation))
                         return;
@@ -264,7 +262,8 @@ public class ShokoResolveManager
                     semaphore.Release();
                 }
             })
-            .ToList());
+            .ToList())
+            .ConfigureAwait(false);
 
         var removedSubtitles = 0;
         var toBeRemoved = FileSystem.GetFilePaths(ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder), true)
@@ -300,7 +299,7 @@ public class ShokoResolveManager
 
     private async Task<(string sourceLocation, string[] symbolicLinks)> GenerateLocationsForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId, string[] episodeIds)
     {
-        var season = await ApiManager.GetSeasonInfoForSeries(seriesId);
+        var season = await ApiManager.GetSeasonInfoForSeries(seriesId).ConfigureAwait(false);
         if (season == null)
             return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
 
@@ -313,11 +312,11 @@ public class ShokoResolveManager
         if (shouldAbort)
             return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
 
-        var show = await ApiManager.GetShowInfoForSeries(seriesId);
+        var show = await ApiManager.GetShowInfoForSeries(seriesId).ConfigureAwait(false);
         if (show == null)
             return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
 
-        var file = await ApiManager.GetFileInfo(fileId, seriesId);
+        var file = await ApiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false);
         var episode = file?.EpisodeList.FirstOrDefault();
         if (file == null || episode == null)
             return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
@@ -465,9 +464,9 @@ public class ShokoResolveManager
             var shouldIgnore = Plugin.Instance.Configuration.LibraryFilteringMode ?? Plugin.Instance.Configuration.VirtualFileSystem || isSoleProvider;
             var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
             if (fileInfo.IsDirectory)
-                return await ScanDirectory(partialPath, fullPath, collectionType, shouldIgnore);
+                return await ScanDirectory(partialPath, fullPath, collectionType, shouldIgnore).ConfigureAwait(false);
             else
-                return await ScanFile(partialPath, fullPath, shouldIgnore);
+                return await ScanFile(partialPath, fullPath, shouldIgnore).ConfigureAwait(false);
         }
         catch (Exception ex) {
             if (!(ex is System.Net.Http.HttpRequestException && ex.Message.Contains("Connection refused")))
@@ -480,7 +479,7 @@ public class ShokoResolveManager
 
     private async Task<bool> ScanDirectory(string partialPath, string fullPath, string? collectionType, bool shouldIgnore)
     {
-        var season = await ApiManager.GetSeasonInfoByPath(fullPath);
+        var season = await ApiManager.GetSeasonInfoByPath(fullPath).ConfigureAwait(false);
 
         // We inform/warn here since we enabled the provider in our library, but we can't find a match for the given folder path.
         if (season == null) {
@@ -490,7 +489,7 @@ public class ShokoResolveManager
                     var entries = FileSystem.GetDirectories(fullPath, false).ToList();
                     Logger.LogDebug("Unable to find shoko series for {Path}, trying {DirCount} sub-directories.", partialPath, entries.Count);
                     foreach (var entry in entries) {
-                        season = await ApiManager.GetSeasonInfoByPath(entry.FullName);
+                        season = await ApiManager.GetSeasonInfoByPath(entry.FullName).ConfigureAwait(false);
                         if (season != null)
                         {
                             Logger.LogDebug("Found shoko series {SeriesName} for sub-directory of path {Path} (Series={SeriesId})", season.Shoko.Name, partialPath, season.Id);
@@ -526,7 +525,7 @@ public class ShokoResolveManager
                 break;
         }
 
-        var show = await ApiManager.GetShowInfoForSeries(season.Id)!;
+        var show = await ApiManager.GetShowInfoForSeries(season.Id).ConfigureAwait(false)!;
         if (!string.IsNullOrEmpty(show!.GroupId))
             Logger.LogInformation("Found shoko group {GroupName} (Series={SeriesId},Group={GroupId})", show.Name, season.Id, show.GroupId);
         else
@@ -537,7 +536,7 @@ public class ShokoResolveManager
 
     private async Task<bool> ScanFile(string partialPath, string fullPath, bool shouldIgnore)
     {
-        var (file, season, _) = await ApiManager.GetFileInfoByPath(fullPath);
+        var (file, season, _) = await ApiManager.GetFileInfoByPath(fullPath).ConfigureAwait(false);
 
         // We inform/warn here since we enabled the provider in our library, but we can't find a match for the given file path.
         if (file == null || season == null) {
@@ -591,7 +590,7 @@ public class ShokoResolveManager
             var searchPath = mediaFolder.Path != parent.Path
                 ? Path.Combine(mediaFolder.Path, parent.Path[(mediaFolder.Path.Length + 1)..].Split(Path.DirectorySeparatorChar).Skip(1).Join(Path.DirectorySeparatorChar))
                 : mediaFolder.Path;
-            var vfsPath = await GenerateStructureForFolder(mediaFolder, searchPath);
+            var vfsPath = await GenerateStructureForFolder(mediaFolder, searchPath).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath))
                 return null;
 
@@ -637,7 +636,7 @@ public class ShokoResolveManager
 
             // Redirect children of a VFS managed media folder to the VFS.
             if (parent.ParentId == root.Id) {
-                var vfsPath = await GenerateStructureForFolder(parent, parent.Path);
+                var vfsPath = await GenerateStructureForFolder(parent, parent.Path).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(vfsPath))
                     return null;
 
@@ -650,6 +649,7 @@ public class ShokoResolveManager
                             return Array.Empty<BaseItem>();
 
                         var season = ApiManager.GetSeasonInfoForSeries(seriesId.ToString())
+                            .ConfigureAwait(false)
                             .GetAwaiter()
                             .GetResult();
                         if (season == null)
@@ -665,6 +665,7 @@ public class ShokoResolveManager
                                     // This will hopefully just re-use the pre-cached entries from the cache, but it may
                                     // also get it from remote if the cache was emptied for whatever reason.
                                     var file = ApiManager.GetFileInfo(fileId.ToString(), seriesId.ToString())
+                                        .ConfigureAwait(false)
                                         .GetAwaiter()
                                         .GetResult();
 

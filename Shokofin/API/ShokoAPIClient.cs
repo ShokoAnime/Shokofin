@@ -84,20 +84,20 @@ public class ShokoAPIClient : IDisposable
             $"apiKey={apiKey ?? "default"},method={method},url={url},object",
             (_) => Logger.LogTrace("Reusing object for {Method} {URL}", method, url),
             async (cachedEntry) => {
-                var response = await Get(url, method, apiKey);
+                var response = await Get(url, method, apiKey).ConfigureAwait(false);
                 if (response.StatusCode != HttpStatusCode.OK)
                     throw ApiException.FromResponse(response);
-                var responseStream = await response.Content.ReadAsStreamAsync();
+                var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 responseStream.Seek(0, System.IO.SeekOrigin.Begin);
-                var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream) ??
+                var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream).ConfigureAwait(false) ??
                     throw new ApiException(response.StatusCode, nameof(ShokoAPIClient), "Unexpected null return value.");
                 cachedEntry.SlidingExpiration = DefaultTimeSpan;
                 return value;
             }
         );
 
-    private async Task<HttpResponseMessage> Get(string url, HttpMethod method, string? apiKey = null)
-        => await _cache.GetOrCreateAsync(
+    private Task<HttpResponseMessage> Get(string url, HttpMethod method, string? apiKey = null)
+        => _cache.GetOrCreateAsync(
             $"apiKey={apiKey ?? "default"},method={method},url={url},httpRequest",
             (response) => Logger.LogTrace("Reusing response for {Method} {URL}", method, url),
             async (cachedEntry) => {
@@ -111,7 +111,7 @@ public class ShokoAPIClient : IDisposable
                 var version = Plugin.Instance.Configuration.HostVersion;
                 if (version == null)
                 {
-                    version = await GetVersion()
+                    version = await GetVersion().ConfigureAwait(false)
                         ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
                     Plugin.Instance.Configuration.HostVersion = version;
@@ -125,7 +125,7 @@ public class ShokoAPIClient : IDisposable
                     using var requestMessage = new HttpRequestMessage(method, remoteUrl);
                     requestMessage.Content = new StringContent(string.Empty);
                     requestMessage.Headers.Add("apikey", apiKey);
-                    var response = await _httpClient.SendAsync(requestMessage);
+                    var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
                     if (response.StatusCode == HttpStatusCode.Unauthorized)
                         throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection or deleting and re-adding the user in the plugin settings.", null, HttpStatusCode.Unauthorized);
                     Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
@@ -145,11 +145,11 @@ public class ShokoAPIClient : IDisposable
 
     private async Task<ReturnType> Post<Type, ReturnType>(string url, HttpMethod method, Type body, string? apiKey = null)
     {
-        var response = await Post(url, method, body, apiKey);
+        var response = await Post(url, method, body, apiKey).ConfigureAwait(false);
         if (response.StatusCode != HttpStatusCode.OK)
             throw ApiException.FromResponse(response);
-        var responseStream = await response.Content.ReadAsStreamAsync();
-        var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream) ??
+        var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream).ConfigureAwait(false) ??
             throw new ApiException(response.StatusCode, nameof(ShokoAPIClient), "Unexpected null return value.");
         return value;
     }
@@ -166,7 +166,7 @@ public class ShokoAPIClient : IDisposable
         var version = Plugin.Instance.Configuration.HostVersion;
         if (version == null)
         {
-            version = await GetVersion()
+            version = await GetVersion().ConfigureAwait(false)
                 ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
             Plugin.Instance.Configuration.HostVersion = version;
@@ -184,9 +184,9 @@ public class ShokoAPIClient : IDisposable
                 throw new HttpRequestException("Head requests cannot contain a body.");
 
             using var requestMessage = new HttpRequestMessage(method, remoteUrl);
-            requestMessage.Content = (new StringContent(JsonSerializer.Serialize<Type>(body), Encoding.UTF8, "application/json"));
+            requestMessage.Content = new StringContent(JsonSerializer.Serialize<Type>(body), Encoding.UTF8, "application/json");
             requestMessage.Headers.Add("apikey", apiKey);
-            var response = await _httpClient.SendAsync(requestMessage);
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.Unauthorized)
                 throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection or deleting and re-adding the user in the plugin settings.", null, HttpStatusCode.Unauthorized);
             Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
@@ -206,7 +206,7 @@ public class ShokoAPIClient : IDisposable
         var version = Plugin.Instance.Configuration.HostVersion;
         if (version == null)
         {
-            version = await GetVersion()
+            version = await GetVersion().ConfigureAwait(false)
                 ?? throw new HttpRequestException("Unable to connect to Shoko Server to read the version.", null, HttpStatusCode.BadGateway);
 
             Plugin.Instance.Configuration.HostVersion = version;
@@ -220,11 +220,11 @@ public class ShokoAPIClient : IDisposable
             {"device", forUser ? "Shoko Jellyfin Plugin (Shokofin) - User Key" : "Shoko Jellyfin Plugin (Shokofin)"},
         });
         var apiBaseUrl = Plugin.Instance.Configuration.Host;
-        var response = await _httpClient.PostAsync($"{apiBaseUrl}/api/auth", new StringContent(postData, Encoding.UTF8, "application/json"));
-        if (response.StatusCode == HttpStatusCode.OK)
-            return await JsonSerializer.DeserializeAsync<ApiKey>(response.Content.ReadAsStreamAsync().Result);
+        var response = await _httpClient.PostAsync($"{apiBaseUrl}/api/auth", new StringContent(postData, Encoding.UTF8, "application/json")).ConfigureAwait(false);
+        if (response.StatusCode != HttpStatusCode.OK)
+            return null;
 
-        return null;
+        return await JsonSerializer.DeserializeAsync<ApiKey>(response.Content.ReadAsStreamAsync().Result).ConfigureAwait(false);
     }
 
     public async Task<ComponentVersion?> GetVersion()
@@ -261,20 +261,20 @@ public class ShokoAPIClient : IDisposable
     public async Task<IReadOnlyList<File>> GetFilesForSeries(string seriesId)
     {
         if (UseOlderSeriesAndFileEndpoints)
-            return await Get<List<File>>($"/api/v3/Series/{seriesId}/File?&includeXRefs=true&includeDataFrom=AniDB");
+            return await Get<List<File>>($"/api/v3/Series/{seriesId}/File?&includeXRefs=true&includeDataFrom=AniDB").ConfigureAwait(false);
 
-        var listResult = await Get<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB");
+        var listResult = await Get<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false);
         return listResult.List;
     }
 
     public async Task<IReadOnlyList<File>> GetFilesForImportFolder(int importFolderId, string subPath)
     {
         if (UseOlderImportFolderFileEndpoints) {
-            var listResult1 = await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?pageSize=0&includeXRefs=true");
+            var listResult1 = await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?pageSize=0&includeXRefs=true").ConfigureAwait(false);
             return listResult1.List;
         }
 
-        var listResult2 = await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?folderPath={Uri.EscapeDataString(subPath)}&pageSize=0&include=XRefs");
+        var listResult2 = await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?folderPath={Uri.EscapeDataString(subPath)}&pageSize=0&include=XRefs").ConfigureAwait(false);
         return listResult2.List;
     }
 
@@ -282,7 +282,7 @@ public class ShokoAPIClient : IDisposable
     {
         try
         {
-            return await Get<File.UserStats>($"/api/v3/File/{fileId}/UserStats", apiKey);
+            return await Get<File.UserStats>($"/api/v3/File/{fileId}/UserStats", apiKey).ConfigureAwait(false);
         }
         catch (ApiException e)
         {
@@ -303,21 +303,21 @@ public class ShokoAPIClient : IDisposable
 
     public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, bool watched, string apiKey)
     {
-        var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&watched={watched}", HttpMethod.Patch, apiKey);
+        var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&watched={watched}", HttpMethod.Patch, apiKey).ConfigureAwait(false);
         return response != null && (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent);
     }
 
     public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, long progress, string apiKey)
     {
-        var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress).TotalMilliseconds)}", HttpMethod.Patch, apiKey);
+        var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress).TotalMilliseconds)}", HttpMethod.Patch, apiKey).ConfigureAwait(false);
         return response != null && (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent);
     }
 
     public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, long? progress, bool watched, string apiKey)
     {
         if (!progress.HasValue)
-            return await ScrobbleFile(fileId, episodeId, eventName, watched, apiKey);
-        var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress.Value).TotalMilliseconds)}&watched={watched}", HttpMethod.Patch, apiKey);
+            return await ScrobbleFile(fileId, episodeId, eventName, watched, apiKey).ConfigureAwait(false);
+        var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress.Value).TotalMilliseconds)}&watched={watched}", HttpMethod.Patch, apiKey).ConfigureAwait(false);
         return response != null && (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent);
     }
 
@@ -372,7 +372,7 @@ public class ShokoAPIClient : IDisposable
             return null;
 
         // Return the first (and hopefully only) exact match on the full title.
-        var results = await Get<List<SeriesSearchResult>>($"/api/v3/Series/Search?query={Uri.EscapeDataString(name)}&limit=10&fuzzy=false");
+        var results = await Get<List<SeriesSearchResult>>($"/api/v3/Series/Search?query={Uri.EscapeDataString(name)}&limit=10&fuzzy=false").ConfigureAwait(false);
         return results?.FirstOrDefault(series => series.ExactMatch && series.Index == 0 && series.LengthDifference == 0 && string.Equals(name, series.Match, StringComparison.Ordinal));
     }
 
