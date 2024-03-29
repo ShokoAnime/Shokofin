@@ -21,7 +21,7 @@ jobs:
       - name: Checkout master
         uses: actions/checkout@master
         with:
-          ref: "${{ github.sha }}"
+          ref: "${{ github.ref }}"
           fetch-depth: 0 # This is set to download the full git history for the repo
 
       - name: Get Previous Version
@@ -63,7 +63,7 @@ jobs:
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "CHANGELOG<<$EOF" >> "$GITHUB_OUTPUT"
-          git log $PREVIOUS_COMMIT..$NEXT_COMMIT --pretty=format:"%s" >> "$GITHUB_OUTPUT"
+          git log $PREVIOUS_COMMIT..$NEXT_COMMIT --pretty=format:"%B%n" >> "$GITHUB_OUTPUT"
           echo "" >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
 
@@ -130,11 +130,6 @@ jobs:
       - build_plugin
 
     steps:
-      - name: Checkout master
-        uses: actions/checkout@master
-        with:
-          ref: "${{ github.sha }}"
-
       - name: Notify Discord Users
         uses: sarisia/actions-status-discord@v1
         with:
