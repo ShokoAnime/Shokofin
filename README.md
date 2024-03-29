@@ -173,7 +173,7 @@ compatible with what.
 | `1.x.x`    | `10.7`   | `4.1.0-4.1.2` |
 | `2.x.x`    | `10.8`   | `4.1.2`       |
 | `3.x.x`    | `10.8`   | `4.2.0`       |
-| `unstable` | `10.8`   | `dev`         |
+| `unstable` | `10.8`   | `4.2.2`       |
 | `N/A`      | `10.9`   | `N/A`         |
 
 ### Official Repository
