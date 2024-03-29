@@ -210,6 +210,8 @@ public class ShokoResolveManager
 
         var start = DateTime.UtcNow;
         var skipped = 0;
+        var subtitles = 0;
+        var skippedSubtitles = 0;
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
         var allPathsForVFS = new ConcurrentBag<(string sourceLocation, string symbolicLink)>();
@@ -248,11 +250,12 @@ public class ShokoResolveManager
                                 var extName = subtitleSource[sourcePrefixLength..];
                                 var subtitleLink = Path.Combine(symbolicDirectory, symbolicName + extName);
 
+                                subtitles++;
                                 allPathsForVFS.Add((subtitleSource, subtitleLink));
                                 if (!File.Exists(subtitleLink))
                                     File.CreateSymbolicLink(subtitleLink, subtitleSource);
                                 else
-                                    skipped++;
+                                    skippedSubtitles++;
                             }
                         }
                     }
@@ -263,6 +266,7 @@ public class ShokoResolveManager
             })
             .ToList());
 
+        var removedSubtitles = 0;
         var toBeRemoved = FileSystem.GetFilePaths(ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder), true)
             .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
             .Except(allPathsForVFS.Select(tuple => tuple.symbolicLink).ToHashSet())
@@ -272,18 +276,23 @@ public class ShokoResolveManager
 
             File.Delete(symbolicLink);
 
-            foreach (var subtitleLink in subtitleLinks)
+            foreach (var subtitleLink in subtitleLinks) {
+                removedSubtitles++;
                 File.Delete(symbolicLink);
+            }
 
             CleanupDirectoryStructure(symbolicLink);
         }
 
         var timeSpent = DateTime.UtcNow - start;
         Logger.LogInformation(
-            "Created {CreatedCount}, skipped {SkippedCount}, and removed {RemovedCount} symbolic links for media folder at {Path} in {TimeSpan}",
-            allPathsForVFS.Count - skipped,
+            "Created {CreatedMedia} ({CreatedSubtitles}), skipped {SkippedMedia} ({SkippedSubtitles}), and removed {RemovedMedia} ({RemovedSubtitles}) symbolic links for media folder at {Path} in {TimeSpan}",
+            allPathsForVFS.Count - skipped - subtitles,
+            subtitles - skippedSubtitles,
             skipped,
+            skippedSubtitles,
             toBeRemoved.Count,
+            removedSubtitles,
             mediaFolder.Path,
             timeSpent
         );
