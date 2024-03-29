@@ -14,107 +14,107 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Utils;
 
-namespace Shokofin.Providers
+#nullable enable
+namespace Shokofin.Providers;
+
+public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 {
-    public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
+    public string Name => Plugin.MetadataProviderName;
+
+    private readonly IHttpClientFactory HttpClientFactory;
+
+    private readonly ILogger<SeriesProvider> Logger;
+
+    private readonly ShokoAPIManager ApiManager;
+
+    private readonly IFileSystem FileSystem;
+
+    public SeriesProvider(IHttpClientFactory httpClientFactory, ILogger<SeriesProvider> logger, ShokoAPIManager apiManager, IFileSystem fileSystem)
     {
-        public string Name => Plugin.MetadataProviderName;
+        Logger = logger;
+        HttpClientFactory = httpClientFactory;
+        ApiManager = apiManager;
+        FileSystem = fileSystem;
+    }
 
-        private readonly IHttpClientFactory HttpClientFactory;
-
-        private readonly ILogger<SeriesProvider> Logger;
-
-        private readonly ShokoAPIManager ApiManager;
-
-        private readonly IFileSystem FileSystem;
-
-        public SeriesProvider(IHttpClientFactory httpClientFactory, ILogger<SeriesProvider> logger, ShokoAPIManager apiManager, IFileSystem fileSystem)
-        {
-            Logger = logger;
-            HttpClientFactory = httpClientFactory;
-            ApiManager = apiManager;
-            FileSystem = fileSystem;
-        }
-
-        public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
-        {
-            try {
-                var result = new MetadataResult<Series>();
-                var show = await ApiManager.GetShowInfoByPath(info.Path);
-                if (show == null) {
-                    try {
-                        // Look for the "season" directories to probe for the group information
-                        var entries = FileSystem.GetDirectories(info.Path, false);
-                        foreach (var entry in entries) {
-                            show = await ApiManager.GetShowInfoByPath(entry.FullName);
-                            if (show != null)
-                                break;
-                        }
-                        if (show == null) {
-                            Logger.LogWarning("Unable to find show info for path {Path}", info.Path);
-                            return result;
-                        }
+    public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
+    {
+        try {
+            var result = new MetadataResult<Series>();
+            var show = await ApiManager.GetShowInfoByPath(info.Path);
+            if (show == null) {
+                try {
+                    // Look for the "season" directories to probe for the group information
+                    var entries = FileSystem.GetDirectories(info.Path, false);
+                    foreach (var entry in entries) {
+                        show = await ApiManager.GetShowInfoByPath(entry.FullName);
+                        if (show != null)
+                            break;
                     }
-                    catch (DirectoryNotFoundException) {
+                    if (show == null) {
+                        Logger.LogWarning("Unable to find show info for path {Path}", info.Path);
                         return result;
                     }
                 }
-
-                var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(show.DefaultSeason.AniDB.Titles, show.Name, info.MetadataLanguage);
-                var premiereDate = show.PremiereDate;
-                var endDate = show.EndDate;
-                result.Item = new Series {
-                    Name = displayTitle,
-                    OriginalTitle = alternateTitle,
-                    Overview = Text.GetDescription(show),
-                    PremiereDate = premiereDate,
-                    ProductionYear = premiereDate?.Year,
-                    EndDate = endDate,
-                    Status = !endDate.HasValue || endDate.Value > DateTime.UtcNow ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                    Tags = show.Tags,
-                    Genres = show.Genres,
-                    Studios = show.Studios,
-                    OfficialRating = show.ContentRating,
-                    CustomRating = show.ContentRating,
-                    CommunityRating = show.CommunityRating,
-                };
-                result.HasMetadata = true;
-                result.ResetPeople();
-                foreach (var person in show.Staff)
-                    result.AddPerson(person);
-
-                AddProviderIds(result.Item, show.Id, show.GroupId, show.DefaultSeason.AniDB.Id.ToString());
-
-                Logger.LogInformation("Found series {SeriesName} (Series={SeriesId},Group={GroupId})", displayTitle, show.Id, show.GroupId);
-
-                return result;
+                catch (DirectoryNotFoundException) {
+                    return result;
+                }
             }
-            catch (Exception ex) {
-                Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
-                return new MetadataResult<Series>();
-            }
+
+            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(show.DefaultSeason.AniDB.Titles, show.Name, info.MetadataLanguage);
+            var premiereDate = show.PremiereDate;
+            var endDate = show.EndDate;
+            result.Item = new Series {
+                Name = displayTitle,
+                OriginalTitle = alternateTitle,
+                Overview = Text.GetDescription(show),
+                PremiereDate = premiereDate,
+                ProductionYear = premiereDate?.Year,
+                EndDate = endDate,
+                Status = !endDate.HasValue || endDate.Value > DateTime.UtcNow ? SeriesStatus.Continuing : SeriesStatus.Ended,
+                Tags = show.Tags,
+                Genres = show.Genres,
+                Studios = show.Studios,
+                OfficialRating = show.OfficialRating,
+                CustomRating = show.CustomRating,
+                CommunityRating = show.CommunityRating,
+            };
+            result.HasMetadata = true;
+            result.ResetPeople();
+            foreach (var person in show.Staff)
+                result.AddPerson(person);
+
+            AddProviderIds(result.Item, show.Id, show.GroupId, show.DefaultSeason.AniDB.Id.ToString());
+
+            Logger.LogInformation("Found series {SeriesName} (Series={SeriesId},Group={GroupId})", displayTitle, show.Id, show.GroupId);
+
+            return result;
         }
-
-        public static void AddProviderIds(IHasProviderIds item, string seriesId, string groupId = null, string anidbId = null, string tmdbId = null)
-        {
-            // NOTE: These next line will remain here till _someone_ fix the series merging for providers other then TvDB and ImDB in Jellyfin.
-            // NOTE: #2 Will fix this once JF 10.9 is out, as it contains a change that will help in this situation.
-            item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{seriesId}");
-
-            var config = Plugin.Instance.Configuration;
-            item.SetProviderId("Shoko Series", seriesId);
-            if (!string.IsNullOrEmpty(groupId))
-                item.SetProviderId("Shoko Group", groupId);
-            if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
-                item.SetProviderId("AniDB", anidbId);
-            if (config.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")
-                item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
+        catch (Exception ex) {
+            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            return new MetadataResult<Series>();
         }
-
-        public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo info, CancellationToken cancellationToken)
-            => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
-
-        public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-            => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
     }
+
+    public static void AddProviderIds(IHasProviderIds item, string seriesId, string? groupId = null, string? anidbId = null, string? tmdbId = null)
+    {
+        // NOTE: These next line will remain here till _someone_ fix the series merging for providers other then TvDB and ImDB in Jellyfin.
+        // NOTE: #2 Will fix this once JF 10.9 is out, as it contains a change that will help in this situation.
+        item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{seriesId}");
+
+        var config = Plugin.Instance.Configuration;
+        item.SetProviderId("Shoko Series", seriesId);
+        if (!string.IsNullOrEmpty(groupId))
+            item.SetProviderId("Shoko Group", groupId);
+        if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
+            item.SetProviderId("AniDB", anidbId);
+        if (config.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")
+            item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
+    }
+
+    public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo info, CancellationToken cancellationToken)
+        => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
+
+    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
+        => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }

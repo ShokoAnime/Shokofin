@@ -7,12 +7,12 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
-using Microsoft.Extensions.Logging;
 using Jellyfin.Data.Enums;
 using System.Globalization;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Common.Progress;
 
+#nullable enable
 namespace Shokofin.MergeVersions;
 
 /// <summary>
@@ -36,21 +36,15 @@ public class MergeVersionsManager
     private readonly IIdLookup Lookup;
 
     /// <summary>
-    /// Logger.
-    /// </summary>
-    private readonly ILogger<MergeVersionsManager> Logger;
-
-    /// <summary>
     /// Used by the DI IoC to inject the needed interfaces.
     /// </summary>
     /// <param name="libraryManager">Library manager.</param>
     /// <param name="lookup">Shoko ID Lookup.</param>
     /// <param name="logger">Logger.</param>
-    public MergeVersionsManager(ILibraryManager libraryManager, IIdLookup lookup, ILogger<MergeVersionsManager> logger)
+    public MergeVersionsManager(ILibraryManager libraryManager, IIdLookup lookup)
     {
         LibraryManager = libraryManager;
         Lookup = lookup;
-        Logger = logger;
     }
 
     #region Shared
@@ -146,7 +140,7 @@ public class MergeVersionsManager
     /// <param name="movies">Movies to merge.</param>
     /// <returns>An async task that will silently complete when the merging is
     /// complete.</returns>
-    public async Task MergeMovies(IEnumerable<Movie> movies)
+    public static async Task MergeMovies(IEnumerable<Movie> movies)
         => await MergeVideos(movies.Cast<Video>().OrderBy(e => e.Id).ToList());
 
     /// <summary>
@@ -279,7 +273,7 @@ public class MergeVersionsManager
     /// <param name="episodes">Episodes to merge.</param>
     /// <returns>An async task that will silently complete when the merging is
     /// complete.</returns>
-    public async Task MergeEpisodes(IEnumerable<Episode> episodes)
+    public static async Task MergeEpisodes(IEnumerable<Episode> episodes)
         => await MergeVideos(episodes.Cast<Video>().OrderBy(e => e.Id).ToList());
 
     /// <summary>
@@ -380,7 +374,7 @@ public class MergeVersionsManager
         foreach (var episodeGroup in duplicationGroups) {
             // Handle cancelation and update progress.
             cancellationToken.ThrowIfCancellationRequested();
-            var percent = (currentCount++ / totalCount) * 100d;
+            var percent = currentCount++ / totalCount * 100d;
             progress?.Report(percent);
 
             // Link the episodes together as alternate sources.
@@ -396,15 +390,13 @@ public class MergeVersionsManager
     ///
     /// Modified from;
     /// https://github.com/jellyfin/jellyfin/blob/9c97c533eff94d25463fb649c9572234da4af1ea/Jellyfin.Api/Controllers/VideosController.cs#L192
-    private async Task MergeVideos(List<Video> videos)
+    private static async Task MergeVideos(List<Video> videos)
     {
         if (videos.Count < 2)
             return;
 
-        var primaryVersion = videos.FirstOrDefault(i => i.MediaSourceCount > 1 && string.IsNullOrEmpty(i.PrimaryVersionId));
-        if (primaryVersion == null)
-        {
-            primaryVersion = videos
+        var primaryVersion = videos.FirstOrDefault(i => i.MediaSourceCount > 1 && string.IsNullOrEmpty(i.PrimaryVersionId)) ??
+            videos
                 .OrderBy(i =>
                 {
                     if (i.Video3DFormat.HasValue || i.VideoType != VideoType.VideoFile)
@@ -414,7 +406,6 @@ public class MergeVersionsManager
                 })
                 .ThenByDescending(i => i.GetDefaultVideoStream()?.Width ?? 0)
                 .First();
-        }
 
         // Add any videos not already linked to the primary version to the list.
         var alternateVersionsOfPrimary = primaryVersion.LinkedAlternateVersions
@@ -467,9 +458,9 @@ public class MergeVersionsManager
                 return;
 
             // Make sure the primary video still exists before we proceed.
-            video = LibraryManager.GetItemById(video.PrimaryVersionId) as Video;
-            if (video == null)
+            if (LibraryManager.GetItemById(video.PrimaryVersionId) is not Video primaryVideo)
                 return;
+            video = primaryVideo;
         }
 
         // Remove the link for every linked video.

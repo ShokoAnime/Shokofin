@@ -65,7 +65,13 @@ public class ShowInfo
     /// <summary>
     /// Overall content rating of the show.
     /// </summary>
-    public string? ContentRating =>
+    public string? OfficialRating =>
+        DefaultSeason.AniDB.Restricted ? "XXX" : null;
+
+    /// <summary>
+    /// Custom rating of the show.
+    /// </summary>
+    public string? CustomRating =>
         DefaultSeason.AniDB.Restricted ? "XXX" : null;
 
     /// <summary>

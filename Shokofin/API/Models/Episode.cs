@@ -66,7 +66,7 @@ public class Episode
 
         public string Description { get; set; } = "";
 
-        public Rating? Rating { get; set; } = new();
+        public Rating Rating { get; set; } = new();
     }
 
     public class TvDB
