@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.60",
+                "changelog": "fix: impl. actual attribute parsing\n\n- Implement actual attribute parsing on the file/folder names within the\n  VFS, instead of the faulty and error prone guesswork I\n  added in the initial PoC. It was bound to fail eventually.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.60/shoko_3.0.1.60.zip",
+                "checksum": "762320590c2cb57b5dbc4c73f529bbb1",
+                "timestamp": "2024-03-29T23:00:50Z"
+            },
+            {
                 "version": "3.0.1.59",
                 "changelog": "misc: manually amends broken links in unstable manifest\n\nfix: forces version specific release url in manifest",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.56/shoko_3.0.1.56.zip",
                 "checksum": "3b1322198a5614672a565cdafaaa92b4",
                 "timestamp": "2024-03-29T05:31:41Z"
-            },
-            {
-                "version": "3.0.1.55",
-                "changelog": "NA\n",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.55/shoko_3.0.1.55.zip",
-                "checksum": "82036927eba09ef9b1cd153ff4903bd3",
-                "timestamp": "2024-03-29T05:18:42Z"
             }
         ]
     }
