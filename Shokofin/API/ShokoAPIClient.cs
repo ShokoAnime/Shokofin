@@ -267,15 +267,13 @@ public class ShokoAPIClient : IDisposable
         return listResult.List;
     }
 
-    public async Task<IReadOnlyList<File>> GetFilesForImportFolder(int importFolderId, string subPath)
+    public async Task<ListResult<File>> GetFilesForImportFolder(int importFolderId, string subPath, int page = 1)
     {
         if (UseOlderImportFolderFileEndpoints) {
-            var listResult1 = await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?pageSize=0&includeXRefs=true").ConfigureAwait(false);
-            return listResult1.List;
+            return await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?page={page}&pageSize=100&includeXRefs=true").ConfigureAwait(false);
         }
 
-        var listResult2 = await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?folderPath={Uri.EscapeDataString(subPath)}&pageSize=0&include=XRefs").ConfigureAwait(false);
-        return listResult2.List;
+        return await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?page={page}&folderPath={Uri.EscapeDataString(subPath)}&pageSize=1000&include=XRefs").ConfigureAwait(false);
     }
 
     public async Task<File.UserStats?> GetFileUserStats(string fileId, string? apiKey = null)

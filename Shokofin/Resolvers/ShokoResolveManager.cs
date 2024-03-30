@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Emby.Naming.Common;
@@ -123,14 +124,19 @@ public class ShokoResolveManager
             Logger.LogInformation("Looking for match for folder at {Path}.", folderPath);
 
             // Check if we should introduce the VFS for the media folder.
+            var start = DateTime.UtcNow;
             var allPaths = FileSystem.GetFilePaths(folderPath, true)
                 .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
-                .Take(100)
-                .ToList();
+                .ToHashSet();
+
+            Logger.LogDebug("Found {FileCount} files in {Path} in {TimeSpan}.", allPaths.Count, folderPath, DateTime.UtcNow - start);
+            Logger.LogDebug("Asking remote server if it knows any of the {Count} sampled files in {Path}.", allPaths.Count > 100 ? 100 : allPaths.Count, folderPath);
+            start = DateTime.UtcNow;
+
             int importFolderId = 0;
             var attempts = 0;
             string importFolderSubPath = string.Empty;
-            foreach (var path in allPaths) {
+            foreach (var path in allPaths.Take(100)) {
                 attempts++;
                 var partialPath = path[mediaFolder.Path.Length..];
                 var partialFolderPath = path[folderPath.Length..];
@@ -153,59 +159,113 @@ public class ShokoResolveManager
             }
 
             if (importFolderId == 0) {
-                Logger.LogWarning("Failed to find a match for folder at {Path} after {Amount} attempts.", folderPath, allPaths.Count);
+                Logger.LogWarning(
+                    "Failed to find a match for folder at {Path} after {Amount} attempts in {TimeSpan}.",
+                    folderPath,
+                    attempts, 
+                    DateTime.UtcNow - start
+                );
 
                 cachedEntry.AbsoluteExpirationRelativeToNow = DefaultTTL;
                 return null;
             }
 
-            Logger.LogInformation("Found a match for folder at {Path} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path},Attempts={Attempts})", folderPath, importFolderId, importFolderSubPath, mediaFolder.Path, attempts);
+            Logger.LogInformation(
+                "Found a match for folder at {Path} in {TimeSpan} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path},Attempts={Attempts})",
+                folderPath,
+                DateTime.UtcNow - start,
+                importFolderId,
+                importFolderSubPath,
+                mediaFolder.Path,
+                attempts
+            );
 
             vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
-            var allFiles = await GetImportFolderFiles(importFolderId, importFolderSubPath, folderPath).ConfigureAwait(false);
+            var allFiles = GetImportFolderFiles(importFolderId, importFolderSubPath, folderPath, allPaths);
             await GenerateSymbolicLinks(mediaFolder, allFiles).ConfigureAwait(false);
 
             cachedEntry.AbsoluteExpirationRelativeToNow = DefaultTTL;
             return vfsPath;
-        });
+        }).ConfigureAwait(false);
     }
 
-    private async Task<IReadOnlyList<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)>> GetImportFolderFiles(int importFolderId, string importFolderSubPath, string mediaFolderPath)
+    private IEnumerable<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)> GetImportFolderFiles(int importFolderId, string importFolderSubPath, string mediaFolderPath, ISet<string> fileSet)
     {
-        Logger.LogDebug("Looking up recognised files for media folder… (ImportFolder={FolderId},RelativePath={RelativePath})", importFolderId, importFolderSubPath);
         var start = DateTime.UtcNow;
-        var allFilesForImportFolder = (await ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath).ConfigureAwait(false))
-            .AsParallel()
-            .SelectMany(file =>
-            {
+        var firstPage = ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath);
+        var pageData = firstPage
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult();
+        var totalPages = pageData.List.Count == pageData.Total ? 1 : (int)Math.Ceiling((float)pageData.Total / pageData.List.Count);
+        Logger.LogDebug(
+            "Iterating ≤{FileCount} files to potentially use within media folder at {Path} by checking {TotalCount} matches. (ImportFolder={FolderId},RelativePath={RelativePath},PageSize={PageSize},TotalPages={TotalPages})",
+            fileSet.Count,
+            mediaFolderPath,
+            pageData.Total,
+            importFolderId,
+            importFolderSubPath,
+            pageData.List.Count == pageData.Total ? null : pageData.List.Count,
+            totalPages
+        );
+
+        // Ensure at most 5 pages are in-flight at any given time, until we're done fetching the pages.
+        var semaphore = new SemaphoreSlim(5);
+        var pages = new List<Task<ListResult<API.Models.File>>>() { firstPage };
+        for (var page = 2; page <= totalPages; page++)
+            pages.Add(GetImportFolderFilesPage(importFolderId, importFolderSubPath, page, semaphore));
+
+        var totalFiles = 0;
+        do {
+            var task = Task.WhenAny(pages).ConfigureAwait(false).GetAwaiter().GetResult();
+            pages.Remove(task);
+            semaphore.Release();
+            pageData = task.Result;
+
+            Logger.LogTrace(
+                "Iterating page {PageNumber} with size {PageSize} (ImportFolder={FolderId},RelativePath={RelativePath})",
+                totalPages - pages.Count,
+                pageData.List.Count,
+                importFolderId,
+                importFolderSubPath
+            );
+            foreach (var file in pageData.List) {
                 var location = file.Locations
                     .Where(location => location.ImportFolderId == importFolderId && (importFolderSubPath.Length == 0 || location.Path.StartsWith(importFolderSubPath)))
                     .FirstOrDefault();
                 if (location == null || file.CrossReferences.Count == 0)
-                    return Array.Empty<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)>();
+                    continue;
 
                 var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
-                return file.CrossReferences
-                    .Select(xref => (sourceLocation, fileId: file.Id.ToString(), seriesId: xref.Series.Shoko.ToString(), episodeIds: xref.Episodes.Select(e => e.Shoko.ToString()).ToArray()));
-            })
-            .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation))
-            .ToList();
+                if (!fileSet.Contains(sourceLocation))
+                    continue;
+
+                totalFiles++;
+                foreach (var xref in file.CrossReferences)
+                    yield return (sourceLocation, fileId: file.Id.ToString(), seriesId: xref.Series.Shoko.ToString(), episodeIds: xref.Episodes.Select(e => e.Shoko.ToString()).ToArray());
+            }
+        } while (pages.Count > 0);
+
         var timeSpent = DateTime.UtcNow - start;
-        Logger.LogDebug(
-            "Found ≤{FileCount} files to potentially use within media folder at {Path} in {TimeSpan} (ImportFolder={FolderId},RelativePath={RelativePath})",
-            allFilesForImportFolder.Count,
+        Logger.LogTrace(
+            "Iterated {FileCount} files to potentially use within media folder at {Path} in {TimeSpan} (ImportFolder={FolderId},RelativePath={RelativePath})",
+            totalFiles,
             mediaFolderPath,
             timeSpent,
             importFolderId,
             importFolderSubPath
         );
-        return allFilesForImportFolder;
+
     }
 
-    private async Task GenerateSymbolicLinks(Folder mediaFolder, IReadOnlyList<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)> files)
+    private async Task<ListResult<API.Models.File>> GetImportFolderFilesPage(int importFolderId, string importFolderSubPath, int page, SemaphoreSlim semaphore)
     {
-        Logger.LogInformation("Creating structure for ≤{FileCount} files to potentially use within media folder at {Path}", files.Count, mediaFolder.Path);
+        await semaphore.WaitAsync().ConfigureAwait(false);
+        return await ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath, page).ConfigureAwait(false);
+    }
 
+    private async Task GenerateSymbolicLinks(Folder mediaFolder, IEnumerable<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)> files)
+    {
         var start = DateTime.UtcNow;
         var skipped = 0;
         var subtitles = 0;
@@ -214,55 +274,49 @@ public class ShokoResolveManager
         var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
         var allPathsForVFS = new ConcurrentBag<(string sourceLocation, string symbolicLink)>();
         var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VirtualFileSystemThreads);
-        await Task.WhenAll(files
-            .Select(async (tuple) => {
-                await semaphore.WaitAsync().ConfigureAwait(false);
+        await Task.WhenAll(files.Select(async (tuple) => {
+            await semaphore.WaitAsync().ConfigureAwait(false);
 
-                try {
-                    // Skip any source files we that we cannot find.
-                    if (!File.Exists(tuple.sourceLocation))
-                        return;
+            try {
+                // Skip any source files we weren't meant to have in the library.
+                var (sourceLocation, symbolicLinks) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId, tuple.episodeIds).ConfigureAwait(false);
+                if (string.IsNullOrEmpty(sourceLocation))
+                    return;
 
-                    var (sourceLocation, symbolicLinks) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId, tuple.episodeIds).ConfigureAwait(false);
-                    // Skip any source files we weren't meant to have in the library.
-                    if (string.IsNullOrEmpty(sourceLocation))
-                        return;
+                var sourcePrefix = Path.GetFileNameWithoutExtension(sourceLocation);
+                var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
+                var subtitleLinks = FindSubtitlesForPath(sourceLocation);
+                foreach (var symbolicLink in symbolicLinks) {
+                    var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
+                    if (!Directory.Exists(symbolicDirectory))
+                        Directory.CreateDirectory(symbolicDirectory);
 
-                    var sourcePrefix = Path.GetFileNameWithoutExtension(sourceLocation);
-                    var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
-                    var subtitleLinks = FindSubtitlesForPath(sourceLocation);
-                    foreach (var symbolicLink in symbolicLinks) {
-                        var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
-                        if (!Directory.Exists(symbolicDirectory))
-                            Directory.CreateDirectory(symbolicDirectory);
+                    allPathsForVFS.Add((sourceLocation, symbolicLink));
+                    if (!File.Exists(symbolicLink))
+                        File.CreateSymbolicLink(symbolicLink, sourceLocation);
+                    else
+                        skipped++;
 
-                        allPathsForVFS.Add((sourceLocation, symbolicLink));
-                        if (!File.Exists(symbolicLink))
-                            File.CreateSymbolicLink(symbolicLink, sourceLocation);
-                        else
-                            skipped++;
+                    if (subtitleLinks.Count > 0) {
+                        var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
+                        foreach (var subtitleSource in subtitleLinks) {
+                            var extName = subtitleSource[sourcePrefixLength..];
+                            var subtitleLink = Path.Combine(symbolicDirectory, symbolicName + extName);
 
-                        if (subtitleLinks.Count > 0) {
-                            var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
-                            foreach (var subtitleSource in subtitleLinks) {
-                                var extName = subtitleSource[sourcePrefixLength..];
-                                var subtitleLink = Path.Combine(symbolicDirectory, symbolicName + extName);
-
-                                subtitles++;
-                                allPathsForVFS.Add((subtitleSource, subtitleLink));
-                                if (!File.Exists(subtitleLink))
-                                    File.CreateSymbolicLink(subtitleLink, subtitleSource);
-                                else
-                                    skippedSubtitles++;
-                            }
+                            subtitles++;
+                            allPathsForVFS.Add((subtitleSource, subtitleLink));
+                            if (!File.Exists(subtitleLink))
+                                File.CreateSymbolicLink(subtitleLink, subtitleSource);
+                            else
+                                skippedSubtitles++;
                         }
                     }
                 }
-                finally {
-                    semaphore.Release();
-                }
-            })
-            .ToList())
+            }
+            finally {
+                semaphore.Release();
+            }
+        }))
             .ConfigureAwait(false);
 
         var removedSubtitles = 0;
@@ -285,7 +339,7 @@ public class ShokoResolveManager
 
         var timeSpent = DateTime.UtcNow - start;
         Logger.LogInformation(
-            "Created {CreatedMedia} ({CreatedSubtitles}), skipped {SkippedMedia} ({SkippedSubtitles}), and removed {RemovedMedia} ({RemovedSubtitles}) symbolic links for media folder at {Path} in {TimeSpan}",
+            "Created {CreatedMedia} ({CreatedSubtitles}), skipped {SkippedMedia} ({SkippedSubtitles}), and removed {RemovedMedia} ({RemovedSubtitles}) symbolic links in media folder at {Path} in {TimeSpan}",
             allPathsForVFS.Count - skipped - subtitles,
             subtitles - skippedSubtitles,
             skipped,
