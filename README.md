@@ -77,13 +77,13 @@ Learn more about Shoko at https://shokoanime.com/.
 
       ¹ _You need at least one movie in your library for this to currently work as expected. This is an issue with Jellyfin 10.8._
 
-  - [/] Supports adding local trailers
+  - [X] Supports adding local trailers
 
     - [X] on Show items
 
     - [X] on Season items
 
-    - [ ] on Movie items
+    - [X] on Movie items
 
   - [X] Specials and extra features. 
 
