@@ -667,7 +667,7 @@ public class ShokoResolveManager
             {
                 Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             }
-            return null;
+            throw;
         }
     }
 
@@ -764,7 +764,7 @@ public class ShokoResolveManager
             {
                 Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             }
-            return null;
+            throw;
         }
     }
 
