@@ -67,7 +67,7 @@ public static class StringExtensions
             .Replace(@"?", "\uff1f") // ？ (FULL WIDTH QUESTION MARK)
             .Replace(@".", "\u2024") // ․ (ONE DOT LEADER)
             .Trim();
-    
+
     /// <summary>
     /// Gets the attribute value for <paramref name="attribute"/> in <paramref name="text"/>.
     /// </summary>
@@ -117,4 +117,7 @@ public static class StringExtensions
 
         return null;
     }
+
+    public static bool TryGetAttributeValue(this string text, string attribute, out string? value)
+        => !string.IsNullOrEmpty(value = GetAttributeValue(text, attribute));
 }

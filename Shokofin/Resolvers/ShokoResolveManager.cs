@@ -595,8 +595,7 @@ public class ShokoResolveManager
                 return null;
 
             if (parent.Id == mediaFolder.Id && fileInfo.IsDirectory) {
-                var seriesSegment = fileInfo.Name.GetAttributeValue("shoko-series");
-                if (!int.TryParse(seriesSegment, out var seriesId))
+                if (!fileInfo.Name.TryGetAttributeValue("shoko-series", out var seriesId) || !int.TryParse(seriesId, out _))
                     return null;
 
                 return new TvSeries()
@@ -644,11 +643,10 @@ public class ShokoResolveManager
                 var items = FileSystem.GetDirectories(vfsPath)
                     .AsParallel()
                     .SelectMany(dirInfo => {
-                        var seriesSegment = dirInfo.Name.GetAttributeValue("shoko-series");
-                        if (!int.TryParse(seriesSegment, out var seriesId))
+                        if (!dirInfo.Name.TryGetAttributeValue("shoko-series", out var seriesId) || !int.TryParse(seriesId, out _))
                             return Array.Empty<BaseItem>();
 
-                        var season = ApiManager.GetSeasonInfoForSeries(seriesId.ToString())
+                        var season = ApiManager.GetSeasonInfoForSeries(seriesId)
                             .ConfigureAwait(false)
                             .GetAwaiter()
                             .GetResult();
@@ -659,12 +657,12 @@ public class ShokoResolveManager
                             return FileSystem.GetFiles(dirInfo.FullName)
                                 .AsParallel()
                                 .Select(fileInfo => {
-                                    if (!int.TryParse(fileInfo.Name.GetAttributeValue("shoko-file"), out var fileId))
+                                    if (!fileInfo.Name.TryGetAttributeValue("shoko-file", out var fileId) || !int.TryParse(fileId, out _))
                                         return null;
 
                                     // This will hopefully just re-use the pre-cached entries from the cache, but it may
                                     // also get it from remote if the cache was emptied for whatever reason.
-                                    var file = ApiManager.GetFileInfo(fileId.ToString(), seriesId.ToString())
+                                    var file = ApiManager.GetFileInfo(fileId, seriesId)
                                         .ConfigureAwait(false)
                                         .GetAwaiter()
                                         .GetResult();
