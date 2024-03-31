@@ -5,12 +5,10 @@ A Jellyfin plugin to integrate [Jellyfin](https://jellyfin.org/docs/) with
 
 ## Read this before installing
 
-**This plugin requires that you have already set up and are using Shoko
-Server**, and that the directories/folders you intend to use in Jellyfin are
-**fully indexed** (and optionally managed) by Shoko Server. **Otherwise, the
-plugin won't be able to function properly**, meaning, the plugin won't be able
-to any find metadata about any entries that are not indexed by Shoko Server
-since there is no metadata to find.
+**This plugin requires that you have already set up and are using Shoko Server**,
+and that the files you intend to include in Jellyfin are **indexed** (and
+optionally managed) by Shoko Server. **Otherwise, the plugin won't be able to
+provide metadata for your files**, since there is no metadata to find for them.
 
 ### What Is Shoko?
 
