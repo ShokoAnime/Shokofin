@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.63",
+                "changelog": "misc: try adding icon and color to discord embeds\n\n- First attempt at adding color (will word) and an icon (not so sure) to\n  discord embeds.\n\nmisc: advertise support for movie trailers\n\n- Advertise our support for local movie trailers\u00b9. Finally I can close #10.\n\n\u00b9 _As long as the VFS is used._\n[skip ci]",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.63/shoko_3.0.1.63.zip",
+                "checksum": "7d24b26f8a7601b12b46be01416b0992",
+                "timestamp": "2024-03-31T00:42:11Z"
+            },
+            {
                 "version": "3.0.1.62",
                 "changelog": "refactor: throw if unresolved\n\n- Log and re-throw the error if we fail while resolving one or more base\n  items.\n\nfeat: impl. file path generator\n\n- Switch from getting all the file at once to using a generator that\n  pre-fetches the next 10 pages. This changes shaved off ~10s (from 51s\n  to 39s) on my small test library, but didn't affect the overall\n  performance of the full library scan on my full library. This change\n  in essense minimises the risk of getting all the files at onces timing\n  out and also allows the rest of the symbolic link generation to start\n  earlier.\n\n- Don't check the file system if the file exists every time we iterate\n  the generator. Instead use the list of all known paths we created\n  earlier by converting it to a set and just checking the set. This\n  helps a lot when you're accessing the files over the network.\n\n- Add better logging for when we're generating symbolic links.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.59/shoko_3.0.1.59.zip",
                 "checksum": "e5e2bfba77cf5414b774bdec246be68d",
                 "timestamp": "2024-03-29T21:30:32Z"
-            },
-            {
-                "version": "3.0.1.58",
-                "changelog": "refactor: overdose on `.ConfigureAwait(false)`\n\n- Use `.ConfigureAwait(false)` where-ever we can. It sped up\n  the discovery phase by 30 seconds over multiple runs, so I\n  think it should be okay to commit this now.\n\nmisc: better tracking of subtitle files\n\n- Add better tracking of the link generation for subtitle files.\n\nmisc: change default cache expire\n\n- change the cache expire time from 1h30m to 2h30m to\n  better accomodate a typical initial scan based on my testing.\n\nfix: fix vfs link creation\n\n- fix the faulty behaviour of alternatingly skipping and creating\n  symlinks because of an accidental early return.\n\nmisc: add changelog to manifest releases\n\n[skip ci]\n\nmisc: add changelog to GH pre-releases\n\n[skip ci]",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.58/shoko_3.0.1.58.zip",
-                "checksum": "1c32f315eac5dd815346c49776c07c24",
-                "timestamp": "2024-03-29T11:19:48Z"
             }
         ]
     }
