@@ -1,5 +1,6 @@
 using MediaBrowser.Model.Plugins;
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Shokofin.API.Models;
 
@@ -88,6 +89,8 @@ public class PluginConfiguration : BasePluginConfiguration
 
     public UserConfiguration[] UserList { get; set; }
 
+    public List<MediaFolderConfiguration> MediaFolders { get; set; }
+
     public string[] IgnoredFolders { get; set; }
 
     public bool? LibraryFilteringMode { get; set; }
@@ -139,6 +142,7 @@ public class PluginConfiguration : BasePluginConfiguration
         CollectionGrouping = CollectionCreationType.None;
         MovieOrdering = OrderType.Default;
         UserList = Array.Empty<UserConfiguration>();
+        MediaFolders = new();
         IgnoredFolders = new [] { ".streams", "@recently-snapshot" };
         LibraryFilteringMode = null;
         EXPERIMENTAL_AutoMergeVersions = false;

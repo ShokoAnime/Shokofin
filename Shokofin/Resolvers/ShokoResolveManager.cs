@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Emby.Naming.Common;
@@ -19,6 +18,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Models;
+using Shokofin.Configuration;
 using Shokofin.Utils;
 
 using File = System.IO.File;
@@ -101,6 +101,18 @@ public class ShokoResolveManager
         var root = LibraryManager.RootFolder;
         if (e.Item != null && root != null && e.Item != root && e.Item is Folder folder && folder.ParentId == Guid.Empty  && !string.IsNullOrEmpty(folder.Path) && !folder.Path.StartsWith(root.Path)) {
             DataCache.Remove(folder.Id.ToString());
+            var mediaFolderConfig = Plugin.Instance.Configuration.MediaFolders.FirstOrDefault(c => c.MediaFolderId == folder.Id);
+            if (mediaFolderConfig != null)
+            {
+                Logger.LogDebug(
+                    "Removing stored configuration for folder at {Path} (ImportFolder={ImportFolderId},RelativePath={RelativePath})",
+                    folder.Path,
+                    mediaFolderConfig.ImportFolderId,
+                    mediaFolderConfig.ImportFolderRelativePath
+                );
+                Plugin.Instance.Configuration.MediaFolders.Remove(mediaFolderConfig);
+                Plugin.Instance.SaveConfiguration();
+            }
             var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(folder);
             if (Directory.Exists(vfsPath)) {
                 Logger.LogInformation("Removing VFS directory for folder at {Path}", folder.Path);
@@ -112,6 +124,75 @@ public class ShokoResolveManager
 
     #endregion
 
+    #region Media Folder Mapping
+
+    public async Task<MediaFolderConfiguration> GetOrCreateConfigurationForMediaFolder(Folder mediaFolder)
+    {
+        var config = Plugin.Instance.Configuration;
+        var mediaFolderConfig = config.MediaFolders.FirstOrDefault(c => c.MediaFolderId == mediaFolder.Id);
+        if (mediaFolderConfig != null)
+            return mediaFolderConfig;
+
+        // Check if we should introduce the VFS for the media folder.
+        mediaFolderConfig = new() { MediaFolderId = mediaFolder.Id };
+
+        var start = DateTime.UtcNow;
+        var attempts = 0;
+        var samplePaths = FileSystem.GetFilePaths(mediaFolder.Path, true)
+            .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+            .Take(100)
+            .ToList();
+
+        Logger.LogDebug("Asking remote server if it knows any of the {Count} sampled files in {Path}.", samplePaths.Count > 100 ? 100 : samplePaths.Count, mediaFolder.Path);
+        foreach (var path in samplePaths) {
+            attempts++;
+            var partialPath = path[mediaFolder.Path.Length..];
+            var files = await ApiClient.GetFileByPath(partialPath).ConfigureAwait(false);
+            var file = files.FirstOrDefault();
+            if (file == null)
+                continue;
+
+            var fileId = file.Id.ToString();
+            var fileLocations = file.Locations
+                .Where(location => location.Path.EndsWith(partialPath))
+                .ToList();
+            if (fileLocations.Count == 0)
+                continue;
+
+            var fileLocation = fileLocations[0];
+            mediaFolderConfig.ImportFolderId = fileLocation.ImportFolderId;
+            mediaFolderConfig.ImportFolderRelativePath = fileLocation.Path[..^partialPath.Length];
+            break;
+        }
+
+        // Store and log the result.
+        config.MediaFolders.Add(mediaFolderConfig);
+        Plugin.Instance.SaveConfiguration(config);
+        if (mediaFolderConfig.IsMapped) {
+            Logger.LogInformation(
+                "Found a match for media folder at {Path} in {TimeSpan} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path},Attempts={Attempts})",
+                mediaFolder.Path,
+                DateTime.UtcNow - start,
+                mediaFolderConfig.ImportFolderId,
+                mediaFolderConfig.ImportFolderRelativePath,
+                mediaFolder.Path,
+                attempts
+            );
+        }
+        else {
+            Logger.LogWarning(
+                "Failed to find a match for media folder at {Path} after {Amount} attempts in {TimeSpan}.",
+                mediaFolder.Path,
+                attempts, 
+                DateTime.UtcNow - start
+            );
+        }
+
+        return mediaFolderConfig;
+    }
+
+    #endregion
+
     #region Generate Structure
 
     private async Task<string?> GenerateStructureForFolder(Folder mediaFolder, string folderPath)
@@ -119,74 +200,31 @@ public class ShokoResolveManager
         // Return early if we've already generated the structure from the import folder itself.
         if (DataCache.TryGetValue<string?>(mediaFolder.Path, out var vfsPath))
             return vfsPath;
+        return await DataCache.GetOrCreateAsync(
+            folderPath,
+            async (_) => {
+                var mediaConfig = await GetOrCreateConfigurationForMediaFolder(mediaFolder);
+                if (!mediaConfig.IsMapped)
+                    return null;
 
-        return await DataCache.GetOrCreateAsync(folderPath, async (cachedEntry) => {
-            Logger.LogInformation("Looking for match for folder at {Path}.", folderPath);
+                // Check if we should introduce the VFS for the media folder.
+                var start = DateTime.UtcNow;
+                var allPaths = FileSystem.GetFilePaths(folderPath, true)
+                    .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+                    .ToHashSet();
+                Logger.LogDebug("Found {FileCount} files in folder at {Path} in {TimeSpan}.", allPaths.Count, folderPath, DateTime.UtcNow - start);
 
-            // Check if we should introduce the VFS for the media folder.
-            var start = DateTime.UtcNow;
-            var allPaths = FileSystem.GetFilePaths(folderPath, true)
-                .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
-                .ToHashSet();
+                var relativeFolderPath = mediaConfig.ImportFolderRelativePath + folderPath[mediaFolder.Path.Length..];
+                vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
+                var allFiles = GetImportFolderFiles(mediaConfig.ImportFolderId, relativeFolderPath, folderPath, allPaths);
+                await GenerateSymbolicLinks(mediaFolder, allFiles).ConfigureAwait(false);
 
-            Logger.LogDebug("Found {FileCount} files in {Path} in {TimeSpan}.", allPaths.Count, folderPath, DateTime.UtcNow - start);
-            Logger.LogDebug("Asking remote server if it knows any of the {Count} sampled files in {Path}.", allPaths.Count > 100 ? 100 : allPaths.Count, folderPath);
-            start = DateTime.UtcNow;
-
-            int importFolderId = 0;
-            var attempts = 0;
-            string importFolderSubPath = string.Empty;
-            foreach (var path in allPaths.Take(100)) {
-                attempts++;
-                var partialPath = path[mediaFolder.Path.Length..];
-                var partialFolderPath = path[folderPath.Length..];
-                var files = await ApiClient.GetFileByPath(partialPath).ConfigureAwait(false);
-                var file = files.FirstOrDefault();
-                if (file == null)
-                    continue;
-
-                var fileId = file.Id.ToString();
-                var fileLocations = file.Locations
-                    .Where(location => location.Path.EndsWith(partialFolderPath))
-                    .ToList();
-                if (fileLocations.Count == 0)
-                    continue;
-
-                var fileLocation = fileLocations[0];
-                importFolderId = fileLocation.ImportFolderId;
-                importFolderSubPath = fileLocation.Path[..^partialFolderPath.Length];
-                break;
+                return vfsPath;
+            },
+            new() {
+                AbsoluteExpirationRelativeToNow = DefaultTTL,
             }
-
-            if (importFolderId == 0) {
-                Logger.LogWarning(
-                    "Failed to find a match for folder at {Path} after {Amount} attempts in {TimeSpan}.",
-                    folderPath,
-                    attempts, 
-                    DateTime.UtcNow - start
-                );
-
-                cachedEntry.AbsoluteExpirationRelativeToNow = DefaultTTL;
-                return null;
-            }
-
-            Logger.LogInformation(
-                "Found a match for folder at {Path} in {TimeSpan} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path},Attempts={Attempts})",
-                folderPath,
-                DateTime.UtcNow - start,
-                importFolderId,
-                importFolderSubPath,
-                mediaFolder.Path,
-                attempts
-            );
-
-            vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
-            var allFiles = GetImportFolderFiles(importFolderId, importFolderSubPath, folderPath, allPaths);
-            await GenerateSymbolicLinks(mediaFolder, allFiles).ConfigureAwait(false);
-
-            cachedEntry.AbsoluteExpirationRelativeToNow = DefaultTTL;
-            return vfsPath;
-        }).ConfigureAwait(false);
+        ).ConfigureAwait(false);
     }
 
     private IEnumerable<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)> GetImportFolderFiles(int importFolderId, string importFolderSubPath, string mediaFolderPath, ISet<string> fileSet)
@@ -486,18 +524,21 @@ public class ShokoResolveManager
 
     public async Task<bool> ShouldFilterItem(Folder? parent, FileSystemMetadata fileInfo)
     {
+        // Check if the parent is not made yet, or the file info is missing.
         if (parent == null || fileInfo == null)
             return false;
 
+        // Check if the root is not made yet. This should **never** be false at
+        // this point in time, but if it is, then bail.
         var root = LibraryManager.RootFolder;
-        if (root == null || parent == root || parent.ParentId == root.Id)
+        if (root == null || parent.Id == root.Id)
+            return false;
+
+        // Assume anything within the VFS is already okay.
+        if (fileInfo.FullName.StartsWith(Plugin.Instance.VirtualRoot))
             return false;
 
         try {
-            // Assume anything within the VFS is already okay.
-            if (fileInfo.FullName.StartsWith(Plugin.Instance.VirtualRoot))
-                return false;
-
             // Enable the scanner if we selected to use the Shoko provider for any metadata type on the current root folder.
             if (!Lookup.IsEnabledForItem(parent, out var isSoleProvider))
                 return false;
@@ -515,23 +556,33 @@ public class ShokoResolveManager
             var fullPath = fileInfo.FullName;
             var (mediaFolder, partialPath) = ApiManager.FindMediaFolder(fullPath, parent, root);
 
+            // Ignore any media folders that aren't mapped to shoko.
+            var mediaFolderConfig = await GetOrCreateConfigurationForMediaFolder(mediaFolder);
+            if (!mediaFolderConfig.IsMapped) {
+                Logger.LogDebug("Skipped media folder for path {Path} (MediaFolder={MediaFolderId})", fileInfo.FullName, mediaFolderConfig.MediaFolderId);
+                return false;
+            }
+
+            // Abort now if the VFS is enabled, since it will take care of moving
+            // from the physical library to the "virtual" library.
+            if (parent.ParentId == root.Id && Plugin.Instance.Configuration.VirtualFileSystem)
+                return false;
+
+            // Scan the 
             var shouldIgnore = Plugin.Instance.Configuration.LibraryFilteringMode ?? Plugin.Instance.Configuration.VirtualFileSystem || isSoleProvider;
             var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
             if (fileInfo.IsDirectory)
-                return await ScanDirectory(partialPath, fullPath, collectionType, shouldIgnore).ConfigureAwait(false);
+                return await ShouldFilterDirectory(partialPath, fullPath, collectionType, shouldIgnore).ConfigureAwait(false);
             else
-                return await ScanFile(partialPath, fullPath, shouldIgnore).ConfigureAwait(false);
+                return await ShouldFilterFile(partialPath, fullPath, shouldIgnore).ConfigureAwait(false);
         }
         catch (Exception ex) {
-            if (!(ex is System.Net.Http.HttpRequestException && ex.Message.Contains("Connection refused")))
-            {
-                Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
-            }
-            return false;
+            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            throw;
         }
     }
 
-    private async Task<bool> ScanDirectory(string partialPath, string fullPath, string? collectionType, bool shouldIgnore)
+    private async Task<bool> ShouldFilterDirectory(string partialPath, string fullPath, string? collectionType, bool shouldIgnore)
     {
         var season = await ApiManager.GetSeasonInfoByPath(fullPath).ConfigureAwait(false);
 
@@ -588,7 +639,7 @@ public class ShokoResolveManager
         return false;
     }
 
-    private async Task<bool> ScanFile(string partialPath, string fullPath, bool shouldIgnore)
+    private async Task<bool> ShouldFilterFile(string partialPath, string fullPath, bool shouldIgnore)
     {
         var (file, season, _) = await ApiManager.GetFileInfoByPath(fullPath).ConfigureAwait(false);
 
@@ -663,10 +714,7 @@ public class ShokoResolveManager
             return null;
         }
         catch (Exception ex) {
-            if (!(ex is System.Net.Http.HttpRequestException && ex.Message.Contains("Connection refused")))
-            {
-                Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
-            }
+            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             throw;
         }
     }
@@ -760,10 +808,7 @@ public class ShokoResolveManager
             return null;
         }
         catch (Exception ex) {
-            if (!(ex is System.Net.Http.HttpRequestException && ex.Message.Contains("Connection refused")))
-            {
-                Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
-            }
+            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             throw;
         }
     }
