@@ -445,44 +445,45 @@ public class ShokoAPIManager : IDisposable
 
     private static readonly EpisodeType[] EpisodePickOrder = { EpisodeType.Special, EpisodeType.Normal, EpisodeType.Other };
 
-    private async Task<FileInfo> CreateFileInfo(File file, string fileId, string seriesId)
-    {
-        var cacheKey = $"file:{fileId}:{seriesId}";
-        if (DataCache.TryGetValue<FileInfo>(cacheKey, out var fileInfo))
-            return fileInfo;
+    private Task<FileInfo> CreateFileInfo(File file, string fileId, string seriesId)
+        => DataCache.GetOrCreateAsync(
+            $"file:{fileId}:{seriesId}",
+            async (_) => {
+                Logger.LogTrace("Creating info object for file. (File={FileId},Series={SeriesId})", fileId, seriesId);
 
-        Logger.LogTrace("Creating info object for file. (File={FileId},Series={SeriesId})", fileId, seriesId);
+                // Find the cross-references for the selected series.
+                var seriesXRef = file.CrossReferences.FirstOrDefault(xref => xref.Series.Shoko.ToString() == seriesId) ??
+                    throw new Exception($"Unable to find any cross-references for the specified series for the file. (File={fileId},Series={seriesId})");
 
-        // Find the cross-references for the selected series.
-        var seriesXRef = file.CrossReferences.FirstOrDefault(xref => xref.Series.Shoko.ToString() == seriesId) ??
-            throw new Exception($"Unable to find any cross-references for the specified series for the file. (File={fileId},Series={seriesId})");
+                // Find a list of the episode info for each episode linked to the file for the series.
+                var episodeList = new List<EpisodeInfo>();
+                foreach (var episodeXRef in seriesXRef.Episodes) {
+                    var episodeId = episodeXRef.Shoko.ToString();
+                    var episodeInfo = await GetEpisodeInfo(episodeId).ConfigureAwait(false) ??
+                        throw new Exception($"Unable to find episode cross-reference for the specified series and episode for the file. (File={fileId},Episode={episodeId},Series={seriesId})");
+                    if (episodeInfo.Shoko.IsHidden) {
+                        Logger.LogDebug("Skipped hidden episode linked to file. (File={FileId},Episode={EpisodeId},Series={SeriesId})", fileId, episodeId, seriesId);
+                        continue;
+                    }
+                    episodeList.Add(episodeInfo);
+                }
 
-        // Find a list of the episode info for each episode linked to the file for the series.
-        var episodeList = new List<EpisodeInfo>();
-        foreach (var episodeXRef in seriesXRef.Episodes) {
-            var episodeId = episodeXRef.Shoko.ToString();
-            var episodeInfo = await GetEpisodeInfo(episodeId).ConfigureAwait(false) ??
-                throw new Exception($"Unable to find episode cross-reference for the specified series and episode for the file. (File={fileId},Episode={episodeId},Series={seriesId})");
-            if (episodeInfo.Shoko.IsHidden) {
-                Logger.LogDebug("Skipped hidden episode linked to file. (File={FileId},Episode={EpisodeId},Series={SeriesId})", fileId, episodeId, seriesId);
-                continue;
+                // Group and order the episodes.
+                var groupedEpisodeLists = episodeList
+                    .GroupBy(episode => episode.AniDB.Type)
+                    .OrderByDescending(a => Array.IndexOf(EpisodePickOrder, a.Key))
+                    .Select(epList => epList.OrderBy(episode => episode.AniDB.EpisodeNumber).ToList())
+                    .ToList();
+
+                var fileInfo = new FileInfo(file, groupedEpisodeLists, seriesId);
+
+                FileAndSeriesIdToEpisodeIdDictionary[$"{fileId}:{seriesId}"] = episodeList.Select(episode => episode.Id).ToList();
+                return fileInfo;
+            },
+            new() {
+                AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
             }
-            episodeList.Add(episodeInfo);
-        }
-
-        // Group and order the episodes.
-        var groupedEpisodeLists = episodeList
-            .GroupBy(episode => episode.AniDB.Type)
-            .OrderByDescending(a => Array.IndexOf(EpisodePickOrder, a.Key))
-            .Select(epList => epList.OrderBy(episode => episode.AniDB.EpisodeNumber).ToList())
-            .ToList();
-
-        fileInfo = new FileInfo(file, groupedEpisodeLists, seriesId);
-
-        DataCache.Set<FileInfo>(cacheKey, fileInfo, DefaultTimeSpan);
-        FileAndSeriesIdToEpisodeIdDictionary[$"{fileId}:{seriesId}"] = episodeList.Select(episode => episode.Id).ToList();
-        return fileInfo;
-    }
+        );
 
     public bool TryGetFileIdForPath(string path, out string? fileId)
     {
