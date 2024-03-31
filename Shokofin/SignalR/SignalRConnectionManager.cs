@@ -14,7 +14,7 @@ using Shokofin.SignalR.Models;
 #nullable enable
 namespace Shokofin.SignalR;
 
-class SignalRConnectionManager
+public class SignalRConnectionManager : IDisposable
 {
     private const string HubUrl = "/signalr/aggregate?feeds=shoko";
 
@@ -43,6 +43,7 @@ class SignalRConnectionManager
     public void Dispose()
     {
         Plugin.Instance.ConfigurationChanged -= OnConfigurationChanged;
+        Disconnect();
     }
 
     #region Connection
@@ -53,7 +54,7 @@ class SignalRConnectionManager
             return;
 
         var builder = new HubConnectionBuilder()
-            .WithUrl(config + HubUrl, connectionOptions => 
+            .WithUrl(config.Host + HubUrl, connectionOptions => 
                 connectionOptions.AccessTokenProvider = () => Task.FromResult<string?>(config.ApiKey)
             )
             .AddJsonProtocol();
@@ -83,6 +84,8 @@ class SignalRConnectionManager
 
         try {
             await Connection.StartAsync();
+
+            Logger.LogInformation("Connected to Shoko Server.");
         }
         catch {
             Disconnect();
