@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Shokofin.API.Info;
 using Shokofin.API.Models;
+using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
 using Path = System.IO.Path;
@@ -346,9 +347,9 @@ public class ShokoAPIManager : IDisposable
         // Fast-path for VFS.
         if (path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar)) {
             var fileName = Path.GetFileNameWithoutExtension(path);
-            if (!fileName.TryGetAttributeValue("shoko-series", out var sI) || !int.TryParse(sI, out _))
+            if (!fileName.TryGetAttributeValue(ShokoSeriesId.Name, out var sI) || !int.TryParse(sI, out _))
                 return (null, null, null);
-            if (!fileName.TryGetAttributeValue("shoko-file", out var fI) || !int.TryParse(fI, out _))
+            if (!fileName.TryGetAttributeValue(ShokoFileId.Name, out var fI) || !int.TryParse(fI, out _))
                 return (null, null, null);
 
             var fileInfo = await GetFileInfo(fI, sI).ConfigureAwait(false);
@@ -685,7 +686,7 @@ public class ShokoAPIManager : IDisposable
 
         // Fast-path for VFS.
         if (path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar)) {
-            if (!Path.GetFileName(path).TryGetAttributeValue("shoko-series", out seriesId) || !int.TryParse(seriesId, out _))
+            if (!Path.GetFileName(path).TryGetAttributeValue(ShokoSeriesId.Name, out seriesId) || !int.TryParse(seriesId, out _))
                 return null;
 
             PathToSeriesIdDictionary[path] = seriesId;

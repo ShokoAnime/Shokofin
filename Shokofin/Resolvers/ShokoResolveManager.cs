@@ -19,6 +19,7 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Models;
 using Shokofin.Configuration;
+using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
 using File = System.IO.File;
@@ -452,26 +453,26 @@ public class ShokoResolveManager
         if (isMovieSeason && collectionType != CollectionType.TvShows) {
             if (!string.IsNullOrEmpty(extrasFolder)) {
                 foreach (var episodeInfo in season.EpisodeList)
-                    folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}] [shoko-episode-{episodeInfo.Id}]", extrasFolder));
+                    folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}] [{ShokoEpisodeId.Name}={episodeInfo.Id}]", extrasFolder));
             }
             else {
-                folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}] [shoko-episode-{episode.Id}]"));
+                folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}] [{ShokoEpisodeId.Name}={episode.Id}]"));
                 episodeName = "Movie";
             }
         }
         else {
             var seasonName = $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}";
             if (!string.IsNullOrEmpty(extrasFolder)) {
-                folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}]", extrasFolder));
-                folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}]", seasonName, extrasFolder));
+                folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}]", extrasFolder));
+                folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}]", seasonName, extrasFolder));
             }
             else {
-                folders.Add(Path.Combine(vfsPath, $"{showName} [shoko-series-{show.Id}]", seasonName));
+                folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}]", seasonName));
                 episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber}";
             }
         }
 
-        var fileName = $"{episodeName} [shoko-series-{seriesId}] [shoko-file-{fileId}]{fileNameSuffic}{Path.GetExtension(sourceLocation)}";
+        var fileName = $"{episodeName} [{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileId}]{fileNameSuffic}{Path.GetExtension(sourceLocation)}";
         var symbolicLinks = folders
             .Select(folderPath => Path.Combine(folderPath, fileName))
             .ToArray();
@@ -703,7 +704,7 @@ public class ShokoResolveManager
                 return null;
 
             if (parent.Id == mediaFolder.Id && fileInfo.IsDirectory) {
-                if (!fileInfo.Name.TryGetAttributeValue("shoko-series", out var seriesId) || !int.TryParse(seriesId, out _))
+                if (!fileInfo.Name.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
                     return null;
 
                 return new TvSeries()
@@ -748,7 +749,7 @@ public class ShokoResolveManager
                 var items = FileSystem.GetDirectories(vfsPath)
                     .AsParallel()
                     .SelectMany(dirInfo => {
-                        if (!dirInfo.Name.TryGetAttributeValue("shoko-series", out var seriesId) || !int.TryParse(seriesId, out _))
+                        if (!dirInfo.Name.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
                             return Array.Empty<BaseItem>();
 
                         var season = ApiManager.GetSeasonInfoForSeries(seriesId)
@@ -762,7 +763,7 @@ public class ShokoResolveManager
                             return FileSystem.GetFiles(dirInfo.FullName)
                                 .AsParallel()
                                 .Select(fileInfo => {
-                                    if (!fileInfo.Name.TryGetAttributeValue("shoko-file", out var fileId) || !int.TryParse(fileId, out _))
+                                    if (!fileInfo.Name.TryGetAttributeValue(ShokoFileId.Name, out var fileId) || !int.TryParse(fileId, out _))
                                         return null;
 
                                     // This will hopefully just re-use the pre-cached entries from the cache, but it may
