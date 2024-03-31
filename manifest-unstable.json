@@ -2,12 +2,20 @@
     {
         "guid": "5216ccbf-d24a-4eb3-8a7e-7da4230b7052",
         "name": "Shoko",
-        "description": "A plugin to provide metadata from Shoko Server for your locally organized anime library in Jellyfin.\n",
+        "description": "A Jellyfin plugin to integrate [Jellyfin](https://jellyfin.org/docs/) with [Shoko Server](https://shokoanime.com/downloads/shoko-server/).\n## Read this before installing\n**This plugin requires that you have already set up and are using Shoko Server**, and that the files you intend to include in Jellyfin are **indexed** (and optionally managed) by Shoko Server. **Otherwise, the plugin won't be able to provide metadata for your files**, since there is no metadata to find for them.\n",
         "overview": "Manage your anime from Jellyfin using metadata from Shoko",
-        "owner": "shokoanime",
+        "owner": "ShokoAnime",
         "category": "Metadata",
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
+            {
+                "version": "3.0.1.66",
+                "changelog": "fix: fix extras placement for movies/shows\n\n- Fix the incorrect placement of some extras in shows/seasons/movies.\n\nrefactor: save media folder mappings\n\n- Store a which import folder each media folder is mapped to. This wil\n  be used now to save requests needed to find the mapping, and in the\n  future by the SignalR file event stream to know which files to update.\n\n- Throw if we're unable to filter an item, instead of gracefully\n  returning early. This will prevent accidentail inclusions in the\n  library at the expense of aborting a library scan if something\n  goes awry.\n\nfix: fix ignored sub title removal\n\nmisc: update read-me file for the project\nand the plugin repostory in jellyfin. the updated read-me will only be\nvisible on the unstable repository until the next stable release though.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.66/shoko_3.0.1.66.zip",
+                "checksum": "5f7173d0dae94f4329d64f9f50eff9a5",
+                "timestamp": "2024-03-31T05:46:40Z"
+            },
             {
                 "version": "3.0.1.65",
                 "changelog": "misc: change title format\n\n- Changed the title format to include the project name first,\n  followed by the build type released.",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.62/shoko_3.0.1.62.zip",
                 "checksum": "abacc3b06a0498bc24362816a793f301",
                 "timestamp": "2024-03-30T05:31:33Z"
-            },
-            {
-                "version": "3.0.1.61",
-                "changelog": "cleanup: prittify get attribute value\n\n- Prittified how we get the attribute value.\n\nmisc: update logo\n\n- mascot accredited to @Queuecumbr\n\n- image accredited to @ElementalCrisis",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.61/shoko_3.0.1.61.zip",
-                "checksum": "9ad292bd6812e255ef90cea787c4d743",
-                "timestamp": "2024-03-30T01:20:42Z"
             }
         ]
     }
