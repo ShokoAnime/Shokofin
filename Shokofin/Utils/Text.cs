@@ -61,7 +61,7 @@ public static class Text
         '⦎',   // right angle bracket
     };
 
-    private static HashSet<string> IgnoredSubTitles = new() {
+    private static readonly HashSet<string> IgnoredSubTitles = new(StringComparer.InvariantCultureIgnoreCase) {
         "Complete Movie",
         "OVA",
     };
@@ -326,7 +326,7 @@ public static class Text
                 var mainTitle = getSeriesTitle()?.Trim();
                 var subTitle = getEpisodeTitle()?.Trim();
                 // Include sub-title if it does not strictly equals any ignored sub titles.
-                if (!string.IsNullOrWhiteSpace(subTitle) && !IgnoredSubTitles.Contains(mainTitle))
+                if (!string.IsNullOrWhiteSpace(subTitle) && !IgnoredSubTitles.Contains(subTitle))
                     return $"{mainTitle}: {subTitle}";
                 return mainTitle;
             }
