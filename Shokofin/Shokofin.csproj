@@ -2,12 +2,25 @@
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <OutputType>Library</OutputType>
+        <SignalRVersion>6.0.28</SignalRVersion>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Jellyfin.Controller" Version="10.8.0" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="$(SignalRVersion)" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
     </ItemGroup>
+
+    <Target Name="CopySignalRDLLsToOutputPath" AfterTargets="Build">
+        <ItemGroup>
+            <BasePackage Include="$(NuGetPackageRoot)\microsoft.aspnetcore.signalr.client\$(SignalRVersion)\lib\$(TargetFramework)\Microsoft.AspNetCore.SignalR.Client.dll" />
+            <CorePackage Include="$(NuGetPackageRoot)\microsoft.aspnetcore.signalr.client.core\$(SignalRVersion)\lib\$(TargetFramework)\Microsoft.AspNetCore.SignalR.Client.Core.dll" />
+            <HttpPackage Include="$(NuGetPackageRoot)\microsoft.aspnetcore.http.connections.client\$(SignalRVersion)\lib\$(TargetFramework)\Microsoft.AspNetCore.Http.Connections.Client.dll" />
+        </ItemGroup>
+        <Copy SourceFiles="@(BasePackage)" DestinationFolder="$(OutputPath)" />
+        <Copy SourceFiles="@(CorePackage)" DestinationFolder="$(OutputPath)" />
+        <Copy SourceFiles="@(HttpPackage)" DestinationFolder="$(OutputPath)" />
+    </Target>
 
     <ItemGroup>
         <None Remove="Configuration\configController.js" />

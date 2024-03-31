@@ -18,4 +18,7 @@ description: >
 category: "Metadata"
 artifacts:
 - "Shokofin.dll"
+- "Microsoft.AspNetCore.SignalR.Client.dll"
+- "Microsoft.AspNetCore.SignalR.Client.Core.dll"
+- "Microsoft.AspNetCore.Http.Connections.Client.dll"
 changelog: ""

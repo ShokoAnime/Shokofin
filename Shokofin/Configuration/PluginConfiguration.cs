@@ -95,6 +95,32 @@ public class PluginConfiguration : BasePluginConfiguration
 
     public bool? LibraryFilteringMode { get; set; }
 
+    #region SignalR
+
+    /// <summary>
+    /// Enable the SignalR events from Shoko.
+    /// </summary>
+    /// <value></value>
+    public bool SignalR_AutoConnectEnabled { get; set; }
+
+    /// <summary>
+    /// Reconnect intervals if the the stream gets disconnected.
+    /// </summary>
+    public List<int> SignalR_AutoReconnectInSeconds { get; set; }
+
+    /// <summary>
+    /// Will automatically refresh entries if metadata is updated in Shoko.
+    /// </summary>
+    public bool SignalR_RefreshEnabled { get; set; }
+
+    /// <summary>
+    /// Will notify Jellyfin about files that have been added/updated/removed
+    /// in shoko.
+    /// </summary>
+    public bool SignalR_FileWatcherEnabled { get; set; }
+
+    #endregion
+
     #region Experimental features
 
     public bool EXPERIMENTAL_AutoMergeVersions { get; set; }
@@ -145,6 +171,10 @@ public class PluginConfiguration : BasePluginConfiguration
         MediaFolders = new();
         IgnoredFolders = new [] { ".streams", "@recently-snapshot" };
         LibraryFilteringMode = null;
+        SignalR_AutoConnectEnabled = false;
+        SignalR_AutoReconnectInSeconds = new() { 0, 2, 10, 30, 60, 120, 300 };
+        SignalR_RefreshEnabled = false;
+        SignalR_FileWatcherEnabled = false;
         EXPERIMENTAL_AutoMergeVersions = false;
         EXPERIMENTAL_SplitThenMergeMovies = true;
         EXPERIMENTAL_SplitThenMergeEpisodes = false;
