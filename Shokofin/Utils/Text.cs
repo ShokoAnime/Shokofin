@@ -149,19 +149,19 @@ public static class Text
         FullTitle = 3,
     }
 
-    public static string GetDescription(ShowInfo show)
+    public static string? GetDescription(ShowInfo show)
         => GetDescription(show.DefaultSeason);
 
-    public static string GetDescription(SeasonInfo season)
+    public static string? GetDescription(SeasonInfo season)
         => GetDescription(season.AniDB.Description, season.TvDB?.Description);
 
-    public static string GetDescription(EpisodeInfo episode)
+    public static string? GetDescription(EpisodeInfo episode)
         => GetDescription(episode.AniDB.Description, episode.TvDB?.Description);
 
-    public static string GetDescription(IEnumerable<EpisodeInfo> episodeList)
+    public static string? GetDescription(IEnumerable<EpisodeInfo> episodeList)
         => JoinText(episodeList.Select(episode => GetDescription(episode)));
 
-    private static string GetDescription(string aniDbDescription, string otherDescription)
+    private static string GetDescription(string aniDbDescription, string? otherDescription)
     {
         string overview;
         switch (Plugin.Instance.Configuration.DescriptionSource) {
@@ -213,16 +213,16 @@ public static class Text
         return summary.Trim();
     }
 
-    public static ( string, string ) GetEpisodeTitles(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string episodeTitle, string metadataLanguage)
+    public static (string?, string?) GetEpisodeTitles(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string episodeTitle, string metadataLanguage)
         => GetTitles(seriesTitles, episodeTitles, null, episodeTitle, DisplayTitleType.SubTitle, metadataLanguage);
 
-    public static ( string, string ) GetSeriesTitles(IEnumerable<Title> seriesTitles, string seriesTitle, string metadataLanguage)
+    public static (string?, string?) GetSeriesTitles(IEnumerable<Title> seriesTitles, string seriesTitle, string metadataLanguage)
         => GetTitles(seriesTitles, null, seriesTitle, null,  DisplayTitleType.MainTitle, metadataLanguage);
 
-    public static ( string, string ) GetMovieTitles(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, string metadataLanguage)
+    public static (string?, string?) GetMovieTitles(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, string metadataLanguage)
         => GetTitles(seriesTitles, episodeTitles, seriesTitle, episodeTitle, DisplayTitleType.FullTitle, metadataLanguage);
 
-    public static ( string, string ) GetTitles(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, DisplayTitleType outputType, string metadataLanguage)
+    public static (string?, string?) GetTitles(IEnumerable<Title>? seriesTitles, IEnumerable<Title>? episodeTitles, string? seriesTitle, string? episodeTitle, DisplayTitleType outputType, string metadataLanguage)
     {
         // Don't process anything if the series titles are not provided.
         if (seriesTitles == null)
@@ -233,17 +233,17 @@ public static class Text
         );
     }
 
-    public static string JoinText(IEnumerable<string> textList)
+    public static string? JoinText(IEnumerable<string?> textList)
     {
         var filteredList = textList
             .Where(title => !string.IsNullOrWhiteSpace(title))
-            .Select(title => title.Trim())
+            .Select(title => title!.Trim())
             // We distinct the list because some episode entries contain the **exact** same description.
             .Distinct()
             .ToList();
 
         if (filteredList.Count == 0)
-            return string.Empty;
+            return null;
 
         var index = 1;
         var outputText = filteredList[0];
@@ -259,19 +259,19 @@ public static class Text
         return outputText;
     }
 
-    public static string GetEpisodeTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string episodeTitle, string metadataLanguage)
+    public static string? GetEpisodeTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string episodeTitle, string metadataLanguage)
         => GetTitle(seriesTitles, episodeTitles, null, episodeTitle, DisplayTitleType.SubTitle, metadataLanguage);
 
-    public static string GetSeriesTitle(IEnumerable<Title> seriesTitles, string seriesTitle, string metadataLanguage)
+    public static string? GetSeriesTitle(IEnumerable<Title> seriesTitles, string seriesTitle, string metadataLanguage)
         => GetTitle(seriesTitles, null, seriesTitle, null, DisplayTitleType.MainTitle, metadataLanguage);
 
-    public static string GetMovieTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, string metadataLanguage)
+    public static string? GetMovieTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, string metadataLanguage)
         => GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, DisplayTitleType.FullTitle, metadataLanguage);
 
-    public static string GetTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, DisplayTitleType outputType, string metadataLanguage)
+    public static string? GetTitle(IEnumerable<Title>? seriesTitles, IEnumerable<Title>? episodeTitles, string? seriesTitle, string? episodeTitle, DisplayTitleType outputType, string metadataLanguage)
         => GetTitle(seriesTitles, episodeTitles, seriesTitle, episodeTitle, Plugin.Instance.Configuration.TitleMainType, outputType, metadataLanguage);
 
-    public static string GetTitle(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, DisplayLanguageType languageType, DisplayTitleType outputType, string displayLanguage)
+    public static string? GetTitle(IEnumerable<Title>? seriesTitles, IEnumerable<Title>? episodeTitles, string? seriesTitle, string? episodeTitle, DisplayLanguageType languageType, DisplayTitleType outputType, string displayLanguage)
     {
         // Don't process anything if the series titles are not provided.
         if (seriesTitles == null)
@@ -289,8 +289,8 @@ public static class Text
             // Display in metadata-preferred language, or fallback to default.
             case DisplayLanguageType.MetadataPreferred: {
                 var allowAny = Plugin.Instance.Configuration.TitleAllowAny;
-                string getSeriesTitle() => GetTitleByTypeAndLanguage(seriesTitles, TitleType.Official, displayLanguage) ?? (allowAny ? GetTitleByLanguages(seriesTitles, displayLanguage) : null) ?? seriesTitle;
-                string getEpisodeTitle() => GetTitleByLanguages(episodeTitles, displayLanguage) ?? episodeTitle;
+                string? getSeriesTitle() => GetTitleByTypeAndLanguage(seriesTitles, TitleType.Official, displayLanguage) ?? (allowAny ? GetTitleByLanguages(seriesTitles, displayLanguage) : null) ?? seriesTitle;
+                string? getEpisodeTitle() => GetTitleByLanguages(episodeTitles, displayLanguage) ?? episodeTitle;
                 var title = ConstructTitle(getSeriesTitle, getEpisodeTitle, outputType);
                 if (string.IsNullOrEmpty(title))
                     goto case DisplayLanguageType.Default;
@@ -299,20 +299,20 @@ public static class Text
             // Display in origin language.
             case DisplayLanguageType.Origin: {
                 var allowAny = Plugin.Instance.Configuration.TitleAllowAny;
-                string getSeriesTitle() => GetTitleByTypeAndLanguage(seriesTitles, TitleType.Official, originLanguages) ?? (allowAny ? GetTitleByLanguages(seriesTitles, originLanguages) : null) ?? seriesTitle;
-                string getEpisodeTitle() => GetTitleByLanguages(episodeTitles, originLanguages) ?? episodeTitle;
+                string? getSeriesTitle() => GetTitleByTypeAndLanguage(seriesTitles, TitleType.Official, originLanguages) ?? (allowAny ? GetTitleByLanguages(seriesTitles, originLanguages) : null) ?? seriesTitle;
+                string? getEpisodeTitle() => GetTitleByLanguages(episodeTitles, originLanguages) ?? episodeTitle;
                 return ConstructTitle(getSeriesTitle, getEpisodeTitle, outputType);
             }
             // Display the main title.
             case DisplayLanguageType.Main: {
-                string getSeriesTitle() => GetTitleByType(seriesTitles, TitleType.Main) ?? seriesTitle;
-                string getEpisodeTitle() => GetTitleByLanguages(episodeTitles, "en", mainTitleLanguage) ?? episodeTitle;
+                string? getSeriesTitle() => GetTitleByType(seriesTitles, TitleType.Main) ?? seriesTitle;
+                string? getEpisodeTitle() => GetTitleByLanguages(episodeTitles, "en", mainTitleLanguage) ?? episodeTitle;
                 return ConstructTitle(getSeriesTitle, getEpisodeTitle, outputType);
             }
         }
     }
 
-    private static string ConstructTitle(Func<string> getSeriesTitle, Func<string> getEpisodeTitle, DisplayTitleType outputType)
+    private static string? ConstructTitle(Func<string?> getSeriesTitle, Func<string?> getEpisodeTitle, DisplayTitleType outputType)
     {
         switch (outputType) {
             // Return series title.
@@ -335,30 +335,30 @@ public static class Text
         }
     }
 
-    public static string GetTitleByType(IEnumerable<Title> titles, TitleType type)
+    public static string? GetTitleByType(IEnumerable<Title> titles, TitleType type)
     {
         if (titles != null) {
-            string title = titles.FirstOrDefault(s => s.Type == type)?.Value;
+            var title = titles.FirstOrDefault(s => s.Type == type)?.Value;
             if (title != null)
                 return title;
         }
         return null;
     }
 
-    public static string GetTitleByTypeAndLanguage(IEnumerable<Title> titles, TitleType type, params string[] langs)
+    public static string? GetTitleByTypeAndLanguage(IEnumerable<Title>? titles, TitleType type, params string[] langs)
     {
         if (titles != null) foreach (string lang in langs) {
-            string title = titles.FirstOrDefault(s => s.LanguageCode == lang && s.Type == type)?.Value;
+            var title = titles.FirstOrDefault(s => s.LanguageCode == lang && s.Type == type)?.Value;
             if (title != null)
                 return title;
         }
         return null;
     }
 
-    public static string GetTitleByLanguages(IEnumerable<Title> titles, params string[] langs)
+    public static string? GetTitleByLanguages(IEnumerable<Title>? titles, params string[] langs)
     {
         if (titles != null) foreach (string lang in langs) {
-            string title = titles.FirstOrDefault(s => lang.Equals(s.LanguageCode, System.StringComparison.OrdinalIgnoreCase))?.Value;
+            var title = titles.FirstOrDefault(s => lang.Equals(s.LanguageCode, System.StringComparison.OrdinalIgnoreCase))?.Value;
             if (title != null)
                 return title;
         }

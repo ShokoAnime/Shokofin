@@ -13,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using System.Linq;
 
-#nullable enable
 namespace Shokofin.Providers;
 
 public class ImageProvider : IRemoteImageProvider

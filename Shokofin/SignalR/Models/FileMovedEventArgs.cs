@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
 using Shokofin.SignalR.Interfaces;
 
-#nullable enable
 namespace Shokofin.SignalR.Models;
 
 public class FileMovedEventArgs : IFileRelocationEventArgs

@@ -1,6 +1,5 @@
 using System;
 
-#nullable enable
 namespace Shokofin.Sync;
 
 /// <summary>

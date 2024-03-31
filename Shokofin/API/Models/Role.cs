@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 
-#nullable enable
 namespace Shokofin.API.Models;
 
 public class Role

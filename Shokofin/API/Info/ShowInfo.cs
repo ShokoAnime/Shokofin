@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API.Models;
 using Shokofin.Utils;
 
-#nullable enable
 namespace Shokofin.API.Info;
 
 public class ShowInfo

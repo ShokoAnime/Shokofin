@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Shokofin.API.Models;
 using Shokofin.Utils;
 
-#nullable enable
 namespace Shokofin.API.Info;
 
 public class CollectionInfo

@@ -1,4 +1,3 @@
-#nullable enable
 namespace Shokofin.API.Models;
 
 public class Group

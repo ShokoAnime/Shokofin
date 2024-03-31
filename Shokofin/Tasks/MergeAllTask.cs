@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using MediaBrowser.Model.Tasks;
 using Shokofin.MergeVersions;
 
-#nullable enable
 namespace Shokofin.Tasks;
 
 /// <summary>

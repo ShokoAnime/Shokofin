@@ -18,7 +18,6 @@ using Shokofin.Configuration;
 
 using UserStats = Shokofin.API.Models.File.UserStats;
 
-#nullable enable
 namespace Shokofin.Sync;
 
 public class UserDataSyncManager

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-#nullable enable
 namespace Shokofin.SignalR.Models;
 
 public class FileMatchedEventArgs : FileEventArgs

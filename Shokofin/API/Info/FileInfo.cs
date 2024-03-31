@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Shokofin.API.Models;
 
-#nullable enable
 namespace Shokofin.API.Info;
 
 public class FileInfo

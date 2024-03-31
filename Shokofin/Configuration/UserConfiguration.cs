@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-#nullable enable
 namespace Shokofin.Configuration;
 
 /// <summary>

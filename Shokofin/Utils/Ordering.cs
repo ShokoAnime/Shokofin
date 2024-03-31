@@ -4,7 +4,6 @@ using Shokofin.API.Models;
 
 using ExtraType = MediaBrowser.Model.Entities.ExtraType;
 
-#nullable enable
 namespace Shokofin.Utils;
 
 public class Ordering

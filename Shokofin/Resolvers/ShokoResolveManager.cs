@@ -25,7 +25,6 @@ using Shokofin.Utils;
 using File = System.IO.File;
 using TvSeries = MediaBrowser.Controller.Entities.TV.Series;
 
-#nullable enable
 namespace Shokofin.Resolvers;
 
 public class ShokoResolveManager

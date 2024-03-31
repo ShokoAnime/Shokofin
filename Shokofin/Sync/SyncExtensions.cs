@@ -3,7 +3,6 @@ using System;
 using MediaBrowser.Controller.Entities;
 using Shokofin.API.Models;
 
-#nullable enable
 namespace Shokofin.Sync;
 
 public static class SyncExtensions

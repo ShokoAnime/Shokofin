@@ -11,7 +11,6 @@ using Shokofin.Resolvers;
 using Shokofin.SignalR.Interfaces;
 using Shokofin.SignalR.Models;
 
-#nullable enable
 namespace Shokofin.SignalR;
 
 public class SignalRConnectionManager : IDisposable

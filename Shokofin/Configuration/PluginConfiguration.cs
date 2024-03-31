@@ -10,7 +10,6 @@ using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
 
-#nullable enable
 namespace Shokofin.Configuration;
 
 public class PluginConfiguration : BasePluginConfiguration

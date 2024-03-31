@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-#nullable enable
 namespace Shokofin.API.Models;
 
 public class Episode

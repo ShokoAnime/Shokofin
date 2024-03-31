@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Models;
 
-#nullable enable
 namespace Shokofin.Web;
 
 /// <summary>

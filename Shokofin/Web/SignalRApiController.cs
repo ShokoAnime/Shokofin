@@ -12,7 +12,6 @@ using Shokofin.API;
 using Shokofin.API.Models;
 using Shokofin.SignalR;
 
-#nullable enable
 namespace Shokofin.Web;
 
 /// <summary>

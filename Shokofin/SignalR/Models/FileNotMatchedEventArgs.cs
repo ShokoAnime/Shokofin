@@ -1,5 +1,4 @@
 
-#nullable enable
 namespace Shokofin.SignalR.Models;
 
 public class FileNotMatchedEventArgs : FileEventArgs

@@ -14,7 +14,6 @@ using Shokofin.API.Info;
 using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
-#nullable enable
 namespace Shokofin.Collections;
 
 public class CollectionManager

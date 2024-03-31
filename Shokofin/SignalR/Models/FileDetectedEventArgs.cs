@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 
-#nullable enable
 namespace Shokofin.SignalR.Models;
 
 public class FileDetectedEventArgs

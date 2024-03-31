@@ -13,7 +13,6 @@ using Shokofin.API;
 using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
-#nullable enable
 namespace Shokofin.Providers;
 
 public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>

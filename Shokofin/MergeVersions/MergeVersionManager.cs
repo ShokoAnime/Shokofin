@@ -13,7 +13,6 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Common.Progress;
 using Shokofin.ExternalIds;
 
-#nullable enable
 namespace Shokofin.MergeVersions;
 
 /// <summary>

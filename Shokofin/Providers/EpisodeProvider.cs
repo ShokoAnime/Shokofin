@@ -17,7 +17,6 @@ using Info = Shokofin.API.Info;
 using SeriesType = Shokofin.API.Models.SeriesType;
 using EpisodeType = Shokofin.API.Models.EpisodeType;
 
-#nullable enable
 namespace Shokofin.Providers;
 
 public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
@@ -98,10 +97,10 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
     private static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage, Season? season, Guid episodeId)
     {
         var config = Plugin.Instance.Configuration;
-        string displayTitle, alternateTitle, description;
+        string? displayTitle, alternateTitle, description;
         if (config.TitleAddForMultipleEpisodes && file != null && file.EpisodeList.Count > 1) {
-            var displayTitles = new List<string>(file.EpisodeList.Count);
-            var alternateTitles = new List<string>(file.EpisodeList.Count);
+            var displayTitles = new List<string?>();
+            var alternateTitles = new List<string?>();
             foreach (var episodeInfo in file.EpisodeList)
             {
                 string defaultEpisodeTitle = episodeInfo.Shoko.Name;

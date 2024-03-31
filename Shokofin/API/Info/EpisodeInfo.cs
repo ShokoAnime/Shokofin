@@ -4,7 +4,6 @@ using Shokofin.Utils;
 
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
 
-#nullable enable
 namespace Shokofin.API.Info;
 
 public class EpisodeInfo

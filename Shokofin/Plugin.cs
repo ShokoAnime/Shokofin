@@ -9,7 +9,6 @@ using MediaBrowser.Model.Serialization;
 using Microsoft.Extensions.Logging;
 using Shokofin.Configuration;
 
-#nullable enable
 namespace Shokofin;
 
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages

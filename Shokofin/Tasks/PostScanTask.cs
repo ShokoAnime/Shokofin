@@ -8,7 +8,6 @@ using Shokofin.Collections;
 using Shokofin.MergeVersions;
 using Shokofin.Resolvers;
 
-#nullable enable
 namespace Shokofin.Tasks;
 
 public class PostScanTask : ILibraryPostScanTask

@@ -14,7 +14,6 @@ using Shokofin.Utils;
 
 using Info = Shokofin.API.Info;
 
-#nullable enable
 namespace Shokofin.Providers;
 
 public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>

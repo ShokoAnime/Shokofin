@@ -14,7 +14,6 @@ using Shokofin.Utils;
 
 using Path = System.IO.Path;
 
-#nullable enable
 namespace Shokofin.API;
 
 public class ShokoAPIManager : IDisposable

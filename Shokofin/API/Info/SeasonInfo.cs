@@ -5,7 +5,6 @@ using Shokofin.API.Models;
 using PersonInfo = MediaBrowser.Controller.Entities.PersonInfo;
 using PersonType = MediaBrowser.Model.Entities.PersonType;
 
-#nullable enable
 namespace Shokofin.API.Info;
 
 public class SeasonInfo

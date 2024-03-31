@@ -4,7 +4,6 @@ using System.Linq;
 using Shokofin.API.Info;
 using Shokofin.API.Models;
 
-#nullable enable
 namespace Shokofin.Utils;
 
 public class SeriesInfoRelationComparer : IComparer<SeasonInfo>

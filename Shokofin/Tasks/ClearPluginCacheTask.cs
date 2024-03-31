@@ -6,7 +6,6 @@ using MediaBrowser.Model.Tasks;
 using Shokofin.API;
 using Shokofin.Resolvers;
 
-#nullable enable
 namespace Shokofin.Tasks;
 
 /// <summary>

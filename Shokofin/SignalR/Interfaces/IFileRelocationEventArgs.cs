@@ -1,5 +1,4 @@
 
-#nullable enable
 namespace Shokofin.SignalR.Interfaces;
 
 public interface IFileRelocationEventArgs

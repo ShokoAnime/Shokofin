@@ -5,7 +5,6 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Controller.Resolvers;
 using MediaBrowser.Model.IO;
 
-#nullable enable
 namespace Shokofin.Resolvers;
 #pragma warning disable CS8766
 

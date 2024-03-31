@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 
-#nullable enable
 namespace Shokofin.Utils;
 
 sealed class GuardedMemoryCache : IDisposable, IMemoryCache

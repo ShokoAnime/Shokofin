@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using MediaBrowser.Model.Tasks;
 using Shokofin.Sync;
 
-#nullable enable
 namespace Shokofin.Tasks;
 
 /// <summary>

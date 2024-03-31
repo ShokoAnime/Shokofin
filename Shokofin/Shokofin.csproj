@@ -3,6 +3,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <OutputType>Library</OutputType>
         <SignalRVersion>6.0.28</SignalRVersion>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>

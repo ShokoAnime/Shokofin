@@ -1,7 +1,6 @@
 using MediaBrowser.Common.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 
-#nullable enable
 namespace Shokofin;
 
 /// <inheritdoc />

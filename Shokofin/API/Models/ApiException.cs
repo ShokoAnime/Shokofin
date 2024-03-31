@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 
-#nullable enable
 namespace Shokofin.API.Models;
 
 [Serializable]

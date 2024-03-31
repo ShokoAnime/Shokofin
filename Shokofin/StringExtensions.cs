@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using MediaBrowser.Common.Providers;
 
-#nullable enable
 namespace Shokofin;
 
 public static class StringExtensions
