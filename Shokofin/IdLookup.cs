@@ -264,7 +264,7 @@ public class IdLookup : IIdLookup
     public bool TryGetEpisodeIdsFor(BaseItem item, out List<string> episodeIds)
     {
         // This will account for virtual episodes and existing episodes
-        if (item.ProviderIds.TryGetValue(ShokoFileId.Name, out var fileId) && ApiManager.TryGetEpisodeIdsForFileId(fileId, out episodeIds)) {
+        if (item.ProviderIds.TryGetValue(ShokoFileId.Name, out var fileId) && item.ProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId) && ApiManager.TryGetEpisodeIdsForFileId(fileId, seriesId, out episodeIds)) {
             return true;
         }
 

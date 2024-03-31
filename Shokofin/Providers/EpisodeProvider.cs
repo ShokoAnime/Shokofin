@@ -228,17 +228,19 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
                 result.IndexNumberEnd = episodeNumberEnd;
         }
 
-        AddProviderIds(result, episodeId: episode.Id, fileId: file?.Id, anidbId: episode.AniDB.Id.ToString());
+        AddProviderIds(result, episodeId: episode.Id, fileId: file?.Id, seriesId: file?.SeriesId, anidbId: episode.AniDB.Id.ToString());
 
         return result;
     }
 
-    private static void AddProviderIds(IHasProviderIds item, string episodeId, string? fileId = null, string? anidbId = null, string? tmdbId = null)
+    private static void AddProviderIds(IHasProviderIds item, string episodeId, string? fileId = null, string? seriesId = null, string? anidbId = null, string? tmdbId = null)
     {
         var config = Plugin.Instance.Configuration;
         item.SetProviderId(ShokoEpisodeId.Name, episodeId);
         if (!string.IsNullOrEmpty(fileId))
             item.SetProviderId(ShokoFileId.Name, fileId);
+        if (!string.IsNullOrEmpty(seriesId))
+            item.SetProviderId(ShokoSeriesId.Name, seriesId);
         if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
             item.SetProviderId("AniDB", anidbId);
         if (config.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")

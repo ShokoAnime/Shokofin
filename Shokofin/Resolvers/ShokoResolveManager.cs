@@ -477,7 +477,7 @@ public class ShokoResolveManager
             .ToArray();
 
         foreach (var symbolicLink in symbolicLinks)
-            ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, episodeIds);
+            ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, file.EpisodeList.Select(episode => episode.Id));
         return (sourceLocation, symbolicLinks);
     }
 

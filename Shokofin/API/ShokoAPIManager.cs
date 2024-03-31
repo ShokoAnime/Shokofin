@@ -46,7 +46,7 @@ public class ShokoAPIManager : IDisposable
 
     private readonly ConcurrentDictionary<string, string> EpisodeIdToSeriesIdDictionary = new();
 
-    private readonly ConcurrentDictionary<string, List<string>> FileIdToEpisodeIdDictionary = new();
+    private readonly ConcurrentDictionary<string, List<string>> FileAndSeriesIdToEpisodeIdDictionary = new();
 
     public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ShokoAPIClient apiClient, ILibraryManager libraryManager)
     {
@@ -153,7 +153,7 @@ public class ShokoAPIManager : IDisposable
         DataCache.Dispose();
         EpisodeIdToEpisodePathDictionary.Clear();
         EpisodeIdToSeriesIdDictionary.Clear();
-        FileIdToEpisodeIdDictionary.Clear();
+        FileAndSeriesIdToEpisodeIdDictionary.Clear();
         lock (MediaFolderListLock) {
             MediaFolderList.Clear();
         }
@@ -480,7 +480,7 @@ public class ShokoAPIManager : IDisposable
         fileInfo = new FileInfo(file, groupedEpisodeLists, seriesId);
 
         DataCache.Set<FileInfo>(cacheKey, fileInfo, DefaultTimeSpan);
-        FileIdToEpisodeIdDictionary.TryAdd(fileId, episodeList.Select(episode => episode.Id).ToList());
+        FileAndSeriesIdToEpisodeIdDictionary[$"{fileId}:{seriesId}"] = episodeList.Select(episode => episode.Id).ToList();
         return fileInfo;
     }
 
@@ -544,13 +544,13 @@ public class ShokoAPIManager : IDisposable
         return PathToEpisodeIdsDictionary.TryGetValue(path, out episodeIds);
     }
 
-    public bool TryGetEpisodeIdsForFileId(string fileId, out List<string>? episodeIds)
+    public bool TryGetEpisodeIdsForFileId(string fileId, string seriesId, out List<string>? episodeIds)
     {
-        if (string.IsNullOrEmpty(fileId)) {
+        if (string.IsNullOrEmpty(fileId) || string.IsNullOrEmpty(seriesId)) {
             episodeIds = null;
             return false;
         }
-        return FileIdToEpisodeIdDictionary.TryGetValue(fileId, out episodeIds);
+        return FileAndSeriesIdToEpisodeIdDictionary.TryGetValue($"{fileId}:{seriesId}", out episodeIds);
     }
 
     public bool TryGetEpisodePathForId(string episodeId, out string? path)

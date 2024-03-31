@@ -12,7 +12,7 @@ public class ShokoSeriesId : IExternalId
     public const string Name = "Shoko Series";
 
     public bool Supports(IHasProviderIds item)
-        => item is Series or Season or Movie;
+        => item is Series or Season or Episode or Movie;
 
     public string ProviderName
         => Name;
