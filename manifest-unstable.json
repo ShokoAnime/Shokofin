@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.71",
+                "changelog": "chore: even more de-duplication of provider ids",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.71/shoko_3.0.1.71.zip",
+                "checksum": "3ec315f2cabb7b679d54dd20ceae9b5a",
+                "timestamp": "2024-03-31T11:31:28Z"
+            },
+            {
                 "version": "3.0.1.70",
                 "changelog": "refactor: convert create file info\n\n- Convert `CreateFileInfo` to the new cache getter pattern\n\nfix: fix episode id lookups\n\n- the episode lookups should had been per file per series, not just per\n  file. now it is.\n\nchore: `\"\"` \u2192\u00a0`string.Empty`\n\nchore: de-duplicate provider ids",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.67/shoko_3.0.1.67.zip",
                 "checksum": "98ffec6ef0101bc2030276f11b08ea14",
                 "timestamp": "2024-03-31T07:29:06Z"
-            },
-            {
-                "version": "3.0.1.66",
-                "changelog": "fix: fix extras placement for movies/shows\n\n- Fix the incorrect placement of some extras in shows/seasons/movies.\n\nrefactor: save media folder mappings\n\n- Store a which import folder each media folder is mapped to. This wil\n  be used now to save requests needed to find the mapping, and in the\n  future by the SignalR file event stream to know which files to update.\n\n- Throw if we're unable to filter an item, instead of gracefully\n  returning early. This will prevent accidentail inclusions in the\n  library at the expense of aborting a library scan if something\n  goes awry.\n\nfix: fix ignored sub title removal\n\nmisc: update read-me file for the project\nand the plugin repostory in jellyfin. the updated read-me will only be\nvisible on the unstable repository until the next stable release though.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.66/shoko_3.0.1.66.zip",
-                "checksum": "5f7173d0dae94f4329d64f9f50eff9a5",
-                "timestamp": "2024-03-31T05:46:40Z"
             }
         ]
     }
