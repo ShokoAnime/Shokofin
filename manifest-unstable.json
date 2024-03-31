@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.67",
+                "changelog": "feat: initial PoC SignalR connection manager\n\n- Add the initial PoC SignalR Connection Manager responsible for\n  reacting to Shoko file, episode, and series update events, if\n  enabled. Currently it only prints debug messages when enabled. And\n  it can only be enabled by manually editing the settings xml.\n\nmisc: change mount of shoko api controller",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.67/shoko_3.0.1.67.zip",
+                "checksum": "98ffec6ef0101bc2030276f11b08ea14",
+                "timestamp": "2024-03-31T07:29:06Z"
+            },
+            {
                 "version": "3.0.1.66",
                 "changelog": "fix: fix extras placement for movies/shows\n\n- Fix the incorrect placement of some extras in shows/seasons/movies.\n\nrefactor: save media folder mappings\n\n- Store a which import folder each media folder is mapped to. This wil\n  be used now to save requests needed to find the mapping, and in the\n  future by the SignalR file event stream to know which files to update.\n\n- Throw if we're unable to filter an item, instead of gracefully\n  returning early. This will prevent accidentail inclusions in the\n  library at the expense of aborting a library scan if something\n  goes awry.\n\nfix: fix ignored sub title removal\n\nmisc: update read-me file for the project\nand the plugin repostory in jellyfin. the updated read-me will only be\nvisible on the unstable repository until the next stable release though.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.63/shoko_3.0.1.63.zip",
                 "checksum": "7d24b26f8a7601b12b46be01416b0992",
                 "timestamp": "2024-03-31T00:42:11Z"
-            },
-            {
-                "version": "3.0.1.62",
-                "changelog": "refactor: throw if unresolved\n\n- Log and re-throw the error if we fail while resolving one or more base\n  items.\n\nfeat: impl. file path generator\n\n- Switch from getting all the file at once to using a generator that\n  pre-fetches the next 10 pages. This changes shaved off ~10s (from 51s\n  to 39s) on my small test library, but didn't affect the overall\n  performance of the full library scan on my full library. This change\n  in essense minimises the risk of getting all the files at onces timing\n  out and also allows the rest of the symbolic link generation to start\n  earlier.\n\n- Don't check the file system if the file exists every time we iterate\n  the generator. Instead use the list of all known paths we created\n  earlier by converting it to a set and just checking the set. This\n  helps a lot when you're accessing the files over the network.\n\n- Add better logging for when we're generating symbolic links.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.62/shoko_3.0.1.62.zip",
-                "checksum": "abacc3b06a0498bc24362816a793f301",
-                "timestamp": "2024-03-30T05:31:33Z"
             }
         ]
     }
