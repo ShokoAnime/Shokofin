@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.72",
+                "changelog": "chore: enable nullable for whole project\n\nchore: fix up IDE complaints for Text.cs",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.72/shoko_3.0.1.72.zip",
+                "checksum": "a4df844c4f680c7cb916eca56f72b542",
+                "timestamp": "2024-03-31T12:02:07Z"
+            },
+            {
                 "version": "3.0.1.71",
                 "changelog": "chore: even more de-duplication of provider ids",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.68/shoko_3.0.1.68.zip",
                 "checksum": "f7f21944a55a43c1974b583d910f1bdc",
                 "timestamp": "2024-03-31T07:51:13Z"
-            },
-            {
-                "version": "3.0.1.67",
-                "changelog": "feat: initial PoC SignalR connection manager\n\n- Add the initial PoC SignalR Connection Manager responsible for\n  reacting to Shoko file, episode, and series update events, if\n  enabled. Currently it only prints debug messages when enabled. And\n  it can only be enabled by manually editing the settings xml.\n\nmisc: change mount of shoko api controller",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.67/shoko_3.0.1.67.zip",
-                "checksum": "98ffec6ef0101bc2030276f11b08ea14",
-                "timestamp": "2024-03-31T07:29:06Z"
             }
         ]
     }
