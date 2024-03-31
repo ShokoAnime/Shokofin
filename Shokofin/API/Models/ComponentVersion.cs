@@ -33,6 +33,19 @@ public class ComponentVersion
     /// Release date.
     /// </summary>
     public DateTime? ReleaseDate { get; set; } = null;
+
+    public override string ToString()
+    {
+        var extraDetails = new string?[3] {
+            ReleaseChannel?.ToString(),
+            Commit?[0..7],
+            ReleaseDate?.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ"),
+        }.Where(s => !string.IsNullOrEmpty(s)).OfType<string>().Join(", ");
+        if (extraDetails.Length == 0)
+            return $"Version {Version}";
+
+        return $"Version {Version} ({extraDetails})";
+    }
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
