@@ -1,7 +1,7 @@
 using System;
+using System.Linq;
 using System.Text.Json.Serialization;
 
-# nullable enable
 namespace Shokofin.API.Models;
 
 public class ComponentVersionSet

@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 
-# nullable enable
 namespace Shokofin.API.Models;
 
 public class Image
@@ -9,7 +8,7 @@ public class Image
     /// AniDB, TvDB, TMDB, etc.
     /// </summary>
     public ImageSource Source { get; set; } = ImageSource.AniDB;
-    
+
     /// <summary>
     /// Poster, Banner, etc.
     /// </summary>
@@ -21,7 +20,7 @@ public class Image
     /// </summary>
     public string ID { get; set; } = string.Empty;
 
-    
+
     /// <summary>
     /// True if the image is marked as the default for the given <see cref="ImageType"/>.
     /// Only one default is possible for a given <see cref="ImageType"/>.
@@ -47,7 +46,7 @@ public class Image
 
     /// <summary>
     /// The relative path from the image base directory if the image is present
-    /// on the server. 
+    /// on the server.
     /// </summary>
     [JsonPropertyName("RelativeFilepath")]
     public string? LocalPath { get; set; }
@@ -65,7 +64,7 @@ public class Image
     [JsonIgnore]
     public virtual string Path
         => $"/api/v3/Image/{Source.ToString()}/{Type.ToString()}/{ID}";
-    
+
     /// <summary>
     /// Get an URL to both download the image on the backend and preview it for
     /// the clients.
