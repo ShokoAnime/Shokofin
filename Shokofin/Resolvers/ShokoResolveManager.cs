@@ -432,18 +432,21 @@ public class ShokoResolveManager
         var folders = new List<string>();
         var episodeName = (episode.AniDB.Titles.FirstOrDefault(t => t.LanguageCode == "en")?.Value ?? $"Episode {episode.AniDB.Type} {episodeNumber}").ReplaceInvalidPathCharacters();
         var extrasFolder = file.ExtraType switch {
-            ExtraType.BehindTheScenes => "behind the scenes",
-            ExtraType.Clip => "clips",
-            ExtraType.DeletedScene => "deleted scene",
-            ExtraType.Interview => "interviews",
-            ExtraType.Sample => "samples",
-            ExtraType.Scene => "scenes",
+            null => null,
             ExtraType.ThemeSong => "theme-music",
             ExtraType.ThemeVideo => "backdrops",
             ExtraType.Trailer => "trailers",
-            ExtraType.Unknown => "others",
-            null => null,
             _ => "extras",
+        };
+        var fileNameSuffic = file.ExtraType switch {
+            ExtraType.BehindTheScenes => "-behindthescenes",
+            ExtraType.Clip => "-clip",
+            ExtraType.DeletedScene => "-deletedscene",
+            ExtraType.Interview => "-interview",
+            ExtraType.Scene => "-scene",
+            ExtraType.Sample => "-other",
+            ExtraType.Unknown => "-other",
+            _ => string.Empty,
         };
 
         if (isMovieSeason && collectionType != CollectionType.TvShows) {
@@ -468,7 +471,7 @@ public class ShokoResolveManager
             }
         }
 
-        var fileName = $"{episodeName} [shoko-series-{seriesId}] [shoko-file-{fileId}]{Path.GetExtension(sourceLocation)}";
+        var fileName = $"{episodeName} [shoko-series-{seriesId}] [shoko-file-{fileId}]{fileNameSuffic}{Path.GetExtension(sourceLocation)}";
         var symbolicLinks = folders
             .Select(folderPath => Path.Combine(folderPath, fileName))
             .ToArray();
