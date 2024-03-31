@@ -17,7 +17,7 @@ public class ApiException : Exception
     {
         public Dictionary<string, string[]> errors = new();
 
-        public string title = "";
+        public string title = string.Empty;
 
         public HttpStatusCode status = HttpStatusCode.BadRequest;
     }
@@ -70,7 +70,7 @@ public class ApiException : Exception
             var stackTrace = string.Join('\n', lines);
             return new ApiException(response.StatusCode, new RemoteApiException(name ?? "InternalServerException", message, stackTrace));
         }
-        return new ApiException(response.StatusCode, response.StatusCode.ToString() + "Exception", text.Split('\n').FirstOrDefault() ?? "");
+        return new ApiException(response.StatusCode, response.StatusCode.ToString() + "Exception", text.Split('\n').FirstOrDefault() ?? string.Empty);
     }
 
     public class RemoteApiException : Exception

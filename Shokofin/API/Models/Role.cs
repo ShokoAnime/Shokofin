@@ -9,7 +9,7 @@ public class Role
     /// Extra info about the role. For example, role can be voice actor, while role_details is Main Character
     /// </summary>
     [JsonPropertyName("RoleDetails")]
-    public string Name { get; set; } = "";
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// The role that the staff plays, cv, writer, director, etc
@@ -37,7 +37,7 @@ public class Role
         /// Main Name, romanized if needed
         /// ex. Sawano Hiroyuki
         /// </summary>
-        public string Name { get; set; } = "";
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Alternate Name, this can be any other name, whether kanji, an alias, etc
@@ -49,7 +49,7 @@ public class Role
         /// A description, bio, etc
         /// ex. Sawano Hiroyuki was born September 12, 1980 in Tokyo, Japan. He is a composer and arranger.
         /// </summary>
-        public string Description { get; set; } = "";
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Visual representation of the character or staff. Usually a profile

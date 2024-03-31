@@ -382,7 +382,7 @@ public class CollectionManager
         return LibraryManager.GetItemList(new()
         {
             IncludeItemTypes = new[] { BaseItemKind.Movie },
-            HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, "" } },
+            HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, string.Empty } },
             IsVirtualItem = false,
             Recursive = true,
         })
@@ -396,7 +396,7 @@ public class CollectionManager
         return LibraryManager.GetItemList(new()
         {
             IncludeItemTypes = new[] { BaseItemKind.Series },
-            HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, "" } },
+            HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, string.Empty } },
             IsVirtualItem = false,
             Recursive = true,
         })
@@ -410,7 +410,7 @@ public class CollectionManager
         return LibraryManager.GetItemList(new()
         {
             IncludeItemTypes = new[] { BaseItemKind.BoxSet },
-            HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, "" } },
+            HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, string.Empty } },
             IsVirtualItem = false,
             Recursive = true,
         })
@@ -427,7 +427,7 @@ public class CollectionManager
         {
             IncludeItemTypes = new[] { BaseItemKind.BoxSet },
             
-            HasAnyProviderId = new Dictionary<string, string> { { ShokoGroupId.Name, "" } },
+            HasAnyProviderId = new Dictionary<string, string> { { ShokoGroupId.Name, string.Empty } },
             IsVirtualItem = false,
             Recursive = true,
         })

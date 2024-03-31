@@ -36,7 +36,7 @@ public class File
     /// <summary>
     /// Try to fit this file's resolution to something like 1080p, 480p, etc.
     /// </summary>
-    public string Resolution { get; set; } = "";
+    public string Resolution { get; set; } = string.Empty;
 
     /// <summary>
     /// The duration of the file.
@@ -76,7 +76,7 @@ public class File
         /// The relative path from the base of the <see cref="ImportFolder"/> to
         /// where the <see cref="File"/> lies.
         /// </summary>
-        public string RelativePath { get; set; } = "";
+        public string RelativePath { get; set; } = string.Empty;
 
         /// <summary>
         /// The relative path from the base of the <see cref="ImportFolder"/> to
@@ -135,7 +135,7 @@ public class File
         /// <summary>
         /// The original FileName. Useful for when you obtained from a shady source or when you renamed it without thinking. 
         /// </summary>
-        public string OriginalFileName { get; set; } = "";
+        public string OriginalFileName { get; set; } = string.Empty;
 
         /// <summary>
         /// Is the file marked as deprecated. Generally, yes if there's a V2, and this isn't it
@@ -177,12 +177,12 @@ public class File
         /// <summary>
         /// The release group's Name (Unlimited Translation Works)
         /// </summary>
-        public string Name { get; set; } = "";
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// The release group's Name (UTW)
         /// </summary>
-        public string ShortName { get; set; } = "";
+        public string ShortName { get; set; } = string.Empty;
     }
 
     /// <summary>
@@ -191,13 +191,13 @@ public class File
     /// </summary>
     public class HashMap
     {
-        public string ED2K { get; set; } = "";
+        public string ED2K { get; set; } = string.Empty;
 
-        public string SHA1 { get; set; } = "";
+        public string SHA1 { get; set; } = string.Empty;
 
-        public string CRC32 { get; set; } = "";
+        public string CRC32 { get; set; } = string.Empty;
 
-        public string MD5 { get; set; } = "";
+        public string MD5 { get; set; } = string.Empty;
     }
 
     public class CrossReference

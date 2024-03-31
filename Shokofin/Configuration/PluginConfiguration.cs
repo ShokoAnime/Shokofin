@@ -137,9 +137,9 @@ public class PluginConfiguration : BasePluginConfiguration
     {
         Host = "http://127.0.0.1:8111";
         HostVersion = null;
-        PublicHost = "";
+        PublicHost = string.Empty;
         Username = "Default";
-        ApiKey = "";
+        ApiKey = string.Empty;
         HideArtStyleTags = false;
         HideMiscTags = false;
         HidePlotTags = true;

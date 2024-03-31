@@ -172,7 +172,7 @@ public static class Text
                     goto case TextSourceType.OnlyOther;
                 break;
             case TextSourceType.PreferOther:
-                overview = otherDescription ?? "";
+                overview = otherDescription ?? string.Empty;
                 if (string.IsNullOrEmpty(overview))
                     goto case TextSourceType.OnlyAniDb;
                 break;
@@ -180,7 +180,7 @@ public static class Text
                 overview = SanitizeTextSummary(aniDbDescription);
                 break;
             case TextSourceType.OnlyOther:
-                overview = otherDescription ?? "";
+                overview = otherDescription ?? string.Empty;
                 break;
         }
         return overview;
@@ -194,7 +194,7 @@ public static class Text
     public static string SanitizeTextSummary(string summary)
     {
         if (string.IsNullOrWhiteSpace(summary))
-            return "";
+            return string.Empty;
 
         var config = Plugin.Instance.Configuration;
 
@@ -202,10 +202,10 @@ public static class Text
             summary = Regex.Replace(summary, @"https?:\/\/\w+.\w+(?:\/?\w+)? \[([^\]]+)\]", match => match.Groups[1].Value);
 
         if (config.SynopsisCleanMiscLines)
-            summary = Regex.Replace(summary, @"^(\*|--|~) .*", "", RegexOptions.Multiline);
+            summary = Regex.Replace(summary, @"^(\*|--|~) .*", string.Empty, RegexOptions.Multiline);
 
         if (config.SynopsisRemoveSummary)
-            summary = Regex.Replace(summary, @"\n(Source|Note|Summary):.*", "", RegexOptions.Singleline);
+            summary = Regex.Replace(summary, @"\n(Source|Note|Summary):.*", string.Empty, RegexOptions.Singleline);
 
         if (config.SynopsisCleanMultiEmptyLines)
             summary = Regex.Replace(summary, @"\n{2,}", "\n", RegexOptions.Singleline);
@@ -243,7 +243,7 @@ public static class Text
             .ToList();
 
         if (filteredList.Count == 0)
-            return "";
+            return string.Empty;
 
         var index = 1;
         var outputText = filteredList[0];

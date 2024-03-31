@@ -16,7 +16,7 @@ public class Rating
     /// <summary>
     /// AniDB, etc.
     /// </summary>
-    public string Source { get; set; } = "";
+    public string Source { get; set; } = string.Empty;
 
     /// <summary>
     /// number of votes

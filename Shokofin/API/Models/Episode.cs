@@ -13,7 +13,7 @@ public class Episode
     /// </summary>
     public EpisodeIDs IDs { get; set; } = new();
 
-    public string Name { get; set; } = "";
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// The duration of the episode.
@@ -64,7 +64,7 @@ public class Episode
 
         public List<Title> Titles { get; set; } = new();
 
-        public string Description { get; set; } = "";
+        public string Description { get; set; } = string.Empty;
 
         public Rating Rating { get; set; } = new();
     }
@@ -83,9 +83,9 @@ public class Episode
         [JsonPropertyName("AbsoluteNumber")]
         public int AbsoluteEpisodeNumber { get; set; }
 
-        public string Title { get; set; } = "";
+        public string Title { get; set; } = string.Empty;
 
-        public string Description { get; set; } = "";
+        public string Description { get; set; } = string.Empty;
 
         public DateTime? AirDate { get; set; }
 

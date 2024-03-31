@@ -9,37 +9,37 @@ public static class StringExtensions
 {
     public static void Deconstruct(this IList<string> list, out string first)
     {
-        first = list.Count > 0 ? list[0] : "";
+        first = list.Count > 0 ? list[0] : string.Empty;
     }
 
     public static void Deconstruct(this IList<string> list, out string first, out string second)
     {
-        first = list.Count > 0 ? list[0] : "";
-        second = list.Count > 1 ? list[1] : "";
+        first = list.Count > 0 ? list[0] : string.Empty;
+        second = list.Count > 1 ? list[1] : string.Empty;
     }
 
     public static void Deconstruct(this IList<string> list, out string first, out string second, out string third)
     {
-        first = list.Count > 0 ? list[0] : "";
-        second = list.Count > 1 ? list[1] : "";
-        third = list.Count > 2 ? list[2] : "";
+        first = list.Count > 0 ? list[0] : string.Empty;
+        second = list.Count > 1 ? list[1] : string.Empty;
+        third = list.Count > 2 ? list[2] : string.Empty;
     }
 
     public static void Deconstruct(this IList<string> list, out string first, out string second, out string third, out string forth)
     {
-        first = list.Count > 0 ? list[0] : "";
-        second = list.Count > 1 ? list[1] : "";
-        third = list.Count > 2 ? list[2] : "";
-        forth = list.Count > 3 ? list[3] : "";
+        first = list.Count > 0 ? list[0] : string.Empty;
+        second = list.Count > 1 ? list[1] : string.Empty;
+        third = list.Count > 2 ? list[2] : string.Empty;
+        forth = list.Count > 3 ? list[3] : string.Empty;
     }
 
     public static void Deconstruct(this IList<string> list, out string first, out string second, out string third, out string forth, out string fifth)
     {
-        first = list.Count > 0 ? list[0] : "";
-        second = list.Count > 1 ? list[1] : "";
-        third = list.Count > 2 ? list[2] : "";
-        forth = list.Count > 3 ? list[3] : "";
-        fifth = list.Count > 4 ? list[4] : "";
+        first = list.Count > 0 ? list[0] : string.Empty;
+        second = list.Count > 1 ? list[1] : string.Empty;
+        third = list.Count > 2 ? list[2] : string.Empty;
+        forth = list.Count > 3 ? list[3] : string.Empty;
+        fifth = list.Count > 4 ? list[4] : string.Empty;
     }
 
     public static string Join(this IEnumerable<string> list, char separator)

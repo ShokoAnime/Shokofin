@@ -209,7 +209,7 @@ public class SeasonInfo
                 Name = role.Staff.Name,
                 // The character will always be present if the role is a VA.
                 // We make it a conditional check since otherwise will the compiler complain.
-                Role = role.Character?.Name ?? "",
+                Role = role.Character?.Name ?? string.Empty,
                 ImageUrl = GetImagePath(role.Staff.Image),
             },
             _ => null,

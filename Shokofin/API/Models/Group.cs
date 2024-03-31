@@ -3,15 +3,15 @@ namespace Shokofin.API.Models;
 
 public class Group
 {
-    public string Name { get; set; } = "";
+    public string Name { get; set; } = string.Empty;
 
     public int Size { get; set; }
 
     public GroupIDs IDs { get; set; } = new();
 
-    public string SortName { get; set; } = "";
+    public string SortName { get; set; } = string.Empty;
 
-    public string Description { get; set; } = "";
+    public string Description { get; set; } = string.Empty;
 
     public bool HasCustomName { get; set; }
 

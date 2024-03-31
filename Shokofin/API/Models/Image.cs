@@ -19,7 +19,7 @@ public class Image
     /// The image's id. Usually an int, but in the case of <see cref="ImageType.Static"/> resources
     /// then it is the resource name.
     /// </summary>
-    public string ID { get; set; } = "";
+    public string ID { get; set; } = string.Empty;
 
     
     /// <summary>

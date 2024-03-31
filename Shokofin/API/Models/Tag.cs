@@ -22,7 +22,7 @@ public class Tag
     /// <summary>
     /// The tag itself
     /// </summary>
-    public string Name { get; set; } = "";
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// What does the tag mean/what's it for
@@ -63,5 +63,5 @@ public class Tag
     /// <summary>
     /// Source. AniDB, User, etc.
     /// </summary>
-    public string Source { get; set; } = "";
+    public string Source { get; set; } = string.Empty;
 }

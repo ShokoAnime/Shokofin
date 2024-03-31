@@ -7,7 +7,7 @@ namespace Shokofin.API.Models;
 
 public class Series
 {
-    public string Name { get; set; } = "";
+    public string Name { get; set; } = string.Empty;
     
     public int Size { get; set; }
 
@@ -79,7 +79,7 @@ public class Series
         /// <summary>
         /// Main Title, usually matches x-jat
         /// </summary>
-        public string Title { get; set; } = "";
+        public string Title { get; set; } = string.Empty;
 
         /// <summary>
         /// There should always be at least one of these, the <see cref="Title"/>. May be omitted if needed.
@@ -89,7 +89,7 @@ public class Series
         /// <summary>
         /// Description.
         /// </summary>
-        public string Description { get; set; } = "";
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Restricted content. Mainly porn.
@@ -128,7 +128,7 @@ public class Series
         /// <summary>
         /// Description.
         /// </summary>
-        public new string Description { get; set; } = "";
+        public new string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// There should always be at least one of these, the <see cref="Title"/>. May be omitted if needed.
@@ -194,9 +194,9 @@ public class Series
 
         public DateTime? EndDate { get; set; }
 
-        public string Title { get; set; } = "";
+        public string Title { get; set; } = string.Empty;
 
-        public string Description { get; set; } = "";
+        public string Description { get; set; } = string.Empty;
 
         public Rating Rating { get; set; } = new();
     }

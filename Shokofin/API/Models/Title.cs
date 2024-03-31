@@ -9,7 +9,7 @@ public class Title
     /// The title.
     /// </summary>
     [JsonPropertyName("Name")]
-    public string Value { get; set; } = "";
+    public string Value { get; set; } = string.Empty;
 
     /// <summary>
     /// 3-digit language code (x-jat, etc. are exceptions)

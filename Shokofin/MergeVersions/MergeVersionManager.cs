@@ -128,7 +128,7 @@ public class MergeVersionsManager
                 IncludeItemTypes = new[] { BaseItemKind.Movie },
                 IsVirtualItem = false,
                 Recursive = true,
-                HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, "" } },
+                HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, string.Empty } },
             })
             .Cast<Movie>()
             .Where(Lookup.IsEnabledForItem)
@@ -259,7 +259,7 @@ public class MergeVersionsManager
     {
         return LibraryManager.GetItemList(new() {
                 IncludeItemTypes = new[] { BaseItemKind.Episode },
-                HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, "" } },
+                HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, string.Empty } },
                 IsVirtualItem = false,
                 Recursive = true,
             })
