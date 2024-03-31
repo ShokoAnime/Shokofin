@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.64",
+                "changelog": "misc: fix color for discord embeds.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.64/shoko_3.0.1.64.zip",
+                "checksum": "e6c72aade8a4a964bdfd8f9057b39ce5",
+                "timestamp": "2024-03-31T00:45:50Z"
+            },
+            {
                 "version": "3.0.1.63",
                 "changelog": "misc: try adding icon and color to discord embeds\n\n- First attempt at adding color (will word) and an icon (not so sure) to\n  discord embeds.\n\nmisc: advertise support for movie trailers\n\n- Advertise our support for local movie trailers\u00b9. Finally I can close #10.\n\n\u00b9 _As long as the VFS is used._\n[skip ci]",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.60/shoko_3.0.1.60.zip",
                 "checksum": "762320590c2cb57b5dbc4c73f529bbb1",
                 "timestamp": "2024-03-29T23:00:50Z"
-            },
-            {
-                "version": "3.0.1.59",
-                "changelog": "misc: manually amends broken links in unstable manifest\n\nfix: forces version specific release url in manifest",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.59/shoko_3.0.1.59.zip",
-                "checksum": "e5e2bfba77cf5414b774bdec246be68d",
-                "timestamp": "2024-03-29T21:30:32Z"
             }
         ]
     }
