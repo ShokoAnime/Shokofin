@@ -17,7 +17,7 @@ namespace Shokofin.Web;
 /// Pushbullet notifications controller.
 /// </summary>
 [ApiController]
-[Route("Plugin/Shokofin")]
+[Route("Plugin/Shokofin/Host")]
 [Produces(MediaTypeNames.Application.Json)]
 public class ShokoApiController : ControllerBase
 {
@@ -60,7 +60,7 @@ public class ShokoApiController : ControllerBase
     }
 
     [HttpPost("GetApiKey")]
-    public async Task<ActionResult<ApiKey>> PostAsync([FromBody] ApiLoginRequest body)
+    public async Task<ActionResult<ApiKey>> GetApiKeyAsync([FromBody] ApiLoginRequest body)
     {
         try {
             Logger.LogDebug("Trying to create an API-key for user {Username}.", body.Username);

@@ -92,7 +92,7 @@ function getApiKey(username, password, userKey = false) {
             "Accept": "application/json",
         },
         type: "POST",
-        url: ApiClient.getUrl("Plugin/Shokofin/GetApiKey"),
+        url: ApiClient.getUrl("Plugin/Shokofin/Host/GetApiKey"),
     });
 }
 
