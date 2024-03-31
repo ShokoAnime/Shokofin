@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.70",
+                "changelog": "refactor: convert create file info\n\n- Convert `CreateFileInfo` to the new cache getter pattern\n\nfix: fix episode id lookups\n\n- the episode lookups should had been per file per series, not just per\n  file. now it is.\n\nchore: `\"\"` \u2192\u00a0`string.Empty`\n\nchore: de-duplicate provider ids",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.70/shoko_3.0.1.70.zip",
+                "checksum": "75cd51b883822d38f716c884e829efc7",
+                "timestamp": "2024-03-31T11:26:21Z"
+            },
+            {
                 "version": "3.0.1.69",
                 "changelog": "feat: add signalr api controller",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.66/shoko_3.0.1.66.zip",
                 "checksum": "5f7173d0dae94f4329d64f9f50eff9a5",
                 "timestamp": "2024-03-31T05:46:40Z"
-            },
-            {
-                "version": "3.0.1.65",
-                "changelog": "misc: change title format\n\n- Changed the title format to include the project name first,\n  followed by the build type released.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.65/shoko_3.0.1.65.zip",
-                "checksum": "c9b029c65971248c8327fd7ae047f690",
-                "timestamp": "2024-03-31T00:47:34Z"
             }
         ]
     }
