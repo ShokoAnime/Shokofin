@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.65",
+                "changelog": "misc: change title format\n\n- Changed the title format to include the project name first,\n  followed by the build type released.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.65/shoko_3.0.1.65.zip",
+                "checksum": "c9b029c65971248c8327fd7ae047f690",
+                "timestamp": "2024-03-31T00:47:34Z"
+            },
+            {
                 "version": "3.0.1.64",
                 "changelog": "misc: fix color for discord embeds.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.61/shoko_3.0.1.61.zip",
                 "checksum": "9ad292bd6812e255ef90cea787c4d743",
                 "timestamp": "2024-03-30T01:20:42Z"
-            },
-            {
-                "version": "3.0.1.60",
-                "changelog": "fix: impl. actual attribute parsing\n\n- Implement actual attribute parsing on the file/folder names within the\n  VFS, instead of the faulty and error prone guesswork I\n  added in the initial PoC. It was bound to fail eventually.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.60/shoko_3.0.1.60.zip",
-                "checksum": "762320590c2cb57b5dbc4c73f529bbb1",
-                "timestamp": "2024-03-29T23:00:50Z"
             }
         ]
     }
