@@ -12,6 +12,7 @@ using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
 #nullable enable
@@ -103,9 +104,9 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
         item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{seriesId}");
 
         var config = Plugin.Instance.Configuration;
-        item.SetProviderId("Shoko Series", seriesId);
+        item.SetProviderId(ShokoSeriesId.Name, seriesId);
         if (!string.IsNullOrEmpty(groupId))
-            item.SetProviderId("Shoko Group", groupId);
+            item.SetProviderId(ShokoGroupId.Name, groupId);
         if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
             item.SetProviderId("AniDB", anidbId);
         if (config.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")

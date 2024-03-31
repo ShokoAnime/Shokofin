@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
@@ -13,6 +12,7 @@ using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Model.Globalization;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
 using Info = Shokofin.API.Info;
@@ -615,7 +615,7 @@ public class ExtraMetadataProvider : IServerEntryPoint
     {
         var searchList = LibraryManager.GetItemList(new InternalItemsQuery {
             IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Episode },
-            HasAnyProviderId = new Dictionary<string, string> { ["Shoko Episode"] = episodeId },
+            HasAnyProviderId = new Dictionary<string, string> { [ShokoEpisodeId.Name] = episodeId },
             DtoOptions = new DtoOptions(true),
         }, true);
 
@@ -644,7 +644,7 @@ public class ExtraMetadataProvider : IServerEntryPoint
         var query = new InternalItemsQuery {
             IsVirtualItem = true,
             ExcludeItemIds = new [] { episode.Id },
-            HasAnyProviderId = new Dictionary<string, string> { ["Shoko Episode"] = episodeId },
+            HasAnyProviderId = new Dictionary<string, string> { [ShokoEpisodeId.Name] = episodeId },
             IncludeItemTypes = new [] {Jellyfin.Data.Enums.BaseItemKind.Episode },
             GroupByPresentationUniqueKey = false,
             DtoOptions = new DtoOptions(true),

@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
-using Jellyfin.Data.Enums;
-using System.Globalization;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Common.Progress;
+using Shokofin.ExternalIds;
 
 #nullable enable
 namespace Shokofin.MergeVersions;
@@ -127,7 +128,7 @@ public class MergeVersionsManager
                 IncludeItemTypes = new[] { BaseItemKind.Movie },
                 IsVirtualItem = false,
                 Recursive = true,
-                HasAnyProviderId = new Dictionary<string, string> { {"Shoko Episode", "" } },
+                HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, "" } },
             })
             .Cast<Movie>()
             .Where(Lookup.IsEnabledForItem)
@@ -160,7 +161,7 @@ public class MergeVersionsManager
         // Merge all movies with more than one version.
         var movies = GetMoviesFromLibrary();
         var duplicationGroups = movies
-            .GroupBy(x => x.ProviderIds["Shoko Episode"])
+            .GroupBy(x => x.ProviderIds[ShokoEpisodeId.Name])
             .Where(x => x.Count() > 1)
             .ToList();
         double currentCount = 0d;
@@ -229,7 +230,7 @@ public class MergeVersionsManager
 
         // Merge all movies with more than one version (again).
         var duplicationGroups = movies
-            .GroupBy(movie => movie.ProviderIds["Shoko Episode"])
+            .GroupBy(movie => movie.ProviderIds[ShokoEpisodeId.Name])
             .Where(movie => movie.Count() > 1)
             .ToList();
         currentCount = 0d;
@@ -258,7 +259,7 @@ public class MergeVersionsManager
     {
         return LibraryManager.GetItemList(new() {
                 IncludeItemTypes = new[] { BaseItemKind.Episode },
-                HasAnyProviderId = new Dictionary<string, string> { {"Shoko Episode", "" } },
+                HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, "" } },
                 IsVirtualItem = false,
                 Recursive = true,
             })
@@ -295,7 +296,7 @@ public class MergeVersionsManager
         // of additional episodes.
         var episodes = GetEpisodesFromLibrary();
         var duplicationGroups = episodes
-            .GroupBy(e => $"{e.ProviderIds["Shoko Episode"]}-{(e.IndexNumberEnd ?? e.IndexNumber ?? 1) - (e.IndexNumber ?? 1)}")
+            .GroupBy(e => $"{e.ProviderIds[ShokoEpisodeId.Name]}-{(e.IndexNumberEnd ?? e.IndexNumber ?? 1) - (e.IndexNumber ?? 1)}")
             .Where(e => e.Count() > 1)
             .ToList();
         double currentCount = 0d;
@@ -366,7 +367,7 @@ public class MergeVersionsManager
         // Merge episodes with more than one version (again), and with the same
         // number of additional episodes.
         var duplicationGroups = episodes
-            .GroupBy(e => $"{e.ProviderIds["Shoko Episode"]}-{(e.IndexNumberEnd ?? e.IndexNumber ?? 1) - (e.IndexNumber ?? 1)}")
+            .GroupBy(e => $"{e.ProviderIds[ShokoEpisodeId.Name]}-{(e.IndexNumberEnd ?? e.IndexNumber ?? 1) - (e.IndexNumber ?? 1)}")
             .Where(e => e.Count() > 1)
             .ToList();
         currentCount = 0d;

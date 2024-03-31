@@ -9,14 +9,16 @@ namespace Shokofin.ExternalIds;
 
 public class ShokoGroupId : IExternalId
 {
+    public const string Name = "Shoko Group";
+
     public bool Supports(IHasProviderIds item)
         => item is Series or BoxSet;
 
     public string ProviderName
-        => "Shoko Group";
+        => Name;
 
     public string Key
-        => "Shoko Group";
+        => Name;
 
     public ExternalIdMediaType? Type
         => null;

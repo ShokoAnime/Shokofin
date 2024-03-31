@@ -779,9 +779,6 @@ public class ShokoResolveManager
                                     return new Movie()
                                     {
                                         Path = fileInfo.FullName,
-                                        ProviderIds = new() {
-                                            { "Shoko File", fileId.ToString() },
-                                        }
                                     } as BaseItem;
                                 })
                                 .ToArray();

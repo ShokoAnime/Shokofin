@@ -9,6 +9,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
 using Info = Shokofin.API.Info;
@@ -38,7 +39,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
             if (!info.IndexNumber.HasValue || info.IndexNumber.HasValue && info.IndexNumber.Value == 0)
                 return result;
 
-            if (!info.SeriesProviderIds.TryGetValue("Shoko Series", out var seriesId) || !info.IndexNumber.HasValue) {
+            if (!info.SeriesProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId) || !info.IndexNumber.HasValue) {
                 Logger.LogDebug("Unable refresh Season {SeasonNumber} {SeasonName}", info.IndexNumber, info.Name);
                 return result;
             }
@@ -148,7 +149,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
                 CommunityRating = seasonInfo.AniDB.Rating?.ToFloat(10),
             };
         }
-        season.ProviderIds.Add("Shoko Series", seasonInfo.Id);
+        season.ProviderIds.Add(ShokoSeriesId.Name, seasonInfo.Id);
         season.ProviderIds.Add("Shoko Season Offset", offset.ToString());
         if (Plugin.Instance.Configuration.AddAniDBId)
             season.ProviderIds.Add("AniDB", seasonInfo.AniDB.Id.ToString());

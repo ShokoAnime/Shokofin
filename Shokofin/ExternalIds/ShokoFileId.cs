@@ -10,14 +10,16 @@ namespace Shokofin.ExternalIds;
 
 public class ShokoFileId : IExternalId
 {
+    public const string Name = "Shoko File";
+
     public bool Supports(IHasProviderIds item)
         => item is Episode or Movie;
 
     public string ProviderName
-        => "Shoko File";
+        => Name;
 
     public string Key
-        => "Shoko File";
+        => Name;
 
     public ExternalIdMediaType? Type
         => null;

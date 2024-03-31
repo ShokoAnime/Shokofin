@@ -10,6 +10,7 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
 #nullable enable
@@ -52,7 +53,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>
         var result = new MetadataResult<BoxSet>();
 
         // First try to re-use any existing series id.
-        if (!info.ProviderIds.TryGetValue("Shoko Series", out var seriesId))
+        if (!info.ProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId))
             return result;
 
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId);
@@ -78,7 +79,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>
             Tags = season.Tags.ToArray(),
             CommunityRating = season.AniDB.Rating.ToFloat(10),
         };
-        result.Item.SetProviderId("Shoko Series", season.Id);
+        result.Item.SetProviderId(ShokoSeriesId.Name, season.Id);
         if (Plugin.Instance.Configuration.AddAniDBId)
             result.Item.SetProviderId("AniDB", season.AniDB.Id.ToString());
 
@@ -91,7 +92,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>
     {
         // Filter out all manually created collections. We don't help those.
         var result = new MetadataResult<BoxSet>();
-        if (!info.ProviderIds.TryGetValue("Shoko Group", out var groupId))
+        if (!info.ProviderIds.TryGetValue(ShokoGroupId.Name, out var groupId))
             return result;
 
         var collection = await ApiManager.GetCollectionInfoForGroup(groupId);
@@ -104,7 +105,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>
             Name = collection.Name,
             Overview = collection.Shoko.Description,
         };
-        result.Item.SetProviderId("Shoko Group", collection.Id);
+        result.Item.SetProviderId(ShokoGroupId.Name, collection.Id);
         result.HasMetadata = true;
 
         return result;

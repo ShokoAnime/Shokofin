@@ -10,6 +10,7 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
 using Info = Shokofin.API.Info;
@@ -49,7 +50,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
             Info.ShowInfo? showInfo = null;
             if (info.IsMissingEpisode || string.IsNullOrEmpty(info.Path)) {
                 // We're unable to fetch the latest metadata for the virtual episode.
-                if (!info.ProviderIds.TryGetValue("Shoko Episode", out var episodeId))
+                if (!info.ProviderIds.TryGetValue(ShokoEpisodeId.Name, out var episodeId))
                     return result;
 
                 episodeInfo = await ApiManager.GetEpisodeInfo(episodeId);
@@ -235,9 +236,9 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
     private static void AddProviderIds(IHasProviderIds item, string episodeId, string? fileId = null, string? anidbId = null, string? tmdbId = null)
     {
         var config = Plugin.Instance.Configuration;
-        item.SetProviderId("Shoko Episode", episodeId);
+        item.SetProviderId(ShokoEpisodeId.Name, episodeId);
         if (!string.IsNullOrEmpty(fileId))
-            item.SetProviderId("Shoko File", fileId);
+            item.SetProviderId(ShokoFileId.Name, fileId);
         if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
             item.SetProviderId("AniDB", anidbId);
         if (config.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")

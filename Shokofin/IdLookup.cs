@@ -5,6 +5,7 @@ using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using Shokofin.API;
+using Shokofin.ExternalIds;
 using Shokofin.Providers;
 
 namespace Shokofin;
@@ -165,16 +166,16 @@ public class IdLookup : IIdLookup
 
     public bool TryGetSeriesIdFor(Series series, out string seriesId)
     {
-        if (series.ProviderIds.TryGetValue("Shoko Series", out seriesId) && !string.IsNullOrEmpty(seriesId)) {
+        if (series.ProviderIds.TryGetValue(ShokoSeriesId.Name, out seriesId) && !string.IsNullOrEmpty(seriesId)) {
             return true;
         }
 
         if (TryGetSeriesIdFor(series.Path, out seriesId)) {
-            // Set the "Shoko Group" and "Shoko Series" provider ids for the series, since it haven't been set again. It doesn't matter if it's not saved to the database, since we only need it while running the following code.
+            // Set the ShokoGroupId.Name and ShokoSeriesId.Name provider ids for the series, since it haven't been set again. It doesn't matter if it's not saved to the database, since we only need it while running the following code.
             if (ApiManager.TryGetDefaultSeriesIdForSeriesId(seriesId, out var defaultSeriesId)) {
                 SeriesProvider.AddProviderIds(series, defaultSeriesId);
             }
-            // Same as above, but only set the "Shoko Series" id.
+            // Same as above, but only set the ShokoSeriesId.Name id.
             else {
                 SeriesProvider.AddProviderIds(series, seriesId);
             }
@@ -188,7 +189,7 @@ public class IdLookup : IIdLookup
 
     public bool TryGetSeriesIdFor(Season season, out string seriesId)
     {
-        if (season.ProviderIds.TryGetValue("Shoko Series", out seriesId) && !string.IsNullOrEmpty(seriesId)) {
+        if (season.ProviderIds.TryGetValue(ShokoSeriesId.Name, out seriesId) && !string.IsNullOrEmpty(seriesId)) {
             return true;
         }
 
@@ -197,7 +198,7 @@ public class IdLookup : IIdLookup
 
     public bool TryGetSeriesIdFor(Movie movie, out string seriesId)
     {
-        if (movie.ProviderIds.TryGetValue("Shoko Series", out seriesId) && !string.IsNullOrEmpty(seriesId)) {
+        if (movie.ProviderIds.TryGetValue(ShokoSeriesId.Name, out seriesId) && !string.IsNullOrEmpty(seriesId)) {
             return true;
         }
 
@@ -210,7 +211,7 @@ public class IdLookup : IIdLookup
 
     public bool TryGetSeriesIdFor(BoxSet boxSet, out string seriesId)
     {
-        if (boxSet.ProviderIds.TryGetValue("Shoko Series", out seriesId) && !string.IsNullOrEmpty(seriesId)) {
+        if (boxSet.ProviderIds.TryGetValue(ShokoSeriesId.Name, out seriesId) && !string.IsNullOrEmpty(seriesId)) {
             return true;
         }
 
@@ -243,7 +244,7 @@ public class IdLookup : IIdLookup
     public bool TryGetEpisodeIdFor(BaseItem item, out string episodeId)
     {
         // This will account for virtual episodes and existing episodes
-        if (item.ProviderIds.TryGetValue("Shoko Episode", out episodeId) && !string.IsNullOrEmpty(episodeId)) {
+        if (item.ProviderIds.TryGetValue(ShokoEpisodeId.Name, out episodeId) && !string.IsNullOrEmpty(episodeId)) {
             return true;
         }
 
@@ -263,7 +264,7 @@ public class IdLookup : IIdLookup
     public bool TryGetEpisodeIdsFor(BaseItem item, out List<string> episodeIds)
     {
         // This will account for virtual episodes and existing episodes
-        if (item.ProviderIds.TryGetValue("Shoko File", out var fileId) && ApiManager.TryGetEpisodeIdsForFileId(fileId, out episodeIds)) {
+        if (item.ProviderIds.TryGetValue(ShokoFileId.Name, out var fileId) && ApiManager.TryGetEpisodeIdsForFileId(fileId, out episodeIds)) {
             return true;
         }
 
@@ -288,7 +289,7 @@ public class IdLookup : IIdLookup
 
     public bool TryGetFileIdFor(BaseItem episode, out string fileId)
     {
-        if (episode.ProviderIds.TryGetValue("Shoko File", out fileId))
+        if (episode.ProviderIds.TryGetValue(ShokoFileId.Name, out fileId))
             return true;
 
         return ApiManager.TryGetFileIdForPath(episode.Path, out fileId);

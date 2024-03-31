@@ -10,6 +10,7 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
 #nullable enable
@@ -65,9 +66,9 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>
                 Studios = season.Studios.ToArray(),
                 CommunityRating = rating,
             };
-            result.Item.SetProviderId("Shoko File", file.Id);
-            result.Item.SetProviderId("Shoko Episode", episode.Id);
-            result.Item.SetProviderId("Shoko Series", season.Id);
+            result.Item.SetProviderId(ShokoFileId.Name, file.Id);
+            result.Item.SetProviderId(ShokoEpisodeId.Name, episode.Id);
+            result.Item.SetProviderId(ShokoSeriesId.Name, season.Id);
 
             result.HasMetadata = true;
 

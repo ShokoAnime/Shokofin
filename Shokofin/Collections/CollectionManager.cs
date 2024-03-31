@@ -11,6 +11,7 @@ using MediaBrowser.Controller.Library;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Info;
+using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
 #nullable enable
@@ -162,7 +163,7 @@ public class CollectionManager
             var collectionInfo = finalGroups[missingId];
             var collection = await Collection.CreateCollectionAsync(new() {
                 Name = collectionInfo.Name,
-                ProviderIds = new() { { "Shoko Group", missingId } },
+                ProviderIds = new() { { ShokoGroupId.Name, missingId } },
             });
             toCheck.Add(missingId, collection);
         }
@@ -268,7 +269,7 @@ public class CollectionManager
             var collectionInfo = finalGroups[missingId];
             var collection = await Collection.CreateCollectionAsync(new() {
                 Name = collectionInfo.Name,
-                ProviderIds = new() { { "Shoko Group", missingId } },
+                ProviderIds = new() { { ShokoGroupId.Name, missingId } },
             });
             toCheck.Add(missingId, collection);
         }
@@ -381,7 +382,7 @@ public class CollectionManager
         return LibraryManager.GetItemList(new()
         {
             IncludeItemTypes = new[] { BaseItemKind.Movie },
-            HasAnyProviderId = new Dictionary<string, string> { { "Shoko File", "" } },
+            HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, "" } },
             IsVirtualItem = false,
             Recursive = true,
         })
@@ -395,7 +396,7 @@ public class CollectionManager
         return LibraryManager.GetItemList(new()
         {
             IncludeItemTypes = new[] { BaseItemKind.Series },
-            HasAnyProviderId = new Dictionary<string, string> { { "Shoko Series", "" } },
+            HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, "" } },
             IsVirtualItem = false,
             Recursive = true,
         })
@@ -409,12 +410,12 @@ public class CollectionManager
         return LibraryManager.GetItemList(new()
         {
             IncludeItemTypes = new[] { BaseItemKind.BoxSet },
-            HasAnyProviderId = new Dictionary<string, string> { { "Shoko Series", "" } },
+            HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, "" } },
             IsVirtualItem = false,
             Recursive = true,
         })
             .Cast<BoxSet>()
-            .Select(x => x.ProviderIds.TryGetValue("Shoko Series", out var seriesId) && !string.IsNullOrEmpty(seriesId) ? new { SeriesId = seriesId, BoxSet = x } : null)
+            .Select(x => x.ProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId) && !string.IsNullOrEmpty(seriesId) ? new { SeriesId = seriesId, BoxSet = x } : null)
             .Where(x => x != null)
             .GroupBy(x => x!.SeriesId, x => x!.BoxSet)
             .ToDictionary(x => x.Key, x => x.ToList() as IReadOnlyList<BoxSet>);
@@ -426,12 +427,12 @@ public class CollectionManager
         {
             IncludeItemTypes = new[] { BaseItemKind.BoxSet },
             
-            HasAnyProviderId = new Dictionary<string, string> { { "Shoko Group", "" } },
+            HasAnyProviderId = new Dictionary<string, string> { { ShokoGroupId.Name, "" } },
             IsVirtualItem = false,
             Recursive = true,
         })
             .Cast<BoxSet>()
-            .Select(x => x.ProviderIds.TryGetValue("Shoko Group", out var groupId) && !string.IsNullOrEmpty(groupId) ? new { GroupId = groupId, BoxSet = x } : null)
+            .Select(x => x.ProviderIds.TryGetValue(ShokoGroupId.Name, out var groupId) && !string.IsNullOrEmpty(groupId) ? new { GroupId = groupId, BoxSet = x } : null)
             .Where(x => x != null)
             .GroupBy(x => x!.GroupId, x => x!.BoxSet)
             .ToDictionary(x => x.Key, x => x.ToList() as IReadOnlyList<BoxSet>);
