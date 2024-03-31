@@ -30,6 +30,10 @@ public class SignalRConnectionManager : IDisposable
 
     private string LastConfigKey = string.Empty;
 
+    public bool IsUsable => CanConnect(Plugin.Instance.Configuration);
+
+    public bool IsActive => Connection != null;
+
     public HubConnectionState State => Connection == null ? HubConnectionState.Disconnected : Connection.State;
 
     public SignalRConnectionManager(ILogger<SignalRConnectionManager> logger, ShokoResolveManager resolveManager, ILibraryManager libraryManager, ILibraryMonitor libraryMonitor)
@@ -121,7 +125,7 @@ public class SignalRConnectionManager : IDisposable
     public void Disconnect()
         => DisconnectAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 
-    private async Task DisconnectAsync()
+    public async Task DisconnectAsync()
     {
         if (Connection == null)
             return;
@@ -133,19 +137,16 @@ public class SignalRConnectionManager : IDisposable
         await connection.DisposeAsync();
     }
 
-    public void ResetConnection(bool autoConnect)
-        => ResetConnection(Plugin.Instance.Configuration, autoConnect);
+    public Task ResetConnectionAsync()
+        => ResetConnectionAsync(Plugin.Instance.Configuration, true);
 
-    private void ResetConnection(PluginConfiguration config, bool autoConnect)
-        => ResetConnectionAsync(config, autoConnect).ConfigureAwait(false).GetAwaiter().GetResult();
+    private void ResetConnection(PluginConfiguration config, bool shouldConnect)
+        => ResetConnectionAsync(config, shouldConnect).ConfigureAwait(false).GetAwaiter().GetResult();
 
-    public Task ResetConnectionAsync(bool autoConnect)
-        => ResetConnectionAsync(Plugin.Instance.Configuration, autoConnect);
-
-    private async Task ResetConnectionAsync(PluginConfiguration config, bool autoConnect)
+    private async Task ResetConnectionAsync(PluginConfiguration config, bool shouldConnect)
     {
         await DisconnectAsync();
-        if (autoConnect)
+        if (shouldConnect)
             await ConnectAsync(config);
     }
 
