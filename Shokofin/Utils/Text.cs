@@ -9,7 +9,7 @@ namespace Shokofin.Utils;
 
 public static class Text
 {
-    private static HashSet<char> PunctuationMarks = new() {
+    private static readonly HashSet<char> PunctuationMarks = new() {
         // Common punctuation marks
         '.',   // period
         ',',   // comma
@@ -254,7 +254,7 @@ public static class Text
         }
 
         if (filteredList.Count > 1)
-            outputText.TrimEnd();
+            outputText = outputText.TrimEnd();
 
         return outputText;
     }
@@ -289,8 +289,8 @@ public static class Text
             // Display in metadata-preferred language, or fallback to default.
             case DisplayLanguageType.MetadataPreferred: {
                 var allowAny = Plugin.Instance.Configuration.TitleAllowAny;
-                var getSeriesTitle =  () => GetTitleByTypeAndLanguage(seriesTitles, TitleType.Official, displayLanguage) ?? (allowAny ? GetTitleByLanguages(seriesTitles, displayLanguage) : null) ?? seriesTitle;
-                var getEpisodeTitle = () => GetTitleByLanguages(episodeTitles, displayLanguage) ?? episodeTitle;
+                string getSeriesTitle() => GetTitleByTypeAndLanguage(seriesTitles, TitleType.Official, displayLanguage) ?? (allowAny ? GetTitleByLanguages(seriesTitles, displayLanguage) : null) ?? seriesTitle;
+                string getEpisodeTitle() => GetTitleByLanguages(episodeTitles, displayLanguage) ?? episodeTitle;
                 var title = ConstructTitle(getSeriesTitle, getEpisodeTitle, outputType);
                 if (string.IsNullOrEmpty(title))
                     goto case DisplayLanguageType.Default;
@@ -299,14 +299,14 @@ public static class Text
             // Display in origin language.
             case DisplayLanguageType.Origin: {
                 var allowAny = Plugin.Instance.Configuration.TitleAllowAny;
-                var getSeriesTitle = () => GetTitleByTypeAndLanguage(seriesTitles, TitleType.Official, originLanguages) ?? (allowAny ? GetTitleByLanguages(seriesTitles, originLanguages) : null) ?? seriesTitle;
-                var getEpisodeTitle = () => GetTitleByLanguages(episodeTitles, originLanguages) ?? episodeTitle;
+                string getSeriesTitle() => GetTitleByTypeAndLanguage(seriesTitles, TitleType.Official, originLanguages) ?? (allowAny ? GetTitleByLanguages(seriesTitles, originLanguages) : null) ?? seriesTitle;
+                string getEpisodeTitle() => GetTitleByLanguages(episodeTitles, originLanguages) ?? episodeTitle;
                 return ConstructTitle(getSeriesTitle, getEpisodeTitle, outputType);
             }
             // Display the main title.
             case DisplayLanguageType.Main: {
-                var getSeriesTitle = () => GetTitleByType(seriesTitles, TitleType.Main) ?? seriesTitle;
-                var getEpisodeTitle = () => GetTitleByLanguages(episodeTitles, "en", mainTitleLanguage) ?? episodeTitle;
+                string getSeriesTitle() => GetTitleByType(seriesTitles, TitleType.Main) ?? seriesTitle;
+                string getEpisodeTitle() => GetTitleByLanguages(episodeTitles, "en", mainTitleLanguage) ?? episodeTitle;
                 return ConstructTitle(getSeriesTitle, getEpisodeTitle, outputType);
             }
         }
