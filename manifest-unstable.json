@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.80",
+                "changelog": "misc: fix links in dev release notification",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.80/shoko_3.0.1.80.zip",
+                "checksum": "600c57484fddfd0fc53004da083bc056",
+                "timestamp": "2024-04-05T07:42:12Z"
+            },
+            {
                 "version": "3.0.1.79",
                 "changelog": "misc: take 4: action!\nThis time using a new GH Action. So time to test out a few things;\n\n- List item\n\n[Link](<https://discord.com>)\n\n**Bold**\n\n_Italic_\n\n||Spoiler||\n\n**Note**: I totally didn't just typo that env. var..",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.76/shoko_3.0.1.76.zip",
                 "checksum": "0a1a24e4a381194c585d3cb9681e00f2",
                 "timestamp": "2024-04-05T07:21:21Z"
-            },
-            {
-                "version": "3.0.1.75",
-                "changelog": "misc: try updating discord notifications",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.75/shoko_3.0.1.75.zip",
-                "checksum": "5c35bffc9cb81ddd724d0fd7df36f052",
-                "timestamp": "2024-04-05T07:01:01Z"
             }
         ]
     }
