@@ -140,7 +140,7 @@ jobs:
       - name: Notify Discord Users
         uses: Ilshidur/action-discord@08d9328877d6954120eef2b07abbc79249bb6210
         env:
-          DISCORD_WEBHOO: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         with:
           args: |
             # <:jellyfin:1045360407814090953> Shokofin: New Unstable Build!
