@@ -134,7 +134,10 @@ public class ShokoResolveManager
             return mediaFolderConfig;
 
         // Check if we should introduce the VFS for the media folder.
-        mediaFolderConfig = new() { MediaFolderId = mediaFolder.Id };
+        mediaFolderConfig = new() {
+            MediaFolderId = mediaFolder.Id,
+            IsVirtualFileSystemEnabled = config.VirtualFileSystem,
+        };
 
         var start = DateTime.UtcNow;
         var attempts = 0;
@@ -195,7 +198,14 @@ public class ShokoResolveManager
 
     #region Generate Structure
 
-    private async Task<string?> GenerateStructureForFolder(Folder mediaFolder, string folderPath)
+    /// <summary>
+    /// Generates the VFS structure if the VFS is enabled globally or on the
+    /// <paramref name="mediaFolder"/>.
+    /// </summary>
+    /// <param name="mediaFolder">The media folder to generate a structure for.</param>
+    /// <param name="folderPath">The folder within the media folder to generate a structure for.</param>
+    /// <returns>The VFS path, if it succeeded.</returns>
+    private async Task<string?> GenerateStructureForFolderInVFS(Folder mediaFolder, string folderPath)
     {
         // Return early if we've already generated the structure from the import folder itself.
         if (DataCache.TryGetValue<string?>(mediaFolder.Path, out var vfsPath))
@@ -205,6 +215,10 @@ public class ShokoResolveManager
             async (_) => {
                 var mediaConfig = await GetOrCreateConfigurationForMediaFolder(mediaFolder);
                 if (!mediaConfig.IsMapped)
+                    return null;
+
+                // Return early if we're not going to generate them.
+                if (!(mediaConfig.IsVirtualFileSystemEnabled ?? Plugin.Instance.Configuration.VirtualFileSystem))
                     return null;
 
                 // Check if we should introduce the VFS for the media folder.
@@ -728,9 +742,6 @@ public class ShokoResolveManager
 
     public async Task<BaseItem?> ResolveSingle(Folder? parent, string? collectionType, FileSystemMetadata fileInfo)
     {
-        if (!Plugin.Instance.Configuration.VirtualFileSystem)
-            return null;
-
         if (!(collectionType == CollectionType.TvShows || collectionType == CollectionType.Movies || collectionType == null) || parent == null || fileInfo == null)
             return null;
 
@@ -742,19 +753,19 @@ public class ShokoResolveManager
             if (!Lookup.IsEnabledForItem(parent))
                 return null;
 
+            // We're already within the VFS, so let jellyfin take it from here.
             var fullPath = fileInfo.FullName;
-            var (mediaFolder, partialPath) = ApiManager.FindMediaFolder(fullPath, parent, root);
-            if (mediaFolder == root)
+            if (!fullPath.StartsWith(Plugin.Instance.VirtualRoot))
                 return null;
 
-            // We're most likely already within the VFS, so abort here.
-            if (!fullPath.StartsWith(Plugin.Instance.VirtualRoot))
+            var (mediaFolder, partialPath) = ApiManager.FindMediaFolder(fullPath, parent, root);
+            if (mediaFolder == root)
                 return null;
 
             var searchPath = mediaFolder.Path != parent.Path
                 ? Path.Combine(mediaFolder.Path, parent.Path[(mediaFolder.Path.Length + 1)..].Split(Path.DirectorySeparatorChar).Skip(1).Join(Path.DirectorySeparatorChar))
                 : mediaFolder.Path;
-            var vfsPath = await GenerateStructureForFolder(mediaFolder, searchPath).ConfigureAwait(false);
+            var vfsPath = await GenerateStructureForFolderInVFS(mediaFolder, searchPath).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath))
                 return null;
 
@@ -780,9 +791,6 @@ public class ShokoResolveManager
 
     public async Task<MultiItemResolverResult?> ResolveMultiple(Folder? parent, string? collectionType, List<FileSystemMetadata> fileInfoList)
     {
-        if (!Plugin.Instance.Configuration.VirtualFileSystem)
-            return null;
-
         if (!(collectionType == CollectionType.TvShows || collectionType == CollectionType.Movies || collectionType == null) || parent == null)
             return null;
 
@@ -796,7 +804,7 @@ public class ShokoResolveManager
 
             // Redirect children of a VFS managed media folder to the VFS.
             if (parent.ParentId == root.Id) {
-                var vfsPath = await GenerateStructureForFolder(parent, parent.Path).ConfigureAwait(false);
+                var vfsPath = await GenerateStructureForFolderInVFS(parent, parent.Path).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(vfsPath))
                     return null;
 
@@ -860,6 +868,8 @@ public class ShokoResolveManager
 
                 return new() { Items = items.Where(i => i is Movie).ToList(), ExtraFiles = items.OfType<TvSeries>().Select(s => FileSystem.GetFileSystemInfo(s.Path)).ToList() };
             }
+
+            // TODO: Redirect to the base item in the VFS if needed.
 
             return null;
         }

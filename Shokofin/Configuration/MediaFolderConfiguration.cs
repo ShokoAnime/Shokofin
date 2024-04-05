@@ -35,6 +35,12 @@ public class MediaFolderConfiguration
     public bool IsFileEventsEnabled { get; set; } = true;
 
     /// <summary>
+    /// Enable or disable the virtual file system on a per-media-folder basis.
+    /// </summary>
+    /// <value></value>
+    public bool? IsVirtualFileSystemEnabled { get; set; } = null;
+
+    /// <summary>
     /// Check if a relative path within the import folder is potentially available in this media folder.
     /// </summary>
     /// <param name="relativePath"></param>
