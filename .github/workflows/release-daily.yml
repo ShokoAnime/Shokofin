@@ -138,13 +138,11 @@ jobs:
 
     steps:
       - name: Notify Discord Users
-        uses: sarisia/actions-status-discord@v1
+        uses: Ilshidur/action-discord@08d9328877d6954120eef2b07abbc79249bb6210
+        env:
+          DISCORD_WEBHOO: ${{ secrets.DISCORD_WEBHOOK }}
         with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          nodetail: true
-          notimestamp: true
-          title: ""
-          content: |
+          args: |
             # <:jellyfin:1045360407814090953> Shokofin: New Unstable Build!
             **Version**: `${{ needs.current_info.outputs.version }}` (`${{ needs.current_info.outputs.sha_short }}`)
 
