@@ -142,6 +142,7 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
           nodetail: true
+          notimestamp: true
           color: 0xaa5cc3
           content: |
             # <:jellyfin:1045360407814090953> Shokofin: New Unstable Build!
@@ -150,4 +151,5 @@ jobs:
             Update your plugin using the [unstable manifest](https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/manifest-unstable.json) or by downloading the release from [GitHub Releases](https://github.com/ShokoAnime/Shokofin/releases/tag/${{ needs.current_info.outputs.version }}) and installing it manually!
 
             **Changes since last build**:
+
             ${{ needs.current_info.outputs.changelog }}
