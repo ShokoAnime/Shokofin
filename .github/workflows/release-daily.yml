@@ -143,7 +143,7 @@ jobs:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
           nodetail: true
           notimestamp: true
-          color: 0xaa5cc3
+          title: ""
           content: |
             # <:jellyfin:1045360407814090953> Shokofin: New Unstable Build!
             **Version**: `${{ needs.current_info.outputs.version }}` (`${{ needs.current_info.outputs.sha_short }}`)
