@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.75",
+                "changelog": "misc: try updating discord notifications",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.75/shoko_3.0.1.75.zip",
+                "checksum": "5c35bffc9cb81ddd724d0fd7df36f052",
+                "timestamp": "2024-04-05T07:01:01Z"
+            },
+            {
                 "version": "3.0.1.74",
                 "changelog": "feat: allow the VFS to be toggled per media folder\n\n- Allow the VFS to be toggled on/off **per media folder**. The global\n  setting at the time of creating the media folder will be saved for\n  the folder, so you can enable/disable the setting, create a library,\n  then reverse the setting to have it only enabled/disabled on a single\n  media folder.\n\n- Still no UI for the media folder settings to edit the settings for\n  existing media folders.\n\n- People that want to experiment with the VFS on _and_ off can now\n  create a symbolic link to the root of their media folder and enable\n  VFS for that folder after some shenanigans. Do note that the global\n  setting applies to any media folder that was mapped before this\n  commit, so if you want to save the setting for those media folders\n  then you need to edit the media folder settings directly (since there)\n  is no UI for the media folders yet.\n\nfix: validate links in case they broke",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.71/shoko_3.0.1.71.zip",
                 "checksum": "3ec315f2cabb7b679d54dd20ceae9b5a",
                 "timestamp": "2024-03-31T11:31:28Z"
-            },
-            {
-                "version": "3.0.1.70",
-                "changelog": "refactor: convert create file info\n\n- Convert `CreateFileInfo` to the new cache getter pattern\n\nfix: fix episode id lookups\n\n- the episode lookups should had been per file per series, not just per\n  file. now it is.\n\nchore: `\"\"` \u2192\u00a0`string.Empty`\n\nchore: de-duplicate provider ids",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.70/shoko_3.0.1.70.zip",
-                "checksum": "75cd51b883822d38f716c884e829efc7",
-                "timestamp": "2024-03-31T11:26:21Z"
             }
         ]
     }
