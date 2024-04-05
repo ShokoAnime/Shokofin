@@ -305,8 +305,10 @@ public class ShokoResolveManager
     private async Task GenerateSymbolicLinks(Folder mediaFolder, IEnumerable<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)> files)
     {
         var start = DateTime.UtcNow;
-        var skipped = 0;
+        var skippedLinks = 0;
+        var fixedLinks = 0;
         var subtitles = 0;
+        var fixedSubtitles = 0;
         var skippedSubtitles = 0;
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
@@ -330,10 +332,32 @@ public class ShokoResolveManager
                         Directory.CreateDirectory(symbolicDirectory);
 
                     allPathsForVFS.Add((sourceLocation, symbolicLink));
-                    if (!File.Exists(symbolicLink))
+                    if (!File.Exists(symbolicLink)) {
                         File.CreateSymbolicLink(symbolicLink, sourceLocation);
-                    else
-                        skipped++;
+                    }
+                    else {
+                        var shouldFix = false;
+                        try {
+                            var nextTarget = File.ResolveLinkTarget(symbolicLink, false);
+                            if (!string.Equals(sourceLocation, nextTarget)) {
+                                shouldFix = true;
+
+                                Logger.LogWarning("Fixing broken symbolic link {Link} for {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget);
+                            }
+                        }
+                        catch (Exception ex) {
+                            Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link}", symbolicLink);
+                            shouldFix = true;
+                        }
+                        if (shouldFix) {
+                            File.Delete(symbolicLink);
+                            File.CreateSymbolicLink(symbolicLink, sourceLocation);
+                            fixedLinks++;
+                        }
+                        else {
+                            skippedLinks++;
+                        }
+                    }
 
                     if (subtitleLinks.Count > 0) {
                         var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
@@ -345,8 +369,25 @@ public class ShokoResolveManager
                             allPathsForVFS.Add((subtitleSource, subtitleLink));
                             if (!File.Exists(subtitleLink))
                                 File.CreateSymbolicLink(subtitleLink, subtitleSource);
-                            else
-                                skippedSubtitles++;
+                            else {
+                                var shouldFix = false;
+                                try {
+                                    var nextTarget = File.ResolveLinkTarget(subtitleLink, false);
+                                    shouldFix = !string.Equals(subtitleSource, nextTarget);
+                                }
+                                catch (Exception ex) {
+                                    Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link} for {LinkTarget}", subtitleLink, subtitleSource);
+                                    shouldFix = true;
+                                }
+                                if (shouldFix) {
+                                    File.Delete(subtitleLink);
+                                    File.CreateSymbolicLink(subtitleLink, subtitleSource);
+                                    fixedSubtitles++;
+                                }
+                                else {
+                                    skippedSubtitles++;
+                                }
+                            }
                         }
                     }
                 }
@@ -357,19 +398,32 @@ public class ShokoResolveManager
         }))
             .ConfigureAwait(false);
 
+        var removedLinks = 0;
         var removedSubtitles = 0;
-        var toBeRemoved = FileSystem.GetFilePaths(ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder), true)
-            .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
-            .Except(allPathsForVFS.Select(tuple => tuple.symbolicLink).ToHashSet())
+        var toBeRemoved = FileSystem.GetFilePaths(vfsPath, true)
+            .Select(path => (path, extName: Path.GetExtension(path)))
+            .Where(tuple => _namingOptions.VideoFileExtensions.Contains(tuple.extName) || _namingOptions.SubtitleFileExtensions.Contains(tuple.extName))
+            .ExceptBy(allPathsForVFS.Select(tuple => tuple.symbolicLink).ToHashSet(), tuple => tuple.path)
             .ToList();
-        foreach (var symbolicLink in toBeRemoved) {
-            var subtitleLinks = FindSubtitlesForPath(symbolicLink);
+        foreach (var (symbolicLink, extName) in toBeRemoved) {
+            // Continue in case we already removed the (subtitle) file.
+            if (!File.Exists(symbolicLink))
+                continue;
 
             File.Delete(symbolicLink);
 
-            foreach (var subtitleLink in subtitleLinks) {
+            // Stats tracking.
+            if (_namingOptions.VideoFileExtensions.Contains(extName)) {
+                var subtitleLinks = _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(symbolicLink)) ? FindSubtitlesForPath(symbolicLink) : Array.Empty<string>();
+
+                removedLinks++;
+                foreach (var subtitleLink in subtitleLinks) {
+                    removedSubtitles++;
+                    File.Delete(symbolicLink);
+                }
+            }
+            else {
                 removedSubtitles++;
-                File.Delete(symbolicLink);
             }
 
             CleanupDirectoryStructure(symbolicLink);
@@ -377,10 +431,12 @@ public class ShokoResolveManager
 
         var timeSpent = DateTime.UtcNow - start;
         Logger.LogInformation(
-            "Created {CreatedMedia} ({CreatedSubtitles}), skipped {SkippedMedia} ({SkippedSubtitles}), and removed {RemovedMedia} ({RemovedSubtitles}) symbolic links in media folder at {Path} in {TimeSpan}",
-            allPathsForVFS.Count - skipped - subtitles,
+            "Created {CreatedMedia} ({CreatedSubtitles}), fixed {FixedMedia} ({FixedSubtitles}), skipped {SkippedMedia} ({SkippedSubtitles}), and removed {RemovedMedia} ({RemovedSubtitles}) symbolic links in media folder at {Path} in {TimeSpan}",
+            allPathsForVFS.Count - skippedLinks - subtitles,
             subtitles - skippedSubtitles,
-            skipped,
+            fixedLinks,
+            fixedSubtitles,
+            skippedLinks,
             skippedSubtitles,
             toBeRemoved.Count,
             removedSubtitles,
