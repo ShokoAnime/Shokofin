@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.81",
+                "changelog": "refactor: update plugin config\n\n- Give the plugin configuration a face-lift by adding proper regions\n  and comments, and also rename a few fields in the code, but not\n  in the settings file itself (as to not break anything).\n\n- Added and hooked up per-media-folder library filtering. Still no UI\n  to update it for existing libraries, and the global option is now\n  treated as a default option. It is recommended to either edit the\n  option in the xml file after updating, or removing the media folder\n  settings from the file and letting it re-generate itself on the next\n  library scan.\n\n- Tweaked the VFS per-media-folder setting to not fallback to the global\n  option, and treat the global option as a default option for new media\n  libraries.\n\nAlso, not in this commit, but the settings page will get another refactor\nto add the per-media-folder settings and SignalR settings sometime in\nthe future, but for now you will just have to deal with the fact that a\nmedia library is locked in on some settings when you create it, unless\nyou wipe or edit the media folder settings stored in the xml file.\n\nmisc: update logo [skip ci]",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.81/shoko_3.0.1.81.zip",
+                "checksum": "f37c6beefb43997ea3c07e855bf921aa",
+                "timestamp": "2024-04-06T11:02:39Z"
+            },
+            {
                 "version": "3.0.1.80",
                 "changelog": "misc: fix links in dev release notification",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.77/shoko_3.0.1.77.zip",
                 "checksum": "9323325ce698ca405875a232a4f4f6df",
                 "timestamp": "2024-04-05T07:26:40Z"
-            },
-            {
-                "version": "3.0.1.76",
-                "changelog": "misc: try removing embed in discord\n\n- Try removing the embed at the end of each release\n  message in discord.\n\n- Also @Queuecumbr (GH) / <@308830889281060864> (Discord) wanted to see\n  @ mentions in action from a web hook.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.76/shoko_3.0.1.76.zip",
-                "checksum": "0a1a24e4a381194c585d3cb9681e00f2",
-                "timestamp": "2024-04-05T07:21:21Z"
             }
         ]
     }
