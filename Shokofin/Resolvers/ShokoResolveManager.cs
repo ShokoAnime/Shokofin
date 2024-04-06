@@ -241,7 +241,7 @@ public class ShokoResolveManager
         ).ConfigureAwait(false);
     }
 
-    private IEnumerable<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)> GetImportFolderFiles(int importFolderId, string importFolderSubPath, string mediaFolderPath, ISet<string> fileSet)
+    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetImportFolderFiles(int importFolderId, string importFolderSubPath, string mediaFolderPath, ISet<string> fileSet)
     {
         var start = DateTime.UtcNow;
         var firstPage = ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath);
@@ -294,7 +294,7 @@ public class ShokoResolveManager
 
                 totalFiles++;
                 foreach (var xref in file.CrossReferences)
-                    yield return (sourceLocation, fileId: file.Id.ToString(), seriesId: xref.Series.Shoko.ToString(), episodeIds: xref.Episodes.Select(e => e.Shoko.ToString()).ToArray());
+                    yield return (sourceLocation, fileId: file.Id.ToString(), seriesId: xref.Series.Shoko.ToString());
             }
         } while (pages.Count > 0);
 
@@ -316,7 +316,7 @@ public class ShokoResolveManager
         return await ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath, page).ConfigureAwait(false);
     }
 
-    private async Task GenerateSymbolicLinks(Folder mediaFolder, IEnumerable<(string sourceLocation, string fileId, string seriesId, string[] episodeIds)> files)
+    private async Task GenerateSymbolicLinks(Folder mediaFolder, IEnumerable<(string sourceLocation, string fileId, string seriesId)> files)
     {
         var start = DateTime.UtcNow;
         var skippedLinks = 0;
@@ -333,7 +333,7 @@ public class ShokoResolveManager
 
             try {
                 // Skip any source files we weren't meant to have in the library.
-                var (sourceLocation, symbolicLinks) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId, tuple.episodeIds).ConfigureAwait(false);
+                var (sourceLocation, symbolicLinks) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(sourceLocation))
                     return;
 
@@ -459,7 +459,7 @@ public class ShokoResolveManager
         );
     }
 
-    private async Task<(string sourceLocation, string[] symbolicLinks)> GenerateLocationsForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId, string[] episodeIds)
+    private async Task<(string sourceLocation, string[] symbolicLinks)> GenerateLocationsForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId)
     {
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId).ConfigureAwait(false);
         if (season == null)
