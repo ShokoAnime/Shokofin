@@ -27,8 +27,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
         semaphore.Wait();
 
-        try
-        {
+        try {
             if (Cache.TryGetValue<TItem>(key, out value)) {
                 foundAction(value);
                 return value;
@@ -42,8 +41,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             entry.Value = value;
             return value;
         }
-        finally
-        {
+        finally {
             semaphore.Release();
             RemoveSemaphore(key);
         }
@@ -60,8 +58,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
         await semaphore.WaitAsync();
 
-        try
-        {
+        try {
             if (Cache.TryGetValue<TItem>(key, out value)) {
                 foundAction(value);
                 return value;
@@ -75,8 +72,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             entry.Value = value;
             return value;
         }
-        finally
-        {
+        finally {
             semaphore.Release();
             RemoveSemaphore(key);
         }
@@ -91,8 +87,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
         semaphore.Wait();
 
-        try
-        {
+        try {
             if (Cache.TryGetValue<TItem>(key, out value))
                 return value;
 
@@ -104,8 +99,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             entry.Value = value;
             return value;
         }
-        finally
-        {
+        finally {
             semaphore.Release();
             RemoveSemaphore(key);
         }
@@ -120,8 +114,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
         await semaphore.WaitAsync();
 
-        try
-        {
+        try {
             if (Cache.TryGetValue<TItem>(key, out value))
                 return value;
 
@@ -133,8 +126,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             entry.Value = value;
             return value;
         }
-        finally
-        {
+        finally {
             semaphore.Release();
             RemoveSemaphore(key);
         }

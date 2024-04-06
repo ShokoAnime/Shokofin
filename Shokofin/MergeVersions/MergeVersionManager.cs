@@ -451,8 +451,7 @@ public class MergeVersionsManager
     private async Task RemoveAlternateSources(Video video)
     {
         // Find the primary video.
-        if (video.LinkedAlternateVersions.Length == 0)
-        {
+        if (video.LinkedAlternateVersions.Length == 0) {
             // Ensure we're not running on an unlinked item.
             if (string.IsNullOrEmpty(video.PrimaryVersionId))
                 return;

@@ -108,8 +108,7 @@ public class ShokoAPIClient : IDisposable
                     throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
                 var version = Plugin.Instance.Configuration.ServerVersion;
-                if (version == null)
-                {
+                if (version == null) {
                     version = await GetVersion().ConfigureAwait(false)
                         ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
@@ -131,8 +130,7 @@ public class ShokoAPIClient : IDisposable
                     cachedEntry.SlidingExpiration = DefaultTimeSpan;
                     return response;
                 }
-                catch (HttpRequestException ex)
-                {
+                catch (HttpRequestException ex) {
                     Logger.LogWarning(ex, "Unable to connect to complete the request to Shoko.");
                     throw;
                 }
@@ -163,8 +161,7 @@ public class ShokoAPIClient : IDisposable
             throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
         var version = Plugin.Instance.Configuration.ServerVersion;
-        if (version == null)
-        {
+        if (version == null) {
             version = await GetVersion().ConfigureAwait(false)
                 ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
@@ -191,8 +188,7 @@ public class ShokoAPIClient : IDisposable
             Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
             return response;
         }
-        catch (HttpRequestException ex)
-        {
+        catch (HttpRequestException ex) {
             Logger.LogWarning(ex, "Unable to connect to complete the request to Shoko.");
             throw;
         }
@@ -203,8 +199,7 @@ public class ShokoAPIClient : IDisposable
     public async Task<ApiKey?> GetApiKey(string username, string password, bool forUser = false)
     {
         var version = Plugin.Instance.Configuration.ServerVersion;
-        if (version == null)
-        {
+        if (version == null) {
             version = await GetVersion().ConfigureAwait(false)
                 ?? throw new HttpRequestException("Unable to connect to Shoko Server to read the version.", null, HttpStatusCode.BadGateway);
 
@@ -277,12 +272,10 @@ public class ShokoAPIClient : IDisposable
 
     public async Task<File.UserStats?> GetFileUserStats(string fileId, string? apiKey = null)
     {
-        try
-        {
+        try {
             return await Get<File.UserStats>($"/api/v3/File/{fileId}/UserStats", apiKey).ConfigureAwait(false);
         }
-        catch (ApiException e)
-        {
+        catch (ApiException e) {
             // File user stats were not found.
             if (e.StatusCode == HttpStatusCode.NotFound) {
                 if (!e.Message.Contains("FileUserStats"))

@@ -61,8 +61,7 @@ public class ApiException : Exception
             return new ApiException(response.StatusCode, "ValidationError", title, validationErrors);
         }
         var index = text.IndexOf("HEADERS");
-        if (index != -1)
-        {
+        if (index != -1) {
             var (firstLine, lines) = text.Substring(0, index).TrimEnd().Split('\n');
             var (name, splitMessage) = firstLine?.Split(':') ?? new string[] {};
             var message = string.Join(':', splitMessage).Trim();

@@ -39,8 +39,7 @@ public class CollectionManager
 
     public async Task ReconstructCollections(IProgress<double> progress, CancellationToken cancellationToken)
     {
-        try
-        {
+        try {
             switch (Plugin.Instance.Configuration.CollectionGrouping)
             {
                 default:
@@ -53,8 +52,7 @@ public class CollectionManager
                     break;
             }
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
         }
     }
@@ -74,8 +72,7 @@ public class CollectionManager
         // create a tree-map of how it's supposed to be.
         var config = Plugin.Instance.Configuration;
         var movieDict = new Dictionary<Movie, (FileInfo, SeasonInfo, ShowInfo)>();
-        foreach (var movie in movies)
-        {
+        foreach (var movie in movies) {
             if (!Lookup.TryGetEpisodeIdsFor(movie, out var episodeIds))
                 continue;
 
@@ -100,8 +97,7 @@ public class CollectionManager
             .ContinueWith(task => task.Result.ToDictionary(x => x!.Id, x => x!));
 
         var finalGroups = new Dictionary<string, CollectionInfo>();
-        foreach (var initialGroup in groupsDict.Values)
-        {
+        foreach (var initialGroup in groupsDict.Values) {
             var currentGroup = initialGroup;
             if (finalGroups.ContainsKey(currentGroup.Id))
                 continue;
@@ -157,8 +153,7 @@ public class CollectionManager
         }
 
         // Add the missing collections.
-        foreach (var missingId in toAdd)
-        {
+        foreach (var missingId in toAdd) {
             var collectionInfo = finalGroups[missingId];
             var collection = await Collection.CreateCollectionAsync(new() {
                 Name = collectionInfo.Name,
@@ -192,8 +187,7 @@ public class CollectionManager
         // create a tree-map of how it's supposed to be.
         var config = Plugin.Instance.Configuration;
         var movieDict = new Dictionary<Movie, (FileInfo, SeasonInfo, ShowInfo)>();
-        foreach (var movie in movies)
-        {
+        foreach (var movie in movies) {
             if (!Lookup.TryGetEpisodeIdsFor(movie, out var episodeIds))
                 continue;
 
@@ -218,8 +212,7 @@ public class CollectionManager
             .ContinueWith(task => task.Result.ToDictionary(x => x!.Id, x => x!));
 
         var finalGroups = new Dictionary<string, CollectionInfo>();
-        foreach (var initialGroup in groupsDict.Values)
-        {
+        foreach (var initialGroup in groupsDict.Values) {
             var currentGroup = initialGroup;
             if (finalGroups.ContainsKey(currentGroup.Id))
                 continue;
@@ -263,8 +256,7 @@ public class CollectionManager
             await RemoveCollection(boxSet, toRemoveSet, groupId: groupId);
 
         // Add the missing collections.
-        foreach (var missingId in toAdd)
-        {
+        foreach (var missingId in toAdd) {
             var collectionInfo = finalGroups[missingId];
             var collection = await Collection.CreateCollectionAsync(new() {
                 Name = collectionInfo.Name,
@@ -311,8 +303,7 @@ public class CollectionManager
     {
         // Check the movies with a shoko series id set, and remove the collection name from them.
         var movies = GetMovies();
-        foreach (var movie in movies)
-        {
+        foreach (var movie in movies) {
             if (string.IsNullOrEmpty(movie.CollectionName))
                 continue;
 

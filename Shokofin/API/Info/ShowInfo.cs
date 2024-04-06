@@ -175,8 +175,7 @@ public class ShowInfo
         }
 
         // Fallback to the first series if we can't get a base point for seasons.
-        if (foundIndex == -1)
-        {
+        if (foundIndex == -1) {
             logger.LogWarning("Unable to get a base-point for seasons within the group for the filter, so falling back to the first series in the group. This is most likely due to library separation being enabled. (Group={GroupID})", groupId);
             foundIndex = 0;
         }

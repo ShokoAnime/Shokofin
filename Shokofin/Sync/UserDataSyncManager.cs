@@ -335,8 +335,7 @@ public class UserDataSyncManager
 
         var numComplete = 0;
         var numTotal = videos.Count * enabledUsers.Count;
-        foreach (var video in videos)
-        {
+        foreach (var video in videos) {
             cancellationToken.ThrowIfCancellationRequested();
 
             if (!(Lookup.TryGetFileIdFor(video, out var fileId) && Lookup.TryGetEpisodeIdFor(video, out var episodeId)))
@@ -487,8 +486,7 @@ public class UserDataSyncManager
                     if (localUserStats == null)
                         break;
                     // Export the local stats if there is no remote stats or if the local stats are newer.
-                    if (remoteUserStats == null)
-                    {
+                    if (remoteUserStats == null) {
                         remoteUserStats = localUserStats.ToFileUserStats();
                         // Don't sync if the local state is considered empty and there is no remote state.
                         if (remoteUserStats.IsEmpty)
@@ -507,14 +505,12 @@ public class UserDataSyncManager
                     if (remoteUserStats == null)
                         break;
                     // Create a new local stats entry if there is no local entry.
-                    if (localUserStats == null)
-                    {
+                    if (localUserStats == null) {
                         UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats = remoteUserStats.ToUserData(video, userConfig.UserId), UserDataSaveReason.Import, CancellationToken.None);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, episodeId);
                     }
                     // Else merge the remote stats into the local stats entry.
-                    else if (!localUserStats.LastPlayedDate.HasValue || remoteUserStats.LastUpdatedAt > localUserStats.LastPlayedDate.Value)
-                    {
+                    else if (!localUserStats.LastPlayedDate.HasValue || remoteUserStats.LastUpdatedAt > localUserStats.LastPlayedDate.Value) {
                         UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, episodeId);
                     }
@@ -542,15 +538,13 @@ public class UserDataSyncManager
                         break;
 
                     // Export if the local state is fresher then the remote state.
-                    if (localUserStats.LastPlayedDate.Value > remoteUserStats.LastUpdatedAt)
-                    {
+                    if (localUserStats.LastPlayedDate.Value > remoteUserStats.LastUpdatedAt) {
                         remoteUserStats = localUserStats.ToFileUserStats();
                         remoteUserStats = await APIClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Episode={EpisodeId})", SyncDirection.Export.ToString(), video.Name, userConfig.UserId, fileId, episodeId);
                     }
                     // Else import if the remote state is fresher then the local state.
-                    else if (localUserStats.LastPlayedDate.Value < remoteUserStats.LastUpdatedAt)
-                    {
+                    else if (localUserStats.LastPlayedDate.Value < remoteUserStats.LastUpdatedAt) {
                         UserDataManager.SaveUserData(userConfig.UserId, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Episode={EpisodeId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, episodeId);
                     }

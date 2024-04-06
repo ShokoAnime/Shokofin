@@ -102,8 +102,7 @@ public class ShokoResolveManager
         if (e.Item != null && root != null && e.Item != root && e.Item is Folder folder && folder.ParentId == Guid.Empty  && !string.IsNullOrEmpty(folder.Path) && !folder.Path.StartsWith(root.Path)) {
             DataCache.Remove(folder.Id.ToString());
             var mediaFolderConfig = Plugin.Instance.Configuration.MediaFolders.FirstOrDefault(c => c.MediaFolderId == folder.Id);
-            if (mediaFolderConfig != null)
-            {
+            if (mediaFolderConfig != null) {
                 Logger.LogDebug(
                     "Removing stored configuration for folder at {Path} (ImportFolder={ImportFolderId},RelativePath={RelativePath})",
                     folder.Path,
@@ -487,20 +486,18 @@ public class ShokoResolveManager
         if (season == null || episode == null)
             return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
 
-        var isSpecial = episode.IsSpecial;
-        var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
-        var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
         var showName = show.DefaultSeason.AniDB.Title?.ReplaceInvalidPathCharacters();
-        if (string.IsNullOrEmpty(showName))
+        if (string.IsNullOrEmpty(showName)) {
             showName = $"Shoko Series {show.Id}";
-        else if (show.DefaultSeason.AniDB.AirDate.HasValue)
-        {
+        }
+        else if (show.DefaultSeason.AniDB.AirDate.HasValue) {
             var yearText = $" ({show.DefaultSeason.AniDB.AirDate.Value.Year})";
             if (!showName.EndsWith(yearText))
                 showName += yearText;
         }
 
         var folders = new List<string>();
+        var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
         var episodeName = (episode.AniDB.Titles.FirstOrDefault(t => t.LanguageCode == "en")?.Value ?? $"Episode {episode.AniDB.Type} {episodeNumber}").ReplaceInvalidPathCharacters();
         var extrasFolder = file.ExtraType switch {
             null => null,
@@ -531,6 +528,8 @@ public class ShokoResolveManager
             }
         }
         else {
+            var isSpecial = episode.IsSpecial;
+            var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
             var seasonName = $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}";
             if (!string.IsNullOrEmpty(extrasFolder)) {
                 folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}]", extrasFolder));
@@ -668,8 +667,7 @@ public class ShokoResolveManager
                     Logger.LogDebug("Unable to find shoko series for {Path}, trying {DirCount} sub-directories.", partialPath, entries.Count);
                     foreach (var entry in entries) {
                         season = await ApiManager.GetSeasonInfoByPath(entry.FullName).ConfigureAwait(false);
-                        if (season != null)
-                        {
+                        if (season != null) {
                             Logger.LogDebug("Found shoko series {SeriesName} for sub-directory of path {Path} (Series={SeriesId})", season.Shoko.Name, partialPath, season.Id);
                             break;
                         }
@@ -773,8 +771,7 @@ public class ShokoResolveManager
                 if (!fileInfo.Name.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
                     return null;
 
-                return new TvSeries()
-                {
+                return new TvSeries() {
                     Path = fileInfo.FullName,
                 };
             }
@@ -840,8 +837,7 @@ public class ShokoResolveManager
                                     if (file == null || file.ExtraType != null)
                                         return null;
 
-                                    return new Movie()
-                                    {
+                                    return new Movie() {
                                         Path = fileInfo.FullName,
                                     } as BaseItem;
                                 })

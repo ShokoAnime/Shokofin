@@ -101,8 +101,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
         if (config.TitleAddForMultipleEpisodes && file != null && file.EpisodeList.Count > 1) {
             var displayTitles = new List<string?>();
             var alternateTitles = new List<string?>();
-            foreach (var episodeInfo in file.EpisodeList)
-            {
+            foreach (var episodeInfo in file.EpisodeList) {
                 string defaultEpisodeTitle = episodeInfo.Shoko.Name;
                 if (
                     // Movies

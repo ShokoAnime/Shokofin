@@ -374,8 +374,7 @@ public class ShokoAPIManager : IDisposable
 
         // Check if we found a match.
         var file = result?.FirstOrDefault();
-        if (file == null || file.CrossReferences.Count == 0)
-        {
+        if (file == null || file.CrossReferences.Count == 0) {
             Logger.LogTrace("Found no match for {Path}", partialPath);
             return (null, null, null);
         }
@@ -701,12 +700,10 @@ public class ShokoAPIManager : IDisposable
 
         // Return the first match where the series unique paths partially match
         // the input path.
-        foreach (var series in result)
-        {
+        foreach (var series in result) {
             seriesId  = series.IDs.Shoko.ToString();
             var pathSet = await GetPathSetForSeries(seriesId).ConfigureAwait(false);
-            foreach (var uniquePath in pathSet)
-            {
+            foreach (var uniquePath in pathSet) {
                 // Remove the trailing slash before matching.
                 if (!uniquePath[..^1].EndsWith(partialPath))
                     continue;
