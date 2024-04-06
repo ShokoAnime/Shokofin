@@ -70,11 +70,11 @@ public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
     {
         var version = await ApiClient.GetVersion();
         if (version != null && (
-            Plugin.Instance.Configuration.HostVersion == null ||
-            !string.Equals(version.ToString(), Plugin.Instance.Configuration.HostVersion.ToString())
+            Plugin.Instance.Configuration.ServerVersion == null ||
+            !string.Equals(version.ToString(), Plugin.Instance.Configuration.ServerVersion.ToString())
         )) {
             Logger.LogInformation("Found new Shoko Server version; {version}", version);
-            Plugin.Instance.Configuration.HostVersion = version;
+            Plugin.Instance.Configuration.ServerVersion = version;
             Plugin.Instance.SaveConfiguration();
         }
     }

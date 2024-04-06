@@ -100,10 +100,10 @@ async function defaultSubmit(form) {
     let config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
 
     if (config.ApiKey !== "") {
-        let publicHost = form.querySelector("#PublicHost").value;
-        if (publicHost.endsWith("/")) {
-            publicHost = publicHost.slice(0, -1);
-            form.querySelector("#PublicHost").value = publicHost;
+        let publicUrl = form.querySelector("#PublicUrl").value;
+        if (publicUrl.endsWith("/")) {
+            publicUrl = publicUrl.slice(0, -1);
+            form.querySelector("#PublicUrl").value = publicUrl;
         }
         const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
         const filteringModeRaw = form.querySelector("#LibraryFilteringMode").value;
@@ -144,7 +144,7 @@ async function defaultSubmit(form) {
         config.HideProgrammingTags = form.querySelector("#HideProgrammingTags").checked;
     
         // Advanced settings
-        config.PublicHost = publicHost;
+        config.PublicUrl = publicUrl;
         config.IgnoredFolders = ignoredFolders;
         form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
 
@@ -195,33 +195,33 @@ async function defaultSubmit(form) {
     }
     else {
         // Connection settings
-        let host = form.querySelector("#Host").value;
-        if (!host) {
-            host = "http://localhost:8111";
+        let url = form.querySelector("#Url").value;
+        if (!url) {
+            url = "http://localhost:8111";
         }
         else {
             try {
-                let url = new URL(host);
-                host = url.href;
+                let url = new URL(url);
+                url = url.href;
             }
             catch (err) {
                 try {
-                    let url = new URL(`http://${host}:8111`);
-                    host = url.href;
+                    let url = new URL(`http://${url}:8111`);
+                    url = url.href;
                 }
                 catch (err2) {
                   throw err;
                 }
             }
         }
-        if (host.endsWith("/")) {
-            host = host.slice(0, -1);
+        if (url.endsWith("/")) {
+            url = url.slice(0, -1);
         }
 
-        // Update the host if needed.
-        if (config.Host !== host) {
-            config.Host = host;
-            form.querySelector("#Host").value = host;
+        // Update the url if needed.
+        if (config.Url !== url) {
+            config.Url = url;
+            form.querySelector("#Url").value = url;
             let result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
             Dashboard.processPluginConfigurationUpdateResult(result);
         }
@@ -253,7 +253,7 @@ async function resetConnectionSettings(form) {
     
     // Connection settings
     config.ApiKey = "";
-    config.HostVersion = null;
+    config.ServerVersion = null;
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
     Dashboard.processPluginConfigurationUpdateResult(result);
@@ -263,10 +263,10 @@ async function resetConnectionSettings(form) {
 
 async function syncSettings(form) {
     const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
-    let publicHost = form.querySelector("#PublicHost").value;
-    if (publicHost.endsWith("/")) {
-        publicHost = publicHost.slice(0, -1);
-        form.querySelector("#PublicHost").value = publicHost;
+    let publicUrl = form.querySelector("#PublicUrl").value;
+    if (publicUrl.endsWith("/")) {
+        publicUrl = publicUrl.slice(0, -1);
+        form.querySelector("#PublicUrl").value = publicUrl;
     }
     const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
     const filteringModeRaw = form.querySelector("#LibraryFilteringMode").value;
@@ -307,7 +307,7 @@ async function syncSettings(form) {
     config.HideProgrammingTags = form.querySelector("#HideProgrammingTags").checked;
 
     // Advanced settings
-    config.PublicHost = publicHost;
+    config.PublicUrl = publicUrl;
     config.IgnoredFolders = ignoredFolders;
     form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
 
@@ -388,12 +388,12 @@ export default function (page) {
     const userSelector = form.querySelector("#UserSelector");
     // Refresh the view after we changed the settings, so the view reflect the new settings.
     const refreshSettings = (config) => {
-        if (config.HostVersion) {
-            let version = `Version ${config.HostVersion.Version}`;
+        if (config.ServerVersion) {
+            let version = `Version ${config.ServerVersion.Version}`;
             const extraDetails = [
-                config.HostVersion.ReleaseChannel || "",
-                config.HostVersion.
-                Commit ? config.HostVersion.Commit.slice(0, 7) : "",
+                config.ServerVersion.ReleaseChannel || "",
+                config.ServerVersion.
+                Commit ? config.ServerVersion.Commit.slice(0, 7) : "",
             ].filter(s => s).join(", ");
             if (extraDetails)
                 version += ` (${extraDetails})`;
@@ -403,7 +403,7 @@ export default function (page) {
             form.querySelector("#ServerVersion").value = "Version N/A";
         }
         if (config.ApiKey) {
-            form.querySelector("#Host").setAttribute("disabled", "");
+            form.querySelector("#Url").setAttribute("disabled", "");
             form.querySelector("#Username").setAttribute("disabled", "");
             form.querySelector("#Password").value = "";
             form.querySelector("#ConnectionSetContainer").setAttribute("hidden", "");
@@ -418,7 +418,7 @@ export default function (page) {
             form.querySelector("#ExperimentalSection").removeAttribute("hidden");
         }
         else {
-            form.querySelector("#Host").removeAttribute("disabled");
+            form.querySelector("#Url").removeAttribute("disabled");
             form.querySelector("#Username").removeAttribute("disabled");
             form.querySelector("#ConnectionSetContainer").removeAttribute("hidden");
             form.querySelector("#ConnectionResetContainer").setAttribute("hidden", "");
@@ -482,7 +482,7 @@ export default function (page) {
             const users = await ApiClient.getUsers();
 
             // Connection settings
-            form.querySelector("#Host").value = config.Host;
+            form.querySelector("#Url").value = config.Url;
             form.querySelector("#Username").value = config.Username;
             form.querySelector("#Password").value = "";
 
@@ -536,7 +536,7 @@ export default function (page) {
             form.querySelector("#HideProgrammingTags").checked = config.HideProgrammingTags;
 
             // Advanced settings
-            form.querySelector("#PublicHost").value = config.PublicHost;
+            form.querySelector("#PublicUrl").value = config.PublicUrl;
             form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
 
             // Experimental settings

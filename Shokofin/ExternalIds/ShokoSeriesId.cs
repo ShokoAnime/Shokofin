@@ -24,5 +24,5 @@ public class ShokoSeriesId : IExternalId
         => null;
 
     public virtual string UrlFormatString
-        => $"{Plugin.Instance.Configuration.PrettyHost}/webui/collection/series/{{0}}";
+        => $"{Plugin.Instance.Configuration.PrettyUrl}/webui/collection/series/{{0}}";
 }

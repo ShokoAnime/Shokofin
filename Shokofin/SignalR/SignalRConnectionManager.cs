@@ -57,7 +57,7 @@ public class SignalRConnectionManager : IDisposable
             return;
 
         var builder = new HubConnectionBuilder()
-            .WithUrl(config.Host + HubUrl, connectionOptions => 
+            .WithUrl(config.Url + HubUrl, connectionOptions => 
                 connectionOptions.AccessTokenProvider = () => Task.FromResult<string?>(config.ApiKey)
             )
             .AddJsonProtocol();
@@ -172,7 +172,7 @@ public class SignalRConnectionManager : IDisposable
     }
 
     private static bool CanConnect(PluginConfiguration config)
-        => !string.IsNullOrEmpty(config.Host) && !string.IsNullOrEmpty(config.ApiKey);
+        => !string.IsNullOrEmpty(config.Url) && !string.IsNullOrEmpty(config.ApiKey);
 
     private static string GenerateConfigKey(PluginConfiguration config)
         => $"CanConnect={CanConnect(config)},Refresh={config.SignalR_RefreshEnabled},FileWatcher={config.SignalR_FileWatcherEnabled},AutoReconnect={config.SignalR_AutoReconnectInSeconds.Select(s => s.ToString()).Join(',')}";

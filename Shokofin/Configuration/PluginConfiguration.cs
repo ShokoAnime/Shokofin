@@ -1,7 +1,7 @@
 using MediaBrowser.Model.Plugins;
-using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using System.Xml.Serialization;
 using Shokofin.API.Models;
 
 using TextSourceType = Shokofin.Utils.Text.TextSourceType;
@@ -14,19 +14,116 @@ namespace Shokofin.Configuration;
 
 public class PluginConfiguration : BasePluginConfiguration
 {
-    public string Host { get; set; }
+    #region Connection
 
-    public ComponentVersion? HostVersion { get; set; }
+    /// <summary>
+    /// The URL for where to connect to shoko internally.
+    /// And externally if no <seealso cref="PublicUrl"/> is set.
+    /// </summary>
+    [XmlElement("Host")]
+    public string Url { get; set; }
 
-    public string PublicHost { get; set; }
+    /// <summary>
+    /// The last known server version. This is used for keeping compatibility
+    /// with multiple versions of the server.
+    /// </summary>
+    [XmlElement("HostVersion")]
+    public ComponentVersion? ServerVersion { get; set; }
+
+    [XmlElement("PublicHost")]
+    public string PublicUrl { get; set; }
 
     [JsonIgnore]
-    public virtual string PrettyHost
-        => string.IsNullOrEmpty(PublicHost) ? Host : PublicHost;
+    public virtual string PrettyUrl
+        => string.IsNullOrEmpty(PublicUrl) ? Url : PublicUrl;
 
+    /// <summary>
+    /// The last known user name we used to try and connect to the server.
+    /// </summary>
     public string Username { get; set; }
 
+    /// <summary>
+    /// The API key used to authenticate our requests to the server.
+    /// This will be an empty string if we're not authenticated yet.
+    /// </summary>
     public string ApiKey { get; set; }
+
+    #endregion
+
+    #region Plugin Interoperability
+
+    /// <summary>
+    /// Add AniDB ids to entries that support it. This is best to use when you
+    /// don't use shoko groups.
+    /// </summary>
+    public bool AddAniDBId { get; set; }
+
+    /// <summary>
+    /// Add TMDb ids to entries that support it.
+    /// </summary>
+    public bool AddTMDBId { get; set; }
+
+    #endregion
+
+    #region Metadata
+
+    /// <summary>
+    /// Determines how we'll be selecting our main title for entries.
+    /// </summary>
+    public DisplayLanguageType TitleMainType { get; set; }
+
+    /// <summary>
+    /// Determines how we'll be selecting the alternate title for our entries.
+    /// </summary>
+    public DisplayLanguageType TitleAlternateType { get; set; }
+
+    /// <summary>
+    /// Allow choosing any title in the selected language if no official
+    /// title is available.
+    /// </summary>
+    public bool TitleAllowAny { get; set; }
+
+    /// <summary>
+    /// This will combine the titles for multi episodes entries into a single
+    /// title, instead of just showing the title for the first episode.
+    /// </summary>
+    public bool TitleAddForMultipleEpisodes { get; set; }
+
+    /// <summary>
+    /// Mark any episode that is not considered a normal season epiode with a
+    /// prefix and number.
+    /// </summary>
+    public bool MarkSpecialsWhenGrouped { get; set; }
+
+    /// <summary>
+    /// The description source. This will be replaced in the future.
+    /// </summary>
+    public TextSourceType DescriptionSource { get; set; }
+
+    /// <summary>
+    /// Clean up links within the AniDB description for entries.
+    /// </summary>
+    public bool SynopsisCleanLinks { get; set; }
+
+    /// <summary>
+    /// Clean up misc. lines within the AniDB description for entries.
+    /// </summary>
+    public bool SynopsisCleanMiscLines { get; set; }
+
+    /// <summary>
+    /// Remove the "summary" preface text in the AniDB description for entries.
+    /// </summary>
+    public bool SynopsisRemoveSummary { get; set; }
+
+    /// <summary>
+    /// Collapse up multiple empty lines into a single line in the AniDB
+    /// description for entries.
+    /// </summary>
+    public bool SynopsisCleanMultiEmptyLines { get; set; }
+
+    #endregion
+
+    #region Tags
 
     public bool HideArtStyleTags { get; set; }
 
@@ -39,67 +136,88 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool HideSettingTags { get; set; }
 
     public bool HideProgrammingTags { get; set; }
-    
+
     public bool HideUnverifiedTags { get; set; }
 
-    public bool TitleAddForMultipleEpisodes { get; set; }
+    #endregion
 
-    public bool SynopsisCleanLinks { get; set; }
-
-    public bool SynopsisCleanMiscLines { get; set; }
-
-    public bool SynopsisRemoveSummary { get; set; }
-
-    public bool SynopsisCleanMultiEmptyLines { get; set; }
-
-    public bool AddAniDBId { get; set; }
-
-    public bool AddTMDBId { get; set; }
-
-    public TextSourceType DescriptionSource { get; set; }
-
-    public bool VirtualFileSystem { get; set; }
-
-    public int VirtualFileSystemThreads { get; set; }
-
-    public bool UseGroupsForShows { get; set; }
-
-    public bool SeparateMovies { get; set; }
-
-    public OrderType SeasonOrdering { get; set; }
-
-    public bool MarkSpecialsWhenGrouped { get; set; }
-
-    public SpecialOrderType SpecialsPlacement { get; set; }
-
-    public CollectionCreationType CollectionGrouping { get; set; }
-
-    public OrderType MovieOrdering { get; set; }
-
-    public DisplayLanguageType TitleMainType { get; set; }
-
-    public DisplayLanguageType TitleAlternateType { get; set; }
+    #region User
 
     /// <summary>
-    /// Allow choosing any title in the selected language if no official
-    /// title is available.
+    /// User configuration.
     /// </summary>
-    public bool TitleAllowAny { get; set; }
+    public List<UserConfiguration> UserList { get; set; }
 
-    public UserConfiguration[] UserList { get; set; }
+    #endregion
 
+    #region Library
+
+    /// <summary>
+    /// Use Shoko Groups to group Shoko Series together to create the show entries.
+    /// </summary>
+    public bool UseGroupsForShows { get; set; }
+
+    /// <summary>
+    /// Separate movies out of show type libraries.
+    /// </summary>
+    public bool SeparateMovies { get; set; }
+
+    /// <summary>
+    /// Determines how collections are made.
+    /// </summary>
+    public CollectionCreationType CollectionGrouping { get; set; }
+
+    /// <summary>
+    /// Determines how seasons are ordered within a show.
+    /// </summary>
+    public OrderType SeasonOrdering { get; set; }
+
+    /// <summary>
+    /// Determines how specials are placed within seasons, if at all.
+    /// </summary>
+    public SpecialOrderType SpecialsPlacement { get; set; }
+
+    /// <summary>
+    /// Add missing season and episode entries so the user can see at a glance
+    /// what is missing, and so the "Upcoming" section of the library works as
+    /// intended.
+    /// </summary>
+    public bool AddMissingMetadata { get; set; }
+
+    public List<string> IgnoredFolders { get; set; }
+
+    #endregion
+
+    #region Media Folder
+
+    /// <summary>
+    /// Enable/disable the VFS for new media-folders/libraries.
+    /// </summary>
+    public bool VirtualFileSystem { get; set; }
+
+    /// <summary>
+    /// Number of threads to concurrently generate links for the VFS.
+    /// </summary>
+    public int VirtualFileSystemThreads { get; set; }
+
+    /// <summary>
+    /// Enable/disable the filtering for new media-folders/libraries.
+    /// </summary>
+    [XmlElement("LibraryFilteringMode")]
+    public bool? LibraryFiltering { get; set; }
+
+    /// <summary>
+    /// Per media folder configuration.
+    /// </summary>
     public List<MediaFolderConfiguration> MediaFolders { get; set; }
 
-    public string[] IgnoredFolders { get; set; }
-
-    public bool? LibraryFilteringMode { get; set; }
+    #endregion
 
     #region SignalR
 
     /// <summary>
     /// Enable the SignalR events from Shoko.
     /// </summary>
-    /// <value></value>
     public bool SignalR_AutoConnectEnabled { get; set; }
 
     /// <summary>
@@ -122,21 +240,33 @@ public class PluginConfiguration : BasePluginConfiguration
 
     #region Experimental features
 
+    /// <summary>
+    /// Automagically merge alternate versions after a library scan.
+    /// </summary>
     public bool EXPERIMENTAL_AutoMergeVersions { get; set; }
 
+    /// <summary>
+    /// Split all movies up before merging them back together.
+    /// </summary>
     public bool EXPERIMENTAL_SplitThenMergeMovies { get; set; }
 
+    /// <summary>
+    /// Split all episodes up before merging them back together.
+    /// </summary>
     public bool EXPERIMENTAL_SplitThenMergeEpisodes { get; set; }
 
+    /// <summary>
+    /// Coming soon™.
+    /// </summary>
     public bool EXPERIMENTAL_MergeSeasons { get; set; }
 
     #endregion
 
     public PluginConfiguration()
     {
-        Host = "http://127.0.0.1:8111";
-        HostVersion = null;
-        PublicHost = string.Empty;
+        Url = "http://127.0.0.1:8111";
+        ServerVersion = null;
+        PublicUrl = string.Empty;
         Username = "Default";
         ApiKey = string.Empty;
         HideArtStyleTags = false;
@@ -163,18 +293,18 @@ public class PluginConfiguration : BasePluginConfiguration
         SeparateMovies = false;
         SeasonOrdering = OrderType.Default;
         SpecialsPlacement = SpecialOrderType.AfterSeason;
+        AddMissingMetadata = true;
         MarkSpecialsWhenGrouped = true;
         CollectionGrouping = CollectionCreationType.None;
-        MovieOrdering = OrderType.Default;
-        UserList = Array.Empty<UserConfiguration>();
+        UserList = new();
         MediaFolders = new();
-        IgnoredFolders = new [] { ".streams", "@recently-snapshot" };
-        LibraryFilteringMode = null;
+        IgnoredFolders = new() { ".streams", "@recently-snapshot" };
+        LibraryFiltering = null;
         SignalR_AutoConnectEnabled = false;
         SignalR_AutoReconnectInSeconds = new() { 0, 2, 10, 30, 60, 120, 300 };
         SignalR_RefreshEnabled = false;
         SignalR_FileWatcherEnabled = false;
-        EXPERIMENTAL_AutoMergeVersions = false;
+        EXPERIMENTAL_AutoMergeVersions = true;
         EXPERIMENTAL_SplitThenMergeMovies = true;
         EXPERIMENTAL_SplitThenMergeEpisodes = false;
         EXPERIMENTAL_MergeSeasons = false;

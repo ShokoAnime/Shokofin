@@ -137,6 +137,7 @@ public class ShokoResolveManager
         mediaFolderConfig = new() {
             MediaFolderId = mediaFolder.Id,
             IsVirtualFileSystemEnabled = config.VirtualFileSystem,
+            IsLibraryFilteringEnabled = config.LibraryFiltering,
         };
 
         var start = DateTime.UtcNow;
@@ -218,7 +219,7 @@ public class ShokoResolveManager
                     return null;
 
                 // Return early if we're not going to generate them.
-                if (!(mediaConfig.IsVirtualFileSystemEnabled ?? Plugin.Instance.Configuration.VirtualFileSystem))
+                if (!mediaConfig.IsVirtualFileSystemEnabled)
                     return null;
 
                 // Check if we should introduce the VFS for the media folder.
@@ -641,8 +642,7 @@ public class ShokoResolveManager
             if (parent.ParentId == root.Id && Plugin.Instance.Configuration.VirtualFileSystem)
                 return false;
 
-            // Scan the 
-            var shouldIgnore = Plugin.Instance.Configuration.LibraryFilteringMode ?? Plugin.Instance.Configuration.VirtualFileSystem || isSoleProvider;
+            var shouldIgnore = mediaFolderConfig.IsLibraryFilteringEnabled ?? mediaFolderConfig.IsVirtualFileSystemEnabled  || isSoleProvider;
             var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
             if (fileInfo.IsDirectory)
                 return await ShouldFilterDirectory(partialPath, fullPath, collectionType, shouldIgnore).ConfigureAwait(false);

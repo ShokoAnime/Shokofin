@@ -24,5 +24,5 @@ public class ShokoEpisodeId : IExternalId
         => null;
 
     public virtual string UrlFormatString
-        => $"{Plugin.Instance.Configuration.PrettyHost}/webui/redirect/episode/{{0}}";
+        => $"{Plugin.Instance.Configuration.PrettyUrl}/webui/redirect/episode/{{0}}";
 }

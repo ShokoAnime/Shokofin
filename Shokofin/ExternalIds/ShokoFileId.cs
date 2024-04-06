@@ -25,5 +25,5 @@ public class ShokoFileId : IExternalId
         => null;
 
     public virtual string UrlFormatString
-        => $"{Plugin.Instance.Configuration.PrettyHost}/webui/redirect/file/{{0}}";
+        => $"{Plugin.Instance.Configuration.PrettyUrl}/webui/redirect/file/{{0}}";
 }

@@ -25,7 +25,7 @@ public class ShokoAPIClient : IDisposable
     private readonly ILogger<ShokoAPIClient> Logger;
 
     private static DateTime? ServerCommitDate =>
-        Plugin.Instance.Configuration.HostVersion?.ReleaseDate;
+        Plugin.Instance.Configuration.ServerVersion?.ReleaseDate;
 
     private static readonly DateTime StableCutOffDate = DateTime.Parse("2023-12-16T00:00:00.000Z");
 
@@ -107,19 +107,19 @@ public class ShokoAPIClient : IDisposable
                 if (string.IsNullOrEmpty(apiKey))
                     throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
-                var version = Plugin.Instance.Configuration.HostVersion;
+                var version = Plugin.Instance.Configuration.ServerVersion;
                 if (version == null)
                 {
                     version = await GetVersion().ConfigureAwait(false)
                         ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
-                    Plugin.Instance.Configuration.HostVersion = version;
+                    Plugin.Instance.Configuration.ServerVersion = version;
                     Plugin.Instance.SaveConfiguration();
                 }
 
                 try {
                     Logger.LogTrace("Trying to {Method} {URL}", method, url);
-                    var remoteUrl = string.Concat(Plugin.Instance.Configuration.Host, url);
+                    var remoteUrl = string.Concat(Plugin.Instance.Configuration.Url, url);
 
                     using var requestMessage = new HttpRequestMessage(method, remoteUrl);
                     requestMessage.Content = new StringContent(string.Empty);
@@ -162,19 +162,19 @@ public class ShokoAPIClient : IDisposable
         if (string.IsNullOrEmpty(apiKey))
             throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
-        var version = Plugin.Instance.Configuration.HostVersion;
+        var version = Plugin.Instance.Configuration.ServerVersion;
         if (version == null)
         {
             version = await GetVersion().ConfigureAwait(false)
                 ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
-            Plugin.Instance.Configuration.HostVersion = version;
+            Plugin.Instance.Configuration.ServerVersion = version;
             Plugin.Instance.SaveConfiguration();
         }
 
         try {
             Logger.LogTrace("Trying to get {URL}", url);
-            var remoteUrl = string.Concat(Plugin.Instance.Configuration.Host, url);
+            var remoteUrl = string.Concat(Plugin.Instance.Configuration.Url, url);
 
             if (method == HttpMethod.Get)
                 throw new HttpRequestException("Get requests cannot contain a body.");
@@ -202,13 +202,13 @@ public class ShokoAPIClient : IDisposable
 
     public async Task<ApiKey?> GetApiKey(string username, string password, bool forUser = false)
     {
-        var version = Plugin.Instance.Configuration.HostVersion;
+        var version = Plugin.Instance.Configuration.ServerVersion;
         if (version == null)
         {
             version = await GetVersion().ConfigureAwait(false)
                 ?? throw new HttpRequestException("Unable to connect to Shoko Server to read the version.", null, HttpStatusCode.BadGateway);
 
-            Plugin.Instance.Configuration.HostVersion = version;
+            Plugin.Instance.Configuration.ServerVersion = version;
             Plugin.Instance.SaveConfiguration();
         }
 
@@ -218,7 +218,7 @@ public class ShokoAPIClient : IDisposable
             {"pass", password},
             {"device", forUser ? "Shoko Jellyfin Plugin (Shokofin) - User Key" : "Shoko Jellyfin Plugin (Shokofin)"},
         });
-        var apiBaseUrl = Plugin.Instance.Configuration.Host;
+        var apiBaseUrl = Plugin.Instance.Configuration.Url;
         var response = await _httpClient.PostAsync($"{apiBaseUrl}/api/auth", new StringContent(postData, Encoding.UTF8, "application/json")).ConfigureAwait(false);
         if (response.StatusCode != HttpStatusCode.OK)
             return null;
@@ -228,7 +228,7 @@ public class ShokoAPIClient : IDisposable
 
     public async Task<ComponentVersion?> GetVersion()
     {
-        var apiBaseUrl = Plugin.Instance.Configuration.Host;
+        var apiBaseUrl = Plugin.Instance.Configuration.Url;
         var response = await _httpClient.GetAsync($"{apiBaseUrl}/api/v3/Init/Version");
         if (response.StatusCode == HttpStatusCode.OK) {
             try {

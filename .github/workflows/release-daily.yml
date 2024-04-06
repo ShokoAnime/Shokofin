@@ -64,8 +64,7 @@ jobs:
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "CHANGELOG<<$EOF" >> "$GITHUB_OUTPUT"
           git log $PREVIOUS_COMMIT..$NEXT_COMMIT --pretty=format:"%B" | grep -v "misc: update unstable manifest" | head -c -2 >> "$GITHUB_OUTPUT"
-          echo "" >> "$GITHUB_OUTPUT"
-          echo "$EOF" >> "$GITHUB_OUTPUT"
+          echo -e "\n$EOF" >> "$GITHUB_OUTPUT"
 
   build_plugin:
     runs-on: ubuntu-latest

@@ -75,7 +75,7 @@ public class Image
     /// </remarks>
     /// <returns>The image URL</returns>
     public string ToURLString()
-        => string.Concat(Plugin.Instance.Configuration.PrettyHost, Path);
+        => string.Concat(Plugin.Instance.Configuration.PrettyUrl, Path);
 }
 
 /// <summary>

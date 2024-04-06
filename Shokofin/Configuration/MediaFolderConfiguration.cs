@@ -37,8 +37,13 @@ public class MediaFolderConfiguration
     /// <summary>
     /// Enable or disable the virtual file system on a per-media-folder basis.
     /// </summary>
-    /// <value></value>
-    public bool? IsVirtualFileSystemEnabled { get; set; } = null;
+    public bool IsVirtualFileSystemEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Enable or disable the library filterin on a per-media-folder basis. Do
+    /// note that this will only take effect if the VFS is not used.
+    /// </summary>
+    public bool? IsLibraryFilteringEnabled { get; set; } = null;
 
     /// <summary>
     /// Check if a relative path within the import folder is potentially available in this media folder.
