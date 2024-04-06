@@ -381,13 +381,18 @@ public class ShokoResolveManager
 
                             subtitles++;
                             allPathsForVFS.Add((subtitleSource, subtitleLink));
-                            if (!File.Exists(subtitleLink))
+                            if (!File.Exists(subtitleLink)) {
                                 File.CreateSymbolicLink(subtitleLink, subtitleSource);
+                            }
                             else {
                                 var shouldFix = false;
                                 try {
                                     var nextTarget = File.ResolveLinkTarget(subtitleLink, false);
-                                    shouldFix = !string.Equals(subtitleSource, nextTarget);
+                                    if (!string.Equals(subtitleSource, nextTarget?.FullName)) {
+                                        shouldFix = true;
+
+                                        Logger.LogWarning("Fixing broken symbolic link {Link} for {LinkTarget} (RealTarget={RealTarget})", subtitleLink, subtitleSource, nextTarget?.FullName);
+                                    }
                                 }
                                 catch (Exception ex) {
                                     Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link} for {LinkTarget}", subtitleLink, subtitleSource);
