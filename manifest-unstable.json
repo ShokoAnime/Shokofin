@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.82",
+                "changelog": "fix: fix link validation\n\nmisc: remove unused variable(s)\n\nmisc: code style fixes\n\n- Fix bracket open style in the code where I mind slipped back into\n  standard C# style. No bracket open on a seperate line allowed inside\n  method bodies. None.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.82/shoko_3.0.1.82.zip",
+                "checksum": "852ec0f991da1fb794adbdccef83c71d",
+                "timestamp": "2024-04-06T12:43:52Z"
+            },
+            {
                 "version": "3.0.1.81",
                 "changelog": "refactor: update plugin config\n\n- Give the plugin configuration a face-lift by adding proper regions\n  and comments, and also rename a few fields in the code, but not\n  in the settings file itself (as to not break anything).\n\n- Added and hooked up per-media-folder library filtering. Still no UI\n  to update it for existing libraries, and the global option is now\n  treated as a default option. It is recommended to either edit the\n  option in the xml file after updating, or removing the media folder\n  settings from the file and letting it re-generate itself on the next\n  library scan.\n\n- Tweaked the VFS per-media-folder setting to not fallback to the global\n  option, and treat the global option as a default option for new media\n  libraries.\n\nAlso, not in this commit, but the settings page will get another refactor\nto add the per-media-folder settings and SignalR settings sometime in\nthe future, but for now you will just have to deal with the fact that a\nmedia library is locked in on some settings when you create it, unless\nyou wipe or edit the media folder settings stored in the xml file.\n\nmisc: update logo [skip ci]",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.78/shoko_3.0.1.78.zip",
                 "checksum": "3e22b60ab94067ab9731fc09f37f7dbf",
                 "timestamp": "2024-04-05T07:36:13Z"
-            },
-            {
-                "version": "3.0.1.77",
-                "changelog": "misc: take 2 on removing embed in discord\n\n- This time for real\u2026 hopefully.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.77/shoko_3.0.1.77.zip",
-                "checksum": "9323325ce698ca405875a232a4f4f6df",
-                "timestamp": "2024-04-05T07:26:40Z"
             }
         ]
     }
