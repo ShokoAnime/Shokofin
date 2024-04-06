@@ -353,10 +353,10 @@ public class ShokoResolveManager
                         var shouldFix = false;
                         try {
                             var nextTarget = File.ResolveLinkTarget(symbolicLink, false);
-                            if (!string.Equals(sourceLocation, nextTarget)) {
+                            if (!string.Equals(sourceLocation, nextTarget?.FullName)) {
                                 shouldFix = true;
 
-                                Logger.LogWarning("Fixing broken symbolic link {Link} for {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget);
+                                Logger.LogWarning("Fixing broken symbolic link {Link} for {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
                             }
                         }
                         catch (Exception ex) {
