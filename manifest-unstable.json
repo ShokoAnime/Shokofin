@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.83",
+                "changelog": "fix: also fix it for subtitle files",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.83/shoko_3.0.1.83.zip",
+                "checksum": "3f6e36ae51862f36cc03672ee7fdfe67",
+                "timestamp": "2024-04-06T12:48:17Z"
+            },
+            {
                 "version": "3.0.1.82",
                 "changelog": "fix: fix link validation\n\nmisc: remove unused variable(s)\n\nmisc: code style fixes\n\n- Fix bracket open style in the code where I mind slipped back into\n  standard C# style. No bracket open on a seperate line allowed inside\n  method bodies. None.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.79/shoko_3.0.1.79.zip",
                 "checksum": "ac4d3e9cb4d16eb565b5805448c5293c",
                 "timestamp": "2024-04-05T07:39:45Z"
-            },
-            {
-                "version": "3.0.1.78",
-                "changelog": "misc: take 3\nThis time using a new GH Action. So time to test out a few things;\n\n- List item\n\n[Link](<https://discord.com>)\n\n**Bold**\n\n_Italic_\n\n||Spoiler||",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.78/shoko_3.0.1.78.zip",
-                "checksum": "3e22b60ab94067ab9731fc09f37f7dbf",
-                "timestamp": "2024-04-05T07:36:13Z"
             }
         ]
     }
