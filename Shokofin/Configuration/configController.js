@@ -244,13 +244,13 @@ async function defaultSubmit(form) {
         }
         else {
             try {
-                let url = new URL(url);
-                url = url.href;
+                let actualUrl = new URL(url);
+                url = actualUrl.href;
             }
             catch (err) {
                 try {
-                    let url = new URL(`http://${url}:8111`);
-                    url = url.href;
+                    let actualUrl = new URL(`http://${url}:8111`);
+                    url = actualUrl.href;
                 }
                 catch (err2) {
                   throw err;
