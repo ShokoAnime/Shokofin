@@ -67,7 +67,6 @@ public class File
         /// The id of the <see cref="ImportFolder"/> this <see cref="File"/>
         /// resides in.
         /// </summary>
-        /// <value></value>
         [JsonPropertyName("ImportFolderID")]
         public int ImportFolderId { get; set; }
 
@@ -83,18 +82,14 @@ public class File
         /// the start.
         /// </summary>
         public string Path =>
-            __path != null ? (
-                __path
-             ) : (
-                __path = System.IO.Path.DirectorySeparatorChar + RelativePath
-                    .Replace('/', System.IO.Path.DirectorySeparatorChar)
-                    .Replace('\\', System.IO.Path.DirectorySeparatorChar)
-             );
+            CachedPath ??= System.IO.Path.DirectorySeparatorChar + RelativePath
+                .Replace('/', System.IO.Path.DirectorySeparatorChar)
+                .Replace('\\', System.IO.Path.DirectorySeparatorChar);
 
         /// <summary>
         /// Cached path for later re-use.
         /// </summary>
-        private string? __path { get; set; }
+        private string? CachedPath { get; set; }
 
         /// <summary>
         /// True if the server can access the the <see cref="Location.Path"/> at
