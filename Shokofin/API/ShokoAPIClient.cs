@@ -75,10 +75,10 @@ public class ShokoAPIClient : IDisposable
         Clear(false);
     }
 
-    private Task<ReturnType> Get<ReturnType>(string url, string? apiKey = null, bool skipCache = false)
-        => Get<ReturnType>(url, HttpMethod.Get, apiKey);
+    private Task<ReturnType> Get<ReturnType>(string url, string? apiKey = null, bool skipCache = true)
+        => Get<ReturnType>(url, HttpMethod.Get, apiKey, skipCache);
 
-    private async Task<ReturnType> Get<ReturnType>(string url, HttpMethod method, string? apiKey = null, bool skipCache = false)
+    private async Task<ReturnType> Get<ReturnType>(string url, HttpMethod method, string? apiKey = null, bool skipCache = true)
     {
         if (skipCache) {
             var response = await Get(url, method, apiKey, true).ConfigureAwait(false);
@@ -110,7 +110,7 @@ public class ShokoAPIClient : IDisposable
         );
     }
 
-    private async Task<HttpResponseMessage> Get(string url, HttpMethod method, string? apiKey = null, bool skipCache = false)
+    private async Task<HttpResponseMessage> Get(string url, HttpMethod method, string? apiKey = null, bool skipCache = true)
     {
         if (skipCache) {
             // Use the default key if no key was provided.
