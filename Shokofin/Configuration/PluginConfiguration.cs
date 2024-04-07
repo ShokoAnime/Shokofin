@@ -184,7 +184,7 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public bool AddMissingMetadata { get; set; }
 
-    public List<string> IgnoredFolders { get; set; }
+    public string[] IgnoredFolders { get; set; }
 
     #endregion
 
@@ -298,7 +298,7 @@ public class PluginConfiguration : BasePluginConfiguration
         CollectionGrouping = CollectionCreationType.None;
         UserList = new();
         MediaFolders = new();
-        IgnoredFolders = new() { ".streams", "@recently-snapshot" };
+        IgnoredFolders = new[] { ".streams", "@recently-snapshot" };
         LibraryFiltering = null;
         SignalR_AutoConnectEnabled = false;
         SignalR_AutoReconnectInSeconds = new() { 0, 2, 10, 30, 60, 120, 300 };
