@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.90",
+                "changelog": "misc: temporerily disable the http request cache",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.90/shoko_3.0.1.90.zip",
+                "checksum": "937ca86982d0e6b763a071e01c0c42b9",
+                "timestamp": "2024-04-07T16:32:49Z"
+            },
+            {
                 "version": "3.0.1.89",
                 "changelog": "fix: bypass cache for file user stats",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.86/shoko_3.0.1.86.zip",
                 "checksum": "846ee8f2a7160738d1e65d2caa4e1dd1",
                 "timestamp": "2024-04-07T13:46:55Z"
-            },
-            {
-                "version": "3.0.1.85",
-                "changelog": "fix: fix duplication bug on settings deserialise\n\n- I don't know why it happens if it's a `List<string>` but not a\n  `string[]`, but I don't care enough to study the internals of\n  `System.Xml` to find out.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.85/shoko_3.0.1.85.zip",
-                "checksum": "b0caa5a4ffb380b7fa28e69489212874",
-                "timestamp": "2024-04-07T13:16:52Z"
             }
         ]
     }
