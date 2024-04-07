@@ -838,6 +838,10 @@ public class ShokoResolveManager
                             return FileSystem.GetFiles(dirInfo.FullName)
                                 .AsParallel()
                                 .Select(fileInfo => {
+                                    // Only allow the video files, since the subtitle files also have the ids set.
+                                    if (!_namingOptions.VideoFileExtensions.Contains(Path.GetExtension(fileInfo.Name)))
+                                        return null;
+
                                     if (!fileInfo.Name.TryGetAttributeValue(ShokoFileId.Name, out var fileId) || !int.TryParse(fileId, out _))
                                         return null;
 
