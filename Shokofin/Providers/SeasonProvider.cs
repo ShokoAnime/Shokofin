@@ -35,8 +35,24 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
     {
         try {
             var result = new MetadataResult<Season>();
-            if (!info.IndexNumber.HasValue || info.IndexNumber.HasValue && info.IndexNumber.Value == 0)
+            if (!info.IndexNumber.HasValue)
                 return result;
+
+            // Special handling of the "Specials" season (pun intended).
+            if (info.IndexNumber.Value == 0) {
+                // We're forcing the sort names to start with "ZZ" to make it 
+                // always appear last in the UI.
+                var seasonName = info.Name;
+                result.Item = new Season {
+                    Name = seasonName,
+                    IndexNumber = info.IndexNumber,
+                    SortName = $"ZZ - {seasonName}",
+                    ForcedSortName = $"ZZ - {seasonName}",
+                };
+                result.HasMetadata = true;
+
+                return result;
+            }
 
             if (!info.SeriesProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId) || !info.IndexNumber.HasValue) {
                 Logger.LogDebug("Unable refresh Season {SeasonNumber} {SeasonName}", info.IndexNumber, info.Name);
