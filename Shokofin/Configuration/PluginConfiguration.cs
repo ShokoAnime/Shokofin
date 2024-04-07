@@ -223,7 +223,7 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Reconnect intervals if the the stream gets disconnected.
     /// </summary>
-    public List<int> SignalR_AutoReconnectInSeconds { get; set; }
+    public int[] SignalR_AutoReconnectInSeconds { get; set; }
 
     /// <summary>
     /// Will automatically refresh entries if metadata is updated in Shoko.
@@ -301,7 +301,7 @@ public class PluginConfiguration : BasePluginConfiguration
         IgnoredFolders = new[] { ".streams", "@recently-snapshot" };
         LibraryFiltering = null;
         SignalR_AutoConnectEnabled = false;
-        SignalR_AutoReconnectInSeconds = new() { 0, 2, 10, 30, 60, 120, 300 };
+        SignalR_AutoReconnectInSeconds = new[] { 0, 2, 10, 30, 60, 120, 300 };
         SignalR_RefreshEnabled = false;
         SignalR_FileEvents = false;
         EXPERIMENTAL_AutoMergeVersions = true;

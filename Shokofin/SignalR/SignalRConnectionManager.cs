@@ -62,8 +62,8 @@ public class SignalRConnectionManager : IDisposable
             )
             .AddJsonProtocol();
 
-        if (config.SignalR_AutoReconnectInSeconds.Count > 0)
-            builder.WithAutomaticReconnect(config.SignalR_AutoReconnectInSeconds.Select(seconds => TimeSpan.FromSeconds(seconds)).ToArray());
+        if (config.SignalR_AutoReconnectInSeconds.Length > 0)
+            builder = builder.WithAutomaticReconnect(config.SignalR_AutoReconnectInSeconds.Select(seconds => TimeSpan.FromSeconds(seconds)).ToArray());
 
         var connection = Connection = builder.Build();
 
