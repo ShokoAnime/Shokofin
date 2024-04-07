@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
-using Shokofin.MergeVersions;
+using Shokofin.API.Models;
 
 namespace Shokofin.Tasks;
 
@@ -68,6 +69,7 @@ public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
     /// <returns>Task.</returns>
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
+        var updated = false;
         var version = await ApiClient.GetVersion();
         if (version != null && (
             Plugin.Instance.Configuration.ServerVersion == null ||
@@ -75,6 +77,32 @@ public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
         )) {
             Logger.LogInformation("Found new Shoko Server version; {version}", version);
             Plugin.Instance.Configuration.ServerVersion = version;
+            updated = true;
+        }
+
+        var mediaFolders = Plugin.Instance.Configuration.MediaFolders;
+        var importFolderNameMap = await Task
+            .WhenAll(
+                mediaFolders
+                    .Select(m => m.ImportFolderId)
+                    .Distinct()
+                    .Except(new int[1] { 0 })
+                    .Select(id => ApiClient.GetImportFolder(id))
+                    .ToList()
+            )
+            .ContinueWith(task => task.Result.OfType<ImportFolder>().ToDictionary(i => i.Id, i => i.Name))
+            .ConfigureAwait(false);
+        foreach (var mediaFolder in mediaFolders) {
+            if (!importFolderNameMap.TryGetValue(mediaFolder.ImportFolderId, out var importFolderName))
+                importFolderName = null;
+
+            if (!string.Equals(mediaFolder.ImportFolderName, importFolderName)) {
+                Logger.LogInformation("Found new name for import folder; {name} (ImportFolder={ImportFolderId})", importFolderName, mediaFolder.ImportFolderId);
+                mediaFolder.ImportFolderName = importFolderName;
+                updated = true;
+            }
+        }
+        if (updated) {
             Plugin.Instance.SaveConfiguration();
         }
     }

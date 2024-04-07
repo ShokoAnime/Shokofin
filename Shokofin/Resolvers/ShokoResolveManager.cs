@@ -135,8 +135,11 @@ public class ShokoResolveManager
         // Check if we should introduce the VFS for the media folder.
         mediaFolderConfig = new() {
             MediaFolderId = mediaFolder.Id,
+            MediaFolderPath = mediaFolder.Path,
             IsVirtualFileSystemEnabled = config.VirtualFileSystem,
             IsLibraryFilteringEnabled = config.LibraryFiltering,
+            IsFileEventsEnabled = config.SignalR_FileEvents,
+            IsRefreshEventsEnabled = config.SignalR_RefreshEnabled,
         };
 
         var start = DateTime.UtcNow;
@@ -167,6 +170,13 @@ public class ShokoResolveManager
             mediaFolderConfig.ImportFolderRelativePath = fileLocation.Path[..^partialPath.Length];
             break;
         }
+
+        try {
+            var importFolder = await ApiClient.GetImportFolder(mediaFolderConfig.ImportFolderId);
+            if (importFolder != null)
+                mediaFolderConfig.ImportFolderName = importFolder.Name;
+        }
+        catch { }
 
         // Store and log the result.
         config.MediaFolders.Add(mediaFolderConfig);
@@ -643,7 +653,7 @@ public class ShokoResolveManager
 
             // Abort now if the VFS is enabled, since it will take care of moving
             // from the physical library to the "virtual" library.
-            if (parent.ParentId == root.Id && Plugin.Instance.Configuration.VirtualFileSystem)
+            if (parent.ParentId == root.Id && mediaFolderConfig.IsVirtualFileSystemEnabled)
                 return false;
 
             var shouldIgnore = mediaFolderConfig.IsLibraryFilteringEnabled ?? mediaFolderConfig.IsVirtualFileSystemEnabled  || isSoleProvider;

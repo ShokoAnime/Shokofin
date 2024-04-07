@@ -13,9 +13,22 @@ public class MediaFolderConfiguration
     public Guid MediaFolderId { get; set; }
 
     /// <summary>
+    /// The jellyfin media folder path. Stored only for showing in the settings
+    /// page of the plugin… since it's very hard to get in there otherwise.
+    /// </summary>
+    public string MediaFolderPath { get; set; } = string.Empty;
+
+    /// <summary>
     /// The shoko import folder id the jellyfin media folder is linked to.
     /// </summary>
     public int ImportFolderId { get; set; }
+
+    /// <summary>
+    /// The friendly name of the import folder, if any. Stored only for showing
+    /// in the setttings page of the plugin… since it's very hard to get in
+    /// there otherwise.
+    /// </summary>
+    public string? ImportFolderName { get; set; }
 
     /// <summary>
     /// The relative path from the root of the import folder the media folder is located at.
@@ -33,6 +46,11 @@ public class MediaFolderConfiguration
     /// Indicates that SignalR file events is enabled for the folder.
     /// </summary>
     public bool IsFileEventsEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Indicates that SignalR refresh events is enabled for the folder.
+    /// </summary>
+    public bool IsRefreshEventsEnabled { get; set; } = true;
 
     /// <summary>
     /// Enable or disable the virtual file system on a per-media-folder basis.

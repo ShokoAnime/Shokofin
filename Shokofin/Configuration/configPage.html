@@ -92,6 +92,13 @@
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
+                                <span>Mark specials</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add a number to the title of each specials episode</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="CleanupAniDBDescriptions" />
                                 <span>Cleanup AniDB descriptions</span>
                             </label>
@@ -102,30 +109,7 @@
                                 <input is="emby-checkbox" type="checkbox" id="MinimalAniDBDescriptions" />
                                 <span>Minimalistic AniDB descriptions</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Remove any lines starting with '* ', '-- ',  '~ ', 'Note', 'Source', and/or 'Summery'</div>
-                        </div>
-                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
-                        </button>
-                    </fieldset>
-                    <fieldset id="ProviderSection" class="verticalSection verticalSection-extrabottompadding" hidden>
-                        <legend>
-                            <h3>Plugin Compatibility Settings</h3>
-                        </legend>
-                        <div class="fieldDescription verticalSection-extrabottompadding">We can optionally set some ids for interoperability with other plugins.</div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="AddAniDBId" />
-                                <span>Add AniDB IDs</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the AniDB ID for all supported item types where an ID is available.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="AddTMDBId" />
-                                <span>Add TMDB IDs</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the TMDB ID for all supported item types where an ID is available.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Trim any lines starting with '* ', '-- ',  '~ ', 'Note', 'Source', and/or 'Summery'</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -135,63 +119,8 @@
                         <legend>
                             <h3>Library Settings</h3>
                         </legend>
-                        <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="CollectionGrouping">Collections:</label>
-                            <select is="emby-select" id="CollectionGrouping" name="CollectionGrouping" class="emby-select-withcolor emby-select">
-                                <option value="None" selected>Do not create collections</option>
-                                <option value="ShokoSeries">Create collections for movies based upon Shoko's series</option>
-                                <option value="ShokoGroup">Create collections for movies and shows based upon Shoko's groups and series</option>
-                            </select>
-                            <div class="fieldDescription">Determines how to group entities into collections.</div>
-                        </div>
-                        <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="SpecialsPlacement">Specials placement within seasons:</label>
-                            <select is="emby-select" id="SpecialsPlacement" name="SpecialsPlacement" class="emby-select-withcolor emby-select">
-                                <option value="AfterSeason">Always place specials after the normal episodes (Default)</option>
-                                <option value="InBetweenSeasonByAirDate">Use release dates to place specials</option>
-                                <option value="InBetweenSeasonByOtherData">Loosely use the TvDB/TMDB data available in Shoko to place specials</option>
-                                <option value="InBetweenSeasonMixed">Either loosely use the TvDB/TMDB data available in Shoko or fallback to using release dates to place specials</option>
-                                <option value="Excluded">Exclude specials from the seasons</option>
-                            </select>
-                            <div class="fieldDescription selectFieldDescription">Determines how specials are placed within seasons. <strong>Warning:</strong> Modifying this setting requires a recreation (read as; delete existing then create a new) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="VirtualFileSystem" />
-                                <span>Virtual File System&trade; (VFS)</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">
-                                <div>Enables the use of the Virtual File System&trade; for any media libraries managed by the plugin.</div>
-                                <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does this mean?</summary>
-                                    Enabling this setting should in theory make it so you won't have to think about file structure incompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links managed by the plugin instead of your actual file structure.
-                                    &nbsp;
-                                    <strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
-                                </details>
-                            </div>
-                        </div>
-                        <div id="LibraryFilteringModeContainer" class="selectContainer selectContainer-withDescription" hidden>
-                            <label class="selectLabel" for="LibraryFilteringMode">Filtering mode:</label>
-                            <select is="emby-select" id="LibraryFilteringMode" name="LibraryFilteringMode" class="emby-select-withcolor emby-select" disabled>
-                                <option value="null">Auto</option>
-                                <option value="true" selected>Strict</option>
-                                <option value="false">Disabled</option>
-                            </select>
-                            <div class="fieldDescription">
-                                <div>Choose how the plugin filters out videos in your library. This option only applies if the VFS is not used.</div>
-                                <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does auto filtering entail?</summary>
-                                    Auto filtering means the plugin will only filter out unrecognized videos if no other metadata provider is enabled, otherwise it will leave them in the library.
-                                </details>
-                                <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does strict filtering entail?</summary>
-                                    Strict filtering means the plugin will filter out any and all unrecognized videos from the library.
-                                </details>
-                                <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does disabling filtering entail?</summary>
-                                    Disabling the filtering means the plugin will not filter out anything from the library. Use this only if you're having trouble.
-                                </details>
-                            </div>
+                        <div class="fieldDescription verticalSection-extrabottompadding">
+                            Placeholder description.
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
@@ -236,14 +165,129 @@
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">This filters out movies from the shows in your library. Disable this if you want your movies to show up as episodes within seasons of your shows instead.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
-                                <span>Mark specials</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add a number to the title of each Special episode</div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="SpecialsPlacement">Specials placement within seasons:</label>
+                            <select is="emby-select" id="SpecialsPlacement" name="SpecialsPlacement" class="emby-select-withcolor emby-select">
+                                <option value="AfterSeason">Always place specials after the normal episodes (Default)</option>
+                                <option value="InBetweenSeasonByAirDate">Use release dates to place specials</option>
+                                <option value="InBetweenSeasonByOtherData">Loosely use the TvDB/TMDB data available in Shoko to place specials</option>
+                                <option value="InBetweenSeasonMixed">Either loosely use the TvDB/TMDB data available in Shoko or fallback to using release dates to place specials</option>
+                                <option value="Excluded">Exclude specials from the seasons</option>
+                            </select>
+                            <div class="fieldDescription selectFieldDescription">Determines how specials are placed within seasons. <strong>Warning:</strong> Modifying this setting requires a recreation (read as; delete existing then create a new) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="CollectionGrouping">Collections:</label>
+                            <select is="emby-select" id="CollectionGrouping" name="CollectionGrouping" class="emby-select-withcolor emby-select">
+                                <option value="None" selected>Do not create collections</option>
+                                <option value="ShokoSeries">Create collections for movies based upon Shoko's series</option>
+                                <option value="ShokoGroup">Create collections for movies and shows based upon Shoko's groups and series</option>
+                            </select>
+                            <div class="fieldDescription">Determines how to group entities into collections.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="MediaFolderSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Media Folder Settings</h3>
+                        </legend>
+                        <div class="fieldDescription verticalSection-extrabottompadding">
+                            Placeholder description.
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="MediaFolderSelector">Configure settings for:</label>
+                            <select is="emby-select" id="MediaFolderSelector" name="MediaFolderSelector" value="" class="emby-select-withcolor emby-select">
+                                <option value="">Default settings for new media folders</option>
+                            </select>
+                            <div class="fieldDescription selectFieldDescription">Select a media folder to add or modify the media folder settings for.</div>
+                        </div>
+                        <div id="MediaFolderDefaultSettingsContainer">
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="VirtualFileSystem" />
+                                    <span>Virtual File System&trade;</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">
+                                    <div>Enables the use of the Virtual File System&trade; for any new media libraries managed by the plugin.</div>
+                                    <details style="margin-top: 0.5em">
+                                        <summary style="margin-bottom: 0.25em">What does this mean?</summary>
+                                        Enabling this setting should in theory make it so you won't have to think about file structure incompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links managed by the plugin instead of your actual file structure.
+                                        &nbsp;
+                                        <strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
+                                    </details>
+                                </div>
+                            </div>
+                            <div class="selectContainer selectContainer-withDescription">
+                                <label class="selectLabel" for="LibraryFiltering">Library Filtering:</label>
+                                <select is="emby-select" id="LibraryFiltering" name="LibraryFiltering" class="emby-select-withcolor emby-select">
+                                    <option value="null">Auto</option>
+                                    <option value="true" selected>Strict</option>
+                                    <option value="false">Disabled</option>
+                                </select>
+                                <div class="fieldDescription">
+                                    <div>Choose how the plugin filters out videos in your new libraries. This option only applies if the VFS is not used.</div>
+                                    <details style="margin-top: 0.5em">
+                                        <summary style="margin-bottom: 0.25em">What does auto filtering entail?</summary>
+                                        Auto filtering means the plugin will only filter out unrecognized videos if no other metadata provider is enabled, otherwise it will leave them in the library.
+                                    </details>
+                                    <details style="margin-top: 0.5em">
+                                        <summary style="margin-bottom: 0.25em">What does strict filtering entail?</summary>
+                                        Strict filtering means the plugin will filter out any and all unrecognized videos from the library.
+                                    </details>
+                                    <details style="margin-top: 0.5em">
+                                        <summary style="margin-bottom: 0.25em">What does disabling filtering entail?</summary>
+                                        Disabling the filtering means the plugin will not filter out anything from the library. Use this only if you're having trouble.
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="MediaFolderPerFolderSettingsContainer" hidden>
+                            <div class="inputContainer inputContainer-withDescription">
+                                <input is="emby-input" type="text" id="MediaFolderImportFolderName" label="Mapped Import Folder:" disabled readonly value="-" />
+                                <div class="fieldDescription">The Shoko Import Folder the Media Folder is mapped to.</div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="MediaFolderVirtualFileSystem" />
+                                    <span>Virtual File System&trade;</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">
+                                    <div>Enables the use of the Virtual File System&trade; for the library.</div>
+                                    <details style="margin-top: 0.5em">
+                                        <summary style="margin-bottom: 0.25em">What does this mean?</summary>
+                                        Enabling this setting should in theory make it so you won't have to think about file structure incompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links managed by the plugin instead of your actual file structure.
+                                        &nbsp;
+                                        <strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
+                                    </details>
+                                </div>
+                            </div>
+                            <div class="selectContainer selectContainer-withDescription">
+                                <label class="selectLabel" for="MediaFolderLibraryFiltering">Library Filtering:</label>
+                                <select is="emby-select" id="MediaFolderLibraryFiltering" name="MediaFolderLibraryFilteringMode" class="emby-select-withcolor emby-select">
+                                    <option value="null">Auto</option>
+                                    <option value="true" selected>Strict</option>
+                                    <option value="false">Disabled</option>
+                                </select>
+                                <div class="fieldDescription">
+                                    <div>Choose how the plugin filters out videos in your library. This option only applies if the VFS is not used.</div>
+                                    <details style="margin-top: 0.5em">
+                                        <summary style="margin-bottom: 0.25em">What does auto filtering entail?</summary>
+                                        Auto filtering means the plugin will only filter out unrecognized videos if no other metadata provider is enabled, otherwise it will leave them in the library.
+                                    </details>
+                                    <details style="margin-top: 0.5em">
+                                        <summary style="margin-bottom: 0.25em">What does strict filtering entail?</summary>
+                                        Strict filtering means the plugin will filter out any and all unrecognized videos from the library.
+                                    </details>
+                                    <details style="margin-top: 0.5em">
+                                        <summary style="margin-bottom: 0.25em">What does disabling filtering entail?</summary>
+                                        Disabling the filtering means the plugin will not filter out anything from the library. Use this only if you're having trouble.
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+                        <button is="emby-button" type="submit" name="media-folder-settings" class="raised button-submit block emby-button">
                             <span>Save</span>
                         </button>
                     </fieldset>
@@ -372,6 +416,31 @@
                                 <input is="emby-checkbox" type="checkbox" id="HideProgrammingTags" />
                                 <span>Hide any tags that involve how or where it aired, or any awards it got</span>
                             </label>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="ProviderSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Plugin Compatibility Settings</h3>
+                        </legend>
+                        <div class="fieldDescription verticalSection-extrabottompadding">
+                            We can optionally set some ids for interoperability with other plugins.
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddAniDBId" />
+                                <span>Add AniDB IDs</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the AniDB ID for all supported item types where an ID is available.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddTMDBId" />
+                                <span>Add TMDB IDs</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the TMDB ID for all supported item types where an ID is available.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>

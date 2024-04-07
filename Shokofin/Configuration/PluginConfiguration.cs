@@ -234,7 +234,7 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Will notify Jellyfin about files that have been added/updated/removed
     /// in shoko.
     /// </summary>
-    public bool SignalR_FileWatcherEnabled { get; set; }
+    public bool SignalR_FileEvents { get; set; }
 
     #endregion
 
@@ -303,7 +303,7 @@ public class PluginConfiguration : BasePluginConfiguration
         SignalR_AutoConnectEnabled = false;
         SignalR_AutoReconnectInSeconds = new() { 0, 2, 10, 30, 60, 120, 300 };
         SignalR_RefreshEnabled = false;
-        SignalR_FileWatcherEnabled = false;
+        SignalR_FileEvents = false;
         EXPERIMENTAL_AutoMergeVersions = true;
         EXPERIMENTAL_SplitThenMergeMovies = true;
         EXPERIMENTAL_SplitThenMergeEpisodes = false;

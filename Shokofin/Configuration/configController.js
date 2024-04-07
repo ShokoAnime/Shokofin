@@ -42,7 +42,7 @@ async function loadUserConfig(form, userId, config) {
         Dashboard.hideLoadingMsg();
         return;
     }
-    
+
     Dashboard.showLoadingMsg();
 
     // Get the configuration to use.
@@ -79,6 +79,39 @@ async function loadUserConfig(form, userId, config) {
     Dashboard.hideLoadingMsg();
 }
 
+async function loadMediaFolderConfig(form, mediaFolderId, config) {
+    if (!mediaFolderId) {
+        form.querySelector("#MediaFolderDefaultSettingsContainer").removeAttribute("hidden");
+        form.querySelector("#MediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
+        Dashboard.hideLoadingMsg();
+        return;
+    }
+
+    Dashboard.showLoadingMsg();
+
+    // Get the configuration to use.
+    if (!config) config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId)
+    const mediaFolderConfig = config.MediaFolders.find((c) => mediaFolderId === c.MediaFolderId);
+    if (!mediaFolderConfig) {
+        form.querySelector("#MediaFolderDefaultSettingsContainer").removeAttribute("hidden");
+        form.querySelector("#MediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
+        Dashboard.hideLoadingMsg();
+        return;
+    }
+
+    form.querySelector("#MediaFolderImportFolderName").value = mediaFolderConfig.IsMapped ? `${mediaFolderConfig.ImportFolderName} (${mediaFolderConfig.ImportFolderId}) ${mediaFolderConfig.ImportFolderRelativePath}` : "Not Mapped";
+
+    // Configure the elements within the user container
+    form.querySelector("#MediaFolderVirtualFileSystem").checked = mediaFolderConfig.IsVirtualFileSystemEnabled;
+    form.querySelector("#MediaFolderLibraryFiltering").value = `${mediaFolderConfig.IsLibraryFilteringEnabled != null ? mediaFolderConfig.IsLibraryFilteringEnabled : null}`;
+
+    // Show the user settings now if it was previously hidden.
+    form.querySelector("#MediaFolderDefaultSettingsContainer").setAttribute("hidden", "");
+    form.querySelector("#MediaFolderPerFolderSettingsContainer").removeAttribute("hidden");
+
+    Dashboard.hideLoadingMsg();
+}
+
 function getApiKey(username, password, userKey = false) {
     return ApiClient.fetch({
         dataType: "json",
@@ -106,34 +139,44 @@ async function defaultSubmit(form) {
             form.querySelector("#PublicUrl").value = publicUrl;
         }
         const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
-        const filteringModeRaw = form.querySelector("#LibraryFilteringMode").value;
-        const filteringMode = filteringModeRaw === "true" ? true : filteringModeRaw === "false" ? false : null;
 
         // Metadata settings
         config.TitleMainType = form.querySelector("#TitleMainType").value;
         config.TitleAlternateType = form.querySelector("#TitleAlternateType").value;
         config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
         config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
+        config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
         config.DescriptionSource = form.querySelector("#DescriptionSource").value;
         config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
         config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
         config.SynopsisCleanMiscLines = form.querySelector("#MinimalAniDBDescriptions").checked;
         config.SynopsisRemoveSummary = form.querySelector("#MinimalAniDBDescriptions").checked;
-    
+
         // Provider settings
         config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
         config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
 
         // Library settings
-        config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
-        config.LibraryFilteringMode = filteringMode;
         config.UseGroupsForShows = form.querySelector("#UseGroupsForShows").checked;
         config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
         config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
         config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
         config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
-        config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
-    
+
+        // Media Folder settings
+        const mediaFolderId = form.querySelector("#MediaFolderSelector").value;
+        const mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
+        if (mediaFolderConfig) {
+            const filteringMode = form.querySelector("#MediaFolderLibraryFiltering").value;
+            mediaFolderConfig.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
+            mediaFolderConfig.IsLibraryFilteringEnabled = filteringMode === "true" ? true : filteringMode === "false" ? false : null;
+        }
+        else {
+            const filteringMode = form.querySelector("#LibraryFiltering").value;
+            config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
+            config.LibraryFiltering = filteringMode === "true" ? true : filteringMode === "false" ? false : null;
+        }
+
         // Tag settings
         config.HideUnverifiedTags = form.querySelector("#HideUnverifiedTags").checked;
         config.HideArtStyleTags = form.querySelector("#HideArtStyleTags").checked;
@@ -142,7 +185,7 @@ async function defaultSubmit(form) {
         config.HideAniDbTags = form.querySelector("#HideAniDbTags").checked;
         config.HideSettingTags = form.querySelector("#HideSettingTags").checked;
         config.HideProgrammingTags = form.querySelector("#HideProgrammingTags").checked;
-    
+
         // Advanced settings
         config.PublicUrl = publicUrl;
         config.IgnoredFolders = ignoredFolders;
@@ -162,7 +205,7 @@ async function defaultSubmit(form) {
                 userConfig = { UserId: userId };
                 config.UserList.push(userConfig);
             }
-            
+
             // The user settings goes below here;
             userConfig.EnableSynchronization = form.querySelector("#UserEnableSynchronization").checked;
             userConfig.SyncUserDataOnImport = form.querySelector("#SyncUserDataOnImport").checked;
@@ -173,11 +216,11 @@ async function defaultSubmit(form) {
             userConfig.SyncUserDataUnderPlaybackAtEveryXTicks = 6;
             userConfig.SyncUserDataUnderPlaybackLiveThreshold = 125000000; // 12.5s
             userConfig.SyncRestrictedVideos = form.querySelector("#SyncRestrictedVideos").checked;
-            
+
             // Only try to save a new token if a token is not already present.
-            const username = form.querySelector("#UserUsername").value;
-            const password = form.querySelector("#UserPassword").value;
             if (!userConfig.Token) try {
+                const username = form.querySelector("#UserUsername").value;
+                const password = form.querySelector("#UserPassword").value;
                 const response = await getApiKey(username, password, true);
                 userConfig.Username = username;
                 userConfig.Token = response.apikey;
@@ -250,7 +293,7 @@ async function resetConnectionSettings(form) {
     const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
     form.querySelector("#Username").value = config.Username;
     form.querySelector("#Password").value = "";
-    
+
     // Connection settings
     config.ApiKey = "";
     config.ServerVersion = null;
@@ -269,8 +312,7 @@ async function syncSettings(form) {
         form.querySelector("#PublicUrl").value = publicUrl;
     }
     const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
-    const filteringModeRaw = form.querySelector("#LibraryFilteringMode").value;
-    const filteringMode = filteringModeRaw === "true" ? true : filteringModeRaw === "false" ? false : null;
+    const fitleringMode = form.querySelector("#LibraryFiltering").value;
 
     // Metadata settings
     config.TitleMainType = form.querySelector("#TitleMainType").value;
@@ -289,7 +331,7 @@ async function syncSettings(form) {
 
     // Library settings
     config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
-    config.LibraryFilteringMode = filteringMode;
+    config.LibraryFiltering = fitleringMode === "true" ? true : fitleringMode === "false" ? false : null;
     config.UseGroupsForShows = form.querySelector("#UseGroupsForShows").checked;
     config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
     config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
@@ -339,6 +381,27 @@ async function unlinkUser(form) {
     return config;
 }
 
+async function syncMediaFolderSettings(form) {
+    const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
+    const mediaFolderId = form.querySelector("#MediaFolderSelector").value;
+    const mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
+    if (mediaFolderConfig) {
+        const filteringMode = form.querySelector("#MediaFolderLibraryFiltering").value;
+        mediaFolderConfig.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
+        mediaFolderConfig.IsLibraryFilteringEnabled = filteringMode === "true" ? true : filteringMode === "false" ? false : null;
+    }
+    else {
+        const filteringMode = form.querySelector("#LibraryFiltering").value;
+        config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
+        config.LibraryFiltering = filteringMode === "true" ? true : filteringMode === "false" ? false : null;
+    }
+
+    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config)
+    Dashboard.processPluginConfigurationUpdateResult(result);
+
+    return config;
+}
+
 async function syncUserSettings(form) {
     const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
     const userId = form.querySelector("#UserSelector").value;
@@ -350,7 +413,7 @@ async function syncUserSettings(form) {
         userConfig = { UserId: userId };
         config.UserList.push(userConfig);
     }
-    
+
     // The user settings goes below here;
     userConfig.EnableSynchronization = form.querySelector("#UserEnableSynchronization").checked;
     userConfig.SyncUserDataOnImport = form.querySelector("#SyncUserDataOnImport").checked;
@@ -361,7 +424,7 @@ async function syncUserSettings(form) {
     userConfig.SyncUserDataUnderPlaybackAtEveryXTicks = 6;
     userConfig.SyncUserDataUnderPlaybackLiveThreshold = 125000000; // 12.5s
     userConfig.SyncRestrictedVideos = form.querySelector("#SyncRestrictedVideos").checked;
-    
+
     // Only try to save a new token if a token is not already present.
     const username = form.querySelector("#UserUsername").value;
     const password = form.querySelector("#UserPassword").value;
@@ -386,6 +449,8 @@ async function syncUserSettings(form) {
 export default function (page) {
     const form = page.querySelector("#ShokoConfigForm");
     const userSelector = form.querySelector("#UserSelector");
+    const mediaFolderSelector = form.querySelector("#MediaFolderSelector");
+
     // Refresh the view after we changed the settings, so the view reflect the new settings.
     const refreshSettings = (config) => {
         if (config.ServerVersion) {
@@ -412,6 +477,7 @@ export default function (page) {
             form.querySelector("#MetadataSection").removeAttribute("hidden");
             form.querySelector("#ProviderSection").removeAttribute("hidden");
             form.querySelector("#LibrarySection").removeAttribute("hidden");
+            form.querySelector("#MediaFolderSection").removeAttribute("hidden");
             form.querySelector("#UserSection").removeAttribute("hidden");
             form.querySelector("#TagSection").removeAttribute("hidden");
             form.querySelector("#AdvancedSection").removeAttribute("hidden");
@@ -426,6 +492,7 @@ export default function (page) {
             form.querySelector("#MetadataSection").setAttribute("hidden", "");
             form.querySelector("#ProviderSection").setAttribute("hidden", "");
             form.querySelector("#LibrarySection").setAttribute("hidden", "");
+            form.querySelector("#MediaFolderSection").setAttribute("hidden", "");
             form.querySelector("#UserSection").setAttribute("hidden", "");
             form.querySelector("#TagSection").setAttribute("hidden", "");
             form.querySelector("#AdvancedSection").setAttribute("hidden", "");
@@ -434,6 +501,9 @@ export default function (page) {
 
         const userId = form.querySelector("#UserSelector").value;
         loadUserConfig(form, userId, config);
+
+        const mediaFolderId = form.querySelector("#MediaFolderSelector").value;
+        loadMediaFolderConfig(form, mediaFolderId, config);
     };
 
     const onError = (err) => {
@@ -446,6 +516,10 @@ export default function (page) {
         loadUserConfig(page, this.value);
     });
 
+    mediaFolderSelector.addEventListener("change", function () {
+        loadMediaFolderConfig(page, this.value);
+    })
+
     form.querySelector("#UserEnableSynchronization").addEventListener("change", function () {
         const disabled = !this.checked;
         form.querySelector("#SyncUserDataOnImport").disabled = disabled;
@@ -453,16 +527,6 @@ export default function (page) {
         form.querySelector("#SyncUserDataUnderPlayback").disabled = disabled;
         form.querySelector("#SyncUserDataUnderPlaybackLive").disabled = disabled;
         form.querySelector("#SyncUserDataInitialSkipEventCount").disabled = disabled;
-    });
-
-    form.querySelector("#VirtualFileSystem").addEventListener("change", function () {
-        form.querySelector("#LibraryFilteringMode").disabled = this.checked;
-        if (this.checked) {
-            form.querySelector("#LibraryFilteringModeContainer").setAttribute("hidden", "");
-        }
-        else {
-            form.querySelector("#LibraryFilteringModeContainer").removeAttribute("hidden");
-        }
     });
 
     form.querySelector("#UseGroupsForShows").addEventListener("change", function () {
@@ -491,6 +555,7 @@ export default function (page) {
             form.querySelector("#TitleAlternateType").value = config.TitleAlternateType;
             form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
             form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null ? config.TitleAddForMultipleEpisodes : true;
+            form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
             form.querySelector("#DescriptionSource").value = config.DescriptionSource;
             form.querySelector("#CleanupAniDBDescriptions").checked = config.SynopsisCleanMultiEmptyLines || config.SynopsisCleanLinks;
             form.querySelector("#MinimalAniDBDescriptions").checked = config.SynopsisRemoveSummary || config.SynopsisCleanMiscLines;
@@ -500,15 +565,6 @@ export default function (page) {
             form.querySelector("#AddTMDBId").checked = config.AddTMDBId;
 
             // Library settings
-            form.querySelector("#VirtualFileSystem").checked = config.VirtualFileSystem != null ? config.VirtualFileSystem : true;
-            form.querySelector("#LibraryFilteringMode").value = `${config.LibraryFilteringMode != null ? config.LibraryFilteringMode : null}`;
-            form.querySelector("#LibraryFilteringMode").disabled = form.querySelector("#VirtualFileSystem").checked;
-            if (form.querySelector("#VirtualFileSystem").checked) {
-                form.querySelector("#LibraryFilteringModeContainer").setAttribute("hidden", "");
-            }
-            else {
-                form.querySelector("#LibraryFilteringModeContainer").removeAttribute("hidden");
-            }
             form.querySelector("#UseGroupsForShows").checked = config.UseGroupsForShows || false;
             form.querySelector("#SeasonOrdering").value = config.SeasonOrdering;
             form.querySelector("#SeasonOrdering").disabled = !form.querySelector("#UseGroupsForShows").checked;
@@ -521,10 +577,16 @@ export default function (page) {
             form.querySelector("#CollectionGrouping").value = config.CollectionGrouping || "Default";
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies != null ? config.SeparateMovies : true;
             form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
-            form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
+
+            // Media Folder settings
+            form.querySelector("#VirtualFileSystem").checked = config.VirtualFileSystem != null ? config.VirtualFileSystem : true;
+            form.querySelector("#LibraryFiltering").value = `${config.LibraryFiltering != null ? config.LibraryFiltering : null}`;
+
+            // Media Folder settings
+            mediaFolderSelector.innerHTML += config.MediaFolders.map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.MediaFolderPath}</option>`).join("");
 
             // User settings
-            userSelector.innerHTML += users.map((user) => `<option value="${user.Id}">${user.Name}</option>`);
+            userSelector.innerHTML += users.map((user) => `<option value="${user.Id}">${user.Name}</option>`).join("");
 
             // Tag settings
             form.querySelector("#HideUnverifiedTags").checked = config.HideUnverifiedTags;
@@ -578,6 +640,9 @@ export default function (page) {
             case "unlink-user":
                 unlinkUser(form).then(refreshSettings).catch(onError);
                 break;
+            case "media-folder-settings":
+                Dashboard.showLoadingMsg();
+                syncMediaFolderSettings(form).then(refreshSettings).case(onError);
             case "user-settings":
                 Dashboard.showLoadingMsg();
                 syncUserSettings(form).then(refreshSettings).catch(onError);

@@ -239,6 +239,18 @@ public class ShokoAPIClient : IDisposable
         return null;
     }
 
+    public async Task<ImportFolder?> GetImportFolder(int id)
+    {
+        try {
+            return await Get<ImportFolder>($"/api/v3/ImportFolder/{id}");
+        }
+        catch (ApiException e) {
+            if (e.StatusCode == HttpStatusCode.NotFound)
+                return null;
+            throw;
+        }
+    }
+
     public Task<File> GetFile(string id)
     {
         if (UseOlderSeriesAndFileEndpoints)
