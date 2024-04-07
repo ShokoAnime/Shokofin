@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.85",
+                "changelog": "fix: fix duplication bug on settings deserialise\n\n- I don't know why it happens if it's a `List<string>` but not a\n  `string[]`, but I don't care enough to study the internals of\n  `System.Xml` to find out.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.85/shoko_3.0.1.85.zip",
+                "checksum": "b0caa5a4ffb380b7fa28e69489212874",
+                "timestamp": "2024-04-07T13:16:52Z"
+            },
+            {
                 "version": "3.0.1.84",
                 "changelog": "fix: make sure specials are last (again)\n\nmisc: fix complaints from the IDE for the file model\n\nrefacor: more changes to the plugin config\n\n- Added _some_ per media folder configurations to the UI. This\n  will tell you the mapped import folder name, id, and relative path\n  within the folder the media folder is mapped to, along with the\n  settings you can tweak for media resolution.\n\n- Laid some more groundwork for the SignalR events to be better\n  supported per media folder. no settings for any of the SignalR stuff\n  yet though. That will be in a future commit.\n\nmisc: remove redundant tasks",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.81/shoko_3.0.1.81.zip",
                 "checksum": "f37c6beefb43997ea3c07e855bf921aa",
                 "timestamp": "2024-04-06T11:02:39Z"
-            },
-            {
-                "version": "3.0.1.80",
-                "changelog": "misc: fix links in dev release notification",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.80/shoko_3.0.1.80.zip",
-                "checksum": "600c57484fddfd0fc53004da083bc056",
-                "timestamp": "2024-04-05T07:42:12Z"
             }
         ]
     }
