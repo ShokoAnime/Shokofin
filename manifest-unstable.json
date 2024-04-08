@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.91",
+                "changelog": "fix: only merge with entries in the same media folder",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.91/shoko_3.0.1.91.zip",
+                "checksum": "5a3776354ca845bae71c46474059bb9b",
+                "timestamp": "2024-04-08T11:40:55Z"
+            },
+            {
                 "version": "3.0.1.90",
                 "changelog": "misc: temporerily disable the http request cache",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.87/shoko_3.0.1.87.zip",
                 "checksum": "bce7350f1ef5ba677024e331d1c69733",
                 "timestamp": "2024-04-07T14:08:01Z"
-            },
-            {
-                "version": "3.0.1.86",
-                "changelog": "fix: fix connection settings",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.86/shoko_3.0.1.86.zip",
-                "checksum": "846ee8f2a7160738d1e65d2caa4e1dd1",
-                "timestamp": "2024-04-07T13:46:55Z"
             }
         ]
     }
