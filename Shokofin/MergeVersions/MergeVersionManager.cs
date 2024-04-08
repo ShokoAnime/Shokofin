@@ -160,7 +160,7 @@ public class MergeVersionsManager
         // Merge all movies with more than one version.
         var movies = GetMoviesFromLibrary();
         var duplicationGroups = movies
-            .GroupBy(x => x.ProviderIds[ShokoEpisodeId.Name])
+            .GroupBy(x => (x.GetTopParent()?.Path, x.ProviderIds[ShokoEpisodeId.Name]))
             .Where(x => x.Count() > 1)
             .ToList();
         double currentCount = 0d;
@@ -229,7 +229,7 @@ public class MergeVersionsManager
 
         // Merge all movies with more than one version (again).
         var duplicationGroups = movies
-            .GroupBy(movie => movie.ProviderIds[ShokoEpisodeId.Name])
+            .GroupBy(movie => (movie.GetTopParent()?.Path, movie.ProviderIds[ShokoEpisodeId.Name]))
             .Where(movie => movie.Count() > 1)
             .ToList();
         currentCount = 0d;
@@ -295,7 +295,7 @@ public class MergeVersionsManager
         // of additional episodes.
         var episodes = GetEpisodesFromLibrary();
         var duplicationGroups = episodes
-            .GroupBy(e => $"{e.ProviderIds[ShokoEpisodeId.Name]}-{(e.IndexNumberEnd ?? e.IndexNumber ?? 1) - (e.IndexNumber ?? 1)}")
+            .GroupBy(e => (e.GetTopParent()?.Path, $"{e.ProviderIds[ShokoEpisodeId.Name]}-{(e.IndexNumberEnd ?? e.IndexNumber ?? 1) - (e.IndexNumber ?? 1)}"))
             .Where(e => e.Count() > 1)
             .ToList();
         double currentCount = 0d;
@@ -366,7 +366,7 @@ public class MergeVersionsManager
         // Merge episodes with more than one version (again), and with the same
         // number of additional episodes.
         var duplicationGroups = episodes
-            .GroupBy(e => $"{e.ProviderIds[ShokoEpisodeId.Name]}-{(e.IndexNumberEnd ?? e.IndexNumber ?? 1) - (e.IndexNumber ?? 1)}")
+            .GroupBy(e => (e.GetTopParent()?.Path, $"{e.ProviderIds[ShokoEpisodeId.Name]}-{(e.IndexNumberEnd ?? e.IndexNumber ?? 1) - (e.IndexNumber ?? 1)}"))
             .Where(e => e.Count() > 1)
             .ToList();
         currentCount = 0d;
