@@ -215,13 +215,9 @@ public class ShokoResolveManager
     /// <param name="mediaFolder">The media folder to generate a structure for.</param>
     /// <param name="folderPath">The folder within the media folder to generate a structure for.</param>
     /// <returns>The VFS path, if it succeeded.</returns>
-    private async Task<string?> GenerateStructureForFolderInVFS(Folder mediaFolder, string folderPath)
-    {
-        // Return early if we've already generated the structure from the import folder itself.
-        if (DataCache.TryGetValue<string?>(mediaFolder.Path, out var vfsPath))
-            return vfsPath;
-        return await DataCache.GetOrCreateAsync(
-            folderPath,
+    private Task<string?> GenerateStructureForFolderInVFS(Folder mediaFolder)
+        => DataCache.GetOrCreateAsync(
+            mediaFolder.Path,
             async (_) => {
                 var mediaConfig = await GetOrCreateConfigurationForMediaFolder(mediaFolder);
                 if (!mediaConfig.IsMapped)
@@ -233,14 +229,13 @@ public class ShokoResolveManager
 
                 // Check if we should introduce the VFS for the media folder.
                 var start = DateTime.UtcNow;
-                var allPaths = FileSystem.GetFilePaths(folderPath, true)
+                var allPaths = FileSystem.GetFilePaths(mediaFolder.Path, true)
                     .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
                     .ToHashSet();
-                Logger.LogDebug("Found {FileCount} files in folder at {Path} in {TimeSpan}.", allPaths.Count, folderPath, DateTime.UtcNow - start);
+                Logger.LogDebug("Found {FileCount} files in media folder at {Path} in {TimeSpan}.", allPaths.Count, mediaFolder.Path, DateTime.UtcNow - start);
 
-                var relativeFolderPath = mediaConfig.ImportFolderRelativePath + folderPath[mediaFolder.Path.Length..];
-                vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
-                var allFiles = GetImportFolderFiles(mediaConfig.ImportFolderId, relativeFolderPath, folderPath, allPaths);
+                var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
+                var allFiles = GetImportFolderFiles(mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
                 await GenerateSymbolicLinks(mediaFolder, allFiles).ConfigureAwait(false);
 
                 return vfsPath;
@@ -248,8 +243,7 @@ public class ShokoResolveManager
             new() {
                 AbsoluteExpirationRelativeToNow = DefaultTTL,
             }
-        ).ConfigureAwait(false);
-    }
+        );
 
     private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetImportFolderFiles(int importFolderId, string importFolderSubPath, string mediaFolderPath, ISet<string> fileSet)
     {
@@ -771,14 +765,11 @@ public class ShokoResolveManager
             if (!fullPath.StartsWith(Plugin.Instance.VirtualRoot))
                 return null;
 
-            var (mediaFolder, partialPath) = ApiManager.FindMediaFolder(fullPath, parent, root);
+            var (mediaFolder, _) = ApiManager.FindMediaFolder(fullPath, parent, root);
             if (mediaFolder == root)
                 return null;
 
-            var searchPath = mediaFolder.Path != parent.Path
-                ? Path.Combine(mediaFolder.Path, parent.Path[(mediaFolder.Path.Length + 1)..].Split(Path.DirectorySeparatorChar).Skip(1).Join(Path.DirectorySeparatorChar))
-                : mediaFolder.Path;
-            var vfsPath = await GenerateStructureForFolderInVFS(mediaFolder, searchPath).ConfigureAwait(false);
+            var vfsPath = await GenerateStructureForFolderInVFS(mediaFolder).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath))
                 return null;
 
@@ -816,7 +807,7 @@ public class ShokoResolveManager
 
             // Redirect children of a VFS managed media folder to the VFS.
             if (parent.ParentId == root.Id) {
-                var vfsPath = await GenerateStructureForFolderInVFS(parent, parent.Path).ConfigureAwait(false);
+                var vfsPath = await GenerateStructureForFolderInVFS(parent).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(vfsPath))
                     return null;
 
