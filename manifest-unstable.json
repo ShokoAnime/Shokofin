@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.92",
+                "changelog": "fix: fix stats after generation\n\nfix: remove dangerous sub-structure generation\n\n- Removed the dangerous sub-path structure generation\n  that could had ran if you tried to refresh a series, resulting\n  in **all** files not belonging to the series being removed,\n  because they were not in the list of files to keep.\n  The side-effect of this change is that it will regenerate the\n  whole VFS structure if needed when you're updating a single series.\n\nmisc: re-enable the request cache, but only for objects",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.92/shoko_3.0.1.92.zip",
+                "checksum": "25000b60e661f6c7c95631bfd6cc5efa",
+                "timestamp": "2024-04-08T21:43:05Z"
+            },
+            {
                 "version": "3.0.1.91",
                 "changelog": "fix: only merge with entries in the same media folder",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.88/shoko_3.0.1.88.zip",
                 "checksum": "0ee96a0bc6ddceaee675b9d7703fadbb",
                 "timestamp": "2024-04-07T15:11:29Z"
-            },
-            {
-                "version": "3.0.1.87",
-                "changelog": "fix: fix duplication bug on signalr auto-reconnect",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.87/shoko_3.0.1.87.zip",
-                "checksum": "bce7350f1ef5ba677024e331d1c69733",
-                "timestamp": "2024-04-07T14:08:01Z"
             }
         ]
     }
