@@ -82,13 +82,13 @@ public class SignalRConnectionManager : IDisposable
         connection.On<FileEventArgs>("ShokoEvent:FileDeleted", OnFileDeleted);
 
         try {
-            await Connection.StartAsync();
+            await connection.StartAsync().ConfigureAwait(false);
 
             Logger.LogInformation("Connected to Shoko Server.");
         }
-        catch {
-            Disconnect();
-            throw;
+        catch (Exception ex) {
+            Logger.LogError(ex, "Unable to connect to Shoko Server at this time. Please reconnect manually.");
+            await DisconnectAsync().ConfigureAwait(false);
         }
     }
 
@@ -128,7 +128,9 @@ public class SignalRConnectionManager : IDisposable
         var connection = Connection;
         Connection = null;
 
-        await connection.StopAsync();
+        if (connection.State != HubConnectionState.Disconnected)
+            await connection.StopAsync();
+
         await connection.DisposeAsync();
     }
 
