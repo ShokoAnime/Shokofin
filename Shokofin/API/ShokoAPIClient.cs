@@ -75,13 +75,13 @@ public class ShokoAPIClient : IDisposable
         Clear(false);
     }
 
-    private Task<ReturnType> Get<ReturnType>(string url, string? apiKey = null, bool skipCache = true)
+    private Task<ReturnType> Get<ReturnType>(string url, string? apiKey = null, bool skipCache = false)
         => Get<ReturnType>(url, HttpMethod.Get, apiKey, skipCache);
 
-    private async Task<ReturnType> Get<ReturnType>(string url, HttpMethod method, string? apiKey = null, bool skipCache = true)
+    private async Task<ReturnType> Get<ReturnType>(string url, HttpMethod method, string? apiKey = null, bool skipCache = false)
     {
         if (skipCache) {
-            var response = await Get(url, method, apiKey, true).ConfigureAwait(false);
+            var response = await Get(url, method, apiKey).ConfigureAwait(false);
             if (response.StatusCode != HttpStatusCode.OK)
                 throw ApiException.FromResponse(response);
             var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
@@ -95,6 +95,7 @@ public class ShokoAPIClient : IDisposable
             $"apiKey={apiKey ?? "default"},method={method},url={url},object",
             (_) => Logger.LogTrace("Reusing object for {Method} {URL}", method, url),
             async (_) => {
+                Logger.LogTrace("Creating object for {Method} {URL}", method, url);
                 var response = await Get(url, method, apiKey).ConfigureAwait(false);
                 if (response.StatusCode != HttpStatusCode.OK)
                     throw ApiException.FromResponse(response);
@@ -110,86 +111,41 @@ public class ShokoAPIClient : IDisposable
         );
     }
 
-    private async Task<HttpResponseMessage> Get(string url, HttpMethod method, string? apiKey = null, bool skipCache = true)
+    private async Task<HttpResponseMessage> Get(string url, HttpMethod method, string? apiKey = null)
     {
-        if (skipCache) {
-            // Use the default key if no key was provided.
-            apiKey ??= Plugin.Instance.Configuration.ApiKey;
+        // Use the default key if no key was provided.
+        apiKey ??= Plugin.Instance.Configuration.ApiKey;
 
-            // Check if we have a key to use.
-            if (string.IsNullOrEmpty(apiKey))
-                throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
+        // Check if we have a key to use.
+        if (string.IsNullOrEmpty(apiKey))
+            throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
-            var version = Plugin.Instance.Configuration.ServerVersion;
-            if (version == null) {
-                version = await GetVersion().ConfigureAwait(false)
-                    ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
+        var version = Plugin.Instance.Configuration.ServerVersion;
+        if (version == null) {
+            version = await GetVersion().ConfigureAwait(false)
+                ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
-                Plugin.Instance.Configuration.ServerVersion = version;
-                Plugin.Instance.SaveConfiguration();
-            }
-
-            try {
-                Logger.LogTrace("Trying to {Method} {URL}", method, url);
-                var remoteUrl = string.Concat(Plugin.Instance.Configuration.Url, url);
-
-                using var requestMessage = new HttpRequestMessage(method, remoteUrl);
-                requestMessage.Content = new StringContent(string.Empty);
-                requestMessage.Headers.Add("apikey", apiKey);
-                var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
-                if (response.StatusCode == HttpStatusCode.Unauthorized)
-                    throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection or deleting and re-adding the user in the plugin settings.", null, HttpStatusCode.Unauthorized);
-                Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
-                return response;
-            }
-            catch (HttpRequestException ex) {
-                Logger.LogWarning(ex, "Unable to connect to complete the request to Shoko.");
-                throw;
-            }
+            Plugin.Instance.Configuration.ServerVersion = version;
+            Plugin.Instance.SaveConfiguration();
         }
 
-        return await _cache.GetOrCreateAsync(
-            $"apiKey={apiKey ?? "default"},method={method},url={url},httpRequest",
-            (response) => Logger.LogTrace("Reusing response for {Method} {URL}", method, url),
-            async (_) => {
-                // Use the default key if no key was provided.
-                apiKey ??= Plugin.Instance.Configuration.ApiKey;
+        try {
+            Logger.LogTrace("Trying to {Method} {URL}", method, url);
+            var remoteUrl = string.Concat(Plugin.Instance.Configuration.Url, url);
 
-                // Check if we have a key to use.
-                if (string.IsNullOrEmpty(apiKey))
-                    throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
-
-                var version = Plugin.Instance.Configuration.ServerVersion;
-                if (version == null) {
-                    version = await GetVersion().ConfigureAwait(false)
-                        ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
-
-                    Plugin.Instance.Configuration.ServerVersion = version;
-                    Plugin.Instance.SaveConfiguration();
-                }
-
-                try {
-                    Logger.LogTrace("Trying to {Method} {URL}", method, url);
-                    var remoteUrl = string.Concat(Plugin.Instance.Configuration.Url, url);
-
-                    using var requestMessage = new HttpRequestMessage(method, remoteUrl);
-                    requestMessage.Content = new StringContent(string.Empty);
-                    requestMessage.Headers.Add("apikey", apiKey);
-                    var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
-                    if (response.StatusCode == HttpStatusCode.Unauthorized)
-                        throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection or deleting and re-adding the user in the plugin settings.", null, HttpStatusCode.Unauthorized);
-                    Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
-                    return response;
-                }
-                catch (HttpRequestException ex) {
-                    Logger.LogWarning(ex, "Unable to connect to complete the request to Shoko.");
-                    throw;
-                }
-            },
-            new() {
-                SlidingExpiration = DefaultTimeSpan,
-            }
-        );
+            using var requestMessage = new HttpRequestMessage(method, remoteUrl);
+            requestMessage.Content = new StringContent(string.Empty);
+            requestMessage.Headers.Add("apikey", apiKey);
+            var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection or deleting and re-adding the user in the plugin settings.", null, HttpStatusCode.Unauthorized);
+            Logger.LogTrace("API returned response with status code {StatusCode}", response.StatusCode);
+            return response;
+        }
+        catch (HttpRequestException ex) {
+            Logger.LogWarning(ex, "Unable to connect to complete the request to Shoko.");
+            throw;
+        }
     }
 
     private Task<ReturnType> Post<Type, ReturnType>(string url, Type body, string? apiKey = null)
@@ -360,13 +316,13 @@ public class ShokoAPIClient : IDisposable
 
     public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, bool watched, string apiKey)
     {
-        var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&watched={watched}", HttpMethod.Patch, apiKey, true).ConfigureAwait(false);
+        var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&watched={watched}", HttpMethod.Patch, apiKey).ConfigureAwait(false);
         return response != null && (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent);
     }
 
     public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, long progress, string apiKey)
     {
-        var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress).TotalMilliseconds)}", HttpMethod.Patch, apiKey, true).ConfigureAwait(false);
+        var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress).TotalMilliseconds)}", HttpMethod.Patch, apiKey).ConfigureAwait(false);
         return response != null && (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent);
     }
 
@@ -374,7 +330,7 @@ public class ShokoAPIClient : IDisposable
     {
         if (!progress.HasValue)
             return await ScrobbleFile(fileId, episodeId, eventName, watched, apiKey).ConfigureAwait(false);
-        var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress.Value).TotalMilliseconds)}&watched={watched}", HttpMethod.Patch, apiKey, true).ConfigureAwait(false);
+        var response = await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress.Value).TotalMilliseconds)}&watched={watched}", HttpMethod.Patch, apiKey).ConfigureAwait(false);
         return response != null && (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NoContent);
     }
 
