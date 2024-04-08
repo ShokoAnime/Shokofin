@@ -455,8 +455,8 @@ public class ShokoResolveManager
         var timeSpent = DateTime.UtcNow - start;
         Logger.LogInformation(
             "Created {CreatedMedia} ({CreatedSubtitles}), fixed {FixedMedia} ({FixedSubtitles}), skipped {SkippedMedia} ({SkippedSubtitles}), and removed {RemovedMedia} ({RemovedSubtitles}) symbolic links in media folder at {Path} in {TimeSpan}",
-            allPathsForVFS.Count - skippedLinks - subtitles,
-            subtitles - skippedSubtitles,
+            allPathsForVFS.Count - skippedLinks - fixedLinks - subtitles,
+            subtitles - fixedSubtitles - skippedSubtitles,
             fixedLinks,
             fixedSubtitles,
             skippedLinks,
