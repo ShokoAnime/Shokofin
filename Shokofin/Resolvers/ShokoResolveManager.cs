@@ -303,7 +303,7 @@ public class ShokoResolveManager
         } while (pages.Count > 0);
 
         var timeSpent = DateTime.UtcNow - start;
-        Logger.LogTrace(
+        Logger.LogDebug(
             "Iterated {FileCount} files to potentially use within media folder at {Path} in {TimeSpan} (ImportFolder={FolderId},RelativePath={RelativePath})",
             totalFiles,
             mediaFolderPath,
@@ -351,6 +351,7 @@ public class ShokoResolveManager
 
                     allPathsForVFS.Add((sourceLocation, symbolicLink));
                     if (!File.Exists(symbolicLink)) {
+                        Logger.LogDebug("Linking {Link} → {LinkTarget}", symbolicLink, sourceLocation);
                         File.CreateSymbolicLink(symbolicLink, sourceLocation);
                     }
                     else {
@@ -360,7 +361,7 @@ public class ShokoResolveManager
                             if (!string.Equals(sourceLocation, nextTarget?.FullName)) {
                                 shouldFix = true;
 
-                                Logger.LogWarning("Fixing broken symbolic link {Link} for {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
+                                Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
                             }
                         }
                         catch (Exception ex) {
@@ -386,6 +387,7 @@ public class ShokoResolveManager
                             subtitles++;
                             allPathsForVFS.Add((subtitleSource, subtitleLink));
                             if (!File.Exists(subtitleLink)) {
+                                Logger.LogDebug("Linking {Link} → {LinkTarget}", subtitleLink, subtitleSource);
                                 File.CreateSymbolicLink(subtitleLink, subtitleSource);
                             }
                             else {
@@ -395,7 +397,7 @@ public class ShokoResolveManager
                                     if (!string.Equals(subtitleSource, nextTarget?.FullName)) {
                                         shouldFix = true;
 
-                                        Logger.LogWarning("Fixing broken symbolic link {Link} for {LinkTarget} (RealTarget={RealTarget})", subtitleLink, subtitleSource, nextTarget?.FullName);
+                                        Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", subtitleLink, subtitleSource, nextTarget?.FullName);
                                     }
                                 }
                                 catch (Exception ex) {
