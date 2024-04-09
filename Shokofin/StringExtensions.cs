@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using MediaBrowser.Common.Providers;
 
@@ -54,8 +55,32 @@ public static class StringExtensions
     public static string Join(this IEnumerable<string> list, string? separator, int startIndex, int count)
         => string.Join(separator, list, startIndex, count);
 
+    public static string Join(this IEnumerable<char> list, char separator)
+        => string.Join(separator, list);
+
+    public static string Join(this IEnumerable<char> list, string? separator)
+        => string.Join(separator, list);
+
+    public static string Join(this IEnumerable<char> list, char separator, int startIndex, int count)
+        => string.Join(separator, list, startIndex, count);
+
+    public static string Join(this IEnumerable<char> list, string? separator, int startIndex, int count)
+        => string.Join(separator, list, startIndex, count);
+
+    private static char? IsAllowedCharacter(this char c)
+        => c == 32 || c > 47 && c < 58 || c > 64 && c < 91 || c > 96 && c < 123 ? c : '_';
+
+    public static string ForceASCII(this string value)
+        => value.Select(c => c.IsAllowedCharacter()).OfType<char>().Join("");
+
+    private static string CompactUnderscore(this string path)
+        => Regex.Replace(path, @"_{2,}", "_", RegexOptions.Singleline);
+
+    public static string CompactWhitespaces(this string path)
+        => Regex.Replace(path, @"\s{2,}", " ", RegexOptions.Singleline);
+
     public static string ReplaceInvalidPathCharacters(this string path)
-        => Regex.Replace(path.Trim(), @"[*|\\/:~<>?!\.…""]{2,}", "_", RegexOptions.Singleline);
+        => path.ForceASCII().CompactUnderscore().CompactWhitespaces().Trim();
 
     /// <summary>
     /// Gets the attribute value for <paramref name="attribute"/> in <paramref name="text"/>.
