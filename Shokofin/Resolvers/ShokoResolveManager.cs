@@ -468,6 +468,9 @@ public class ShokoResolveManager
         );
     }
 
+    // Note: Out of the 14k entries in my test shoko database, then only **319** entries have a title longer than 100 chacters.
+    private const int NameCutOff = 64;
+
     private async Task<(string sourceLocation, string[] symbolicLinks)> GenerateLocationsForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId)
     {
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId).ConfigureAwait(false);
@@ -495,19 +498,17 @@ public class ShokoResolveManager
         if (season == null || episode == null)
             return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
 
-        var showName = show.DefaultSeason.AniDB.Title?.ReplaceInvalidPathCharacters();
-        if (string.IsNullOrEmpty(showName)) {
-            showName = $"Shoko Series {show.Id}";
-        }
-        else if (show.DefaultSeason.AniDB.AirDate.HasValue) {
-            var yearText = $" ({show.DefaultSeason.AniDB.AirDate.Value.Year})";
-            if (!showName.EndsWith(yearText))
-                showName += yearText;
-        }
-
-        var folders = new List<string>();
+        var showName = show.DefaultSeason.AniDB.Title?.ReplaceInvalidPathCharacters() ?? $"Shoko Series {show.Id}";
         var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
         var episodeName = (episode.AniDB.Titles.FirstOrDefault(t => t.LanguageCode == "en")?.Value ?? $"Episode {episode.AniDB.Type} {episodeNumber}").ReplaceInvalidPathCharacters();
+
+        // For those **really** long names we have to cut if off at some point…
+        if (showName.Length >= NameCutOff)
+            showName = showName[..NameCutOff].Split(' ').SkipLast(1).Join(' ') + "…";
+        if (episodeName.Length >= NameCutOff)
+            episodeName = episodeName[..NameCutOff].Split(' ').SkipLast(1).Join(' ') + "…";
+
+        var folders = new List<string>();
         var extrasFolder = file.ExtraType switch {
             null => null,
             ExtraType.ThemeSong => "theme-music",
@@ -515,7 +516,7 @@ public class ShokoResolveManager
             ExtraType.Trailer => "trailers",
             _ => "extras",
         };
-        var fileNameSuffic = file.ExtraType switch {
+        var fileNameSuffix = file.ExtraType switch {
             ExtraType.BehindTheScenes => "-behindthescenes",
             ExtraType.Clip => "-clip",
             ExtraType.DeletedScene => "-deletedscene",
@@ -525,7 +526,6 @@ public class ShokoResolveManager
             ExtraType.Unknown => "-other",
             _ => string.Empty,
         };
-
         if (isMovieSeason && collectionType != CollectionType.TvShows) {
             if (!string.IsNullOrEmpty(extrasFolder)) {
                 foreach (var episodeInfo in season.EpisodeList)
@@ -550,7 +550,7 @@ public class ShokoResolveManager
             }
         }
 
-        var fileName = $"{episodeName} [{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileId}]{fileNameSuffic}{Path.GetExtension(sourceLocation)}";
+        var fileName = $"{episodeName} [{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileId}]{fileNameSuffix}{Path.GetExtension(sourceLocation)}";
         var symbolicLinks = folders
             .Select(folderPath => Path.Combine(folderPath, fileName))
             .ToArray();

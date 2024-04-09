@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using MediaBrowser.Common.Providers;
 
 namespace Shokofin;
@@ -54,18 +55,7 @@ public static class StringExtensions
         => string.Join(separator, list, startIndex, count);
 
     public static string ReplaceInvalidPathCharacters(this string path)
-        => path
-            .Replace(@"*", "\u1F7AF") // 🞯 (LIGHT FIVE SPOKED ASTERISK)
-            .Replace(@"|", "\uFF5C") // ｜ (FULLWIDTH VERTICAL LINE)
-            .Replace(@"\", "\u29F9") // ⧹ (BIG REVERSE SOLIDUS)
-            .Replace(@"/", "\u29F8") // ⧸ (BIG SOLIDUS)
-            .Replace(@":", "\u0589") // ։ (ARMENIAN FULL STOP)
-            .Replace("\"", "\u2033") // ″ (DOUBLE PRIME)
-            .Replace(@">", "\u203a") // › (SINGLE RIGHT-POINTING ANGLE QUOTATION MARK)
-            .Replace(@"<", "\u2039") // ‹ (SINGLE LEFT-POINTING ANGLE QUOTATION MARK)
-            .Replace(@"?", "\uff1f") // ？ (FULL WIDTH QUESTION MARK)
-            .Replace(@".", "\u2024") // ․ (ONE DOT LEADER)
-            .Trim();
+        => Regex.Replace(path.Trim(), @"[*|\\/:~<>?!\.…""]{2,}", "_", RegexOptions.Singleline);
 
     /// <summary>
     /// Gets the attribute value for <paramref name="attribute"/> in <paramref name="text"/>.
