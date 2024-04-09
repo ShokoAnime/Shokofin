@@ -2,11 +2,12 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Emby.Naming.Common;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Plugins;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
@@ -22,7 +23,7 @@ using ApiException = Shokofin.API.Models.ApiException;
 
 namespace Shokofin.Resolvers;
 
-public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
+public class ShokoLibraryMonitor : IHostedService
 {
     private readonly ILogger<ShokoLibraryMonitor> Logger;
 
@@ -86,16 +87,16 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
         LibraryScanWatcher.ValueChanged -= OnLibraryScanRunningChanged;
     }
 
-    Task IServerEntryPoint.RunAsync()
+    Task IHostedService.StartAsync(CancellationToken cancellationToken)
     {
         StartWatching();
         return Task.CompletedTask;
     }
 
-    void IDisposable.Dispose()
+    Task IHostedService.StopAsync(CancellationToken cancellationToken)
     {
-        GC.SuppressFinalize(this);
         StopWatching();
+        return Task.CompletedTask;
     }
 
     public void StartWatching()

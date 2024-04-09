@@ -1,4 +1,5 @@
-using MediaBrowser.Common.Plugins;
+using MediaBrowser.Controller;
+using MediaBrowser.Controller.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Shokofin;
@@ -7,7 +8,7 @@ namespace Shokofin;
 public class PluginServiceRegistrator : IPluginServiceRegistrator
 {
     /// <inheritdoc />
-    public void RegisterServices(IServiceCollection serviceCollection)
+    public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
     {
         serviceCollection.AddSingleton<Utils.LibraryScanWatcher>();
         serviceCollection.AddSingleton<API.ShokoAPIClient>();

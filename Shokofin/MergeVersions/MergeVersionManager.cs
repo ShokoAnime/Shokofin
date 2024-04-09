@@ -10,7 +10,6 @@ using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Common.Progress;
 using Shokofin.ExternalIds;
 
 namespace Shokofin.MergeVersions;
@@ -20,7 +19,7 @@ namespace Shokofin.MergeVersions;
 /// single UI element (by linking the videos together and letting Jellyfin
 /// handle the rest).
 /// </summary>
-/// 
+///
 /// Based upon;
 /// https://github.com/danieladov/jellyfin-plugin-mergeversions
 public class MergeVersionsManager
@@ -62,16 +61,14 @@ public class MergeVersionsManager
         double episodeProgressValue = 0d, movieProgressValue = 0d;
 
         // Setup the movie task.
-        var movieProgress = new ActionableProgress<double>();
-        movieProgress.RegisterAction(value => {
+        var movieProgress = new Progress<double>(value => {
             movieProgressValue = value / 2d;
             progress?.Report(movieProgressValue + episodeProgressValue);
         });
         var movieTask = MergeAllMovies(movieProgress, cancellationToken);
 
         // Setup the episode task.
-        var episodeProgress = new ActionableProgress<double>();
-        episodeProgress.RegisterAction(value => {
+        var episodeProgress = new Progress<double>(value => {
             episodeProgressValue = value / 2d;
             progress?.Report(movieProgressValue + episodeProgressValue);
         });
@@ -94,16 +91,14 @@ public class MergeVersionsManager
         double episodeProgressValue = 0d, movieProgressValue = 0d;
 
         // Setup the movie task.
-        var movieProgress = new ActionableProgress<double>();
-        movieProgress.RegisterAction(value => {
+        var movieProgress = new Progress<double>(value => {
             movieProgressValue = value / 2d;
             progress?.Report(movieProgressValue + episodeProgressValue);
         });
         var movieTask = SplitAllMovies(movieProgress, cancellationToken);
 
         // Setup the episode task.
-        var episodeProgress = new ActionableProgress<double>();
-        episodeProgress.RegisterAction(value => {
+        var episodeProgress = new Progress<double>(value => {
             episodeProgressValue = value / 2d;
             progress?.Report(movieProgressValue + episodeProgressValue);
             progress?.Report(50d + (value / 2d));
@@ -205,7 +200,7 @@ public class MergeVersionsManager
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="progress">Progress indicator.</param>
     /// <param name="cancellationToken">Cancellation token.</param>

@@ -128,7 +128,7 @@ public class MediaFolderConfigurationService
 
     #region Media Folder Mapping
 
-    public IReadOnlyList<(string vfsPath, string mainMediaFolderPath, string? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)> GetAvailableMediaFoldersForLibraries(Func<MediaFolderConfiguration, bool>? filter = null)
+    public IReadOnlyList<(string vfsPath, string mainMediaFolderPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)> GetAvailableMediaFoldersForLibraries(Func<MediaFolderConfiguration, bool>? filter = null)
     {
 
         lock (LockObj) {
@@ -144,12 +144,12 @@ public class MediaFolderConfigurationService
                         .ToList() as IReadOnlyList<MediaFolderConfiguration>
                 ))
                 .Where(tuple => tuple.libraryFolder is not null && tuple.virtualFolder is not null && tuple.virtualFolder.Locations.Length is > 0 && tuple.mediaList.Count is > 0)
-                .Select(tuple => (tuple.libraryFolder!.GetVirtualRoot(), tuple.virtualFolder!.Locations[0], LibraryManager.GetConfiguredContentType(tuple.libraryFolder!) ?? null, tuple.mediaList))
+                .Select(tuple => (tuple.libraryFolder!.GetVirtualRoot(), tuple.virtualFolder!.Locations[0], LibraryManager.GetConfiguredContentType(tuple.libraryFolder!), tuple.mediaList))
                 .ToList();
         }
     }
 
-    public (string vfsPath, string mainMediaFolderPath, string? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList) GetAvailableMediaFoldersForLibrary(Folder mediaFolder, Func<MediaFolderConfiguration, bool>? filter = null)
+    public (string vfsPath, string mainMediaFolderPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList) GetAvailableMediaFoldersForLibrary(Folder mediaFolder, Func<MediaFolderConfiguration, bool>? filter = null)
     {
         var mediaFolderConfig = GetOrCreateConfigurationForMediaFolder(mediaFolder);
         lock (LockObj) {

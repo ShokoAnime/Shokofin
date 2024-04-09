@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Emby.Naming.Common;
 using Emby.Naming.ExternalFiles;
+using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
@@ -47,7 +48,7 @@ public class VirtualFileSystemService
     // Note: Out of the 14k entries in my test shoko database, then only **319** entries have a title longer than 100 characters.
     private const int NameCutOff = 64;
 
-    private static readonly HashSet<string> IgnoreFolderNames = new() {
+    private static readonly HashSet<string> IgnoreFolderNames = [
         "backdrops",
         "behind the scenes",
         "deleted scenes",
@@ -60,7 +61,7 @@ public class VirtualFileSystemService
         "other",
         "extras",
         "trailers",
-    };
+    ];
 
     public VirtualFileSystemService(
         ShokoAPIManager apiManager,
@@ -635,7 +636,7 @@ public class VirtualFileSystemService
         return await ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath, page).ConfigureAwait(false);
     }
 
-    private async Task<LinkGenerationResult> GenerateStructure(string? collectionType, string vfsPath, IEnumerable<(string sourceLocation, string fileId, string seriesId)> allFiles)
+    private async Task<LinkGenerationResult> GenerateStructure(CollectionType? collectionType, string vfsPath, IEnumerable<(string sourceLocation, string fileId, string seriesId)> allFiles)
     {
         var result = new LinkGenerationResult();
         var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VFS_Threads);
@@ -667,33 +668,33 @@ public class VirtualFileSystemService
         return result;
     }
 
-    public async Task<(string sourceLocation, string[] symbolicLinks, DateTime? importedAt)> GenerateLocationsForFile(string? collectionType, string vfsPath, string sourceLocation, string fileId, string seriesId)
+    public async Task<(string sourceLocation, string[] symbolicLinks, DateTime? importedAt)> GenerateLocationsForFile(CollectionType? collectionType, string vfsPath, string sourceLocation, string fileId, string seriesId)
     {
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId).ConfigureAwait(false);
         if (season is null)
-            return (string.Empty, Array.Empty<string>(), null);
+            return (string.Empty, [], null);
 
         var isMovieSeason = season.Type is SeriesType.Movie;
         var config = Plugin.Instance.Configuration;
         var shouldAbort = collectionType switch {
-            CollectionType.TvShows => isMovieSeason && config.SeparateMovies,
-            CollectionType.Movies => !isMovieSeason,
+            CollectionType.tvshows => isMovieSeason && config.SeparateMovies,
+            CollectionType.movies => !isMovieSeason,
             _ => false,
         };
         if (shouldAbort)
-            return (string.Empty, Array.Empty<string>(), null);
+            return (string.Empty, [], null);
 
         var show = await ApiManager.GetShowInfoForSeries(season.Id).ConfigureAwait(false);
         if (show is null)
-            return (string.Empty, Array.Empty<string>(), null);
+            return (string.Empty, [], null);
 
         var file = await ApiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false);
-        var (episode, episodeXref, _) = (file?.EpisodeList ?? new()).FirstOrDefault();
+        var (episode, episodeXref, _) = (file?.EpisodeList ?? []).FirstOrDefault();
         if (file is null || episode is null)
-            return (string.Empty, Array.Empty<string>(), null);
+            return (string.Empty, [], null);
 
         if (season is null || episode is null)
-            return (string.Empty, Array.Empty<string>(), null);
+            return (string.Empty, [], null);
 
         var showName = show.DefaultSeason.AniDB.Title?.ReplaceInvalidPathCharacters() ?? $"Shoko Series {show.Id}";
         var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
@@ -709,29 +710,29 @@ public class VirtualFileSystemService
         var folders = new List<string>();
         var extrasFolders = file.ExtraType switch {
             null => isExtra ? new string[] { "extras" } : null,
-            ExtraType.ThemeSong => new string[] { "theme-music" },
+            ExtraType.ThemeSong => ["theme-music"],
             ExtraType.ThemeVideo => config.AddCreditsAsThemeVideos && config.AddCreditsAsSpecialFeatures
-                ? new string[] { "backdrops", "extras" }
+                ? ["backdrops", "extras"]
                 : config.AddCreditsAsThemeVideos
-                ? new string[] { "backdrops" }
+                ? ["backdrops"]
                 : config.AddCreditsAsSpecialFeatures
-                ? new string[] { "extras" }
-                : new string[] {  },
+                ? ["extras"]
+                : [],
             ExtraType.Trailer => config.AddTrailers
-                ? new string[] { "trailers" }
-                : new string[] {  },
-            ExtraType.BehindTheScenes => new string[] { "behind the scenes" },
-            ExtraType.DeletedScene => new string[] { "deleted scenes" },
-            ExtraType.Clip => new string[] { "clips" },
-            ExtraType.Interview => new string[] { "interviews" },
-            ExtraType.Scene => new string[] { "scenes" },
-            ExtraType.Sample => new string[] { "samples" },
-            _ => new string[] { "extras" },
+                ? ["trailers"]
+                : [],
+            ExtraType.BehindTheScenes => ["behind the scenes"],
+            ExtraType.DeletedScene => ["deleted scenes"],
+            ExtraType.Clip => ["clips"],
+            ExtraType.Interview => ["interviews"],
+            ExtraType.Scene => ["scenes"],
+            ExtraType.Sample => ["samples"],
+            _ => ["extras"],
         };
         var filePartSuffix = (episodeXref.Percentage?.Group ?? 1) is not 1
             ? $".pt{episode.Shoko.CrossReferences.Where(xref => xref.ReleaseGroup == episodeXref.ReleaseGroup && xref.Percentage!.Group == episodeXref.Percentage!.Group).ToList().FindIndex(xref => xref.Percentage!.Start == episodeXref.Percentage!.Start && xref.Percentage!.End == episodeXref.Percentage!.End) + 1}"
             : "";
-        if (isMovieSeason && collectionType is not CollectionType.TvShows) {
+        if (isMovieSeason && collectionType is not CollectionType.tvshows) {
             if (extrasFolders != null) {
                 foreach (var extrasFolder in extrasFolders)
                     foreach (var episodeInfo in season.EpisodeList)
