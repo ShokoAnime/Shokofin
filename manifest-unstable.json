@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.98",
+                "changelog": "refactor: simplify extra metadata provider\n\nmisc: remove unneeded stored offset\n\nmisc: more logging for link generation stage",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.98/shoko_3.0.1.98.zip",
+                "checksum": "383409f47b08c2e92e60d391d16e061a",
+                "timestamp": "2024-04-09T20:52:02Z"
+            },
+            {
                 "version": "3.0.1.97",
                 "changelog": "fix: use older endpoints for stable",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.94/shoko_3.0.1.94.zip",
                 "checksum": "bf3d9ffa87b6c1b1bab1cb37025711c6",
                 "timestamp": "2024-04-09T08:30:39Z"
-            },
-            {
-                "version": "3.0.1.93",
-                "changelog": "fix: don't throw if signalr service could not be started",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.93/shoko_3.0.1.93.zip",
-                "checksum": "3203f9969ddb7bf3d76f24e1a8181761",
-                "timestamp": "2024-04-08T21:49:58Z"
             }
         ]
     }
