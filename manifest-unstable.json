@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.99",
+                "changelog": "refactor: split-up extra metadata provider",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.99/shoko_3.0.1.99.zip",
+                "checksum": "0631035367d742f60ccdb0ff7fe95b38",
+                "timestamp": "2024-04-09T20:59:58Z"
+            },
+            {
                 "version": "3.0.1.98",
                 "changelog": "refactor: simplify extra metadata provider\n\nmisc: remove unneeded stored offset\n\nmisc: more logging for link generation stage",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.95/shoko_3.0.1.95.zip",
                 "checksum": "769d3cc409b02dc48e8d1aa1c77923e9",
                 "timestamp": "2024-04-09T10:30:16Z"
-            },
-            {
-                "version": "3.0.1.94",
-                "changelog": "fix: change to more permissive folder/file names",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.94/shoko_3.0.1.94.zip",
-                "checksum": "bf3d9ffa87b6c1b1bab1cb37025711c6",
-                "timestamp": "2024-04-09T08:30:39Z"
             }
         ]
     }
