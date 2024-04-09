@@ -165,7 +165,6 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
             };
         }
         season.ProviderIds.Add(ShokoSeriesId.Name, seasonInfo.Id);
-        season.ProviderIds.Add("Shoko Season Offset", offset.ToString());
         if (Plugin.Instance.Configuration.AddAniDBId)
             season.ProviderIds.Add("AniDB", seasonInfo.AniDB.Id.ToString());
 
