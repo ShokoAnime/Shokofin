@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
@@ -19,16 +20,24 @@ namespace Shokofin.Providers;
 public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
 {
     public string Name => Plugin.MetadataProviderName;
+
     private readonly IHttpClientFactory HttpClientFactory;
+
     private readonly ILogger<SeasonProvider> Logger;
 
     private readonly ShokoAPIManager ApiManager;
 
-    public SeasonProvider(IHttpClientFactory httpClientFactory, ILogger<SeasonProvider> logger, ShokoAPIManager apiManager)
+    private readonly IIdLookup Lookup;
+
+    private readonly ILibraryManager LibraryManager;
+
+    public SeasonProvider(IHttpClientFactory httpClientFactory, ILogger<SeasonProvider> logger, ShokoAPIManager apiManager, IIdLookup lookup, ILibraryManager libraryManager)
     {
         HttpClientFactory = httpClientFactory;
         Logger = logger;
         ApiManager = apiManager;
+        Lookup = lookup;
+        LibraryManager = libraryManager;
     }
 
     public async Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
@@ -176,5 +185,135 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+        
+    public async Task<ItemUpdateType> FetchAsync(Season season, MetadataRefreshOptions options, CancellationToken cancellationToken)
+    {
+        // We're not interested in the dummy season.
+        if (!season.IndexNumber.HasValue)
+            return ItemUpdateType.None;
+
+        // Abort if we're unable to get the shoko series id
+        var series = season.Series;
+        if (!Lookup.TryGetSeriesIdFor(series, out var seriesId))
+            return ItemUpdateType.None;
+
+        var seasonNumber = season.IndexNumber!.Value;
+        var showInfo = await ApiManager.GetShowInfoForSeries(seriesId);
+        if (showInfo == null || showInfo.SeasonList.Count == 0) {
+            Logger.LogWarning("Unable to find show info for season. (Series={SeriesId})", seriesId);
+            return ItemUpdateType.None;
+        }
+
+        var itemUpdated = ItemUpdateType.None;
+        if (Plugin.Instance.Configuration.AddMissingMetadata) {
+            // Get a hash-set of existing episodes – both physical and virtual – to exclude when adding new virtual episodes.
+            var existingEpisodes = new HashSet<string>();
+            foreach (var episode in season.Children.OfType<Episode>()) {
+                if (Lookup.TryGetEpisodeIdsFor(episode, out var episodeIds))
+                    foreach (var episodeId in episodeIds)
+                        existingEpisodes.Add(episodeId);
+                else if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId))
+                    existingEpisodes.Add(episodeId);
+            }
+
+            // Special handling of specials (pun intended).
+            if (seasonNumber == 0) {
+                foreach (var sI in showInfo.SeasonList) {
+                    foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(sI.Id))
+                        existingEpisodes.Add(episodeId);
+
+                    foreach (var episodeInfo in sI.SpecialsList) {
+                        if (existingEpisodes.Contains(episodeInfo.Id))
+                            continue;
+
+                        if (AddVirtualEpisode(showInfo, sI, episodeInfo, season))
+                            itemUpdated |= ItemUpdateType.MetadataImport;
+                    }
+                }
+            }
+            // Every other "season".
+            else {
+                var seasonInfo = showInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
+                if (seasonInfo == null) {
+                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber:00} in group for series. (Group={GroupId})", seasonNumber, showInfo.GroupId);
+                    return ItemUpdateType.None;
+                }
+
+                var offset = seasonNumber - showInfo.SeasonNumberBaseDictionary[seasonInfo.Id];
+                foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
+                    existingEpisodes.Add(episodeId);
+
+                foreach (var episodeInfo in seasonInfo.EpisodeList.Concat(seasonInfo.AlternateEpisodesList).Concat(seasonInfo.OthersList)) {
+                    var episodeParentIndex = episodeInfo.IsSpecial ? 0 : Ordering.GetSeasonNumber(showInfo, seasonInfo, episodeInfo);
+                    if (episodeParentIndex != seasonNumber)
+                        continue;
+
+                    if (existingEpisodes.Contains(episodeInfo.Id))
+                        continue;
+
+                    if (AddVirtualEpisode(showInfo, seasonInfo, episodeInfo, season))
+                        itemUpdated |= ItemUpdateType.MetadataImport;
+                }
+            }
+        }
+
+        // Remove the virtual season/episode that matches the newly updated item
+        var searchList = LibraryManager
+            .GetItemList(
+                new() {
+                    ParentId = season.ParentId,
+                    IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Season },
+                    ExcludeItemIds = new [] { season.Id },
+                    IndexNumber = seasonNumber,
+                    DtoOptions = new(true),
+                },
+                true
+            )
+            .Where(item => !item.IndexNumber.HasValue)
+            .ToList();
+        if (searchList.Count > 0)
+        {
+            Logger.LogInformation("Removing {Count:00} duplicate seasons from Series {SeriesName} (Series={SeriesId})", searchList.Count, series.Name, seriesId);
+
+            var deleteOptions = new DeleteOptions { DeleteFileLocation = false };
+            foreach (var item in searchList)
+                LibraryManager.DeleteItem(item, deleteOptions);
+
+            itemUpdated |= ItemUpdateType.MetadataEdit;
+        }
+
+
+        return itemUpdated;
+    }
+
+    private bool EpisodeExists(string episodeId, string seriesId, string? groupId)
+    {
+        var searchList = LibraryManager.GetItemList(new() {
+            IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Episode },
+            HasAnyProviderId = new Dictionary<string, string> { [ShokoEpisodeId.Name] = episodeId },
+            DtoOptions = new(true),
+        }, true);
+
+        if (searchList.Count > 0) {
+            Logger.LogDebug("A virtual or physical episode entry already exists for Episode {EpisodeName}. Ignoring. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", searchList[0].Name, episodeId, seriesId, groupId);
+            return true;
+        }
+        return false;
+    }
+
+    private bool AddVirtualEpisode(Info.ShowInfo showInfo, Info.SeasonInfo seasonInfo, Info.EpisodeInfo episodeInfo, Season season)
+    {
+        if (EpisodeExists(episodeInfo.Id, seasonInfo.Id, showInfo.GroupId))
+            return false;
+
+        var episodeId = LibraryManager.GetNewItemId(season.Series.Id + " Season " + seasonInfo.Id + " Episode " + episodeInfo.Id, typeof(Episode));
+        var episode = EpisodeProvider.CreateMetadata(showInfo, seasonInfo, episodeInfo, season, episodeId);
+
+        Logger.LogInformation("Adding virtual Episode {EpisodeNumber:000} in Season {SeasonNumber:00} for Series {SeriesName}. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", episode.IndexNumber, season.Name, showInfo.Name, episodeInfo.Id, seasonInfo.Id, showInfo.GroupId);
+
+        season.AddChild(episode);
+
+        return true;
+    }
 }
 
