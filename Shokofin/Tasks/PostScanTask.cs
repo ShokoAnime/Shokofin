@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Common.Progress;
 using MediaBrowser.Controller.Library;
 using Shokofin.API;
 using Shokofin.Collections;
@@ -37,8 +36,7 @@ public class PostScanTask : ILibraryPostScanTask
         if (Plugin.Instance.Configuration.EXPERIMENTAL_AutoMergeVersions) {
             // Setup basic progress tracking
             var baseProgress = 0d;
-            var simpleProgress = new ActionableProgress<double>();
-            simpleProgress.RegisterAction(value => progress.Report(baseProgress + (value / 2d)));
+            var simpleProgress = new Progress<double>(value => progress.Report(baseProgress + (value / 2d)));
 
             // Merge versions.
             await VersionsManager.MergeAll(simpleProgress, token);

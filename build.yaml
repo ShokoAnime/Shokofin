@@ -1,7 +1,7 @@
 name: "Shoko"
 guid: "5216ccbf-d24a-4eb3-8a7e-7da4230b7052"
 imageUrl: https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png
-targetAbi: "10.8.0.0"
+targetAbi: "10.9.0.0"
 owner: "ShokoAnime"
 overview: "Manage your anime from Jellyfin using metadata from Shoko"
 description: >

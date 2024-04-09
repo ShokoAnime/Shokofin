@@ -98,9 +98,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
 
     public static void AddProviderIds(IHasProviderIds item, string seriesId, string? groupId = null, string? anidbId = null, string? tmdbId = null)
     {
-        // NOTE: These next line will remain here till _someone_ fix the series merging for providers other then TvDB and ImDB in Jellyfin.
-        // NOTE: #2 Will fix this once JF 10.9 is out, as it contains a change that will help in this situation.
-        item.SetProviderId(MetadataProvider.Imdb, $"INVALID-BUT-DO-NOT-TOUCH:{seriesId}");
+        item.SetProviderId(MetadataProvider.Custom, $"shoko://shoko-series={seriesId}");
 
         var config = Plugin.Instance.Configuration;
         item.SetProviderId(ShokoSeriesId.Name, seriesId);

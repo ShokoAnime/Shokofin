@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
@@ -25,7 +26,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
             .GetAwaiter()
             .GetResult();
 
-    public MultiItemResolverResult? ResolveMultiple(Folder parent, List<FileSystemMetadata> files, string collectionType, IDirectoryService directoryService)
+    public MultiItemResolverResult? ResolveMultiple(Folder parent, List<FileSystemMetadata> files, CollectionType? collectionType, IDirectoryService directoryService)
         => ResolveManager.ResolveMultiple(parent, collectionType, files)
             .ConfigureAwait(false)
             .GetAwaiter()
