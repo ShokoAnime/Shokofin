@@ -5,11 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Emby.Naming.Common;
+using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Resolvers;
-using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
@@ -58,9 +58,9 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
         NamingOptions = namingOptions;
     }
 
-    public async Task<BaseItem?> ResolveSingle(Folder? parent, string? collectionType, FileSystemMetadata fileInfo)
+    public async Task<BaseItem?> ResolveSingle(Folder? parent, CollectionType? collectionType, FileSystemMetadata fileInfo)
     {
-        if (!(collectionType is CollectionType.TvShows or CollectionType.Movies or null) || parent is null || fileInfo is null)
+        if (!(collectionType is CollectionType.tvshows or CollectionType.movies or null) || parent is null || fileInfo is null)
             return null;
 
         var root = LibraryManager.RootFolder;
@@ -105,9 +105,9 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
         }
     }
 
-    public async Task<MultiItemResolverResult?> ResolveMultiple(Folder? parent, string? collectionType, List<FileSystemMetadata> fileInfoList)
+    public async Task<MultiItemResolverResult?> ResolveMultiple(Folder? parent, CollectionType? collectionType, List<FileSystemMetadata> fileInfoList)
     {
-        if (!(collectionType is CollectionType.TvShows or CollectionType.Movies or null) || parent is null)
+        if (!(collectionType is CollectionType.tvshows or CollectionType.movies or null) || parent is null)
             return null;
 
         var root = LibraryManager.RootFolder;
@@ -129,7 +129,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
 
             // Redirect children of a VFS managed media folder to the VFS.
             if (parent.IsTopParent) {
-                var createMovies = collectionType is CollectionType.Movies || (collectionType is null && Plugin.Instance.Configuration.SeparateMovies);
+                var createMovies = collectionType is CollectionType.movies || (collectionType is null && Plugin.Instance.Configuration.SeparateMovies);
                 var pathsToRemoveBag = new ConcurrentBag<(string, bool)>();
                 var items = FileSystem.GetDirectories(vfsPath)
                     .AsParallel()
@@ -254,7 +254,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
     
     #region IMultiItemResolver
 
-    MultiItemResolverResult? IMultiItemResolver.ResolveMultiple(Folder parent, List<FileSystemMetadata> files, string? collectionType, IDirectoryService directoryService)
+    MultiItemResolverResult? IMultiItemResolver.ResolveMultiple(Folder parent, List<FileSystemMetadata> files, CollectionType? collectionType, IDirectoryService directoryService)
         => ResolveMultiple(parent, collectionType, files)
             .ConfigureAwait(false)
             .GetAwaiter()

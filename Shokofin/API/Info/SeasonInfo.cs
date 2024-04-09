@@ -4,7 +4,7 @@ using System.Linq;
 using Shokofin.API.Models;
 
 using PersonInfo = MediaBrowser.Controller.Entities.PersonInfo;
-using PersonType = MediaBrowser.Model.Entities.PersonType;
+using PersonKind = Jellyfin.Data.Enums.PersonKind;
 
 namespace Shokofin.API.Info;
 
@@ -273,41 +273,41 @@ public class SeasonInfo
         {
             CreatorRoleType.Director => new PersonInfo
             {
-                Type = PersonType.Director,
+                Type = PersonKind.Director,
                 Name = role.Staff.Name,
                 Role = role.Name,
                 ImageUrl = GetImagePath(role.Staff.Image),
             },
             CreatorRoleType.Producer => new PersonInfo
             {
-                Type = PersonType.Producer,
+                Type = PersonKind.Producer,
                 Name = role.Staff.Name,
                 Role = role.Name,
                 ImageUrl = GetImagePath(role.Staff.Image),
             },
             CreatorRoleType.Music => new PersonInfo
             {
-                Type = PersonType.Lyricist,
+                Type = PersonKind.Lyricist,
                 Name = role.Staff.Name,
                 Role = role.Name,
                 ImageUrl = GetImagePath(role.Staff.Image),
             },
             CreatorRoleType.SourceWork => new PersonInfo
             {
-                Type = PersonType.Writer,
+                Type = PersonKind.Writer,
                 Name = role.Staff.Name,
                 Role = role.Name,
                 ImageUrl = GetImagePath(role.Staff.Image),
             },
             CreatorRoleType.SeriesComposer => new PersonInfo
             {
-                Type = PersonType.Composer,
+                Type = PersonKind.Composer,
                 Name = role.Staff.Name,
                 ImageUrl = GetImagePath(role.Staff.Image),
             },
             CreatorRoleType.Seiyuu => new PersonInfo
             {
-                Type = PersonType.Actor,
+                Type = PersonKind.Actor,
                 Name = role.Staff.Name,
                 // The character will always be present if the role is a VA.
                 // We make it a conditional check since otherwise will the compiler complain.

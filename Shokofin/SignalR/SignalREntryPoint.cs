@@ -1,24 +1,19 @@
 
-using System;
+using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Controller.Plugins;
+using Microsoft.Extensions.Hosting;
 
 namespace Shokofin.SignalR;
 
-public class SignalREntryPoint : IServerEntryPoint
+public class SignalREntryPoint : IHostedService
 {
     private readonly SignalRConnectionManager ConnectionManager;
 
     public SignalREntryPoint(SignalRConnectionManager connectionManager) => ConnectionManager = connectionManager;
 
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-        ConnectionManager.StopAsync()
-            .GetAwaiter()
-            .GetResult();
-    }
+    public Task StopAsync(CancellationToken cancellationToken)
+        => ConnectionManager.StopAsync();
 
-    public Task RunAsync()
+    public Task StartAsync(CancellationToken cancellationToken)
         => ConnectionManager.RunAsync();
 }

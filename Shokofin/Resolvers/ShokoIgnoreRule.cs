@@ -3,10 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Emby.Naming.Common;
+using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Resolvers;
-using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
@@ -124,7 +124,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
         }
     }
 
-    private async Task<bool> ShouldFilterDirectory(string partialPath, string fullPath, string? collectionType, bool shouldIgnore)
+    private async Task<bool> ShouldFilterDirectory(string partialPath, string fullPath, CollectionType? collectionType, bool shouldIgnore)
     {
         var season = await ApiManager.GetSeasonInfoByPath(fullPath).ConfigureAwait(false);
 
@@ -157,13 +157,13 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
         // Filter library if we enabled the option.
         var isMovieSeason = season.Type is SeriesType.Movie;
         switch (collectionType) {
-            case CollectionType.TvShows:
+            case CollectionType.tvshows:
                 if (isMovieSeason && Plugin.Instance.Configuration.SeparateMovies) {
                     Logger.LogInformation("Found movie in show library and library separation is enabled, ignoring shoko series. (Series={SeriesId},ExtraSeries={ExtraIds})", season.Id, season.ExtraIds);
                     return true;
                 }
                 break;
-            case CollectionType.Movies:
+            case CollectionType.movies:
                 if (!isMovieSeason) {
                     Logger.LogInformation("Found show in movie library, ignoring shoko series. (Series={SeriesId},ExtraSeries={ExtraIds})", season.Id, season.ExtraIds);
                     return true;
