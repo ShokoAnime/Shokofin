@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.96",
+                "changelog": "fix: force ascii for vfs paths",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.96/shoko_3.0.1.96.zip",
+                "checksum": "f0624ecbdd03c022423df5ed60323db6",
+                "timestamp": "2024-04-09T14:00:16Z"
+            },
+            {
                 "version": "3.0.1.95",
                 "changelog": "fix: update user password field type",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.92/shoko_3.0.1.92.zip",
                 "checksum": "25000b60e661f6c7c95631bfd6cc5efa",
                 "timestamp": "2024-04-08T21:43:05Z"
-            },
-            {
-                "version": "3.0.1.91",
-                "changelog": "fix: only merge with entries in the same media folder",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.91/shoko_3.0.1.91.zip",
-                "checksum": "5a3776354ca845bae71c46474059bb9b",
-                "timestamp": "2024-04-08T11:40:55Z"
             }
         ]
     }
