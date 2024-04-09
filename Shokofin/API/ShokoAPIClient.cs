@@ -24,18 +24,18 @@ public class ShokoAPIClient : IDisposable
 
     private readonly ILogger<ShokoAPIClient> Logger;
 
-    private static DateTime? ServerCommitDate =>
-        Plugin.Instance.Configuration.ServerVersion?.ReleaseDate;
+    private static ComponentVersion? ServerVersion =>
+        Plugin.Instance.Configuration.ServerVersion;
 
     private static readonly DateTime StableCutOffDate = DateTime.Parse("2023-12-16T00:00:00.000Z");
 
     private static bool UseOlderSeriesAndFileEndpoints =>
-        ServerCommitDate.HasValue && ServerCommitDate.Value < StableCutOffDate;
+        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == "4.2.2.0") || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < StableCutOffDate));
 
     private static readonly DateTime ImportFolderCutOffDate = DateTime.Parse("2024-03-28T00:00:00.000Z");
 
     private static bool UseOlderImportFolderFileEndpoints =>
-        ServerCommitDate.HasValue && ServerCommitDate.Value < ImportFolderCutOffDate;
+        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == "4.2.2.0") || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < ImportFolderCutOffDate));
 
     private GuardedMemoryCache _cache = new(new MemoryCacheOptions() {
         ExpirationScanFrequency = ExpirationScanFrequency,
