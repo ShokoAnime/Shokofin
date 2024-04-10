@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.100",
+                "changelog": "fix: make owarimonogarari great again!\n\n- Convert movie series into web series if all the normal episodes are\n  hidden and we have \"other\" type episodes locally.\n\nrefactor: remove others but keep alt. ver.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.100/shoko_3.0.1.100.zip",
+                "checksum": "5b9aeb9577ec28258ca4baca252d893d",
+                "timestamp": "2024-04-10T14:21:18Z"
+            },
+            {
                 "version": "3.0.1.99",
                 "changelog": "refactor: split-up extra metadata provider",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.96/shoko_3.0.1.96.zip",
                 "checksum": "f0624ecbdd03c022423df5ed60323db6",
                 "timestamp": "2024-04-09T14:00:16Z"
-            },
-            {
-                "version": "3.0.1.95",
-                "changelog": "fix: update user password field type",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.95/shoko_3.0.1.95.zip",
-                "checksum": "769d3cc409b02dc48e8d1aa1c77923e9",
-                "timestamp": "2024-04-09T10:30:16Z"
             }
         ]
     }
