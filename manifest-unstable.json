@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.101",
+                "changelog": "refactor: allow specials only season info\nand always map the alternate episodes as main episodes\nif main episodes are filtered out.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.101/shoko_3.0.1.101.zip",
+                "checksum": "13f71ef620334d9d726383976c34624a",
+                "timestamp": "2024-04-10T18:55:25Z"
+            },
+            {
                 "version": "3.0.1.100",
                 "changelog": "fix: make owarimonogarari great again!\n\n- Convert movie series into web series if all the normal episodes are\n  hidden and we have \"other\" type episodes locally.\n\nrefactor: remove others but keep alt. ver.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.97/shoko_3.0.1.97.zip",
                 "checksum": "f5d22c7b6e98afc33b004d956605c36c",
                 "timestamp": "2024-04-09T18:46:12Z"
-            },
-            {
-                "version": "3.0.1.96",
-                "changelog": "fix: force ascii for vfs paths",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.96/shoko_3.0.1.96.zip",
-                "checksum": "f0624ecbdd03c022423df5ed60323db6",
-                "timestamp": "2024-04-09T14:00:16Z"
             }
         ]
     }
