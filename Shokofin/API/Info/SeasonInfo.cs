@@ -126,6 +126,14 @@ public class SeasonInfo
             index++;
         }
 
+        // Switch the type from movie to web if we've hidden the main movie, and we have some of the parts.
+        var type = series.AniDBEntity.Type;
+        if (type == SeriesType.Movie && episodesList.Count == 0 && altEpisodesList.Any(ep => ep.Shoko.Size > 0)) {
+            type = SeriesType.Web;
+            episodesList = altEpisodesList;
+            altEpisodesList = new();
+        }
+
         // While the filtered specials list is ordered by episode number
         specialsList = specialsList
             .OrderBy(e => e.AniDB.EpisodeNumber)
@@ -135,7 +143,7 @@ public class SeasonInfo
         Shoko = series;
         AniDB = series.AniDBEntity;
         TvDB = series.TvDBEntityList.FirstOrDefault();
-        Type = series.AniDBEntity.Type;
+        Type = type;
         Tags = tags;
         Genres = genres;
         Studios = studios;
