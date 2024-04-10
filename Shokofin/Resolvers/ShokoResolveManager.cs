@@ -540,7 +540,7 @@ public class ShokoResolveManager
         }
         else {
             var isSpecial = show.IsSpecial(episode);
-            var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
+            var seasonNumber = isSpecial ? 0 : Ordering.GetSeasonNumber(show, season, episode);
             var seasonName = $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}";
             if (!string.IsNullOrEmpty(extrasFolder)) {
                 folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}]", extrasFolder));
