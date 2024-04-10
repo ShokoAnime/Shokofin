@@ -271,7 +271,9 @@ public class ShokoResolveManager
         for (var page = 2; page <= totalPages; page++)
             pages.Add(GetImportFolderFilesPage(importFolderId, importFolderSubPath, page, semaphore));
 
-        var totalFiles = 0;
+        var singleSeriesIds = new HashSet<int>();
+        var multiSeriesFiles = new List<(API.Models.File, string)>();
+        var totalSingleSeriesFiles = 0;
         do {
             var task = Task.WhenAny(pages).ConfigureAwait(false).GetAwaiter().GetResult();
             pages.Remove(task);
@@ -296,22 +298,44 @@ public class ShokoResolveManager
                 if (!fileSet.Contains(sourceLocation))
                     continue;
 
-                totalFiles++;
-                foreach (var xref in file.CrossReferences)
-                    yield return (sourceLocation, fileId: file.Id.ToString(), seriesId: xref.Series.Shoko.ToString());
+                // Yield all single-series files now, and offset the processing of all multi-series files for later.
+                var seriesIds = file.CrossReferences.Select(x => x.Series.Shoko).ToHashSet();
+                if (seriesIds.Count == 1) {
+                    totalSingleSeriesFiles++;
+                    singleSeriesIds.Add(seriesIds.First());
+                    foreach (var xref in file.CrossReferences)
+                        yield return (sourceLocation, fileId: file.Id.ToString(), seriesId: xref.Series.Shoko.ToString());
+                }
+                else if (seriesIds.Count > 1) {
+                    multiSeriesFiles.Add((file, sourceLocation));
+                }
             }
         } while (pages.Count > 0);
 
+        // Check which series of the multiple series we have, and only yield
+        // the paths for the series we have. This will fail if an OVA episode is
+        // linked to both the OVA and e.g. a specials for the TV Series.
+        var totalMultiSeriesFiles = 0;
+        foreach (var (file, sourceLocation) in multiSeriesFiles) {
+            var crossReferences = file.CrossReferences
+                .Where(xref => singleSeriesIds.Contains(xref.Series.Shoko))
+                .ToList();
+            foreach (var xref in crossReferences)
+                yield return (sourceLocation, fileId: file.Id.ToString(), seriesId: xref.Series.Shoko.ToString());
+            totalMultiSeriesFiles += crossReferences.Count;
+        }
+
         var timeSpent = DateTime.UtcNow - start;
         Logger.LogDebug(
-            "Iterated {FileCount} files to potentially use within media folder at {Path} in {TimeSpan} (ImportFolder={FolderId},RelativePath={RelativePath})",
-            totalFiles,
+            "Iterated {FileCount} ({MultiFileCount}→{MultiFileCount}) files to potentially use within media folder at {Path} in {TimeSpan} (ImportFolder={FolderId},RelativePath={RelativePath})",
+            totalSingleSeriesFiles,
+            multiSeriesFiles.Count,
+            totalMultiSeriesFiles,
             mediaFolderPath,
             timeSpent,
             importFolderId,
             importFolderSubPath
         );
-
     }
 
     private async Task<ListResult<API.Models.File>> GetImportFolderFilesPage(int importFolderId, string importFolderSubPath, int page, SemaphoreSlim semaphore)
