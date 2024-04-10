@@ -116,13 +116,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
                 default:
                     break;
                 case 1:
-                    if (seasonInfo.AlternateEpisodesList.Count > 0)
-                        type = "Alternate Stories";
-                    else
-                        type = "Other Episodes";
-                    break;
-                case 2:
-                    type = "Other Episodes";
+                    type = "Alternate Version";
                     break;
             }
             if (!string.IsNullOrEmpty(type)) {
@@ -243,7 +237,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
                 foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
                     existingEpisodes.Add(episodeId);
 
-                foreach (var episodeInfo in seasonInfo.EpisodeList.Concat(seasonInfo.AlternateEpisodesList).Concat(seasonInfo.OthersList)) {
+                foreach (var episodeInfo in seasonInfo.EpisodeList.Concat(seasonInfo.AlternateEpisodesList)) {
                     var episodeParentIndex = episodeInfo.IsSpecial ? 0 : Ordering.GetSeasonNumber(showInfo, seasonInfo, episodeInfo);
                     if (episodeParentIndex != seasonNumber)
                         continue;

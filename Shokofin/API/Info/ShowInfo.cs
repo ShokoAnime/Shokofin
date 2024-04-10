@@ -126,8 +126,6 @@ public class ShowInfo
         var seasonNumberOffset = 1;
         if (seasonInfo.AlternateEpisodesList.Count > 0)
             seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
-        if (seasonInfo.OthersList.Count > 0)
-            seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
 
         Id = seasonInfo.Id;
         GroupId = seasonInfo.Shoko.IDs.ParentGroup.ToString();
@@ -188,8 +186,6 @@ public class ShowInfo
             seasonNumberBaseDictionary.Add(seasonInfo.Id, ++seasonNumberOffset);
             seasonOrderDictionary.Add(seasonNumberOffset, seasonInfo);
             if (seasonInfo.AlternateEpisodesList.Count > 0)
-                seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
-            if (seasonInfo.OthersList.Count > 0)
                 seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
         }
 

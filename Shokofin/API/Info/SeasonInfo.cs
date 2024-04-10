@@ -49,13 +49,6 @@ public class SeasonInfo
     public List<EpisodeInfo> AlternateEpisodesList;
 
     /// <summary>
-    /// A pre-filtered list of "other" episodes that belong to this series.
-    /// 
-    /// Ordered by AniDb air-date.
-    /// </summary>
-    public List<EpisodeInfo> OthersList;
-
-    /// <summary>
     /// A pre-filtered list of "extra" videos that belong to this series.
     /// 
     /// Ordered by AniDb air-date.
@@ -104,7 +97,6 @@ public class SeasonInfo
         var episodesList = new List<EpisodeInfo>();
         var extrasList = new List<EpisodeInfo>();
         var altEpisodesList = new List<EpisodeInfo>();
-        var othersList = new List<EpisodeInfo>();
 
         // Iterate over the episodes once and store some values for later use.
         int index = 0;
@@ -116,9 +108,6 @@ public class SeasonInfo
                     lastNormalEpisode = index;
                     break;
                 case EpisodeType.Other:
-                    othersList.Add(episode);
-                    break;
-                case EpisodeType.Unknown:
                     altEpisodesList.Add(episode);
                     break;
                 default:
@@ -154,7 +143,6 @@ public class SeasonInfo
         RawEpisodeList = episodes;
         EpisodeList = episodesList;
         AlternateEpisodesList = altEpisodesList;
-        OthersList = othersList;
         ExtrasList = extrasList;
         SpecialsAnchors = specialsAnchorDictionary;
         SpecialsList = specialsList;

@@ -113,7 +113,6 @@ public class Ordering
         var sizes = series.Shoko.Sizes.Total;
         switch (episode.AniDB.Type) {
             case EpisodeType.Other:
-            case EpisodeType.Unknown:
             case EpisodeType.Normal:
                 // offset += 0; // it's not needed, so it's just here as a comment instead.
                 break;
@@ -218,21 +217,10 @@ public class Ordering
         if (!group.SeasonNumberBaseDictionary.TryGetValue(series.Id, out var seasonNumber))
             throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id})");
 
-        var offset = 0;
-        switch (episode.AniDB.Type) {
-            default:
-                break;
-            case EpisodeType.Unknown: {
-                offset = 1;
-                break;
-            }
-            case EpisodeType.Other: {
-                offset = series.AlternateEpisodesList.Count > 0 ? 2 : 1;
-                break;
-            }
-        }
-
-        return seasonNumber + offset;
+        return episode.AniDB.Type switch {
+            EpisodeType.Other => seasonNumber + 1,
+            _ => seasonNumber,
+        };
     }
 
     /// <summary>
