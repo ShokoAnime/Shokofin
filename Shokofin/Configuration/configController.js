@@ -162,6 +162,7 @@ async function defaultSubmit(form) {
         config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
         config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
         config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
+        config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
         // Media Folder settings
         const mediaFolderId = form.querySelector("#MediaFolderSelector").value;
@@ -319,6 +320,7 @@ async function syncSettings(form) {
     config.TitleAlternateType = form.querySelector("#TitleAlternateType").value;
     config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
     config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
+    config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
     config.DescriptionSource = form.querySelector("#DescriptionSource").value;
     config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
     config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
@@ -330,14 +332,12 @@ async function syncSettings(form) {
     config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
 
     // Library settings
-    config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
-    config.LibraryFiltering = fitleringMode === "true" ? true : fitleringMode === "false" ? false : null;
     config.UseGroupsForShows = form.querySelector("#UseGroupsForShows").checked;
     config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
-    config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
     config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
+    config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
     config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
-    config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
+    config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
     // Tag settings
     config.HideUnverifiedTags = form.querySelector("#HideUnverifiedTags").checked;
@@ -577,12 +577,11 @@ export default function (page) {
             form.querySelector("#CollectionGrouping").value = config.CollectionGrouping || "Default";
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies != null ? config.SeparateMovies : true;
             form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
+            form.querySelector("#AddMissingMetadata").checked = config.AddMissingMetadata || false;
 
             // Media Folder settings
             form.querySelector("#VirtualFileSystem").checked = config.VirtualFileSystem != null ? config.VirtualFileSystem : true;
             form.querySelector("#LibraryFiltering").value = `${config.LibraryFiltering != null ? config.LibraryFiltering : null}`;
-
-            // Media Folder settings
             mediaFolderSelector.innerHTML += config.MediaFolders.map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.MediaFolderPath}</option>`).join("");
 
             // User settings

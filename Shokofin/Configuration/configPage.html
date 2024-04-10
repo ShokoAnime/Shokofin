@@ -65,6 +65,13 @@
                             </select>
                             <div class="fieldDescription selectFieldDescription">How to select the alternate title for each item. The plugin will fallback to the default title if no title can be found in the target language.</div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
+                                <span>Mark specials</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add a number to the title of each specials episode</div>
+                        </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="DescriptionSource">Description source:</label>
                             <select is="emby-select" id="DescriptionSource" name="DescriptionSource" class="emby-select-withcolor emby-select">
@@ -89,13 +96,6 @@
                                 <span>Add all metadata for multi-episode entries.</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Will add the title and description for every episode in a multi-episode entry.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
-                                <span>Mark specials</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add a number to the title of each specials episode</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
@@ -184,6 +184,13 @@
                                 <option value="ShokoGroup">Create collections for movies and shows based upon Shoko's groups and series</option>
                             </select>
                             <div class="fieldDescription">Determines how to group entities into collections.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddMissingMetadata" />
+                                <span>Add Missing Episodes/Seasons</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add the metadata for missing episodes/seasons not in the local collection.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
