@@ -135,7 +135,7 @@ public class ShowInfo
     {
         var seasonNumberBaseDictionary = new Dictionary<string, int>();
         var seasonOrderDictionary = new Dictionary<int, SeasonInfo>();
-        var seasonNumberOffset = 0;
+        var seasonNumberOffset = 1;
         if (seasonInfo.EpisodeList.Count > 0 || seasonInfo.AlternateEpisodesList.Count > 0)
             seasonNumberBaseDictionary.Add(seasonInfo.Id, seasonNumberOffset);
         if (seasonInfo.EpisodeList.Count > 0)

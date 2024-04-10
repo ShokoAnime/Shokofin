@@ -216,8 +216,11 @@ public class Ordering
     /// <returns></returns>
     public static int GetSeasonNumber(ShowInfo showInfo, SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
     {
-        if (!showInfo.TryGetBaseSeasonNumberForSeasonInfo(seasonInfo, out var seasonNumber))
+        if (!showInfo.TryGetBaseSeasonNumberForSeasonInfo(seasonInfo, out var seasonNumber)) {
+            if (showInfo.IsSpecial(episodeInfo))
+                return 0;
             throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id})");
+        }
 
         if (seasonInfo.AlternateEpisodesList.Any(ep => ep.Id == episodeInfo.Id))
             return seasonNumber + 1;
