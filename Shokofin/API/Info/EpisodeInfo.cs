@@ -2,8 +2,6 @@ using System.Linq;
 using Shokofin.API.Models;
 using Shokofin.Utils;
 
-using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
-
 namespace Shokofin.API.Info;
 
 public class EpisodeInfo
@@ -17,17 +15,6 @@ public class EpisodeInfo
     public Episode.AniDB AniDB;
 
     public Episode.TvDB? TvDB;
-
-    public bool IsSpecial
-    {
-        get
-        {
-            if (ExtraType != null) return false;
-            var order = Plugin.Instance.Configuration.SpecialsPlacement;
-            var allowOtherData = order == SpecialOrderType.InBetweenSeasonByOtherData || order == SpecialOrderType.InBetweenSeasonMixed;
-            return allowOtherData  ? (TvDB?.SeasonNumber == 0 || AniDB.Type == EpisodeType.Special) : AniDB.Type == EpisodeType.Special;
-        }
-    }
 
     public EpisodeInfo(Episode episode)
     {

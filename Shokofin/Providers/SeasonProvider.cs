@@ -75,8 +75,8 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
                 return result;
             }
 
-            var seasonInfo = showInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
-            if (seasonInfo == null || !showInfo.SeasonNumberBaseDictionary.TryGetValue(seasonInfo.Id, out var baseSeasonNumber)) {
+            var seasonInfo = showInfo.GetSeasonInfoBySeasonNumber(seasonNumber);
+            if (seasonInfo == null || !showInfo.TryGetBaseSeasonNumberForSeasonInfo(seasonInfo, out var baseSeasonNumber)) {
                 Logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (Series={SeriesId},Group={GroupId})", seasonNumber, seriesId, showInfo.GroupId);
                 return result;
             }
@@ -227,18 +227,17 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
             }
             // Every other "season".
             else {
-                var seasonInfo = showInfo.GetSeriesInfoBySeasonNumber(seasonNumber);
+                var seasonInfo = showInfo.GetSeasonInfoBySeasonNumber(seasonNumber);
                 if (seasonInfo == null) {
                     Logger.LogWarning("Unable to find series info for Season {SeasonNumber:00} in group for series. (Group={GroupId})", seasonNumber, showInfo.GroupId);
                     return ItemUpdateType.None;
                 }
 
-                var offset = seasonNumber - showInfo.SeasonNumberBaseDictionary[seasonInfo.Id];
                 foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
                     existingEpisodes.Add(episodeId);
 
                 foreach (var episodeInfo in seasonInfo.EpisodeList.Concat(seasonInfo.AlternateEpisodesList)) {
-                    var episodeParentIndex = episodeInfo.IsSpecial ? 0 : Ordering.GetSeasonNumber(showInfo, seasonInfo, episodeInfo);
+                    var episodeParentIndex = Ordering.GetSeasonNumber(showInfo, seasonInfo, episodeInfo);
                     if (episodeParentIndex != seasonNumber)
                         continue;
 

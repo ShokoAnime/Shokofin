@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -85,9 +86,9 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, ICust
                 ProductionYear = premiereDate?.Year,
                 EndDate = endDate,
                 Status = !endDate.HasValue || endDate.Value > DateTime.UtcNow ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                Tags = show.Tags,
-                Genres = show.Genres,
-                Studios = show.Studios,
+                Tags = show.Tags.ToArray(),
+                Genres = show.Genres.ToArray(),
+                Studios = show.Studios.ToArray(),
                 OfficialRating = show.OfficialRating,
                 CustomRating = show.CustomRating,
                 CommunityRating = show.CommunityRating,
@@ -147,20 +148,17 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, ICust
         // Get the existing seasons and episode ids
         var itemUpdated = ItemUpdateType.None;
         if (Plugin.Instance.Configuration.AddMissingMetadata) {
-            var hasSpecials = false;
             var (seasons, _) = GetExistingSeasonsAndEpisodeIds(series);
-            foreach (var pair in showInfo.SeasonOrderDictionary) {
-                if (seasons.ContainsKey(pair.Key))
+            foreach (var (seasonNumber, seasonInfo) in showInfo.SeasonOrderDictionary) {
+                if (seasons.ContainsKey(seasonNumber))
                     continue;
-                if (pair.Value.SpecialsList.Count > 0)
-                    hasSpecials = true;
-                var offset = pair.Key - showInfo.SeasonNumberBaseDictionary[pair.Value.Id];
-                var season = AddVirtualSeason(pair.Value, offset, pair.Key, series);
+                var offset = seasonNumber - showInfo.GetBaseSeasonNumberForSeasonInfo(seasonInfo);
+                var season = AddVirtualSeason(seasonInfo, offset, seasonNumber, series);
                 if (season != null)
                     itemUpdated |= ItemUpdateType.MetadataImport;
             }
 
-            if (hasSpecials && !seasons.ContainsKey(0)) {
+            if (showInfo.HasSpecials && !seasons.ContainsKey(0)) {
                 var season = AddVirtualSeason(0, series);
                 if (season != null)
                     itemUpdated |= ItemUpdateType.MetadataImport;

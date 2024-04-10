@@ -14,22 +14,22 @@ public class ShowInfo
     /// <summary>
     /// Main Shoko Series Id.
     /// </summary>
-    public string Id;
+    public readonly string Id;
 
     /// <summary>
     /// Main Shoko Group Id.
     /// </summary>
-    public string? GroupId;
+    public readonly string? GroupId;
 
     /// <summary>
     /// Shoko Group Id used for Collection Support.
     /// </summary>
-    public string? CollectionId;
+    public readonly string? CollectionId;
 
     /// <summary>
     /// The main name of the show.
     /// </summary>
-    public string Name;
+    public readonly string Name;
 
     /// <summary>
     /// Indicates this is a standalone show without a group attached to it.
@@ -40,7 +40,7 @@ public class ShowInfo
     /// <summary>
     /// The Shoko Group, if this is not a standalone show entry.
     /// </summary>
-    public Group? Shoko;
+    public readonly Group? Shoko;
 
     /// <summary>
     /// First premiere date of the show.
@@ -82,51 +82,66 @@ public class ShowInfo
     /// <summary>
     /// All tags from across all seasons.
     /// </summary>
-    public string[] Tags;
+    public readonly IReadOnlyList<string> Tags;
 
     /// <summary>
     /// All genres from across all seasons.
     /// </summary>
-    public string[] Genres;
+    public readonly IReadOnlyList<string> Genres;
 
     /// <summary>
     /// All studios from across all seasons.
     /// </summary>
-    public string[] Studios;
+    public readonly IReadOnlyList<string> Studios;
 
     /// <summary>
     /// All staff from across all seasons.
     /// </summary>
-    public PersonInfo[] Staff;
+    public readonly IReadOnlyList<PersonInfo> Staff;
 
     /// <summary>
     /// All seasons.
     /// </summary>
-    public List<SeasonInfo> SeasonList;
+    public readonly List<SeasonInfo> SeasonList;
 
     /// <summary>
     /// The season order dictionary.
     /// </summary>
-    public Dictionary<int, SeasonInfo> SeasonOrderDictionary;
+    public readonly IReadOnlyDictionary<int, SeasonInfo> SeasonOrderDictionary;
 
     /// <summary>
     /// The season number base-number dictionary.
     /// </summary>
-    public Dictionary<string, int> SeasonNumberBaseDictionary;
+    private readonly IReadOnlyDictionary<string, int> SeasonNumberBaseDictionary;
+
+    /// <summary>
+    /// A pre-filtered set of special episode ids without an ExtraType
+    /// attached.
+    /// </summary>
+    private readonly IReadOnlySet<string> SpecialsSet;
+
+    /// <summary>
+    /// Indicates that the show has specials.
+    /// </summary>
+    public bool HasSpecials =>
+        SpecialsSet.Count > 0;
 
     /// <summary>
     /// The default season for the show.
     /// </summary>
-    public SeasonInfo DefaultSeason;
+    public readonly SeasonInfo DefaultSeason;
 
     public ShowInfo(SeasonInfo seasonInfo, string? collectionId = null)
     {
-        var seasonNumberBaseDictionary = new Dictionary<string, int>() { { seasonInfo.Id, 1 } };
-        var seasonOrderDictionary = new Dictionary<int, SeasonInfo>() { { 1, seasonInfo } };
-        var seasonNumberOffset = 1;
+        var seasonNumberBaseDictionary = new Dictionary<string, int>();
+        var seasonOrderDictionary = new Dictionary<int, SeasonInfo>();
+        var seasonNumberOffset = 0;
+        if (seasonInfo.EpisodeList.Count > 0 || seasonInfo.AlternateEpisodesList.Count > 0)
+            seasonNumberBaseDictionary.Add(seasonInfo.Id, seasonNumberOffset);
+        if (seasonInfo.EpisodeList.Count > 0)
+            seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
         if (seasonInfo.AlternateEpisodesList.Count > 0)
             seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
-
         Id = seasonInfo.Id;
         GroupId = seasonInfo.Shoko.IDs.ParentGroup.ToString();
         CollectionId = collectionId ?? seasonInfo.Shoko.IDs.ParentGroup.ToString();
@@ -135,9 +150,10 @@ public class ShowInfo
         Genres = seasonInfo.Genres;
         Studios = seasonInfo.Studios;
         Staff = seasonInfo.Staff;
-        SeasonList = new() { seasonInfo };
+        SeasonList = new List<SeasonInfo>() { seasonInfo };
         SeasonNumberBaseDictionary = seasonNumberBaseDictionary;
         SeasonOrderDictionary = seasonOrderDictionary;
+        SpecialsSet = seasonInfo.SpecialsList.Select(episodeInfo => episodeInfo.Id).ToHashSet();
         DefaultSeason = seasonInfo;
     }
 
@@ -179,14 +195,19 @@ public class ShowInfo
         }
 
         var defaultSeason = seasonList[foundIndex];
+        var specialsSet = new HashSet<string>();
         var seasonOrderDictionary = new Dictionary<int, SeasonInfo>();
         var seasonNumberBaseDictionary = new Dictionary<string, int>();
-        var seasonNumberOffset = 0;
-        foreach (var (seasonInfo, index) in seasonList.Select((s, i) => (s, i))) {
-            seasonNumberBaseDictionary.Add(seasonInfo.Id, ++seasonNumberOffset);
-            seasonOrderDictionary.Add(seasonNumberOffset, seasonInfo);
+        var seasonNumberOffset = 1;
+        foreach (var seasonInfo in seasonList) {
+            if (seasonInfo.EpisodeList.Count > 0 || seasonInfo.AlternateEpisodesList.Count > 0)
+                seasonNumberBaseDictionary.Add(seasonInfo.Id, seasonNumberOffset);
+            if (seasonInfo.EpisodeList.Count > 0)
+                seasonOrderDictionary.Add(seasonNumberOffset++, seasonInfo);
             if (seasonInfo.AlternateEpisodesList.Count > 0)
-                seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
+                seasonOrderDictionary.Add(seasonNumberOffset++, seasonInfo);
+            foreach (var episodeInfo in seasonInfo.SpecialsList)
+                specialsSet.Add(episodeInfo.Id);
         }
 
         Id = defaultSeason.Id;
@@ -201,10 +222,21 @@ public class ShowInfo
         SeasonList = seasonList;
         SeasonNumberBaseDictionary = seasonNumberBaseDictionary;
         SeasonOrderDictionary = seasonOrderDictionary;
+        SpecialsSet = specialsSet;
         DefaultSeason = defaultSeason;
     }
 
-    public SeasonInfo? GetSeriesInfoBySeasonNumber(int seasonNumber) {
+    public bool IsSpecial(EpisodeInfo episodeInfo)
+        => SpecialsSet.Contains(episodeInfo.Id);
+
+    public bool TryGetBaseSeasonNumberForSeasonInfo(SeasonInfo season, out int baseSeasonNumber)
+        => SeasonNumberBaseDictionary.TryGetValue(season.Id, out baseSeasonNumber);
+
+    public int GetBaseSeasonNumberForSeasonInfo(SeasonInfo season)
+        => SeasonNumberBaseDictionary.TryGetValue(season.Id, out var baseSeasonNumber) ? baseSeasonNumber : 0;
+
+    public SeasonInfo? GetSeasonInfoBySeasonNumber(int seasonNumber)
+    {
         if (seasonNumber == 0 || !(SeasonOrderDictionary.TryGetValue(seasonNumber, out var seasonInfo) && seasonInfo != null))
             return null;
 

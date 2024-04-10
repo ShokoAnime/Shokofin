@@ -539,7 +539,7 @@ public class ShokoResolveManager
             }
         }
         else {
-            var isSpecial = episode.IsSpecial;
+            var isSpecial = show.IsSpecial(episode);
             var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
             var seasonName = $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}";
             if (!string.IsNullOrEmpty(extrasFolder)) {

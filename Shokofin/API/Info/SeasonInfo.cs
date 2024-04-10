@@ -9,56 +9,56 @@ namespace Shokofin.API.Info;
 
 public class SeasonInfo
 {
-    public string Id;
+    public readonly string Id;
 
-    public Series Shoko;
+    public readonly Series Shoko;
 
-    public Series.AniDBWithDate AniDB;
+    public readonly Series.AniDBWithDate AniDB;
 
-    public Series.TvDB? TvDB;
+    public readonly Series.TvDB? TvDB;
 
-    public SeriesType Type;
+    public readonly SeriesType Type;
 
-    public string[] Tags;
+    public readonly IReadOnlyList<string> Tags;
 
-    public string[] Genres;
+    public readonly IReadOnlyList<string> Genres;
 
-    public string[] Studios;
+    public readonly IReadOnlyList<string> Studios;
 
-    public PersonInfo[] Staff;
+    public readonly IReadOnlyList<PersonInfo> Staff;
 
     /// <summary>
     /// All episodes (of all type) that belong to this series.
     /// 
     /// Unordered.
     /// </summary>
-    public List<EpisodeInfo> RawEpisodeList;
+    public readonly IReadOnlyList<EpisodeInfo> RawEpisodeList;
 
     /// <summary>
     /// A pre-filtered list of normal episodes that belong to this series.
     /// 
     /// Ordered by AniDb air-date.
     /// </summary>
-    public List<EpisodeInfo> EpisodeList;
+    public readonly List<EpisodeInfo> EpisodeList;
 
     /// <summary>
     /// A pre-filtered list of "unknown" episodes that belong to this series.
     /// 
     /// Ordered by AniDb air-date.
     /// </summary>
-    public List<EpisodeInfo> AlternateEpisodesList;
+    public readonly List<EpisodeInfo> AlternateEpisodesList;
 
     /// <summary>
     /// A pre-filtered list of "extra" videos that belong to this series.
     /// 
     /// Ordered by AniDb air-date.
     /// </summary>
-    public List<EpisodeInfo> ExtrasList;
+    public readonly List<EpisodeInfo> ExtrasList;
 
     /// <summary>
     /// A dictionary holding mappings for the previous normal episode for every special episode in a series.
     /// </summary>
-    public Dictionary<EpisodeInfo, EpisodeInfo> SpecialsAnchors;
+    public readonly IReadOnlyDictionary<EpisodeInfo, EpisodeInfo> SpecialsAnchors;
 
     /// <summary>
     /// A pre-filtered list of special episodes without an ExtraType
@@ -66,17 +66,17 @@ public class SeasonInfo
     ///
     /// Ordered by AniDb episode number.
     /// </summary>
-    public List<EpisodeInfo> SpecialsList;
+    public readonly List<EpisodeInfo> SpecialsList;
 
     /// <summary>
     /// Related series data available in Shoko.
     /// </summary>
-    public List<Relation> Relations;
+    public readonly IReadOnlyList<Relation> Relations;
 
     /// <summary>
     /// Map of related series with type.
     /// </summary>
-    public Dictionary<string, RelationType> RelationMap;
+    public readonly IReadOnlyDictionary<string, RelationType> RelationMap;
 
     public SeasonInfo(Series series, List<EpisodeInfo> episodes, List<Role> cast, List<Relation> relations, string[] genres, string[] tags)
     {
@@ -126,12 +126,28 @@ public class SeasonInfo
             index++;
         }
 
-        // Switch the type from movie to web if we've hidden the main movie, and we have some of the parts.
+        // Replace the normal episodes if we've hidden all the normal episodes and we have at least one
+        // alternate episode locally.
         var type = series.AniDBEntity.Type;
-        if (type == SeriesType.Movie && episodesList.Count == 0 && altEpisodesList.Any(ep => ep.Shoko.Size > 0)) {
-            type = SeriesType.Web;
+        if (episodesList.Count == 0 && altEpisodesList.Any(ep => ep.Shoko.Size > 0)) {
+            // Switch the type from movie to web if we've hidden the main movie, and we have some of the parts.
+            if (type == SeriesType.Movie)
+                type = SeriesType.Web;
+
             episodesList = altEpisodesList;
             altEpisodesList = new();
+        }
+        // Treat all 'tv special' episodes as specials.
+        else if (type == SeriesType.TVSpecial) {
+            if (episodesList.Count > 0) {
+                specialsList.InsertRange(0, episodesList);
+                episodesList = new();
+            }
+            if (altEpisodesList.Count > 0) {
+                specialsList.InsertRange(0, altEpisodesList);
+                altEpisodesList = new();
+            }
+            specialsAnchorDictionary = new();
         }
 
         // While the filtered specials list is ordered by episode number

@@ -87,31 +87,33 @@ public class Ordering
     /// Get index number for an episode in a series.
     /// </summary>
     /// <returns>Absolute index.</returns>
-    public static int GetEpisodeNumber(ShowInfo group, SeasonInfo series, EpisodeInfo episode)
+    public static int GetEpisodeNumber(ShowInfo showInfo, SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
     {
         int offset = 0;
-        if (episode.ExtraType != null) {
-            var seasonIndex = group.SeasonList.FindIndex(s => string.Equals(s.Id, series.Id));
+        if (episodeInfo.ExtraType != null) {
+            var seasonIndex = showInfo.SeasonList.FindIndex(s => string.Equals(s.Id, seasonInfo.Id));
             if (seasonIndex == -1)
-                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
-            var index = series.ExtrasList.FindIndex(e => string.Equals(e.Id, episode.Id));
+                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
+            var index = seasonInfo.ExtrasList.FindIndex(e => string.Equals(e.Id, episodeInfo.Id));
             if (index == -1)
-                throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
-            offset = group.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.ExtrasList.Count);
+                throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
+            offset = showInfo.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.ExtrasList.Count);
             return offset + index + 1;
         }
-        if (episode.AniDB.Type == EpisodeType.Special) {
-            var seasonIndex = group.SeasonList.FindIndex(s => string.Equals(s.Id, series.Id));
+
+        if (showInfo.IsSpecial(episodeInfo)) {
+            var seasonIndex = showInfo.SeasonList.FindIndex(s => string.Equals(s.Id, seasonInfo.Id));
             if (seasonIndex == -1)
-                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
-            var index = series.SpecialsList.FindIndex(e => string.Equals(e.Id, episode.Id));
+                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
+            var index = seasonInfo.SpecialsList.FindIndex(e => string.Equals(e.Id, episodeInfo.Id));
             if (index == -1)
-                throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={group.Id},Series={series.Id},Episode={episode.Id})");
-            offset = group.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.SpecialsList.Count);
+                throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
+            offset = showInfo.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.SpecialsList.Count);
             return offset + index + 1;
         }
-        var sizes = series.Shoko.Sizes.Total;
-        switch (episode.AniDB.Type) {
+
+        var sizes = seasonInfo.Shoko.Sizes.Total;
+        switch (episodeInfo.AniDB.Type) {
             case EpisodeType.Other:
             case EpisodeType.Normal:
                 // offset += 0; // it's not needed, so it's just here as a comment instead.
@@ -130,25 +132,25 @@ public class Ordering
                 offset += sizes?.Trailers ?? 0;
                 goto case EpisodeType.Trailer;
         }
-        return offset + episode.AniDB.EpisodeNumber;
+        return offset + episodeInfo.AniDB.EpisodeNumber;
     }
 
-    public static (int?, int?, int?, bool) GetSpecialPlacement(ShowInfo group, SeasonInfo series, EpisodeInfo episode)
+    public static (int?, int?, int?, bool) GetSpecialPlacement(ShowInfo showInfo, SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
     {
         var order = Plugin.Instance.Configuration.SpecialsPlacement;
 
         // Return early if we want to exclude them from the normal seasons.
         if (order == SpecialOrderType.Excluded) {
             // Check if this should go in the specials season.
-            return (null, null, null, episode.IsSpecial);
+            return (null, null, null, showInfo.IsSpecial(episodeInfo));
         }
 
         // Abort if episode is not a TvDB special or AniDB special
-        if (!episode.IsSpecial)
+        if (!showInfo.IsSpecial(episodeInfo))
             return (null, null, null, false);
 
         int? episodeNumber = null;
-        int seasonNumber = GetSeasonNumber(group, series, episode);
+        int seasonNumber = GetSeasonNumber(showInfo, seasonInfo, episodeInfo);
         int? airsBeforeEpisodeNumber = null;
         int? airsBeforeSeasonNumber = null;
         int? airsAfterSeasonNumber = null;
@@ -160,10 +162,10 @@ public class Ordering
                 byAirdate:
                 // Reset the order if we come from `SpecialOrderType.InBetweenSeasonMixed`.
                 episodeNumber = null;
-                if (series.SpecialsAnchors.TryGetValue(episode, out var previousEpisode))
-                    episodeNumber = GetEpisodeNumber(group, series, previousEpisode);
+                if (seasonInfo.SpecialsAnchors.TryGetValue(episodeInfo, out var previousEpisode))
+                    episodeNumber = GetEpisodeNumber(showInfo, seasonInfo, previousEpisode);
 
-                if (episodeNumber.HasValue && episodeNumber.Value < series.EpisodeList.Count) {
+                if (episodeNumber.HasValue && episodeNumber.Value < seasonInfo.EpisodeList.Count) {
                     airsBeforeEpisodeNumber = episodeNumber.Value + 1;
                     airsBeforeSeasonNumber = seasonNumber;
                 }
@@ -174,14 +176,14 @@ public class Ordering
             case SpecialOrderType.InBetweenSeasonMixed:
             case SpecialOrderType.InBetweenSeasonByOtherData:
                 // We need to have TvDB/TMDB data in the first place to do this method.
-                if (episode.TvDB == null) {
+                if (episodeInfo.TvDB == null) {
                     if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirdate;
                     break;
                 }
 
-                episodeNumber = episode.TvDB.AirsBeforeEpisode;
+                episodeNumber = episodeInfo.TvDB.AirsBeforeEpisode;
                 if (!episodeNumber.HasValue) {
-                    if (episode.TvDB.AirsBeforeSeason.HasValue) {
+                    if (episodeInfo.TvDB.AirsBeforeSeason.HasValue) {
                         airsBeforeSeasonNumber = seasonNumber;
                         break;
                     }
@@ -191,9 +193,9 @@ public class Ordering
                     break;
                 }
 
-                var nextEpisode = series.EpisodeList.FirstOrDefault(e => e.TvDB != null && e.TvDB.SeasonNumber == seasonNumber && e.TvDB.EpisodeNumber == episodeNumber);
+                var nextEpisode = seasonInfo.EpisodeList.FirstOrDefault(e => e.TvDB != null && e.TvDB.SeasonNumber == seasonNumber && e.TvDB.EpisodeNumber == episodeNumber);
                 if (nextEpisode != null) {
-                    airsBeforeEpisodeNumber = GetEpisodeNumber(group, series, nextEpisode);
+                    airsBeforeEpisodeNumber = GetEpisodeNumber(showInfo, seasonInfo, nextEpisode);
                     airsBeforeSeasonNumber = seasonNumber;
                     break;
                 }
@@ -208,19 +210,19 @@ public class Ordering
     /// <summary>
     /// Get season number for an episode in a series.
     /// </summary>
-    /// <param name="group"></param>
-    /// <param name="series"></param>
-    /// <param name="episode"></param>
+    /// <param name="showInfo"></param>
+    /// <param name="seasonInfo"></param>
+    /// <param name="episodeInfo"></param>
     /// <returns></returns>
-    public static int GetSeasonNumber(ShowInfo group, SeasonInfo series, EpisodeInfo episode)
+    public static int GetSeasonNumber(ShowInfo showInfo, SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
     {
-        if (!group.SeasonNumberBaseDictionary.TryGetValue(series.Id, out var seasonNumber))
-            throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={group.Id},Series={series.Id})");
+        if (!showInfo.TryGetBaseSeasonNumberForSeasonInfo(seasonInfo, out var seasonNumber))
+            throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id})");
 
-        return episode.AniDB.Type switch {
-            EpisodeType.Other => seasonNumber + 1,
-            _ => seasonNumber,
-        };
+        if (seasonInfo.AlternateEpisodesList.Any(ep => ep.Id == episodeInfo.Id))
+            return seasonNumber + 1;
+
+        return seasonNumber;
     }
 
     /// <summary>
@@ -234,7 +236,6 @@ public class Ordering
         {
             case EpisodeType.Normal:
             case EpisodeType.Other:
-            case EpisodeType.Unknown:
                 return null;
             case EpisodeType.ThemeSong:
             case EpisodeType.OpeningSong:
