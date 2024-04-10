@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.103",
+                "changelog": "fix: only create links for series in the local collection\n\n- Only create links for any local series linked to\n  multi-series files. This should prevent a file linked to\n  multiple series from creating a new mostly empty series\n  if the user don't have any other files for said series.\n\nfix: fix season number usage",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.103/shoko_3.0.1.103.zip",
+                "checksum": "862502227360cff63832846b7f170b4c",
+                "timestamp": "2024-04-10T20:06:24Z"
+            },
+            {
                 "version": "3.0.1.102",
                 "changelog": "fix: fix season number assignement and usage",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.99/shoko_3.0.1.99.zip",
                 "checksum": "0631035367d742f60ccdb0ff7fe95b38",
                 "timestamp": "2024-04-09T20:59:58Z"
-            },
-            {
-                "version": "3.0.1.98",
-                "changelog": "refactor: simplify extra metadata provider\n\nmisc: remove unneeded stored offset\n\nmisc: more logging for link generation stage",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.98/shoko_3.0.1.98.zip",
-                "checksum": "383409f47b08c2e92e60d391d16e061a",
-                "timestamp": "2024-04-09T20:52:02Z"
             }
         ]
     }
