@@ -1,0 +1,90 @@
+name: Shokofin Issue Report 101
+description: Report your issues here!
+labels: []
+projects: []
+assignees:
+  - revam
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: jelly
+    attributes:
+      label: Jellyfin version.
+      placeholder: "E.g. `10.8.12`"
+    validations:
+      required: true
+  - type: input
+    id: shokofin
+    attributes:
+      label: Shokofin version.
+      placeholder: "E.g. `3.0.1.0`"
+    validations:
+      required: true
+  - type: input
+    id: Shokoserver
+    attributes:
+      label: Shoko Server version, release channel, and commit hash.
+      placeholder: "E.g. `1.0.0 Stable` or  `1.0.0 Dev (efefefe)`"
+    validations:
+      required: true
+  - type: textarea
+    id: fileStructure
+    attributes:
+      label: File structure of your _Media Library Folder in Jellyfin_/_Import Folder in Shoko Server_.
+      placeholder: "E.g. ../Anime A/Episode 1.avi or ../Anime A/Season 1/Episode 1.avi"
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot of the "library settings" section of the plugin settings.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Library type and metadata/image providers enabled for the library/libaries in Jellyfin.
+  - type: checkboxes
+    id: library
+    attributes:
+      label: "Library Type:"
+      options:
+        - label: Shows
+        - label: Movies
+        - label: Movies & Shows
+    validations:
+      required: true
+  - type: input
+    id: showmeta
+    attributes:
+      label: "Show providers:"
+      description: Metadata providers that you are using for Show metadata
+      placeholder: "`Shoko`"
+    validations:
+      required: true
+  - type: input
+    id: seasonmeta
+    attributes:
+      label: "Season providers:"
+      description: Metadata providers that you are using for Season metadata
+      placeholder: "`Shoko`"
+    validations:
+      required: true
+  - type: input
+    id: episodemeta
+    attributes:
+      label: "Episode providers:"
+      description: Metadata providers that you are using for Episode metadata
+      placeholder: "`Shoko`"
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: Your Issue
+      description: Try to explain your issue in simple terms. We'll ask for details if it's needed.
+    validations:
+      required: true
