@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.104",
+                "changelog": "misc: swap season conversion logic\n\n- Swapped the TV Specials conversion logic and\n  the episode list conversion logic so the tv specials take precedence.\n\nmisc: always ignore items outside the VFS\n\n- Always ignore items outside the VFS if the VFS is enabled.\n\nmisc: add SignalR settings + cleanup\n\n- Add the SignalR settings\n\n- Cleaned up some code in the settings controller.\n\nmisc: add 'add missing metadata' setting",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.104/shoko_3.0.1.104.zip",
+                "checksum": "d27fe1c9f63620cb5443a860c1609b20",
+                "timestamp": "2024-04-11T11:01:56Z"
+            },
+            {
                 "version": "3.0.1.103",
                 "changelog": "fix: only create links for series in the local collection\n\n- Only create links for any local series linked to\n  multi-series files. This should prevent a file linked to\n  multiple series from creating a new mostly empty series\n  if the user don't have any other files for said series.\n\nfix: fix season number usage",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.100/shoko_3.0.1.100.zip",
                 "checksum": "5b9aeb9577ec28258ca4baca252d893d",
                 "timestamp": "2024-04-10T14:21:18Z"
-            },
-            {
-                "version": "3.0.1.99",
-                "changelog": "refactor: split-up extra metadata provider",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.99/shoko_3.0.1.99.zip",
-                "checksum": "0631035367d742f60ccdb0ff7fe95b38",
-                "timestamp": "2024-04-09T20:59:58Z"
             }
         ]
     }
