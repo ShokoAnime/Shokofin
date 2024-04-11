@@ -139,22 +139,10 @@ public class SeasonInfo
             .OrderBy(e => e.AniDB.EpisodeNumber)
             .ToList();
 
-        // Treat all 'tv special' episodes as specials.
-        var type = series.AniDBEntity.Type;
-        if (type == SeriesType.TVSpecial) {
-            if (episodesList.Count > 0) {
-                specialsList.InsertRange(0, episodesList);
-                episodesList = new();
-            }
-            if (altEpisodesList.Count > 0) {
-                specialsList.InsertRange(0, altEpisodesList);
-                altEpisodesList = new();
-            }
-            specialsAnchorDictionary = new();
-        }
         // Replace the normal episodes if we've hidden all the normal episodes and we have at least one
         // alternate episode locally.
-        else if (episodesList.Count == 0 && altEpisodesList.Count > 0) {
+        var type = series.AniDBEntity.Type;
+        if (episodesList.Count == 0 && altEpisodesList.Count > 0) {
             // Switch the type from movie to web if we've hidden the main movie, and we have some of the parts.
             if (type == SeriesType.Movie)
                 type = SeriesType.Web;
