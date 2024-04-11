@@ -126,19 +126,9 @@ public class SeasonInfo
             index++;
         }
 
-        // Replace the normal episodes if we've hidden all the normal episodes and we have at least one
-        // alternate episode locally.
-        var type = series.AniDBEntity.Type;
-        if (episodesList.Count == 0 && altEpisodesList.Any(ep => ep.Shoko.Size > 0)) {
-            // Switch the type from movie to web if we've hidden the main movie, and we have some of the parts.
-            if (type == SeriesType.Movie)
-                type = SeriesType.Web;
-
-            episodesList = altEpisodesList;
-            altEpisodesList = new();
-        }
         // Treat all 'tv special' episodes as specials.
-        else if (type == SeriesType.TVSpecial) {
+        var type = series.AniDBEntity.Type;
+        if (type == SeriesType.TVSpecial) {
             if (episodesList.Count > 0) {
                 specialsList.InsertRange(0, episodesList);
                 episodesList = new();
@@ -148,6 +138,16 @@ public class SeasonInfo
                 altEpisodesList = new();
             }
             specialsAnchorDictionary = new();
+        }
+        // Replace the normal episodes if we've hidden all the normal episodes and we have at least one
+        // alternate episode locally.
+        else if (episodesList.Count == 0 && altEpisodesList.Any(ep => ep.Shoko.Size > 0)) {
+            // Switch the type from movie to web if we've hidden the main movie, and we have some of the parts.
+            if (type == SeriesType.Movie)
+                type = SeriesType.Web;
+
+            episodesList = altEpisodesList;
+            altEpisodesList = new();
         }
 
         // While the filtered specials list is ordered by episode number
