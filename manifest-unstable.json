@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.107",
+                "changelog": "fix: increment season number _after_ saving it\n\n- Increment the season number when grouping is not used\n  after saving it, not before saving it.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.107/shoko_3.0.1.107.zip",
+                "checksum": "ae397b52e895b1abbef07c84a1ae88bc",
+                "timestamp": "2024-04-11T23:29:04Z"
+            },
+            {
                 "version": "3.0.1.106",
                 "changelog": "fix: add missing episode padding\n\n- Add the missing padding to the episode numbers in the file names\n  for the links inside the VFS. So this change requires a refresh of the\n  library to \"fix\" the VFS, in case it wasn't clear enough already.\n\nfix: we can have season info without a base number\nwithin a show info.\n\nfix: remove the extra logic for tv series,\nsince it was flawed.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.103/shoko_3.0.1.103.zip",
                 "checksum": "862502227360cff63832846b7f170b4c",
                 "timestamp": "2024-04-10T20:06:24Z"
-            },
-            {
-                "version": "3.0.1.102",
-                "changelog": "fix: fix season number assignement and usage",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.102/shoko_3.0.1.102.zip",
-                "checksum": "fbb7a00d35223a71fd26c4ee0c96273b",
-                "timestamp": "2024-04-10T19:37:18Z"
             }
         ]
     }
