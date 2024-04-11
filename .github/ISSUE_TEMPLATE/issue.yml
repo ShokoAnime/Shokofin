@@ -9,8 +9,9 @@ body:
     attributes:
       value: |
         ## Shokofin Issue Report
-        Please fill out the following information to help us understand your issue better, we respond faster on [Discord](https://discord.gg/shokoanime) <br />
-        If you are facing setup issues use discord, we'll be happy to help you. <br />
+        Please fill out the following information to help us understand your issue better, we respond faster on [Discord](https://discord.gg/shokoanime).
+        If you are facing setup issues use discord, we'll be happy to help you.
+        
         **Note:** This template is for bug reports only, if you require another form of assistance please use the Discord server.
   - type: input
     id: jelly
