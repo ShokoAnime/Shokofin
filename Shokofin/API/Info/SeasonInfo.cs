@@ -29,28 +29,28 @@ public class SeasonInfo
 
     /// <summary>
     /// All episodes (of all type) that belong to this series.
-    /// 
+    ///
     /// Unordered.
     /// </summary>
     public readonly IReadOnlyList<EpisodeInfo> RawEpisodeList;
 
     /// <summary>
     /// A pre-filtered list of normal episodes that belong to this series.
-    /// 
+    ///
     /// Ordered by AniDb air-date.
     /// </summary>
     public readonly List<EpisodeInfo> EpisodeList;
 
     /// <summary>
     /// A pre-filtered list of "unknown" episodes that belong to this series.
-    /// 
+    ///
     /// Ordered by AniDb air-date.
     /// </summary>
     public readonly List<EpisodeInfo> AlternateEpisodesList;
 
     /// <summary>
     /// A pre-filtered list of "extra" videos that belong to this series.
-    /// 
+    ///
     /// Ordered by AniDb air-date.
     /// </summary>
     public readonly List<EpisodeInfo> ExtrasList;
@@ -126,6 +126,19 @@ public class SeasonInfo
             index++;
         }
 
+        // We order the lists after sorting them into buckets because the bucket
+        // sort we're doing above have the episodes ordered by air date to get
+        // the previous episode anchors right.
+        episodesList = episodesList
+            .OrderBy(e => e.AniDB.EpisodeNumber)
+            .ToList();
+        specialsList = specialsList
+            .OrderBy(e => e.AniDB.EpisodeNumber)
+            .ToList();
+        altEpisodesList = altEpisodesList
+            .OrderBy(e => e.AniDB.EpisodeNumber)
+            .ToList();
+
         // Treat all 'tv special' episodes as specials.
         var type = series.AniDBEntity.Type;
         if (type == SeriesType.TVSpecial) {
@@ -141,7 +154,7 @@ public class SeasonInfo
         }
         // Replace the normal episodes if we've hidden all the normal episodes and we have at least one
         // alternate episode locally.
-        else if (episodesList.Count == 0 && altEpisodesList.Any(ep => ep.Shoko.Size > 0)) {
+        else if (episodesList.Count == 0 && altEpisodesList.Count > 0) {
             // Switch the type from movie to web if we've hidden the main movie, and we have some of the parts.
             if (type == SeriesType.Movie)
                 type = SeriesType.Web;
@@ -149,11 +162,6 @@ public class SeasonInfo
             episodesList = altEpisodesList;
             altEpisodesList = new();
         }
-
-        // While the filtered specials list is ordered by episode number
-        specialsList = specialsList
-            .OrderBy(e => e.AniDB.EpisodeNumber)
-            .ToList();
 
         Id = seriesId;
         Shoko = series;

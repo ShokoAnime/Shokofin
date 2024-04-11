@@ -89,12 +89,13 @@ public class Ordering
     /// <returns>Absolute index.</returns>
     public static int GetEpisodeNumber(ShowInfo showInfo, SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
     {
-        int offset = 0;
+        var index = 0;
+        var offset = 0;
         if (episodeInfo.ExtraType != null) {
             var seasonIndex = showInfo.SeasonList.FindIndex(s => string.Equals(s.Id, seasonInfo.Id));
             if (seasonIndex == -1)
                 throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
-            var index = seasonInfo.ExtrasList.FindIndex(e => string.Equals(e.Id, episodeInfo.Id));
+            index = seasonInfo.ExtrasList.FindIndex(e => string.Equals(e.Id, episodeInfo.Id));
             if (index == -1)
                 throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
             offset = showInfo.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.ExtrasList.Count);
@@ -105,34 +106,18 @@ public class Ordering
             var seasonIndex = showInfo.SeasonList.FindIndex(s => string.Equals(s.Id, seasonInfo.Id));
             if (seasonIndex == -1)
                 throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
-            var index = seasonInfo.SpecialsList.FindIndex(e => string.Equals(e.Id, episodeInfo.Id));
+            index = seasonInfo.SpecialsList.FindIndex(e => string.Equals(e.Id, episodeInfo.Id));
             if (index == -1)
                 throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
             offset = showInfo.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.SpecialsList.Count);
             return offset + index + 1;
         }
 
-        var sizes = seasonInfo.Shoko.Sizes.Total;
-        switch (episodeInfo.AniDB.Type) {
-            case EpisodeType.Other:
-            case EpisodeType.Normal:
-                // offset += 0; // it's not needed, so it's just here as a comment instead.
-                break;
-            // Add them to the bottom of the list if we didn't filter them out properly.
-            case EpisodeType.Parody:
-                offset += sizes?.Episodes ?? 0;
-                goto case EpisodeType.Normal;
-            case EpisodeType.OpeningSong:
-                offset += sizes?.Parodies ?? 0;
-                goto case EpisodeType.Parody;
-            case EpisodeType.Trailer:
-                offset += sizes?.Credits ?? 0;
-                goto case EpisodeType.OpeningSong;
-            default:
-                offset += sizes?.Trailers ?? 0;
-                goto case EpisodeType.Trailer;
-        }
-        return offset + episodeInfo.AniDB.EpisodeNumber;
+        index = seasonInfo.EpisodeList.FindIndex(ep => ep.Id == episodeInfo.Id);
+        if (index == -1)
+            index = seasonInfo.AlternateEpisodesList.FindIndex(ep => ep.Id == episodeInfo.Id);
+
+        return index + 1;
     }
 
     public static (int?, int?, int?, bool) GetSpecialPlacement(ShowInfo showInfo, SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
