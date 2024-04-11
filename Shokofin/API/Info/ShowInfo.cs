@@ -144,9 +144,9 @@ public class ShowInfo
         if (seasonInfo.EpisodeList.Count > 0 || seasonInfo.AlternateEpisodesList.Count > 0)
             seasonNumberBaseDictionary.Add(seasonInfo.Id, seasonNumberOffset);
         if (seasonInfo.EpisodeList.Count > 0)
-            seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
+            seasonOrderDictionary.Add(seasonNumberOffset++, seasonInfo);
         if (seasonInfo.AlternateEpisodesList.Count > 0)
-            seasonOrderDictionary.Add(++seasonNumberOffset, seasonInfo);
+            seasonOrderDictionary.Add(seasonNumberOffset++, seasonInfo);
         Id = seasonInfo.Id;
         GroupId = seasonInfo.Shoko.IDs.ParentGroup.ToString();
         CollectionId = collectionId ?? seasonInfo.Shoko.IDs.ParentGroup.ToString();
