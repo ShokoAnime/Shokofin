@@ -564,15 +564,18 @@ public class ShokoResolveManager
         }
         else {
             var isSpecial = show.IsSpecial(episode);
-            var seasonNumber = isSpecial ? 0 : Ordering.GetSeasonNumber(show, season, episode);
+            var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
             var seasonName = $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}";
             if (!string.IsNullOrEmpty(extrasFolder)) {
                 folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}]", extrasFolder));
-                folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}]", seasonName, extrasFolder));
+
+                // Only place the extra within the season if we have a season number assigned to the episode.
+                if (seasonNumber != 0)
+                    folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}]", seasonName, extrasFolder));
             }
             else {
                 folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}]", seasonName));
-                episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber}";
+                episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber.ToString().PadLeft(show.EpisodePadding, '0')}";
             }
         }
 

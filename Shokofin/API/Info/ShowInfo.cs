@@ -131,6 +131,11 @@ public class ShowInfo
     /// </summary>
     public readonly SeasonInfo DefaultSeason;
 
+    /// <summary>
+    /// Episode number padding for file name generation.
+    /// </summary>
+    public readonly int EpisodePadding;
+
     public ShowInfo(SeasonInfo seasonInfo, string? collectionId = null)
     {
         var seasonNumberBaseDictionary = new Dictionary<string, int>();
@@ -155,6 +160,7 @@ public class ShowInfo
         SeasonOrderDictionary = seasonOrderDictionary;
         SpecialsSet = seasonInfo.SpecialsList.Select(episodeInfo => episodeInfo.Id).ToHashSet();
         DefaultSeason = seasonInfo;
+        EpisodePadding = Math.Max(2, (new int[] { seasonInfo.EpisodeList.Count, seasonInfo.AlternateEpisodesList.Count, seasonInfo.SpecialsList.Count }).Max().ToString().Length);
     }
 
     public ShowInfo(Group group, List<SeasonInfo> seasonList, ILogger logger, bool useGroupIdForCollection)
@@ -224,6 +230,7 @@ public class ShowInfo
         SeasonOrderDictionary = seasonOrderDictionary;
         SpecialsSet = specialsSet;
         DefaultSeason = defaultSeason;
+        EpisodePadding = Math.Max(2, seasonList.SelectMany(s => new int[] { s.EpisodeList.Count, s.AlternateEpisodesList.Count }).Append(specialsSet.Count).Max().ToString().Length);
     }
 
     public bool IsSpecial(EpisodeInfo episodeInfo)
