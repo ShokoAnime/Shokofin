@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.106",
+                "changelog": "fix: add missing episode padding\n\n- Add the missing padding to the episode numbers in the file names\n  for the links inside the VFS. So this change requires a refresh of the\n  library to \"fix\" the VFS, in case it wasn't clear enough already.\n\nfix: we can have season info without a base number\nwithin a show info.\n\nfix: remove the extra logic for tv series,\nsince it was flawed.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.106/shoko_3.0.1.106.zip",
+                "checksum": "1e9054b146efe2f9ea40f580d84cc9ff",
+                "timestamp": "2024-04-11T22:42:30Z"
+            },
+            {
                 "version": "3.0.1.105",
                 "changelog": "fix: use relative based episode numbering\n\n- Because Owarimonogarari (2017) is a clusterfudge to support, and\n  implementing this won't break existing stuff\u2026 in theory.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.102/shoko_3.0.1.102.zip",
                 "checksum": "fbb7a00d35223a71fd26c4ee0c96273b",
                 "timestamp": "2024-04-10T19:37:18Z"
-            },
-            {
-                "version": "3.0.1.101",
-                "changelog": "refactor: allow specials only season info\nand always map the alternate episodes as main episodes\nif main episodes are filtered out.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.101/shoko_3.0.1.101.zip",
-                "checksum": "13f71ef620334d9d726383976c34624a",
-                "timestamp": "2024-04-10T18:55:25Z"
             }
         ]
     }
