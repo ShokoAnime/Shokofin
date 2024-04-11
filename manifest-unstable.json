@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.105",
+                "changelog": "fix: use relative based episode numbering\n\n- Because Owarimonogarari (2017) is a clusterfudge to support, and\n  implementing this won't break existing stuff\u2026 in theory.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.105/shoko_3.0.1.105.zip",
+                "checksum": "77681e93c483f163495b17c69d478ebf",
+                "timestamp": "2024-04-11T12:10:53Z"
+            },
+            {
                 "version": "3.0.1.104",
                 "changelog": "misc: swap season conversion logic\n\n- Swapped the TV Specials conversion logic and\n  the episode list conversion logic so the tv specials take precedence.\n\nmisc: always ignore items outside the VFS\n\n- Always ignore items outside the VFS if the VFS is enabled.\n\nmisc: add SignalR settings + cleanup\n\n- Add the SignalR settings\n\n- Cleaned up some code in the settings controller.\n\nmisc: add 'add missing metadata' setting",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.101/shoko_3.0.1.101.zip",
                 "checksum": "13f71ef620334d9d726383976c34624a",
                 "timestamp": "2024-04-10T18:55:25Z"
-            },
-            {
-                "version": "3.0.1.100",
-                "changelog": "fix: make owarimonogarari great again!\n\n- Convert movie series into web series if all the normal episodes are\n  hidden and we have \"other\" type episodes locally.\n\nrefactor: remove others but keep alt. ver.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.100/shoko_3.0.1.100.zip",
-                "checksum": "5b9aeb9577ec28258ca4baca252d893d",
-                "timestamp": "2024-04-10T14:21:18Z"
             }
         ]
     }
