@@ -671,10 +671,12 @@ public class ShokoResolveManager
                 return false;
             }
 
-            // Abort now if the VFS is enabled, since it will take care of moving
-            // from the physical library to the "virtual" library.
-            if (parent.ParentId == root.Id && mediaFolderConfig.IsVirtualFileSystemEnabled)
-                return false;
+            // Filter out anything in the media folder if the VFS is enabled,
+            // because the VFS is pre-filtered, and we should **never** reach
+            // this point except for the folders in the root of the media folder
+            // that we're not even going to use.
+            if (mediaFolderConfig.IsVirtualFileSystemEnabled)
+                return true;
 
             var shouldIgnore = mediaFolderConfig.IsLibraryFilteringEnabled ?? mediaFolderConfig.IsVirtualFileSystemEnabled  || isSoleProvider;
             var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
@@ -786,7 +788,7 @@ public class ShokoResolveManager
             if (!Lookup.IsEnabledForItem(parent))
                 return null;
 
-            // We're already within the VFS, so let jellyfin take it from here.
+            // Skip anything outside the VFS.
             var fullPath = fileInfo.FullName;
             if (!fullPath.StartsWith(Plugin.Instance.VirtualRoot))
                 return null;
