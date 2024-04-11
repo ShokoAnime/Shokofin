@@ -298,6 +298,99 @@
                             <span>Save</span>
                         </button>
                     </fieldset>
+                    <fieldset id="SignalRSection1" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>SignalR Connection</h3>
+                        </legend>
+                        <div class="inputContainer inputContainer-withDescription">
+                            <label class="inputLabel inputLabelUnfocused" for="SignalRStatus">Status:</label><input is="emby-input" type="text" id="SignalRStatus" label="Status:" disabled readonly class="emby-input" value="Inactive">
+                            <div class="fieldDescription">SignalR connection status.</div>
+                        </div>
+                        <div id="SignalRConnectContainer" hidden>
+                            <button id="SignalRConnectButton" is="emby-button" type="submit" name="signalr-connect" class="raised button-submit block emby-button" disabled>
+                                <span>Connect</span>
+                            </button>
+                            <div class="fieldDescription">Establish a SignalR connection to Shoko Server.</div>
+                        </div>
+                        <div id="SignalRDisconnectContainer">
+                            <button is="emby-button" type="submit" name="signalr-disconnect" class="raised block emby-button">
+                                <span>Disconnect</span>
+                            </button>
+                            <div class="fieldDescription">Terminate the SignalR connection to Shoko Server.</div>
+                        </div>
+                    </fieldset>
+                    <fieldset id="SignalRSection2" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>SignalR Settings</h3>
+                        </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="SignalRAutoConnect" />
+                                <span>Auto Connect On Start</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Automatically establish a SignalR connection to Shoko Server when Jellyfin starts.
+                            </div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription">
+                            <input is="emby-input" type="text" id="SignalRAutoReconnectIntervals" label="Auto Reconnect Intervals:" />
+                            <div class="fieldDescription">A comma separated list of intervals in seconds to try re-establish the connection if the plugin gets disconnected from Shoko Server.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="SignalRMediaFolderSelector">Configure settings for:</label>
+                            <select is="emby-select" id="SignalRMediaFolderSelector" name="SignalRMediaFolderSelector" value="" class="emby-select-withcolor emby-select">
+                                <option value="">Default settings for new media folders</option>
+                            </select>
+                            <div class="fieldDescription selectFieldDescription">Select a media folder to add or modify the SignalR settings for.</div>
+                        </div>
+                        <div id="SignalRMediaFolderDefaultSettingsContainer">
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="SignalRDefaultFileEvents" />
+                                    <span>File Events</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">
+                                    <div>Enable the SignalR file events for any new media folders.</div>
+                                </div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="SignalRDefaultRefreshEvents" />
+                                    <span>Metadata Update Events</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">
+                                    <div>Enable the SignalR metadata update events for any new media folders.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="SignalRMediaFolderPerFolderSettingsContainer" hidden>
+                            <div class="inputContainer inputContainer-withDescription">
+                                <input is="emby-input" type="text" id="SignalRMediaFolderImportFolderName" label="Mapped Import Folder:" disabled readonly value="-" />
+                                <div class="fieldDescription">The Shoko Import Folder the Media Folder is mapped to.</div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="SignalRFileEvents" />
+                                    <span>File Events</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">
+                                    <div>Enable the SignalR file events for the media folder.</div>
+                                </div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="SignalRRefreshEvents" />
+                                    <span>Refresh Events</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">
+                                    <div>Enable the SignalR metadata update events for the media folder.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button is="emby-button" type="submit" name="signalr-settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
                     <fieldset id="UserSection" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
                             <h3>User Settings</h3>

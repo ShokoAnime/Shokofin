@@ -20,19 +20,32 @@ const Messages = {
             // Split the values at every comma.
             .split(",")
             // Sanitize inputs.
-            .map(str =>  {
-                // Trim the start and end and convert to lower-case.
-                str = str.trim().toLowerCase();
-                return str;
-            }),
+            .map(str =>  str.trim().toLowerCase())
+            .filter(str => str),
     );
-
-    // Filter out empty values.
-    if (filteredSet.has(""))
-        filteredSet.delete("");
 
     // Convert it back into an array.
     return Array.from(filteredSet);
+}
+
+/**
+ * Filter out duplicate values and sanitize list.
+ * @param {string} value - Stringified list of values to filter.
+ * @returns {number[]} An array of sanitized and filtered values.
+ */
+ function filterReconnectIntervals(value) {
+    // We convert to a set to filter out duplicate values.
+    const filteredSet = new Set(
+        value
+            // Split the values at every comma.
+            .split(",")
+            // Sanitize inputs.
+            .map(str => parseInt(str.trim().toLowerCase(), 10))
+            .filter(int => !Number.isNaN(int)),
+    );
+
+    // Convert it back into an array.
+    return Array.from(filteredSet).sort((a, b) => a - b);
 }
 
 async function loadUserConfig(form, userId, config) {
@@ -112,6 +125,46 @@ async function loadMediaFolderConfig(form, mediaFolderId, config) {
     Dashboard.hideLoadingMsg();
 }
 
+async function loadSignalrMediaFolderConfig(form, mediaFolderId, config) {
+    if (!mediaFolderId) {
+        form.querySelector("#SignalRMediaFolderDefaultSettingsContainer").removeAttribute("hidden");
+        form.querySelector("#SignalRMediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
+        Dashboard.hideLoadingMsg();
+        return;
+    }
+
+    Dashboard.showLoadingMsg();
+
+    // Get the configuration to use.
+    if (!config) config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId)
+    const mediaFolderConfig = config.MediaFolders.find((c) => mediaFolderId === c.MediaFolderId);
+    if (!mediaFolderConfig) {
+        form.querySelector("#SignalRMediaFolderDefaultSettingsContainer").removeAttribute("hidden");
+        form.querySelector("#SignalRMediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
+        Dashboard.hideLoadingMsg();
+        return;
+    }
+
+    form.querySelector("#SignalRMediaFolderImportFolderName").value = mediaFolderConfig.IsMapped ? `${mediaFolderConfig.ImportFolderName} (${mediaFolderConfig.ImportFolderId}) ${mediaFolderConfig.ImportFolderRelativePath}` : "Not Mapped";
+
+    // Configure the elements within the user container
+    form.querySelector("#SignalRFileEvents").checked = mediaFolderConfig.IsFileEventsEnabled;
+    form.querySelector("#SignalRRefreshEvents").checked = mediaFolderConfig.IsRefreshEventsEnabled;
+
+    // Show the user settings now if it was previously hidden.
+    form.querySelector("#SignalRMediaFolderDefaultSettingsContainer").setAttribute("hidden", "");
+    form.querySelector("#SignalRMediaFolderPerFolderSettingsContainer").removeAttribute("hidden");
+
+    Dashboard.hideLoadingMsg();
+}
+
+/**
+ * 
+ * @param {string} username 
+ * @param {string} password 
+ * @param {boolean?} userKey 
+ * @returns {Promise<{ apikey: string; }>}
+ */
 function getApiKey(username, password, userKey = false) {
     return ApiClient.fetch({
         dataType: "json",
@@ -127,6 +180,34 @@ function getApiKey(username, password, userKey = false) {
         type: "POST",
         url: ApiClient.getUrl("Plugin/Shokofin/Host/GetApiKey"),
     });
+}
+
+/**
+ * 
+ * @returns {Promise<{ IsUsable: boolean; IsActive: boolean; State: "Disconnected" | "Connected" | "Connecting" | "Reconnecting" }>}
+ */
+function getSignalrStatus() {
+    return ApiClient.fetch({
+        dataType: "json",
+        type: "GET",
+        url: ApiClient.getUrl("Plugin/Shokofin/SignalR/Status"),
+    });
+}
+
+async function signalrConnect() {
+    await ApiClient.fetch({
+        type: "POST",
+        url: ApiClient.getUrl("Plugin/Shokofin/SignalR/Connect"),
+    });
+    return getSignalrStatus();
+}
+
+async function signalrDisconnect() {
+    await ApiClient.fetch({
+        type: "POST",
+        url: ApiClient.getUrl("Plugin/Shokofin/SignalR/Disconnect"),
+    });
+    return getSignalrStatus();
 }
 
 async function defaultSubmit(form) {
@@ -165,8 +246,8 @@ async function defaultSubmit(form) {
         config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
         // Media Folder settings
-        const mediaFolderId = form.querySelector("#MediaFolderSelector").value;
-        const mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
+        let mediaFolderId = form.querySelector("#MediaFolderSelector").value;
+        let mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
         if (mediaFolderConfig) {
             const filteringMode = form.querySelector("#MediaFolderLibraryFiltering").value;
             mediaFolderConfig.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
@@ -176,6 +257,22 @@ async function defaultSubmit(form) {
             const filteringMode = form.querySelector("#LibraryFiltering").value;
             config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
             config.LibraryFiltering = filteringMode === "true" ? true : filteringMode === "false" ? false : null;
+        }
+
+        // SignalR settings
+        const reconnectIntervals = filterReconnectIntervals(form.querySelector("#SignalRAutoReconnectIntervals").value);
+        config.SignalR_AutoConnectEnabled = form.querySelector("#SignalRAutoConnect").checked;
+        config.SignalR_AutoReconnectInSeconds = reconnectIntervals;
+        form.querySelector("#SignalRAutoReconnectIntervals").value = reconnectIntervals.join(", ");
+        mediaFolderId = form.querySelector("#SignalRMediaFolderSelector").value;
+        mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
+        if (mediaFolderConfig) {
+            mediaFolderConfig.IsFileEventsEnabled = form.querySelector("#SignalRFileEvents").checked;
+            mediaFolderConfig.IsRefreshEventsEnabled = form.querySelector("#SignalRRefreshEvents").checked;
+        }
+        else {
+            config.SignalR_FileEvents = form.querySelector("#SignalRDefaultFileEvents").checked;
+            config.SignalR_RefreshEnabled = form.querySelector("#SignalRDefaultRefreshEvents").checked;
         }
 
         // Tag settings
@@ -313,7 +410,6 @@ async function syncSettings(form) {
         form.querySelector("#PublicUrl").value = publicUrl;
     }
     const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
-    const fitleringMode = form.querySelector("#LibraryFiltering").value;
 
     // Metadata settings
     config.TitleMainType = form.querySelector("#TitleMainType").value;
@@ -396,7 +492,32 @@ async function syncMediaFolderSettings(form) {
         config.LibraryFiltering = filteringMode === "true" ? true : filteringMode === "false" ? false : null;
     }
 
-    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config)
+    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
+    Dashboard.processPluginConfigurationUpdateResult(result);
+
+    return config;
+}
+
+async function syncSignalrSettings(form) {
+    const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
+    const mediaFolderId = form.querySelector("#SignalRMediaFolderSelector").value;
+    const reconnectIntervals = filterReconnectIntervals(form.querySelector("#SignalRAutoReconnectIntervals").value);
+
+    config.SignalR_AutoConnectEnabled = form.querySelector("#SignalRAutoConnect").checked;
+    config.SignalR_AutoReconnectInSeconds = reconnectIntervals;
+    form.querySelector("#SignalRAutoReconnectIntervals").value = reconnectIntervals.join(", ");
+
+    const mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
+    if (mediaFolderConfig) {
+        mediaFolderConfig.IsFileEventsEnabled = form.querySelector("#SignalRFileEvents").checked;
+        mediaFolderConfig.IsRefreshEventsEnabled = form.querySelector("#SignalRRefreshEvents").checked;
+    }
+    else {
+        config.SignalR_FileEvents = form.querySelector("#SignalRDefaultFileEvents").checked;
+        config.SignalR_RefreshEnabled = form.querySelector("#SignalRDefaultRefreshEvents").checked;
+    }
+
+    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
     Dashboard.processPluginConfigurationUpdateResult(result);
 
     return config;
@@ -450,6 +571,7 @@ export default function (page) {
     const form = page.querySelector("#ShokoConfigForm");
     const userSelector = form.querySelector("#UserSelector");
     const mediaFolderSelector = form.querySelector("#MediaFolderSelector");
+    const signalrMediaFolderSelector = form.querySelector("#SignalRMediaFolderSelector");
 
     // Refresh the view after we changed the settings, so the view reflect the new settings.
     const refreshSettings = (config) => {
@@ -478,6 +600,8 @@ export default function (page) {
             form.querySelector("#ProviderSection").removeAttribute("hidden");
             form.querySelector("#LibrarySection").removeAttribute("hidden");
             form.querySelector("#MediaFolderSection").removeAttribute("hidden");
+            form.querySelector("#SignalRSection1").removeAttribute("hidden");
+            form.querySelector("#SignalRSection2").removeAttribute("hidden");
             form.querySelector("#UserSection").removeAttribute("hidden");
             form.querySelector("#TagSection").removeAttribute("hidden");
             form.querySelector("#AdvancedSection").removeAttribute("hidden");
@@ -493,17 +617,39 @@ export default function (page) {
             form.querySelector("#ProviderSection").setAttribute("hidden", "");
             form.querySelector("#LibrarySection").setAttribute("hidden", "");
             form.querySelector("#MediaFolderSection").setAttribute("hidden", "");
+            form.querySelector("#SignalRSection1").setAttribute("hidden", "");
+            form.querySelector("#SignalRSection2").setAttribute("hidden", "");
             form.querySelector("#UserSection").setAttribute("hidden", "");
             form.querySelector("#TagSection").setAttribute("hidden", "");
             form.querySelector("#AdvancedSection").setAttribute("hidden", "");
             form.querySelector("#ExperimentalSection").setAttribute("hidden", "");
         }
 
-        const userId = form.querySelector("#UserSelector").value;
-        loadUserConfig(form, userId, config);
+        loadUserConfig(form, form.querySelector("#UserSelector").value, config);
+        loadMediaFolderConfig(form, form.querySelector("#MediaFolderSelector").value, config);
+        loadSignalrMediaFolderConfig(form, form.querySelector("#SignalRMediaFolderSelector").value, config);
+    };
 
-        const mediaFolderId = form.querySelector("#MediaFolderSelector").value;
-        loadMediaFolderConfig(form, mediaFolderId, config);
+    /**
+     * 
+     * @param {{ IsUsable: boolean; IsActive: boolean; State: "Disconnected" | "Connected" | "Connecting" | "Reconnecting" }} status 
+     */
+    const refreshSignalr = (status) => {
+        form.querySelector("#SignalRStatus").value = status.IsActive ? `Enabled, ${status.State}` : status.IsUsable ? "Disabled" : "Unavailable";
+        if (status.IsUsable) {
+            form.querySelector("#SignalRConnectButton").removeAttribute("disabled");
+        }
+        else {
+            form.querySelector("#SignalRConnectButton").setAttribute("disabled", "");
+        }
+        if (status.IsActive) {
+            form.querySelector("#SignalRConnectContainer").setAttribute("hidden", "");
+            form.querySelector("#SignalRDisconnectContainer").removeAttribute("hidden");
+        }
+        else {
+            form.querySelector("#SignalRConnectContainer").removeAttribute("hidden");
+            form.querySelector("#SignalRDisconnectContainer").setAttribute("hidden", "");
+        }
     };
 
     const onError = (err) => {
@@ -518,7 +664,11 @@ export default function (page) {
 
     mediaFolderSelector.addEventListener("change", function () {
         loadMediaFolderConfig(page, this.value);
-    })
+    });
+
+    signalrMediaFolderSelector.addEventListener("change", function () {
+        loadSignalrMediaFolderConfig(page, this.value);
+    });
 
     form.querySelector("#UserEnableSynchronization").addEventListener("change", function () {
         const disabled = !this.checked;
@@ -543,6 +693,7 @@ export default function (page) {
         Dashboard.showLoadingMsg();
         try {
             const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
+            const signalrStatus = await getSignalrStatus();
             const users = await ApiClient.getUsers();
 
             // Connection settings
@@ -584,6 +735,13 @@ export default function (page) {
             form.querySelector("#LibraryFiltering").value = `${config.LibraryFiltering != null ? config.LibraryFiltering : null}`;
             mediaFolderSelector.innerHTML += config.MediaFolders.map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.MediaFolderPath}</option>`).join("");
 
+            // SignalR settings
+            form.querySelector("#SignalRAutoConnect").checked = config.SignalR_AutoConnectEnabled;
+            form.querySelector("#SignalRAutoReconnectIntervals").value = config.SignalR_AutoReconnectInSeconds.join(", ");
+            signalrMediaFolderSelector.innerHTML += config.MediaFolders.map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.MediaFolderPath}</option>`).join("");
+            form.querySelector("#SignalRDefaultFileEvents").checked = config.SignalR_FileEvents;
+            form.querySelector("#SignalRDefaultRefreshEvents").checked = config.SignalR_RefreshEnabled;
+
             // User settings
             userSelector.innerHTML += users.map((user) => `<option value="${user.Id}">${user.Name}</option>`).join("");
 
@@ -611,6 +769,7 @@ export default function (page) {
             }
 
             refreshSettings(config);
+            refreshSignalr(signalrStatus);
         }
         catch (err) {
             Dashboard.alert(Messages.UnableToRender);
@@ -641,7 +800,17 @@ export default function (page) {
                 break;
             case "media-folder-settings":
                 Dashboard.showLoadingMsg();
-                syncMediaFolderSettings(form).then(refreshSettings).case(onError);
+                syncMediaFolderSettings(form).then(refreshSettings).catch(onError);
+                break;
+            case "signalr-connect":
+                signalrConnect().then(refreshSignalr).catch(onError);
+                break;
+            case "signalr-disconnect":
+                signalrDisconnect().then(refreshSignalr).catch(onError);
+                break;
+            case "signalr-settings":
+                syncSignalrSettings(form).then(refreshSettings).catch(onError);
+                break;
             case "user-settings":
                 Dashboard.showLoadingMsg();
                 syncUserSettings(form).then(refreshSettings).catch(onError);
