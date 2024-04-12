@@ -69,11 +69,12 @@ const Messages = {
   }
 }
 
-function onSortableContainerClick(element) {
+/** @param {PointerEvent} event */
+function onSortableContainerClick(event) {
   const parentWithClass = (element, className) => {
     return (element.parentElement.classList.contains(className)) ? element.parentElement : null;
   }
-  const btnSortable = parentWithClass(element.target, "btnSortable");
+  const btnSortable = parentWithClass(event.target, "btnSortable");
   if (btnSortable) {
     const listItem = parentWithClass(btnSortable, "sortableOption");
     const list = parentWithClass(listItem, "paperList");
@@ -872,18 +873,14 @@ export default function (page) {
 }
 
 function setDescriptionSourcesIntoConfig(form, config) {
-  config.DescriptionSource = Array.prototype.map.call(
-    Array.prototype.filter.call(
-      form.querySelectorAll("#descriptionSource .chkDescriptionSource"),
-      (el) => el.checked
-    ),
-    (el) => el.dataset.descriptionsource
-  );
+    const descriptionElements = form.querySelectorAll(`#descriptionSource .chkDescriptionSource`);
+    config.DescriptionSource = Array.prototype.filter.call(descriptionElements,
+        (el) => el.checked)
+        .map((el) => el.dataset.descriptionsource);
 
-  config.DescriptionSourceOrder = Array.prototype.map.call(
-    form.querySelectorAll("#descriptionSource .chkDescriptionSource"),
-    (el) => el.dataset.descriptionsource
-  );
+    config.DescriptionSourceOrder = Array.prototype.map.call(descriptionElements,
+        (el) => el.dataset.descriptionsource
+    );
 }
 
 async function setDescriptionSourcesFromConfig(form) {
