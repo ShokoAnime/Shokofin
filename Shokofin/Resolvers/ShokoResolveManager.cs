@@ -196,7 +196,7 @@ public class ShokoResolveManager
             Logger.LogWarning(
                 "Failed to find a match for media folder at {Path} after {Amount} attempts in {TimeSpan}.",
                 mediaFolder.Path,
-                attempts, 
+                attempts,
                 DateTime.UtcNow - start
             );
         }
@@ -443,6 +443,7 @@ public class ShokoResolveManager
                     }
                 }
 
+                // TODO: Remove these two hacks once we have proper support for adding multiple series at once.
                 foreach (var nfoFile in nfoFiles)
                 {
                     if (allNfoFiles.Contains(nfoFile))
@@ -636,7 +637,7 @@ public class ShokoResolveManager
             path = Path.GetDirectoryName(path);
         }
     }
-    
+
     private IReadOnlyList<string> FindSubtitlesForPath(string sourcePath)
     {
         var externalPaths = new List<string>();
