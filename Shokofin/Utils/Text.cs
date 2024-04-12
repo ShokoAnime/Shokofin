@@ -71,30 +71,19 @@ public static class Text
     /// </summary>
     public enum TextSourceType {
         /// <summary>
-        /// Use the default source for the current series grouping.
+        /// Use data from AniDB.
         /// </summary>
-        Default = 1,
+        AniDb = 0,
 
         /// <summary>
-        /// Only use AniDb, or null if no data is available.
+        /// Use data from TvDB.
         /// </summary>
-        OnlyAniDb = 2,
+        TvDb = 1,
 
         /// <summary>
-        /// Prefer the AniDb data, but use the other provider if there is no
-        /// AniDb data available.
+        /// Use data from TMDB
         /// </summary>
-        PreferAniDb = 3,
-
-        /// <summary>
-        /// Prefer the other provider (e.g. TvDB/TMDB)
-        /// </summary>
-        PreferOther = 4,
-
-        /// <summary>
-        /// Only use the other provider, or null if no data is available.
-        /// </summary>
-        OnlyOther = 5,
+        TMDB = 2
     }
 
     /// <summary>
@@ -149,40 +138,55 @@ public static class Text
         FullTitle = 3,
     }
 
-    public static string? GetDescription(ShowInfo show)
+    public static string GetDescription(ShowInfo show)
         => GetDescription(show.DefaultSeason);
 
-    public static string? GetDescription(SeasonInfo season)
-        => GetDescription(season.AniDB.Description, season.TvDB?.Description);
+    public static string GetDescription(SeasonInfo season)
+    {
+        Dictionary<TextSourceType, string> descriptions = new() {
+            {TextSourceType.AniDb, season.AniDB.Description ?? string.Empty},
+            {TextSourceType.TvDb, season.TvDB?.Description ?? string.Empty},
+        };
+        return GetDescription(descriptions);
+    }
 
-    public static string? GetDescription(EpisodeInfo episode)
-        => GetDescription(episode.AniDB.Description, episode.TvDB?.Description);
+    public static string GetDescription(EpisodeInfo episode)
+    {
+        Dictionary<TextSourceType, string> descriptions = new() {
+            {TextSourceType.AniDb, episode.AniDB.Description ?? string.Empty},
+            {TextSourceType.TvDb, episode.TvDB?.Description ?? string.Empty},
+        };
+        return GetDescription(descriptions);
+    }
 
-    public static string? GetDescription(IEnumerable<EpisodeInfo> episodeList)
+    public static string GetDescription(IEnumerable<EpisodeInfo> episodeList)
         => JoinText(episodeList.Select(episode => GetDescription(episode)));
 
-    private static string GetDescription(string aniDbDescription, string? otherDescription)
+    private static string GetDescription(Dictionary<TextSourceType, string> descriptions)
     {
-        string overview;
-        switch (Plugin.Instance.Configuration.DescriptionSource) {
-            default:
-            case TextSourceType.PreferAniDb:
-                overview = SanitizeTextSummary(aniDbDescription);
-                if (string.IsNullOrEmpty(overview))
-                    goto case TextSourceType.OnlyOther;
-                break;
-            case TextSourceType.PreferOther:
-                overview = otherDescription ?? string.Empty;
-                if (string.IsNullOrEmpty(overview))
-                    goto case TextSourceType.OnlyAniDb;
-                break;
-            case TextSourceType.OnlyAniDb:
-                overview = SanitizeTextSummary(aniDbDescription);
-                break;
-            case TextSourceType.OnlyOther:
-                overview = otherDescription ?? string.Empty;
-                break;
+        string overview = string.Empty;
+
+        var providerOrder = Plugin.Instance.Configuration.DescriptionSourceOrder;
+        var providers = Plugin.Instance.Configuration.DescriptionSource;
+
+        if (providers.Length == 0) {
+            return overview; // This is what they want if everything is unticked...
         }
+
+        foreach (var provider in providerOrder.Where(provider => providers.Contains(provider)))
+        {
+            if (!string.IsNullOrEmpty(overview)) {
+                return overview;
+            }
+
+            overview = provider switch
+            {
+                TextSourceType.AniDb => descriptions.TryGetValue(TextSourceType.AniDb, out var desc) ? SanitizeTextSummary(desc) : string.Empty,
+                TextSourceType.TvDb => descriptions.TryGetValue(TextSourceType.TvDb, out var desc) ? desc : string.Empty,
+                _ => string.Empty
+            };
+        }
+
         return overview;
     }
 
