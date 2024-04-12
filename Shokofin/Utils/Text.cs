@@ -167,7 +167,7 @@ public static class Text
         string overview = string.Empty;
 
         var providerOrder = Plugin.Instance.Configuration.DescriptionSourceOrder;
-        var providers = Plugin.Instance.Configuration.DescriptionSource;
+        var providers = Plugin.Instance.Configuration.DescriptionSourceList;
 
         if (providers.Length == 0) {
             return overview; // This is what they want if everything is unticked...

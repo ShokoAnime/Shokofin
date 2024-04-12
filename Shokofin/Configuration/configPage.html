@@ -72,7 +72,10 @@
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Add a number to the title of each specials episode</div>
                         </div>
-                        <div id="descriptionSource" style="margin-bottom: 2em;">
+                        <!-- (Below) Kept to allow setting migration! -->
+                        <input is="emby-input" type="text" id="descriptionSource" style="display: none;" value="" />
+                        <!-- (Above) Kept to allow setting migration! -->
+                        <div id="descriptionSourceList" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Description source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem descriptionSourceItem sortableOption" data-descriptionsource="AniDb">

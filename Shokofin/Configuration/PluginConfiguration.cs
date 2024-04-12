@@ -9,6 +9,7 @@ using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
 using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
+using System;
 
 namespace Shokofin.Configuration;
 
@@ -96,9 +97,14 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool MarkSpecialsWhenGrouped { get; set; }
 
     /// <summary>
-    /// The description source. This will be replaced in the future.
+    /// This setting is now deprecated. Use `DescriptionSourceList` instead.
     /// </summary>
-    public TextSourceType[] DescriptionSource { get; set; }
+    public string? DescriptionSource { get; set; }
+
+    /// <summary>
+    /// The collection of providers for descriptions
+    /// </summary>
+    public TextSourceType[] DescriptionSourceList { get; set; }
 
     /// <summary>
     /// The prioritisation order of source providers for description sources.
@@ -291,7 +297,8 @@ public class PluginConfiguration : BasePluginConfiguration
         TitleMainType = DisplayLanguageType.Default;
         TitleAlternateType = DisplayLanguageType.Origin;
         TitleAllowAny = false;
-        DescriptionSource = new[] { TextSourceType.AniDb };
+        DescriptionSource = null;
+        DescriptionSourceList = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
         DescriptionSourceOrder = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
         VirtualFileSystem = true;
         VirtualFileSystemThreads = 10;
