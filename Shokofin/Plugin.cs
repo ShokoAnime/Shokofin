@@ -24,13 +24,14 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <summary>
     /// "Virtual" File System Root Directory.
     /// </summary>
-    public string VirtualRoot => Path.Combine(DataFolderPath, "VFS");
+    public readonly string VirtualRoot;
 
     public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
     {
         Instance = this;
         ConfigurationChanged += OnConfigChanged;
         IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
+        VirtualRoot = Path.Combine(applicationPaths.ProgramDataPath, "Shokofin", "VFS");
         Logger = logger;
         Logger.LogInformation("Virtual File System Location; {Path}", VirtualRoot);
     }
