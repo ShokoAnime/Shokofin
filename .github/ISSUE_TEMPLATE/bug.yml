@@ -1,5 +1,5 @@
-name: Shokofin Issue Report 101
-description: Report your issues here!
+name: Shokofin Bug Report 101
+description: Report any bugs here!
 labels: []
 projects: []
 assignees:
@@ -8,11 +8,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Shokofin Issue Report
-        Please fill out the following information to help us understand your issue better, we respond faster on [Discord](https://discord.gg/shokoanime).
-        If you are facing setup issues use discord, we'll be happy to help you.
-        
-        **Note:** This template is for bug reports only, if you require another form of assistance please use the Discord server.
+        ## Shokofin Bug Report
+        **Important:** This form is exclusively for reporting bugs. If your issue is not due to a bug but you requires assistance (e.g. with setup) or if you just have a question or inquiry, then please seek help on our [Discord](https://discord.gg/shokoanime) server instead. Our Discord community is eager to assist, and we often respond faster and can provide more immediate support on Discord.
+
+        To help us understand and resolve your bug report more efficiently, please fill out the following information.
+
+        And remember, for quicker assistance on any inquiries, Discord is the way to go!
   - type: input
     id: jelly
     attributes:
@@ -51,29 +52,30 @@ body:
     attributes:
       value: |
         Library type and metadata/image providers enabled for the library/libaries in Jellyfin.
-  - type: checkboxes
+  - type: dropdown
     id: library
     attributes:
-      label: "Library Type:"
+      label: Library Type(s).
+      multiple: true
       options:
-        - label: Shows
-        - label: Movies
-        - label: Movies & Shows
+        - Shows
+        - Movies
+        - Movies & Shows
     validations:
       required: true
   - type: checkboxes
     id: metadataCheck
     attributes:
-      label: "Have you tried creating a library with only Shoko as metadata provider?"
+      label: "Do the issue persists after creating a library with Shoko set as the only metadata provider? (Now is your time to check if you haven't already.)"
       options:
-        - label: "Yes"
+        - label: "Yes, I hereby confirm that the issue persists after creating a library with Shoko set as the only metadata provider."
           required: true
     validations:
       required: true
   - type: textarea
     id: issue
     attributes:
-      label: Your Issue
+      label: Issue
       description: Try to explain your issue in simple terms. We'll ask for details if it's needed.
     validations:
       required: true
