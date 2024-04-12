@@ -9,7 +9,6 @@ using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
 using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
-using System;
 
 namespace Shokofin.Configuration;
 
