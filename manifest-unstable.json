@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.108",
+                "changelog": "fix: add workaround for mixed library support\n\n- Implement a workaround for using the mixed library with no movies yet,\n  by adding empty 'tvshow.nfo' and 'season.nfo' files within the\n  show/season directories (but only in mixed libraries) so the jellyfin\n  internal logic will assign the directories as a show/season/episode\n  structure. ||This is untested code btw. I'll test tomorrow. Now good night.||\n\nmisc: add issue template (#49) [skip ci]\n\n\nUpdate and rename issue.yml to bug.yml\n\nFinal touches.\n\nAdded request features template\nFixing up the template\nPath fix\nAdd issue templat",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.108/shoko_3.0.1.108.zip",
+                "checksum": "2a156f5c4bdc3a1c6e832a2fd871466b",
+                "timestamp": "2024-04-12T01:13:15Z"
+            },
+            {
                 "version": "3.0.1.107",
                 "changelog": "fix: increment season number _after_ saving it\n\n- Increment the season number when grouping is not used\n  after saving it, not before saving it.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.104/shoko_3.0.1.104.zip",
                 "checksum": "d27fe1c9f63620cb5443a860c1609b20",
                 "timestamp": "2024-04-11T11:01:56Z"
-            },
-            {
-                "version": "3.0.1.103",
-                "changelog": "fix: only create links for series in the local collection\n\n- Only create links for any local series linked to\n  multi-series files. This should prevent a file linked to\n  multiple series from creating a new mostly empty series\n  if the user don't have any other files for said series.\n\nfix: fix season number usage",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.103/shoko_3.0.1.103.zip",
-                "checksum": "862502227360cff63832846b7f170b4c",
-                "timestamp": "2024-04-10T20:06:24Z"
             }
         ]
     }
