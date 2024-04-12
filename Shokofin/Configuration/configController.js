@@ -759,7 +759,7 @@ export default function (page) {
             form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
             form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null ? config.TitleAddForMultipleEpisodes : true;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
-            await setDescriptionSourcesFromConfig(form);
+            await setDescriptionSourcesFromConfig(form, config);
             form.querySelector("#CleanupAniDBDescriptions").checked = config.SynopsisCleanMultiEmptyLines || config.SynopsisCleanLinks;
             form.querySelector("#MinimalAniDBDescriptions").checked = config.SynopsisRemoveSummary || config.SynopsisCleanMiscLines;
 
@@ -884,9 +884,7 @@ function setDescriptionSourcesIntoConfig(form, config) {
     );
 }
 
-async function setDescriptionSourcesFromConfig(form) {
-  const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
-
+async function setDescriptionSourcesFromConfig(form, config) {
   migrateDescriptionSource(config);
 
   const list = form.querySelector("#descriptionSourceList .checkboxList");
