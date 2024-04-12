@@ -938,9 +938,9 @@ public class ShokoResolveManager
                 // return new() { Items = items, ExtraFiles = new() };
 
                 // TODO: Remove these two hacks once we have proper support for adding multiple series at once.
-                if (items.Where(i => i is Movie).ToList().Count == 0 && items.Count > 0) {
+                if (!items.Any(i => i is Movie) && items.Count > 0) {
                     fileInfoList.Clear();
-                    fileInfoList.AddRange(items.Select(s => FileSystem.GetFileSystemInfo(s.Path)));
+                    fileInfoList.AddRange(items.OrderBy(s => int.Parse(s.Path.GetAttributeValue(ShokoSeriesId.Name)!)).Select(s => FileSystem.GetFileSystemInfo(s.Path)));
                 }
 
                 return new() { Items = items.Where(i => i is Movie).ToList(), ExtraFiles = items.OfType<TvSeries>().Select(s => FileSystem.GetFileSystemInfo(s.Path)).ToList() };
