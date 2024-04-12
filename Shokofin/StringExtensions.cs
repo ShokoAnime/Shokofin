@@ -101,9 +101,10 @@ public static class StringExtensions
         if (attribute.Length == 0)
             throw new ArgumentException("String can't be empty.", nameof(attribute));
 
-        // Must be at least 3 characters after the attribute =, ], any character.
+        // Must be at least 3 characters after the attribute =, ], any character,
+        // then we offset it by 1, because we want the index and not length.
         var attributeIndex = text.IndexOf(attribute, StringComparison.OrdinalIgnoreCase);
-        var maxIndex = text.Length - attribute.Length - 3;
+        var maxIndex = text.Length - attribute.Length - 2;
         while (attributeIndex > -1 && attributeIndex < maxIndex)
         {
             var attributeEnd = attributeIndex + attribute.Length;
