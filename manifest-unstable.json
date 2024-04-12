@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.110",
+                "changelog": "misc: order file list by series id.\n\nfix: fix off-by-one error in GetAttributeValue",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.110/shoko_3.0.1.110.zip",
+                "checksum": "fb5abc01ccafc5b83e96340e057f56c5",
+                "timestamp": "2024-04-12T22:45:41Z"
+            },
+            {
                 "version": "3.0.1.109",
                 "changelog": "misc: add missing TODO and remove trailing spaces\n\nrefactor: move VFS location\n\n- Moved the location of the VFS outside the plugins directory, so it\n  won't be scanned on startup by Jellyfin when it tries to discover\n  the plugins to load. Also, in case it wasn't obvious enough.\n  THIS IS A BREAKIGN CHANGE. Okay? Okay.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.106/shoko_3.0.1.106.zip",
                 "checksum": "1e9054b146efe2f9ea40f580d84cc9ff",
                 "timestamp": "2024-04-11T22:42:30Z"
-            },
-            {
-                "version": "3.0.1.105",
-                "changelog": "fix: use relative based episode numbering\n\n- Because Owarimonogarari (2017) is a clusterfudge to support, and\n  implementing this won't break existing stuff\u2026 in theory.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.105/shoko_3.0.1.105.zip",
-                "checksum": "77681e93c483f163495b17c69d478ebf",
-                "timestamp": "2024-04-11T12:10:53Z"
             }
         ]
     }
