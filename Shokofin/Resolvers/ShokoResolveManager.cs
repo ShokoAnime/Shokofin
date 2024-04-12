@@ -352,8 +352,10 @@ public class ShokoResolveManager
         var subtitles = 0;
         var fixedSubtitles = 0;
         var skippedSubtitles = 0;
+        var skippedNfo = 0;
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
+        var allNfoFiles = new HashSet<string>();
         var allPathsForVFS = new ConcurrentBag<(string sourceLocation, string symbolicLink)>();
         var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VirtualFileSystemThreads);
         await Task.WhenAll(files.Select(async (tuple) => {
@@ -361,7 +363,7 @@ public class ShokoResolveManager
 
             try {
                 // Skip any source files we weren't meant to have in the library.
-                var (sourceLocation, symbolicLinks) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
+                var (sourceLocation, symbolicLinks, nfoFiles) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
                 if (string.IsNullOrEmpty(sourceLocation))
                     return;
 
@@ -440,6 +442,25 @@ public class ShokoResolveManager
                         }
                     }
                 }
+
+                foreach (var nfoFile in nfoFiles)
+                {
+                    if (allNfoFiles.Contains(nfoFile))
+                        continue;
+                    allNfoFiles.Add(nfoFile);
+
+                    var nfoDirectory = Path.GetDirectoryName(nfoFile)!;
+                    if (!Directory.Exists(nfoDirectory))
+                        Directory.CreateDirectory(nfoDirectory);
+
+                    if (!File.Exists(nfoFile)) {
+                        File.WriteAllText(nfoFile, "");
+                    }
+                    else {
+                        skippedNfo++;
+                    }
+
+                }
             }
             finally {
                 semaphore.Release();
@@ -449,10 +470,12 @@ public class ShokoResolveManager
 
         var removedLinks = 0;
         var removedSubtitles = 0;
+        var removedNfo = 0;
         var toBeRemoved = FileSystem.GetFilePaths(vfsPath, true)
             .Select(path => (path, extName: Path.GetExtension(path)))
-            .Where(tuple => _namingOptions.VideoFileExtensions.Contains(tuple.extName) || _namingOptions.SubtitleFileExtensions.Contains(tuple.extName))
+            .Where(tuple => _namingOptions.VideoFileExtensions.Contains(tuple.extName) || _namingOptions.SubtitleFileExtensions.Contains(tuple.extName) || tuple.extName == ".nfo")
             .ExceptBy(allPathsForVFS.Select(tuple => tuple.symbolicLink).ToHashSet(), tuple => tuple.path)
+            .ExceptBy(allNfoFiles, tuple => tuple.path)
             .ToList();
         foreach (var (symbolicLink, extName) in toBeRemoved) {
             // Continue in case we already removed the (subtitle) file.
@@ -471,6 +494,9 @@ public class ShokoResolveManager
                     File.Delete(symbolicLink);
                 }
             }
+            else if (extName == ".nfo") {
+                removedNfo++;
+            }
             else {
                 removedSubtitles++;
             }
@@ -480,15 +506,18 @@ public class ShokoResolveManager
 
         var timeSpent = DateTime.UtcNow - start;
         Logger.LogInformation(
-            "Created {CreatedMedia} ({CreatedSubtitles}), fixed {FixedMedia} ({FixedSubtitles}), skipped {SkippedMedia} ({SkippedSubtitles}), and removed {RemovedMedia} ({RemovedSubtitles}) symbolic links in media folder at {Path} in {TimeSpan}",
+            "Created {CreatedMedia} ({CreatedSubtitles},{CreatedNFO}), fixed {FixedMedia} ({FixedSubtitles}), skipped {SkippedMedia} ({SkippedSubtitles},{SkippedNFO}), and removed {RemovedMedia} ({RemovedSubtitles},{RemovedNFO}) symbolic links in media folder at {Path} in {TimeSpan}",
             allPathsForVFS.Count - skippedLinks - fixedLinks - subtitles,
             subtitles - fixedSubtitles - skippedSubtitles,
+            allNfoFiles.Count - skippedNfo,
             fixedLinks,
             fixedSubtitles,
             skippedLinks,
             skippedSubtitles,
-            toBeRemoved.Count,
+            skippedNfo,
+            removedLinks,
             removedSubtitles,
+            removedNfo,
             mediaFolder.Path,
             timeSpent
         );
@@ -497,11 +526,11 @@ public class ShokoResolveManager
     // Note: Out of the 14k entries in my test shoko database, then only **319** entries have a title longer than 100 chacters.
     private const int NameCutOff = 64;
 
-    private async Task<(string sourceLocation, string[] symbolicLinks)> GenerateLocationsForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId)
+    private async Task<(string sourceLocation, string[] symbolicLinks, string[] nfoFiles)> GenerateLocationsForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId)
     {
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId).ConfigureAwait(false);
         if (season == null)
-            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
+            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>(), nfoFiles: Array.Empty<string>());
 
         var isMovieSeason = season.Type == SeriesType.Movie;
         var shouldAbort = collectionType switch {
@@ -510,19 +539,19 @@ public class ShokoResolveManager
             _ => false,
         };
         if (shouldAbort)
-            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
+            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>(), nfoFiles: Array.Empty<string>());
 
         var show = await ApiManager.GetShowInfoForSeries(seriesId).ConfigureAwait(false);
         if (show == null)
-            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
+            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>(), nfoFiles: Array.Empty<string>());
 
         var file = await ApiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false);
         var episode = file?.EpisodeList.FirstOrDefault();
         if (file == null || episode == null)
-            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
+            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>(), nfoFiles: Array.Empty<string>());
 
         if (season == null || episode == null)
-            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>());
+            return (sourceLocation: string.Empty, symbolicLinks: Array.Empty<string>(), nfoFiles: Array.Empty<string>());
 
         var showName = show.DefaultSeason.AniDB.Title?.ReplaceInvalidPathCharacters() ?? $"Shoko Series {show.Id}";
         var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
@@ -534,6 +563,7 @@ public class ShokoResolveManager
         if (episodeName.Length >= NameCutOff)
             episodeName = episodeName[..NameCutOff].Split(' ').SkipLast(1).Join(' ') + "…";
 
+        var nfoFiles = new List<string>();
         var folders = new List<string>();
         var extrasFolder = file.ExtraType switch {
             null => null,
@@ -565,17 +595,26 @@ public class ShokoResolveManager
         else {
             var isSpecial = show.IsSpecial(episode);
             var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
-            var seasonName = $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}";
+            var seasonFolder = $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}";
+            var showFolder = $"{showName} [{ShokoSeriesId.Name}={show.Id}]";
             if (!string.IsNullOrEmpty(extrasFolder)) {
-                folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}]", extrasFolder));
+                folders.Add(Path.Combine(vfsPath, showFolder, extrasFolder));
 
                 // Only place the extra within the season if we have a season number assigned to the episode.
                 if (seasonNumber != 0)
-                    folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}]", seasonName, extrasFolder));
+                    folders.Add(Path.Combine(vfsPath, showFolder, seasonFolder, extrasFolder));
             }
             else {
-                folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}]", seasonName));
+                folders.Add(Path.Combine(vfsPath, showFolder, seasonFolder));
                 episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber.ToString().PadLeft(show.EpisodePadding, '0')}";
+            }
+
+            // Add NFO files for the show and season if we're in a mixed library,
+            // to allow the built-in movie resolver to detect the directories
+            // properly as tv shows.
+            if (collectionType == null) {
+                nfoFiles.Add(Path.Combine(vfsPath, showFolder, "tvshow.nfo"));
+                nfoFiles.Add(Path.Combine(vfsPath, showFolder, seasonFolder, "season.nfo"));
             }
         }
 
@@ -586,7 +625,7 @@ public class ShokoResolveManager
 
         foreach (var symbolicLink in symbolicLinks)
             ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, file.EpisodeList.Select(episode => episode.Id));
-        return (sourceLocation, symbolicLinks);
+        return (sourceLocation, symbolicLinks, nfoFiles: nfoFiles.ToArray());
     }
 
     private static void CleanupDirectoryStructure(string? path)

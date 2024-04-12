@@ -71,9 +71,7 @@ Learn more about Shoko at https://shokoanime.com/.
 
     - [X] Movie library
 
-    - [X] Mixed show/movie library¹.
-
-      ¹ _You need at least one movie in your library for this to currently work as expected. This is an issue with Jellyfin 10.8._
+    - [X] Mixed show/movie library.
 
   - [X] Supports adding local trailers
 
