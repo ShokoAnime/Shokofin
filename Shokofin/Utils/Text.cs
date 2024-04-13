@@ -221,7 +221,7 @@ public static class Text
         => GetTitles(seriesTitles, episodeTitles, null, episodeTitle, DisplayTitleType.SubTitle, metadataLanguage);
 
     public static (string?, string?) GetSeriesTitles(IEnumerable<Title> seriesTitles, string seriesTitle, string metadataLanguage)
-        => GetTitles(seriesTitles, null, seriesTitle, null,  DisplayTitleType.MainTitle, metadataLanguage);
+        => GetTitles(seriesTitles, null, seriesTitle, null, DisplayTitleType.MainTitle, metadataLanguage);
 
     public static (string?, string?) GetMovieTitles(IEnumerable<Title> seriesTitles, IEnumerable<Title> episodeTitles, string seriesTitle, string episodeTitle, string metadataLanguage)
         => GetTitles(seriesTitles, episodeTitles, seriesTitle, episodeTitle, DisplayTitleType.FullTitle, metadataLanguage);
@@ -237,7 +237,7 @@ public static class Text
         );
     }
 
-    public static string? JoinText(IEnumerable<string?> textList)
+    public static string JoinText(IEnumerable<string?> textList)
     {
         var filteredList = textList
             .Where(title => !string.IsNullOrWhiteSpace(title))
@@ -247,7 +247,7 @@ public static class Text
             .ToList();
 
         if (filteredList.Count == 0)
-            return null;
+            return string.Empty;
 
         var index = 1;
         var outputText = filteredList[0];

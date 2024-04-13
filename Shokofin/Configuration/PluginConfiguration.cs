@@ -96,12 +96,7 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool MarkSpecialsWhenGrouped { get; set; }
 
     /// <summary>
-    /// This setting is now deprecated. Use `DescriptionSourceList` instead.
-    /// </summary>
-    public string? DescriptionSource { get; set; }
-
-    /// <summary>
-    /// The collection of providers for descriptions
+    /// The collection of providers for descriptions. Replaces the former `DescriptionSource`.
     /// </summary>
     public TextSourceType[] DescriptionSourceList { get; set; }
 
@@ -296,7 +291,6 @@ public class PluginConfiguration : BasePluginConfiguration
         TitleMainType = DisplayLanguageType.Default;
         TitleAlternateType = DisplayLanguageType.Origin;
         TitleAllowAny = false;
-        DescriptionSource = null;
         DescriptionSourceList = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
         DescriptionSourceOrder = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
         VirtualFileSystem = true;

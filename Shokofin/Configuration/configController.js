@@ -874,7 +874,6 @@ export default function (page) {
 
 function setDescriptionSourcesIntoConfig(form, config) {
     const descriptionElements = form.querySelectorAll(`#descriptionSourceList .chkDescriptionSource`);
-    config.DescriptionSource = "";
     config.DescriptionSourceList = Array.prototype.filter.call(descriptionElements,
         (el) => el.checked)
         .map((el) => el.dataset.descriptionsource);
@@ -885,8 +884,6 @@ function setDescriptionSourcesIntoConfig(form, config) {
 }
 
 async function setDescriptionSourcesFromConfig(form, config) {
-  migrateDescriptionSource(config);
-
   const list = form.querySelector("#descriptionSourceList .checkboxList");
   const listItems = list.querySelectorAll('.listItem');
 
@@ -906,27 +903,4 @@ async function setDescriptionSourcesFromConfig(form, config) {
       list.append(targetElement);
     }
   }
-}
-
-function migrateDescriptionSource(config) {
-    if (config.DescriptionSource !== null) {
-        let checked = config.DescriptionSourceList;
-        let order = config.DescriptionSourceOrder;
-        switch (config.DescriptionSource) {
-            case "OnlyAniDb":
-                checked = ["AniDb"];
-                break;
-            case "OnlyOther":
-                checked = ["TMDB", "TvDb"];
-                order = ["TMDB", "TvDb", "AniDb"]
-                break;
-            case "PreferOther":
-                order = ["TMDB", "TvDb", "AniDb"];
-                break;
-        }
-
-        config.DescriptionSource = "";
-        config.DescriptionSourceList = checked;
-        config.DescriptionSourceOrder = order;
-    }
 }
