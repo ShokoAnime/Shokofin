@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.113",
+                "changelog": "fix: better handling of index number end\n\n- Only add index number end for episodes if it's not the\n  same as the episode number.\n\nrefactor: update signalr events\n\n- Updated the SignalR Connection Manager\n  to support both the new and old signalr events.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.113/shoko_3.0.1.113.zip",
+                "checksum": "6f5479613dfec25fd10d91e40fe57964",
+                "timestamp": "2024-04-13T22:00:58Z"
+            },
+            {
                 "version": "3.0.1.112",
                 "changelog": "fix: prevent error being logged in the console on plugin settings page",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.109/shoko_3.0.1.109.zip",
                 "checksum": "5c47ba81f04a92a71c5095f3a1239ea0",
                 "timestamp": "2024-04-12T21:10:54Z"
-            },
-            {
-                "version": "3.0.1.108",
-                "changelog": "fix: add workaround for mixed library support\n\n- Implement a workaround for using the mixed library with no movies yet,\n  by adding empty 'tvshow.nfo' and 'season.nfo' files within the\n  show/season directories (but only in mixed libraries) so the jellyfin\n  internal logic will assign the directories as a show/season/episode\n  structure. ||This is untested code btw. I'll test tomorrow. Now good night.||\n\nmisc: add issue template (#49) [skip ci]\n\n\nUpdate and rename issue.yml to bug.yml\n\nFinal touches.\n\nAdded request features template\nFixing up the template\nPath fix\nAdd issue templat",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.108/shoko_3.0.1.108.zip",
-                "checksum": "2a156f5c4bdc3a1c6e832a2fd871466b",
-                "timestamp": "2024-04-12T01:13:15Z"
             }
         ]
     }
