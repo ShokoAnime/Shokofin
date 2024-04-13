@@ -903,4 +903,7 @@ async function setDescriptionSourcesFromConfig(form, config) {
       list.append(targetElement);
     }
   }
+  for (const option of list.querySelectorAll(".sortableOption")) {
+    adjustSortableListElement(option)
+  };
 }
