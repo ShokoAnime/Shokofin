@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Shokofin.SignalR.Models;
@@ -5,14 +6,31 @@ namespace Shokofin.SignalR.Models;
 public class SeriesInfoUpdatedEventArgs
 {
     /// <summary>
-    /// Shoko series id.
+    /// The update reason.
     /// </summary>
-    [JsonPropertyName("SeriesID")]
-    public int SeriesId { get; set; }
+    public UpdateReason Reason { get; set; }
 
     /// <summary>
-    /// Shoko group id.
+    /// The provider metadata source.
     /// </summary>
-    [JsonPropertyName("GroupID")]
-    public int GroupId { get; set; }
+    [JsonPropertyName("Source")]
+    public string ProviderName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The provided metadata series id.
+    /// </summary>
+    [JsonPropertyName("SeriesID")]
+    public int ProviderId { get; set; }
+
+    /// <summary>
+    /// Shoko series ids affected by this update.
+    /// </summary>
+    [JsonPropertyName("ShokoSeriesIDs")]
+    public List<int> SeriesIds { get; set; } = new();
+
+    /// <summary>
+    /// Shoko group ids affected by this update.
+    /// </summary>
+    [JsonPropertyName("ShokoGroupIDs")]
+    public List<int> GroupIds { get; set; } = new();
 }

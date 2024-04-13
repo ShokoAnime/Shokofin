@@ -6,6 +6,7 @@ using MediaBrowser.Model.Plugins;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Shokofin.API.Models;
 using Shokofin.Configuration;
 using Shokofin.Resolvers;
 using Shokofin.SignalR.Interfaces;
@@ -15,6 +16,14 @@ namespace Shokofin.SignalR;
 
 public class SignalRConnectionManager : IDisposable
 {
+    private static ComponentVersion? ServerVersion =>
+        Plugin.Instance.Configuration.ServerVersion;
+
+    private static readonly DateTime EventChangedDate = DateTime.Parse("2024-04-01T04:04:00.000Z");
+
+    private static bool UseOlderEvents =>
+        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == "4.2.2.0") || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < EventChangedDate));
+
     private const string HubUrl = "/signalr/aggregate?feeds=shoko";
 
     private readonly ILogger<SignalRConnectionManager> Logger;
@@ -76,10 +85,18 @@ public class SignalRConnectionManager : IDisposable
         connection.On<SeriesInfoUpdatedEventArgs>("ShokoEvent:SeriesUpdated", OnSeriesInfoUpdated);
 
         // Attach file events.
-        connection.On<FileMatchedEventArgs>("ShokoEvent:FileMatched", OnFileMatched);
-        connection.On<FileMovedEventArgs>("ShokoEvent:FileMoved", OnFileMoved);
-        connection.On<FileRenamedEventArgs>("ShokoEvent:FileRenamed", OnFileRenamed);
-        connection.On<FileEventArgs>("ShokoEvent:FileDeleted", OnFileDeleted);
+        if (UseOlderEvents) {
+            connection.On<FileMatchedEventArgsV1>("ShokoEvent:FileMatched", OnFileMatched);
+            connection.On<FileMovedEventArgsV1>("ShokoEvent:FileMoved", OnFileRelocated);
+            connection.On<FileRenamedEventArgsV1>("ShokoEvent:FileRenamed", OnFileRelocated);
+            connection.On<FileEventArgs>("ShokoEvent:FileDeleted", OnFileDeleted);
+        }
+        else {
+            connection.On<FileEventArgs>("ShokoEvent:FileMatched", OnFileMatched);
+            connection.On<FileMovedEventArgs>("ShokoEvent:FileMoved", OnFileRelocated);
+            connection.On<FileRenamedEventArgs>("ShokoEvent:FileRenamed", OnFileRelocated);
+            connection.On<FileEventArgs>("ShokoEvent:FileDeleted", OnFileDeleted);
+        }
 
         try {
             await connection.StartAsync().ConfigureAwait(false);
@@ -181,10 +198,10 @@ public class SignalRConnectionManager : IDisposable
 
     #region File Events
 
-    private void OnFileMatched(FileMatchedEventArgs eventArgs)
+    private void OnFileMatched(IFileEventArgs eventArgs)
     {
         Logger.LogDebug(
-            "File matched; {ImportFolderIdB} {PathB} (File={FileId})",
+            "File matched; {ImportFolderId} {Path} (File={FileId})",
             eventArgs.ImportFolderId,
             eventArgs.RelativePath,
             eventArgs.FileId
@@ -222,13 +239,7 @@ public class SignalRConnectionManager : IDisposable
         // the links broke, and if the newly generated links is not in the list provided by the base items, then remove the broken link.
     }
 
-    private void OnFileMoved(FileMovedEventArgs eventArgs)
-        => OnFileRelocated(eventArgs);
-
-    private void OnFileRenamed(FileRenamedEventArgs eventArgs)
-        => OnFileRelocated(eventArgs);
-
-    private void OnFileDeleted(FileEventArgs eventArgs)
+    private void OnFileDeleted(IFileEventArgs eventArgs)
     {
         Logger.LogDebug(
             "File deleted; {ImportFolderIdB} {PathB} (File={FileId})",
@@ -253,10 +264,14 @@ public class SignalRConnectionManager : IDisposable
     private void OnEpisodeInfoUpdated(EpisodeInfoUpdatedEventArgs eventArgs)
     {
         Logger.LogDebug(
-            "Episode updated. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})",
-            eventArgs.EpisodeId,
-            eventArgs.SeriesId,
-            eventArgs.GroupId
+            "{ProviderName} episode {ProviderId} ({ProviderSeriesId}) dispatched event {UpdateReason}. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})",
+            eventArgs.ProviderName,
+            eventArgs.ProviderId,
+            eventArgs.ProviderSeriesId,
+            eventArgs.Reason,
+            eventArgs.EpisodeIds,
+            eventArgs.SeriesIds,
+            eventArgs.GroupIds
         );
 
         // Refresh all epoisodes and movies linked to the episode.
@@ -265,9 +280,12 @@ public class SignalRConnectionManager : IDisposable
     private void OnSeriesInfoUpdated(SeriesInfoUpdatedEventArgs eventArgs)
     {
         Logger.LogDebug(
-            "Series updated. (Series={SeriesId},Group={GroupId})",
-            eventArgs.SeriesId,
-            eventArgs.GroupId
+            "{ProviderName} series {ProviderId} dispatched event {UpdateReason}. (Series={SeriesId},Group={GroupId})",
+            eventArgs.ProviderName,
+            eventArgs.ProviderId,
+            eventArgs.Reason,
+            eventArgs.SeriesIds,
+            eventArgs.GroupIds
         );
 
         // look up the series/season/movie, then check the media folder they're

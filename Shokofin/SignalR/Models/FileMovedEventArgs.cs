@@ -3,7 +3,7 @@ using Shokofin.SignalR.Interfaces;
 
 namespace Shokofin.SignalR.Models;
 
-public class FileMovedEventArgs : IFileRelocationEventArgs
+public class FileMovedEventArgsV1 : IFileRelocationEventArgs
 {
     /// <summary>
     /// Shoko file id.
@@ -35,5 +35,20 @@ public class FileMovedEventArgs : IFileRelocationEventArgs
     /// The relative path of the old file from the import folder base location.
     /// </summary>
     [JsonPropertyName("OldRelativePath")]
+    public string PreviousRelativePath { get; set; } = string.Empty;
+}
+
+public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
+{
+    /// <summary>
+    /// The ID of the old import folder the event was detected in.
+    /// </summary>
+    /// <value></value>
+    [JsonPropertyName("PreviousImportFolderID")]
+    public int PreviousImportFolderId { get; set; }
+
+    /// <summary>
+    /// The relative path of the old file from the import folder base location.
+    /// </summary>
     public string PreviousRelativePath { get; set; } = string.Empty;
 }
