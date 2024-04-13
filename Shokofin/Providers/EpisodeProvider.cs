@@ -227,9 +227,9 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
             };
         }
 
-        if (file != null) {
+        if (file != null && file.EpisodeList.Count > 1) {
             var episodeNumberEnd = episodeNumber + file.EpisodeList.Count - 1;
-            if (episode.AniDB.EpisodeNumber != episodeNumberEnd)
+            if (episodeNumberEnd != episodeNumber && episode.AniDB.EpisodeNumber != episodeNumberEnd)
                 result.IndexNumberEnd = episodeNumberEnd;
         }
 
