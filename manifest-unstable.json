@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.111",
+                "changelog": "Merge pull request #42 from fearnlj01/config-tweak\n\nAdd sortable checkboxes for description source\nMisc: Implement requested style changes from #42\n\nFix: Ensure description sources sorting direction renders as expected\n\nFix: Settings description tweak\n\nMisc: Migrations begone... Simpler for everyone this way!\n\n\nChore: Remove uneccersary using that snuck in somehow\n\nFix: Avoid requesting the config twice after load...\n\nRefactor: Allows for a partially working settings migration\n\nFix: Change HTML description values to match Enum counterpart\n\nFeat: Implements C# changes for new settings\n\nMisc: minor refactoring\n\nFeat: Add sortable checkboxes for description source\n(Client side only, no settings saved",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.111/shoko_3.0.1.111.zip",
+                "checksum": "4435d62750c4efaf0a74a830fd1f9131",
+                "timestamp": "2024-04-13T21:26:44Z"
+            },
+            {
                 "version": "3.0.1.110",
                 "changelog": "misc: order file list by series id.\n\nfix: fix off-by-one error in GetAttributeValue",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.107/shoko_3.0.1.107.zip",
                 "checksum": "ae397b52e895b1abbef07c84a1ae88bc",
                 "timestamp": "2024-04-11T23:29:04Z"
-            },
-            {
-                "version": "3.0.1.106",
-                "changelog": "fix: add missing episode padding\n\n- Add the missing padding to the episode numbers in the file names\n  for the links inside the VFS. So this change requires a refresh of the\n  library to \"fix\" the VFS, in case it wasn't clear enough already.\n\nfix: we can have season info without a base number\nwithin a show info.\n\nfix: remove the extra logic for tv series,\nsince it was flawed.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.106/shoko_3.0.1.106.zip",
-                "checksum": "1e9054b146efe2f9ea40f580d84cc9ff",
-                "timestamp": "2024-04-11T22:42:30Z"
             }
         ]
     }
