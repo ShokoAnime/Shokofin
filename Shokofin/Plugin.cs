@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
@@ -19,6 +20,8 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     public override Guid Id => Guid.Parse("5216ccbf-d24a-4eb3-8a7e-7da4230b7052");
 
+    public readonly bool CanCreateSymbolicLinks;
+
     private readonly ILogger<Plugin> Logger;
 
     /// <summary>
@@ -33,7 +36,28 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
         VirtualRoot = Path.Combine(applicationPaths.ProgramDataPath, "Shokofin", "VFS");
         Logger = logger;
-        Logger.LogInformation("Virtual File System Location; {Path}", VirtualRoot);
+        CanCreateSymbolicLinks = true;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+            var target = Path.Combine(Path.GetDirectoryName(VirtualRoot)!, "TestTarget.txt");
+            var link = Path.Combine(Path.GetDirectoryName(VirtualRoot)!, "TestLink.txt");
+            try {
+                if (!Directory.Exists(Path.GetDirectoryName(VirtualRoot)!))
+                    Directory.CreateDirectory(Path.GetDirectoryName(VirtualRoot)!);
+                File.Create(target);
+                File.CreateSymbolicLink(link, target);
+            }
+            catch {
+                CanCreateSymbolicLinks = false;
+            }
+            finally {
+                if (File.Exists(link))
+                    File.Delete(link);
+                if (File.Exists(target))
+                    File.Delete(target);
+            }
+        }
+        Logger.LogDebug("Virtual File System Location; {Path}", VirtualRoot);
+        Logger.LogDebug("Can create symbolic links; {Value}", CanCreateSymbolicLinks);
     }
 
     public void OnConfigChanged(object? sender, BasePluginConfiguration e)

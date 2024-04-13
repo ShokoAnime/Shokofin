@@ -639,6 +639,10 @@ export default function (page) {
         else {
             form.querySelector("#ServerVersion").value = "Version N/A";
         }
+        if (!config.CanCreateSymbolicLinks) {
+            form.querySelector("#WindowsSymLinkWarning1").removeAttribute("hidden");
+            form.querySelector("#WindowsSymLinkWarning2").removeAttribute("hidden");
+        }
         if (config.ApiKey) {
             form.querySelector("#Url").setAttribute("disabled", "");
             form.querySelector("#Username").setAttribute("disabled", "");

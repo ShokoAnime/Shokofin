@@ -17,6 +17,13 @@ public class PluginConfiguration : BasePluginConfiguration
     #region Connection
 
     /// <summary>
+    /// Helper for the web ui to show the windows only warning, and to disable
+    /// the VFS by default if we cannot create symbolic links.
+    /// </summary>
+    [XmlIgnore, JsonInclude]
+    public bool CanCreateSymbolicLinks => Plugin.Instance.CanCreateSymbolicLinks;
+
+    /// <summary>
     /// The URL for where to connect to shoko internally.
     /// And externally if no <seealso cref="PublicUrl"/> is set.
     /// </summary>
@@ -293,7 +300,7 @@ public class PluginConfiguration : BasePluginConfiguration
         TitleAllowAny = false;
         DescriptionSourceList = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
         DescriptionSourceOrder = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
-        VirtualFileSystem = true;
+        VirtualFileSystem = CanCreateSymbolicLinks;
         VirtualFileSystemThreads = 10;
         UseGroupsForShows = false;
         SeparateMovies = false;
