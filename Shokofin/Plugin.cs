@@ -43,7 +43,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             try {
                 if (!Directory.Exists(Path.GetDirectoryName(VirtualRoot)!))
                     Directory.CreateDirectory(Path.GetDirectoryName(VirtualRoot)!);
-                File.Create(target);
+                File.WriteAllText(target, "");
                 File.CreateSymbolicLink(link, target);
             }
             catch {
