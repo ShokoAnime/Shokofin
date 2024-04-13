@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.114",
+                "changelog": "misc: add warning for windows users\n\n- Add a warning for windows users that they need to enable dev mode to\n  be allowed to create sym links, along with a link for how to enable\n  it. Also, this warning is only shown if we fail the test to create a\n  sym link at start up.\n\n- Disable the VFS by default if we cannot create sym links.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.114/shoko_3.0.1.114.zip",
+                "checksum": "647df758c777a758c810b5e8d54d2fc9",
+                "timestamp": "2024-04-13T22:46:11Z"
+            },
+            {
                 "version": "3.0.1.113",
                 "changelog": "fix: better handling of index number end\n\n- Only add index number end for episodes if it's not the\n  same as the episode number.\n\nrefactor: update signalr events\n\n- Updated the SignalR Connection Manager\n  to support both the new and old signalr events.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.110/shoko_3.0.1.110.zip",
                 "checksum": "fb5abc01ccafc5b83e96340e057f56c5",
                 "timestamp": "2024-04-12T22:45:41Z"
-            },
-            {
-                "version": "3.0.1.109",
-                "changelog": "misc: add missing TODO and remove trailing spaces\n\nrefactor: move VFS location\n\n- Moved the location of the VFS outside the plugins directory, so it\n  won't be scanned on startup by Jellyfin when it tries to discover\n  the plugins to load. Also, in case it wasn't obvious enough.\n  THIS IS A BREAKIGN CHANGE. Okay? Okay.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.109/shoko_3.0.1.109.zip",
-                "checksum": "5c47ba81f04a92a71c5095f3a1239ea0",
-                "timestamp": "2024-04-12T21:10:54Z"
             }
         ]
     }
