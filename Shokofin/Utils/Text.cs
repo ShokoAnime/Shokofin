@@ -142,29 +142,23 @@ public static class Text
         => GetDescription(show.DefaultSeason);
 
     public static string GetDescription(SeasonInfo season)
-    {
-        Dictionary<TextSourceType, string> descriptions = new() {
+        => GetDescription(new Dictionary<TextSourceType, string>() {
             {TextSourceType.AniDb, season.AniDB.Description ?? string.Empty},
             {TextSourceType.TvDb, season.TvDB?.Description ?? string.Empty},
-        };
-        return GetDescription(descriptions);
-    }
+        });
 
     public static string GetDescription(EpisodeInfo episode)
-    {
-        Dictionary<TextSourceType, string> descriptions = new() {
+        => GetDescription(new Dictionary<TextSourceType, string>() {
             {TextSourceType.AniDb, episode.AniDB.Description ?? string.Empty},
             {TextSourceType.TvDb, episode.TvDB?.Description ?? string.Empty},
-        };
-        return GetDescription(descriptions);
-    }
+        });
 
     public static string GetDescription(IEnumerable<EpisodeInfo> episodeList)
-        => JoinText(episodeList.Select(episode => GetDescription(episode)));
+        => JoinText(episodeList.Select(episode => GetDescription(episode))) ?? string.Empty;
 
     private static string GetDescription(Dictionary<TextSourceType, string> descriptions)
     {
-        string overview = string.Empty;
+        var overview = string.Empty;
 
         var providerOrder = Plugin.Instance.Configuration.DescriptionSourceOrder;
         var providers = Plugin.Instance.Configuration.DescriptionSourceList;
@@ -237,7 +231,7 @@ public static class Text
         );
     }
 
-    public static string JoinText(IEnumerable<string?> textList)
+    public static string? JoinText(IEnumerable<string?> textList)
     {
         var filteredList = textList
             .Where(title => !string.IsNullOrWhiteSpace(title))
@@ -247,7 +241,7 @@ public static class Text
             .ToList();
 
         if (filteredList.Count == 0)
-            return string.Empty;
+            return null;
 
         var index = 1;
         var outputText = filteredList[0];
