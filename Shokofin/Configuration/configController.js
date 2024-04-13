@@ -46,6 +46,56 @@ const Messages = {
 
     // Convert it back into an array.
     return Array.from(filteredSet).sort((a, b) => a - b);
+ }
+
+ function adjustSortableListElement(element) {
+  const btnSortable = element.querySelector(".btnSortable");
+  const inner = btnSortable.querySelector(".material-icons");
+
+  if (element.previousElementSibling) {
+    btnSortable.title = "Up";
+    btnSortable.classList.add("btnSortableMoveUp");
+    inner.classList.add("keyboard_arrow_up");
+
+    btnSortable.classList.remove("btnSortableMoveDown");
+    inner.classList.remove("keyboard_arrow_down");
+  } else {
+    btnSortable.title = "Down";
+    btnSortable.classList.add("btnSortableMoveDown");
+    inner.classList.add("keyboard_arrow_down");
+
+    btnSortable.classList.remove("btnSortableMoveUp");
+    inner.classList.remove("keyboard_arrow_up");
+  }
+}
+
+/** @param {PointerEvent} event */
+function onSortableContainerClick(event) {
+  const parentWithClass = (element, className) => {
+    return (element.parentElement.classList.contains(className)) ? element.parentElement : null;
+  }
+  const btnSortable = parentWithClass(event.target, "btnSortable");
+  if (btnSortable) {
+    const listItem = parentWithClass(btnSortable, "sortableOption");
+    const list = parentWithClass(listItem, "paperList");
+    if (btnSortable.classList.contains("btnSortableMoveDown")) {
+      const next = listItem.nextElementSibling;
+      if (next) {
+        listItem.parentElement.removeChild(listItem);
+        next.parentElement.insertBefore(listItem, next.nextSibling);
+      }
+    } else {
+      const prev = listItem.previousElementSibling;
+      if (prev) {
+        listItem.parentElement.removeChild(listItem);
+        prev.parentElement.insertBefore(listItem, prev);
+      }
+    }
+
+    for (const option of list.querySelectorAll(".sortableOption")) {
+      adjustSortableListElement(option)
+    };
+  }
 }
 
 async function loadUserConfig(form, userId, config) {
@@ -227,7 +277,7 @@ async function defaultSubmit(form) {
         config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
         config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
         config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
-        config.DescriptionSource = form.querySelector("#DescriptionSource").value;
+        setDescriptionSourcesIntoConfig(form, config);
         config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
         config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
         config.SynopsisCleanMiscLines = form.querySelector("#MinimalAniDBDescriptions").checked;
@@ -417,7 +467,7 @@ async function syncSettings(form) {
     config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
     config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
     config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
-    config.DescriptionSource = form.querySelector("#DescriptionSource").value;
+    setDescriptionSourcesIntoConfig(form, config);
     config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
     config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
     config.SynopsisCleanMiscLines = form.querySelector("#MinimalAniDBDescriptions").checked;
@@ -689,6 +739,8 @@ export default function (page) {
         }
     });
 
+    form.querySelector("#descriptionSourceList").addEventListener("click", onSortableContainerClick);
+
     page.addEventListener("viewshow", async function () {
         Dashboard.showLoadingMsg();
         try {
@@ -707,7 +759,7 @@ export default function (page) {
             form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
             form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null ? config.TitleAddForMultipleEpisodes : true;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
-            form.querySelector("#DescriptionSource").value = config.DescriptionSource;
+            await setDescriptionSourcesFromConfig(form, config);
             form.querySelector("#CleanupAniDBDescriptions").checked = config.SynopsisCleanMultiEmptyLines || config.SynopsisCleanLinks;
             form.querySelector("#MinimalAniDBDescriptions").checked = config.SynopsisRemoveSummary || config.SynopsisCleanMiscLines;
 
@@ -818,4 +870,40 @@ export default function (page) {
         }
         return false;
     });
+}
+
+function setDescriptionSourcesIntoConfig(form, config) {
+    const descriptionElements = form.querySelectorAll(`#descriptionSourceList .chkDescriptionSource`);
+    config.DescriptionSourceList = Array.prototype.filter.call(descriptionElements,
+        (el) => el.checked)
+        .map((el) => el.dataset.descriptionsource);
+
+    config.DescriptionSourceOrder = Array.prototype.map.call(descriptionElements,
+        (el) => el.dataset.descriptionsource
+    );
+}
+
+async function setDescriptionSourcesFromConfig(form, config) {
+  const list = form.querySelector("#descriptionSourceList .checkboxList");
+  const listItems = list.querySelectorAll('.listItem');
+
+  for (const item of listItems) {
+    const source = item.dataset.descriptionsource;
+    if (config.DescriptionSourceList.includes(source)) {
+      item.querySelector(".chkDescriptionSource").checked = true;
+    }
+    if (config.DescriptionSourceOrder.includes(source)) {
+      list.removeChild(item); // This is safe to be removed as we can re-add it in the next loop
+    }
+  }
+
+  for (const source of config.DescriptionSourceOrder) {
+    const targetElement = Array.prototype.find.call(listItems, (el) => el.dataset.descriptionsource === source);
+    if (targetElement) {
+      list.append(targetElement);
+    }
+  }
+  for (const option of list.querySelectorAll(".sortableOption")) {
+    adjustSortableListElement(option)
+  };
 }

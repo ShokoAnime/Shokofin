@@ -96,9 +96,14 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool MarkSpecialsWhenGrouped { get; set; }
 
     /// <summary>
-    /// The description source. This will be replaced in the future.
+    /// The collection of providers for descriptions. Replaces the former `DescriptionSource`.
     /// </summary>
-    public TextSourceType DescriptionSource { get; set; }
+    public TextSourceType[] DescriptionSourceList { get; set; }
+
+    /// <summary>
+    /// The prioritisation order of source providers for description sources.
+    /// </summary>
+    public TextSourceType[] DescriptionSourceOrder { get; set; }
 
     /// <summary>
     /// Clean up links within the AniDB description for entries.
@@ -286,7 +291,8 @@ public class PluginConfiguration : BasePluginConfiguration
         TitleMainType = DisplayLanguageType.Default;
         TitleAlternateType = DisplayLanguageType.Origin;
         TitleAllowAny = false;
-        DescriptionSource = TextSourceType.Default;
+        DescriptionSourceList = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
+        DescriptionSourceOrder = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
         VirtualFileSystem = true;
         VirtualFileSystemThreads = 10;
         UseGroupsForShows = false;
