@@ -1,54 +1,93 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Shokofin.SignalR.Interfaces;
 
 namespace Shokofin.SignalR.Models;
 
-public class FileMovedEventArgsV1 : IFileRelocationEventArgs
-{
-    /// <summary>
-    /// Shoko file id.
-    /// </summary>
-    [JsonPropertyName("FileID")]
-    public int FileId { get; set; }
-
-    /// <summary>
-    /// The ID of the new import folder the event was detected in.
-    /// </summary>
-    /// <value></value>
-    [JsonPropertyName("NewImportFolderID")]
-    public int ImportFolderId { get; set; }
-
-    /// <summary>
-    /// The ID of the old import folder the event was detected in.
-    /// </summary>
-    /// <value></value>
-    [JsonPropertyName("OldImportFolderID")]
-    public int PreviousImportFolderId { get; set; }
-
-    /// <summary>
-    /// The relative path of the new file from the import folder base location.
-    /// </summary>
-    [JsonPropertyName("NewRelativePath")]
-    public string RelativePath { get; set; } = string.Empty;
-
-    /// <summary>
-    /// The relative path of the old file from the import folder base location.
-    /// </summary>
-    [JsonPropertyName("OldRelativePath")]
-    public string PreviousRelativePath { get; set; } = string.Empty;
-}
 
 public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
 {
-    /// <summary>
-    /// The ID of the old import folder the event was detected in.
-    /// </summary>
-    /// <value></value>
-    [JsonPropertyName("PreviousImportFolderID")]
+    /// <inheritdoc/>
+    [JsonInclude, JsonPropertyName("PreviousImportFolderID")]
     public int PreviousImportFolderId { get; set; }
 
     /// <summary>
-    /// The relative path of the old file from the import folder base location.
+    /// The previous relative path with no leading slash and directory
+    /// seperators used on the Shoko side.
     /// </summary>
-    public string PreviousRelativePath { get; set; } = string.Empty;
+    [JsonInclude, JsonPropertyName("PreviousRelativePath")]
+    private string PreviousInternalPath  { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Cached path for later re-use.
+    /// </summary>
+    [JsonIgnore]
+    private string? PreviousCachedPath { get; set; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public string PreviousRelativePath =>
+        PreviousCachedPath ??= System.IO.Path.DirectorySeparatorChar + PreviousInternalPath
+            .Replace('/', System.IO.Path.DirectorySeparatorChar)
+            .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+
+    public class V0 : IFileRelocationEventArgs
+    {
+        /// <inheritdoc/>
+        [JsonInclude, JsonPropertyName("FileID")]
+        public int FileId { get; set; }
+
+        /// <inheritdoc/>
+        [JsonInclude, JsonPropertyName("NewImportFolderID")]
+        public int ImportFolderId { get; set; }
+
+        /// <inheritdoc/>
+        [JsonInclude, JsonPropertyName("OldImportFolderID")]
+        public int PreviousImportFolderId { get; set; }
+
+        /// <summary>
+        /// The relative path with no leading slash and directory seperators used on
+        /// the Shoko side.
+        /// </summary>
+        [JsonInclude, JsonPropertyName("RelativePath")]
+        private string InternalPath  { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Cached path for later re-use.
+        /// </summary>
+        [JsonIgnore]
+        private string? CachedPath { get; set; }
+
+        /// <inheritdoc/>
+        [JsonIgnore]
+        public string RelativePath =>
+            CachedPath ??= System.IO.Path.DirectorySeparatorChar + InternalPath
+                .Replace('/', System.IO.Path.DirectorySeparatorChar)
+                .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+
+
+        /// <summary>
+        /// The previous relative path with no leading slash and directory
+        /// seperators used on the Shoko side.
+        /// </summary>
+        [JsonInclude, JsonPropertyName("OldRelativePath")]
+        private string PreviousInternalPath  { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Cached path for later re-use.
+        /// </summary>
+        [JsonIgnore]
+        private string? PreviousCachedPath { get; set; }
+
+        /// <inheritdoc/>
+        [JsonIgnore]
+        public string PreviousRelativePath =>
+            PreviousCachedPath ??= System.IO.Path.DirectorySeparatorChar + PreviousInternalPath
+                .Replace('/', System.IO.Path.DirectorySeparatorChar)
+                .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+
+        /// <inheritdoc/>
+        [JsonIgnore]
+        public List<IFileEventArgs.FileCrossReference> CrossReferences => new();
+    }
 }

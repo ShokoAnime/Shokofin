@@ -17,7 +17,9 @@ public interface IFileEventArgs
     int ImportFolderId { get; }
 
     /// <summary>
-    /// The relative path of the new file from the import folder base location.
+    /// The relative path from the base of the <see cref="ImportFolder"/> to
+    /// where the <see cref="File"/> lies, with a leading slash applied at
+    /// the start and normalised for the local system.
     /// </summary>
     string RelativePath { get; }
 

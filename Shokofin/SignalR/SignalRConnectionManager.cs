@@ -85,17 +85,15 @@ public class SignalRConnectionManager : IDisposable
         connection.On<SeriesInfoUpdatedEventArgs>("ShokoEvent:SeriesUpdated", OnSeriesInfoUpdated);
 
         // Attach file events.
+        connection.On<FileEventArgs>("ShokoEvent:FileMatched", OnFileMatched);
+        connection.On<FileEventArgs>("ShokoEvent:FileDeleted", OnFileDeleted);
         if (UseOlderEvents) {
-            connection.On<FileMatchedEventArgsV1>("ShokoEvent:FileMatched", OnFileMatched);
-            connection.On<FileMovedEventArgsV1>("ShokoEvent:FileMoved", OnFileRelocated);
-            connection.On<FileRenamedEventArgsV1>("ShokoEvent:FileRenamed", OnFileRelocated);
-            connection.On<FileEventArgs>("ShokoEvent:FileDeleted", OnFileDeleted);
+            connection.On<FileMovedEventArgs.V0>("ShokoEvent:FileMoved", OnFileRelocated);
+            connection.On<FileRenamedEventArgs.V0>("ShokoEvent:FileRenamed", OnFileRelocated);
         }
         else {
-            connection.On<FileEventArgs>("ShokoEvent:FileMatched", OnFileMatched);
             connection.On<FileMovedEventArgs>("ShokoEvent:FileMoved", OnFileRelocated);
             connection.On<FileRenamedEventArgs>("ShokoEvent:FileRenamed", OnFileRelocated);
-            connection.On<FileEventArgs>("ShokoEvent:FileDeleted", OnFileDeleted);
         }
 
         try {
