@@ -264,7 +264,6 @@ async function signalrDisconnect() {
 
 async function defaultSubmit(form) {
     let config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
-    debug_load(config);
 
     if (config.ApiKey !== "") {
         let publicUrl = form.querySelector("#PublicUrl").value;
@@ -275,7 +274,7 @@ async function defaultSubmit(form) {
         const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
         // Metadata settings
-        ["Main", "Alternate"].forEach((t) => setTitleIntoConfig(form, t, config));
+        ["Main", "Alternate"].forEach((type) => setTitleIntoConfig(form, type, config));
         config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
         config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
         config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
@@ -455,7 +454,6 @@ async function resetConnectionSettings(form) {
 
 async function syncSettings(form) {
     const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
-    debug_load(config);
     let publicUrl = form.querySelector("#PublicUrl").value;
     if (publicUrl.endsWith("/")) {
         publicUrl = publicUrl.slice(0, -1);
@@ -464,7 +462,10 @@ async function syncSettings(form) {
     const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
     // Metadata settings
-    ["Main", "Alternate"].forEach((t) => setTitleIntoConfig(form, t, config));
+    ["Main", "Alternate"].forEach((type) => {
+        setTitleIntoConfig(form, type, config)
+        config[`Title${type}Override`] = form.querySelector(`#Title${type}Override`).checked;
+    });
     config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
     config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
     config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
@@ -743,13 +744,13 @@ export default function (page) {
     });
 
     Array.prototype.forEach.call(
-        form.querySelectorAll("#descriptionSourceList, #mainTitleSourceList, #alternateTitleSourceList"),
+        form.querySelectorAll("#descriptionSourceList, #TitleMainList, #TitleAlternateList"),
         (el) => el.addEventListener("click", onSortableContainerClick)
     );
 
-    ["Main", "Alternate"].forEach((t) => {
-        const showSettings = form.querySelector(`#show${t}TitleAdvancedSettings`);
-        const settingsList = form.querySelector(`#${t.toLowerCase()}TitleSourceList`);
+    ["Main", "Alternate"].forEach((type) => {
+        const showSettings = form.querySelector(`#Title${type}Override`);
+        const settingsList = form.querySelector(`#Title${type}List`);
 
         showSettings.addEventListener("change", () => {
             if (showSettings.checked) {
@@ -765,7 +766,6 @@ export default function (page) {
         Dashboard.showLoadingMsg();
         try {
             const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
-            debug_load(config);
             const signalrStatus = await getSignalrStatus();
             const users = await ApiClient.getUsers();
 
@@ -778,14 +778,13 @@ export default function (page) {
             ["Main", "Alternate"].forEach((t) => {
                 setTitleFromConfig(form, t, config);
 
-                const showSettings = form.querySelector(`#show${t}TitleAdvancedSettings`);
-                const settingsList = form.querySelector(`#${t.toLowerCase()}TitleSourceList`);
+                const showSettings = form.querySelector(`#Title${t}Override`);
+                const settingsList = form.querySelector(`#Title${t}List`);
 
-                showSettings.checked = config[`Show${t}TitleAdvancedSettings`];
+                showSettings.checked = config[`Title${t}Override`];
                 if (!showSettings.checked)
                     settingsList.setAttribute("hidden", "");
             });
-            //using the values now set in the DOM... set the visibility
             form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
             form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null ? config.TitleAddForMultipleEpisodes : true;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
@@ -944,14 +943,14 @@ function setDescriptionSourcesFromConfig(form, config) {
  * @param {"Main"|"Alternate"} type
  */
 function setTitleIntoConfig(form, type, config) {
-    const titleElements = form.querySelectorAll(`#${type.toLowerCase()}TitleSourceList .chkTitleSource`);
+    const titleElements = form.querySelectorAll(`#Title${type}List .chkTitleSource`);
     const getSettingName = (el) => `${el.dataset.titleprovider}_${el.dataset.titlestyle}`;
 
-    config[`${type}TitleList`] = Array.prototype.filter.call(titleElements,
+    config[`Title${type}List`] = Array.prototype.filter.call(titleElements,
         (el) => el.checked)
         .map((el) => getSettingName(el));
     
-    config[`${type}TitleOrder`] = Array.prototype.map.call(descriptionElements,
+    config[`Title${type}Order`] = Array.prototype.map.call(titleElements,
         (el) => getSettingName(el)
     );
 }
@@ -961,20 +960,20 @@ function setTitleIntoConfig(form, type, config) {
  * @param {"Main"|"Alternate"} type
  */
 function setTitleFromConfig(form, type, config) {
-    const list = form.querySelector(`#${type.toLowerCase()}TitleSourceList .checkboxList`);
+    const list = form.querySelector(`#Title${type}List .checkboxList`);
     const listItems = list.querySelectorAll('.listItem');
 
     const getSettingName = (el) => `${el.dataset.titleprovider}_${el.dataset.titlestyle}`;
 
     for (const item of listItems) {
         const setting = getSettingName(item);
-        if (config[`${type}TitleList`].includes(setting))
+        if (config[`Title${type}List`].includes(setting))
             item.querySelector(".chkTitleSource").checked = true;
-        if (config[`${type}TitleOrder`].includes(setting))
+        if (config[`Title${type}Order`].includes(setting))
             list.removeChild(item);
     }
 
-    for (const setting of config[`${type}TitleOrder`]) {
+    for (const setting of config[`Title${type}Order`]) {
         const targetElement = Array.prototype.find.call(
             listItems,
             (el) => getSettingName(el) === setting
@@ -986,14 +985,4 @@ function setTitleFromConfig(form, type, config) {
     for (const option of list.querySelectorAll(".sortableOption")) {
         adjustSortableListElement(option)
     }
-}
-
-
-function debug_load(config) {
-    config.ShowMainTitleAdvancedSettings = false;
-    config.ShowAlternateTitleAdvancedSettings = true;
-    config.MainTitleList = [];
-    config.MainTitleOrder = [];
-    config.AlternateTitleList = [];
-    config.AlternateTitleOrder = [];
 }

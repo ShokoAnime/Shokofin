@@ -116,6 +116,15 @@ public static class Text
         /// Use the main title for the series.
         /// </summary>
         Main = 5,
+
+        // this is just temporary to allow the plugin to compile and show the settings page
+        Shoko_Default = 6,
+        AniDb_Default = 7,
+        AniDb_LibraryLanguage = 8,
+        AniDb_CountryOfOrigin = 9,
+        TMDB_Default = 10,
+        TMDB_LibraryLanguage = 11,
+        TMDB_CountryOfOrigin = 12,
     }
 
     /// <summary>

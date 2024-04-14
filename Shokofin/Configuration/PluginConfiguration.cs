@@ -9,7 +9,7 @@ using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
 using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
-using TextSourceType = Shokofin.Utils.Text.TextSourceType;
+using System;
 
 namespace Shokofin.Configuration;
 
@@ -75,15 +75,41 @@ public class PluginConfiguration : BasePluginConfiguration
 
     #region Metadata
 
+    [Obsolete("Being deprecated...")]
+    public DisplayLanguageType  TitleMainType { get; set; }
+
+    [Obsolete("Being deprecated...")]
+    public DisplayLanguageType  TitleAlternateType { get; set; }
+
+    /// <summary>
+    /// Determines if we use the overriden settings for how the main title is fetched for entries.
+    /// </summary>
+    public bool TitleMainOverride { get; set; }
+
     /// <summary>
     /// Determines how we'll be selecting our main title for entries.
     /// </summary>
-    public DisplayLanguageType TitleMainType { get; set; }
+    public DisplayLanguageType[] TitleMainList { get; set; }
 
     /// <summary>
-    /// Determines how we'll be selecting the alternate title for our entries.
+    /// The order of which we will be selecting our main title for entries.
     /// </summary>
-    public DisplayLanguageType TitleAlternateType { get; set; }
+    public DisplayLanguageType[] TitleMainOrder { get; set; }
+
+    /// <summary>
+    /// Determines if we use the overriden settings for how the alternate title is fetched for entries.
+    /// </summary>
+    public bool TitleAlternateOverride { get; set; }
+
+    /// <summary>
+    /// Determines how we'll be selecting our alternate title for entries.
+    /// </summary>
+    public DisplayLanguageType[] TitleAlternateList { get; set; }
+
+    /// <summary>
+    /// The order of which we will be selecting our alternate title for entries.
+    /// </summary>
+    public DisplayLanguageType[] TitleAlternateOrder { get; set; }
 
     /// <summary>
     /// Allow choosing any title in the selected language if no official
@@ -296,11 +322,21 @@ public class PluginConfiguration : BasePluginConfiguration
         SynopsisCleanMultiEmptyLines = true;
         AddAniDBId = true;
         AddTMDBId = true;
+        TitleMainOverride = false;
+        TitleMainOrder = new[] { 
+            DisplayLanguageType.Shoko_Default,
+            DisplayLanguageType.AniDb_Default, DisplayLanguageType.AniDb_LibraryLanguage, DisplayLanguageType.AniDb_CountryOfOrigin,
+            DisplayLanguageType.TMDB_Default, DisplayLanguageType.TMDB_LibraryLanguage, DisplayLanguageType.TMDB_CountryOfOrigin
+        };
+        TitleMainList = Array.Empty<DisplayLanguageType>();
+        TitleAlternateOverride = false;
+        TitleAlternateOrder = TitleMainOrder;
+        TitleAlternateList = Array.Empty<DisplayLanguageType>();
         TitleMainType = DisplayLanguageType.Default;
         TitleAlternateType = DisplayLanguageType.Origin;
         TitleAllowAny = false;
         DescriptionSourceList = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
-        DescriptionSourceOrder = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
+        DescriptionSourceOrder = DescriptionSourceList;
         VirtualFileSystem = CanCreateSymbolicLinks;
         VirtualFileSystemThreads = 4;
         UseGroupsForShows = false;
