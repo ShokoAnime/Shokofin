@@ -25,7 +25,7 @@ public class FileRenamedEventArgs : FileEventArgs, IFileRelocationEventArgs
 
     /// <inheritdoc/>
     [JsonIgnore]
-    public string PreviousRelativePath => RelativePath[^FileName.Length] + PreviousFileName;
+    public string PreviousRelativePath => RelativePath[..^FileName.Length] + PreviousFileName;
 
     public class V0 : IFileRelocationEventArgs
     {
