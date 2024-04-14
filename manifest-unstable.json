@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.119",
+                "changelog": "fix: fix renamed event args previous relation path\n\nrefactor: split up resolve methods [skip ci]\n\n- Split up the resolver manager methods so the individual parts\n  can be used by the signalr connection manager in the future.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.119/shoko_3.0.1.119.zip",
+                "checksum": "ce399e5cba039b8be006c6104002d009",
+                "timestamp": "2024-04-14T22:11:43Z"
+            },
+            {
                 "version": "3.0.1.118",
                 "changelog": "refactor: more changes to signalr models\n\n- Another overhaul of the SingalR models, this time removing\n  an (now) unneeded event model, and also (hopefully) correcting the\n  relative paths to use the correct directory separators for the local\n  os environment and not the environment Shoko Server is running in.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.115/shoko_3.0.1.115.zip",
                 "checksum": "0d701d7641ef938197b631b3ceaa2101",
                 "timestamp": "2024-04-13T23:14:19Z"
-            },
-            {
-                "version": "3.0.1.114",
-                "changelog": "misc: add warning for windows users\n\n- Add a warning for windows users that they need to enable dev mode to\n  be allowed to create sym links, along with a link for how to enable\n  it. Also, this warning is only shown if we fail the test to create a\n  sym link at start up.\n\n- Disable the VFS by default if we cannot create sym links.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.114/shoko_3.0.1.114.zip",
-                "checksum": "647df758c777a758c810b5e8d54d2fc9",
-                "timestamp": "2024-04-13T22:46:11Z"
             }
         ]
     }
