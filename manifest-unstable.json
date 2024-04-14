@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.116",
+                "changelog": "chore: cleanup js in settings page (#51)\n\nNow matches revam\u2122 formatting standard",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.116/shoko_3.0.1.116.zip",
+                "checksum": "946de3d379dee74db88deef64d7531f8",
+                "timestamp": "2024-04-14T10:12:21Z"
+            },
+            {
                 "version": "3.0.1.115",
                 "changelog": "fix: fix sym link test",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.112/shoko_3.0.1.112.zip",
                 "checksum": "41712fea39e3dea10c3004de0ae10cce",
                 "timestamp": "2024-04-13T21:40:13Z"
-            },
-            {
-                "version": "3.0.1.111",
-                "changelog": "Merge pull request #42 from fearnlj01/config-tweak\n\nAdd sortable checkboxes for description source\nMisc: Implement requested style changes from #42\n\nFix: Ensure description sources sorting direction renders as expected\n\nFix: Settings description tweak\n\nMisc: Migrations begone... Simpler for everyone this way!\n\n\nChore: Remove uneccersary using that snuck in somehow\n\nFix: Avoid requesting the config twice after load...\n\nRefactor: Allows for a partially working settings migration\n\nFix: Change HTML description values to match Enum counterpart\n\nFeat: Implements C# changes for new settings\n\nMisc: minor refactoring\n\nFeat: Add sortable checkboxes for description source\n(Client side only, no settings saved",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.111/shoko_3.0.1.111.zip",
-                "checksum": "4435d62750c4efaf0a74a830fd1f9131",
-                "timestamp": "2024-04-13T21:26:44Z"
             }
         ]
     }
