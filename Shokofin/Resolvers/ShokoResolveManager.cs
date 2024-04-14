@@ -227,6 +227,9 @@ public class ShokoResolveManager
                 if (!mediaConfig.IsVirtualFileSystemEnabled)
                     return null;
 
+                if (!Plugin.Instance.CanCreateSymbolicLinks)
+                    throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
+
                 // Check if we should introduce the VFS for the media folder.
                 var start = DateTime.UtcNow;
                 var allPaths = FileSystem.GetFilePaths(mediaFolder.Path, true)
@@ -455,7 +458,7 @@ public class ShokoResolveManager
                         Directory.CreateDirectory(nfoDirectory);
 
                     if (!File.Exists(nfoFile)) {
-                        File.WriteAllText(nfoFile, "");
+                        File.WriteAllText(nfoFile, string.Empty);
                     }
                     else {
                         skippedNfo++;

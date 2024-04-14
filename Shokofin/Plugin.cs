@@ -20,6 +20,9 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     public override Guid Id => Guid.Parse("5216ccbf-d24a-4eb3-8a7e-7da4230b7052");
 
+    /// <summary>
+    /// Indicates that we can create symbolic links.
+    /// </summary>
     public readonly bool CanCreateSymbolicLinks;
 
     private readonly ILogger<Plugin> Logger;
@@ -43,7 +46,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             try {
                 if (!Directory.Exists(Path.GetDirectoryName(VirtualRoot)!))
                     Directory.CreateDirectory(Path.GetDirectoryName(VirtualRoot)!);
-                File.WriteAllText(target, "");
+                File.WriteAllText(target, string.Empty);
                 File.CreateSymbolicLink(link, target);
             }
             catch {
