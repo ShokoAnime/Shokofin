@@ -208,6 +208,13 @@ public class ShokoResolveManager
 
     #region Generate Structure
 
+    public IReadOnlyList<(MediaFolderConfiguration config, Folder mediaFolder)> GetAvailableMediaFolders()
+        => Plugin.Instance.Configuration.MediaFolders
+            .Where(mediaFolder => mediaFolder.IsMapped && mediaFolder.IsFileEventsEnabled)
+            .Select(config => (config,  mediaFolder: LibraryManager.GetItemById(config.MediaFolderId) as Folder))
+            .OfType<(MediaFolderConfiguration config, Folder mediaFolder)>()
+            .ToList();
+
     /// <summary>
     /// Generates the VFS structure if the VFS is enabled globally or on the
     /// <paramref name="mediaFolder"/>.
@@ -349,17 +356,10 @@ public class ShokoResolveManager
 
     private async Task GenerateSymbolicLinks(Folder mediaFolder, IEnumerable<(string sourceLocation, string fileId, string seriesId)> files)
     {
-        var start = DateTime.UtcNow;
-        var skippedLinks = 0;
-        var fixedLinks = 0;
-        var subtitles = 0;
-        var fixedSubtitles = 0;
-        var skippedSubtitles = 0;
-        var skippedNfo = 0;
+        var result = new LinkGenerationResult();
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
-        var allNfoFiles = new HashSet<string>();
-        var allPathsForVFS = new ConcurrentBag<(string sourceLocation, string symbolicLink)>();
+        var allPathsForVFS = new ConcurrentBag<string>();
         var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VirtualFileSystemThreads);
         await Task.WhenAll(files.Select(async (tuple) => {
             await semaphore.WaitAsync().ConfigureAwait(false);
@@ -367,103 +367,9 @@ public class ShokoResolveManager
             try {
                 // Skip any source files we weren't meant to have in the library.
                 var (sourceLocation, symbolicLinks, nfoFiles) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
-                if (string.IsNullOrEmpty(sourceLocation))
-                    return;
-
-                var sourcePrefix = Path.GetFileNameWithoutExtension(sourceLocation);
-                var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
-                var subtitleLinks = FindSubtitlesForPath(sourceLocation);
-                foreach (var symbolicLink in symbolicLinks) {
-                    var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
-                    if (!Directory.Exists(symbolicDirectory))
-                        Directory.CreateDirectory(symbolicDirectory);
-
-                    allPathsForVFS.Add((sourceLocation, symbolicLink));
-                    if (!File.Exists(symbolicLink)) {
-                        Logger.LogDebug("Linking {Link} → {LinkTarget}", symbolicLink, sourceLocation);
-                        File.CreateSymbolicLink(symbolicLink, sourceLocation);
-                    }
-                    else {
-                        var shouldFix = false;
-                        try {
-                            var nextTarget = File.ResolveLinkTarget(symbolicLink, false);
-                            if (!string.Equals(sourceLocation, nextTarget?.FullName)) {
-                                shouldFix = true;
-
-                                Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
-                            }
-                        }
-                        catch (Exception ex) {
-                            Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link}", symbolicLink);
-                            shouldFix = true;
-                        }
-                        if (shouldFix) {
-                            File.Delete(symbolicLink);
-                            File.CreateSymbolicLink(symbolicLink, sourceLocation);
-                            fixedLinks++;
-                        }
-                        else {
-                            skippedLinks++;
-                        }
-                    }
-
-                    if (subtitleLinks.Count > 0) {
-                        var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
-                        foreach (var subtitleSource in subtitleLinks) {
-                            var extName = subtitleSource[sourcePrefixLength..];
-                            var subtitleLink = Path.Combine(symbolicDirectory, symbolicName + extName);
-
-                            subtitles++;
-                            allPathsForVFS.Add((subtitleSource, subtitleLink));
-                            if (!File.Exists(subtitleLink)) {
-                                Logger.LogDebug("Linking {Link} → {LinkTarget}", subtitleLink, subtitleSource);
-                                File.CreateSymbolicLink(subtitleLink, subtitleSource);
-                            }
-                            else {
-                                var shouldFix = false;
-                                try {
-                                    var nextTarget = File.ResolveLinkTarget(subtitleLink, false);
-                                    if (!string.Equals(subtitleSource, nextTarget?.FullName)) {
-                                        shouldFix = true;
-
-                                        Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", subtitleLink, subtitleSource, nextTarget?.FullName);
-                                    }
-                                }
-                                catch (Exception ex) {
-                                    Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link} for {LinkTarget}", subtitleLink, subtitleSource);
-                                    shouldFix = true;
-                                }
-                                if (shouldFix) {
-                                    File.Delete(subtitleLink);
-                                    File.CreateSymbolicLink(subtitleLink, subtitleSource);
-                                    fixedSubtitles++;
-                                }
-                                else {
-                                    skippedSubtitles++;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // TODO: Remove these two hacks once we have proper support for adding multiple series at once.
-                foreach (var nfoFile in nfoFiles)
-                {
-                    if (allNfoFiles.Contains(nfoFile))
-                        continue;
-                    allNfoFiles.Add(nfoFile);
-
-                    var nfoDirectory = Path.GetDirectoryName(nfoFile)!;
-                    if (!Directory.Exists(nfoDirectory))
-                        Directory.CreateDirectory(nfoDirectory);
-
-                    if (!File.Exists(nfoFile)) {
-                        File.WriteAllText(nfoFile, string.Empty);
-                    }
-                    else {
-                        skippedNfo++;
-                    }
-
+                var subResult = GenerateSymbolicLink(sourceLocation, symbolicLinks, nfoFiles, allPathsForVFS);
+                lock (semaphore) {
+                    result += subResult;
                 }
             }
             finally {
@@ -472,63 +378,19 @@ public class ShokoResolveManager
         }))
             .ConfigureAwait(false);
 
-        var removedLinks = 0;
-        var removedSubtitles = 0;
-        var removedNfo = 0;
-        var toBeRemoved = FileSystem.GetFilePaths(vfsPath, true)
-            .Select(path => (path, extName: Path.GetExtension(path)))
-            .Where(tuple => _namingOptions.VideoFileExtensions.Contains(tuple.extName) || _namingOptions.SubtitleFileExtensions.Contains(tuple.extName) || tuple.extName == ".nfo")
-            .ExceptBy(allPathsForVFS.Select(tuple => tuple.symbolicLink).ToHashSet(), tuple => tuple.path)
-            .ExceptBy(allNfoFiles, tuple => tuple.path)
-            .ToList();
-        foreach (var (symbolicLink, extName) in toBeRemoved) {
-            // Continue in case we already removed the (subtitle) file.
-            if (!File.Exists(symbolicLink))
-                continue;
-
-            File.Delete(symbolicLink);
-
-            // Stats tracking.
-            if (_namingOptions.VideoFileExtensions.Contains(extName)) {
-                var subtitleLinks = _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(symbolicLink)) ? FindSubtitlesForPath(symbolicLink) : Array.Empty<string>();
-
-                removedLinks++;
-                foreach (var subtitleLink in subtitleLinks) {
-                    removedSubtitles++;
-                    File.Delete(symbolicLink);
-                }
-            }
-            else if (extName == ".nfo") {
-                removedNfo++;
-            }
-            else {
-                removedSubtitles++;
-            }
-
-            CleanupDirectoryStructure(symbolicLink);
-        }
-
-        var timeSpent = DateTime.UtcNow - start;
-        Logger.LogInformation(
-            "Created {CreatedMedia} ({CreatedSubtitles},{CreatedNFO}), fixed {FixedMedia} ({FixedSubtitles}), skipped {SkippedMedia} ({SkippedSubtitles},{SkippedNFO}), and removed {RemovedMedia} ({RemovedSubtitles},{RemovedNFO}) symbolic links in media folder at {Path} in {TimeSpan}",
-            allPathsForVFS.Count - skippedLinks - fixedLinks - subtitles,
-            subtitles - fixedSubtitles - skippedSubtitles,
-            allNfoFiles.Count - skippedNfo,
-            fixedLinks,
-            fixedSubtitles,
-            skippedLinks,
-            skippedSubtitles,
-            skippedNfo,
-            removedLinks,
-            removedSubtitles,
-            removedNfo,
-            mediaFolder.Path,
-            timeSpent
-        );
+        result += CleanupStructure(vfsPath, allPathsForVFS);
+        result.Print(mediaFolder, Logger);
     }
 
     // Note: Out of the 14k entries in my test shoko database, then only **319** entries have a title longer than 100 chacters.
     private const int NameCutOff = 64;
+
+    public async Task<(string sourceLocation, string[] symbolicLinks, string[] nfoFiles)> GenerateLocationsForFile(Folder mediaFolder, string sourceLocation, string fileId, string seriesId)
+    {
+        var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
+        var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
+        return await GenerateLocationsForFile(vfsPath, collectionType, sourceLocation, fileId, seriesId);
+    }
 
     private async Task<(string sourceLocation, string[] symbolicLinks, string[] nfoFiles)> GenerateLocationsForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId)
     {
@@ -630,6 +492,155 @@ public class ShokoResolveManager
         foreach (var symbolicLink in symbolicLinks)
             ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, file.EpisodeList.Select(episode => episode.Id));
         return (sourceLocation, symbolicLinks, nfoFiles: nfoFiles.ToArray());
+    }
+
+
+    public LinkGenerationResult GenerateSymbolicLinks(string? sourceLocation, string[] symbolicLinks, string[] nfoFiles)
+        => GenerateSymbolicLink(sourceLocation, symbolicLinks, nfoFiles, new());
+
+    private LinkGenerationResult GenerateSymbolicLink(string? sourceLocation, string[] symbolicLinks, string[] nfoFiles, ConcurrentBag<string> allPathsForVFS)
+    {
+        var result = new LinkGenerationResult();
+        if (string.IsNullOrEmpty(sourceLocation))
+            return result;
+
+        var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
+        var subtitleLinks = FindSubtitlesForPath(sourceLocation);
+        foreach (var symbolicLink in symbolicLinks) {
+            var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
+            if (!Directory.Exists(symbolicDirectory))
+                Directory.CreateDirectory(symbolicDirectory);
+
+            allPathsForVFS.Add(symbolicLink);
+            if (!File.Exists(symbolicLink)) {
+                result.CreatedVideos++;
+                Logger.LogDebug("Linking {Link} → {LinkTarget}", symbolicLink, sourceLocation);
+                File.CreateSymbolicLink(symbolicLink, sourceLocation);
+            }
+            else {
+                var shouldFix = false;
+                try {
+                    var nextTarget = File.ResolveLinkTarget(symbolicLink, false);
+                    if (!string.Equals(sourceLocation, nextTarget?.FullName)) {
+                        shouldFix = true;
+
+                        Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link}", symbolicLink);
+                    shouldFix = true;
+                }
+                if (shouldFix) {
+                    File.Delete(symbolicLink);
+                    File.CreateSymbolicLink(symbolicLink, sourceLocation);
+                    result.FixedVideos++;
+                }
+                else {
+                    result.SkippedVideos++;
+                }
+            }
+
+            if (subtitleLinks.Count > 0) {
+                var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
+                foreach (var subtitleSource in subtitleLinks) {
+                    var extName = subtitleSource[sourcePrefixLength..];
+                    var subtitleLink = Path.Combine(symbolicDirectory, symbolicName + extName);
+
+                    allPathsForVFS.Add(subtitleLink);
+                    if (!File.Exists(subtitleLink)) {
+                        result.CreatedSubtitles++;
+                        Logger.LogDebug("Linking {Link} → {LinkTarget}", subtitleLink, subtitleSource);
+                        File.CreateSymbolicLink(subtitleLink, subtitleSource);
+                    }
+                    else {
+                        var shouldFix = false;
+                        try {
+                            var nextTarget = File.ResolveLinkTarget(subtitleLink, false);
+                            if (!string.Equals(subtitleSource, nextTarget?.FullName)) {
+                                shouldFix = true;
+
+                                Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", subtitleLink, subtitleSource, nextTarget?.FullName);
+                            }
+                        }
+                        catch (Exception ex) {
+                            Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link} for {LinkTarget}", subtitleLink, subtitleSource);
+                            shouldFix = true;
+                        }
+                        if (shouldFix) {
+                            File.Delete(subtitleLink);
+                            File.CreateSymbolicLink(subtitleLink, subtitleSource);
+                            result.FixedSubtitles++;
+                        }
+                        else {
+                            result.SkippedSubtitles++;
+                        }
+                    }
+                }
+            }
+        }
+
+        // TODO: Remove these two hacks once we have proper support for adding multiple series at once.
+        foreach (var nfoFile in nfoFiles)
+        {
+            if (allPathsForVFS.Contains(nfoFile))
+                continue;
+            allPathsForVFS.Add(nfoFile);
+
+            var nfoDirectory = Path.GetDirectoryName(nfoFile)!;
+            if (!Directory.Exists(nfoDirectory))
+                Directory.CreateDirectory(nfoDirectory);
+
+            if (!File.Exists(nfoFile)) {
+                result.CreatedNfos++;
+                Logger.LogDebug("Adding stub show/season NFO file {Target} ", nfoFile);
+                File.WriteAllText(nfoFile, string.Empty);
+            }
+            else {
+                result.SkippedNfos++;
+            }
+        }
+
+        return result;
+    }
+
+    private LinkGenerationResult CleanupStructure(string vfsPath, ConcurrentBag<string> allPathsForVFS)
+    {
+        var result = new LinkGenerationResult();
+        var searchFiles = _namingOptions.VideoFileExtensions.Concat(_namingOptions.SubtitleFileExtensions).Append(".nfo").ToHashSet();
+        var toBeRemoved = FileSystem.GetFilePaths(vfsPath, true)
+            .Select(path => (path, extName: Path.GetExtension(path)))
+            .Where(tuple => searchFiles.Contains(tuple.extName))
+            .ExceptBy(allPathsForVFS.ToHashSet(), tuple => tuple.path)
+            .ToList();
+        foreach (var (location, extName) in toBeRemoved) {
+            // Continue in case we already removed the (subtitle) file.
+            if (!File.Exists(location))
+                continue;
+
+            File.Delete(location);
+
+            // Stats tracking.
+            if (_namingOptions.VideoFileExtensions.Contains(extName)) {
+                result.RemovedVideos++;
+
+                var subtitleLinks = FindSubtitlesForPath(location);
+                foreach (var subtitleLink in subtitleLinks) {
+                    result.RemovedSubtitles++;
+                    File.Delete(location);
+                }
+            }
+            else if (extName == ".nfo") {
+                result.RemovedNfos++;
+            }
+            else {
+                result.RemovedSubtitles++;
+            }
+
+            CleanupDirectoryStructure(location);
+        }
+
+        return result;
     }
 
     private static void CleanupDirectoryStructure(string? path)
