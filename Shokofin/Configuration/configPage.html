@@ -47,19 +47,15 @@
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="showMainTitleAdvancedSettings" />
-                                <span>Show advanced settings for the Default Title options</span>
+                                <span>Override main title selection</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Controls how the Default Title is set for series/seasons/episodes<br />
-                                By default, Shokofin will take care of these settings for you.
-                                <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">Want to change how this works?</summary>
-                                    When this box is ticked, additional settings are shown directly below. You can change these settings as desired
-                                    and uncheck this box afterwards - just make sure to <strong>remember to save your changes!</strong>
-                                </details>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Enables the advanced title selection options for main titles.<br />
+                                This does not need to remain ticked for the overrides to take effect.
                             </div>
                         </div>
                         <div id="mainTitleSourceList" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Default Title source:</h3>
+                            <h3 class="checkboxListLabel">Main title source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="Shoko" data-titlestyle="Default">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="Shoko" data-titlestyle="Default"><span></span></label>
@@ -68,42 +64,32 @@
                                 </div>
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="AniDb" data-titlestyle="Default">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="AniDb" data-titlestyle="Default"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Default Title</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
-                                </div>
-                                <div class="listItem titleSourceItem sortableOption" data-titleprovider="AniDb" data-titlestyle="ShokoPreferred">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="AniDb" data-titlestyle="ShokoPreferred"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Shoko Preferred Title</h3></div>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Default title</h3></div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
                                 </div>
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="AniDb" data-titlestyle="LibraryLanguage">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="AniDb" data-titlestyle="LibraryLanguage"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Language set on the library</h3></div>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Follow metadata language in library</h3></div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
                                 </div>
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="AniDb" data-titlestyle="CountryOfOrigin">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="AniDb" data-titlestyle="CountryOfOrigin"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Language in country of origin</h3></div>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Use the language from the country of origin</h3></div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
                                 </div>
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="TMDB" data-titlestyle="Default">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="TMDB" data-titlestyle="Default"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Default Title</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
-                                </div>
-                                <div class="listItem titleSourceItem sortableOption" data-titleprovider="TMDB" data-titlestyle="ShokoPreferred">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="TMDB" data-titlestyle="ShokoPreferred"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Shoko Preferred Title</h3></div>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Default title</h3></div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
                                 </div>
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="TMDB" data-titlestyle="LibraryLanguage">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="TMDB" data-titlestyle="LibraryLanguage"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Language set on the library</h3></div>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Follow metadata language in library</h3></div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
                                 </div>
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="TMDB" data-titlestyle="CountryOfOrigin">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="TMDB" data-titlestyle="CountryOfOrigin"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Language in country of origin</h3></div>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Use the language from the country of origin</h3></div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
                                 </div>
                             </div>
@@ -111,15 +97,11 @@
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="showAlternateTitleAdvancedSettings" />
-                                <span>Show advanced settings for the alternate title options</span>
+                                <span>Override alternate title selection</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Controls how the alternate title is set for series/seasons/episodes<br />
-                                By default, Shokofin won't try fetch an alternate title.
-                                <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">Want to change how this works?</summary>
-                                    When this box is ticked, additional settings are shown directly below. You can change these settings as desired
-                                    and uncheck this box afterwards - just make sure to <strong>remember to save your changes!</strong>
-                                </details>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Enables the advanced title selection options for alternate titles.<br />
+                                This does not need to remain ticked for the overrides to take effect.
                             </div>
                         </div>
                         <div id="alternateTitleSourceList" style="margin-bottom: 2em;">
@@ -132,42 +114,32 @@
                                 </div>
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="AniDb" data-titlestyle="Default">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="AniDb" data-titlestyle="Default"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Default Title</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
-                                </div>
-                                <div class="listItem titleSourceItem sortableOption" data-titleprovider="AniDb" data-titlestyle="ShokoPreferred">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="AniDb" data-titlestyle="ShokoPreferred"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Shoko Preferred Title</h3></div>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Default title</h3></div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
                                 </div>
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="AniDb" data-titlestyle="LibraryLanguage">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="AniDb" data-titlestyle="LibraryLanguage"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Language set on the library</h3></div>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Follow metadata language in library</h3></div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
                                 </div>
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="AniDb" data-titlestyle="CountryOfOrigin">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="AniDb" data-titlestyle="CountryOfOrigin"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Language in country of origin</h3></div>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Use the language from the country of origin</h3></div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
                                 </div>
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="TMDB" data-titlestyle="Default">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="TMDB" data-titlestyle="Default"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Default Title</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
-                                </div>
-                                <div class="listItem titleSourceItem sortableOption" data-titleprovider="TMDB" data-titlestyle="ShokoPreferred">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="TMDB" data-titlestyle="ShokoPreferred"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Shoko Preferred Title</h3></div>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Default title</h3></div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
                                 </div>
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="TMDB" data-titlestyle="LibraryLanguage">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="TMDB" data-titlestyle="LibraryLanguage"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Language set on the library</h3></div>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Follow metadata language in library</h3></div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
                                 </div>
                                 <div class="listItem titleSourceItem sortableOption" data-titleprovider="TMDB" data-titlestyle="CountryOfOrigin">
                                     <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-titleprovider="TMDB" data-titlestyle="CountryOfOrigin"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Language in country of origin</h3></div>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Use the language from the country of origin</h3></div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
                                 </div>
                             </div>
