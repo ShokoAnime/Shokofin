@@ -13,7 +13,7 @@ const Messages = {
  * @param {string} value - Stringified list of values to filter.
  * @returns {string[]} An array of sanitized and filtered values.
  */
- function filterIgnoredFolders(value) {
+function filterIgnoredFolders(value) {
     // We convert to a set to filter out duplicate values.
     const filteredSet = new Set(
         value
@@ -33,7 +33,7 @@ const Messages = {
  * @param {string} value - Stringified list of values to filter.
  * @returns {number[]} An array of sanitized and filtered values.
  */
- function filterReconnectIntervals(value) {
+function filterReconnectIntervals(value) {
     // We convert to a set to filter out duplicate values.
     const filteredSet = new Set(
         value
@@ -48,54 +48,56 @@ const Messages = {
     return Array.from(filteredSet).sort((a, b) => a - b);
  }
 
- function adjustSortableListElement(element) {
-  const btnSortable = element.querySelector(".btnSortable");
-  const inner = btnSortable.querySelector(".material-icons");
+function adjustSortableListElement(element) {
+    const btnSortable = element.querySelector(".btnSortable");
+    const inner = btnSortable.querySelector(".material-icons");
 
-  if (element.previousElementSibling) {
-    btnSortable.title = "Up";
-    btnSortable.classList.add("btnSortableMoveUp");
-    inner.classList.add("keyboard_arrow_up");
+    if (element.previousElementSibling) {
+        btnSortable.title = "Up";
+        btnSortable.classList.add("btnSortableMoveUp");
+        inner.classList.add("keyboard_arrow_up");
 
-    btnSortable.classList.remove("btnSortableMoveDown");
-    inner.classList.remove("keyboard_arrow_down");
-  } else {
-    btnSortable.title = "Down";
-    btnSortable.classList.add("btnSortableMoveDown");
-    inner.classList.add("keyboard_arrow_down");
+        btnSortable.classList.remove("btnSortableMoveDown");
+        inner.classList.remove("keyboard_arrow_down");
+    }
+    else {
+        btnSortable.title = "Down";
+        btnSortable.classList.add("btnSortableMoveDown");
+        inner.classList.add("keyboard_arrow_down");
 
-    btnSortable.classList.remove("btnSortableMoveUp");
-    inner.classList.remove("keyboard_arrow_up");
-  }
+        btnSortable.classList.remove("btnSortableMoveUp");
+        inner.classList.remove("keyboard_arrow_up");
+    }
 }
 
 /** @param {PointerEvent} event */
 function onSortableContainerClick(event) {
-  const parentWithClass = (element, className) => {
-    return (element.parentElement.classList.contains(className)) ? element.parentElement : null;
-  }
-  const btnSortable = parentWithClass(event.target, "btnSortable");
-  if (btnSortable) {
-    const listItem = parentWithClass(btnSortable, "sortableOption");
-    const list = parentWithClass(listItem, "paperList");
-    if (btnSortable.classList.contains("btnSortableMoveDown")) {
-      const next = listItem.nextElementSibling;
-      if (next) {
-        listItem.parentElement.removeChild(listItem);
-        next.parentElement.insertBefore(listItem, next.nextSibling);
-      }
-    } else {
-      const prev = listItem.previousElementSibling;
-      if (prev) {
-        listItem.parentElement.removeChild(listItem);
-        prev.parentElement.insertBefore(listItem, prev);
-      }
+    const parentWithClass = (element, className) => {
+        return (element.parentElement.classList.contains(className)) ? element.parentElement : null;
     }
+    const btnSortable = parentWithClass(event.target, "btnSortable");
+    if (btnSortable) {
+        const listItem = parentWithClass(btnSortable, "sortableOption");
+        const list = parentWithClass(listItem, "paperList");
+        if (btnSortable.classList.contains("btnSortableMoveDown")) {
+            const next = listItem.nextElementSibling;
+            if (next) {
+                listItem.parentElement.removeChild(listItem);
+                next.parentElement.insertBefore(listItem, next.nextSibling);
+            }
+        }
+        else {
+            const prev = listItem.previousElementSibling;
+            if (prev) {
+                listItem.parentElement.removeChild(listItem);
+                prev.parentElement.insertBefore(listItem, prev);
+            }
+        }
 
-    for (const option of list.querySelectorAll(".sortableOption")) {
-      adjustSortableListElement(option)
-    };
-  }
+        for (const option of list.querySelectorAll(".sortableOption")) {
+            adjustSortableListElement(option)
+        };
+    }
 }
 
 async function loadUserConfig(form, userId, config) {
@@ -888,26 +890,26 @@ function setDescriptionSourcesIntoConfig(form, config) {
 }
 
 async function setDescriptionSourcesFromConfig(form, config) {
-  const list = form.querySelector("#descriptionSourceList .checkboxList");
-  const listItems = list.querySelectorAll('.listItem');
+    const list = form.querySelector("#descriptionSourceList .checkboxList");
+    const listItems = list.querySelectorAll('.listItem');
 
-  for (const item of listItems) {
-    const source = item.dataset.descriptionsource;
-    if (config.DescriptionSourceList.includes(source)) {
-      item.querySelector(".chkDescriptionSource").checked = true;
+    for (const item of listItems) {
+        const source = item.dataset.descriptionsource;
+        if (config.DescriptionSourceList.includes(source)) {
+            item.querySelector(".chkDescriptionSource").checked = true;
+        }
+        if (config.DescriptionSourceOrder.includes(source)) {
+            list.removeChild(item); // This is safe to be removed as we can re-add it in the next loop
+        }
     }
-    if (config.DescriptionSourceOrder.includes(source)) {
-      list.removeChild(item); // This is safe to be removed as we can re-add it in the next loop
-    }
-  }
 
-  for (const source of config.DescriptionSourceOrder) {
-    const targetElement = Array.prototype.find.call(listItems, (el) => el.dataset.descriptionsource === source);
-    if (targetElement) {
-      list.append(targetElement);
+    for (const source of config.DescriptionSourceOrder) {
+        const targetElement = Array.prototype.find.call(listItems, (el) => el.dataset.descriptionsource === source);
+        if (targetElement) {
+            list.append(targetElement);
+        }
     }
-  }
-  for (const option of list.querySelectorAll(".sortableOption")) {
-    adjustSortableListElement(option)
-  };
+    for (const option of list.querySelectorAll(".sortableOption")) {
+        adjustSortableListElement(option)
+    };
 }
