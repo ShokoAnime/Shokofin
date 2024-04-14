@@ -274,8 +274,8 @@ async function defaultSubmit(form) {
         const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
         // Metadata settings
-        config.TitleMainType = form.querySelector("#TitleMainType").value;
-        config.TitleAlternateType = form.querySelector("#TitleAlternateType").value;
+        // config.TitleMainType = form.querySelector("#TitleMainType").value;
+        // config.TitleAlternateType = form.querySelector("#TitleAlternateType").value;
         config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
         config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
         config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
@@ -463,8 +463,8 @@ async function syncSettings(form) {
     const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
     // Metadata settings
-    config.TitleMainType = form.querySelector("#TitleMainType").value;
-    config.TitleAlternateType = form.querySelector("#TitleAlternateType").value;
+    // config.TitleMainType = form.querySelector("#TitleMainType").value;
+    // config.TitleAlternateType = form.querySelector("#TitleAlternateType").value;
     config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
     config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
     config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
@@ -757,8 +757,8 @@ export default function (page) {
             form.querySelector("#Password").value = "";
 
             // Metadata settings
-            form.querySelector("#TitleMainType").value = config.TitleMainType;
-            form.querySelector("#TitleAlternateType").value = config.TitleAlternateType;
+            // form.querySelector("#TitleMainType").value = config.TitleMainType;
+            // form.querySelector("#TitleAlternateType").value = config.TitleAlternateType;
             form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
             form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null ? config.TitleAddForMultipleEpisodes : true;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
