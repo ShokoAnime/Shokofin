@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.117",
+                "changelog": "fix: throw early if we cannot create symlinks\n\n- Throw as early as possible if we have determined we cannot\n  create symbolic links.\n\n- Update the warning in the settings to also say the users need to\n  restart their Jellyfin server after enabling dev mode (to let the\n  plugin re-check), for the VFS to work.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.117/shoko_3.0.1.117.zip",
+                "checksum": "b16b26ac53196d172cc5615e43270caa",
+                "timestamp": "2024-04-14T10:39:04Z"
+            },
+            {
                 "version": "3.0.1.116",
                 "changelog": "chore: cleanup js in settings page (#51)\n\nNow matches revam\u2122 formatting standard",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.113/shoko_3.0.1.113.zip",
                 "checksum": "6f5479613dfec25fd10d91e40fe57964",
                 "timestamp": "2024-04-13T22:00:58Z"
-            },
-            {
-                "version": "3.0.1.112",
-                "changelog": "fix: prevent error being logged in the console on plugin settings page",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.112/shoko_3.0.1.112.zip",
-                "checksum": "41712fea39e3dea10c3004de0ae10cce",
-                "timestamp": "2024-04-13T21:40:13Z"
             }
         ]
     }
