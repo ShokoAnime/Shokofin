@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.125",
+                "changelog": "misc: tweak link generation logging\n\nmisc: remove unneeded arg for cleanup func.\n\nfix: correct yielded series id for files",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.125/shoko_3.0.1.125.zip",
+                "checksum": "c8520e33727a185d0a3ad32e3651db91",
+                "timestamp": "2024-04-15T22:08:45Z"
+            },
+            {
                 "version": "3.0.1.124",
                 "changelog": "fix: fix the simplified cleanup code\n\n- add path tracking to the link generation results so we can\n  reuse the paths from a cached result when cleaning.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.121/shoko_3.0.1.121.zip",
                 "checksum": "4782541b6439f4bc26eb815a9c4495e4",
                 "timestamp": "2024-04-15T02:06:01Z"
-            },
-            {
-                "version": "3.0.1.120",
-                "changelog": "refactor: overhaul link generation (again)\n\n- Overhauled the link generation to cache per file/series/location, and\n  to allow cleanup/generation on a media folder, series, season, movie,\n  and/or episode basis.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.120/shoko_3.0.1.120.zip",
-                "checksum": "3e7df7e8b4de82bb9116056dc5e3b67e",
-                "timestamp": "2024-04-15T01:56:01Z"
             }
         ]
     }
