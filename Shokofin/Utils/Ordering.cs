@@ -239,9 +239,6 @@ public class Ordering
                 if (title.StartsWith("cinema ", System.StringComparison.OrdinalIgnoreCase) &&
                 (title.Contains("intro", System.StringComparison.OrdinalIgnoreCase) || title.Contains("outro", System.StringComparison.OrdinalIgnoreCase)))
                     return ExtraType.Clip;
-                // Music videos
-                if (title.Contains("music video", System.StringComparison.OrdinalIgnoreCase))
-                    return ExtraType.ThemeVideo;
                 // Behind the Scenes
                 if (title.Contains("making of", System.StringComparison.CurrentCultureIgnoreCase))
                     return ExtraType.BehindTheScenes;
