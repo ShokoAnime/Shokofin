@@ -626,7 +626,6 @@ public class ShokoResolveManager
         var result = new LinkGenerationResult();
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
-        var allPathsForVFS = new ConcurrentBag<string>();
         var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VirtualFileSystemThreads);
         await Task.WhenAll(files.Select(async (tuple) => {
             var subResult = await DataCache.GetOrCreateAsync(
@@ -639,7 +638,7 @@ public class ShokoResolveManager
                     try {
                         // Skip any source files we weren't meant to have in the library.
                         var (sourceLocation, symbolicLinks, nfoFiles) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
-                        return GenerateSymbolicLinks(sourceLocation, symbolicLinks, nfoFiles, allPathsForVFS);
+                        return GenerateSymbolicLinks(sourceLocation, symbolicLinks, nfoFiles, result.Paths);
                     }
                     finally {
                         semaphore.Release();
@@ -660,7 +659,7 @@ public class ShokoResolveManager
             .ConfigureAwait(false);
 
         // Cleanup the structure in the VFS.
-        result += CleanupStructure(vfsPath, allPathsForVFS, pathToClean);
+        result += CleanupStructure(vfsPath, result.Paths, pathToClean);
 
         result.Print(mediaFolder, Logger);
     }
@@ -793,7 +792,7 @@ public class ShokoResolveManager
             if (!Directory.Exists(symbolicDirectory))
                 Directory.CreateDirectory(symbolicDirectory);
 
-            allPathsForVFS.Add(symbolicLink);
+            result.Paths.Add(symbolicLink);
             if (!File.Exists(symbolicLink)) {
                 result.CreatedVideos++;
                 Logger.LogDebug("Linking {Link} → {LinkTarget}", symbolicLink, sourceLocation);
@@ -829,7 +828,7 @@ public class ShokoResolveManager
                     var extName = subtitleSource[sourcePrefixLength..];
                     var subtitleLink = Path.Combine(symbolicDirectory, symbolicName + extName);
 
-                    allPathsForVFS.Add(subtitleLink);
+                    result.Paths.Add(subtitleLink);
                     if (!File.Exists(subtitleLink)) {
                         result.CreatedSubtitles++;
                         Logger.LogDebug("Linking {Link} → {LinkTarget}", subtitleLink, subtitleSource);
@@ -865,9 +864,18 @@ public class ShokoResolveManager
         // TODO: Remove these two hacks once we have proper support for adding multiple series at once.
         foreach (var nfoFile in nfoFiles)
         {
-            if (allPathsForVFS.Contains(nfoFile))
+            if (allPathsForVFS.Contains(nfoFile)) {
+                if (!result.Paths.Contains(nfoFile))
+                    result.Paths.Add(nfoFile);
                 continue;
+            }
+            if (result.Paths.Contains(nfoFile)) {
+                if (!allPathsForVFS.Contains(nfoFile))
+                    allPathsForVFS.Add(nfoFile);
+                continue;
+            }
             allPathsForVFS.Add(nfoFile);
+            result.Paths.Add(nfoFile);
 
             var nfoDirectory = Path.GetDirectoryName(nfoFile)!;
             if (!Directory.Exists(nfoDirectory))

@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Concurrent;
 using MediaBrowser.Controller.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -8,6 +9,8 @@ namespace Shokofin.Resolvers;
 public class LinkGenerationResult
 {
     private DateTime CreatedAt { get; init; } = DateTime.Now;
+
+    public ConcurrentBag<string> Paths { get; init; } = new();
 
     public int Total =>
         TotalVideos + TotalSubtitles + TotalNfos;
@@ -83,19 +86,31 @@ public class LinkGenerationResult
 
     public void MarkSkipped()
     {
-        SkippedSubtitles += FixedSubtitles + CreatedSubtitles;
-        FixedSubtitles = CreatedSubtitles = RemovedSubtitles = 0;
-        SkippedVideos += FixedVideos + CreatedVideos;
-        FixedVideos = CreatedVideos = RemovedVideos = 0;
-        SkippedNfos += CreatedNfos;
-        CreatedNfos = RemovedNfos = 0;
+        if (FixedSubtitles > 0 || CreatedSubtitles > 0) {
+            SkippedSubtitles += FixedSubtitles + CreatedSubtitles;
+            FixedSubtitles = CreatedSubtitles = 0;
+        }
+        if (FixedVideos > 0 || CreatedVideos > 0) {
+            SkippedVideos += FixedVideos + CreatedVideos;
+            FixedVideos = CreatedVideos = 0;
+        }
+        if (CreatedNfos > 0) {
+            SkippedNfos += CreatedNfos;
+            CreatedNfos = 0;
+        }
     }
 
     public static LinkGenerationResult operator +(LinkGenerationResult a, LinkGenerationResult b)
     {
+        // Re-use the same instance so the parallel execution will share the same bag.
+        var paths = a.Paths;
+        foreach (var path in b.Paths)
+            a.Paths.Add(path);
+
         return new()
         {
             CreatedAt = a.CreatedAt,
+            Paths = paths,
             CreatedVideos = a.CreatedVideos + b.CreatedVideos,
             FixedVideos = a.FixedVideos + b.FixedVideos,
             SkippedVideos = a.SkippedVideos + b.SkippedVideos,
