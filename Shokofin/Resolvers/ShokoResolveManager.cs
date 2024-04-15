@@ -407,7 +407,7 @@ public class ShokoResolveManager
                 continue;
 
             totalFiles++;
-            yield return (sourceLocation, fileId: file.Id.ToString(), seriesId);
+            yield return (sourceLocation, file.Id.ToString(), seasonInfo.Id);
         }
         var timeSpent = DateTime.UtcNow - start;
         Logger.LogDebug(
@@ -458,7 +458,7 @@ public class ShokoResolveManager
                             continue;
 
                         totalFiles++;
-                        yield return (sourceLocation, fileId: file.Id.ToString(), seriesId);
+                        yield return (sourceLocation, file.Id.ToString(), seasonInfo.Id);
                     }
                 }
             }
@@ -483,7 +483,7 @@ public class ShokoResolveManager
                             continue;
 
                         totalFiles++;
-                        yield return (sourceLocation, fileId: file.Id.ToString(), seriesId);
+                        yield return (sourceLocation, file.Id.ToString(), seasonInfo.Id);
                     }
                 }
             }
@@ -504,7 +504,7 @@ public class ShokoResolveManager
                         continue;
 
                     totalFiles++;
-                    yield return (sourceLocation, fileId: file.Id.ToString(), seriesId);
+                    yield return (sourceLocation, file.Id.ToString(), seasonInfo.Id);
                 }
             }
         }
@@ -581,7 +581,7 @@ public class ShokoResolveManager
                     totalSingleSeriesFiles++;
                     singleSeriesIds.Add(seriesIds.First());
                     foreach (var xref in file.CrossReferences)
-                        yield return (sourceLocation, fileId: file.Id.ToString(), seriesId: xref.Series.Shoko.ToString());
+                        yield return (sourceLocation, file.Id.ToString(), xref.Series.Shoko.ToString());
                 }
                 else if (seriesIds.Count > 1) {
                     multiSeriesFiles.Add((file, sourceLocation));
@@ -598,7 +598,7 @@ public class ShokoResolveManager
                 .Where(xref => singleSeriesIds.Contains(xref.Series.Shoko))
                 .ToList();
             foreach (var xref in crossReferences)
-                yield return (sourceLocation, fileId: file.Id.ToString(), seriesId: xref.Series.Shoko.ToString());
+                yield return (sourceLocation, file.Id.ToString(), xref.Series.Shoko.ToString());
             totalMultiSeriesFiles += crossReferences.Count;
         }
 
