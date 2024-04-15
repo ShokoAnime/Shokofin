@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.121",
+                "changelog": "fix: fix signalr models",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.121/shoko_3.0.1.121.zip",
+                "checksum": "4782541b6439f4bc26eb815a9c4495e4",
+                "timestamp": "2024-04-15T02:06:01Z"
+            },
+            {
                 "version": "3.0.1.120",
                 "changelog": "refactor: overhaul link generation (again)\n\n- Overhauled the link generation to cache per file/series/location, and\n  to allow cleanup/generation on a media folder, series, season, movie,\n  and/or episode basis.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.117/shoko_3.0.1.117.zip",
                 "checksum": "b16b26ac53196d172cc5615e43270caa",
                 "timestamp": "2024-04-14T10:39:04Z"
-            },
-            {
-                "version": "3.0.1.116",
-                "changelog": "chore: cleanup js in settings page (#51)\n\nNow matches revam\u2122 formatting standard",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.116/shoko_3.0.1.116.zip",
-                "checksum": "946de3d379dee74db88deef64d7531f8",
-                "timestamp": "2024-04-14T10:12:21Z"
             }
         ]
     }
