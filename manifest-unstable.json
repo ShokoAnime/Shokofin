@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.123",
+                "changelog": "refactor: simplify cleanup code",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.123/shoko_3.0.1.123.zip",
+                "checksum": "b47786b60e2271c85e0536e294458c0a",
+                "timestamp": "2024-04-15T11:52:13Z"
+            },
+            {
                 "version": "3.0.1.122",
                 "changelog": "refactor: remove music video extra type mappjn",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.119/shoko_3.0.1.119.zip",
                 "checksum": "ce399e5cba039b8be006c6104002d009",
                 "timestamp": "2024-04-14T22:11:43Z"
-            },
-            {
-                "version": "3.0.1.118",
-                "changelog": "refactor: more changes to signalr models\n\n- Another overhaul of the SingalR models, this time removing\n  an (now) unneeded event model, and also (hopefully) correcting the\n  relative paths to use the correct directory separators for the local\n  os environment and not the environment Shoko Server is running in.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.118/shoko_3.0.1.118.zip",
-                "checksum": "61dcdd30ab92ceac809a21462452d4d8",
-                "timestamp": "2024-04-14T11:38:40Z"
             }
         ]
     }
