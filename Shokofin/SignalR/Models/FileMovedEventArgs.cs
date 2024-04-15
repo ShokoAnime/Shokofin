@@ -50,7 +50,7 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
         /// the Shoko side.
         /// </summary>
         [JsonInclude, JsonPropertyName("RelativePath")]
-        private string InternalPath  { get; set; } = string.Empty;
+        public string InternalPath  { get; set; } = string.Empty;
 
         /// <summary>
         /// Cached path for later re-use.
@@ -71,7 +71,7 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
         /// seperators used on the Shoko side.
         /// </summary>
         [JsonInclude, JsonPropertyName("OldRelativePath")]
-        private string PreviousInternalPath  { get; set; } = string.Empty;
+        public string PreviousInternalPath  { get; set; } = string.Empty;
 
         /// <summary>
         /// Cached path for later re-use.

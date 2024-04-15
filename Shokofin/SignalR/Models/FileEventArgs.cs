@@ -19,7 +19,7 @@ public class FileEventArgs : IFileEventArgs
     /// the Shoko side.
     /// </summary>
     [JsonInclude, JsonPropertyName("RelativePath")]
-    private string InternalPath  { get; set; } = string.Empty;
+    public string InternalPath  { get; set; } = string.Empty;
 
     /// <summary>
     /// Cached path for later re-use.
