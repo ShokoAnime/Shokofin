@@ -659,7 +659,8 @@ public class ShokoResolveManager
             .ConfigureAwait(false);
 
         // Cleanup the structure in the VFS.
-        result += CleanupStructure(vfsPath, result.Paths, pathToClean);
+        if (!string.IsNullOrEmpty(pathToClean))
+            result += CleanupStructure(pathToClean, result.Paths);
 
         result.Print(mediaFolder, Logger);
     }
@@ -894,19 +895,15 @@ public class ShokoResolveManager
         return result;
     }
 
-    private LinkGenerationResult CleanupStructure(string vfsPath, ConcurrentBag<string> allPathsForVFS, string? pathToClean)
+    private LinkGenerationResult CleanupStructure(string directoryToClean, ConcurrentBag<string> allKnownPaths)
     {
-        // Return now if we're not going to search for files to remove.
-        var result = new LinkGenerationResult();
-        if (pathToClean == null)
-            return result;
-
         // Search the selected paths for files to remove.
+        var result = new LinkGenerationResult();
         var searchFiles = _namingOptions.VideoFileExtensions.Concat(_namingOptions.SubtitleFileExtensions).Append(".nfo").ToHashSet();
-        var toBeRemoved = FileSystem.GetFilePaths(pathToClean, true)
+        var toBeRemoved = FileSystem.GetFilePaths(directoryToClean, true)
             .Select(path => (path, extName: Path.GetExtension(path)))
             .Where(tuple => searchFiles.Contains(tuple.extName))
-            .ExceptBy(allPathsForVFS.ToHashSet(), tuple => tuple.path)
+            .ExceptBy(allKnownPaths.ToHashSet(), tuple => tuple.path)
             .ToList();
         foreach (var (location, extName) in toBeRemoved) {
             // Continue in case we already removed the (subtitle) file.
