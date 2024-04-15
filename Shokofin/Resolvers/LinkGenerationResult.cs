@@ -81,6 +81,16 @@ public class LinkGenerationResult
         );
     }
 
+    public void MarkSkipped()
+    {
+        SkippedSubtitles += FixedSubtitles + CreatedSubtitles;
+        FixedSubtitles = CreatedSubtitles = RemovedSubtitles = 0;
+        SkippedVideos += FixedVideos + CreatedVideos;
+        FixedVideos = CreatedVideos = RemovedVideos = 0;
+        SkippedNfos += CreatedNfos;
+        CreatedNfos = RemovedNfos = 0;
+    }
+
     public static LinkGenerationResult operator +(LinkGenerationResult a, LinkGenerationResult b)
     {
         return new()

@@ -125,6 +125,13 @@ public class ShokoResolveManager
 
     #region Media Folder Mapping
 
+    public IReadOnlyList<(MediaFolderConfiguration config, Folder mediaFolder)> GetAvailableMediaFolders()
+        => Plugin.Instance.Configuration.MediaFolders
+            .Where(mediaFolder => mediaFolder.IsMapped && mediaFolder.IsFileEventsEnabled)
+            .Select(config => (config,  mediaFolder: LibraryManager.GetItemById(config.MediaFolderId) as Folder))
+            .OfType<(MediaFolderConfiguration config, Folder mediaFolder)>()
+            .ToList();
+
     public async Task<MediaFolderConfiguration> GetOrCreateConfigurationForMediaFolder(Folder mediaFolder)
     {
         var config = Plugin.Instance.Configuration;
@@ -208,13 +215,6 @@ public class ShokoResolveManager
 
     #region Generate Structure
 
-    public IReadOnlyList<(MediaFolderConfiguration config, Folder mediaFolder)> GetAvailableMediaFolders()
-        => Plugin.Instance.Configuration.MediaFolders
-            .Where(mediaFolder => mediaFolder.IsMapped && mediaFolder.IsFileEventsEnabled)
-            .Select(config => (config,  mediaFolder: LibraryManager.GetItemById(config.MediaFolderId) as Folder))
-            .OfType<(MediaFolderConfiguration config, Folder mediaFolder)>()
-            .ToList();
-
     /// <summary>
     /// Generates the VFS structure if the VFS is enabled globally or on the
     /// <paramref name="mediaFolder"/>.
@@ -222,40 +222,309 @@ public class ShokoResolveManager
     /// <param name="mediaFolder">The media folder to generate a structure for.</param>
     /// <param name="folderPath">The folder within the media folder to generate a structure for.</param>
     /// <returns>The VFS path, if it succeeded.</returns>
-    private Task<string?> GenerateStructureForFolderInVFS(Folder mediaFolder)
-        => DataCache.GetOrCreateAsync(
-            mediaFolder.Path,
-            async (_) => {
-                var mediaConfig = await GetOrCreateConfigurationForMediaFolder(mediaFolder);
-                if (!mediaConfig.IsMapped)
-                    return null;
+    private async Task<string?> GenerateStructureInVFS(Folder mediaFolder, string folderPath)
+    {
+        var mediaConfig = await GetOrCreateConfigurationForMediaFolder(mediaFolder);
+        if (!mediaConfig.IsMapped)
+            return null;
 
-                // Return early if we're not going to generate them.
-                if (!mediaConfig.IsVirtualFileSystemEnabled)
-                    return null;
+        // Return early if we're not going to generate them.
+        if (!mediaConfig.IsVirtualFileSystemEnabled)
+            return null;
 
-                if (!Plugin.Instance.CanCreateSymbolicLinks)
-                    throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
+        if (!Plugin.Instance.CanCreateSymbolicLinks)
+            throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
 
-                // Check if we should introduce the VFS for the media folder.
-                var start = DateTime.UtcNow;
-                var allPaths = FileSystem.GetFilePaths(mediaFolder.Path, true)
-                    .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
-                    .ToHashSet();
-                Logger.LogDebug("Found {FileCount} files in media folder at {Path} in {TimeSpan}.", allPaths.Count, mediaFolder.Path, DateTime.UtcNow - start);
+        // Iterate the files already in the VFS.
+        var cleanLevel = -1;
+        IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
+        var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
+        if (folderPath.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
+            var start = DateTime.UtcNow;
+            var allPaths = FileSystem.GetFilePaths(mediaFolder.Path, true)
+                .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+                .ToHashSet();
+            Logger.LogDebug("Found {FileCount} files in media folder at {Path} in {TimeSpan}.", allPaths.Count, folderPath, DateTime.UtcNow - start);
 
-                var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
-                var allFiles = GetImportFolderFiles(mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
-                await GenerateSymbolicLinks(mediaFolder, allFiles).ConfigureAwait(false);
+            var pathSegments = folderPath[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
+            switch (pathSegments.Length) {
+                // show/movie-folder level
+                case 1: {
+                    var seriesName = pathSegments[0];
+                    if (!seriesName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
+                        break;
 
-                return vfsPath;
-            },
-            new() {
-                AbsoluteExpirationRelativeToNow = DefaultTTL,
+                    // movie-folder
+                    if (seriesName.TryGetAttributeValue(ShokoEpisodeId.Name, out var episodeId) ) {
+                        if (!int.TryParse(episodeId, out _))
+                            break;
+
+                        cleanLevel = 1;
+                        GetFilesForMovie(episodeId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
+                        break;
+                    }
+
+                    // show
+                    cleanLevel = 1;
+                    allFiles = GetFilesForShow(seriesId, null, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
+                    break;
+                }
+
+                // season/movie level
+                case 2: {
+                    var (seriesName, seasonOrMovieName) = pathSegments;
+                    if (!seriesName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
+                        break;
+
+                    // movie
+                    if (seriesName.TryGetAttributeValue(ShokoEpisodeId.Name, out var episodeId)) {
+                        if (!seasonOrMovieName.TryGetAttributeValue(ShokoSeriesId.Name, out seriesId) || !int.TryParse(seriesId, out _))
+                            break;
+
+                        if (!seasonOrMovieName.TryGetAttributeValue(ShokoFileId.Name, out var fileId) || !int.TryParse(fileId, out _))
+                            break;
+
+                        cleanLevel = -1;
+                        allFiles = GetFilesForEpisode(fileId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path);
+                        break;
+                    }
+
+                    // "season" or extras
+                    if (!seasonOrMovieName.StartsWith("Season ") || !int.TryParse(seasonOrMovieName.Split(' ').Last(), out var seasonNumber))
+                        break;
+
+                    cleanLevel = 2;
+                    allFiles = GetFilesForShow(seriesId, seasonNumber, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
+                    break;
+                }
+
+                // episodes level
+                case 3: {
+                    var (seriesName, seasonName, episodeName) = pathSegments;
+                    if (!seriesName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
+                        break;
+
+                    if (!seasonName.StartsWith("Season ") || !int.TryParse(seasonName.Split(' ').Last(), out var seasonNumber))
+                        break;
+
+                    if (!episodeName.TryGetAttributeValue(ShokoSeriesId.Name, out seriesId) || !int.TryParse(seriesId, out _))
+                        break;
+
+                    if (!episodeName.TryGetAttributeValue(ShokoFileId.Name, out var fileId) || !int.TryParse(fileId, out _))
+                        break;
+
+                    cleanLevel = -1;
+                    allFiles = GetFilesForEpisode(fileId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path);
+                    break;
+                }
             }
+        }
+        // Iterate files in the "real" media folder.
+        else if (folderPath.StartsWith(mediaFolder.Path)) {
+            var start = DateTime.UtcNow;
+            var allPaths = FileSystem.GetFilePaths(mediaFolder.Path, true)
+                .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+                .ToHashSet();
+            Logger.LogDebug("Found {FileCount} files in media folder at {Path} in {TimeSpan}.", allPaths.Count, mediaFolder.Path, DateTime.UtcNow - start);
+
+            cleanLevel = 0;
+            allFiles = GetFilesForImportFolder(mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
+        }
+
+        if (allFiles == null)
+            return null;
+
+        await GenerateSymbolicLinks(mediaFolder, allFiles, cleanLevel).ConfigureAwait(false);
+
+        return vfsPath;
+    }
+
+    public IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForEpisode(string fileId, string seriesId, int importFolderId, string importFolderSubPath, string mediaFolderPath)
+    {
+        var start = DateTime.UtcNow;
+        var file = ApiClient.GetFile(fileId).ConfigureAwait(false).GetAwaiter().GetResult();
+        if (file == null || !file.CrossReferences.Any(xref => xref.Series.ToString() == seriesId))
+            yield break;
+        Logger.LogDebug(
+            "Iterating 1 file to potentially use within media folder at {Path} (File={FileId},Series={SeriesId},ImportFolder={FolderId},RelativePath={RelativePath})",
+            mediaFolderPath,
+            fileId,
+            seriesId,
+            importFolderId,
+            importFolderSubPath
         );
 
-    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetImportFolderFiles(int importFolderId, string importFolderSubPath, string mediaFolderPath, ISet<string> fileSet)
+        var location = file.Locations
+            .Where(location => location.ImportFolderId == importFolderId && (importFolderSubPath.Length == 0 || location.Path.StartsWith(importFolderSubPath)))
+            .FirstOrDefault();
+        if (location == null || file.CrossReferences.Count == 0)
+            yield break;
+
+        var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
+        if (!File.Exists(sourceLocation))
+            yield break;
+
+        yield return (sourceLocation, fileId, seriesId);
+
+        var timeSpent = DateTime.UtcNow - start;
+        Logger.LogDebug(
+            "Iterated 1 file to potentially use within media folder at {Path} in {TimeSpan} (File={FileId},Series={SeriesId},ImportFolder={FolderId},RelativePath={RelativePath})",
+            mediaFolderPath,
+            timeSpent,
+            fileId,
+            seriesId,
+            importFolderId,
+            importFolderSubPath
+        );
+    }
+
+    public IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForMovie(string episodeId, string seriesId, int importFolderId, string importFolderSubPath, string mediaFolderPath, ISet<string> fileSet)
+    {
+        var start = DateTime.UtcNow;
+        var totalFiles = 0;
+        var seasonInfo = ApiManager.GetSeasonInfoForSeries(seriesId).ConfigureAwait(false).GetAwaiter().GetResult();
+        if (seasonInfo == null)
+            yield break;
+        Logger.LogDebug(
+            "Iterating files to potentially use within media folder at {Path} (Episode={EpisodeId},Series={SeriesId},ImportFolder={FolderId},RelativePath={RelativePath})",
+            mediaFolderPath,
+            episodeId,
+            seriesId,
+            importFolderId,
+            importFolderSubPath
+        );
+
+        var episodeIds = seasonInfo.ExtrasList.Select(episode => episode.Id).Append(episodeId).ToHashSet();
+        var files = ApiClient.GetFilesForSeries(seasonInfo.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+        var fileLocations = files
+            .Where(files => files.CrossReferences.Any(xref => xref.Episodes.Any(xrefEp => episodeIds.Contains(xrefEp.Shoko.ToString()))))
+            .SelectMany(file => file.Locations.Select(location => (file, location)))
+            .ToList();
+        foreach (var (file, location) in fileLocations) {
+            if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.Path.StartsWith(importFolderSubPath))
+                continue;
+
+            var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
+            if (!fileSet.Contains(sourceLocation))
+                continue;
+
+            totalFiles++;
+            yield return (sourceLocation, fileId: file.Id.ToString(), seriesId);
+        }
+        var timeSpent = DateTime.UtcNow - start;
+        Logger.LogDebug(
+            "Iterated {FileCount} file to potentially use within media folder at {Path} in {TimeSpan} (Episode={EpisodeId},Series={SeriesId},ImportFolder={FolderId},RelativePath={RelativePath})",
+            totalFiles,
+            mediaFolderPath,
+            timeSpent,
+            episodeId,
+            seriesId,
+            importFolderId,
+            importFolderSubPath
+        );
+    }
+
+    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForShow(string seriesId, int? seasonNumber, int importFolderId, string importFolderSubPath, string mediaFolderPath, ISet<string> fileSet)
+    {
+        var start = DateTime.UtcNow;
+        var showInfo = ApiManager.GetShowInfoForSeries(seriesId).ConfigureAwait(false).GetAwaiter().GetResult();
+        if (showInfo == null)
+            yield break;
+        Logger.LogDebug(
+            "Iterating files to potentially use within media folder at {Path} (Series={SeriesId},Season={SeasonNumber},ImportFolder={FolderId},RelativePath={RelativePath})",
+            mediaFolderPath,
+            seriesId,
+            seasonNumber,
+            importFolderId,
+            importFolderSubPath
+        );
+
+        // Only return the files for the given season.
+        var totalFiles = 0;
+        if (seasonNumber.HasValue) {
+            // Special handling of specials (pun intended)
+            if (seasonNumber.Value == 0) {
+                foreach (var seasonInfo in showInfo.SeasonList) {
+                    var episodeIds = seasonInfo.SpecialsList.Select(episode => episode.Id).ToHashSet();
+                    var files = ApiClient.GetFilesForSeries(seasonInfo.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+                    var fileLocations = files
+                        .Where(files => files.CrossReferences.Any(xref => xref.Episodes.Any(xrefEp => episodeIds.Contains(xrefEp.Shoko.ToString()))))
+                        .SelectMany(file => file.Locations.Select(location => (file, location)))
+                        .ToList();
+                    foreach (var (file, location) in fileLocations) {
+                        if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.Path.StartsWith(importFolderSubPath))
+                            continue;
+
+                        var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
+                        if (!fileSet.Contains(sourceLocation))
+                            continue;
+
+                        totalFiles++;
+                        yield return (sourceLocation, fileId: file.Id.ToString(), seriesId);
+                    }
+                }
+            }
+            // All other seasons.
+            else {
+                var seasonInfo = showInfo.GetSeasonInfoBySeasonNumber(seasonNumber.Value);
+                if (seasonInfo != null) {
+                    var baseNumber = showInfo.GetBaseSeasonNumberForSeasonInfo(seasonInfo);
+                    var offset = seasonNumber.Value - baseNumber;
+                    var episodeIds = (offset == 0 ? seasonInfo.EpisodeList.Concat(seasonInfo.ExtrasList) : seasonInfo.AlternateEpisodesList).Select(episode => episode.Id).ToHashSet();
+                    var files = ApiClient.GetFilesForSeries(seasonInfo.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+                    var fileLocations = files
+                        .Where(files => files.CrossReferences.Any(xref => xref.Episodes.Any(xrefEp => episodeIds.Contains(xrefEp.Shoko.ToString()))))
+                        .SelectMany(file => file.Locations.Select(location => (file, location)))
+                        .ToList();
+                    foreach (var (file, location) in fileLocations) {
+                        if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.Path.StartsWith(importFolderSubPath))
+                            continue;
+
+                        var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
+                        if (!fileSet.Contains(sourceLocation))
+                            continue;
+
+                        totalFiles++;
+                        yield return (sourceLocation, fileId: file.Id.ToString(), seriesId);
+                    }
+                }
+            }
+        }
+        // Return all files for the show.
+        else {
+            foreach (var seasonInfo in showInfo.SeasonList) {
+                var files = ApiClient.GetFilesForSeries(seasonInfo.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+                var fileLocations = files
+                    .SelectMany(file => file.Locations.Select(location => (file, location)))
+                    .ToList();
+                foreach (var (file, location) in fileLocations) {
+                    if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.Path.StartsWith(importFolderSubPath))
+                        continue;
+
+                    var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
+                    if (!fileSet.Contains(sourceLocation))
+                        continue;
+
+                    totalFiles++;
+                    yield return (sourceLocation, fileId: file.Id.ToString(), seriesId);
+                }
+            }
+        }
+
+        var timeSpent = DateTime.UtcNow - start;
+        Logger.LogDebug(
+            "Iterated {FileCount} files to potentially use within media folder at {Path} in {TimeSpan} (Series={SeriesId},Season={SeasonNumber},ImportFolder={FolderId},RelativePath={RelativePath})",
+            totalFiles,
+            mediaFolderPath,
+            timeSpent,
+            seriesId,
+            seasonNumber,
+            importFolderId,
+            importFolderSubPath
+        );
+    }
+
+    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForImportFolder(int importFolderId, string importFolderSubPath, string mediaFolderPath, ISet<string> fileSet)
     {
         var start = DateTime.UtcNow;
         var firstPage = ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath);
@@ -354,7 +623,7 @@ public class ShokoResolveManager
         return await ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath, page).ConfigureAwait(false);
     }
 
-    private async Task GenerateSymbolicLinks(Folder mediaFolder, IEnumerable<(string sourceLocation, string fileId, string seriesId)> files)
+    private async Task GenerateSymbolicLinks(Folder mediaFolder, IEnumerable<(string sourceLocation, string fileId, string seriesId)> files, int cleanLevel)
     {
         var result = new LinkGenerationResult();
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
@@ -362,23 +631,39 @@ public class ShokoResolveManager
         var allPathsForVFS = new ConcurrentBag<string>();
         var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VirtualFileSystemThreads);
         await Task.WhenAll(files.Select(async (tuple) => {
-            await semaphore.WaitAsync().ConfigureAwait(false);
+            var subResult = await DataCache.GetOrCreateAsync(
+                $"file={tuple.fileId},series={tuple.seriesId},location={tuple.sourceLocation}",
+                (_) => Logger.LogTrace("Re-used previous links for path {SourceLocation} (File={FileId},Series={SeriesId})", tuple.sourceLocation, tuple.fileId, tuple.seriesId),
+                async (_) => {
+                    await semaphore.WaitAsync().ConfigureAwait(false);
 
-            try {
-                // Skip any source files we weren't meant to have in the library.
-                var (sourceLocation, symbolicLinks, nfoFiles) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
-                var subResult = GenerateSymbolicLink(sourceLocation, symbolicLinks, nfoFiles, allPathsForVFS);
-                lock (semaphore) {
-                    result += subResult;
+                    Logger.LogTrace("Generating links for path {SourceLocation} (File={FileId},Series={SeriesId})", tuple.sourceLocation, tuple.fileId, tuple.seriesId);
+                    try {
+                        // Skip any source files we weren't meant to have in the library.
+                        var (sourceLocation, symbolicLinks, nfoFiles) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
+                        return GenerateSymbolicLinks(sourceLocation, symbolicLinks, nfoFiles, allPathsForVFS);
+                    }
+                    finally {
+                        semaphore.Release();
+                    }
+                },
+                new() {
+                    AbsoluteExpirationRelativeToNow = DefaultTTL,
                 }
-            }
-            finally {
-                semaphore.Release();
+            );
+
+            // Combine the current results with the overall results and mark the entitis as skipped
+            // for the next iterations.
+            lock (semaphore) {
+                result += subResult;
+                subResult.MarkSkipped();
             }
         }))
             .ConfigureAwait(false);
 
-        result += CleanupStructure(vfsPath, allPathsForVFS);
+        // Cleanup the structure in the VFS.
+        result += CleanupStructure(vfsPath, allPathsForVFS, cleanLevel);
+
         result.Print(mediaFolder, Logger);
     }
 
@@ -494,11 +779,10 @@ public class ShokoResolveManager
         return (sourceLocation, symbolicLinks, nfoFiles: nfoFiles.ToArray());
     }
 
-
     public LinkGenerationResult GenerateSymbolicLinks(string? sourceLocation, string[] symbolicLinks, string[] nfoFiles)
-        => GenerateSymbolicLink(sourceLocation, symbolicLinks, nfoFiles, new());
+        => GenerateSymbolicLinks(sourceLocation, symbolicLinks, nfoFiles, new());
 
-    private LinkGenerationResult GenerateSymbolicLink(string? sourceLocation, string[] symbolicLinks, string[] nfoFiles, ConcurrentBag<string> allPathsForVFS)
+    private LinkGenerationResult GenerateSymbolicLinks(string? sourceLocation, string[] symbolicLinks, string[] nfoFiles, ConcurrentBag<string> allPathsForVFS)
     {
         var result = new LinkGenerationResult();
         if (string.IsNullOrEmpty(sourceLocation))
@@ -604,11 +888,35 @@ public class ShokoResolveManager
         return result;
     }
 
-    private LinkGenerationResult CleanupStructure(string vfsPath, ConcurrentBag<string> allPathsForVFS)
+    private LinkGenerationResult CleanupStructure(string vfsPath, ConcurrentBag<string> allPathsForVFS, int cleanLevel)
     {
+        IEnumerable<string>? pathsToSearch = null;
+        switch (cleanLevel) {
+            // Media-folder level
+            case 0: 
+                pathsToSearch = FileSystem.GetFilePaths(vfsPath, true);
+                break;
+            // Series/box-set level
+            case 1:
+            // Season level
+            case 2:
+                pathsToSearch = allPathsForVFS
+                    .Select(path => path[(vfsPath.Length + 1)..])
+                    .Where(relativePath => relativePath.Split(Path.DirectorySeparatorChar).Length > cleanLevel)
+                    .Select(relativePath => Path.Combine(vfsPath, relativePath.Split(Path.DirectorySeparatorChar).Take(cleanLevel).Join(Path.DirectorySeparatorChar)))
+                    .Distinct()
+                    .SelectMany(path => FileSystem.GetFilePaths(path, true));
+                break;
+        }
+
+        // Return now if we're not going to search for files to remove.
         var result = new LinkGenerationResult();
+        if (pathsToSearch == null)
+            return result;
+
+        // Search the selected paths for files to remove.
         var searchFiles = _namingOptions.VideoFileExtensions.Concat(_namingOptions.SubtitleFileExtensions).Append(".nfo").ToHashSet();
-        var toBeRemoved = FileSystem.GetFilePaths(vfsPath, true)
+        var toBeRemoved = pathsToSearch
             .Select(path => (path, extName: Path.GetExtension(path)))
             .Where(tuple => searchFiles.Contains(tuple.extName))
             .ExceptBy(allPathsForVFS.ToHashSet(), tuple => tuple.path)
@@ -627,7 +935,7 @@ public class ShokoResolveManager
                 var subtitleLinks = FindSubtitlesForPath(location);
                 foreach (var subtitleLink in subtitleLinks) {
                     result.RemovedSubtitles++;
-                    File.Delete(location);
+                    File.Delete(subtitleLink);
                 }
             }
             else if (extName == ".nfo") {
@@ -639,7 +947,6 @@ public class ShokoResolveManager
 
             CleanupDirectoryStructure(location);
         }
-
         return result;
     }
 
@@ -846,15 +1153,13 @@ public class ShokoResolveManager
                 return null;
 
             // Skip anything outside the VFS.
-            var fullPath = fileInfo.FullName;
-            if (!fullPath.StartsWith(Plugin.Instance.VirtualRoot))
+            if (!fileInfo.FullName.StartsWith(Plugin.Instance.VirtualRoot))
                 return null;
 
-            var (mediaFolder, _) = ApiManager.FindMediaFolder(fullPath, parent, root);
-            if (mediaFolder == root)
+            if (parent.GetTopParent() is not Folder mediaFolder)
                 return null;
 
-            var vfsPath = await GenerateStructureForFolderInVFS(mediaFolder).ConfigureAwait(false);
+            var vfsPath = await GenerateStructureInVFS(mediaFolder, fileInfo.FullName).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath))
                 return null;
 
@@ -866,8 +1171,6 @@ public class ShokoResolveManager
                     Path = fileInfo.FullName,
                 };
             }
-
-            // TODO: Redirect to the base item in the VFS if needed.
 
             return null;
         }
@@ -890,12 +1193,15 @@ public class ShokoResolveManager
             if (!Lookup.IsEnabledForItem(parent))
                 return null;
 
-            // Redirect children of a VFS managed media folder to the VFS.
-            if (parent.ParentId == root.Id) {
-                var vfsPath = await GenerateStructureForFolderInVFS(parent).ConfigureAwait(false);
-                if (string.IsNullOrEmpty(vfsPath))
-                    return null;
+            if (parent.GetTopParent() is not Folder mediaFolder)
+                return null;
 
+            var vfsPath = await GenerateStructureInVFS(mediaFolder, parent.Path).ConfigureAwait(false);
+            if (string.IsNullOrEmpty(vfsPath))
+                return null;
+
+            // Redirect children of a VFS managed media folder to the VFS.
+            if (parent.IsTopParent) {
                 var createMovies = collectionType == CollectionType.Movies || (collectionType == null && Plugin.Instance.Configuration.SeparateMovies);
                 var items = FileSystem.GetDirectories(vfsPath)
                     .AsParallel()
@@ -959,8 +1265,6 @@ public class ShokoResolveManager
 
                 return new() { Items = items.Where(i => i is Movie).ToList(), ExtraFiles = items.OfType<TvSeries>().Select(s => FileSystem.GetFileSystemInfo(s.Path)).ToList() };
             }
-
-            // TODO: Redirect to the base item in the VFS if needed.
 
             return null;
         }
