@@ -61,7 +61,9 @@ public class LinkGenerationResult
     public void Print(Folder mediaFolder, ILogger logger)
     {
         var timeSpent = DateTime.Now - CreatedAt;
-        logger.LogInformation(
+        var logLevel = Removed == 0 && Skipped == Total ? LogLevel.Debug : LogLevel.Information;
+        logger.Log(
+            logLevel,
             "Created {CreatedTotal} ({CreatedMedia},{CreatedSubtitles},{CreatedNFO}), fixed {FixedTotal} ({FixedMedia},{FixedSubtitles}), skipped {SkippedTotal} ({SkippedMedia},{SkippedSubtitles},{SkippedNFO}), and removed {RemovedTotal} ({RemovedMedia},{RemovedSubtitles},{RemovedNFO}) entries in media folder at {Path} in {TimeSpan} (Total={Total})",
             Created,
             CreatedVideos,
