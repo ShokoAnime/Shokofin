@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.120",
+                "changelog": "refactor: overhaul link generation (again)\n\n- Overhauled the link generation to cache per file/series/location, and\n  to allow cleanup/generation on a media folder, series, season, movie,\n  and/or episode basis.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.120/shoko_3.0.1.120.zip",
+                "checksum": "3e7df7e8b4de82bb9116056dc5e3b67e",
+                "timestamp": "2024-04-15T01:56:01Z"
+            },
+            {
                 "version": "3.0.1.119",
                 "changelog": "fix: fix renamed event args previous relation path\n\nrefactor: split up resolve methods [skip ci]\n\n- Split up the resolver manager methods so the individual parts\n  can be used by the signalr connection manager in the future.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.116/shoko_3.0.1.116.zip",
                 "checksum": "946de3d379dee74db88deef64d7531f8",
                 "timestamp": "2024-04-14T10:12:21Z"
-            },
-            {
-                "version": "3.0.1.115",
-                "changelog": "fix: fix sym link test",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.115/shoko_3.0.1.115.zip",
-                "checksum": "0d701d7641ef938197b631b3ceaa2101",
-                "timestamp": "2024-04-13T23:14:19Z"
             }
         ]
     }
