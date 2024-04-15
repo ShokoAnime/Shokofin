@@ -236,7 +236,7 @@ public class ShokoResolveManager
             throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
 
         // Iterate the files already in the VFS.
-        var cleanLevel = -1;
+        string? pathToClean = null;
         IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         if (folderPath.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
@@ -259,13 +259,13 @@ public class ShokoResolveManager
                         if (!int.TryParse(episodeId, out _))
                             break;
 
-                        cleanLevel = 1;
-                        GetFilesForMovie(episodeId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
+                        pathToClean = folderPath;
+                        allFiles = GetFilesForMovie(episodeId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
                         break;
                     }
 
                     // show
-                    cleanLevel = 1;
+                    pathToClean = folderPath;
                     allFiles = GetFilesForShow(seriesId, null, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
                     break;
                 }
@@ -284,7 +284,6 @@ public class ShokoResolveManager
                         if (!seasonOrMovieName.TryGetAttributeValue(ShokoFileId.Name, out var fileId) || !int.TryParse(fileId, out _))
                             break;
 
-                        cleanLevel = -1;
                         allFiles = GetFilesForEpisode(fileId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path);
                         break;
                     }
@@ -293,7 +292,7 @@ public class ShokoResolveManager
                     if (!seasonOrMovieName.StartsWith("Season ") || !int.TryParse(seasonOrMovieName.Split(' ').Last(), out var seasonNumber))
                         break;
 
-                    cleanLevel = 2;
+                    pathToClean = folderPath;
                     allFiles = GetFilesForShow(seriesId, seasonNumber, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
                     break;
                 }
@@ -313,7 +312,6 @@ public class ShokoResolveManager
                     if (!episodeName.TryGetAttributeValue(ShokoFileId.Name, out var fileId) || !int.TryParse(fileId, out _))
                         break;
 
-                    cleanLevel = -1;
                     allFiles = GetFilesForEpisode(fileId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path);
                     break;
                 }
@@ -327,14 +325,14 @@ public class ShokoResolveManager
                 .ToHashSet();
             Logger.LogDebug("Found {FileCount} files in media folder at {Path} in {TimeSpan}.", allPaths.Count, mediaFolder.Path, DateTime.UtcNow - start);
 
-            cleanLevel = 0;
+            pathToClean = vfsPath;
             allFiles = GetFilesForImportFolder(mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
         }
 
         if (allFiles == null)
             return null;
 
-        await GenerateSymbolicLinks(mediaFolder, allFiles, cleanLevel).ConfigureAwait(false);
+        await GenerateSymbolicLinks(mediaFolder, allFiles, pathToClean).ConfigureAwait(false);
 
         return vfsPath;
     }
@@ -623,7 +621,7 @@ public class ShokoResolveManager
         return await ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath, page).ConfigureAwait(false);
     }
 
-    private async Task GenerateSymbolicLinks(Folder mediaFolder, IEnumerable<(string sourceLocation, string fileId, string seriesId)> files, int cleanLevel)
+    private async Task GenerateSymbolicLinks(Folder mediaFolder, IEnumerable<(string sourceLocation, string fileId, string seriesId)> files, string? pathToClean)
     {
         var result = new LinkGenerationResult();
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
@@ -662,7 +660,7 @@ public class ShokoResolveManager
             .ConfigureAwait(false);
 
         // Cleanup the structure in the VFS.
-        result += CleanupStructure(vfsPath, allPathsForVFS, cleanLevel);
+        result += CleanupStructure(vfsPath, allPathsForVFS, pathToClean);
 
         result.Print(mediaFolder, Logger);
     }
@@ -888,35 +886,16 @@ public class ShokoResolveManager
         return result;
     }
 
-    private LinkGenerationResult CleanupStructure(string vfsPath, ConcurrentBag<string> allPathsForVFS, int cleanLevel)
+    private LinkGenerationResult CleanupStructure(string vfsPath, ConcurrentBag<string> allPathsForVFS, string? pathToClean)
     {
-        IEnumerable<string>? pathsToSearch = null;
-        switch (cleanLevel) {
-            // Media-folder level
-            case 0: 
-                pathsToSearch = FileSystem.GetFilePaths(vfsPath, true);
-                break;
-            // Series/box-set level
-            case 1:
-            // Season level
-            case 2:
-                pathsToSearch = allPathsForVFS
-                    .Select(path => path[(vfsPath.Length + 1)..])
-                    .Where(relativePath => relativePath.Split(Path.DirectorySeparatorChar).Length > cleanLevel)
-                    .Select(relativePath => Path.Combine(vfsPath, relativePath.Split(Path.DirectorySeparatorChar).Take(cleanLevel).Join(Path.DirectorySeparatorChar)))
-                    .Distinct()
-                    .SelectMany(path => FileSystem.GetFilePaths(path, true));
-                break;
-        }
-
         // Return now if we're not going to search for files to remove.
         var result = new LinkGenerationResult();
-        if (pathsToSearch == null)
+        if (pathToClean == null)
             return result;
 
         // Search the selected paths for files to remove.
         var searchFiles = _namingOptions.VideoFileExtensions.Concat(_namingOptions.SubtitleFileExtensions).Append(".nfo").ToHashSet();
-        var toBeRemoved = pathsToSearch
+        var toBeRemoved = FileSystem.GetFilePaths(pathToClean, true)
             .Select(path => (path, extName: Path.GetExtension(path)))
             .Where(tuple => searchFiles.Contains(tuple.extName))
             .ExceptBy(allPathsForVFS.ToHashSet(), tuple => tuple.path)
