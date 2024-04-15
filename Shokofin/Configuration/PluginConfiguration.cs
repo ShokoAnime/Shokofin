@@ -4,6 +4,8 @@ using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 using Shokofin.API.Models;
 
+using TextSourceType = Shokofin.Utils.Text.TextSourceType;
+using TitleProviderLookupMethod = Shokofin.Utils.Text.TitleProviderLookupMethod;
 using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
 using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
 using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
@@ -75,12 +77,6 @@ public class PluginConfiguration : BasePluginConfiguration
 
     #region Metadata
 
-    [Obsolete("Being deprecated...")]
-    public DisplayLanguageType  TitleMainType { get; set; }
-
-    [Obsolete("Being deprecated...")]
-    public DisplayLanguageType  TitleAlternateType { get; set; }
-
     /// <summary>
     /// Determines if we use the overriden settings for how the main title is fetched for entries.
     /// </summary>
@@ -89,12 +85,12 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Determines how we'll be selecting our main title for entries.
     /// </summary>
-    public DisplayLanguageType[] TitleMainList { get; set; }
+    public TitleProviderLookupMethod[] TitleMainList { get; set; }
 
     /// <summary>
     /// The order of which we will be selecting our main title for entries.
     /// </summary>
-    public DisplayLanguageType[] TitleMainOrder { get; set; }
+    public TitleProviderLookupMethod[] TitleMainOrder { get; set; }
 
     /// <summary>
     /// Determines if we use the overriden settings for how the alternate title is fetched for entries.
@@ -104,12 +100,12 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Determines how we'll be selecting our alternate title for entries.
     /// </summary>
-    public DisplayLanguageType[] TitleAlternateList { get; set; }
+    public TitleProviderLookupMethod[] TitleAlternateList { get; set; }
 
     /// <summary>
     /// The order of which we will be selecting our alternate title for entries.
     /// </summary>
-    public DisplayLanguageType[] TitleAlternateOrder { get; set; }
+    public TitleProviderLookupMethod[] TitleAlternateOrder { get; set; }
 
     /// <summary>
     /// Allow choosing any title in the selected language if no official
@@ -324,16 +320,14 @@ public class PluginConfiguration : BasePluginConfiguration
         AddTMDBId = true;
         TitleMainOverride = false;
         TitleMainOrder = new[] { 
-            DisplayLanguageType.Shoko_Default,
-            DisplayLanguageType.AniDb_Default, DisplayLanguageType.AniDb_LibraryLanguage, DisplayLanguageType.AniDb_CountryOfOrigin,
-            DisplayLanguageType.TMDB_Default, DisplayLanguageType.TMDB_LibraryLanguage, DisplayLanguageType.TMDB_CountryOfOrigin
+            TitleProviderLookupMethod.Shoko_Default,
+            TitleProviderLookupMethod.AniDb_Default, TitleProviderLookupMethod.AniDb_LibraryLanguage, TitleProviderLookupMethod.AniDb_CountryOfOrigin,
+            TitleProviderLookupMethod.TMDB_Default, TitleProviderLookupMethod.TMDB_LibraryLanguage, TitleProviderLookupMethod.TMDB_CountryOfOrigin
         };
-        TitleMainList = Array.Empty<DisplayLanguageType>();
+        TitleMainList = Array.Empty<TitleProviderLookupMethod>();
         TitleAlternateOverride = false;
         TitleAlternateOrder = TitleMainOrder;
-        TitleAlternateList = Array.Empty<DisplayLanguageType>();
-        TitleMainType = DisplayLanguageType.Default;
-        TitleAlternateType = DisplayLanguageType.Origin;
+        TitleAlternateList = Array.Empty<TitleProviderLookupMethod>();
         TitleAllowAny = false;
         DescriptionSourceList = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
         DescriptionSourceOrder = DescriptionSourceList;

@@ -110,12 +110,12 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
                     (series.AniDB.Type == SeriesType.OVA && episodeInfo.AniDB.Type == EpisodeType.Normal && episodeInfo.AniDB.EpisodeNumber == 1 && episodeInfo.Shoko.Name == "OVA")
                 ) {
                     string defaultSeriesTitle = series.Shoko.Name;
-                    var ( dTitle, aTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episodeInfo.AniDB.Titles, defaultSeriesTitle, defaultEpisodeTitle, metadataLanguage);
+                    var ( dTitle, aTitle ) = Text.GetMovieTitle(episodeInfo, series, metadataLanguage);
                     displayTitles.Add(dTitle);
                     alternateTitles.Add(aTitle);
                 }
                 else {
-                    var ( dTitle, aTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episodeInfo.AniDB.Titles, defaultEpisodeTitle, metadataLanguage);
+                    var ( dTitle, aTitle ) = Text.GetEpisodeTitle(episodeInfo, series, metadataLanguage);
                     displayTitles.Add(dTitle);
                     alternateTitles.Add(aTitle);
                 }
@@ -133,10 +133,10 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
                 (series.AniDB.Type == SeriesType.OVA && episode.AniDB.Type == EpisodeType.Normal && episode.AniDB.EpisodeNumber == 1 && episode.Shoko.Name == "OVA")
             ) {
                 string defaultSeriesTitle = series.Shoko.Name;
-                ( displayTitle, alternateTitle ) = Text.GetMovieTitles(series.AniDB.Titles, episode.AniDB.Titles, defaultSeriesTitle, defaultEpisodeTitle, metadataLanguage);
+                ( displayTitle, alternateTitle ) = Text.GetMovieTitle(episode, series, metadataLanguage);
             }
             else {
-                ( displayTitle, alternateTitle ) = Text.GetEpisodeTitles(series.AniDB.Titles, episode.AniDB.Titles, defaultEpisodeTitle, metadataLanguage);
+                ( displayTitle, alternateTitle ) = Text.GetEpisodeTitle(episode, series, metadataLanguage);
             }
             description = Text.GetDescription(episode);
         }
