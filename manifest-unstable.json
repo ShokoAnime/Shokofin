@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.127",
+                "changelog": "fix: fix signalr models (again, but for real this time)",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.127/shoko_3.0.1.127.zip",
+                "checksum": "3de9d69ad6f5a0843d5108dfe7e09094",
+                "timestamp": "2024-04-16T02:20:26Z"
+            },
+            {
                 "version": "3.0.1.126",
                 "changelog": "fix: fix signalr models (again)",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.123/shoko_3.0.1.123.zip",
                 "checksum": "b47786b60e2271c85e0536e294458c0a",
                 "timestamp": "2024-04-15T11:52:13Z"
-            },
-            {
-                "version": "3.0.1.122",
-                "changelog": "refactor: remove music video extra type mappjn",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.122/shoko_3.0.1.122.zip",
-                "checksum": "5bc5164dfbca03f792badcfce06407de",
-                "timestamp": "2024-04-15T11:31:40Z"
             }
         ]
     }
