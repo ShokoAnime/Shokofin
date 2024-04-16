@@ -626,6 +626,7 @@ public class ShokoAPIManager : IDisposable
             async (cachedEntry) => {
                 Logger.LogTrace("Creating info object for season {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
 
+                var (earliestImportedAt, lastImportedAt)= await GetEarliestImportedAtForSeries(seriesId).ConfigureAwait(false);
                 var episodes = (await APIClient.GetEpisodesFromSeries(seriesId).ConfigureAwait(false) ?? new()).List
                     .Select(e => CreateEpisodeInfo(e, e.IDs.Shoko.ToString()))
                     .Where(e => !e.Shoko.IsHidden)
@@ -635,8 +636,7 @@ public class ShokoAPIManager : IDisposable
                 var relations = await APIClient.GetSeriesRelations(seriesId).ConfigureAwait(false);
                 var genres = await GetGenresForSeries(seriesId).ConfigureAwait(false);
                 var tags = await GetTagsForSeries(seriesId).ConfigureAwait(false);
-
-                var seasonInfo = new SeasonInfo(series, episodes, cast, relations, genres, tags);
+                var seasonInfo = new SeasonInfo(series, earliestImportedAt, lastImportedAt, episodes, cast, relations, genres, tags);
 
                 foreach (var episode in episodes)
                     EpisodeIdToSeriesIdDictionary.TryAdd(episode.Id, seriesId);
@@ -644,6 +644,24 @@ public class ShokoAPIManager : IDisposable
             },
             new() {
                 AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
+            }
+        );
+
+    private Task<(DateTime?, DateTime?)> GetEarliestImportedAtForSeries(string seriesId)
+        => DataCache.GetOrCreateAsync<(DateTime?, DateTime?)>(
+            $"series-earliest-imported-at:${seriesId}",
+            async (_) => {
+                var files = await APIClient.GetFilesForSeries(seriesId).ConfigureAwait(false);
+                if (!files.Any(f => f.ImportedAt.HasValue))
+                    return (null, null);
+                return (
+                    files.Any(f => f.ImportedAt.HasValue)
+                        ? files.Where(f => f.ImportedAt.HasValue).Select(f => f.ImportedAt!.Value).Min()
+                        : files.Select(f => f.CreatedAt).Min(),
+                    files.Any(f => f.ImportedAt.HasValue)
+                        ? files.Where(f => f.ImportedAt.HasValue).Select(f => f.ImportedAt!.Value).Max()
+                        : files.Select(f => f.CreatedAt).Max()
+                );
             }
         );
 

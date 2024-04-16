@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Shokofin.API.Models;
@@ -18,6 +19,18 @@ public class SeasonInfo
     public readonly Series.TvDB? TvDB;
 
     public readonly SeriesType Type;
+
+    /// <summary>
+    /// The date of the earliest imported file, or when the series was created
+    /// in shoko if no files are imported yet.
+    /// </summary>
+    public readonly DateTime? EarliestImportedAt;
+
+    /// <summary>
+    /// The date of the last imported file, or when the series was created
+    /// in shoko if no files are imported yet.
+    /// </summary>
+    public readonly DateTime? LastImportedAt;
 
     public readonly IReadOnlyList<string> Tags;
 
@@ -78,7 +91,7 @@ public class SeasonInfo
     /// </summary>
     public readonly IReadOnlyDictionary<string, RelationType> RelationMap;
 
-    public SeasonInfo(Series series, List<EpisodeInfo> episodes, List<Role> cast, List<Relation> relations, string[] genres, string[] tags)
+    public SeasonInfo(Series series, DateTime? earliestImportedAt, DateTime? lastImportedAt, List<EpisodeInfo> episodes, List<Role> cast, List<Relation> relations, string[] genres, string[] tags)
     {
         var seriesId = series.IDs.Shoko.ToString();
         var studios = cast
@@ -156,6 +169,8 @@ public class SeasonInfo
         AniDB = series.AniDBEntity;
         TvDB = series.TvDBEntityList.FirstOrDefault();
         Type = type;
+        EarliestImportedAt = earliestImportedAt;
+        LastImportedAt = lastImportedAt;
         Tags = tags;
         Genres = genres;
         Studios = studios;

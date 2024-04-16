@@ -24,6 +24,7 @@ using Shokofin.Utils;
 
 using File = System.IO.File;
 using TvSeries = MediaBrowser.Controller.Entities.TV.Series;
+using TvSeason = MediaBrowser.Controller.Entities.TV.Season;
 
 namespace Shokofin.Resolvers;
 
@@ -72,11 +73,15 @@ public class ShokoResolveManager
         Logger = logger;
         _namingOptions = namingOptions;
         ExternalPathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Subtitle);
+        LibraryManager.ItemAdded += OnLibraryManagerItemAddedOrUpdated;
+        LibraryManager.ItemUpdated -= OnLibraryManagerItemAddedOrUpdated;
         LibraryManager.ItemRemoved += OnLibraryManagerItemRemoved;
     }
 
     ~ShokoResolveManager()
     {
+        LibraryManager.ItemAdded -= OnLibraryManagerItemAddedOrUpdated;
+        LibraryManager.ItemUpdated -= OnLibraryManagerItemAddedOrUpdated;
         LibraryManager.ItemRemoved -= OnLibraryManagerItemRemoved;
         Clear(false);
     }
@@ -94,6 +99,94 @@ public class ShokoResolveManager
     }
 
     #region Changes Tracking
+
+    /// <summary>
+    /// Responsible for fixing up the date created at timestamps.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="eventArgs"></param>
+    private void OnLibraryManagerItemAddedOrUpdated(object? sender, ItemChangeEventArgs eventArgs)
+    {
+        if (eventArgs.Item == null || eventArgs.Item.IsVirtualItem || string.IsNullOrEmpty(eventArgs.Item.Path) || !eventArgs.Item.Path.StartsWith(Plugin.Instance.VirtualRoot))
+            return;
+
+        switch (eventArgs.Item) {
+            case TvSeries series: {
+                var seriesName = Path.GetFileName(series.Path);
+                if (!seriesName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
+                    break;
+
+                var showInfo = ApiManager.GetShowInfoForSeries(seriesId)
+                    .ConfigureAwait(false).GetAwaiter().GetResult();
+                if (showInfo == null || !showInfo.EarliestImportedAt.HasValue || series.DateCreated == showInfo.EarliestImportedAt.Value)
+                    break;
+                var updated = false;
+                if (showInfo.EarliestImportedAt.HasValue && series.DateCreated != showInfo.EarliestImportedAt.Value) {
+                    series.DateCreated = showInfo.EarliestImportedAt.Value;
+                    updated = true;
+                }
+                if (showInfo.EarliestImportedAt.HasValue && series.DateLastMediaAdded != showInfo.EarliestImportedAt.Value) {
+                    series.DateLastMediaAdded = showInfo.EarliestImportedAt.Value;
+                    updated = true;
+                }
+
+                if (updated)
+                    LibraryManager.UpdateItemAsync(series, eventArgs.Parent, ItemUpdateType.None, CancellationToken.None)
+                        .ConfigureAwait(false).GetAwaiter().GetResult();
+                break;
+            }
+
+            // TVSeason / Season
+            case TvSeason season: {
+                if (!season.IndexNumber.HasValue)
+                    break;
+
+                var series = season.Series;
+                if (series == null)
+                    break;
+
+                var seriesName = Path.GetFileName(series.Path);
+                if (!seriesName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
+                    break;
+
+                var showInfo = ApiManager.GetShowInfoForSeries(seriesId)
+                    .ConfigureAwait(false).GetAwaiter().GetResult();
+                if (showInfo == null)
+                    break;
+
+                var seasonInfo = showInfo.GetSeasonInfoBySeasonNumber(season.IndexNumber.Value);
+                if (seasonInfo == null || !seasonInfo.EarliestImportedAt.HasValue || season.DateCreated == seasonInfo.EarliestImportedAt.Value)
+                    break;
+
+                season.DateCreated = seasonInfo.EarliestImportedAt.Value;
+                LibraryManager.UpdateItemAsync(season, eventArgs.Parent, ItemUpdateType.None, CancellationToken.None)
+                    .ConfigureAwait(false).GetAwaiter().GetResult();
+                break;
+            }
+
+            // TvEpisode / Episode, Movie, and all other Video types.
+            case Video video: {
+                var videoName = Path.GetFileName(video.Path);
+                if (!videoName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
+                    break;
+
+                if (!videoName.TryGetAttributeValue(ShokoFileId.Name, out var fileId) || !int.TryParse(fileId, out _))
+                    break;
+
+                var file = ApiClient.GetFile(fileId)
+                    .ConfigureAwait(false).GetAwaiter().GetResult();
+                var dateCreated = file.ImportedAt ?? file.CreatedAt;
+
+                if (video.DateCreated == dateCreated)
+                    break;
+
+                video.DateCreated = dateCreated;
+                LibraryManager.UpdateItemAsync(video, eventArgs.Parent, ItemUpdateType.None, CancellationToken.None)
+                    .ConfigureAwait(false).GetAwaiter().GetResult();
+                break;
+            }
+        }
+    }
 
     private void OnLibraryManagerItemRemoved(object? sender, ItemChangeEventArgs e)
     {

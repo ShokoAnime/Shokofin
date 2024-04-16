@@ -80,6 +80,18 @@ public class ShowInfo
         (float)(SeasonList.Aggregate(0f, (total, seasonInfo) => total + seasonInfo.AniDB.Rating.ToFloat(10)) / SeasonList.Count);
 
     /// <summary>
+    /// The date of the earliest imported file, or when the series was created
+    /// in shoko if no files are imported yet.
+    /// </summary>
+    public readonly DateTime? EarliestImportedAt;
+
+    /// <summary>
+    /// The date of the last imported file, or when the series was created
+    /// in shoko if no files are imported yet.
+    /// </summary>
+    public readonly DateTime? LastImportedAt;
+
+    /// <summary>
     /// All tags from across all seasons.
     /// </summary>
     public readonly IReadOnlyList<string> Tags;
@@ -151,6 +163,8 @@ public class ShowInfo
         GroupId = seasonInfo.Shoko.IDs.ParentGroup.ToString();
         CollectionId = collectionId ?? seasonInfo.Shoko.IDs.ParentGroup.ToString();
         Name = seasonInfo.Shoko.Name;
+        EarliestImportedAt = seasonInfo.EarliestImportedAt;
+        LastImportedAt = seasonInfo.LastImportedAt;
         Tags = seasonInfo.Tags;
         Genres = seasonInfo.Genres;
         Studios = seasonInfo.Studios;
@@ -221,6 +235,8 @@ public class ShowInfo
         Name = group.Name;
         Shoko = group;
         CollectionId = useGroupIdForCollection ? groupId : group.IDs.ParentGroup?.ToString();
+        EarliestImportedAt = seasonList.Select(seasonInfo => seasonInfo.EarliestImportedAt).Min();
+        LastImportedAt = seasonList.Select(seasonInfo => seasonInfo.LastImportedAt).Max();
         Tags = seasonList.SelectMany(s => s.Tags).Distinct().ToArray();
         Genres = seasonList.SelectMany(s => s.Genres).Distinct().ToArray();
         Studios = seasonList.SelectMany(s => s.Studios).Distinct().ToArray();
