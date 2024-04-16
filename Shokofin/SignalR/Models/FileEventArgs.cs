@@ -40,7 +40,7 @@ public class FileEventArgs : IFileEventArgs
 
 #pragma warning disable IDE0051
     /// <summary>
-    /// Legacy cross-references of episodes lined to this file. Only present
+    /// Legacy cross-references of episodes linked to this file. Only present
     /// for setting the cross-references when deserializing JSON.
     /// </summary>
     [JsonInclude, JsonPropertyName("CrossRefs")]
