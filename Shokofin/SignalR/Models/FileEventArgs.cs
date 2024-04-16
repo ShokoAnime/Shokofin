@@ -44,6 +44,6 @@ public class FileEventArgs : IFileEventArgs
     /// for setting the cross-references when deserializing JSON.
     /// </summary>
     [JsonInclude, JsonPropertyName("CrossRefs")]
-    private List<IFileEventArgs.FileCrossReference> LegacyCrossReferences { set { CrossReferences = value; } }
+    public List<IFileEventArgs.FileCrossReference> LegacyCrossReferences { set { CrossReferences = value; } }
 #pragma warning restore IDE0051
 }
