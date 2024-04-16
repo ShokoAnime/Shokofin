@@ -293,26 +293,27 @@ public class ShokoAPIManager : IDisposable
     }
 
     // Set up both at the same time.
-    private async Task<(HashSet<string>, HashSet<string>)> GetPathSetAndLocalEpisodeIdsForSeries(string seriesId)
-    {
-        var key =$"series-path-set-and-episode-ids:${seriesId}";
-        if (DataCache.TryGetValue<(HashSet<string>, HashSet<string>)>(key, out var cached))
-            return cached;
+    private Task<(HashSet<string>, HashSet<string>)> GetPathSetAndLocalEpisodeIdsForSeries(string seriesId)
+        => DataCache.GetOrCreateAsync<(HashSet<string>, HashSet<string>)>(
+            $"series-path-set-and-episode-ids:${seriesId}",
+            async (_) => {
+                var pathSet = new HashSet<string>();
+                var episodeIds = new HashSet<string>();
+                foreach (var file in await APIClient.GetFilesForSeries(seriesId).ConfigureAwait(false)) {
+                    if (file.CrossReferences.Count == 1)
+                        foreach (var fileLocation in file.Locations)
+                            pathSet.Add((Path.GetDirectoryName(fileLocation.Path) ?? string.Empty) + Path.DirectorySeparatorChar);
+                    var xref = file.CrossReferences.First(xref => xref.Series.Shoko.ToString() == seriesId);
+                    foreach (var episodeXRef in xref.Episodes)
+                        episodeIds.Add(episodeXRef.Shoko.ToString());
+                    if (file.ImportedAt.HasValue) {
+                        
+                    }
+                }
 
-        var pathSet = new HashSet<string>();
-        var episodeIds = new HashSet<string>();
-        foreach (var file in await APIClient.GetFilesForSeries(seriesId).ConfigureAwait(false)) {
-            if (file.CrossReferences.Count == 1)
-                foreach (var fileLocation in file.Locations)
-                    pathSet.Add((Path.GetDirectoryName(fileLocation.Path) ?? string.Empty) + Path.DirectorySeparatorChar);
-            var xref = file.CrossReferences.First(xref => xref.Series.Shoko.ToString() == seriesId);
-            foreach (var episodeXRef in xref.Episodes)
-                episodeIds.Add(episodeXRef.Shoko.ToString());
-        }
-
-        DataCache.Set(key, (pathSet, episodeIds), DefaultTimeSpan);
-        return (pathSet, episodeIds);
-    }
+                return (pathSet, episodeIds);
+            }
+        );
 
     #endregion
     #region File Info
