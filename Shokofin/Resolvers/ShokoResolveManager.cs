@@ -49,7 +49,7 @@ public class ShokoResolveManager
         ExpirationScanFrequency = ExpirationScanFrequency,
     });
 
-    private static readonly TimeSpan ExpirationScanFrequency = new(0, 25, 0);
+    private static readonly TimeSpan ExpirationScanFrequency = TimeSpan.FromMinutes(25);
 
     private static readonly TimeSpan DefaultTTL = TimeSpan.FromMinutes(60);
 
@@ -124,6 +124,23 @@ public class ShokoResolveManager
     #endregion
 
     #region Media Folder Mapping
+
+    private IReadOnlySet<string> GetPathsForMediaFolder(Folder mediaFolder)
+        => DataCache.GetOrCreate<IReadOnlySet<string>>(
+            $"paths-for-media-folder:{mediaFolder.Path}",
+            (paths) => Logger.LogTrace("Reusing {FileCount} files for folder at {Path}", paths.Count, mediaFolder.Path),
+            (_) => {
+                var start = DateTime.UtcNow;
+                var paths = FileSystem.GetFilePaths(mediaFolder.Path, true)
+                    .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+                    .ToHashSet();
+                Logger.LogDebug("Found {FileCount} files in folder at {Path} in {TimeSpan}.", paths.Count, mediaFolder.Path, DateTime.UtcNow - start);
+                return paths;
+            },
+            new() {
+                SlidingExpiration = TimeSpan.FromMinutes(30),
+            }
+        );
 
     public IReadOnlyList<(MediaFolderConfiguration config, Folder mediaFolder)> GetAvailableMediaFolders()
         => Plugin.Instance.Configuration.MediaFolders
@@ -240,12 +257,7 @@ public class ShokoResolveManager
         IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         if (folderPath.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
-            var start = DateTime.UtcNow;
-            var allPaths = FileSystem.GetFilePaths(mediaFolder.Path, true)
-                .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
-                .ToHashSet();
-            Logger.LogDebug("Found {FileCount} files in media folder at {Path} in {TimeSpan}.", allPaths.Count, folderPath, DateTime.UtcNow - start);
-
+            var allPaths = GetPathsForMediaFolder(mediaFolder);
             var pathSegments = folderPath[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
             switch (pathSegments.Length) {
                 // show/movie-folder level
@@ -319,12 +331,7 @@ public class ShokoResolveManager
         }
         // Iterate files in the "real" media folder.
         else if (folderPath.StartsWith(mediaFolder.Path)) {
-            var start = DateTime.UtcNow;
-            var allPaths = FileSystem.GetFilePaths(mediaFolder.Path, true)
-                .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
-                .ToHashSet();
-            Logger.LogDebug("Found {FileCount} files in media folder at {Path} in {TimeSpan}.", allPaths.Count, mediaFolder.Path, DateTime.UtcNow - start);
-
+            var allPaths = GetPathsForMediaFolder(mediaFolder);
             pathToClean = vfsPath;
             allFiles = GetFilesForImportFolder(mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
         }
@@ -376,7 +383,7 @@ public class ShokoResolveManager
         );
     }
 
-    public IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForMovie(string episodeId, string seriesId, int importFolderId, string importFolderSubPath, string mediaFolderPath, ISet<string> fileSet)
+    public IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForMovie(string episodeId, string seriesId, int importFolderId, string importFolderSubPath, string mediaFolderPath, IReadOnlySet<string> fileSet)
     {
         var start = DateTime.UtcNow;
         var totalFiles = 0;
@@ -422,7 +429,7 @@ public class ShokoResolveManager
         );
     }
 
-    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForShow(string seriesId, int? seasonNumber, int importFolderId, string importFolderSubPath, string mediaFolderPath, ISet<string> fileSet)
+    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForShow(string seriesId, int? seasonNumber, int importFolderId, string importFolderSubPath, string mediaFolderPath, IReadOnlySet<string> fileSet)
     {
         var start = DateTime.UtcNow;
         var showInfo = ApiManager.GetShowInfoForSeries(seriesId).ConfigureAwait(false).GetAwaiter().GetResult();
@@ -522,7 +529,7 @@ public class ShokoResolveManager
         );
     }
 
-    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForImportFolder(int importFolderId, string importFolderSubPath, string mediaFolderPath, ISet<string> fileSet)
+    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForImportFolder(int importFolderId, string importFolderSubPath, string mediaFolderPath, IReadOnlySet<string> fileSet)
     {
         var start = DateTime.UtcNow;
         var firstPage = ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath);
