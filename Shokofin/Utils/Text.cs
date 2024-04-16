@@ -232,7 +232,7 @@ public static class Text
             case DisplayTitleType.Alternate:
                 if (Plugin.Instance.Configuration.TitleAlternateOverride)
                     return Plugin.Instance.Configuration.TitleAlternateOrder.Where((t) => Plugin.Instance.Configuration.TitleAlternateList.Contains(t)).ToArray();
-                return Array.Empty<TitleProviderLookupMethod>();
+                return new[] { TitleProviderLookupMethod.AniDb_LibraryLanguage };
             default:
                 return Array.Empty<TitleProviderLookupMethod>();
         }

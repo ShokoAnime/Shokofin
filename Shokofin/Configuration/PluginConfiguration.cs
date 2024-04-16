@@ -327,8 +327,10 @@ public class PluginConfiguration : BasePluginConfiguration
         TitleMainList = Array.Empty<TitleProviderLookupMethod>();
         TitleAlternateOverride = false;
         TitleAlternateOrder = TitleMainOrder;
-        TitleAlternateList = Array.Empty<TitleProviderLookupMethod>();
-        TitleAllowAny = false;
+        TitleAlternateList = new[] {
+            TitleProviderLookupMethod.AniDb_LibraryLanguage
+        };
+        TitleAllowAny = true;
         DescriptionSourceList = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
         DescriptionSourceOrder = DescriptionSourceList;
         VirtualFileSystem = CanCreateSymbolicLinks;
