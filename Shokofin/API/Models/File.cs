@@ -42,11 +42,18 @@ public class File
     /// </summary>
     public TimeSpan Duration { get; set; }
 
+    /// <summary>
+    /// The file creation date of this file.
+    /// </summary>
     [JsonPropertyName("Created")]
     public DateTime CreatedAt { get; set; }
 
-    [JsonPropertyName("Updated")]
-    public DateTime LastUpdatedAt { get; set; }
+    /// <summary>
+    /// When the file was last imported. Usually is a file only imported once,
+    /// but there may be exceptions.
+    /// </summary>
+    [JsonPropertyName("Imported")]
+    public DateTime? ImportedAt { get; set; }
 
     [JsonPropertyName("AniDB")]
     public AniDB? AniDBData { get; set; }

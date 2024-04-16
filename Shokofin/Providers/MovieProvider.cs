@@ -64,6 +64,7 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>
                 Genres = season.Genres.ToArray(),
                 Studios = season.Studios.ToArray(),
                 CommunityRating = rating,
+                DateCreated = file.Shoko.ImportedAt ?? file.Shoko.CreatedAt,
             };
             result.Item.SetProviderId(ShokoFileId.Name, file.Id);
             result.Item.SetProviderId(ShokoEpisodeId.Name, episode.Id);

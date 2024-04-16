@@ -12,7 +12,7 @@ public class FileInfo
 
     public MediaBrowser.Model.Entities.ExtraType? ExtraType;
 
-    public File File;
+    public File Shoko;
 
     public List<EpisodeInfo> EpisodeList;
 
@@ -25,7 +25,7 @@ public class FileInfo
         Id = file.Id.ToString();
         SeriesId = seriesId;
         ExtraType = episodeList.FirstOrDefault(episode => episode.ExtraType != null)?.ExtraType;
-        File = file;
+        Shoko = file;
         EpisodeList = episodeList;
         AlternateEpisodeLists = alternateEpisodeLists;
     }

@@ -227,10 +227,13 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
             };
         }
 
-        if (file != null && file.EpisodeList.Count > 1) {
-            var episodeNumberEnd = episodeNumber + file.EpisodeList.Count - 1;
-            if (episodeNumberEnd != episodeNumber && episode.AniDB.EpisodeNumber != episodeNumberEnd)
-                result.IndexNumberEnd = episodeNumberEnd;
+        if (file != null) {
+            result.DateCreated = file.Shoko.ImportedAt ?? file.Shoko.CreatedAt;
+            if (file.EpisodeList.Count > 1) {
+                var episodeNumberEnd = episodeNumber + file.EpisodeList.Count - 1;
+                if (episodeNumberEnd != episodeNumber && episode.AniDB.EpisodeNumber != episodeNumberEnd)
+                    result.IndexNumberEnd = episodeNumberEnd;
+            }
         }
 
         AddProviderIds(result, episodeId: episode.Id, fileId: file?.Id, seriesId: file?.SeriesId, anidbId: episode.AniDB.Id.ToString());
