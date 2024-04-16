@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.129",
+                "changelog": "fix: only iterate files in folder",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.129/shoko_3.0.1.129.zip",
+                "checksum": "9a20bf38f55b6ad7908c13b9761c87f1",
+                "timestamp": "2024-04-16T03:23:12Z"
+            },
+            {
                 "version": "3.0.1.128",
                 "changelog": "misc: add missing props. to v0 models\n\nmisc: update file event args\n\n- Update file event args to expose the file location id, if available,\n  and to have an indicator as to if we got any cross-references\n  from the server (this is needed because we're supporting _both_\n  the stable server _and_ the daily server).\n\n- Update the debug log statments to include the new properties.\n\nmisc: fix typo [skip ci]",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.125/shoko_3.0.1.125.zip",
                 "checksum": "c8520e33727a185d0a3ad32e3651db91",
                 "timestamp": "2024-04-15T22:08:45Z"
-            },
-            {
-                "version": "3.0.1.124",
-                "changelog": "fix: fix the simplified cleanup code\n\n- add path tracking to the link generation results so we can\n  reuse the paths from a cached result when cleaning.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.124/shoko_3.0.1.124.zip",
-                "checksum": "06de5975cb4886afb6c688ff6097e547",
-                "timestamp": "2024-04-15T21:46:48Z"
             }
         ]
     }
