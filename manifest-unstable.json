@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.128",
+                "changelog": "misc: add missing props. to v0 models\n\nmisc: update file event args\n\n- Update file event args to expose the file location id, if available,\n  and to have an indicator as to if we got any cross-references\n  from the server (this is needed because we're supporting _both_\n  the stable server _and_ the daily server).\n\n- Update the debug log statments to include the new properties.\n\nmisc: fix typo [skip ci]",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.128/shoko_3.0.1.128.zip",
+                "checksum": "a3f564d513b105784c27c0e90f6e73d7",
+                "timestamp": "2024-04-16T03:06:13Z"
+            },
+            {
                 "version": "3.0.1.127",
                 "changelog": "fix: fix signalr models (again, but for real this time)",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.124/shoko_3.0.1.124.zip",
                 "checksum": "06de5975cb4886afb6c688ff6097e547",
                 "timestamp": "2024-04-15T21:46:48Z"
-            },
-            {
-                "version": "3.0.1.123",
-                "changelog": "refactor: simplify cleanup code",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.123/shoko_3.0.1.123.zip",
-                "checksum": "b47786b60e2271c85e0536e294458c0a",
-                "timestamp": "2024-04-15T11:52:13Z"
             }
         ]
     }
