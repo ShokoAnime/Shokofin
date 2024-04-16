@@ -69,14 +69,13 @@ public class FileRenamedEventArgs : FileEventArgs, IFileRelocationEventArgs
         [JsonInclude, JsonPropertyName("OldFileName")]
         public string PreviousFileName  { get; set; } = string.Empty;
 
-
         /// <inheritdoc/>
         [JsonIgnore]
         public int PreviousImportFolderId => ImportFolderId;
 
         /// <inheritdoc/>
         [JsonIgnore]
-        public string PreviousRelativePath => RelativePath[^FileName.Length] + PreviousFileName;
+        public string PreviousRelativePath => RelativePath[..^FileName.Length] + PreviousFileName;
 
         /// <inheritdoc/>
         [JsonIgnore]

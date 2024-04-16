@@ -49,7 +49,7 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
         /// The relative path with no leading slash and directory seperators used on
         /// the Shoko side.
         /// </summary>
-        [JsonInclude, JsonPropertyName("RelativePath")]
+        [JsonInclude, JsonPropertyName("NewRelativePath")]
         public string InternalPath  { get; set; } = string.Empty;
 
         /// <summary>
