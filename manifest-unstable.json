@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.126",
+                "changelog": "fix: fix signalr models (again)",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.126/shoko_3.0.1.126.zip",
+                "checksum": "493279e9e86d69d8e1136ae480f175da",
+                "timestamp": "2024-04-16T02:00:50Z"
+            },
+            {
                 "version": "3.0.1.125",
                 "changelog": "misc: tweak link generation logging\n\nmisc: remove unneeded arg for cleanup func.\n\nfix: correct yielded series id for files",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.122/shoko_3.0.1.122.zip",
                 "checksum": "5bc5164dfbca03f792badcfce06407de",
                 "timestamp": "2024-04-15T11:31:40Z"
-            },
-            {
-                "version": "3.0.1.121",
-                "changelog": "fix: fix signalr models",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.121/shoko_3.0.1.121.zip",
-                "checksum": "4782541b6439f4bc26eb815a9c4495e4",
-                "timestamp": "2024-04-15T02:06:01Z"
             }
         ]
     }
