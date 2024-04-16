@@ -241,7 +241,7 @@ public class ShokoResolveManager
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         if (folderPath.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
             var start = DateTime.UtcNow;
-            var allPaths = FileSystem.GetFilePaths(mediaFolder.Path, true)
+            var allPaths = FileSystem.GetFilePaths(folderPath, true)
                 .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
                 .ToHashSet();
             Logger.LogDebug("Found {FileCount} files in media folder at {Path} in {TimeSpan}.", allPaths.Count, folderPath, DateTime.UtcNow - start);
