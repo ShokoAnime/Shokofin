@@ -38,6 +38,10 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
         public int FileId { get; set; }
 
         /// <inheritdoc/>
+        [JsonIgnore]
+        public int? FileLocationId => null;
+
+        /// <inheritdoc/>
         [JsonInclude, JsonPropertyName("NewImportFolderID")]
         public int ImportFolderId { get; set; }
 
@@ -85,6 +89,10 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
             PreviousCachedPath ??= System.IO.Path.DirectorySeparatorChar + PreviousInternalPath
                 .Replace('/', System.IO.Path.DirectorySeparatorChar)
                 .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+
+        /// <inheritdoc/>
+        [JsonIgnore]
+        public bool HasCrossReferences => false;
 
         /// <inheritdoc/>
         [JsonIgnore]

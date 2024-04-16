@@ -34,6 +34,10 @@ public class FileRenamedEventArgs : FileEventArgs, IFileRelocationEventArgs
         public int FileId { get; set; }
 
         /// <inheritdoc/>
+        [JsonIgnore]
+        public int? FileLocationId => null;
+
+        /// <inheritdoc/>
         [JsonInclude, JsonPropertyName("ImportFolderID")]
         public int ImportFolderId { get; set; }
 
@@ -76,6 +80,10 @@ public class FileRenamedEventArgs : FileEventArgs, IFileRelocationEventArgs
         /// <inheritdoc/>
         [JsonIgnore]
         public string PreviousRelativePath => RelativePath[..^FileName.Length] + PreviousFileName;
+
+        /// <inheritdoc/>
+        [JsonIgnore]
+        public bool HasCrossReferences => false;
 
         /// <inheritdoc/>
         [JsonIgnore]
