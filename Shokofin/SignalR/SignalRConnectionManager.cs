@@ -199,10 +199,12 @@ public class SignalRConnectionManager : IDisposable
     private void OnFileMatched(IFileEventArgs eventArgs)
     {
         Logger.LogDebug(
-            "File matched; {ImportFolderId} {Path} (File={FileId})",
+            "File matched; {ImportFolderId} {Path} (File={FileId},Location={LocationId},CrossReferences={HasCrossReferences})",
             eventArgs.ImportFolderId,
             eventArgs.RelativePath,
-            eventArgs.FileId
+            eventArgs.FileId,
+            eventArgs.FileLocationId,
+            eventArgs.HasCrossReferences
         );
 
         // also check if the locations we've found are mapped, and if they are
@@ -217,12 +219,14 @@ public class SignalRConnectionManager : IDisposable
     private void OnFileRelocated(IFileRelocationEventArgs eventArgs)
     {
         Logger.LogDebug(
-            "File relocated; {ImportFolderIdA} {PathA} → {ImportFolderIdB} {PathB} (File={FileId})",
+            "File relocated; {ImportFolderIdA} {PathA} → {ImportFolderIdB} {PathB} (File={FileId},Location={LocationId},CrossReferences={HasCrossReferences})",
             eventArgs.PreviousImportFolderId,
             eventArgs.PreviousRelativePath,
             eventArgs.ImportFolderId,
             eventArgs.RelativePath,
-            eventArgs.FileId
+            eventArgs.FileId,
+            eventArgs.FileLocationId,
+            eventArgs.HasCrossReferences
         );
 
         // check the previous and current locations, and report the changes.
@@ -240,10 +244,12 @@ public class SignalRConnectionManager : IDisposable
     private void OnFileDeleted(IFileEventArgs eventArgs)
     {
         Logger.LogDebug(
-            "File deleted; {ImportFolderIdB} {PathB} (File={FileId})",
+            "File deleted; {ImportFolderIdB} {PathB} (File={FileId},Location={LocationId},CrossReferences={HasCrossReferences})",
             eventArgs.ImportFolderId,
             eventArgs.RelativePath,
-            eventArgs.FileId
+            eventArgs.FileId,
+            eventArgs.FileLocationId,
+            eventArgs.HasCrossReferences
         );
         // The location has been removed.
 

@@ -11,6 +11,10 @@ public class FileEventArgs : IFileEventArgs
     public int FileId { get; set; }
 
     /// <inheritdoc/>
+    [JsonInclude, JsonPropertyName("FileLocationID")]
+    public int? FileLocationId { get; set; }
+
+    /// <inheritdoc/>
     [JsonInclude, JsonPropertyName("ImportFolderID")]
     public int ImportFolderId { get; set; }
 
@@ -35,7 +39,11 @@ public class FileEventArgs : IFileEventArgs
             .Replace('\\', System.IO.Path.DirectorySeparatorChar);
 
     /// <inheritdoc/>
-    [JsonInclude, JsonPropertyName("CrossReferences")]
+    [JsonIgnore]
+    public bool HasCrossReferences { get; set; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
     public List<IFileEventArgs.FileCrossReference> CrossReferences { get; set; } = new();
 
 #pragma warning disable IDE0051
@@ -43,7 +51,14 @@ public class FileEventArgs : IFileEventArgs
     /// Legacy cross-references of episodes linked to this file. Only present
     /// for setting the cross-references when deserializing JSON.
     /// </summary>
+    [JsonInclude, JsonPropertyName("CrossReferences")]
+    public List<IFileEventArgs.FileCrossReference> CurrentCrossReferences { set { HasCrossReferences = true; CrossReferences = value; } }
+
+    /// <summary>
+    /// Legacy cross-references of episodes linked to this file. Only present
+    /// for setting the cross-references when deserializing JSON.
+    /// </summary>
     [JsonInclude, JsonPropertyName("CrossRefs")]
-    public List<IFileEventArgs.FileCrossReference> LegacyCrossReferences { set { CrossReferences = value; } }
+    public List<IFileEventArgs.FileCrossReference> LegacyCrossReferences { set { HasCrossReferences = true; CrossReferences = value; } }
 #pragma warning restore IDE0051
 }

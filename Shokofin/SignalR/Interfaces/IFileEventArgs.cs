@@ -11,6 +11,11 @@ public interface IFileEventArgs
     int FileId { get; }
 
     /// <summary>
+    /// Shoko file location id, if available.
+    /// </summary>
+    int? FileLocationId { get; }
+
+    /// <summary>
     /// The ID of the new import folder the event was detected in.
     /// </summary>
     /// <value></value>
@@ -22,6 +27,12 @@ public interface IFileEventArgs
     /// the start and normalised for the local system.
     /// </summary>
     string RelativePath { get; }
+
+    /// <summary>
+    /// Indicates that the event has cross references provided. They may still
+    /// be empty, but now we don't need to fetch them seperately.
+    /// </summary>
+    bool HasCrossReferences { get; }
 
     /// <summary>
     /// Cross references of episodes linked to this file.
