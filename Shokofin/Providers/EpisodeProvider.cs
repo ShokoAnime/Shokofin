@@ -110,7 +110,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
                     (series.AniDB.Type == SeriesType.OVA && episodeInfo.AniDB.Type == EpisodeType.Normal && episodeInfo.AniDB.EpisodeNumber == 1 && episodeInfo.Shoko.Name == "OVA")
                 ) {
                     string defaultSeriesTitle = series.Shoko.Name;
-                    var ( dTitle, aTitle ) = Text.GetMovieTitle(episodeInfo, series, metadataLanguage);
+                    var ( dTitle, aTitle ) = Text.GetMovieOrOvaTitle(episodeInfo, series, metadataLanguage);
                     displayTitles.Add(dTitle);
                     alternateTitles.Add(aTitle);
                 }
@@ -133,7 +133,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
                 (series.AniDB.Type == SeriesType.OVA && episode.AniDB.Type == EpisodeType.Normal && episode.AniDB.EpisodeNumber == 1 && episode.Shoko.Name == "OVA")
             ) {
                 string defaultSeriesTitle = series.Shoko.Name;
-                ( displayTitle, alternateTitle ) = Text.GetMovieTitle(episode, series, metadataLanguage);
+                ( displayTitle, alternateTitle ) = Text.GetMovieOrOvaTitle(episode, series, metadataLanguage);
             }
             else {
                 ( displayTitle, alternateTitle ) = Text.GetEpisodeTitle(episode, series, metadataLanguage);

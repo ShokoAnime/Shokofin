@@ -46,7 +46,7 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>
                 return result;
             }
 
-            var ( displayTitle, alternateTitle ) = Text.GetMovieTitle(episode, season, info.MetadataLanguage);
+            var ( displayTitle, alternateTitle ) = Text.GetMovieOrOvaTitle(episode, season, info.MetadataLanguage);
             Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", displayTitle, file.Id, episode.Id, season.Id);
 
             bool isMultiEntry = season.Shoko.Sizes.Total.Episodes > 1;

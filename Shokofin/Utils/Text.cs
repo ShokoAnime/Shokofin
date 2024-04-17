@@ -261,8 +261,8 @@ public static class Text
     public static (string?, string?) GetSeriesTitle(SeasonInfo series, string metadataLanguage)
         => (GetSeriesTitleByType(series, DisplayTitleType.Main, metadataLanguage), GetSeriesTitleByType(series, DisplayTitleType.Alternate, metadataLanguage));
 
-    public static (string?, string?) GetMovieTitle(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
-        => (GetMovieTitleByType(episode, series, DisplayTitleType.Main, metadataLanguage), GetMovieTitleByType(episode, series, DisplayTitleType.Alternate, metadataLanguage));
+    public static (string?, string?) GetMovieOrOvaTitle(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
+        => (GetMovieOrOvaTitleByType(episode, series, DisplayTitleType.Main, metadataLanguage), GetMovieOrOvaTitleByType(episode, series, DisplayTitleType.Alternate, metadataLanguage));
 
     private static string? GetEpisodeTitleByType(EpisodeInfo episode, SeasonInfo series, DisplayTitleType type, string metadataLanguage)
     {
@@ -316,7 +316,7 @@ public static class Text
         return title?.Trim();
     }
 
-    private static string? GetMovieTitleByType(EpisodeInfo episode, SeasonInfo series, DisplayTitleType type, string metadataLanguage)
+    private static string? GetMovieOrOvaTitleByType(EpisodeInfo episode, SeasonInfo series, DisplayTitleType type, string metadataLanguage)
     {
         var mainTitle = GetSeriesTitleByType(series, type, metadataLanguage);
         var subTitle = GetEpisodeTitleByType(episode, series, type, metadataLanguage);
