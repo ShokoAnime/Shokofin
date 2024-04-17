@@ -69,7 +69,7 @@ public static class Text
     /// <summary>
     /// Where to get text the text from.
     /// </summary>
-    public enum TextSourceType {
+    public enum DescriptionSourceType {
         /// <summary>
         /// Use data from AniDB.
         /// </summary>
@@ -119,21 +119,21 @@ public static class Text
         => GetDescription(show.DefaultSeason);
 
     public static string GetDescription(SeasonInfo season)
-        => GetDescription(new Dictionary<TextSourceType, string>() {
-            {TextSourceType.AniDb, season.AniDB.Description ?? string.Empty},
-            {TextSourceType.TvDb, season.TvDB?.Description ?? string.Empty},
+        => GetDescription(new Dictionary<DescriptionSourceType, string>() {
+            {DescriptionSourceType.AniDb, season.AniDB.Description ?? string.Empty},
+            {DescriptionSourceType.TvDb, season.TvDB?.Description ?? string.Empty},
         });
 
     public static string GetDescription(EpisodeInfo episode)
-        => GetDescription(new Dictionary<TextSourceType, string>() {
-            {TextSourceType.AniDb, episode.AniDB.Description ?? string.Empty},
-            {TextSourceType.TvDb, episode.TvDB?.Description ?? string.Empty},
+        => GetDescription(new Dictionary<DescriptionSourceType, string>() {
+            {DescriptionSourceType.AniDb, episode.AniDB.Description ?? string.Empty},
+            {DescriptionSourceType.TvDb, episode.TvDB?.Description ?? string.Empty},
         });
 
     public static string GetDescription(IEnumerable<EpisodeInfo> episodeList)
         => JoinText(episodeList.Select(episode => GetDescription(episode))) ?? string.Empty;
 
-    private static string GetDescription(Dictionary<TextSourceType, string> descriptions)
+    private static string GetDescription(Dictionary<DescriptionSourceType, string> descriptions)
     {
         var overview = string.Empty;
 
@@ -152,8 +152,8 @@ public static class Text
 
             overview = provider switch
             {
-                TextSourceType.AniDb => descriptions.TryGetValue(TextSourceType.AniDb, out var desc) ? SanitizeTextSummary(desc) : string.Empty,
-                TextSourceType.TvDb => descriptions.TryGetValue(TextSourceType.TvDb, out var desc) ? desc : string.Empty,
+                DescriptionSourceType.AniDb => descriptions.TryGetValue(DescriptionSourceType.AniDb, out var desc) ? SanitizeTextSummary(desc) : string.Empty,
+                DescriptionSourceType.TvDb => descriptions.TryGetValue(DescriptionSourceType.TvDb, out var desc) ? desc : string.Empty,
                 _ => string.Empty
             };
         }
@@ -238,7 +238,13 @@ public static class Text
         }
     }
 
-    public static string? GetTitlesForLanguage(List<Title> titles, string metadataLanguage)
+    public static string? GetDefaultTitle(List<Title> titles)
+        => titles.FirstOrDefault(t => t.IsDefault)?.Value;
+
+    private static string? GetLanguageCode(List<Title> titles, string? mainTitle)
+        => titles.FirstOrDefault(t => t.Value == mainTitle)?.LanguageCode;
+    
+    public static string? GetTitlesForLanguage(List<Title> titles, string? metadataLanguage)
     {
         var titleList = titles.Where(t => t.LanguageCode == metadataLanguage);
         if (!titleList.Any())
@@ -252,37 +258,37 @@ public static class Text
     public static (string?, string?) GetEpisodeTitle(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
         => (GetEpisodeTitleByType(episode, series, DisplayTitleType.Main, metadataLanguage), GetEpisodeTitleByType(episode, series, DisplayTitleType.Alternate, metadataLanguage));
 
+    public static (string?, string?) GetSeriesTitle(SeasonInfo series, string metadataLanguage)
+        => (GetSeriesTitleByType(series, DisplayTitleType.Main, metadataLanguage), GetSeriesTitleByType(series, DisplayTitleType.Alternate, metadataLanguage));
+
+    public static (string?, string?) GetMovieTitle(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
+        => (GetMovieTitleByType(episode, series, DisplayTitleType.Main, metadataLanguage), GetMovieTitleByType(episode, series, DisplayTitleType.Alternate, metadataLanguage));
+
     private static string? GetEpisodeTitleByType(EpisodeInfo episode, SeasonInfo series, DisplayTitleType type, string metadataLanguage)
     {
         string? title = null;
         foreach (var provider in GetOrderedProvidersForTitle(type)) {
             switch (provider) {
                 case TitleProviderLookupMethod.Shoko_Default:
-                    title = episode.Shoko.Name.Trim();
+                    title = episode.Shoko.Name;
                     break;
                 case TitleProviderLookupMethod.AniDb_Default:
-                    title = episode.AniDB.Titles.FirstOrDefault(t => t.IsDefault)?.Value;
+                    title = GetDefaultTitle(episode.AniDB.Titles);
                     break;
                 case TitleProviderLookupMethod.AniDb_LibraryLanguage:
                     title = GetTitlesForLanguage(episode.AniDB.Titles, metadataLanguage);
                     break;
                 case TitleProviderLookupMethod.AniDb_CountryOfOrigin:
-                    var langCode = series.AniDB.Titles.FirstOrDefault(t => t.Value == series.AniDB.Title)?.LanguageCode;
-                    if (string.IsNullOrEmpty(langCode))
-                        break;
-                    title = GetTitlesForLanguage(episode.AniDB.Titles, langCode);
+                    title = GetTitlesForLanguage(episode.AniDB.Titles, GetLanguageCode(series.AniDB.Titles, series.AniDB.Title));
                     break;
                 default:
                     break;
             };
             if (!string.IsNullOrEmpty(title))
-                return title;
+                return title.Trim();
         }
         return title;
     }
-
-    public static (string?, string?) GetSeriesTitle(SeasonInfo series, string metadataLanguage)
-        => (GetSeriesTitleByType(series, DisplayTitleType.Main, metadataLanguage), GetSeriesTitleByType(series, DisplayTitleType.Alternate, metadataLanguage));
 
     private static string? GetSeriesTitleByType(SeasonInfo series, DisplayTitleType type, string metadataLanguage)
     {
@@ -290,19 +296,16 @@ public static class Text
         foreach (var provider in GetOrderedProvidersForTitle(type)) {
             switch (provider) {
                 case TitleProviderLookupMethod.Shoko_Default:
-                    title = series.Shoko.Name.Trim();
+                    title = series.Shoko.Name;
                     break;
                 case TitleProviderLookupMethod.AniDb_Default:
-                    title = series.AniDB.Titles.FirstOrDefault(t => t.IsDefault)?.Value;
+                    title = GetDefaultTitle(series.AniDB.Titles);
                     break;
                 case TitleProviderLookupMethod.AniDb_LibraryLanguage:
                     title = GetTitlesForLanguage(series.AniDB.Titles, metadataLanguage);
                     break;
                 case TitleProviderLookupMethod.AniDb_CountryOfOrigin:
-                    var langCode = series.AniDB.Titles.FirstOrDefault(t => t.Value == series.AniDB.Title)?.LanguageCode;
-                    if (string.IsNullOrEmpty(langCode))
-                        break;
-                    title = GetTitlesForLanguage(series.AniDB.Titles, langCode);
+                    title = GetTitlesForLanguage(series.AniDB.Titles, GetLanguageCode(series.AniDB.Titles, series.AniDB.Title));
                     break;
                 default:
                     break;
@@ -310,11 +313,8 @@ public static class Text
             if (!string.IsNullOrEmpty(title))
                 break;
         }
-        return title;
+        return title?.Trim();
     }
-
-    public static (string?, string?) GetMovieTitle(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
-        => (GetMovieTitleByType(episode, series, DisplayTitleType.Main, metadataLanguage), GetMovieTitleByType(episode, series, DisplayTitleType.Alternate, metadataLanguage));
 
     private static string? GetMovieTitleByType(EpisodeInfo episode, SeasonInfo series, DisplayTitleType type, string metadataLanguage)
     {
@@ -322,7 +322,7 @@ public static class Text
         var subTitle = GetEpisodeTitleByType(episode, series, type, metadataLanguage);
 
         if (!(string.IsNullOrEmpty(subTitle) || IgnoredSubTitles.Contains(subTitle)))
-            return $"{mainTitle}: {subTitle}";
-        return mainTitle;
+            return $"{mainTitle}: {subTitle}".Trim();
+        return mainTitle?.Trim();
     }
 }

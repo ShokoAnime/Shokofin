@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 using Shokofin.API.Models;
 
-using TextSourceType = Shokofin.Utils.Text.TextSourceType;
+using DescriptionSourceType = Shokofin.Utils.Text.DescriptionSourceType;
 using TitleProviderLookupMethod = Shokofin.Utils.Text.TitleProviderLookupMethod;
 using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
 using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
@@ -128,12 +128,12 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// The collection of providers for descriptions. Replaces the former `DescriptionSource`.
     /// </summary>
-    public TextSourceType[] DescriptionSourceList { get; set; }
+    public DescriptionSourceType[] DescriptionSourceList { get; set; }
 
     /// <summary>
     /// The prioritisation order of source providers for description sources.
     /// </summary>
-    public TextSourceType[] DescriptionSourceOrder { get; set; }
+    public DescriptionSourceType[] DescriptionSourceOrder { get; set; }
 
     /// <summary>
     /// Clean up links within the AniDB description for entries.
@@ -331,7 +331,7 @@ public class PluginConfiguration : BasePluginConfiguration
             TitleProviderLookupMethod.AniDb_LibraryLanguage
         };
         TitleAllowAny = true;
-        DescriptionSourceList = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
+        DescriptionSourceList = new[] { DescriptionSourceType.AniDb, DescriptionSourceType.TvDb, DescriptionSourceType.TMDB };
         DescriptionSourceOrder = DescriptionSourceList;
         VirtualFileSystem = CanCreateSymbolicLinks;
         VirtualFileSystemThreads = 4;
