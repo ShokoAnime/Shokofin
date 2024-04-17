@@ -58,13 +58,11 @@ public class LinkGenerationResult
 
     public int RemovedNfos { get; set; }
 
-    public void Print(Folder mediaFolder, ILogger logger)
+    public void Print(ILogger logger, string path)
     {
         var timeSpent = DateTime.Now - CreatedAt;
-        var logLevel = Removed == 0 && Skipped == Total ? LogLevel.Debug : LogLevel.Information;
-        logger.Log(
-            logLevel,
-            "Created {CreatedTotal} ({CreatedMedia},{CreatedSubtitles},{CreatedNFO}), fixed {FixedTotal} ({FixedMedia},{FixedSubtitles}), skipped {SkippedTotal} ({SkippedMedia},{SkippedSubtitles},{SkippedNFO}), and removed {RemovedTotal} ({RemovedMedia},{RemovedSubtitles},{RemovedNFO}) entries in media folder at {Path} in {TimeSpan} (Total={Total})",
+        logger.LogInformation(
+            "Created {CreatedTotal} ({CreatedMedia},{CreatedSubtitles},{CreatedNFO}), fixed {FixedTotal} ({FixedMedia},{FixedSubtitles}), skipped {SkippedTotal} ({SkippedMedia},{SkippedSubtitles},{SkippedNFO}), and removed {RemovedTotal} ({RemovedMedia},{RemovedSubtitles},{RemovedNFO}) entries in folder at {Path} in {TimeSpan} (Total={Total})",
             Created,
             CreatedVideos,
             CreatedSubtitles,
@@ -80,26 +78,10 @@ public class LinkGenerationResult
             RemovedVideos,
             RemovedSubtitles,
             RemovedNfos,
-            mediaFolder.Path,
+            path,
             timeSpent,
             Total
         );
-    }
-
-    public void MarkSkipped()
-    {
-        if (FixedSubtitles > 0 || CreatedSubtitles > 0) {
-            SkippedSubtitles += FixedSubtitles + CreatedSubtitles;
-            FixedSubtitles = CreatedSubtitles = 0;
-        }
-        if (FixedVideos > 0 || CreatedVideos > 0) {
-            SkippedVideos += FixedVideos + CreatedVideos;
-            FixedVideos = CreatedVideos = 0;
-        }
-        if (CreatedNfos > 0) {
-            SkippedNfos += CreatedNfos;
-            CreatedNfos = 0;
-        }
     }
 
     public static LinkGenerationResult operator +(LinkGenerationResult a, LinkGenerationResult b)

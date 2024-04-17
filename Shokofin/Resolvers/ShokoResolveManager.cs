@@ -237,10 +237,26 @@ public class ShokoResolveManager
     /// <paramref name="mediaFolder"/>.
     /// </summary>
     /// <param name="mediaFolder">The media folder to generate a structure for.</param>
-    /// <param name="folderPath">The folder within the media folder to generate a structure for.</param>
+    /// <param name="path">The file or folder within the media folder to generate a structure for.</param>
     /// <returns>The VFS path, if it succeeded.</returns>
-    private async Task<string?> GenerateStructureInVFS(Folder mediaFolder, string folderPath)
+    private async Task<string?> GenerateStructureInVFS(Folder mediaFolder, string path)
     {
+        // Skip link generation if we've already generated for the media folder.
+        if (DataCache.TryGetValue<string?>($"should-skip-media-folder:{mediaFolder.Path}", out var vfsPath))
+            return vfsPath;
+        vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
+
+        // Check full path and all parent directories if they have been indexed.
+        if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
+            var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).Prepend(vfsPath).ToArray();
+            while (pathSegments.Length > 1) {
+                var subPath = Path.Join(pathSegments);
+                if (DataCache.TryGetValue<bool>($"should-skip-vfs-path:{subPath}", out _))
+                    return vfsPath;
+                pathSegments = pathSegments.SkipLast(1).ToArray();
+            }
+        }
+
         var mediaConfig = await GetOrCreateConfigurationForMediaFolder(mediaFolder);
         if (!mediaConfig.IsMapped)
             return null;
@@ -255,10 +271,10 @@ public class ShokoResolveManager
         // Iterate the files already in the VFS.
         string? pathToClean = null;
         IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
-        var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
-        if (folderPath.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
+        vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
+        if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
             var allPaths = GetPathsForMediaFolder(mediaFolder);
-            var pathSegments = folderPath[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
+            var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
             switch (pathSegments.Length) {
                 // show/movie-folder level
                 case 1: {
@@ -271,13 +287,13 @@ public class ShokoResolveManager
                         if (!int.TryParse(episodeId, out _))
                             break;
 
-                        pathToClean = folderPath;
+                        pathToClean = path;
                         allFiles = GetFilesForMovie(episodeId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
                         break;
                     }
 
                     // show
-                    pathToClean = folderPath;
+                    pathToClean = path;
                     allFiles = GetFilesForShow(seriesId, null, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
                     break;
                 }
@@ -304,7 +320,7 @@ public class ShokoResolveManager
                     if (!seasonOrMovieName.StartsWith("Season ") || !int.TryParse(seasonOrMovieName.Split(' ').Last(), out var seasonNumber))
                         break;
 
-                    pathToClean = folderPath;
+                    pathToClean = path;
                     allFiles = GetFilesForShow(seriesId, seasonNumber, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
                     break;
                 }
@@ -330,7 +346,7 @@ public class ShokoResolveManager
             }
         }
         // Iterate files in the "real" media folder.
-        else if (folderPath.StartsWith(mediaFolder.Path)) {
+        else if (path.StartsWith(mediaFolder.Path)) {
             var allPaths = GetPathsForMediaFolder(mediaFolder);
             pathToClean = vfsPath;
             allFiles = GetFilesForImportFolder(mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
@@ -339,7 +355,43 @@ public class ShokoResolveManager
         if (allFiles == null)
             return null;
 
-        await GenerateSymbolicLinks(mediaFolder, allFiles, pathToClean).ConfigureAwait(false);
+        var result = new LinkGenerationResult();
+        var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
+        var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VirtualFileSystemThreads);
+        await Task.WhenAll(allFiles.Select(async (tuple) => {
+            await semaphore.WaitAsync().ConfigureAwait(false);
+
+            try {
+                // Skip any source files we weren't meant to have in the library.
+                var (sourceLocation, symbolicLinks, nfoFiles) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
+                var subResult = GenerateSymbolicLinks(sourceLocation, symbolicLinks, nfoFiles, result.Paths);
+
+                // Combine the current results with the overall results and mark the entitis as skipped
+                // for the next iterations.
+                lock (semaphore) {
+                    result += subResult;
+                }
+            }
+            finally {
+                semaphore.Release();
+            }
+        }))
+            .ConfigureAwait(false);
+
+        // Cleanup the structure in the VFS.
+        if (!string.IsNullOrEmpty(pathToClean))
+            result += CleanupStructure(pathToClean, result.Paths);
+
+        // Save which paths we've already generated so we can skip generation
+        // for them and their sub-paths later, and also print the result.
+        if (path.StartsWith(mediaFolder.Path)) {
+            DataCache.Set($"should-skip-media-folder:{mediaFolder.Path}", vfsPath, DefaultTTL);
+            result.Print(Logger, mediaFolder.Path);
+        }
+        else {
+            DataCache.Set($"should-skip-vfs-path:{path}", true);
+            result.Print(Logger, path);
+        }
 
         return vfsPath;
     }
@@ -626,50 +678,6 @@ public class ShokoResolveManager
     {
         await semaphore.WaitAsync().ConfigureAwait(false);
         return await ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath, page).ConfigureAwait(false);
-    }
-
-    private async Task GenerateSymbolicLinks(Folder mediaFolder, IEnumerable<(string sourceLocation, string fileId, string seriesId)> files, string? pathToClean)
-    {
-        var result = new LinkGenerationResult();
-        var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
-        var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
-        var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VirtualFileSystemThreads);
-        await Task.WhenAll(files.Select(async (tuple) => {
-            var subResult = await DataCache.GetOrCreateAsync(
-                $"file={tuple.fileId},series={tuple.seriesId},location={tuple.sourceLocation}",
-                (_) => Logger.LogTrace("Re-used previous links for path {SourceLocation} (File={FileId},Series={SeriesId})", tuple.sourceLocation, tuple.fileId, tuple.seriesId),
-                async (_) => {
-                    await semaphore.WaitAsync().ConfigureAwait(false);
-
-                    Logger.LogTrace("Generating links for path {SourceLocation} (File={FileId},Series={SeriesId})", tuple.sourceLocation, tuple.fileId, tuple.seriesId);
-                    try {
-                        // Skip any source files we weren't meant to have in the library.
-                        var (sourceLocation, symbolicLinks, nfoFiles) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
-                        return GenerateSymbolicLinks(sourceLocation, symbolicLinks, nfoFiles, result.Paths);
-                    }
-                    finally {
-                        semaphore.Release();
-                    }
-                },
-                new() {
-                    AbsoluteExpirationRelativeToNow = DefaultTTL,
-                }
-            );
-
-            // Combine the current results with the overall results and mark the entitis as skipped
-            // for the next iterations.
-            lock (semaphore) {
-                result += subResult;
-                subResult.MarkSkipped();
-            }
-        }))
-            .ConfigureAwait(false);
-
-        // Cleanup the structure in the VFS.
-        if (!string.IsNullOrEmpty(pathToClean))
-            result += CleanupStructure(pathToClean, result.Paths);
-
-        result.Print(mediaFolder, Logger);
     }
 
     // Note: Out of the 14k entries in my test shoko database, then only **319** entries have a title longer than 100 chacters.
