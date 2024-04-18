@@ -16,7 +16,6 @@ using Shokofin.Utils;
 using Info = Shokofin.API.Info;
 using SeriesType = Shokofin.API.Models.SeriesType;
 using EpisodeType = Shokofin.API.Models.EpisodeType;
-using MediaBrowser.Controller.Library;
 
 namespace Shokofin.Providers;
 
@@ -30,17 +29,11 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
 
     private readonly ShokoAPIManager ApiManager;
 
-    private readonly IIdLookup Lookup;
-
-    private readonly ILibraryManager LibraryManager;
-
-    public EpisodeProvider(IHttpClientFactory httpClientFactory, ILogger<EpisodeProvider> logger, ShokoAPIManager apiManager, IIdLookup lookup, ILibraryManager libraryManager)
+    public EpisodeProvider(IHttpClientFactory httpClientFactory, ILogger<EpisodeProvider> logger, ShokoAPIManager apiManager)
     {
         HttpClientFactory = httpClientFactory;
         Logger = logger;
         ApiManager = apiManager;
-        Lookup = lookup;
-        LibraryManager = libraryManager;
     }
 
     public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
@@ -77,7 +70,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
             }
 
             // if the episode info is null then the series info and conditionally the group info is also null.
-            if (fileInfo == null || episodeInfo == null || seasonInfo == null || showInfo == null) {
+            if (episodeInfo == null || seasonInfo == null || showInfo == null) {
                 Logger.LogWarning("Unable to find episode info for path {Path}", info.Path);
                 return result;
             }
@@ -98,7 +91,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
     public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Season season, Guid episodeId)
         => CreateMetadata(group, series, episode, null, season.GetPreferredMetadataLanguage(), season, episodeId);
 
-    public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo file, string metadataLanguage)
+    public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage)
         => CreateMetadata(group, series, episode, file, metadataLanguage, null, Guid.Empty);
 
     private static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage, Season? season, Guid episodeId)
@@ -260,37 +253,4 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
-
-    public Task<ItemUpdateType> FetchAsync(Episode episode, MetadataRefreshOptions options, CancellationToken cancellationToken)
-    {
-        // Abort if we're unable to get the shoko episode id
-        if (!Lookup.TryGetEpisodeIdFor(episode, out var episodeId))
-            return Task.FromResult(ItemUpdateType.None);
-
-        // Remove any extra virtual episodes that matches the newly refreshed episode.
-        var searchList = LibraryManager
-            .GetItemList(
-                new() {
-                    ParentId = episode.ParentId,
-                    IsVirtualItem = true,
-                    ExcludeItemIds = new[] { episode.Id },
-                    HasAnyProviderId = new() { { ShokoEpisodeId.Name, episodeId } },
-                    IncludeItemTypes = new[] { Jellyfin.Data.Enums.BaseItemKind.Episode },
-                    GroupByPresentationUniqueKey = false,
-                    DtoOptions = new(true),
-                },
-                true
-            );
-        if (searchList.Count > 0) {
-            Logger.LogInformation("Removing {Count:00} duplicate episodes for episode {EpisodeName}. (Episode={EpisodeId})", searchList.Count, episode.Name, episodeId);
-
-            var deleteOptions = new DeleteOptions { DeleteFileLocation = false };
-            foreach (var item in searchList)
-                LibraryManager.DeleteItem(item, deleteOptions);
-
-            return Task.FromResult(ItemUpdateType.MetadataEdit);
-        }
-
-        return Task.FromResult(ItemUpdateType.None);
-    }
 }

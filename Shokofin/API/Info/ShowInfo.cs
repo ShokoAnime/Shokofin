@@ -118,7 +118,7 @@ public class ShowInfo
     /// A pre-filtered set of special episode ids without an ExtraType
     /// attached.
     /// </summary>
-    private readonly IReadOnlySet<string> SpecialsSet;
+    public readonly IReadOnlySet<string> SpecialsSet;
 
     /// <summary>
     /// Indicates that the show has specials.
