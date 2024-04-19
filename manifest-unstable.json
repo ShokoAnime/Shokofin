@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.132",
+                "changelog": "fix: fix import order for items in the VFS\n\n- Fix the \"recently added\" section of the dashboard by monkey-patching\n  the creation date for each item type.\n\nfix: fix adding missing metadata\n\n- Fixed up the code for adding/removing \"missing\" metadata as needed. It\n  will now work even better than it ever did, since we're now handling\n  more edge cases. \ud83d\udc4d\n\nrefactor: add fast paths for link generation\n\n- Added back the fast path to skip link generation of all shows/movies\n  if we've already created all possible links for the entire VFS for a\n  media folder, until the cache expires or is cleared.\n\n- Added a new fast path to skip link generation for all children of\n  already generated paths, until the cache expires or is cleared.\n\n- Removed the per-file-slash-series-slash-path caching, since we now\n  cache per folder _and_ file location instead.\n\n- Fixed up link generation result logging so it will be consistent\n  again.\n\n- Some misc. internal restructor of the resolver manager.\n\nmisc: smarter path set and episode ids generation\n\nMerge pull request #53 from fearnlj01/webhook-back-to-embed\n\nMisc: Change update webhook [skip ci]\nMisc: Change update webhook [skip ci]",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.132/shoko_3.0.1.132.zip",
+                "checksum": "d1762380a90fb7e54218f3e3f8ecf647",
+                "timestamp": "2024-04-19T10:56:45Z"
+            },
+            {
                 "version": "3.0.1.131",
                 "changelog": "fix: override date created on episodes/movies\n\nfix: only iterate files in media folder once",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.128/shoko_3.0.1.128.zip",
                 "checksum": "a3f564d513b105784c27c0e90f6e73d7",
                 "timestamp": "2024-04-16T03:06:13Z"
-            },
-            {
-                "version": "3.0.1.127",
-                "changelog": "fix: fix signalr models (again, but for real this time)",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.127/shoko_3.0.1.127.zip",
-                "checksum": "3de9d69ad6f5a0843d5108dfe7e09094",
-                "timestamp": "2024-04-16T02:20:26Z"
             }
         ]
     }
