@@ -604,10 +604,13 @@ public class ShokoResolveManager
                 importFolderSubPath
             );
             foreach (var file in pageData.List) {
+                if (file.CrossReferences.Count == 0)
+                    continue;
+
                 var location = file.Locations
                     .Where(location => location.ImportFolderId == importFolderId && (importFolderSubPath.Length == 0 || location.Path.StartsWith(importFolderSubPath)))
                     .FirstOrDefault();
-                if (location == null || file.CrossReferences.Count == 0)
+                if (location == null)
                     continue;
 
                 var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
@@ -619,8 +622,8 @@ public class ShokoResolveManager
                 if (seriesIds.Count == 1) {
                     totalSingleSeriesFiles++;
                     singleSeriesIds.Add(seriesIds.First());
-                    foreach (var xref in file.CrossReferences)
-                        yield return (sourceLocation, file.Id.ToString(), xref.Series.Shoko.ToString());
+                    foreach (var seriesId in seriesIds)
+                        yield return (sourceLocation, file.Id.ToString(), seriesId.ToString());
                 }
                 else if (seriesIds.Count > 1) {
                     multiSeriesFiles.Add((file, sourceLocation));
@@ -635,9 +638,10 @@ public class ShokoResolveManager
         foreach (var (file, sourceLocation) in multiSeriesFiles) {
             var crossReferences = file.CrossReferences
                 .Where(xref => singleSeriesIds.Contains(xref.Series.Shoko))
-                .ToList();
-            foreach (var xref in crossReferences)
-                yield return (sourceLocation, file.Id.ToString(), xref.Series.Shoko.ToString());
+                .Select(xref => xref.Series.Shoko.ToString())
+                .ToHashSet();
+            foreach (var seriesId in crossReferences)
+                yield return (sourceLocation, file.Id.ToString(), seriesId);
             totalMultiSeriesFiles += crossReferences.Count;
         }
 
