@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.133",
+                "changelog": "misc: add more traces and comments\n\nfix: make scrobbling great again!\n\n- Add the missing initial \"play\" event late if we've enabled playback\n  events _and_ lazy sync. Previously it was skipping the initial \"play\"\n  event in this config, causing trakt syncing to fail from shoko to\n  trakt.\n\n- Fixed event scrobbling when live sync is not enabled.\n\n- Added more documentation about the session fields.\n\nmisc: remove unused method & model [skip ci]\n\nFix discord webhook url [no ci",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.133/shoko_3.0.1.133.zip",
+                "checksum": "07b83cdf08b706f30f488424062892d7",
+                "timestamp": "2024-04-20T11:43:59Z"
+            },
+            {
                 "version": "3.0.1.132",
                 "changelog": "fix: fix import order for items in the VFS\n\n- Fix the \"recently added\" section of the dashboard by monkey-patching\n  the creation date for each item type.\n\nfix: fix adding missing metadata\n\n- Fixed up the code for adding/removing \"missing\" metadata as needed. It\n  will now work even better than it ever did, since we're now handling\n  more edge cases. \ud83d\udc4d\n\nrefactor: add fast paths for link generation\n\n- Added back the fast path to skip link generation of all shows/movies\n  if we've already created all possible links for the entire VFS for a\n  media folder, until the cache expires or is cleared.\n\n- Added a new fast path to skip link generation for all children of\n  already generated paths, until the cache expires or is cleared.\n\n- Removed the per-file-slash-series-slash-path caching, since we now\n  cache per folder _and_ file location instead.\n\n- Fixed up link generation result logging so it will be consistent\n  again.\n\n- Some misc. internal restructor of the resolver manager.\n\nmisc: smarter path set and episode ids generation\n\nMerge pull request #53 from fearnlj01/webhook-back-to-embed\n\nMisc: Change update webhook [skip ci]\nMisc: Change update webhook [skip ci]",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.129/shoko_3.0.1.129.zip",
                 "checksum": "9a20bf38f55b6ad7908c13b9761c87f1",
                 "timestamp": "2024-04-16T03:23:12Z"
-            },
-            {
-                "version": "3.0.1.128",
-                "changelog": "misc: add missing props. to v0 models\n\nmisc: update file event args\n\n- Update file event args to expose the file location id, if available,\n  and to have an indicator as to if we got any cross-references\n  from the server (this is needed because we're supporting _both_\n  the stable server _and_ the daily server).\n\n- Update the debug log statments to include the new properties.\n\nmisc: fix typo [skip ci]",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.128/shoko_3.0.1.128.zip",
-                "checksum": "a3f564d513b105784c27c0e90f6e73d7",
-                "timestamp": "2024-04-16T03:06:13Z"
             }
         ]
     }
