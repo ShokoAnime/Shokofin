@@ -301,7 +301,7 @@ public class PluginConfiguration : BasePluginConfiguration
         DescriptionSourceList = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
         DescriptionSourceOrder = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
         VirtualFileSystem = CanCreateSymbolicLinks;
-        VirtualFileSystemThreads = 10;
+        VirtualFileSystemThreads = 4;
         UseGroupsForShows = false;
         SeparateMovies = false;
         SeasonOrdering = OrderType.Default;
