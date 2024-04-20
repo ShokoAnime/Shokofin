@@ -455,12 +455,12 @@ public class ShokoResolveManager
             await semaphore.WaitAsync().ConfigureAwait(false);
 
             try {
-                // Skip any source files we weren't meant to have in the library.
+                Logger.LogTrace("Generating links for {Path} (File={FileId},Series={SeriesId})", tuple.sourceLocation, tuple.fileId, tuple.seriesId);
+
                 var (sourceLocation, symbolicLinks, nfoFiles) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
                 var subResult = GenerateSymbolicLinks(sourceLocation, symbolicLinks, nfoFiles, result.Paths);
 
-                // Combine the current results with the overall results and mark the entitis as skipped
-                // for the next iterations.
+                // Combine the current results with the overall results.
                 lock (semaphore) {
                     result += subResult;
                 }
@@ -890,6 +890,7 @@ public class ShokoResolveManager
 
     private LinkGenerationResult GenerateSymbolicLinks(string? sourceLocation, string[] symbolicLinks, string[] nfoFiles, ConcurrentBag<string> allPathsForVFS)
     {
+        // Skip any source files we weren't meant to have in the library.
         var result = new LinkGenerationResult();
         if (string.IsNullOrEmpty(sourceLocation))
             return result;
@@ -1013,6 +1014,9 @@ public class ShokoResolveManager
             .Where(tuple => searchFiles.Contains(tuple.extName))
             .ExceptBy(allKnownPaths.ToHashSet(), tuple => tuple.path)
             .ToList();
+
+        Logger.LogTrace("To remove {FileCount} files in {DirectoryToClean}.", toBeRemoved.Count, directoryToClean);
+
         foreach (var (location, extName) in toBeRemoved) {
             // Continue in case we already removed the (subtitle) file.
             if (!File.Exists(location))
@@ -1039,6 +1043,7 @@ public class ShokoResolveManager
 
             CleanupDirectoryStructure(location);
         }
+
         return result;
     }
 
@@ -1059,12 +1064,8 @@ public class ShokoResolveManager
             return externalPaths;
 
         var files = FileSystem.GetFilePaths(folderPath)
+            .Except(new[] { sourcePath })
             .ToList();
-        files.Remove(sourcePath);
-
-        if (files.Count == 0)
-            return externalPaths;
-
         var sourcePrefix = Path.GetFileNameWithoutExtension(sourcePath);
         foreach (var file in files) {
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
