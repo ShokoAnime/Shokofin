@@ -131,6 +131,7 @@ public class ShokoResolveManager
             $"paths-for-media-folder:{mediaFolder.Path}",
             (paths) => Logger.LogTrace("Reusing {FileCount} files for folder at {Path}", paths.Count, mediaFolder.Path),
             (_) => {
+                Logger.LogDebug("Looking for files in folder at {Path}", mediaFolder.Path);
                 var start = DateTime.UtcNow;
                 var paths = FileSystem.GetFilePaths(mediaFolder.Path, true)
                     .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
@@ -924,53 +925,79 @@ public class ShokoResolveManager
     private LinkGenerationResult CleanupStructure(string directoryToClean, ConcurrentBag<string> allKnownPaths)
     {
         // Search the selected paths for files to remove.
+        Logger.LogDebug("Looking for files to remove in folder at {Path}", directoryToClean);
+        var start = DateTime.Now;
+        var previousStep = start;
         var result = new LinkGenerationResult();
         var searchFiles = _namingOptions.VideoFileExtensions.Concat(_namingOptions.SubtitleFileExtensions).Append(".nfo").ToHashSet();
         var toBeRemoved = FileSystem.GetFilePaths(directoryToClean, true)
             .Select(path => (path, extName: Path.GetExtension(path)))
-            .Where(tuple => searchFiles.Contains(tuple.extName))
+            .Where(tuple => !string.IsNullOrEmpty(tuple.extName) && searchFiles.Contains(tuple.extName))
             .ExceptBy(allKnownPaths.ToHashSet(), tuple => tuple.path)
             .ToList();
 
-        Logger.LogTrace("To remove {FileCount} files in {DirectoryToClean}.", toBeRemoved.Count, directoryToClean);
+        var nextStep = DateTime.Now;
+        Logger.LogDebug("Found {FileCount} files to remove in {DirectoryToClean} in {TimeSpent}", toBeRemoved.Count, directoryToClean, nextStep - previousStep);
+        previousStep = nextStep;
 
         foreach (var (location, extName) in toBeRemoved) {
-            // Continue in case we already removed the (subtitle) file.
-            if (!File.Exists(location))
+            try {
+                Logger.LogTrace("Removing file at {Path}", location);
+                File.Delete(location);
+            }
+            catch (Exception ex) {
+                Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
                 continue;
-
-            File.Delete(location);
+            }
 
             // Stats tracking.
-            if (_namingOptions.VideoFileExtensions.Contains(extName)) {
+            if (_namingOptions.VideoFileExtensions.Contains(extName))
                 result.RemovedVideos++;
-
-                var subtitleLinks = FindSubtitlesForPath(location);
-                foreach (var subtitleLink in subtitleLinks) {
-                    result.RemovedSubtitles++;
-                    File.Delete(subtitleLink);
-                }
-            }
-            else if (extName == ".nfo") {
+            else if (extName == ".nfo")
                 result.RemovedNfos++;
-            }
-            else {
+            else
                 result.RemovedSubtitles++;
-            }
-
-            CleanupDirectoryStructure(location);
         }
+
+        nextStep = DateTime.Now;
+        Logger.LogTrace("Removed {FileCount} files in {DirectoryToClean} in {TimeSpent} (Total={TotalSpent})", result.Removed, directoryToClean, nextStep - previousStep, nextStep - start);
+        previousStep = nextStep;
+
+        var cleaned = 0;
+        var directoriesToClean = toBeRemoved
+            .SelectMany(tuple => {
+                var path = Path.GetDirectoryName(tuple.path);
+                var paths = new List<(string path, int level)>();
+                while (!string.IsNullOrEmpty(path)) {
+                    var level = path == directoryToClean ? 0 : path[(directoryToClean.Length + 1)..].Split(Path.DirectorySeparatorChar).Length;
+                    paths.Add((path, level));
+                    if (path == directoryToClean)
+                        break;
+                    path = Path.GetDirectoryName(path);
+                }
+                return paths;
+            })
+            .DistinctBy(tuple => tuple.path)
+            .OrderBy(tuple => tuple.level)
+            .ThenBy(tuple => tuple.path)
+            .Select(tuple => tuple.path)
+            .ToList();
+
+        nextStep = DateTime.Now;
+        Logger.LogDebug("Found {DirectoryCount} directories to potentially clean in {DirectoryToClean} in {TimeSpent} (Total={TotalSpent})", toBeRemoved.Count, directoryToClean, nextStep - previousStep, nextStep - start);
+        previousStep = nextStep;
+
+        foreach (var directoryPath in directoriesToClean) {
+            if (Directory.Exists(directoryPath) && !Directory.EnumerateFileSystemEntries(directoryPath).Any()) {
+                Logger.LogTrace("Removing empty directory at {Path}", directoryPath);
+                Directory.Delete(directoryPath);
+                cleaned++;
+            }
+        }
+
+        Logger.LogTrace("Cleaned {CleanedCount} directories in {DirectoryToClean} in {TimeSpent} (Total={TotalSpent})", cleaned, directoriesToClean, nextStep - previousStep, nextStep - start);
 
         return result;
-    }
-
-    private static void CleanupDirectoryStructure(string? path)
-    {
-        path = Path.GetDirectoryName(path);
-        while (!string.IsNullOrEmpty(path) && Directory.Exists(path) && !Directory.EnumerateFileSystemEntries(path).Any()) {
-            Directory.Delete(path);
-            path = Path.GetDirectoryName(path);
-        }
     }
 
     private IReadOnlyList<string> FindSubtitlesForPath(string sourcePath)
