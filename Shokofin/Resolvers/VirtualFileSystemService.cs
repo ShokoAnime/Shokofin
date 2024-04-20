@@ -786,10 +786,7 @@ public class VirtualFileSystemService
         return (sourceLocation, symbolicLinks, (file.Shoko.ImportedAt ?? file.Shoko.CreatedAt).ToLocalTime());
     }
 
-// TODO: Remove this for 10.9
-#pragma warning disable IDE0060
     public LinkGenerationResult GenerateSymbolicLinks(string sourceLocation, string[] symbolicLinks, DateTime importedAt)
-#pragma warning restore IDE0060
     {
         try {
             var result = new LinkGenerationResult();
@@ -812,9 +809,8 @@ public class VirtualFileSystemService
                         if (!File.Exists(symbolicLink))
                             throw;
                     }
-                    // TODO: Uncomment this for 10.9
-                    // // Mock the creation date to fake the "date added" order in Jellyfin.
-                    // File.SetCreationTime(symbolicLink, importedAt);
+                    // Mock the creation date to fake the "date added" order in Jellyfin.
+                    File.SetCreationTime(symbolicLink, importedAt);
                 }
                 else {
                     var shouldFix = false;
@@ -825,13 +821,12 @@ public class VirtualFileSystemService
 
                             Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
                         }
-                        // TODO: Uncomment this for 10.9
-                        // var date = File.GetCreationTime(symbolicLink);
-                        // if (date != importedAt) {
-                        //     shouldFix = true;
-                        //
-                        //     Logger.LogWarning("Fixing broken symbolic link {Link} with incorrect date.", symbolicLink);
-                        // }
+                        var date = File.GetCreationTime(symbolicLink);
+                        if (date != importedAt) {
+                            shouldFix = true;
+
+                            Logger.LogWarning("Fixing broken symbolic link {Link} with incorrect date.", symbolicLink);
+                        }
                     }
                     catch (Exception ex) {
                         Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link}", symbolicLink);
@@ -847,9 +842,8 @@ public class VirtualFileSystemService
                             if (!File.Exists(symbolicLink))
                                 throw;
                         }
-                        // TODO: Uncomment this for 10.9
-                        // // Mock the creation date to fake the "date added" order in Jellyfin.
-                        // File.SetCreationTime(symbolicLink, importedAt);
+                        // Mock the creation date to fake the "date added" order in Jellyfin.
+                        File.SetCreationTime(symbolicLink, importedAt);
                         result.FixedVideos++;
                     }
                     else {
