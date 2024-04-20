@@ -143,8 +143,11 @@ public class UserDataSyncManager
             if (!isPauseOrResumeEvent && SkipEventCount > 0)
                 SkipEventCount--;
 
-            Logger.LogDebug("Scrobble event was skipped. (File={FileId})", FileId);
-            return SkipEventCount == 0;
+            var shouldSend = SkipEventCount == 0;
+            if (!shouldSend)
+                Logger.LogDebug("Scrobble event was skipped. (File={FileId})", FileId);
+
+            return shouldSend;
         }
     }
 
