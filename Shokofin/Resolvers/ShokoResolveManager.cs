@@ -273,7 +273,6 @@ public class ShokoResolveManager
         // Iterate the files already in the VFS.
         string? pathToClean = null;
         IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
-        vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
             var allPaths = GetPathsForMediaFolder(mediaFolder);
             var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
