@@ -811,7 +811,10 @@ public class ShokoResolveManager
     public LinkGenerationResult GenerateSymbolicLinks(string sourceLocation, string[] symbolicLinks, string[] nfoFiles, DateTime importedAt)
         => GenerateSymbolicLinks(sourceLocation, symbolicLinks, nfoFiles, importedAt, new());
 
+// TODO: Remove this for 10.9
+#pragma warning disable IDE0060
     private LinkGenerationResult GenerateSymbolicLinks(string sourceLocation, string[] symbolicLinks, string[] nfoFiles, DateTime importedAt, ConcurrentBag<string> allPathsForVFS)
+#pragma warning restore IDE0060
     {
         var result = new LinkGenerationResult();
         var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
@@ -826,8 +829,9 @@ public class ShokoResolveManager
                 result.CreatedVideos++;
                 Logger.LogDebug("Linking {Link} → {LinkTarget}", symbolicLink, sourceLocation);
                 File.CreateSymbolicLink(symbolicLink, sourceLocation);
-                // Mock the creation date to fake the "date added" order in Jellyfin.
-                File.SetCreationTime(symbolicLink, importedAt);
+                // TODO: Uncomment this for 10.9
+                // // Mock the creation date to fake the "date added" order in Jellyfin.
+                // File.SetCreationTime(symbolicLink, importedAt);
             }
             else {
                 var shouldFix = false;
@@ -838,6 +842,13 @@ public class ShokoResolveManager
 
                         Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
                     }
+                    // TODO: Uncomment this for 10.9
+                    // var date = File.GetCreationTime(symbolicLink);
+                    // if (date != importedAt) {
+                    //     shouldFix = true;
+                    //
+                    //     Logger.LogWarning("Fixing broken symbolic link {Link} with incorrect date.", symbolicLink);
+                    // }
                 }
                 catch (Exception ex) {
                     Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link}", symbolicLink);
@@ -846,6 +857,9 @@ public class ShokoResolveManager
                 if (shouldFix) {
                     File.Delete(symbolicLink);
                     File.CreateSymbolicLink(symbolicLink, sourceLocation);
+                    // TODO: Uncomment this for 10.9
+                    // // Mock the creation date to fake the "date added" order in Jellyfin.
+                    // File.SetCreationTime(symbolicLink, importedAt);
                     result.FixedVideos++;
                 }
                 else {
