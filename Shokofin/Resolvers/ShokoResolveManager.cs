@@ -805,7 +805,7 @@ public class ShokoResolveManager
 
         foreach (var symbolicLink in symbolicLinks)
             ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, file.EpisodeList.Select(episode => episode.Id));
-        return (sourceLocation, symbolicLinks, nfoFiles: nfoFiles.ToArray(), file.Shoko.ImportedAt);
+        return (sourceLocation, symbolicLinks, nfoFiles: nfoFiles.ToArray(), file.Shoko.ImportedAt ?? file.Shoko.CreatedAt);
     }
 
     public LinkGenerationResult GenerateSymbolicLinks(string sourceLocation, string[] symbolicLinks, string[] nfoFiles, DateTime importedAt)
