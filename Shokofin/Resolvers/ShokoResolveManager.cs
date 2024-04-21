@@ -23,7 +23,6 @@ using Shokofin.Utils;
 
 using File = System.IO.File;
 using TvSeries = MediaBrowser.Controller.Entities.TV.Series;
-using TvSeason = MediaBrowser.Controller.Entities.TV.Season;
 
 namespace Shokofin.Resolvers;
 
