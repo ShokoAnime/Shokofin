@@ -1,6 +1,5 @@
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
@@ -53,15 +52,12 @@ public class ShokoAPIManager : IDisposable
         Logger = logger;
         APIClient = apiClient;
         LibraryManager = libraryManager;
+        DataCache = new(logger, TimeSpan.FromMinutes(15), new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { AbsoluteExpirationRelativeToNow = new(2, 30, 0) });
     }
 
-    private GuardedMemoryCache DataCache = new(new MemoryCacheOptions() {
-        ExpirationScanFrequency = ExpirationScanFrequency,
-    });
+    public bool IsCacheStalled => DataCache.IsStalled;
 
-    private static readonly TimeSpan ExpirationScanFrequency = new(0, 25, 0);
-
-    private static readonly TimeSpan DefaultTimeSpan = new(2, 30, 0);
+    private readonly GuardedMemoryCache DataCache;
 
     #region Ignore rule
 
@@ -144,13 +140,12 @@ public class ShokoAPIManager : IDisposable
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        Clear(false);
+        Clear();
     }
 
-    public void Clear(bool restore = true)
+    public void Clear()
     {
         Logger.LogDebug("Clearing data…");
-        DataCache.Dispose();
         EpisodeIdToEpisodePathDictionary.Clear();
         EpisodeIdToSeriesIdDictionary.Clear();
         FileAndSeriesIdToEpisodeIdDictionary.Clear();
@@ -164,12 +159,7 @@ public class ShokoAPIManager : IDisposable
         SeriesIdToDefaultSeriesIdDictionary.Clear();
         SeriesIdToCollectionIdDictionary.Clear();
         SeriesIdToPathDictionary.Clear();
-        if (restore) {
-            Logger.LogDebug("Initialising new cache…");
-            DataCache = new(new MemoryCacheOptions() {
-                ExpirationScanFrequency = ExpirationScanFrequency,
-            });
-        }
+        DataCache.Clear();
         Logger.LogDebug("Cleanup complete.");
     }
 
@@ -294,7 +284,7 @@ public class ShokoAPIManager : IDisposable
 
     // Set up both at the same time.
     private Task<(HashSet<string>, HashSet<string>)> GetPathSetAndLocalEpisodeIdsForSeries(string seriesId)
-        => DataCache.GetOrCreateAsync<(HashSet<string>, HashSet<string>)>(
+        => DataCache.GetOrCreateAsync(
             $"series-path-set-and-episode-ids:${seriesId}",
             async (_) => {
                 var pathSet = new HashSet<string>();
@@ -312,7 +302,8 @@ public class ShokoAPIManager : IDisposable
                 }
 
                 return (pathSet, episodeIds);
-            }
+            },
+            new()
         );
 
     #endregion
@@ -479,9 +470,6 @@ public class ShokoAPIManager : IDisposable
 
                 FileAndSeriesIdToEpisodeIdDictionary[$"{fileId}:{seriesId}"] = episodeList.Select(episode => episode.Id).ToList();
                 return fileInfo;
-            },
-            new() {
-                AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
             }
         );
 
@@ -519,9 +507,6 @@ public class ShokoAPIManager : IDisposable
                 Logger.LogTrace("Creating info object for episode {EpisodeName}. (Episode={EpisodeId})", episode.Name, episodeId);
 
                 return new EpisodeInfo(episode);
-            },
-            new() {
-                AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
             }
         );
 
@@ -583,7 +568,7 @@ public class ShokoAPIManager : IDisposable
 
         var key = $"season:{seriesId}";
         if (DataCache.TryGetValue<SeasonInfo>(key, out var seasonInfo)) {
-            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId);
+            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo?.Shoko.Name, seriesId);
             return seasonInfo;
         }
 
@@ -598,7 +583,7 @@ public class ShokoAPIManager : IDisposable
 
         var cachedKey = $"season:{seriesId}";
         if (DataCache.TryGetValue<SeasonInfo>(cachedKey, out var seasonInfo)) {
-            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId);
+            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo?.Shoko.Name, seriesId);
             return seasonInfo;
         }
 
@@ -641,9 +626,6 @@ public class ShokoAPIManager : IDisposable
                 foreach (var episode in episodes)
                     EpisodeIdToSeriesIdDictionary.TryAdd(episode.Id, seriesId);
                 return seasonInfo;
-            },
-            new() {
-                AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
             }
         );
 
@@ -662,7 +644,8 @@ public class ShokoAPIManager : IDisposable
                         ? files.Where(f => f.ImportedAt.HasValue).Select(f => f.ImportedAt!.Value).Max()
                         : files.Select(f => f.CreatedAt).Max()
                 );
-            }
+            },
+            new()
         );
 
     #endregion
@@ -813,7 +796,6 @@ public class ShokoAPIManager : IDisposable
                     if (seasonList.Count == 0) {
                         Logger.LogWarning("Creating an empty show info for filter! (Group={GroupId})", groupId);
 
-                        cachedEntry.AbsoluteExpirationRelativeToNow = DefaultTimeSpan;
                         return null;
                     }
                 }
@@ -827,9 +809,6 @@ public class ShokoAPIManager : IDisposable
                 }
 
                 return showInfo;
-            },
-            new() {
-                AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
             }
         );
 
@@ -846,9 +825,6 @@ public class ShokoAPIManager : IDisposable
                 if (!string.IsNullOrEmpty(showInfo.CollectionId))
                     SeriesIdToCollectionIdDictionary[seasonInfo.Id] = showInfo.CollectionId;
                 return showInfo;
-            },
-            new() {
-                AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
             }
         );
 
@@ -861,7 +837,7 @@ public class ShokoAPIManager : IDisposable
             return null;
 
         if (DataCache.TryGetValue<CollectionInfo>($"collection:by-group-id:{groupId}", out var collectionInfo)) {
-            Logger.LogTrace("Reusing info object for collection {GroupName}. (Group={GroupId})", collectionInfo.Name, groupId);
+            Logger.LogTrace("Reusing info object for collection {GroupName}. (Group={GroupId})", collectionInfo?.Name, groupId);
             return collectionInfo;
         }
 
@@ -931,9 +907,6 @@ public class ShokoAPIManager : IDisposable
                 var showList = showDict.Values.ToList();
                 var collectionInfo = new CollectionInfo(group, showList, groupList);
                 return collectionInfo;
-            },
-            new() {
-                AbsoluteExpirationRelativeToNow = DefaultTimeSpan,
             }
         );
 

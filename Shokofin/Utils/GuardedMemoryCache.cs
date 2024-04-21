@@ -3,24 +3,55 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace Shokofin.Utils;
 
 sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 {
-    private readonly IMemoryCache Cache;
+    private readonly MemoryCacheOptions CacheOptions;
+
+    private readonly MemoryCacheEntryOptions? CacheEntryOptions;
+
+    private readonly ILogger Logger;
+
+    private IMemoryCache Cache;
 
     private readonly ConcurrentDictionary<object, SemaphoreSlim> Semaphores = new();
 
-    public GuardedMemoryCache(MemoryCacheOptions options) => Cache = new MemoryCache(options);
+    public DateTime LastClearedAt { get; private set; }
 
-    public GuardedMemoryCache(IMemoryCache cache) => Cache = cache;
+    public DateTime LastAccessedAt { get; private set; }
+
+    public readonly TimeSpan StallTime;
+
+    public bool IsStalled => LastAccessedAt - LastClearedAt > StallTime;
+
+    public GuardedMemoryCache(ILogger logger, TimeSpan stallTime, MemoryCacheOptions options, MemoryCacheEntryOptions? cacheEntryOptions = null)
+    {
+        Logger = logger;
+        CacheOptions = options;
+        CacheEntryOptions = cacheEntryOptions;
+        Cache = new MemoryCache(CacheOptions);
+        StallTime = stallTime;
+        LastClearedAt = LastAccessedAt = DateTime.Now;
+    }
+
+    public void Clear()
+    {
+        Logger.LogDebug("Clearing cache…");
+        var cache = Cache;
+        Cache = new MemoryCache(CacheOptions);
+        Semaphores.Clear();
+        LastClearedAt = LastAccessedAt = DateTime.Now;
+        cache.Dispose();
+    }
 
     public TItem GetOrCreate<TItem>(object key, Action<TItem> foundAction, Func<ICacheEntry, TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
-        if (Cache.TryGetValue<TItem>(key, out var value)) {
-            foundAction(value);
-            return value;
+        if (TryGetValue<TItem>(key, out var value)) {
+            foundAction(value!);
+            return value!;
         }
 
         var semaphore = GetSemaphore(key);
@@ -28,12 +59,13 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         semaphore.Wait();
 
         try {
-            if (Cache.TryGetValue<TItem>(key, out value)) {
-                foundAction(value);
-                return value;
+            if (TryGetValue(key, out value)) {
+                foundAction(value!);
+                return value!;
             }
 
             using ICacheEntry entry = Cache.CreateEntry(key);
+            createOptions ??= CacheEntryOptions;
             if (createOptions != null)
                 entry.SetOptions(createOptions);
 
@@ -42,16 +74,16 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             return value;
         }
         finally {
-            semaphore.Release();
             RemoveSemaphore(key);
+            semaphore.Release();
         }
     }
 
     public async Task<TItem> GetOrCreateAsync<TItem>(object key, Action<TItem> foundAction, Func<ICacheEntry, Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
-        if (Cache.TryGetValue<TItem>(key, out var value)) {
-            foundAction(value);
-            return value;
+        if (TryGetValue<TItem>(key, out var value)) {
+            foundAction(value!);
+            return value!;
         }
 
         var semaphore = GetSemaphore(key);
@@ -59,12 +91,13 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         await semaphore.WaitAsync();
 
         try {
-            if (Cache.TryGetValue<TItem>(key, out value)) {
-                foundAction(value);
-                return value;
+            if (TryGetValue(key, out value)) {
+                foundAction(value!);
+                return value!;
             }
 
             using ICacheEntry entry = Cache.CreateEntry(key);
+            createOptions ??= CacheEntryOptions;
             if (createOptions != null)
                 entry.SetOptions(createOptions);
 
@@ -73,25 +106,26 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             return value;
         }
         finally {
-            semaphore.Release();
             RemoveSemaphore(key);
+            semaphore.Release();
         }
     }
 
     public TItem GetOrCreate<TItem>(object key, Func<ICacheEntry, TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
-        if (Cache.TryGetValue<TItem>(key, out var value))
-            return value;
+        if (TryGetValue<TItem>(key, out var value))
+            return value!;
 
         var semaphore = GetSemaphore(key);
 
         semaphore.Wait();
 
         try {
-            if (Cache.TryGetValue<TItem>(key, out value))
-                return value;
+            if (TryGetValue(key, out value))
+                return value!;
 
             using ICacheEntry entry = Cache.CreateEntry(key);
+            createOptions ??= CacheEntryOptions;
             if (createOptions != null)
                 entry.SetOptions(createOptions);
 
@@ -100,25 +134,26 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             return value;
         }
         finally {
-            semaphore.Release();
             RemoveSemaphore(key);
+            semaphore.Release();
         }
     }
 
     public async Task<TItem> GetOrCreateAsync<TItem>(object key, Func<ICacheEntry, Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
-        if (Cache.TryGetValue<TItem>(key, out var value))
-            return value;
+        if (TryGetValue<TItem>(key, out var value))
+            return value!;
 
         var semaphore = GetSemaphore(key);
 
         await semaphore.WaitAsync();
 
         try {
-            if (Cache.TryGetValue<TItem>(key, out value))
-                return value;
+            if (TryGetValue(key, out value))
+                return value!;
 
             using ICacheEntry entry = Cache.CreateEntry(key);
+            createOptions ??= CacheEntryOptions;
             if (createOptions != null)
                 entry.SetOptions(createOptions);
 
@@ -127,8 +162,8 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             return value;
         }
         finally {
-            semaphore.Release();
             RemoveSemaphore(key);
+            semaphore.Release();
         }
     }
 
@@ -155,4 +190,16 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
     public bool TryGetValue(object key, out object value)
         => Cache.TryGetValue(key, out value);
+
+    public bool TryGetValue<TItem>(object key, out TItem? value)
+    {
+        LastAccessedAt = DateTime.Now;
+        return Cache.TryGetValue(key, out value);
+    }
+
+    public TItem Set<TItem>(object key, TItem value, MemoryCacheEntryOptions? createOptions = null)
+    {
+        LastAccessedAt = DateTime.Now;
+        return Cache.Set(key, value, createOptions ?? CacheEntryOptions);
+    }
 }

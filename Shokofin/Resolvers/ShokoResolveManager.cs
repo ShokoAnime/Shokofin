@@ -14,7 +14,6 @@ using MediaBrowser.Controller.Resolvers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.IO;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Models;
@@ -46,13 +45,9 @@ public class ShokoResolveManager
 
     private readonly ExternalPathParser ExternalPathParser;
 
-    private GuardedMemoryCache DataCache = new(new MemoryCacheOptions() {
-        ExpirationScanFrequency = ExpirationScanFrequency,
-    });
+    public bool IsCacheStalled => DataCache.IsStalled;
 
-    private static readonly TimeSpan ExpirationScanFrequency = TimeSpan.FromMinutes(25);
-
-    private static readonly TimeSpan DefaultTTL = TimeSpan.FromMinutes(60);
+    private readonly GuardedMemoryCache DataCache;
 
     public ShokoResolveManager(
         ShokoAPIManager apiManager,
@@ -71,6 +66,7 @@ public class ShokoResolveManager
         LibraryManager = libraryManager;
         FileSystem = fileSystem;
         Logger = logger;
+        DataCache = new(logger, TimeSpan.FromMinutes(15), new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1), SlidingExpiration = TimeSpan.FromMinutes(15) });
         _namingOptions = namingOptions;
         ExternalPathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Subtitle);
         LibraryManager.ItemRemoved += OnLibraryManagerItemRemoved;
@@ -79,19 +75,13 @@ public class ShokoResolveManager
     ~ShokoResolveManager()
     {
         LibraryManager.ItemRemoved -= OnLibraryManagerItemRemoved;
-        Clear(false);
+        DataCache.Dispose();
     }
 
-    public void Clear(bool restore = true)
+    public void Clear()
     {
         Logger.LogDebug("Clearing data…");
-        DataCache.Dispose();
-        if (restore) {
-            Logger.LogDebug("Initialising new cache…");
-            DataCache = new(new MemoryCacheOptions() {
-                ExpirationScanFrequency = ExpirationScanFrequency,
-            });
-        }
+        DataCache.Clear();
     }
 
     #region Changes Tracking
@@ -101,7 +91,8 @@ public class ShokoResolveManager
         // Remove the VFS directory for any media library folders when they're removed.
         var root = LibraryManager.RootFolder;
         if (e.Item != null && root != null && e.Item != root && e.Item is Folder folder && folder.ParentId == Guid.Empty  && !string.IsNullOrEmpty(folder.Path) && !folder.Path.StartsWith(root.Path)) {
-            DataCache.Remove(folder.Id.ToString());
+            DataCache.Remove($"paths-for-media-folder:{folder.Path}");
+            DataCache.Remove($"should-skip-media-folder:{folder.Path}");
             var mediaFolderConfig = Plugin.Instance.Configuration.MediaFolders.FirstOrDefault(c => c.MediaFolderId == folder.Id);
             if (mediaFolderConfig != null) {
                 Logger.LogDebug(
@@ -364,7 +355,7 @@ public class ShokoResolveManager
         // Save which paths we've already generated so we can skip generation
         // for them and their sub-paths later, and also print the result.
         if (path.StartsWith(mediaFolder.Path)) {
-            DataCache.Set($"should-skip-media-folder:{mediaFolder.Path}", vfsPath, DefaultTTL);
+            DataCache.Set($"should-skip-media-folder:{mediaFolder.Path}", vfsPath);
             result.Print(Logger, mediaFolder.Path);
         }
         else {

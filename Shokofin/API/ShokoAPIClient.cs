@@ -1,14 +1,10 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Shokofin.API.Models;
 using Shokofin.Utils;
@@ -37,42 +33,32 @@ public class ShokoAPIClient : IDisposable
     private static bool UseOlderImportFolderFileEndpoints =>
         ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == "4.2.2.0") || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < ImportFolderCutOffDate));
 
-    private GuardedMemoryCache _cache = new(new MemoryCacheOptions() {
-        ExpirationScanFrequency = ExpirationScanFrequency,
-    });
+    public bool IsCacheStalled => _cache.IsStalled;
 
-    private static readonly TimeSpan ExpirationScanFrequency = new(0, 25, 0);
-
-    private static readonly TimeSpan DefaultTimeSpan = new(2, 30, 0);
+    private readonly GuardedMemoryCache _cache;
 
     public ShokoAPIClient(ILogger<ShokoAPIClient> logger)
     {
-        _httpClient = new HttpClient
-        {
+        _httpClient = new HttpClient {
             Timeout = TimeSpan.FromMinutes(10),
         };
         Logger = logger;
+        _cache = new(logger, TimeSpan.FromMinutes(30), new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { SlidingExpiration = new(2, 30, 0) });
     }
 
     #region Base Implementation
 
-    public void Clear(bool restore = true)
+    public void Clear()
     {
         Logger.LogDebug("Clearing data…");
-        _cache.Dispose();
-        if (restore) {
-            Logger.LogDebug("Initialising new cache…");
-            _cache = new(new MemoryCacheOptions() {
-                ExpirationScanFrequency = ExpirationScanFrequency,
-            });
-        }
+        _cache.Clear();
     }
 
     public void Dispose()
     {
         GC.SuppressFinalize(this);
         _httpClient.Dispose();
-        Clear(false);
+        _cache.Dispose();
     }
 
     private Task<ReturnType> Get<ReturnType>(string url, string? apiKey = null, bool skipCache = false)
@@ -104,9 +90,6 @@ public class ShokoAPIClient : IDisposable
                 var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream).ConfigureAwait(false) ??
                     throw new ApiException(response.StatusCode, nameof(ShokoAPIClient), "Unexpected null return value.");
                 return value;
-            },
-            new() {
-                SlidingExpiration = DefaultTimeSpan,
             }
         );
     }

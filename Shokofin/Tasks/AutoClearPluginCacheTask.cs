@@ -9,30 +9,30 @@ using Shokofin.Resolvers;
 namespace Shokofin.Tasks;
 
 /// <summary>
-/// Forcefully clear the plugin cache. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.
+/// For automagic maintenance. Will clear the plugin cache if there has been no recent activity to the cache.
 /// </summary>
-public class ClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
+public class AutoClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
 {
     /// <inheritdoc />
-    public string Name => "Clear Plugin Cache (Force)";
+    public string Name => "Clear Plugin Cache";
 
     /// <inheritdoc />
-    public string Description => "Forcefully clear the plugin cache. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.";
+    public string Description => "For automagic maintenance. Will clear the plugin cache if there has been no recent activity to the cache.";
 
     /// <inheritdoc />
     public string Category => "Shokofin";
 
     /// <inheritdoc />
-    public string Key => "ShokoClearPluginCache";
+    public string Key => "ShokoAutoClearPluginCache";
 
     /// <inheritdoc />
     public bool IsHidden => false;
 
     /// <inheritdoc />
-    public bool IsEnabled => false;
+    public bool IsEnabled => true;
 
     /// <inheritdoc />
-    public bool IsLogged => true;
+    public bool IsLogged => false;
 
     private readonly ShokoAPIManager ApiManager;
 
@@ -41,9 +41,9 @@ public class ClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
     private readonly ShokoResolveManager ResolveManager;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ClearPluginCacheTask" /> class.
+    /// Initializes a new instance of the <see cref="AutoClearPluginCacheTask" /> class.
     /// </summary>
-    public ClearPluginCacheTask(ShokoAPIManager apiManager, ShokoAPIClient apiClient, ShokoResolveManager resolveManager)
+    public AutoClearPluginCacheTask(ShokoAPIManager apiManager, ShokoAPIClient apiClient, ShokoResolveManager resolveManager)
     {
         ApiManager = apiManager;
         ApiClient = apiClient;
@@ -54,7 +54,12 @@ public class ClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
     /// Creates the triggers that define when the task will run.
     /// </summary>
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-        => Array.Empty<TaskTriggerInfo>();
+        => new TaskTriggerInfo[] {
+            new() {
+                Type = TaskTriggerInfo.TriggerInterval,
+                IntervalTicks = TimeSpan.FromMinutes(15).Ticks,
+            }
+        };
 
     /// <summary>
     /// Returns the task to be executed.
@@ -64,9 +69,12 @@ public class ClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
     /// <returns>Task.</returns>
     public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
-        ApiClient.Clear();
-        ApiManager.Clear();
-        ResolveManager.Clear();
+        if (ApiClient.IsCacheStalled)
+            ApiClient.Clear();
+        if (ApiManager.IsCacheStalled)
+            ApiManager.Clear();
+        if (ResolveManager.IsCacheStalled)
+            ResolveManager.Clear();
         return Task.CompletedTask;
     }
 }
