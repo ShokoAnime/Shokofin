@@ -755,10 +755,10 @@ public class ShokoResolveManager
         if (isMovieSeason && collectionType != CollectionType.TvShows) {
             if (!string.IsNullOrEmpty(extrasFolder)) {
                 foreach (var episodeInfo in season.EpisodeList)
-                    folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}] [{ShokoEpisodeId.Name}={episodeInfo.Id}]", extrasFolder));
+                    folders.Add(Path.Join(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}] [{ShokoEpisodeId.Name}={episodeInfo.Id}]", extrasFolder));
             }
             else {
-                folders.Add(Path.Combine(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}] [{ShokoEpisodeId.Name}={episode.Id}]"));
+                folders.Add(Path.Join(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}] [{ShokoEpisodeId.Name}={episode.Id}]"));
                 episodeName = "Movie";
             }
         }
@@ -768,14 +768,14 @@ public class ShokoResolveManager
             var seasonFolder = $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}";
             var showFolder = $"{showName} [{ShokoSeriesId.Name}={show.Id}]";
             if (!string.IsNullOrEmpty(extrasFolder)) {
-                folders.Add(Path.Combine(vfsPath, showFolder, extrasFolder));
+                folders.Add(Path.Join(vfsPath, showFolder, extrasFolder));
 
                 // Only place the extra within the season if we have a season number assigned to the episode.
                 if (seasonNumber != 0)
-                    folders.Add(Path.Combine(vfsPath, showFolder, seasonFolder, extrasFolder));
+                    folders.Add(Path.Join(vfsPath, showFolder, seasonFolder, extrasFolder));
             }
             else {
-                folders.Add(Path.Combine(vfsPath, showFolder, seasonFolder));
+                folders.Add(Path.Join(vfsPath, showFolder, seasonFolder));
                 episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber.ToString().PadLeft(show.EpisodePadding, '0')}";
             }
 
@@ -783,14 +783,14 @@ public class ShokoResolveManager
             // to allow the built-in movie resolver to detect the directories
             // properly as tv shows.
             if (collectionType == null) {
-                nfoFiles.Add(Path.Combine(vfsPath, showFolder, "tvshow.nfo"));
-                nfoFiles.Add(Path.Combine(vfsPath, showFolder, seasonFolder, "season.nfo"));
+                nfoFiles.Add(Path.Join(vfsPath, showFolder, "tvshow.nfo"));
+                nfoFiles.Add(Path.Join(vfsPath, showFolder, seasonFolder, "season.nfo"));
             }
         }
 
         var fileName = $"{episodeName} [{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileId}]{fileNameSuffix}{Path.GetExtension(sourceLocation)}";
         var symbolicLinks = folders
-            .Select(folderPath => Path.Combine(folderPath, fileName))
+            .Select(folderPath => Path.Join(folderPath, fileName))
             .ToArray();
 
         foreach (var symbolicLink in symbolicLinks)
@@ -861,7 +861,7 @@ public class ShokoResolveManager
                 var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
                 foreach (var subtitleSource in subtitleLinks) {
                     var extName = subtitleSource[sourcePrefixLength..];
-                    var subtitleLink = Path.Combine(symbolicDirectory, symbolicName + extName);
+                    var subtitleLink = Path.Join(symbolicDirectory, symbolicName + extName);
 
                     result.Paths.Add(subtitleLink);
                     if (!File.Exists(subtitleLink)) {

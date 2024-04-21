@@ -37,12 +37,12 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         Instance = this;
         ConfigurationChanged += OnConfigChanged;
         IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
-        VirtualRoot = Path.Combine(applicationPaths.ProgramDataPath, "Shokofin", "VFS");
+        VirtualRoot = Path.Join(applicationPaths.ProgramDataPath, "Shokofin", "VFS");
         Logger = logger;
         CanCreateSymbolicLinks = true;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-            var target = Path.Combine(Path.GetDirectoryName(VirtualRoot)!, "TestTarget.txt");
-            var link = Path.Combine(Path.GetDirectoryName(VirtualRoot)!, "TestLink.txt");
+            var target = Path.Join(Path.GetDirectoryName(VirtualRoot)!, "TestTarget.txt");
+            var link = Path.Join(Path.GetDirectoryName(VirtualRoot)!, "TestLink.txt");
             try {
                 if (!Directory.Exists(Path.GetDirectoryName(VirtualRoot)!))
                     Directory.CreateDirectory(Path.GetDirectoryName(VirtualRoot)!);
