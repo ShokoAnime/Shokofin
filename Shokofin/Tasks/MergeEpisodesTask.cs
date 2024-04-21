@@ -13,7 +13,7 @@ namespace Shokofin.Tasks;
 public class MergeEpisodesTask : IScheduledTask, IConfigurableScheduledTask
 {
     /// <inheritdoc />
-    public string Name => "Merge episodes";
+    public string Name => "Merge Episodes";
 
     /// <inheritdoc />
     public string Description => "Merge all episode entries with the same Shoko Episode ID set.";

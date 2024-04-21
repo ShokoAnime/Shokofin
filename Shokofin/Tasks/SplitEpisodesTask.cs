@@ -13,7 +13,7 @@ namespace Shokofin.Tasks;
 public class SplitEpisodesTask : IScheduledTask, IConfigurableScheduledTask
 {
     /// <inheritdoc />
-    public string Name => "Split episodes";
+    public string Name => "Split Episodes";
 
     /// <inheritdoc />
     public string Description => "Split all episode entries with a Shoko Episode ID set.";

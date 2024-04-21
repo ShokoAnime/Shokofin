@@ -13,7 +13,7 @@ namespace Shokofin.Tasks;
 public class MergeMoviesTask : IScheduledTask, IConfigurableScheduledTask
 {
     /// <inheritdoc />
-    public string Name => "Merge movies";
+    public string Name => "Merge Movies";
 
     /// <inheritdoc />
     public string Description => "Merge all movie entries with the same Shoko Episode ID set.";
