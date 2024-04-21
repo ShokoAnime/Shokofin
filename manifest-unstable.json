@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.135",
+                "changelog": "fix: compensate for missing imported at dates in shoko server\n\n- Compensate for the (since fixed) bug in Shoko Server (hopefully) that\n  lead to some files not having an imported at date if they've been\n  imported, then removed from shoko, then reimported.\n\nmisc: fix logging of skipped event [skip ci]",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.135/shoko_3.0.1.135.zip",
+                "checksum": "03d339cab0a73bc6baab62e55a9f7d3b",
+                "timestamp": "2024-04-21T10:44:24Z"
+            },
+            {
                 "version": "3.0.1.134",
                 "changelog": "fix: temp. disable import order for VFS\n\nmisc: remove unneeded assignment\n\nfix: only emit path for the same file/series once\n\nrefactor: better cleanup logic\n\n- Refactor how we do the cleanup, adding more trace/debug logging,\n  only get the file list once, and to only try to clean up a directory\n  once.\n\nmisc: decrease default VFS link gen. threads\n\nrefactor: easier import order in VFS\n\n- Set the link creation date instead of monkey-patching the items\n  afterwards.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.131/shoko_3.0.1.131.zip",
                 "checksum": "5f5a6e877d92cf06ce782cd2921c7131",
                 "timestamp": "2024-04-16T19:01:04Z"
-            },
-            {
-                "version": "3.0.1.130",
-                "changelog": "revert: \"fix: only iterate files in folder\"\n\nThis reverts commit accba9b1bed6fe6eb630cfb1f4cb07f8fffc2b5e.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.130/shoko_3.0.1.130.zip",
-                "checksum": "c65ff8f6a7b67bfafd1df236c5493a2d",
-                "timestamp": "2024-04-16T03:32:02Z"
             }
         ]
     }
