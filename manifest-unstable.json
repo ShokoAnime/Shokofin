@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.137",
+                "changelog": "misc: log when automagic cache clearing occurs\n\n- Log in the info level when automagic cache clearing occurs. Since not\n  everyone have their jellyfin instance set to log Shokofin message at\n  debug level (or below).",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.137/shoko_3.0.1.137.zip",
+                "checksum": "be30b6fc60b6d8b520b38b2413a1b80a",
+                "timestamp": "2024-04-23T17:46:32Z"
+            },
+            {
                 "version": "3.0.1.136",
                 "changelog": "refactor: partially wire up file events\n\n- Wired up file added/updated events, and laid the ground work for\n  file deleted events and series/episode updated events.\n\nfix: `Path.Combine` \u2192 `Path.Join`\n\n- Replaced all occurences of `Path.Combine` with `Path.Join`, because\n  they are not the same, and we want the bahaviour of `.Join`.\n\nmisc: fix casing of scheduled tasks\n\nmisc: remove unused import\n\nrefactor: track cache access\n\n- Track when we accessed the caches last, and clear them in a\n  scheduled task when they become stall.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.133/shoko_3.0.1.133.zip",
                 "checksum": "07b83cdf08b706f30f488424062892d7",
                 "timestamp": "2024-04-20T11:43:59Z"
-            },
-            {
-                "version": "3.0.1.132",
-                "changelog": "fix: fix import order for items in the VFS\n\n- Fix the \"recently added\" section of the dashboard by monkey-patching\n  the creation date for each item type.\n\nfix: fix adding missing metadata\n\n- Fixed up the code for adding/removing \"missing\" metadata as needed. It\n  will now work even better than it ever did, since we're now handling\n  more edge cases. \ud83d\udc4d\n\nrefactor: add fast paths for link generation\n\n- Added back the fast path to skip link generation of all shows/movies\n  if we've already created all possible links for the entire VFS for a\n  media folder, until the cache expires or is cleared.\n\n- Added a new fast path to skip link generation for all children of\n  already generated paths, until the cache expires or is cleared.\n\n- Removed the per-file-slash-series-slash-path caching, since we now\n  cache per folder _and_ file location instead.\n\n- Fixed up link generation result logging so it will be consistent\n  again.\n\n- Some misc. internal restructor of the resolver manager.\n\nmisc: smarter path set and episode ids generation\n\nMerge pull request #53 from fearnlj01/webhook-back-to-embed\n\nMisc: Change update webhook [skip ci]\nMisc: Change update webhook [skip ci]",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.132/shoko_3.0.1.132.zip",
-                "checksum": "d1762380a90fb7e54218f3e3f8ecf647",
-                "timestamp": "2024-04-19T10:56:45Z"
             }
         ]
     }
