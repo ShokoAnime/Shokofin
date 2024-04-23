@@ -372,12 +372,12 @@ public class SignalRConnectionManager : IDisposable
                     locationsToNotify.Add(sourceLocation);
                     continue;
                 }
+
+                var result = new LinkGenerationResult();
+                var topFolders = new HashSet<string>();
                 var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, sourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
                     .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
                     .ToList();
-
-                var topFolders = new HashSet<string>();
-                var result = new LinkGenerationResult();
                 foreach (var (srcLoc, symLnks, nfoFls, imprtDt) in vfsLocations) {
                     result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLnks, nfoFls, imprtDt!.Value, result.Paths);
                     foreach (var path in symLnks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
