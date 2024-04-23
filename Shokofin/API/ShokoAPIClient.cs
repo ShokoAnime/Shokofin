@@ -67,6 +67,7 @@ public class ShokoAPIClient : IDisposable
     private async Task<ReturnType> Get<ReturnType>(string url, HttpMethod method, string? apiKey = null, bool skipCache = false)
     {
         if (skipCache) {
+            Logger.LogTrace("Creating object for {Method} {URL}", method, url);
             var response = await Get(url, method, apiKey).ConfigureAwait(false);
             if (response.StatusCode != HttpStatusCode.OK)
                 throw ApiException.FromResponse(response);
@@ -270,10 +271,10 @@ public class ShokoAPIClient : IDisposable
     public async Task<ListResult<File>> GetFilesForImportFolder(int importFolderId, string subPath, int page = 1)
     {
         if (UseOlderImportFolderFileEndpoints) {
-            return await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?page={page}&pageSize=100&includeXRefs=true").ConfigureAwait(false);
+            return await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?page={page}&pageSize=100&includeXRefs=true", skipCache: true).ConfigureAwait(false);
         }
 
-        return await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?page={page}&folderPath={Uri.EscapeDataString(subPath)}&pageSize=1000&include=XRefs").ConfigureAwait(false);
+        return await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?page={page}&folderPath={Uri.EscapeDataString(subPath)}&pageSize=1000&include=XRefs", skipCache: true).ConfigureAwait(false);
     }
 
     public async Task<File.UserStats?> GetFileUserStats(string fileId, string? apiKey = null)
