@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.136",
+                "changelog": "refactor: partially wire up file events\n\n- Wired up file added/updated events, and laid the ground work for\n  file deleted events and series/episode updated events.\n\nfix: `Path.Combine` \u2192 `Path.Join`\n\n- Replaced all occurences of `Path.Combine` with `Path.Join`, because\n  they are not the same, and we want the bahaviour of `.Join`.\n\nmisc: fix casing of scheduled tasks\n\nmisc: remove unused import\n\nrefactor: track cache access\n\n- Track when we accessed the caches last, and clear them in a\n  scheduled task when they become stall.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.136/shoko_3.0.1.136.zip",
+                "checksum": "f6457487468f2ffc88c0876f7561e04c",
+                "timestamp": "2024-04-23T17:27:06Z"
+            },
+            {
                 "version": "3.0.1.135",
                 "changelog": "fix: compensate for missing imported at dates in shoko server\n\n- Compensate for the (since fixed) bug in Shoko Server (hopefully) that\n  lead to some files not having an imported at date if they've been\n  imported, then removed from shoko, then reimported.\n\nmisc: fix logging of skipped event [skip ci]",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.132/shoko_3.0.1.132.zip",
                 "checksum": "d1762380a90fb7e54218f3e3f8ecf647",
                 "timestamp": "2024-04-19T10:56:45Z"
-            },
-            {
-                "version": "3.0.1.131",
-                "changelog": "fix: override date created on episodes/movies\n\nfix: only iterate files in media folder once",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.131/shoko_3.0.1.131.zip",
-                "checksum": "5f5a6e877d92cf06ce782cd2921c7131",
-                "timestamp": "2024-04-16T19:01:04Z"
             }
         ]
     }
