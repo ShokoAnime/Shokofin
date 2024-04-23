@@ -296,9 +296,6 @@ public class ShokoAPIManager : IDisposable
                     var xref = file.CrossReferences.First(xref => xref.Series.Shoko.ToString() == seriesId);
                     foreach (var episodeXRef in xref.Episodes)
                         episodeIds.Add(episodeXRef.Shoko.ToString());
-                    if (file.ImportedAt.HasValue) {
-                        
-                    }
                 }
 
                 return (pathSet, episodeIds);

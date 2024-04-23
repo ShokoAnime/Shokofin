@@ -41,6 +41,8 @@ public class SignalRConnectionManager : IDisposable
 
     private readonly ShokoAPIClient ApiClient;
 
+    private readonly ShokoAPIManager ApiManager;
+
     private readonly ShokoResolveManager ResolveManager;
 
     private readonly ILibraryManager LibraryManager;
@@ -65,10 +67,11 @@ public class SignalRConnectionManager : IDisposable
 
     public HubConnectionState State => Connection == null ? HubConnectionState.Disconnected : Connection.State;
 
-    public SignalRConnectionManager(ILogger<SignalRConnectionManager> logger, ShokoAPIClient apiClient, ShokoResolveManager resolveManager, ILibraryManager libraryManager, ILibraryMonitor libraryMonitor, IFileSystem fileSystem)
+    public SignalRConnectionManager(ILogger<SignalRConnectionManager> logger, ShokoAPIClient apiClient, ShokoAPIManager apiManager, ShokoResolveManager resolveManager, ILibraryManager libraryManager, ILibraryMonitor libraryMonitor, IFileSystem fileSystem)
     {
         Logger = logger;
         ApiClient = apiClient;
+        ApiManager = apiManager;
         ResolveManager = resolveManager;
         LibraryManager = libraryManager;
         LibraryMonitor = libraryMonitor;
@@ -352,10 +355,10 @@ public class SignalRConnectionManager : IDisposable
 
         // Something was added or updated.
         var locationsToNotify = new List<string>();
+        var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
         var mediaFolders = ResolveManager.GetAvailableMediaFolders(fileEvents: true);
         var (reason, importFolderId, relativePath, lastEvent) = changes.Last();
         if (reason != UpdateReason.Removed) {
-            var seriesIds = await GetSeriesIds(importFolderId, relativePath, fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
             foreach (var (config, mediaFolder, vfsPath) in mediaFolders) {
                 if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
                     continue;
@@ -419,7 +422,6 @@ public class SignalRConnectionManager : IDisposable
         else if (changes.FirstOrDefault(t => t.Reason == UpdateReason.Removed).Event is IFileRelocationEventArgs firstRemovedEvent) {
             relativePath = firstRemovedEvent.RelativePath;
             importFolderId = firstRemovedEvent.ImportFolderId;
-            var seriesIds = await GetSeriesIds(importFolderId, relativePath, fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
             foreach (var (config, mediaFolder, vfsPath) in mediaFolders) {
                 if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
                     continue;
@@ -447,25 +449,24 @@ public class SignalRConnectionManager : IDisposable
             LibraryMonitor.ReportFileSystemChanged(location);
     }
 
-    private async Task<IReadOnlySet<string>> GetSeriesIds(int importFolderId, string relativePath, int fileId, IFileEventArgs? fileEvent)
+    private async Task<IReadOnlySet<string>> GetSeriesIdsForFile(int fileId, IFileEventArgs? fileEvent)
     {
-        // TODO: VERIFY WHICH SERIES IDS TO ADD FOR. WE MAY ACCIDENTIALLY ADD A FILE LINKED TO MULTIPLE SHOWS WHERE WE ONLY HAVE THIS SINGLE FILE, WHICH WE DON'T WANT.
-        if (fileEvent != null)
-            return fileEvent.CrossReferences.Select(xref => xref.SeriesId.ToString()).Distinct().ToHashSet();
+        var seriesIds = fileEvent != null
+            ? fileEvent.CrossReferences.Select(xref => xref.SeriesId.ToString()).Distinct().ToHashSet()
+            : (await ApiClient.GetFile(fileId.ToString())).CrossReferences.Select(xref => xref.Series.Shoko.ToString()).Distinct().ToHashSet();
 
-        try {
-            var file = await ApiClient.GetFile(fileId.ToString());
-            return file.CrossReferences.Select(xref => xref.Series.Shoko.ToString()).Distinct().ToHashSet();
-        }
-        catch (ApiException ex) {
-            if (ex.StatusCode != System.Net.HttpStatusCode.NotFound)
-                Logger.LogWarning(ex, "An exception occured while trying to get file xrefs; {ExceptionMessage}", ex.Message);
-        }
-        catch (Exception ex) {
-            Logger.LogWarning(ex, "An exception occured while trying to get file xrefs; {ExceptionMessage}", ex.Message);
+        var filteredSeriesIds = new HashSet<string>();
+        foreach (var seriesId in seriesIds) {
+            var seriesPathSet = await ApiManager.GetPathSetForSeries(seriesId);
+            if (seriesPathSet.Count > 0) {
+                filteredSeriesIds.Add(seriesId);
+            }
         }
 
-        return new HashSet<string>();
+        // Return all series if we only have this file for all of them,
+        // otherwise return only the series were we have other files that are
+        // not linked to other series.
+        return filteredSeriesIds.Count == 0 ? seriesIds : filteredSeriesIds;
     }
 
     #endregion
