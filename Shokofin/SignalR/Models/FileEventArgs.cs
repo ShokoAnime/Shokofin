@@ -40,7 +40,7 @@ public class FileEventArgs : IFileEventArgs
 
     /// <inheritdoc/>
     [JsonIgnore]
-    public bool HasCrossReferences { get; set; }
+    public bool HasCrossReferences { get; set; } = false;
 
     /// <inheritdoc/>
     [JsonIgnore]
@@ -48,17 +48,17 @@ public class FileEventArgs : IFileEventArgs
 
 #pragma warning disable IDE0051
     /// <summary>
-    /// Legacy cross-references of episodes linked to this file. Only present
+    /// Current cross-references of episodes linked to this file. Only present
     /// for setting the cross-references when deserializing JSON.
     /// </summary>
     [JsonInclude, JsonPropertyName("CrossReferences")]
-    public List<IFileEventArgs.FileCrossReference> CurrentCrossReferences { set { HasCrossReferences = true; CrossReferences = value; } }
+    public List<IFileEventArgs.FileCrossReference> CurrentCrossReferences { get => CrossReferences; set { HasCrossReferences = true; CrossReferences = value; } }
 
     /// <summary>
     /// Legacy cross-references of episodes linked to this file. Only present
     /// for setting the cross-references when deserializing JSON.
     /// </summary>
     [JsonInclude, JsonPropertyName("CrossRefs")]
-    public List<IFileEventArgs.FileCrossReference> LegacyCrossReferences { set { HasCrossReferences = true; CrossReferences = value; } }
+    public List<IFileEventArgs.FileCrossReference> LegacyCrossReferences { get => CrossReferences; set { HasCrossReferences = true; CrossReferences = value; } }
 #pragma warning restore IDE0051
 }

@@ -134,11 +134,12 @@ public class ShokoResolveManager
             }
         );
 
-    public IReadOnlyList<(MediaFolderConfiguration config, Folder mediaFolder)> GetAvailableMediaFolders()
+    public IReadOnlyList<(MediaFolderConfiguration config, Folder mediaFolder, string vfsPath)> GetAvailableMediaFolders(bool fileEvents = false, bool refreshEvents = false)
         => Plugin.Instance.Configuration.MediaFolders
-            .Where(mediaFolder => mediaFolder.IsMapped && mediaFolder.IsFileEventsEnabled)
+            .Where(mediaFolder => mediaFolder.IsMapped && (!fileEvents || mediaFolder.IsFileEventsEnabled) && (!refreshEvents || mediaFolder.IsRefreshEventsEnabled))
             .Select(config => (config,  mediaFolder: LibraryManager.GetItemById(config.MediaFolderId) as Folder))
             .OfType<(MediaFolderConfiguration config, Folder mediaFolder)>()
+            .Select(tuple => (tuple.config, tuple.mediaFolder, ShokoAPIManager.GetVirtualRootForMediaFolder(tuple.mediaFolder)))
             .ToList();
 
     public async Task<MediaFolderConfiguration> GetOrCreateConfigurationForMediaFolder(Folder mediaFolder)
@@ -798,12 +799,9 @@ public class ShokoResolveManager
         return (sourceLocation, symbolicLinks, nfoFiles: nfoFiles.ToArray(), file.Shoko.ImportedAt ?? file.Shoko.CreatedAt);
     }
 
-    public LinkGenerationResult GenerateSymbolicLinks(string sourceLocation, string[] symbolicLinks, string[] nfoFiles, DateTime importedAt)
-        => GenerateSymbolicLinks(sourceLocation, symbolicLinks, nfoFiles, importedAt, new());
-
 // TODO: Remove this for 10.9
 #pragma warning disable IDE0060
-    private LinkGenerationResult GenerateSymbolicLinks(string sourceLocation, string[] symbolicLinks, string[] nfoFiles, DateTime importedAt, ConcurrentBag<string> allPathsForVFS)
+    public LinkGenerationResult GenerateSymbolicLinks(string sourceLocation, string[] symbolicLinks, string[] nfoFiles, DateTime importedAt, ConcurrentBag<string> allPathsForVFS)
 #pragma warning restore IDE0060
     {
         var result = new LinkGenerationResult();

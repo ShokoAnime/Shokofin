@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Jellyfin.Data.Enums;
+using Shokofin.SignalR.Interfaces;
 
 namespace Shokofin.SignalR.Models;
 
-public class EpisodeInfoUpdatedEventArgs
+public class EpisodeInfoUpdatedEventArgs : IMetadataUpdatedEventArgs
 {
     /// <summary>
     /// The update reason.
@@ -27,7 +29,7 @@ public class EpisodeInfoUpdatedEventArgs
     /// The provided metadata series id.
     /// </summary>
     [JsonInclude, JsonPropertyName("SeriesID")]
-    public int ProviderSeriesId { get; set; }
+    public int ProviderParentId { get; set; }
 
     /// <summary>
     /// Shoko episode ids affected by this update.
@@ -46,4 +48,18 @@ public class EpisodeInfoUpdatedEventArgs
     /// </summary>
     [JsonInclude, JsonPropertyName("ShokoGroupIDs")]
     public List<int> GroupIds { get; set; } = new();
+
+    #region IMetadataUpdatedEventArgs Impl.
+
+    BaseItemKind IMetadataUpdatedEventArgs.Type => BaseItemKind.Episode;
+
+    int? IMetadataUpdatedEventArgs.ProviderParentId => ProviderParentId;
+
+    IReadOnlyList<int> IMetadataUpdatedEventArgs.EpisodeIds => EpisodeIds;
+
+    IReadOnlyList<int> IMetadataUpdatedEventArgs.SeriesIds => SeriesIds;
+
+    IReadOnlyList<int> IMetadataUpdatedEventArgs.GroupIds => GroupIds;
+
+    #endregion
 }
