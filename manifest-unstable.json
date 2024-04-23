@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.138",
+                "changelog": "misc: move variables for better time tracking\n\nfix: bypass http cache for import folder files\n\nfix: filter series ids before use",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.138/shoko_3.0.1.138.zip",
+                "checksum": "63937503973e778eabda44eedb672014",
+                "timestamp": "2024-04-23T22:44:20Z"
+            },
+            {
                 "version": "3.0.1.137",
                 "changelog": "misc: log when automagic cache clearing occurs\n\n- Log in the info level when automagic cache clearing occurs. Since not\n  everyone have their jellyfin instance set to log Shokofin message at\n  debug level (or below).",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.134/shoko_3.0.1.134.zip",
                 "checksum": "d07968638597639c9dc804c1907c5423",
                 "timestamp": "2024-04-20T22:27:27Z"
-            },
-            {
-                "version": "3.0.1.133",
-                "changelog": "misc: add more traces and comments\n\nfix: make scrobbling great again!\n\n- Add the missing initial \"play\" event late if we've enabled playback\n  events _and_ lazy sync. Previously it was skipping the initial \"play\"\n  event in this config, causing trakt syncing to fail from shoko to\n  trakt.\n\n- Fixed event scrobbling when live sync is not enabled.\n\n- Added more documentation about the session fields.\n\nmisc: remove unused method & model [skip ci]\n\nFix discord webhook url [no ci",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.133/shoko_3.0.1.133.zip",
-                "checksum": "07b83cdf08b706f30f488424062892d7",
-                "timestamp": "2024-04-20T11:43:59Z"
             }
         ]
     }
