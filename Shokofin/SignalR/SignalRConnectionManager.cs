@@ -400,6 +400,7 @@ public class SignalRConnectionManager : IDisposable
                         .ToList();
                     foreach (var video in videos) {
                         File.Delete(video.Path);
+                        topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
                         locationsToNotify.Add(video.Path);
                         result.RemovedVideos++;
                     }
@@ -419,7 +420,7 @@ public class SignalRConnectionManager : IDisposable
                     }
                 }
             }
-            // Something was removed.
+            // Something was removed, so assume the location is gone.
             else if (changes.FirstOrDefault(t => t.Reason == UpdateReason.Removed).Event is IFileRelocationEventArgs firstRemovedEvent) {
                 relativePath = firstRemovedEvent.RelativePath;
                 importFolderId = firstRemovedEvent.ImportFolderId;
@@ -427,20 +428,65 @@ public class SignalRConnectionManager : IDisposable
                     if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
                         continue;
 
-                    var sourceLocation = Path.Join(mediaFolder.Path, relativePath[config.ImportFolderRelativePath.Length..]);
-                    if (!File.Exists(sourceLocation))
-                        continue;
 
                     // Let the core logic handle the rest.
                     if (!config.IsVirtualFileSystemEnabled) {
+                        var sourceLocation = Path.Join(mediaFolder.Path, relativePath[config.ImportFolderRelativePath.Length..]);
                         locationsToNotify.Add(sourceLocation);
                         continue;
                     }
 
-                    // TODO: Detect what was removed, and update any needed links, then report the changes.
-                    // VFS or non-VFS
-                    // non-VFS: just check if the file was within any of our media folders, and forward the event to jellyfin if it were.
-                    // VFS: Check with shoko if the file was removed, or if the file locations within our media folders were removed, and fix up the VFS if needed.
+                    // Check if we can use another location for the file.
+                    var result = new LinkGenerationResult();
+                    var vfsSymbolicLinks = new HashSet<string>();
+                    var topFolders = new HashSet<string>();
+                    var newRelativePath = await GetNewRelativePath(config, fileId, relativePath);
+                    if (!string.IsNullOrEmpty(newRelativePath)) {
+                        var newSourceLocation = Path.Join(mediaFolder.Path, newRelativePath[config.ImportFolderRelativePath.Length..]);
+                        var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, newSourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
+                            .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
+                            .ToList();
+                        foreach (var (srcLoc, symLnks, nfoFls, imprtDt) in vfsLocations) {
+                            result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLnks, nfoFls, imprtDt!.Value, result.Paths);
+                            foreach (var path in symLnks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
+                                topFolders.Add(path);
+                        }
+                        vfsSymbolicLinks = vfsLocations.Select(tuple => tuple.sourceLocation).ToHashSet();
+                    }
+
+                    // Remove old links for file.
+                    var videos = LibraryManager
+                        .GetItemList(
+                            new() {
+                                AncestorIds = new[] { mediaFolder.Id },
+                                IncludeItemTypes = new[] { BaseItemKind.Episode, BaseItemKind.Movie },
+                                HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, fileId.ToString() } },
+                                DtoOptions = new(true),
+                            },
+                            true
+                        )
+                        .Where(item => !string.IsNullOrEmpty(item.Path) && item.Path.StartsWith(vfsPath) && !result.Paths.Contains(item.Path))
+                        .ToList();
+                    foreach (var video in videos) {
+                        File.Delete(video.Path);
+                        topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
+                        locationsToNotify.Add(video.Path);
+                        result.RemovedVideos++;
+                    }
+
+                    result.Print(Logger, mediaFolder.Path);
+
+                    // If all the "top-level-folders" exist, then let the core logic handle the rest.
+                    if (topFolders.All(path => LibraryManager.FindByPath(path, true) != null)) {
+                        var old = locationsToNotify.Count;
+                        locationsToNotify.AddRange(vfsSymbolicLinks);
+                    }
+                    // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
+                    else {
+                        var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolder.Path, false).FirstOrDefault();
+                        if (!string.IsNullOrEmpty(fileOrFolder))
+                            locationsToNotify.Add(fileOrFolder);
+                    }
                 }
             }
 
@@ -472,6 +518,23 @@ public class SignalRConnectionManager : IDisposable
         // otherwise return only the series were we have other files that are
         // not linked to other series.
         return filteredSeriesIds.Count == 0 ? seriesIds : filteredSeriesIds;
+    }
+
+    private async Task<string?> GetNewRelativePath(MediaFolderConfiguration config, int fileId, string relativePath)
+    {
+        // Check if the file still exists, and if it has any other locations we can use.
+        try {
+            var file = await ApiClient.GetFile(fileId.ToString());
+            var usableLocation = file.Locations
+                .Where(loc => loc.ImportFolderId == config.ImportFolderId && config.IsEnabledForPath(loc.RelativePath) && loc.RelativePath != relativePath)
+                .FirstOrDefault();
+            return usableLocation?.RelativePath;
+        }
+        catch (ApiException ex) {
+            if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return null;
+            throw;
+        }
     }
 
     #endregion
