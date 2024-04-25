@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Shokofin.API.Info;
@@ -565,7 +566,7 @@ public class ShokoAPIManager : IDisposable
 
         var key = $"season:{seriesId}";
         if (DataCache.TryGetValue<SeasonInfo>(key, out var seasonInfo)) {
-            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo?.Shoko.Name, seriesId);
+            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId);
             return seasonInfo;
         }
 
@@ -580,7 +581,7 @@ public class ShokoAPIManager : IDisposable
 
         var cachedKey = $"season:{seriesId}";
         if (DataCache.TryGetValue<SeasonInfo>(cachedKey, out var seasonInfo)) {
-            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo?.Shoko.Name, seriesId);
+            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId);
             return seasonInfo;
         }
 
@@ -648,7 +649,7 @@ public class ShokoAPIManager : IDisposable
     #endregion
     #region Series Helpers
 
-    public bool TryGetSeriesIdForPath(string path, out string? seriesId)
+    public bool TryGetSeriesIdForPath(string path, [NotNullWhen(true)] out string? seriesId)
     {
         if (string.IsNullOrEmpty(path)) {
             seriesId = null;
@@ -657,7 +658,7 @@ public class ShokoAPIManager : IDisposable
         return PathToSeriesIdDictionary.TryGetValue(path, out seriesId);
     }
 
-    public bool TryGetSeriesPathForId(string seriesId, out string? path)
+    public bool TryGetSeriesPathForId(string seriesId, [NotNullWhen(true)] out string? path)
     {
         if (string.IsNullOrEmpty(seriesId)) {
             path = null;
@@ -666,7 +667,7 @@ public class ShokoAPIManager : IDisposable
         return SeriesIdToPathDictionary.TryGetValue(seriesId, out path);
     }
 
-    public bool TryGetDefaultSeriesIdForSeriesId(string seriesId, out string? defaultSeriesId)
+    public bool TryGetDefaultSeriesIdForSeriesId(string seriesId, [NotNullWhen(true)] out string? defaultSeriesId)
     {
         if (string.IsNullOrEmpty(seriesId)) {
             defaultSeriesId = null;
@@ -834,7 +835,7 @@ public class ShokoAPIManager : IDisposable
             return null;
 
         if (DataCache.TryGetValue<CollectionInfo>($"collection:by-group-id:{groupId}", out var collectionInfo)) {
-            Logger.LogTrace("Reusing info object for collection {GroupName}. (Group={GroupId})", collectionInfo?.Name, groupId);
+            Logger.LogTrace("Reusing info object for collection {GroupName}. (Group={GroupId})", collectionInfo.Name, groupId);
             return collectionInfo;
         }
 

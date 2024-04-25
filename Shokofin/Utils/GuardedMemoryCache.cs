@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
@@ -50,8 +51,8 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
     public TItem GetOrCreate<TItem>(object key, Action<TItem> foundAction, Func<ICacheEntry, TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
         if (TryGetValue<TItem>(key, out var value)) {
-            foundAction(value!);
-            return value!;
+            foundAction(value);
+            return value;
         }
 
         var semaphore = GetSemaphore(key);
@@ -60,8 +61,8 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
         try {
             if (TryGetValue(key, out value)) {
-                foundAction(value!);
-                return value!;
+                foundAction(value);
+                return value;
             }
 
             using ICacheEntry entry = Cache.CreateEntry(key);
@@ -82,8 +83,8 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
     public async Task<TItem> GetOrCreateAsync<TItem>(object key, Action<TItem> foundAction, Func<ICacheEntry, Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
         if (TryGetValue<TItem>(key, out var value)) {
-            foundAction(value!);
-            return value!;
+            foundAction(value);
+            return value;
         }
 
         var semaphore = GetSemaphore(key);
@@ -92,8 +93,8 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
         try {
             if (TryGetValue(key, out value)) {
-                foundAction(value!);
-                return value!;
+                foundAction(value);
+                return value;
             }
 
             using ICacheEntry entry = Cache.CreateEntry(key);
@@ -114,7 +115,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
     public TItem GetOrCreate<TItem>(object key, Func<ICacheEntry, TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
         if (TryGetValue<TItem>(key, out var value))
-            return value!;
+            return value;
 
         var semaphore = GetSemaphore(key);
 
@@ -122,7 +123,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
         try {
             if (TryGetValue(key, out value))
-                return value!;
+                return value;
 
             using ICacheEntry entry = Cache.CreateEntry(key);
             createOptions ??= CacheEntryOptions;
@@ -142,7 +143,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
     public async Task<TItem> GetOrCreateAsync<TItem>(object key, Func<ICacheEntry, Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
         if (TryGetValue<TItem>(key, out var value))
-            return value!;
+            return value;
 
         var semaphore = GetSemaphore(key);
 
@@ -150,7 +151,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
         try {
             if (TryGetValue(key, out value))
-                return value!;
+                return value;
 
             using ICacheEntry entry = Cache.CreateEntry(key);
             createOptions ??= CacheEntryOptions;
@@ -188,16 +189,16 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
     public void Remove(object key)
         => Cache.Remove(key);
 
-    public bool TryGetValue(object key, out object value)
+    public bool TryGetValue(object key, [NotNullWhen(true)] out object? value)
         => Cache.TryGetValue(key, out value);
 
-    public bool TryGetValue<TItem>(object key, out TItem? value)
+    public bool TryGetValue<TItem>(object key, [NotNullWhen(true)] out TItem? value)
     {
         LastAccessedAt = DateTime.Now;
         return Cache.TryGetValue(key, out value);
     }
 
-    public TItem Set<TItem>(object key, TItem value, MemoryCacheEntryOptions? createOptions = null)
+    public TItem? Set<TItem>(object key, [NotNullIfNotNull("value")] TItem? value, MemoryCacheEntryOptions? createOptions = null)
     {
         LastAccessedAt = DateTime.Now;
         return Cache.Set(key, value, createOptions ?? CacheEntryOptions);
