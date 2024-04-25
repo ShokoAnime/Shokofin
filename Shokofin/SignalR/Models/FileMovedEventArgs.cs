@@ -16,7 +16,7 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
     /// seperators used on the Shoko side.
     /// </summary>
     [JsonInclude, JsonPropertyName("PreviousRelativePath")]
-    private string PreviousInternalPath  { get; set; } = string.Empty;
+    public string PreviousInternalPath  { get; set; } = string.Empty;
 
     /// <summary>
     /// Cached path for later re-use.
