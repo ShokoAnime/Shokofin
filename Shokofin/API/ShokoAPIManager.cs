@@ -292,7 +292,7 @@ public class ShokoAPIManager : IDisposable
                 foreach (var file in await APIClient.GetFilesForSeries(seriesId).ConfigureAwait(false)) {
                     if (file.CrossReferences.Count == 1)
                         foreach (var fileLocation in file.Locations)
-                            pathSet.Add((Path.GetDirectoryName(fileLocation.Path) ?? string.Empty) + Path.DirectorySeparatorChar);
+                            pathSet.Add((Path.GetDirectoryName(fileLocation.RelativePath) ?? string.Empty) + Path.DirectorySeparatorChar);
                     var xref = file.CrossReferences.First(xref => xref.Series.Shoko.ToString() == seriesId);
                     foreach (var episodeXRef in xref.Episodes)
                         episodeIds.Add(episodeXRef.Shoko.ToString());
@@ -371,7 +371,7 @@ public class ShokoAPIManager : IDisposable
         // Find the file locations matching the given path.
         var fileId = file.Id.ToString();
         var fileLocations = file.Locations
-            .Where(location => location.Path.EndsWith(partialPath))
+            .Where(location => location.RelativePath.EndsWith(partialPath))
             .ToList();
         Logger.LogTrace("Found a file match for {Path} (File={FileId})", partialPath, file.Id.ToString());
         if (fileLocations.Count != 1) {
@@ -382,7 +382,7 @@ public class ShokoAPIManager : IDisposable
         }
 
         // Find the correct series based on the path.
-        var selectedPath = (Path.GetDirectoryName(fileLocations.First().Path) ?? string.Empty) + Path.DirectorySeparatorChar;
+        var selectedPath = (Path.GetDirectoryName(fileLocations.First().RelativePath) ?? string.Empty) + Path.DirectorySeparatorChar;
         foreach (var seriesXRef in file.CrossReferences) {
             var seriesId = seriesXRef.Series.Shoko.ToString();
 

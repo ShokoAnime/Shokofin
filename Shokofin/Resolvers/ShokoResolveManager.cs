@@ -177,14 +177,14 @@ public class ShokoResolveManager
 
             var fileId = file.Id.ToString();
             var fileLocations = file.Locations
-                .Where(location => location.Path.EndsWith(partialPath))
+                .Where(location => location.RelativePath.EndsWith(partialPath))
                 .ToList();
             if (fileLocations.Count == 0)
                 continue;
 
             var fileLocation = fileLocations[0];
             mediaFolderConfig.ImportFolderId = fileLocation.ImportFolderId;
-            mediaFolderConfig.ImportFolderRelativePath = fileLocation.Path[..^partialPath.Length];
+            mediaFolderConfig.ImportFolderRelativePath = fileLocation.RelativePath[..^partialPath.Length];
             break;
         }
 
@@ -382,12 +382,12 @@ public class ShokoResolveManager
         );
 
         var location = file.Locations
-            .Where(location => location.ImportFolderId == importFolderId && (importFolderSubPath.Length == 0 || location.Path.StartsWith(importFolderSubPath)))
+            .Where(location => location.ImportFolderId == importFolderId && (importFolderSubPath.Length == 0 || location.RelativePath.StartsWith(importFolderSubPath)))
             .FirstOrDefault();
         if (location == null || file.CrossReferences.Count == 0)
             yield break;
 
-        var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
+        var sourceLocation = Path.Join(mediaFolderPath, location.RelativePath[importFolderSubPath.Length..]);
         if (!File.Exists(sourceLocation))
             yield break;
 
@@ -428,10 +428,10 @@ public class ShokoResolveManager
             .SelectMany(file => file.Locations.Select(location => (file, location)))
             .ToList();
         foreach (var (file, location) in fileLocations) {
-            if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.Path.StartsWith(importFolderSubPath))
+            if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.RelativePath.StartsWith(importFolderSubPath))
                 continue;
 
-            var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
+            var sourceLocation = Path.Join(mediaFolderPath, location.RelativePath[importFolderSubPath.Length..]);
             if (!fileSet.Contains(sourceLocation))
                 continue;
 
@@ -479,10 +479,10 @@ public class ShokoResolveManager
                         .SelectMany(file => file.Locations.Select(location => (file, location)))
                         .ToList();
                     foreach (var (file, location) in fileLocations) {
-                        if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.Path.StartsWith(importFolderSubPath))
+                        if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.RelativePath.StartsWith(importFolderSubPath))
                             continue;
 
-                        var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
+                        var sourceLocation = Path.Join(mediaFolderPath, location.RelativePath[importFolderSubPath.Length..]);
                         if (!fileSet.Contains(sourceLocation))
                             continue;
 
@@ -504,10 +504,10 @@ public class ShokoResolveManager
                         .SelectMany(file => file.Locations.Select(location => (file, location)))
                         .ToList();
                     foreach (var (file, location) in fileLocations) {
-                        if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.Path.StartsWith(importFolderSubPath))
+                        if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.RelativePath.StartsWith(importFolderSubPath))
                             continue;
 
-                        var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
+                        var sourceLocation = Path.Join(mediaFolderPath, location.RelativePath[importFolderSubPath.Length..]);
                         if (!fileSet.Contains(sourceLocation))
                             continue;
 
@@ -525,10 +525,10 @@ public class ShokoResolveManager
                     .SelectMany(file => file.Locations.Select(location => (file, location)))
                     .ToList();
                 foreach (var (file, location) in fileLocations) {
-                    if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.Path.StartsWith(importFolderSubPath))
+                    if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.RelativePath.StartsWith(importFolderSubPath))
                         continue;
 
-                    var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
+                    var sourceLocation = Path.Join(mediaFolderPath, location.RelativePath[importFolderSubPath.Length..]);
                     if (!fileSet.Contains(sourceLocation))
                         continue;
 
@@ -598,12 +598,12 @@ public class ShokoResolveManager
                     continue;
 
                 var location = file.Locations
-                    .Where(location => location.ImportFolderId == importFolderId && (importFolderSubPath.Length == 0 || location.Path.StartsWith(importFolderSubPath)))
+                    .Where(location => location.ImportFolderId == importFolderId && (importFolderSubPath.Length == 0 || location.RelativePath.StartsWith(importFolderSubPath)))
                     .FirstOrDefault();
                 if (location == null)
                     continue;
 
-                var sourceLocation = Path.Join(mediaFolderPath, location.Path[importFolderSubPath.Length..]);
+                var sourceLocation = Path.Join(mediaFolderPath, location.RelativePath[importFolderSubPath.Length..]);
                 if (!fileSet.Contains(sourceLocation))
                     continue;
 

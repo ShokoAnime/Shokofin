@@ -81,25 +81,28 @@ public class File
         /// The relative path from the base of the <see cref="ImportFolder"/> to
         /// where the <see cref="File"/> lies.
         /// </summary>
-        public string RelativePath { get; set; } = string.Empty;
+        [JsonPropertyName("RelativePath")]
+        public string InternalPath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Cached path for later re-use.
+        /// </summary>
+        [JsonIgnore]
+        private string? CachedPath { get; set; }
 
         /// <summary>
         /// The relative path from the base of the <see cref="ImportFolder"/> to
         /// where the <see cref="File"/> lies, with a leading slash applied at
         /// the start.
         /// </summary>
-        public string Path =>
-            CachedPath ??= System.IO.Path.DirectorySeparatorChar + RelativePath
+        [JsonIgnore]
+        public string RelativePath =>
+            CachedPath ??= System.IO.Path.DirectorySeparatorChar + InternalPath
                 .Replace('/', System.IO.Path.DirectorySeparatorChar)
                 .Replace('\\', System.IO.Path.DirectorySeparatorChar);
 
         /// <summary>
-        /// Cached path for later re-use.
-        /// </summary>
-        private string? CachedPath { get; set; }
-
-        /// <summary>
-        /// True if the server can access the the <see cref="Location.Path"/> at
+        /// True if the server can access the the <see cref="Location.RelativePath"/> at
         /// the moment of requesting the data.
         /// </summary>
         [JsonPropertyName("Accessible")]
@@ -178,12 +181,12 @@ public class File
         /// <summary>
         /// The release group's Name (Unlimited Translation Works)
         /// </summary>
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; }
 
         /// <summary>
         /// The release group's Name (UTW)
         /// </summary>
-        public string ShortName { get; set; } = string.Empty;
+        public string? ShortName { get; set; }
     }
 
     /// <summary>
