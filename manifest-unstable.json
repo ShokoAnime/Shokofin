@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.140",
+                "changelog": "fix: add file delete event logic\n\n- Added file delete event logic. It may not be perfect, but at least\n  it's something. Time will tell if i did it right or not.\n\nfix: add NotNullWhen attributes",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.140/shoko_3.0.1.140.zip",
+                "checksum": "792dd239d71bccbf4f5530f658ea2785",
+                "timestamp": "2024-04-25T14:37:19Z"
+            },
+            {
                 "version": "3.0.1.139",
                 "changelog": "fix: add try\u2026catch to event proccessing methods\n\nfix: fix new file moved event args\n\nmisc: `Path` \u2192 `RelativePath`",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.136/shoko_3.0.1.136.zip",
                 "checksum": "f6457487468f2ffc88c0876f7561e04c",
                 "timestamp": "2024-04-23T17:27:06Z"
-            },
-            {
-                "version": "3.0.1.135",
-                "changelog": "fix: compensate for missing imported at dates in shoko server\n\n- Compensate for the (since fixed) bug in Shoko Server (hopefully) that\n  lead to some files not having an imported at date if they've been\n  imported, then removed from shoko, then reimported.\n\nmisc: fix logging of skipped event [skip ci]",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.135/shoko_3.0.1.135.zip",
-                "checksum": "03d339cab0a73bc6baab62e55a9f7d3b",
-                "timestamp": "2024-04-21T10:44:24Z"
             }
         ]
     }
