@@ -351,102 +351,107 @@ public class SignalRConnectionManager : IDisposable
 
     private async Task ProcessFileChanges(int fileId, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> changes)
     {
-        Logger.LogInformation("Processing {EventCount} file change events… (File={FileId})", changes.Count, fileId);
+        try {
+            Logger.LogInformation("Processing {EventCount} file change events… (File={FileId})", changes.Count, fileId);
 
-        // Something was added or updated.
-        var locationsToNotify = new List<string>();
-        var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
-        var mediaFolders = ResolveManager.GetAvailableMediaFolders(fileEvents: true);
-        var (reason, importFolderId, relativePath, lastEvent) = changes.Last();
-        if (reason != UpdateReason.Removed) {
-            foreach (var (config, mediaFolder, vfsPath) in mediaFolders) {
-                if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
-                    continue;
+            // Something was added or updated.
+            var locationsToNotify = new List<string>();
+            var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
+            var mediaFolders = ResolveManager.GetAvailableMediaFolders(fileEvents: true);
+            var (reason, importFolderId, relativePath, lastEvent) = changes.Last();
+            if (reason != UpdateReason.Removed) {
+                foreach (var (config, mediaFolder, vfsPath) in mediaFolders) {
+                    if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
+                        continue;
 
-                var sourceLocation = Path.Join(mediaFolder.Path, relativePath[config.ImportFolderRelativePath.Length..]);
-                if (!File.Exists(sourceLocation))
-                    continue;
+                    var sourceLocation = Path.Join(mediaFolder.Path, relativePath[config.ImportFolderRelativePath.Length..]);
+                    if (!File.Exists(sourceLocation))
+                        continue;
 
-                // Let the core logic handle the rest.
-                if (!config.IsVirtualFileSystemEnabled) {
-                    locationsToNotify.Add(sourceLocation);
-                    continue;
-                }
+                    // Let the core logic handle the rest.
+                    if (!config.IsVirtualFileSystemEnabled) {
+                        locationsToNotify.Add(sourceLocation);
+                        continue;
+                    }
 
-                var result = new LinkGenerationResult();
-                var topFolders = new HashSet<string>();
-                var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, sourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
-                    .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
-                    .ToList();
-                foreach (var (srcLoc, symLnks, nfoFls, imprtDt) in vfsLocations) {
-                    result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLnks, nfoFls, imprtDt!.Value, result.Paths);
-                    foreach (var path in symLnks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
-                        topFolders.Add(path);
-                }
+                    var result = new LinkGenerationResult();
+                    var topFolders = new HashSet<string>();
+                    var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, sourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
+                        .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
+                        .ToList();
+                    foreach (var (srcLoc, symLnks, nfoFls, imprtDt) in vfsLocations) {
+                        result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLnks, nfoFls, imprtDt!.Value, result.Paths);
+                        foreach (var path in symLnks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
+                            topFolders.Add(path);
+                    }
 
-                // Remove old links for file.
-                var videos = LibraryManager
-                    .GetItemList(
-                        new() {
-                            AncestorIds = new[] { mediaFolder.Id },
-                            IncludeItemTypes = new[] { BaseItemKind.Episode, BaseItemKind.Movie },
-                            HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, fileId.ToString() } },
-                            DtoOptions = new(true),
-                        },
-                        true
-                    )
-                    .Where(item => !string.IsNullOrEmpty(item.Path) && item.Path.StartsWith(vfsPath) && !result.Paths.Contains(item.Path))
-                    .ToList();
-                foreach (var video in videos) {
-                    File.Delete(video.Path);
-                    locationsToNotify.Add(video.Path);
-                    result.RemovedVideos++;
-                }
+                    // Remove old links for file.
+                    var videos = LibraryManager
+                        .GetItemList(
+                            new() {
+                                AncestorIds = new[] { mediaFolder.Id },
+                                IncludeItemTypes = new[] { BaseItemKind.Episode, BaseItemKind.Movie },
+                                HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, fileId.ToString() } },
+                                DtoOptions = new(true),
+                            },
+                            true
+                        )
+                        .Where(item => !string.IsNullOrEmpty(item.Path) && item.Path.StartsWith(vfsPath) && !result.Paths.Contains(item.Path))
+                        .ToList();
+                    foreach (var video in videos) {
+                        File.Delete(video.Path);
+                        locationsToNotify.Add(video.Path);
+                        result.RemovedVideos++;
+                    }
 
-                result.Print(Logger, mediaFolder.Path);
+                    result.Print(Logger, mediaFolder.Path);
 
-                // If all the "top-level-folders" exist, then let the core logic handle the rest.
-                if (topFolders.All(path => LibraryManager.FindByPath(path, true) != null)) {
-                    var old = locationsToNotify.Count;
-                    locationsToNotify.AddRange(vfsLocations.SelectMany(tuple => tuple.symbolicLinks));
-                }
-                // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
-                else {
-                    var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolder.Path, false).FirstOrDefault();
-                    if (!string.IsNullOrEmpty(fileOrFolder))
-                        locationsToNotify.Add(fileOrFolder);
+                    // If all the "top-level-folders" exist, then let the core logic handle the rest.
+                    if (topFolders.All(path => LibraryManager.FindByPath(path, true) != null)) {
+                        var old = locationsToNotify.Count;
+                        locationsToNotify.AddRange(vfsLocations.SelectMany(tuple => tuple.symbolicLinks));
+                    }
+                    // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
+                    else {
+                        var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolder.Path, false).FirstOrDefault();
+                        if (!string.IsNullOrEmpty(fileOrFolder))
+                            locationsToNotify.Add(fileOrFolder);
+                    }
                 }
             }
-        }
-        // Something was removed.
-        else if (changes.FirstOrDefault(t => t.Reason == UpdateReason.Removed).Event is IFileRelocationEventArgs firstRemovedEvent) {
-            relativePath = firstRemovedEvent.RelativePath;
-            importFolderId = firstRemovedEvent.ImportFolderId;
-            foreach (var (config, mediaFolder, vfsPath) in mediaFolders) {
-                if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
-                    continue;
+            // Something was removed.
+            else if (changes.FirstOrDefault(t => t.Reason == UpdateReason.Removed).Event is IFileRelocationEventArgs firstRemovedEvent) {
+                relativePath = firstRemovedEvent.RelativePath;
+                importFolderId = firstRemovedEvent.ImportFolderId;
+                foreach (var (config, mediaFolder, vfsPath) in mediaFolders) {
+                    if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
+                        continue;
 
-                var sourceLocation = Path.Join(mediaFolder.Path, relativePath[config.ImportFolderRelativePath.Length..]);
-                if (!File.Exists(sourceLocation))
-                    continue;
+                    var sourceLocation = Path.Join(mediaFolder.Path, relativePath[config.ImportFolderRelativePath.Length..]);
+                    if (!File.Exists(sourceLocation))
+                        continue;
 
-                // Let the core logic handle the rest.
-                if (!config.IsVirtualFileSystemEnabled) {
-                    locationsToNotify.Add(sourceLocation);
-                    continue;
+                    // Let the core logic handle the rest.
+                    if (!config.IsVirtualFileSystemEnabled) {
+                        locationsToNotify.Add(sourceLocation);
+                        continue;
+                    }
+
+                    // TODO: Detect what was removed, and update any needed links, then report the changes.
+                    // VFS or non-VFS
+                    // non-VFS: just check if the file was within any of our media folders, and forward the event to jellyfin if it were.
+                    // VFS: Check with shoko if the file was removed, or if the file locations within our media folders were removed, and fix up the VFS if needed.
                 }
-
-                // TODO: Detect what was removed, and update any needed links, then report the changes.
-                // VFS or non-VFS
-                // non-VFS: just check if the file was within any of our media folders, and forward the event to jellyfin if it were.
-                // VFS: Check with shoko if the file was removed, or if the file locations within our media folders were removed, and fix up the VFS if needed.
             }
-        }
 
-        // We let jellyfin take it from here.
-        Logger.LogDebug("Notifying Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count, fileId.ToString());
-        foreach (var location in locationsToNotify)
-            LibraryMonitor.ReportFileSystemChanged(location);
+            // We let jellyfin take it from here.
+            Logger.LogDebug("Notifying Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count, fileId.ToString());
+            foreach (var location in locationsToNotify)
+                LibraryMonitor.ReportFileSystemChanged(location);
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Error processing {EventCount} file change events. (File={FileId})", changes.Count, fileId);
+        }
     }
 
     private async Task<IReadOnlySet<string>> GetSeriesIdsForFile(int fileId, IFileEventArgs? fileEvent)
@@ -504,16 +509,22 @@ public class SignalRConnectionManager : IDisposable
 
     private async Task ProcessSeriesChanges(string metadataId, List<IMetadataUpdatedEventArgs> changes)
     {
-        Logger.LogInformation("Processing {EventCount} metadata change events… (Metadata={ProviderUniqueId})", changes.Count, metadataId);
+        try {
+            Logger.LogInformation("Processing {EventCount} metadata change events… (Metadata={ProviderUniqueId})", changes.Count, metadataId);
+            
+            // Refresh all epoisodes and movies linked to the episode.
 
-        // Refresh all epoisodes and movies linked to the episode.
+            // look up the series/season/movie, then check the media folder they're
+            // in to check if the refresh event is enabled for the media folder, and
+            // only send out the events if it's enabled.
 
-        // look up the series/season/movie, then check the media folder they're
-        // in to check if the refresh event is enabled for the media folder, and
-        // only send out the events if it's enabled.
-
-        // Refresh the show and all entries beneath it, or all movies linked to
-        // the show.
+            // Refresh the show and all entries beneath it, or all movies linked to
+            // the show.
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Error processing {EventCount} metadata change events. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
+            
+        }
     }
 
     #endregion
