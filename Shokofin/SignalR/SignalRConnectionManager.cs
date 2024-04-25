@@ -226,7 +226,7 @@ public class SignalRConnectionManager : IDisposable
     #endregion
 
     #region Events
-    
+
     #region Intervals
 
     private void OnIntervalElapsed(object? sender, ElapsedEventArgs eventArgs)
@@ -574,7 +574,7 @@ public class SignalRConnectionManager : IDisposable
     {
         try {
             Logger.LogInformation("Processing {EventCount} metadata change events… (Metadata={ProviderUniqueId})", changes.Count, metadataId);
-            
+
             // Refresh all epoisodes and movies linked to the episode.
 
             // look up the series/season/movie, then check the media folder they're
@@ -586,7 +586,6 @@ public class SignalRConnectionManager : IDisposable
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Error processing {EventCount} metadata change events. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
-            
         }
     }
 
