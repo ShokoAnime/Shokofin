@@ -804,127 +804,133 @@ public class ShokoResolveManager
     public LinkGenerationResult GenerateSymbolicLinks(string sourceLocation, string[] symbolicLinks, string[] nfoFiles, DateTime importedAt, ConcurrentBag<string> allPathsForVFS)
 #pragma warning restore IDE0060
     {
-        var result = new LinkGenerationResult();
-        var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
-        var subtitleLinks = FindSubtitlesForPath(sourceLocation);
-        foreach (var symbolicLink in symbolicLinks) {
-            var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
-            if (!Directory.Exists(symbolicDirectory))
-                Directory.CreateDirectory(symbolicDirectory);
+        try {
+            var result = new LinkGenerationResult();
+            var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
+            var subtitleLinks = FindSubtitlesForPath(sourceLocation);
+            foreach (var symbolicLink in symbolicLinks) {
+                var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
+                if (!Directory.Exists(symbolicDirectory))
+                    Directory.CreateDirectory(symbolicDirectory);
 
-            result.Paths.Add(symbolicLink);
-            if (!File.Exists(symbolicLink)) {
-                result.CreatedVideos++;
-                Logger.LogDebug("Linking {Link} → {LinkTarget}", symbolicLink, sourceLocation);
-                File.CreateSymbolicLink(symbolicLink, sourceLocation);
-                // TODO: Uncomment this for 10.9
-                // // Mock the creation date to fake the "date added" order in Jellyfin.
-                // File.SetCreationTime(symbolicLink, importedAt);
-            }
-            else {
-                var shouldFix = false;
-                try {
-                    var nextTarget = File.ResolveLinkTarget(symbolicLink, false);
-                    if (!string.Equals(sourceLocation, nextTarget?.FullName)) {
-                        shouldFix = true;
-
-                        Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
-                    }
-                    // TODO: Uncomment this for 10.9
-                    // var date = File.GetCreationTime(symbolicLink);
-                    // if (date != importedAt) {
-                    //     shouldFix = true;
-                    //
-                    //     Logger.LogWarning("Fixing broken symbolic link {Link} with incorrect date.", symbolicLink);
-                    // }
-                }
-                catch (Exception ex) {
-                    Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link}", symbolicLink);
-                    shouldFix = true;
-                }
-                if (shouldFix) {
-                    File.Delete(symbolicLink);
+                result.Paths.Add(symbolicLink);
+                if (!File.Exists(symbolicLink)) {
+                    result.CreatedVideos++;
+                    Logger.LogDebug("Linking {Link} → {LinkTarget}", symbolicLink, sourceLocation);
                     File.CreateSymbolicLink(symbolicLink, sourceLocation);
                     // TODO: Uncomment this for 10.9
                     // // Mock the creation date to fake the "date added" order in Jellyfin.
                     // File.SetCreationTime(symbolicLink, importedAt);
-                    result.FixedVideos++;
                 }
                 else {
-                    result.SkippedVideos++;
-                }
-            }
+                    var shouldFix = false;
+                    try {
+                        var nextTarget = File.ResolveLinkTarget(symbolicLink, false);
+                        if (!string.Equals(sourceLocation, nextTarget?.FullName)) {
+                            shouldFix = true;
 
-            if (subtitleLinks.Count > 0) {
-                var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
-                foreach (var subtitleSource in subtitleLinks) {
-                    var extName = subtitleSource[sourcePrefixLength..];
-                    var subtitleLink = Path.Join(symbolicDirectory, symbolicName + extName);
-
-                    result.Paths.Add(subtitleLink);
-                    if (!File.Exists(subtitleLink)) {
-                        result.CreatedSubtitles++;
-                        Logger.LogDebug("Linking {Link} → {LinkTarget}", subtitleLink, subtitleSource);
-                        File.CreateSymbolicLink(subtitleLink, subtitleSource);
+                            Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
+                        }
+                        // TODO: Uncomment this for 10.9
+                        // var date = File.GetCreationTime(symbolicLink);
+                        // if (date != importedAt) {
+                        //     shouldFix = true;
+                        //
+                        //     Logger.LogWarning("Fixing broken symbolic link {Link} with incorrect date.", symbolicLink);
+                        // }
+                    }
+                    catch (Exception ex) {
+                        Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link}", symbolicLink);
+                        shouldFix = true;
+                    }
+                    if (shouldFix) {
+                        File.Delete(symbolicLink);
+                        File.CreateSymbolicLink(symbolicLink, sourceLocation);
+                        // TODO: Uncomment this for 10.9
+                        // // Mock the creation date to fake the "date added" order in Jellyfin.
+                        // File.SetCreationTime(symbolicLink, importedAt);
+                        result.FixedVideos++;
                     }
                     else {
-                        var shouldFix = false;
-                        try {
-                            var nextTarget = File.ResolveLinkTarget(subtitleLink, false);
-                            if (!string.Equals(subtitleSource, nextTarget?.FullName)) {
-                                shouldFix = true;
+                        result.SkippedVideos++;
+                    }
+                }
 
-                                Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", subtitleLink, subtitleSource, nextTarget?.FullName);
-                            }
-                        }
-                        catch (Exception ex) {
-                            Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link} for {LinkTarget}", subtitleLink, subtitleSource);
-                            shouldFix = true;
-                        }
-                        if (shouldFix) {
-                            File.Delete(subtitleLink);
+                if (subtitleLinks.Count > 0) {
+                    var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
+                    foreach (var subtitleSource in subtitleLinks) {
+                        var extName = subtitleSource[sourcePrefixLength..];
+                        var subtitleLink = Path.Join(symbolicDirectory, symbolicName + extName);
+
+                        result.Paths.Add(subtitleLink);
+                        if (!File.Exists(subtitleLink)) {
+                            result.CreatedSubtitles++;
+                            Logger.LogDebug("Linking {Link} → {LinkTarget}", subtitleLink, subtitleSource);
                             File.CreateSymbolicLink(subtitleLink, subtitleSource);
-                            result.FixedSubtitles++;
                         }
                         else {
-                            result.SkippedSubtitles++;
+                            var shouldFix = false;
+                            try {
+                                var nextTarget = File.ResolveLinkTarget(subtitleLink, false);
+                                if (!string.Equals(subtitleSource, nextTarget?.FullName)) {
+                                    shouldFix = true;
+
+                                    Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", subtitleLink, subtitleSource, nextTarget?.FullName);
+                                }
+                            }
+                            catch (Exception ex) {
+                                Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link} for {LinkTarget}", subtitleLink, subtitleSource);
+                                shouldFix = true;
+                            }
+                            if (shouldFix) {
+                                File.Delete(subtitleLink);
+                                File.CreateSymbolicLink(subtitleLink, subtitleSource);
+                                result.FixedSubtitles++;
+                            }
+                            else {
+                                result.SkippedSubtitles++;
+                            }
                         }
                     }
                 }
             }
+
+            // TODO: Remove these two hacks once we have proper support for adding multiple series at once.
+            foreach (var nfoFile in nfoFiles)
+            {
+                if (allPathsForVFS.Contains(nfoFile)) {
+                    if (!result.Paths.Contains(nfoFile))
+                        result.Paths.Add(nfoFile);
+                    continue;
+                }
+                if (result.Paths.Contains(nfoFile)) {
+                    if (!allPathsForVFS.Contains(nfoFile))
+                        allPathsForVFS.Add(nfoFile);
+                    continue;
+                }
+                allPathsForVFS.Add(nfoFile);
+                result.Paths.Add(nfoFile);
+
+                var nfoDirectory = Path.GetDirectoryName(nfoFile)!;
+                if (!Directory.Exists(nfoDirectory))
+                    Directory.CreateDirectory(nfoDirectory);
+
+                if (!File.Exists(nfoFile)) {
+                    result.CreatedNfos++;
+                    Logger.LogDebug("Adding stub show/season NFO file {Target} ", nfoFile);
+                    File.WriteAllText(nfoFile, string.Empty);
+                }
+                else {
+                    result.SkippedNfos++;
+                }
+            }
+
+            return result;
         }
-
-        // TODO: Remove these two hacks once we have proper support for adding multiple series at once.
-        foreach (var nfoFile in nfoFiles)
-        {
-            if (allPathsForVFS.Contains(nfoFile)) {
-                if (!result.Paths.Contains(nfoFile))
-                    result.Paths.Add(nfoFile);
-                continue;
-            }
-            if (result.Paths.Contains(nfoFile)) {
-                if (!allPathsForVFS.Contains(nfoFile))
-                    allPathsForVFS.Add(nfoFile);
-                continue;
-            }
-            allPathsForVFS.Add(nfoFile);
-            result.Paths.Add(nfoFile);
-
-            var nfoDirectory = Path.GetDirectoryName(nfoFile)!;
-            if (!Directory.Exists(nfoDirectory))
-                Directory.CreateDirectory(nfoDirectory);
-
-            if (!File.Exists(nfoFile)) {
-                result.CreatedNfos++;
-                Logger.LogDebug("Adding stub show/season NFO file {Target} ", nfoFile);
-                File.WriteAllText(nfoFile, string.Empty);
-            }
-            else {
-                result.SkippedNfos++;
-            }
+        catch (Exception ex) {
+            Logger.LogError(ex, "An error occurred while trying to generate {LinkCount} links for {SourceLocation}; {ErrorMessage}", symbolicLinks.Length, sourceLocation, ex.Message);
+            throw;
         }
-
-        return result;
     }
 
     private LinkGenerationResult CleanupStructure(string directoryToClean, ConcurrentBag<string> allKnownPaths)
