@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.142",
+                "changelog": "fix: expect the unexpected\n\n- Always check if the link has been created/removed if the operation\n  fails, and if it has successfully changed to our expected outcome,\n  then just proceed as normal.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.142/shoko_3.0.1.142.zip",
+                "checksum": "743c09872a57108bc6e7c1a0aa765057",
+                "timestamp": "2024-04-26T12:45:35Z"
+            },
+            {
                 "version": "3.0.1.141",
                 "changelog": "misc: log error early if we fail to generate links\n\n- Log the error early to more easier tracking it down if we fail to\n  generate links for a source location, instead of having to wait\n  for `Task.WhenAll` to finish before seeing the _first_ error that\n  occured.\n\nmisc: remove empty whitespace [skip ci]",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.138/shoko_3.0.1.138.zip",
                 "checksum": "63937503973e778eabda44eedb672014",
                 "timestamp": "2024-04-23T22:44:20Z"
-            },
-            {
-                "version": "3.0.1.137",
-                "changelog": "misc: log when automagic cache clearing occurs\n\n- Log in the info level when automagic cache clearing occurs. Since not\n  everyone have their jellyfin instance set to log Shokofin message at\n  debug level (or below).",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.137/shoko_3.0.1.137.zip",
-                "checksum": "be30b6fc60b6d8b520b38b2413a1b80a",
-                "timestamp": "2024-04-23T17:46:32Z"
             }
         ]
     }
