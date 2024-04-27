@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.143",
+                "changelog": "Add option to ignore indirect relations for chronological order\n\nFix chronological season order",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.143/shoko_3.0.1.143.zip",
+                "checksum": "0c438c76793f2fcf1192d786ccd25575",
+                "timestamp": "2024-04-27T17:05:15Z"
+            },
+            {
                 "version": "3.0.1.142",
                 "changelog": "fix: expect the unexpected\n\n- Always check if the link has been created/removed if the operation\n  fails, and if it has successfully changed to our expected outcome,\n  then just proceed as normal.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.139/shoko_3.0.1.139.zip",
                 "checksum": "9feb6a039da7c1bc2c783d35c4c2bc6b",
                 "timestamp": "2024-04-25T12:56:29Z"
-            },
-            {
-                "version": "3.0.1.138",
-                "changelog": "misc: move variables for better time tracking\n\nfix: bypass http cache for import folder files\n\nfix: filter series ids before use",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.138/shoko_3.0.1.138.zip",
-                "checksum": "63937503973e778eabda44eedb672014",
-                "timestamp": "2024-04-23T22:44:20Z"
             }
         ]
     }
