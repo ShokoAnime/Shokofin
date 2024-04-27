@@ -49,6 +49,11 @@ public class Ordering
         /// Order seasons based on the chronological order of relations.
         /// </summary>
         Chronological = 2,
+
+        /// <summary>
+        /// Order seasons based on the chronological order of only direct relations.
+        /// </summary>
+        ChronologicalIgnoreIndirect = 3,
     }
 
     public enum SpecialOrderType {

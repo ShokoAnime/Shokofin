@@ -55,7 +55,7 @@ public class ShowInfo
     /// <summary>
     /// Ended date of the show.
     /// </summary>
-    public DateTime? EndDate => 
+    public DateTime? EndDate =>
         SeasonList.Any(s => s.AniDB.EndDate == null) ? null : SeasonList
             .Select(s => s.AniDB.AirDate)
             .OrderBy(s => s)
@@ -190,6 +190,7 @@ public class ShowInfo
                 seasonList = seasonList.OrderBy(s => s?.AniDB?.AirDate ?? DateTime.MaxValue).ToList();
                 break;
             case Ordering.OrderType.Chronological:
+            case Ordering.OrderType.ChronologicalIgnoreIndirect:
                 seasonList.Sort(new SeriesInfoRelationComparer());
                 break;
         }
@@ -201,11 +202,11 @@ public class ShowInfo
                 foundIndex = 0;
                 break;
             case Ordering.OrderType.Default:
-            case Ordering.OrderType.Chronological: {
+            case Ordering.OrderType.Chronological:
+            case Ordering.OrderType.ChronologicalIgnoreIndirect:
                 int targetId = group.IDs.MainSeries;
                 foundIndex = seasonList.FindIndex(s => s.Shoko.IDs.Shoko == targetId);
                 break;
-            }
         }
 
         // Fallback to the first series if we can't get a base point for seasons.

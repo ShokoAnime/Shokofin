@@ -40,9 +40,12 @@ public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
             return directRelationComparison;
 
         // Check for indirect relations.
-        var indirectRelationComparison = CompareIndirectRelations(a, b);
-        if (indirectRelationComparison != 0)
-            return indirectRelationComparison;
+        if (Plugin.Instance.Configuration.SeasonOrdering != Ordering.OrderType.ChronologicalIgnoreIndirect)
+        {
+            var indirectRelationComparison = CompareIndirectRelations(a, b);
+            if (indirectRelationComparison != 0)
+                return indirectRelationComparison;
+        }
 
         // Fallback to checking the air dates if they're not indirectly related
         // or if they have the same relations.
