@@ -10,12 +10,12 @@ public class Relation
     /// <summary>
     /// The IDs of the series.
     /// </summary>
-    public RelationIDs IDs = new();
+    public RelationIDs IDs { get; set; } = new();
 
     /// <summary>
     /// The IDs of the related series.
     /// </summary>
-    public RelationIDs RelatedIDs = new();
+    public RelationIDs RelatedIDs { get; set; } = new();
 
     /// <summary>
     /// The relation between <see cref="Relation.IDs"/> and <see cref="Relation.RelatedIDs"/>.
@@ -64,7 +64,7 @@ public enum RelationType
     /// The entries use the same base story, but is set in alternate settings.
     /// </summary>
     AlternativeSetting = 2,
-    
+
     /// <summary>
     /// The entries tell the same story in the same settings but are made at different times.
     /// </summary>

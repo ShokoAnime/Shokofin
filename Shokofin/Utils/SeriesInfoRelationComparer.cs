@@ -55,20 +55,20 @@ public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
         // so the relation may only present on one of the entries.
         if (a.RelationMap.TryGetValue(b.Id, out var relationType))
             if (relationType == RelationType.Prequel || relationType == RelationType.MainStory)
-                return -1;
-            else if (relationType == RelationType.Sequel || relationType == RelationType.SideStory)
                 return 1;
+            else if (relationType == RelationType.Sequel || relationType == RelationType.SideStory)
+                return -1;
 
         if (b.RelationMap.TryGetValue(a.Id, out relationType))
             if (relationType == RelationType.Prequel || relationType == RelationType.MainStory)
-                return 1;
-            else if (relationType == RelationType.Sequel || relationType == RelationType.SideStory)
                 return -1;
+            else if (relationType == RelationType.Sequel || relationType == RelationType.SideStory)
+                return 1;
 
         // The entries are not considered to be directly related.
         return 0;
     }
-    
+
     private int CompareIndirectRelations(SeasonInfo a, SeasonInfo b)
     {
         var xRelations = a.Relations
