@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.146",
+                "changelog": "misc: move resolvers above ignore rules\n\nrefactor: move subtitles and ignore videos\n\n- Refactored the cleanup function to also move subtitles from the VFS\n  back to the source video file, if found. And to ignore extras which\n  are not provided by Shoko placed in the VFS, if found. These two\n  changes should better allow third party plugins to add subtitle\n  files and other features without breaking because of the VFS.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.146/shoko_3.0.1.146.zip",
+                "checksum": "e0b2206cdbf0c0b1240b68e877fe4f56",
+                "timestamp": "2024-04-28T14:43:09Z"
+            },
+            {
                 "version": "3.0.1.145",
                 "changelog": "fix: band-aid for latest server changes\n\n- Apply a band-aid for the latest server changes for now. The new\n  server changes will allow better handling of when to create the links\n  in the future.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.142/shoko_3.0.1.142.zip",
                 "checksum": "743c09872a57108bc6e7c1a0aa765057",
                 "timestamp": "2024-04-26T12:45:35Z"
-            },
-            {
-                "version": "3.0.1.141",
-                "changelog": "misc: log error early if we fail to generate links\n\n- Log the error early to more easier tracking it down if we fail to\n  generate links for a source location, instead of having to wait\n  for `Task.WhenAll` to finish before seeing the _first_ error that\n  occured.\n\nmisc: remove empty whitespace [skip ci]",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.141/shoko_3.0.1.141.zip",
-                "checksum": "fab023912a30f71189d4b427443f412c",
-                "timestamp": "2024-04-26T12:27:00Z"
             }
         ]
     }
