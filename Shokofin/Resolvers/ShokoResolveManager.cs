@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -40,13 +41,31 @@ public class ShokoResolveManager
 
     private readonly ILogger<ShokoResolveManager> Logger;
 
-    private readonly NamingOptions _namingOptions;
+    private readonly NamingOptions NamingOptions;
 
     private readonly ExternalPathParser ExternalPathParser;
 
-    public bool IsCacheStalled => DataCache.IsStalled;
-
     private readonly GuardedMemoryCache DataCache;
+
+    // Note: Out of the 14k entries in my test shoko database, then only **319** entries have a title longer than 100 chacters.
+    private const int NameCutOff = 64;
+
+    private static readonly IReadOnlySet<string> IgnoreFolderNames = new HashSet<string>() {
+        "backdrops",
+        "behind the scenes",
+        "deleted scenes",
+        "interviews",
+        "scenes",
+        "samples",
+        "shorts",
+        "featurettes",
+        "clips",
+        "other",
+        "extras",
+        "trailers",
+    };
+
+    public bool IsCacheStalled => DataCache.IsStalled;
 
     public ShokoResolveManager(
         ShokoAPIManager apiManager,
@@ -66,7 +85,7 @@ public class ShokoResolveManager
         FileSystem = fileSystem;
         Logger = logger;
         DataCache = new(logger, TimeSpan.FromMinutes(15), new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1), SlidingExpiration = TimeSpan.FromMinutes(15) });
-        _namingOptions = namingOptions;
+        NamingOptions = namingOptions;
         ExternalPathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Subtitle);
         LibraryManager.ItemRemoved += OnLibraryManagerItemRemoved;
     }
@@ -124,7 +143,7 @@ public class ShokoResolveManager
                 Logger.LogDebug("Looking for files in folder at {Path}", mediaFolder.Path);
                 var start = DateTime.UtcNow;
                 var paths = FileSystem.GetFilePaths(mediaFolder.Path, true)
-                    .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+                    .Where(path => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
                     .ToHashSet();
                 Logger.LogDebug("Found {FileCount} files in folder at {Path} in {TimeSpan}.", paths.Count, mediaFolder.Path, DateTime.UtcNow - start);
                 return paths;
@@ -162,7 +181,7 @@ public class ShokoResolveManager
         var start = DateTime.UtcNow;
         var attempts = 0;
         var samplePaths = FileSystem.GetFilePaths(mediaFolder.Path, true)
-            .Where(path => _namingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+            .Where(path => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
             .Take(100)
             .ToList();
 
@@ -297,7 +316,7 @@ public class ShokoResolveManager
                         break;
 
                     // movie
-                    if (seriesName.TryGetAttributeValue(ShokoEpisodeId.Name, out var episodeId)) {
+                    if (seriesName.TryGetAttributeValue(ShokoEpisodeId.Name, out _)) {
                         if (!seasonOrMovieName.TryGetAttributeValue(ShokoSeriesId.Name, out seriesId) || !int.TryParse(seriesId, out _))
                             break;
 
@@ -323,7 +342,7 @@ public class ShokoResolveManager
                     if (!seriesName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
                         break;
 
-                    if (!seasonName.StartsWith("Season ") || !int.TryParse(seasonName.Split(' ').Last(), out var seasonNumber))
+                    if (!seasonName.StartsWith("Season ") || !int.TryParse(seasonName.Split(' ').Last(), out _))
                         break;
 
                     if (!episodeName.TryGetAttributeValue(ShokoSeriesId.Name, out seriesId) || !int.TryParse(seriesId, out _))
@@ -350,7 +369,7 @@ public class ShokoResolveManager
         // Generate and cleanup the structure in the VFS.
         var result = await GenerateStructure(mediaFolder, vfsPath, allFiles);
         if (!string.IsNullOrEmpty(pathToClean))
-            result += CleanupStructure(pathToClean, result.Paths);
+            result += CleanupStructure(vfsPath, pathToClean, result.Paths.ToArray());
 
         // Save which paths we've already generated so we can skip generation
         // for them and their sub-paths later, and also print the result.
@@ -687,9 +706,6 @@ public class ShokoResolveManager
         return result;
     }
 
-    // Note: Out of the 14k entries in my test shoko database, then only **319** entries have a title longer than 100 chacters.
-    private const int NameCutOff = 64;
-
     public async Task<(string sourceLocation, string[] symbolicLinks, string[] nfoFiles, DateTime? importedAt)> GenerateLocationsForFile(Folder mediaFolder, string sourceLocation, string fileId, string seriesId)
     {
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
@@ -961,14 +977,41 @@ public class ShokoResolveManager
         }
     }
 
-    private LinkGenerationResult CleanupStructure(string directoryToClean, ConcurrentBag<string> allKnownPaths)
+    private IReadOnlyList<string> FindSubtitlesForPath(string sourcePath)
+    {
+        var externalPaths = new List<string>();
+        var folderPath = Path.GetDirectoryName(sourcePath);
+        if (string.IsNullOrEmpty(folderPath) || !FileSystem.DirectoryExists(folderPath))
+            return externalPaths;
+
+        var files = FileSystem.GetFilePaths(folderPath)
+            .Except(new[] { sourcePath })
+            .ToList();
+        var sourcePrefix = Path.GetFileNameWithoutExtension(sourcePath);
+        foreach (var file in files) {
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
+            if (
+                fileNameWithoutExtension.Length >= sourcePrefix.Length &&
+                sourcePrefix.Equals(fileNameWithoutExtension[..sourcePrefix.Length], StringComparison.OrdinalIgnoreCase) &&
+                (fileNameWithoutExtension.Length == sourcePrefix.Length || NamingOptions.MediaFlagDelimiters.Contains(fileNameWithoutExtension[sourcePrefix.Length]))
+            ) {
+                var externalPathInfo = ExternalPathParser.ParseFile(file, fileNameWithoutExtension[sourcePrefix.Length..].ToString());
+                if (externalPathInfo != null && !string.IsNullOrEmpty(externalPathInfo.Path))
+                    externalPaths.Add(externalPathInfo.Path);
+            }
+        }
+
+        return externalPaths;
+    }
+
+    private LinkGenerationResult CleanupStructure(string vfsPath, string directoryToClean, IReadOnlyList<string> allKnownPaths)
     {
         // Search the selected paths for files to remove.
         Logger.LogDebug("Looking for files to remove in folder at {Path}", directoryToClean);
         var start = DateTime.Now;
         var previousStep = start;
         var result = new LinkGenerationResult();
-        var searchFiles = _namingOptions.VideoFileExtensions.Concat(_namingOptions.SubtitleFileExtensions).Append(".nfo").ToHashSet();
+        var searchFiles = NamingOptions.VideoFileExtensions.Concat(NamingOptions.SubtitleFileExtensions).Append(".nfo").ToHashSet();
         var toBeRemoved = FileSystem.GetFilePaths(directoryToClean, true)
             .Select(path => (path, extName: Path.GetExtension(path)))
             .Where(tuple => !string.IsNullOrEmpty(tuple.extName) && searchFiles.Contains(tuple.extName))
@@ -980,22 +1023,54 @@ public class ShokoResolveManager
         previousStep = nextStep;
 
         foreach (var (location, extName) in toBeRemoved) {
-            try {
-                Logger.LogTrace("Removing file at {Path}", location);
-                File.Delete(location);
-            }
-            catch (Exception ex) {
-                Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
-                continue;
-            }
-
-            // Stats tracking.
-            if (_namingOptions.VideoFileExtensions.Contains(extName))
-                result.RemovedVideos++;
-            else if (extName == ".nfo")
+            // NFOs.
+            if (extName == ".nfo") {
+                try {
+                    Logger.LogTrace("Removing NFO file at {Path}", location);
+                    File.Delete(location);
+                }
+                catch (Exception ex) {
+                    Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
+                    continue;
+                }
                 result.RemovedNfos++;
-            else
-                result.RemovedSubtitles++;
+            }
+            // Subtitle files.
+            else if (NamingOptions.SubtitleFileExtensions.Contains(extName)) {
+                // Try moving subtitle if possible, otherwise remove it. There is no in-between.
+                if (TryMoveSubtitleFile(allKnownPaths, location)) {
+                    result.FixedSubtitles++;
+                }
+                else {
+                    try {
+                        Logger.LogTrace("Removing subtitle file at {Path}", location);
+                        File.Delete(location);
+                    }
+                    catch (Exception ex) {
+                        Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
+                        continue;
+                    }
+                    result.RemovedSubtitles++;
+                    
+                }
+            }
+            // Video files.
+            else {
+                if (ShouldIgnoreVideo(vfsPath, location)) {
+                    result.SkippedVideos++;
+                }
+                else {
+                    try {
+                        Logger.LogTrace("Removing video file at {Path}", location);
+                        File.Delete(location);
+                    }
+                    catch (Exception ex) {
+                        Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
+                        continue;
+                    }
+                    result.RemovedVideos++;
+                }
+            }
         }
 
         nextStep = DateTime.Now;
@@ -1039,31 +1114,63 @@ public class ShokoResolveManager
         return result;
     }
 
-    private IReadOnlyList<string> FindSubtitlesForPath(string sourcePath)
+    private static bool TryMoveSubtitleFile(IReadOnlyList<string> allKnownPaths, string subtitlePath)
     {
-        var externalPaths = new List<string>();
-        var folderPath = Path.GetDirectoryName(sourcePath);
-        if (string.IsNullOrEmpty(folderPath) || !FileSystem.DirectoryExists(folderPath))
-            return externalPaths;
+        if (!TryGetIdsForPath(subtitlePath, out var seriesId, out var fileId))
+            return false;
 
-        var files = FileSystem.GetFilePaths(folderPath)
-            .Except(new[] { sourcePath })
-            .ToList();
-        var sourcePrefix = Path.GetFileNameWithoutExtension(sourcePath);
-        foreach (var file in files) {
-            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
-            if (
-                fileNameWithoutExtension.Length >= sourcePrefix.Length &&
-                sourcePrefix.Equals(fileNameWithoutExtension[..sourcePrefix.Length], StringComparison.OrdinalIgnoreCase) &&
-                (fileNameWithoutExtension.Length == sourcePrefix.Length || _namingOptions.MediaFlagDelimiters.Contains(fileNameWithoutExtension[sourcePrefix.Length]))
-            ) {
-                var externalPathInfo = ExternalPathParser.ParseFile(file, fileNameWithoutExtension[sourcePrefix.Length..].ToString());
-                if (externalPathInfo != null && !string.IsNullOrEmpty(externalPathInfo.Path))
-                    externalPaths.Add(externalPathInfo.Path);
-            }
+        var symbolicLink = allKnownPaths.FirstOrDefault(knownPath =>
+            TryGetIdsForPath(knownPath, out var knownSeriesId, out var knownFileId) && seriesId == knownSeriesId && fileId == knownFileId
+        );
+        if (string.IsNullOrEmpty(symbolicLink))
+            return false;
+
+        var sourcePathWithoutExt = symbolicLink[..^Path.GetExtension(symbolicLink).Length];
+        if (!subtitlePath.StartsWith(sourcePathWithoutExt))
+            return false;
+
+        var extName = subtitlePath[sourcePathWithoutExt.Length..];
+        string? realTarget = null;
+        try {
+            realTarget = File.ResolveLinkTarget(symbolicLink, false)?.FullName;
+        }
+        catch { }
+        if (string.IsNullOrEmpty(realTarget))
+            return false;
+
+        var realSubtitlePath = realTarget[..^Path.GetExtension(realTarget).Length] + extName;
+        if (!File.Exists(realSubtitlePath))
+            File.Move(subtitlePath, realSubtitlePath);
+        else
+            File.Delete(subtitlePath);
+        File.CreateSymbolicLink(subtitlePath, realSubtitlePath);
+
+        return true;
+    }
+
+    private static bool ShouldIgnoreVideo(string vfsPath, string path)
+    {
+        // Ignore the video if it's within one of the folders to potentially ignore _and_ it doesn't have any shoko ids set.
+        var parentDirectories = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).SkipLast(1).ToArray();
+        return parentDirectories.Length > 1 && IgnoreFolderNames.Contains(parentDirectories.Last()) && !TryGetIdsForPath(path, out _, out _);
+    }
+
+    private static bool TryGetIdsForPath(string path, [NotNullWhen(true)] out string? seriesId, [NotNullWhen(true)] out string? fileId)
+    {
+        var fileName = Path.GetFileNameWithoutExtension(path);
+        if (!fileName.TryGetAttributeValue(ShokoFileId.Name, out fileId) || !int.TryParse(fileId, out _)) {
+            seriesId = null;
+            fileId = null;
+            return false;
         }
 
-        return externalPaths;
+        if (!fileName.TryGetAttributeValue(ShokoSeriesId.Name, out seriesId) || !int.TryParse(seriesId, out _)) {
+            seriesId = null;
+            fileId = null;
+            return false;
+        }
+
+        return true;
     }
 
     #endregion
@@ -1096,7 +1203,7 @@ public class ShokoResolveManager
                 return true;
             }
 
-            if (!fileInfo.IsDirectory && !_namingOptions.VideoFileExtensions.Contains(fileInfo.Extension.ToLowerInvariant())) {
+            if (!fileInfo.IsDirectory && !NamingOptions.VideoFileExtensions.Contains(fileInfo.Extension.ToLowerInvariant())) {
                 Logger.LogDebug("Skipped excluded file at path {Path}", fileInfo.FullName);
                 return false;
             }
@@ -1297,10 +1404,10 @@ public class ShokoResolveManager
                                 .AsParallel()
                                 .Select(fileInfo => {
                                     // Only allow the video files, since the subtitle files also have the ids set.
-                                    if (!_namingOptions.VideoFileExtensions.Contains(Path.GetExtension(fileInfo.Name)))
+                                    if (!NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(fileInfo.Name)))
                                         return null;
 
-                                    if (!fileInfo.Name.TryGetAttributeValue(ShokoFileId.Name, out var fileId) || !int.TryParse(fileId, out _))
+                                    if (!TryGetIdsForPath(fileInfo.FullName, out seriesId, out var fileId))
                                         return null;
 
                                     // This will hopefully just re-use the pre-cached entries from the cache, but it may
