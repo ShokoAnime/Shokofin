@@ -203,10 +203,11 @@ public class ShowInfo
                 break;
             case Ordering.OrderType.Default:
             case Ordering.OrderType.Chronological:
-            case Ordering.OrderType.ChronologicalIgnoreIndirect:
+            case Ordering.OrderType.ChronologicalIgnoreIndirect: {
                 int targetId = group.IDs.MainSeries;
                 foundIndex = seasonList.FindIndex(s => s.Shoko.IDs.Shoko == targetId);
                 break;
+            }
         }
 
         // Fallback to the first series if we can't get a base point for seasons.
