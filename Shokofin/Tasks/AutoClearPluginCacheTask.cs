@@ -15,7 +15,7 @@ namespace Shokofin.Tasks;
 public class AutoClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
 {
     /// <inheritdoc />
-    public string Name => "Clear Plugin Cache";
+    public string Name => "Clear Plugin Cache (Auto)";
 
     /// <inheritdoc />
     public string Description => "For automagic maintenance. Will clear the plugin cache if there has been no recent activity to the cache.";
