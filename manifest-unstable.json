@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.145",
+                "changelog": "fix: band-aid for latest server changes\n\n- Apply a band-aid for the latest server changes for now. The new\n  server changes will allow better handling of when to create the links\n  in the future.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.145/shoko_3.0.1.145.zip",
+                "checksum": "1fc84a2d6b6bcd3ff4d12705daee77b0",
+                "timestamp": "2024-04-28T13:27:35Z"
+            },
+            {
                 "version": "3.0.1.144",
                 "changelog": "fix: add back scope in switch\n\nfix: fix directory cleanup order",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.141/shoko_3.0.1.141.zip",
                 "checksum": "fab023912a30f71189d4b427443f412c",
                 "timestamp": "2024-04-26T12:27:00Z"
-            },
-            {
-                "version": "3.0.1.140",
-                "changelog": "fix: add file delete event logic\n\n- Added file delete event logic. It may not be perfect, but at least\n  it's something. Time will tell if i did it right or not.\n\nfix: add NotNullWhen attributes",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.140/shoko_3.0.1.140.zip",
-                "checksum": "792dd239d71bccbf4f5530f658ea2785",
-                "timestamp": "2024-04-25T14:37:19Z"
             }
         ]
     }
