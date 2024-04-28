@@ -1017,7 +1017,7 @@ public class ShokoResolveManager
                 return paths;
             })
             .DistinctBy(tuple => tuple.path)
-            .OrderBy(tuple => tuple.level)
+            .OrderByDescending(tuple => tuple.level)
             .ThenBy(tuple => tuple.path)
             .Select(tuple => tuple.path)
             .ToList();
