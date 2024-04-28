@@ -502,9 +502,11 @@ public class SignalRConnectionManager : IDisposable
 
     private async Task<IReadOnlySet<string>> GetSeriesIdsForFile(int fileId, IFileEventArgs? fileEvent)
     {
-        var seriesIds = fileEvent != null
-            ? fileEvent.CrossReferences.Select(xref => xref.SeriesId.ToString()).Distinct().ToHashSet()
-            : (await ApiClient.GetFile(fileId.ToString())).CrossReferences.Select(xref => xref.Series.Shoko.ToString()).Distinct().ToHashSet();
+        HashSet<string> seriesIds;
+        if (fileEvent != null && fileEvent.CrossReferences.All(xref => xref.ShokoSeriesId.HasValue))
+            seriesIds = fileEvent.CrossReferences.Select(xref => xref.ShokoSeriesId!.Value.ToString()).Distinct().ToHashSet();
+        else 
+            seriesIds = (await ApiClient.GetFile(fileId.ToString())).CrossReferences.Select(xref => xref.Series.Shoko.ToString()).Distinct().ToHashSet();
 
         var filteredSeriesIds = new HashSet<string>();
         foreach (var seriesId in seriesIds) {

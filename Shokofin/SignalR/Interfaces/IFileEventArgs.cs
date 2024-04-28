@@ -42,21 +42,33 @@ public interface IFileEventArgs
     public class FileCrossReference
     {
         /// <summary>
+        /// AniDB episode id.
+        /// </summary>
+        [JsonPropertyName("AnidbEpisodeID")]
+        public int AnidbEpisodeId { get; set; }
+
+        /// <summary>
+        /// AniDB anime id.
+        /// </summary>
+        [JsonPropertyName("AnidbAnimeID")]
+        public int AnidbAnimeId { get; set; }
+
+        /// <summary>
         /// Shoko episode id.
         /// </summary>
         [JsonPropertyName("EpisodeID")]
-        public int EpisodeId { get; set; }
+        public int? ShokoEpisodeId { get; set; }
 
         /// <summary>
         /// Shoko series id.
         /// </summary>
         [JsonPropertyName("SeriesID")]
-        public int SeriesId { get; set; }
+        public int? ShokoSeriesId { get; set; }
 
         /// <summary>
         /// Shoko group id.
         /// </summary>
         [JsonPropertyName("GroupID")]
-        public int GroupId { get; set; }
+        public int? ShokoGroupId { get; set; }
     }
 }
