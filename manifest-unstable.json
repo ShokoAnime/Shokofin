@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.144",
+                "changelog": "fix: add back scope in switch\n\nfix: fix directory cleanup order",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.144/shoko_3.0.1.144.zip",
+                "checksum": "aa224c2b565a04b9eb81c740c876f3d1",
+                "timestamp": "2024-04-28T13:06:25Z"
+            },
+            {
                 "version": "3.0.1.143",
                 "changelog": "Add option to ignore indirect relations for chronological order\n\nFix chronological season order",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.140/shoko_3.0.1.140.zip",
                 "checksum": "792dd239d71bccbf4f5530f658ea2785",
                 "timestamp": "2024-04-25T14:37:19Z"
-            },
-            {
-                "version": "3.0.1.139",
-                "changelog": "fix: add try\u2026catch to event proccessing methods\n\nfix: fix new file moved event args\n\nmisc: `Path` \u2192 `RelativePath`",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.139/shoko_3.0.1.139.zip",
-                "checksum": "9feb6a039da7c1bc2c783d35c4c2bc6b",
-                "timestamp": "2024-04-25T12:56:29Z"
             }
         ]
     }
