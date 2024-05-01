@@ -90,7 +90,6 @@ public static class Text
     /// Determines which provider, and which method to construct the title in.
     /// </summary>
     public enum TitleProviderLookupMethod {
-        None = 0,
         Shoko_Default = 1,
         AniDb_Default = 2,
         AniDb_LibraryLanguage = 3,
