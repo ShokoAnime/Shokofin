@@ -69,7 +69,7 @@ public static class Text
     /// <summary>
     /// Where to get text the text from.
     /// </summary>
-    public enum DescriptionSourceType {
+    public enum DescriptionSource {
         /// <summary>
         /// Use data from AniDB.
         /// </summary>
@@ -118,21 +118,21 @@ public static class Text
         => GetDescription(show.DefaultSeason);
 
     public static string GetDescription(SeasonInfo season)
-        => GetDescription(new Dictionary<DescriptionSourceType, string>() {
-            {DescriptionSourceType.AniDb, season.AniDB.Description ?? string.Empty},
-            {DescriptionSourceType.TvDb, season.TvDB?.Description ?? string.Empty},
+        => GetDescription(new Dictionary<DescriptionSource, string>() {
+            {DescriptionSource.AniDb, season.AniDB.Description ?? string.Empty},
+            {DescriptionSource.TvDb, season.TvDB?.Description ?? string.Empty},
         });
 
     public static string GetDescription(EpisodeInfo episode)
-        => GetDescription(new Dictionary<DescriptionSourceType, string>() {
-            {DescriptionSourceType.AniDb, episode.AniDB.Description ?? string.Empty},
-            {DescriptionSourceType.TvDb, episode.TvDB?.Description ?? string.Empty},
+        => GetDescription(new Dictionary<DescriptionSource, string>() {
+            {DescriptionSource.AniDb, episode.AniDB.Description ?? string.Empty},
+            {DescriptionSource.TvDb, episode.TvDB?.Description ?? string.Empty},
         });
 
     public static string GetDescription(IEnumerable<EpisodeInfo> episodeList)
         => JoinText(episodeList.Select(episode => GetDescription(episode))) ?? string.Empty;
 
-    private static string GetDescription(Dictionary<DescriptionSourceType, string> descriptions)
+    private static string GetDescription(Dictionary<DescriptionSource, string> descriptions)
     {
         var overview = string.Empty;
 
@@ -151,8 +151,8 @@ public static class Text
 
             overview = provider switch
             {
-                DescriptionSourceType.AniDb => descriptions.TryGetValue(DescriptionSourceType.AniDb, out var desc) ? SanitizeTextSummary(desc) : string.Empty,
-                DescriptionSourceType.TvDb => descriptions.TryGetValue(DescriptionSourceType.TvDb, out var desc) ? desc : string.Empty,
+                DescriptionSource.AniDb => descriptions.TryGetValue(DescriptionSource.AniDb, out var desc) ? SanitizeTextSummary(desc) : string.Empty,
+                DescriptionSource.TvDb => descriptions.TryGetValue(DescriptionSource.TvDb, out var desc) ? desc : string.Empty,
                 _ => string.Empty
             };
         }

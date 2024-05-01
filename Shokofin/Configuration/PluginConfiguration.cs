@@ -6,7 +6,7 @@ using MediaBrowser.Model.Plugins;
 using Shokofin.API.Models;
 
 using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
-using DescriptionSourceType = Shokofin.Utils.Text.DescriptionSourceType;
+using DescriptionSource = Shokofin.Utils.Text.DescriptionSource;
 using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
@@ -127,12 +127,12 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// The collection of providers for descriptions. Replaces the former `DescriptionSource`.
     /// </summary>
-    public DescriptionSourceType[] DescriptionSourceList { get; set; }
+    public DescriptionSource[] DescriptionSourceList { get; set; }
 
     /// <summary>
     /// The prioritisation order of source providers for description sources.
     /// </summary>
-    public DescriptionSourceType[] DescriptionSourceOrder { get; set; }
+    public DescriptionSource[] DescriptionSourceOrder { get; set; }
 
     /// <summary>
     /// Clean up links within the AniDB description for entries.
@@ -335,9 +335,9 @@ public class PluginConfiguration : BasePluginConfiguration
         };
         TitleAllowAny = true;
         DescriptionSourceList = new[] {
-            DescriptionSourceType.AniDb,
-            DescriptionSourceType.TvDb,
-            DescriptionSourceType.TMDB,
+            DescriptionSource.AniDb,
+            DescriptionSource.TvDb,
+            DescriptionSource.TMDB,
         };
         DescriptionSourceOrder = DescriptionSourceList;
         VirtualFileSystem = CanCreateSymbolicLinks;
