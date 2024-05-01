@@ -214,115 +214,153 @@ public static class Text
         return outputText;
     }
 
+    public static (string?, string?) GetEpisodeTitle(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
+        => (
+            GetEpisodeTitleByType(episode, series, DisplayTitleType.Main, metadataLanguage),
+            GetEpisodeTitleByType(episode, series, DisplayTitleType.Alternate, metadataLanguage)
+        );
+
+    public static (string?, string?) GetSeasonTitle(SeasonInfo series, string metadataLanguage)
+        => (
+            GetSeriesTitleByType(series, series.Shoko.Name, DisplayTitleType.Main, metadataLanguage),
+            GetSeriesTitleByType(series, series.Shoko.Name, DisplayTitleType.Alternate, metadataLanguage)
+        );
+
+    public static (string?, string?) GetShowTitle(ShowInfo series, string metadataLanguage)
+        => (
+            GetSeriesTitleByType(series.DefaultSeason, series.Name, DisplayTitleType.Main, metadataLanguage),
+            GetSeriesTitleByType(series.DefaultSeason, series.Name, DisplayTitleType.Alternate, metadataLanguage)
+        );
+
+    public static (string?, string?) GetMovieTitle(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
+        => (
+            GetMovieTitleByType(episode, series, DisplayTitleType.Main, metadataLanguage),
+            GetMovieTitleByType(episode, series, DisplayTitleType.Alternate, metadataLanguage)
+        );
+
     /// <summary>
     /// Returns a list of the providers to check, and in what order
     /// </summary>
     private static TitleProviderLookupMethod[] GetOrderedProvidersForTitle(DisplayTitleType titleType)
+        => titleType switch {
+            DisplayTitleType.Main =>
+                Plugin.Instance.Configuration.TitleMainOverride
+                    ? Plugin.Instance.Configuration.TitleMainOrder.Where((t) => Plugin.Instance.Configuration.TitleMainList.Contains(t)).ToArray()
+                    : new[] { TitleProviderLookupMethod.Shoko_Default },
+            DisplayTitleType.Alternate =>
+                Plugin.Instance.Configuration.TitleAlternateOverride
+                    ? Plugin.Instance.Configuration.TitleAlternateOrder.Where((t) => Plugin.Instance.Configuration.TitleAlternateList.Contains(t)).ToArray()
+                    : new[] { TitleProviderLookupMethod.AniDb_CountryOfOrigin, TitleProviderLookupMethod.TMDB_CountryOfOrigin },
+            _ => Array.Empty<TitleProviderLookupMethod>(),
+        };
+
+    private static string? GetMovieTitleByType(EpisodeInfo episode, SeasonInfo series, DisplayTitleType type, string metadataLanguage)
     {
-        switch (titleType) {
-            case DisplayTitleType.Main:
-                if (!Plugin.Instance.Configuration.TitleMainOverride) {
-                    return new[] { 
-                        TitleProviderLookupMethod.Shoko_Default,
-                        TitleProviderLookupMethod.AniDb_Default, TitleProviderLookupMethod.AniDb_LibraryLanguage, TitleProviderLookupMethod.AniDb_CountryOfOrigin,
-                        TitleProviderLookupMethod.TMDB_Default, TitleProviderLookupMethod.TMDB_LibraryLanguage, TitleProviderLookupMethod.TMDB_CountryOfOrigin
-                    };
-                }
-                return Plugin.Instance.Configuration.TitleMainOrder.Where((t) => Plugin.Instance.Configuration.TitleMainList.Contains(t)).ToArray();
-            case DisplayTitleType.Alternate:
-                if (Plugin.Instance.Configuration.TitleAlternateOverride)
-                    return Plugin.Instance.Configuration.TitleAlternateOrder.Where((t) => Plugin.Instance.Configuration.TitleAlternateList.Contains(t)).ToArray();
-                return new[] { TitleProviderLookupMethod.AniDb_LibraryLanguage };
-            default:
-                return Array.Empty<TitleProviderLookupMethod>();
-        }
-    }
-
-    public static string? GetDefaultTitle(List<Title> titles)
-        => titles.FirstOrDefault(t => t.IsDefault)?.Value;
-
-    private static string? GetLanguageCode(List<Title> titles, string? mainTitle)
-        => titles.FirstOrDefault(t => t.Value == mainTitle)?.LanguageCode;
-    
-    public static string? GetTitlesForLanguage(List<Title> titles, string? metadataLanguage)
-    {
-        var titleList = titles.Where(t => t.LanguageCode == metadataLanguage);
-        if (!titleList.Any())
-            return null;
-        var title = titleList.FirstOrDefault(t => t.Type == TitleType.Official)?.Value;
-        if (string.IsNullOrEmpty(title) && Plugin.Instance.Configuration.TitleAllowAny)
-            title = titleList.FirstOrDefault()?.Value;
-        return title;
-    }
-
-    public static (string?, string?) GetEpisodeTitle(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
-        => (GetEpisodeTitleByType(episode, series, DisplayTitleType.Main, metadataLanguage), GetEpisodeTitleByType(episode, series, DisplayTitleType.Alternate, metadataLanguage));
-
-    public static (string?, string?) GetSeriesTitle(SeasonInfo series, string metadataLanguage)
-        => (GetSeriesTitleByType(series, DisplayTitleType.Main, metadataLanguage), GetSeriesTitleByType(series, DisplayTitleType.Alternate, metadataLanguage));
-
-    public static (string?, string?) GetMovieOrOvaTitle(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
-        => (GetMovieOrOvaTitleByType(episode, series, DisplayTitleType.Main, metadataLanguage), GetMovieOrOvaTitleByType(episode, series, DisplayTitleType.Alternate, metadataLanguage));
-
-    private static string? GetEpisodeTitleByType(EpisodeInfo episode, SeasonInfo series, DisplayTitleType type, string metadataLanguage)
-    {
-        string? title = null;
-        foreach (var provider in GetOrderedProvidersForTitle(type)) {
-            switch (provider) {
-                case TitleProviderLookupMethod.Shoko_Default:
-                    title = episode.Shoko.Name;
-                    break;
-                case TitleProviderLookupMethod.AniDb_Default:
-                    title = GetDefaultTitle(episode.AniDB.Titles);
-                    break;
-                case TitleProviderLookupMethod.AniDb_LibraryLanguage:
-                    title = GetTitlesForLanguage(episode.AniDB.Titles, metadataLanguage);
-                    break;
-                case TitleProviderLookupMethod.AniDb_CountryOfOrigin:
-                    title = GetTitlesForLanguage(episode.AniDB.Titles, GetLanguageCode(series.AniDB.Titles, series.AniDB.Title));
-                    break;
-                default:
-                    break;
-            };
-            if (!string.IsNullOrEmpty(title))
-                return title.Trim();
-        }
-        return title;
-    }
-
-    private static string? GetSeriesTitleByType(SeasonInfo series, DisplayTitleType type, string metadataLanguage)
-    {
-        string? title = null;
-        foreach (var provider in GetOrderedProvidersForTitle(type)) {
-            switch (provider) {
-                case TitleProviderLookupMethod.Shoko_Default:
-                    title = series.Shoko.Name;
-                    break;
-                case TitleProviderLookupMethod.AniDb_Default:
-                    title = GetDefaultTitle(series.AniDB.Titles);
-                    break;
-                case TitleProviderLookupMethod.AniDb_LibraryLanguage:
-                    title = GetTitlesForLanguage(series.AniDB.Titles, metadataLanguage);
-                    break;
-                case TitleProviderLookupMethod.AniDb_CountryOfOrigin:
-                    title = GetTitlesForLanguage(series.AniDB.Titles, GetLanguageCode(series.AniDB.Titles, series.AniDB.Title));
-                    break;
-                default:
-                    break;
-            }
-            if (!string.IsNullOrEmpty(title))
-                break;
-        }
-        return title?.Trim();
-    }
-
-    private static string? GetMovieOrOvaTitleByType(EpisodeInfo episode, SeasonInfo series, DisplayTitleType type, string metadataLanguage)
-    {
-        var mainTitle = GetSeriesTitleByType(series, type, metadataLanguage);
+        var mainTitle = GetSeriesTitleByType(series, series.Shoko.Name, type, metadataLanguage);
         var subTitle = GetEpisodeTitleByType(episode, series, type, metadataLanguage);
 
         if (!(string.IsNullOrEmpty(subTitle) || IgnoredSubTitles.Contains(subTitle)))
             return $"{mainTitle}: {subTitle}".Trim();
         return mainTitle?.Trim();
     }
+
+    private static string? GetEpisodeTitleByType(EpisodeInfo episode, SeasonInfo series, DisplayTitleType type, string metadataLanguage)
+    {
+        foreach (var provider in GetOrderedProvidersForTitle(type)) {
+            var title = provider switch {
+                TitleProviderLookupMethod.Shoko_Default =>
+                    episode.Shoko.Name,
+                TitleProviderLookupMethod.AniDb_Default =>
+                    GetDefaultTitle(episode.AniDB.Titles),
+                TitleProviderLookupMethod.AniDb_LibraryLanguage =>
+                    GetTitlesForLanguage(episode.AniDB.Titles, false, metadataLanguage),
+                TitleProviderLookupMethod.AniDb_CountryOfOrigin =>
+                    GetTitlesForLanguage(episode.AniDB.Titles, false, GuessOriginLanguage(GetMainLanguage(series.AniDB.Titles))),
+                _ => null,
+            };
+            if (!string.IsNullOrEmpty(title))
+                return title.Trim();
+        }
+        return null;
+    }
+
+    private static string? GetSeriesTitleByType(SeasonInfo series, string defaultName, DisplayTitleType type, string metadataLanguage)
+    {
+        foreach (var provider in GetOrderedProvidersForTitle(type)) {
+            var title = provider switch {
+                TitleProviderLookupMethod.Shoko_Default =>
+                    defaultName,
+                TitleProviderLookupMethod.AniDb_Default =>
+                    GetDefaultTitle(series.AniDB.Titles),
+                TitleProviderLookupMethod.AniDb_LibraryLanguage =>
+                    GetTitlesForLanguage(series.AniDB.Titles, true, metadataLanguage),
+                TitleProviderLookupMethod.AniDb_CountryOfOrigin =>
+                    GetTitlesForLanguage(series.AniDB.Titles, true, GuessOriginLanguage(GetMainLanguage(series.AniDB.Titles))),
+                _ => null,
+            };
+            if (!string.IsNullOrEmpty(title))
+                return title.Trim();
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Get the default title from the title list.
+    /// </summary>
+    /// <param name="titles"></param>
+    /// <returns></returns>
+    private static string? GetDefaultTitle(List<Title> titles)
+        => titles.FirstOrDefault(t => t.IsDefault)?.Value;
+
+    /// <summary>
+    /// Get the first title availalbe for the language, optionally using types
+    /// to filter the list in addition to the metadata languages provided.
+    /// </summary>
+    /// <param name="titles">Title list to search.</param>
+    /// <param name="usingTypes">Search using titles</param>
+    /// <param name="metadataLanguages"></param>
+    /// <returns></returns>
+    public static string? GetTitlesForLanguage(List<Title> titles, bool usingTypes, params string[] metadataLanguages)
+    {
+        foreach (string lang in metadataLanguages) {
+            var titleList = titles.Where(t => t.LanguageCode == lang).ToList();
+            if (titleList.Count == 0)
+                continue;
+
+            if (usingTypes) {
+                var title = titleList.FirstOrDefault(t => t.Type == TitleType.Official)?.Value;
+                if (string.IsNullOrEmpty(title) && Plugin.Instance.Configuration.TitleAllowAny)
+                    title = titleList.FirstOrDefault()?.Value;
+                if (title != null)
+                    return title;
+            }
+            else {
+                var title = titles.FirstOrDefault()?.Value;
+                if (title != null)
+                    return title;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Get the main title language from the title list.
+    /// </summary>
+    /// <param name="titles">Title list.</param>
+    /// <returns></returns>
+    private static string GetMainLanguage(IEnumerable<Title> titles)
+        => titles.FirstOrDefault(t => t?.Type == TitleType.Main)?.LanguageCode ?? titles.FirstOrDefault()?.LanguageCode ?? "x-other";
+
+    /// <summary>
+    /// Guess the origin language based on the main title language.
+    /// </summary>
+    /// <param name="titles">Title list.</param>
+    /// <returns></returns>
+    private static string[] GuessOriginLanguage(string langCode)
+        => langCode switch {
+            "x-other" => new string[] { "ja" },
+            "x-jat" => new string[] { "ja" },
+            "x-zht" => new string[] { "zn-hans", "zn-hant", "zn-c-mcm", "zn" },
+            _ => new string[] { langCode },
+        };
 }
