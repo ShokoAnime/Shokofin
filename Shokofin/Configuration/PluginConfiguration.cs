@@ -320,8 +320,12 @@ public class PluginConfiguration : BasePluginConfiguration
         TitleMainOverride = false;
         TitleMainOrder = new[] { 
             TitleProviderLookupMethod.Shoko_Default,
-            TitleProviderLookupMethod.AniDb_Default, TitleProviderLookupMethod.AniDb_LibraryLanguage, TitleProviderLookupMethod.AniDb_CountryOfOrigin,
-            TitleProviderLookupMethod.TMDB_Default, TitleProviderLookupMethod.TMDB_LibraryLanguage, TitleProviderLookupMethod.TMDB_CountryOfOrigin
+            TitleProviderLookupMethod.AniDb_Default,
+            TitleProviderLookupMethod.AniDb_LibraryLanguage,
+            TitleProviderLookupMethod.AniDb_CountryOfOrigin,
+            TitleProviderLookupMethod.TMDB_Default,
+            TitleProviderLookupMethod.TMDB_LibraryLanguage,
+            TitleProviderLookupMethod.TMDB_CountryOfOrigin,
         };
         TitleMainList = Array.Empty<TitleProviderLookupMethod>();
         TitleAlternateOverride = false;
@@ -330,7 +334,11 @@ public class PluginConfiguration : BasePluginConfiguration
             TitleProviderLookupMethod.AniDb_LibraryLanguage
         };
         TitleAllowAny = true;
-        DescriptionSourceList = new[] { DescriptionSourceType.AniDb, DescriptionSourceType.TvDb, DescriptionSourceType.TMDB };
+        DescriptionSourceList = new[] {
+            DescriptionSourceType.AniDb,
+            DescriptionSourceType.TvDb,
+            DescriptionSourceType.TMDB,
+        };
         DescriptionSourceOrder = DescriptionSourceList;
         VirtualFileSystem = CanCreateSymbolicLinks;
         VirtualFileSystemThreads = 4;
