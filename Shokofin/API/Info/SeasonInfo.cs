@@ -82,11 +82,6 @@ public class SeasonInfo
     public readonly List<EpisodeInfo> SpecialsList;
 
     /// <summary>
-    /// All leftover episodes that will not be used by the plugin.
-    /// </summary>
-    public readonly List<EpisodeInfo> LeftoverList;
-
-    /// <summary>
     /// Related series data available in Shoko.
     /// </summary>
     public readonly IReadOnlyList<Relation> Relations;
@@ -114,7 +109,6 @@ public class SeasonInfo
         var specialsList = new List<EpisodeInfo>();
         var episodesList = new List<EpisodeInfo>();
         var extrasList = new List<EpisodeInfo>();
-        var leftoverList = new List<EpisodeInfo>();
         var altEpisodesList = new List<EpisodeInfo>();
 
         // Iterate over the episodes once and store some values for later use.
@@ -140,9 +134,6 @@ public class SeasonInfo
                             .FirstOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
                         if (previousEpisode != null)
                             specialsAnchorDictionary[episode] = previousEpisode;
-                    }
-                    else {
-                        leftoverList.Add(episode);
                     }
                     break;
             }
@@ -189,7 +180,6 @@ public class SeasonInfo
         EpisodeList = episodesList;
         AlternateEpisodesList = altEpisodesList;
         ExtrasList = extrasList;
-        LeftoverList = leftoverList;
         SpecialsAnchors = specialsAnchorDictionary;
         SpecialsList = specialsList;
         Relations = relations;
@@ -206,14 +196,6 @@ public class SeasonInfo
         var episodeList = EpisodeList.Count == 0 ? AlternateEpisodesList : EpisodeList;
         if (!episodeList.Any(eI => eI.Shoko.Size > 0))
             return false;
-
-        // The extras because some people don't know what they're doing and now we need to compensate for that.
-        if (Plugin.Instance.Configuration.LibraryFilteringMode == Utils.Ordering.LibraryFilteringMode.Disabled) {
-            if (!ExtrasList.Any(eI => eI.Shoko.Size > 0))
-                return false;
-            if (!LeftoverList.Any(eI => eI.Shoko.Size > 0))
-                return false;
-        }
 
         return true;
     }

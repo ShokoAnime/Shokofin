@@ -30,10 +30,6 @@ public class Ordering
         /// the library.
         /// </summary>
         Lax = 2,
-        /// <summary>
-        /// Use at your own risk. And also don't complain about the results.
-        /// </summary>
-        Disabled = 3,
     }
 
     /// <summary>
@@ -150,18 +146,6 @@ public class Ordering
         index = seasonInfo.EpisodeList.FindIndex(ep => ep.Id == episodeInfo.Id);
         if (index == -1)
             index = seasonInfo.AlternateEpisodesList.FindIndex(ep => ep.Id == episodeInfo.Id);
-
-        // Extras that show up in the season because _somebody_ decided to disable filtering.
-        if (index == -1) {
-            offset += seasonInfo.EpisodeList.Count > 0 ? seasonInfo.EpisodeList.Count : seasonInfo.AlternateEpisodesList.Count;
-            index = seasonInfo.ExtrasList.FindIndex(ep => ep.Id == episodeInfo.Id);
-        }
-
-        // All other episodes that show up in the season because _somebody_ decided to disable filtering.
-        if (index == -1) {
-            offset += seasonInfo.ExtrasList.Count;
-            index = seasonInfo.LeftoverList.FindIndex(ep => ep.Id == episodeInfo.Id);
-        }
 
         // If we still cannot find the episode for whatever reason, then bail. I don't fudging know why, but I know it's not the plugin's fault.
         if (index == -1)

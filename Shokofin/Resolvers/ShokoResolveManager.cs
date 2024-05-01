@@ -1364,13 +1364,6 @@ public class ShokoResolveManager
             if (mediaFolderConfig.IsVirtualFileSystemEnabled)
                 return true;
 
-            // Don't do any filtering if the library filtering mode is set to
-            // disabled. Only experts and idiots will disable it, but let them
-            // do their thing and watch the chaos following their decision
-            // themselves.
-            if (mediaFolderConfig.LibraryFilteringMode == Ordering.LibraryFilteringMode.Disabled)
-                return false;
-
             var shouldIgnore = mediaFolderConfig.LibraryFilteringMode switch {
                 Ordering.LibraryFilteringMode.Strict => true,
                 Ordering.LibraryFilteringMode.Lax => false,
