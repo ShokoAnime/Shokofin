@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.148",
+                "changelog": "refactor: add true disabling of filtering\n\n- Reconfigured the setting to allow truely disabling the filtering.\n  Do note that **__THIS IS NOT ADVICED TO BE USED UNLESS YOU\n  KNOW EXACTLY WHAT YOU'RE DOING__**. Anyways, it lets you\n  disable the filtering, which required changing the settings, so\n  now everything is back to \"auto\" (the default) and you need to\n  tweak your filtering setting if you want it back to the _strict_ or\n  _lax_ mode.\n\nmisc: split resolver and ignore rule [skip ci]",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.148/shoko_3.0.1.148.zip",
+                "checksum": "01998cb2c5497930126759f48b9a9155",
+                "timestamp": "2024-05-01T17:20:54Z"
+            },
+            {
                 "version": "3.0.1.147",
                 "changelog": "fix: always remove duplicates + more\n\n- Always remove duplicates and unknown/unwanted seasons/episodes, but\n  conditionally add missing seasons/episodes only if the option to add\n  missing metadata is enabled. This commit will also fix the missing\n  clean-up after disabling the 'add missing metadata' option which\n  will now happen.\n\nmisc: add \"Auto\" to the auto clear cache task [skip ci]",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.144/shoko_3.0.1.144.zip",
                 "checksum": "aa224c2b565a04b9eb81c740c876f3d1",
                 "timestamp": "2024-04-28T13:06:25Z"
-            },
-            {
-                "version": "3.0.1.143",
-                "changelog": "Add option to ignore indirect relations for chronological order\n\nFix chronological season order",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.143/shoko_3.0.1.143.zip",
-                "checksum": "0c438c76793f2fcf1192d786ccd25575",
-                "timestamp": "2024-04-27T17:05:15Z"
             }
         ]
     }
