@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 using Shokofin.API.Models;
+using System;
 
 using DescriptionSourceType = Shokofin.Utils.Text.DescriptionSourceType;
 using TitleProviderLookupMethod = Shokofin.Utils.Text.TitleProviderLookupMethod;
 using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
-using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
 using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
-using System;
 
 namespace Shokofin.Configuration;
 
