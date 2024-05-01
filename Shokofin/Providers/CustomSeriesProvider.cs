@@ -26,6 +26,8 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
 
     private readonly ILibraryManager LibraryManager;
 
+    private static bool ShouldAddMetadata => Plugin.Instance.Configuration.AddMissingMetadata;
+
     public CustomSeriesProvider(ILogger<CustomSeriesProvider> logger, ShokoAPIManager apiManager, IIdLookup lookup, ILibraryManager libraryManager)
     {
         Logger = logger;
@@ -47,62 +49,62 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
             return ItemUpdateType.None;
         }
 
-        // Get the existing seasons and episode ids
+        // Get the existing seasons and known seasons.
         var itemUpdated = ItemUpdateType.None;
-        if (Plugin.Instance.Configuration.AddMissingMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
-            // Get the existing seasons and episode ids
-            var seasons = series.Children
-                .OfType<Season>()
-                .Where(season => season.IndexNumber.HasValue)
-                .ToDictionary(season => season.IndexNumber!.Value);
+        var seasons = series.Children
+            .OfType<Season>()
+            .Where(season => season.IndexNumber.HasValue)
+            .ToDictionary(season => season.IndexNumber!.Value);
+        var knownSeasonIds = showInfo.SeasonOrderDictionary.Keys.ToHashSet();
+        if (showInfo.HasSpecials)
+            knownSeasonIds.Add(0);
 
-            var knownSeasonIds = showInfo.SeasonOrderDictionary.Select(s => s.Key).ToHashSet();
-            if (showInfo.HasSpecials)
-                knownSeasonIds.Add(0);
+        // Remove unknown or unwanted seasons.
+        var toRemove = (ShouldAddMetadata ? seasons.ExceptBy(knownSeasonIds, season => season.Key) : seasons)
+            .Where(season => string.IsNullOrEmpty(season.Value.Path) || season.Value.IsVirtualItem)
+            .ToList();
+        foreach (var (seasonNumber, season) in toRemove) {
+            Logger.LogDebug("Removing Season {SeasonNumber} for Series {SeriesName} (Series={SeriesId})", seasonNumber, series.Name, seriesId);
+            seasons.Remove(seasonNumber);
+            LibraryManager.DeleteItem(season, new() { DeleteFileLocation = false });
+        }
 
-            var toRemove = seasons
-                .ExceptBy(knownSeasonIds, season => season.Key)
-                .Where(season => season.Value.IsVirtualItem)
-                .ToList();
-            foreach (var (seasonNumber, season) in toRemove) {
-                Logger.LogDebug("Removing unknown Season {SeasonNumber} for Series {SeriesName} (Series={SeriesId})", seasonNumber, series.Name, seriesId);
-                seasons.Remove(seasonNumber);
-                LibraryManager.DeleteItem(season, new() { DeleteFileLocation = false });
-            }
-
-            // Add missing seasons
+        // Add missing seasons.
+        if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) 
             foreach (var (seasonNumber, season) in CreateMissingSeasons(showInfo, series, seasons)) {
                 itemUpdated |= ItemUpdateType.MetadataImport;
                 seasons.TryAdd(seasonNumber, season);
             }
 
-            // Specials.
-            if (seasons.TryGetValue(0, out var zeroSeason)) {
-                var goodKnownEpisodeIds = showInfo.SpecialsSet;
-                var toRemoveEpisodes = new List<Episode>();
-                var existingEpisodes = new HashSet<string>();
-                foreach (var episode in zeroSeason.Children.OfType<Episode>()) {
-                    if (Lookup.TryGetEpisodeIdsFor(episode, out var episodeIds))
-                        if (episode.IsVirtualItem && !goodKnownEpisodeIds.Overlaps(episodeIds)) {
-                            toRemoveEpisodes.Add(episode);
-                        }
-                        else {
-                            foreach (var episodeId in episodeIds)
-                                existingEpisodes.Add(episodeId);
-                        }
-                    else if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId)) {
-                        if (episode.IsVirtualItem && !goodKnownEpisodeIds.Contains(episodeId))
-                            toRemoveEpisodes.Add(episode);
-                        else
+        // Special handling of Specials (pun intended).
+        if (seasons.TryGetValue(0, out var zeroSeason)) {
+            // Get known episodes, existing episodes, and episodes to remove.
+            var knownEpisodeIds = ShouldAddMetadata ? showInfo.SpecialsSet : new HashSet<string>();
+            var existingEpisodes = new HashSet<string>();
+            var toRemoveEpisodes = new List<Episode>();
+            foreach (var episode in zeroSeason.Children.OfType<Episode>()) {
+                if (Lookup.TryGetEpisodeIdsFor(episode, out var episodeIds))
+                    if ((string.IsNullOrEmpty(episode.Path) || episode.IsVirtualItem) && !knownEpisodeIds.Overlaps(episodeIds))
+                        toRemoveEpisodes.Add(episode);
+                    else 
+                        foreach (var episodeId in episodeIds)
                             existingEpisodes.Add(episodeId);
-                    }
+                else if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId)) {
+                    if ((string.IsNullOrEmpty(episode.Path) || episode.IsVirtualItem) && !knownEpisodeIds.Contains(episodeId))
+                        toRemoveEpisodes.Add(episode);
+                    else
+                        existingEpisodes.Add(episodeId);
                 }
+            }
 
-                foreach (var episode in toRemoveEpisodes) {
-                    Logger.LogDebug("Removing unknown Episode {EpisodeName} from Season {SeasonNumber} for Series {SeriesName} (Series={SeriesId})", episode.Name, 0, series.Name, seriesId);
-                    LibraryManager.DeleteItem(episode, new() { DeleteFileLocation = false });
-                }
+            // Remove unknown or unwanted episodes.
+            foreach (var episode in toRemoveEpisodes) {
+                Logger.LogDebug("Removing Episode {EpisodeName} from Season {SeasonNumber} for Series {SeriesName} (Series={SeriesId})", episode.Name, 0, series.Name, seriesId);
+                LibraryManager.DeleteItem(episode, new() { DeleteFileLocation = false });
+            }
 
+            // Add missing episodes.
+            if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly)
                 foreach (var seasonInfo in showInfo.SeasonList) {
                     foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
                         existingEpisodes.Add(episodeId);
@@ -115,47 +117,48 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
                             itemUpdated |= ItemUpdateType.MetadataImport;
                     }
                 }
+        }
+
+        // All other seasons.
+        foreach (var (seasonNumber, seasonInfo) in showInfo.SeasonOrderDictionary) {
+            // Silently continue if the season doesn't exist.
+            if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
+                continue;
+
+            // Loudly skip if the season metadata doesn't exist.
+            if (seasonInfo == null || !showInfo.TryGetBaseSeasonNumberForSeasonInfo(seasonInfo, out var baseSeasonNumber)) {
+                Logger.LogWarning("Unable to find series info for Season {SeasonNumber} in group for series. (Group={GroupId})", seasonNumber, showInfo.GroupId);
+                continue;
             }
 
-            // All other seasons.
-            foreach (var (seasonNumber, seasonInfo) in showInfo.SeasonOrderDictionary) {
-                if (!seasons.TryGetValue(seasonNumber, out var season) || season == null)
-                    continue;
-
-                if (seasonInfo == null || !showInfo.TryGetBaseSeasonNumberForSeasonInfo(seasonInfo, out var baseSeasonNumber)) {
-                    Logger.LogWarning("Unable to find series info for Season {SeasonNumber} in group for series. (Group={GroupId})", seasonNumber, showInfo.GroupId);
-                    return ItemUpdateType.None;
-                }
-                var offset = Math.Abs(seasonNumber - baseSeasonNumber);
-
-                var episodeList = offset == 0 ? seasonInfo.EpisodeList : seasonInfo.AlternateEpisodesList;
-                var goodKnownEpisodeIds = episodeList
-                    .Select(episodeInfo => episodeInfo.Id)
-                    .ToHashSet();
-                var toRemoveEpisodes = new List<Episode>();
-                var existingEpisodes = new HashSet<string>();
-                foreach (var episode in season.Children.OfType<Episode>()) {
-                    if (Lookup.TryGetEpisodeIdsFor(episode, out var episodeIds))
-                        if (episode.IsVirtualItem && !goodKnownEpisodeIds.Overlaps(episodeIds)) {
-                            toRemoveEpisodes.Add(episode);
-                        }
-                        else {
-                            foreach (var episodeId in episodeIds)
-                                existingEpisodes.Add(episodeId);
-                        }
-                    else if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId)) {
-                        if (episode.IsVirtualItem && !goodKnownEpisodeIds.Contains(episodeId))
-                            toRemoveEpisodes.Add(episode);
-                        else
+            // Get known episodes, existing episodes, and episodes to remove.
+            var episodeList = Math.Abs(seasonNumber - baseSeasonNumber) == 0 ? seasonInfo.EpisodeList : seasonInfo.AlternateEpisodesList;
+            var knownEpisodeIds = ShouldAddMetadata ? episodeList.Select(episodeInfo => episodeInfo.Id).ToHashSet() : new HashSet<string>();
+            var existingEpisodes = new HashSet<string>();
+            var toRemoveEpisodes = new List<Episode>();
+            foreach (var episode in season.Children.OfType<Episode>()) {
+                if (Lookup.TryGetEpisodeIdsFor(episode, out var episodeIds))
+                    if ((string.IsNullOrEmpty(episode.Path) || episode.IsVirtualItem) && !knownEpisodeIds.Overlaps(episodeIds))
+                        toRemoveEpisodes.Add(episode);
+                    else
+                        foreach (var episodeId in episodeIds)
                             existingEpisodes.Add(episodeId);
-                    }
+                else if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId)) {
+                    if ((string.IsNullOrEmpty(episode.Path) || episode.IsVirtualItem) && !knownEpisodeIds.Contains(episodeId))
+                        toRemoveEpisodes.Add(episode);
+                    else
+                        existingEpisodes.Add(episodeId);
                 }
+            }
 
-                foreach (var episode in toRemoveEpisodes) {
-                    Logger.LogDebug("Removing unknown Episode {EpisodeName} from Season {SeasonNumber} for Series {SeriesName} (Series={SeriesId})", episode.Name, seasonNumber, series.Name, seriesId);
-                    LibraryManager.DeleteItem(episode, new() { DeleteFileLocation = false });
-                }
+            // Remove unknown or unwanted episodes.
+            foreach (var episode in toRemoveEpisodes) {
+                Logger.LogDebug("Removing Episode {EpisodeName} from Season {SeasonNumber} for Series {SeriesName} (Series={SeriesId})", episode.Name, seasonNumber, series.Name, seriesId);
+                LibraryManager.DeleteItem(episode, new() { DeleteFileLocation = false });
+            }
 
+            // Add missing episodes.
+            if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
                 foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
                     existingEpisodes.Add(episodeId);
 
