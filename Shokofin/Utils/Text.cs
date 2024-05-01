@@ -214,25 +214,25 @@ public static class Text
         return outputText;
     }
 
-    public static (string?, string?) GetEpisodeTitle(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
+    public static (string?, string?) GetEpisodeTitles(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
         => (
             GetEpisodeTitleByType(episode, series, DisplayTitleType.Main, metadataLanguage),
             GetEpisodeTitleByType(episode, series, DisplayTitleType.Alternate, metadataLanguage)
         );
 
-    public static (string?, string?) GetSeasonTitle(SeasonInfo series, string metadataLanguage)
+    public static (string?, string?) GetSeasonTitles(SeasonInfo series, string metadataLanguage)
         => (
             GetSeriesTitleByType(series, series.Shoko.Name, DisplayTitleType.Main, metadataLanguage),
             GetSeriesTitleByType(series, series.Shoko.Name, DisplayTitleType.Alternate, metadataLanguage)
         );
 
-    public static (string?, string?) GetShowTitle(ShowInfo series, string metadataLanguage)
+    public static (string?, string?) GetShowTitles(ShowInfo series, string metadataLanguage)
         => (
             GetSeriesTitleByType(series.DefaultSeason, series.Name, DisplayTitleType.Main, metadataLanguage),
             GetSeriesTitleByType(series.DefaultSeason, series.Name, DisplayTitleType.Alternate, metadataLanguage)
         );
 
-    public static (string?, string?) GetMovieTitle(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
+    public static (string?, string?) GetMovieTitles(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
         => (
             GetMovieTitleByType(episode, series, DisplayTitleType.Main, metadataLanguage),
             GetMovieTitleByType(episode, series, DisplayTitleType.Alternate, metadataLanguage)

@@ -100,7 +100,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
 
     public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, string metadataLanguage, Series? series, Guid seasonId)
     {
-        var (displayTitle, alternateTitle) = Text.GetSeasonTitle(seasonInfo, metadataLanguage);
+        var (displayTitle, alternateTitle) = Text.GetSeasonTitles(seasonInfo, metadataLanguage);
         var sortTitle = $"S{seasonNumber} - {seasonInfo.Shoko.Name}";
 
         if (offset > 0) {
