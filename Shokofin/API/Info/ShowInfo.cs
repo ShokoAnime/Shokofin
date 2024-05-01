@@ -130,13 +130,19 @@ public class ShowInfo
     /// A pre-filtered set of special episode ids without an ExtraType
     /// attached.
     /// </summary>
-    public readonly IReadOnlySet<string> SpecialsSet;
+    public readonly IReadOnlyDictionary<string, bool> SpecialsDict;
 
     /// <summary>
     /// Indicates that the show has specials.
     /// </summary>
     public bool HasSpecials =>
-        SpecialsSet.Count > 0;
+        SpecialsDict.Count > 0;
+
+    /// <summary>
+    /// Indicates that the show has specials with files.
+    /// </summary>
+    public bool HasSpecialsWithFiles =>
+        SpecialsDict.Values.Contains(true);
 
     /// <summary>
     /// The default season for the show.
@@ -172,7 +178,7 @@ public class ShowInfo
         SeasonList = new List<SeasonInfo>() { seasonInfo };
         SeasonNumberBaseDictionary = seasonNumberBaseDictionary;
         SeasonOrderDictionary = seasonOrderDictionary;
-        SpecialsSet = seasonInfo.SpecialsList.Select(episodeInfo => episodeInfo.Id).ToHashSet();
+        SpecialsDict = seasonInfo.SpecialsList.ToDictionary(episodeInfo => episodeInfo.Id, episodeInfo => episodeInfo.Shoko.Size > 0);
         DefaultSeason = seasonInfo;
         EpisodePadding = Math.Max(2, (new int[] { seasonInfo.EpisodeList.Count, seasonInfo.AlternateEpisodesList.Count, seasonInfo.SpecialsList.Count }).Max().ToString().Length);
     }
@@ -217,7 +223,7 @@ public class ShowInfo
         }
 
         var defaultSeason = seasonList[foundIndex];
-        var specialsSet = new HashSet<string>();
+        var specialsSet = new Dictionary<string, bool>();
         var seasonOrderDictionary = new Dictionary<int, SeasonInfo>();
         var seasonNumberBaseDictionary = new Dictionary<string, int>();
         var seasonNumberOffset = 1;
@@ -229,7 +235,7 @@ public class ShowInfo
             if (seasonInfo.AlternateEpisodesList.Count > 0)
                 seasonOrderDictionary.Add(seasonNumberOffset++, seasonInfo);
             foreach (var episodeInfo in seasonInfo.SpecialsList)
-                specialsSet.Add(episodeInfo.Id);
+                specialsSet.Add(episodeInfo.Id, episodeInfo.Shoko.Size > 0);
         }
 
         Id = defaultSeason.Id;
@@ -246,13 +252,13 @@ public class ShowInfo
         SeasonList = seasonList;
         SeasonNumberBaseDictionary = seasonNumberBaseDictionary;
         SeasonOrderDictionary = seasonOrderDictionary;
-        SpecialsSet = specialsSet;
+        SpecialsDict = specialsSet;
         DefaultSeason = defaultSeason;
         EpisodePadding = Math.Max(2, seasonList.SelectMany(s => new int[] { s.EpisodeList.Count, s.AlternateEpisodesList.Count }).Append(specialsSet.Count).Max().ToString().Length);
     }
 
     public bool IsSpecial(EpisodeInfo episodeInfo)
-        => SpecialsSet.Contains(episodeInfo.Id);
+        => SpecialsDict.ContainsKey(episodeInfo.Id);
 
     public bool TryGetBaseSeasonNumberForSeasonInfo(SeasonInfo season, out int baseSeasonNumber)
         => SeasonNumberBaseDictionary.TryGetValue(season.Id, out baseSeasonNumber);

@@ -71,7 +71,12 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
         // Special handling of specials (pun intended).
         if (seasonNumber == 0) {
             // Get known episodes, existing episodes, and episodes to remove.
-            var knownEpisodeIds = ShouldAddMetadata ? showInfo.SpecialsSet : new HashSet<string>();
+            var knownEpisodeIds = ShouldAddMetadata
+                ? showInfo.SpecialsDict.Keys.ToHashSet()
+                : showInfo.SpecialsDict
+                    .Where(pair => pair.Value)
+                    .Select(pair => pair.Key)
+                    .ToHashSet();
             var existingEpisodes = new HashSet<string>();
             var toRemoveEpisodes = new List<Episode>();
             foreach (var episode in season.Children.OfType<Episode>()) {

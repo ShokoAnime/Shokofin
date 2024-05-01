@@ -196,6 +196,28 @@ public class SeasonInfo
         RelationMap = relationMap;
     }
 
+    public bool IsEmpty(int offset = 0)
+    {
+        // The extra "season" for this season info.
+        if (offset == 1)
+            return EpisodeList.Count == 0 || !AlternateEpisodesList.Any(eI => eI.Shoko.Size > 0);
+
+        // The default "season" for this season info.
+        var episodeList = EpisodeList.Count == 0 ? AlternateEpisodesList : EpisodeList;
+        if (!episodeList.Any(eI => eI.Shoko.Size > 0))
+            return false;
+
+        // The extras because some people don't know what they're doing and now we need to compensate for that.
+        if (Plugin.Instance.Configuration.LibraryFilteringMode == Utils.Ordering.LibraryFilteringMode.Disabled) {
+            if (!ExtrasList.Any(eI => eI.Shoko.Size > 0))
+                return false;
+            if (!LeftoverList.Any(eI => eI.Shoko.Size > 0))
+                return false;
+        }
+
+        return true;
+    }
+
     private static string? GetImagePath(Image image)
         => image != null && image.IsAvailable ? image.ToURLString() : null;
 

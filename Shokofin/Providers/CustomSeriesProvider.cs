@@ -55,15 +55,20 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
             .OfType<Season>()
             .Where(season => season.IndexNumber.HasValue)
             .ToDictionary(season => season.IndexNumber!.Value);
-        var knownSeasonIds = showInfo.SeasonOrderDictionary.Keys.ToHashSet();
-        if (showInfo.HasSpecials)
+        var knownSeasonIds = ShouldAddMetadata
+            ? showInfo.SeasonOrderDictionary.Keys.ToHashSet()
+            : showInfo.SeasonOrderDictionary
+                .Where(pair => !pair.Value.IsEmpty(Math.Abs(pair.Key - showInfo.GetBaseSeasonNumberForSeasonInfo(pair.Value))))
+                .Select(pair => pair.Key)
+                .ToHashSet();
+        if (ShouldAddMetadata ? showInfo.HasSpecials : showInfo.HasSpecialsWithFiles)
             knownSeasonIds.Add(0);
 
         // Remove unknown or unwanted seasons.
-        var toRemove = (ShouldAddMetadata ? seasons.ExceptBy(knownSeasonIds, season => season.Key) : seasons)
+        var toRemoveSeasons = seasons.ExceptBy(knownSeasonIds, season => season.Key)
             .Where(season => string.IsNullOrEmpty(season.Value.Path) || season.Value.IsVirtualItem)
             .ToList();
-        foreach (var (seasonNumber, season) in toRemove) {
+        foreach (var (seasonNumber, season) in toRemoveSeasons) {
             Logger.LogDebug("Removing Season {SeasonNumber} for Series {SeriesName} (Series={SeriesId})", seasonNumber, series.Name, seriesId);
             seasons.Remove(seasonNumber);
             LibraryManager.DeleteItem(season, new() { DeleteFileLocation = false });
@@ -79,7 +84,12 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
         // Special handling of Specials (pun intended).
         if (seasons.TryGetValue(0, out var zeroSeason)) {
             // Get known episodes, existing episodes, and episodes to remove.
-            var knownEpisodeIds = ShouldAddMetadata ? showInfo.SpecialsSet : new HashSet<string>();
+            var knownEpisodeIds = ShouldAddMetadata
+                ? showInfo.SpecialsDict.Keys.ToHashSet()
+                : showInfo.SpecialsDict
+                    .Where(pair => pair.Value)
+                    .Select(pair => pair.Key)
+                    .ToHashSet();
             var existingEpisodes = new HashSet<string>();
             var toRemoveEpisodes = new List<Episode>();
             foreach (var episode in zeroSeason.Children.OfType<Episode>()) {
