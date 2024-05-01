@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.150",
+                "changelog": "refactor: remove the true disabled option\n\nThis partially reverts commits bcb4f8239cad89d12009c59f865bdf2884eb571\nand fb06a39a8a9484aa3a65a7843ad0b0168f60b37a because it's not needed\nanymore.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.150/shoko_3.0.1.150.zip",
+                "checksum": "1dd15a38a23b58f4c2cd19ef9e62ae41",
+                "timestamp": "2024-05-01T20:00:40Z"
+            },
+            {
                 "version": "3.0.1.149",
                 "changelog": "fix: don't remove empty seasons that should exist\n\n- Don't remove the empty seasons that should exist, according to our\n  shoko data, not using jellyfin since it's not reliable enough to use\n  for this check.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.146/shoko_3.0.1.146.zip",
                 "checksum": "e0b2206cdbf0c0b1240b68e877fe4f56",
                 "timestamp": "2024-04-28T14:43:09Z"
-            },
-            {
-                "version": "3.0.1.145",
-                "changelog": "fix: band-aid for latest server changes\n\n- Apply a band-aid for the latest server changes for now. The new\n  server changes will allow better handling of when to create the links\n  in the future.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.145/shoko_3.0.1.145.zip",
-                "checksum": "1fc84a2d6b6bcd3ff4d12705daee77b0",
-                "timestamp": "2024-04-28T13:27:35Z"
             }
         ]
     }
