@@ -1,16 +1,16 @@
-using MediaBrowser.Model.Plugins;
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
+using MediaBrowser.Model.Plugins;
 using Shokofin.API.Models;
-using System;
 
-using DescriptionSourceType = Shokofin.Utils.Text.DescriptionSourceType;
-using TitleProviderLookupMethod = Shokofin.Utils.Text.TitleProviderLookupMethod;
 using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
+using DescriptionSourceType = Shokofin.Utils.Text.DescriptionSourceType;
 using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
+using TitleProviderLookupMethod = Shokofin.Utils.Text.TitleProviderLookupMethod;
 
 namespace Shokofin.Configuration;
 
