@@ -8,7 +8,7 @@ using MediaBrowser.Model.IO;
 namespace Shokofin.Resolvers;
 #pragma warning disable CS8766
 
-public class ShokoResolver : IItemResolver, IMultiItemResolver, IResolverIgnoreRule
+public class ShokoResolver : IItemResolver, IMultiItemResolver
 {
     private readonly ShokoResolveManager ResolveManager;
 
@@ -18,12 +18,6 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver, IResolverIgnoreR
     {
         ResolveManager = resolveManager;
     }
-
-    public bool ShouldIgnore(FileSystemMetadata fileInfo, BaseItem parent)
-        => ResolveManager.ShouldFilterItem(parent as Folder, fileInfo)
-            .ConfigureAwait(false)
-            .GetAwaiter()
-            .GetResult();
 
     public BaseItem? ResolvePath(ItemResolveArgs args)
         => ResolveManager.ResolveSingle(args.Parent, args.CollectionType, args.FileInfo)
