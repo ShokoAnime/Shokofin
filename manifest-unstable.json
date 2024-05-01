@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.147",
+                "changelog": "fix: always remove duplicates + more\n\n- Always remove duplicates and unknown/unwanted seasons/episodes, but\n  conditionally add missing seasons/episodes only if the option to add\n  missing metadata is enabled. This commit will also fix the missing\n  clean-up after disabling the 'add missing metadata' option which\n  will now happen.\n\nmisc: add \"Auto\" to the auto clear cache task [skip ci]",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.147/shoko_3.0.1.147.zip",
+                "checksum": "97599739431efd2da7ef6aec21c4d2c8",
+                "timestamp": "2024-05-01T13:36:26Z"
+            },
+            {
                 "version": "3.0.1.146",
                 "changelog": "misc: move resolvers above ignore rules\n\nrefactor: move subtitles and ignore videos\n\n- Refactored the cleanup function to also move subtitles from the VFS\n  back to the source video file, if found. And to ignore extras which\n  are not provided by Shoko placed in the VFS, if found. These two\n  changes should better allow third party plugins to add subtitle\n  files and other features without breaking because of the VFS.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.143/shoko_3.0.1.143.zip",
                 "checksum": "0c438c76793f2fcf1192d786ccd25575",
                 "timestamp": "2024-04-27T17:05:15Z"
-            },
-            {
-                "version": "3.0.1.142",
-                "changelog": "fix: expect the unexpected\n\n- Always check if the link has been created/removed if the operation\n  fails, and if it has successfully changed to our expected outcome,\n  then just proceed as normal.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.142/shoko_3.0.1.142.zip",
-                "checksum": "743c09872a57108bc6e7c1a0aa765057",
-                "timestamp": "2024-04-26T12:45:35Z"
             }
         ]
     }
