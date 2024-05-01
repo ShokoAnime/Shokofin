@@ -4,11 +4,12 @@ using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 using Shokofin.API.Models;
 
-using TextSourceType = Shokofin.Utils.Text.TextSourceType;
-using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
 using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
+using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
+using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
+using TextSourceType = Shokofin.Utils.Text.TextSourceType;
 
 namespace Shokofin.Configuration;
 
@@ -215,8 +216,8 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Enable/disable the filtering for new media-folders/libraries.
     /// </summary>
-    [XmlElement("LibraryFilteringMode")]
-    public bool? LibraryFiltering { get; set; }
+        [XmlElement("LibraryFiltering")]
+    public LibraryFilteringMode LibraryFilteringMode { get; set; }
 
     /// <summary>
     /// Per media folder configuration.
@@ -312,7 +313,7 @@ public class PluginConfiguration : BasePluginConfiguration
         UserList = new();
         MediaFolders = new();
         IgnoredFolders = new[] { ".streams", "@recently-snapshot" };
-        LibraryFiltering = null;
+        LibraryFilteringMode = LibraryFilteringMode.Auto;
         SignalR_AutoConnectEnabled = false;
         SignalR_AutoReconnectInSeconds = new[] { 0, 2, 10, 30, 60, 120, 300 };
         SignalR_RefreshEnabled = false;

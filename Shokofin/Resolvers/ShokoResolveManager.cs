@@ -172,10 +172,10 @@ public class ShokoResolveManager
         mediaFolderConfig = new() {
             MediaFolderId = mediaFolder.Id,
             MediaFolderPath = mediaFolder.Path,
-            IsVirtualFileSystemEnabled = config.VirtualFileSystem,
-            IsLibraryFilteringEnabled = config.LibraryFiltering,
             IsFileEventsEnabled = config.SignalR_FileEvents,
             IsRefreshEventsEnabled = config.SignalR_RefreshEnabled,
+            IsVirtualFileSystemEnabled = config.VirtualFileSystem,
+            LibraryFilteringMode = config.LibraryFilteringMode,
         };
 
         var start = DateTime.UtcNow;
@@ -1364,7 +1364,19 @@ public class ShokoResolveManager
             if (mediaFolderConfig.IsVirtualFileSystemEnabled)
                 return true;
 
-            var shouldIgnore = mediaFolderConfig.IsLibraryFilteringEnabled ?? mediaFolderConfig.IsVirtualFileSystemEnabled  || isSoleProvider;
+            // Don't do any filtering if the library filtering mode is set to
+            // disabled. Only experts and idiots will disable it, but let them
+            // do their thing and watch the chaos following their decision
+            // themselves.
+            if (mediaFolderConfig.LibraryFilteringMode == Ordering.LibraryFilteringMode.Disabled)
+                return false;
+
+            var shouldIgnore = mediaFolderConfig.LibraryFilteringMode switch {
+                Ordering.LibraryFilteringMode.Strict => true,
+                Ordering.LibraryFilteringMode.Lax => false,
+                // Ordering.LibraryFilteringMode.Auto =>
+                _ => mediaFolderConfig.IsVirtualFileSystemEnabled  || isSoleProvider,
+            };
             var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
             if (fileInfo.IsDirectory)
                 return await ShouldFilterDirectory(partialPath, fullPath, collectionType, shouldIgnore).ConfigureAwait(false);

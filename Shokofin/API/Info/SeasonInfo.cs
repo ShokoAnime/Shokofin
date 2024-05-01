@@ -82,6 +82,11 @@ public class SeasonInfo
     public readonly List<EpisodeInfo> SpecialsList;
 
     /// <summary>
+    /// All leftover episodes that will not be used by the plugin.
+    /// </summary>
+    public readonly List<EpisodeInfo> LeftoverList;
+
+    /// <summary>
     /// Related series data available in Shoko.
     /// </summary>
     public readonly IReadOnlyList<Relation> Relations;
@@ -109,6 +114,7 @@ public class SeasonInfo
         var specialsList = new List<EpisodeInfo>();
         var episodesList = new List<EpisodeInfo>();
         var extrasList = new List<EpisodeInfo>();
+        var leftoverList = new List<EpisodeInfo>();
         var altEpisodesList = new List<EpisodeInfo>();
 
         // Iterate over the episodes once and store some values for later use.
@@ -124,8 +130,9 @@ public class SeasonInfo
                     altEpisodesList.Add(episode);
                     break;
                 default:
-                    if (episode.ExtraType != null)
+                    if (episode.ExtraType != null) {
                         extrasList.Add(episode);
+                    }
                     else if (episode.AniDB.Type == EpisodeType.Special) {
                         specialsList.Add(episode);
                         var previousEpisode = episodes
@@ -133,6 +140,9 @@ public class SeasonInfo
                             .FirstOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
                         if (previousEpisode != null)
                             specialsAnchorDictionary[episode] = previousEpisode;
+                    }
+                    else {
+                        leftoverList.Add(episode);
                     }
                     break;
             }
@@ -179,6 +189,7 @@ public class SeasonInfo
         EpisodeList = episodesList;
         AlternateEpisodesList = altEpisodesList;
         ExtrasList = extrasList;
+        LeftoverList = leftoverList;
         SpecialsAnchors = specialsAnchorDictionary;
         SpecialsList = specialsList;
         Relations = relations;

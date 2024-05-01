@@ -239,11 +239,12 @@
                                 </div>
                             </div>
                             <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="LibraryFiltering">Library Filtering:</label>
-                                <select is="emby-select" id="LibraryFiltering" name="LibraryFiltering" class="emby-select-withcolor emby-select">
-                                    <option value="null">Auto</option>
-                                    <option value="true" selected>Strict</option>
-                                    <option value="false">Disabled</option>
+                                <label class="selectLabel" for="LibraryFilteringMode">Library Filtering:</label>
+                                <select is="emby-select" id="LibraryFilteringMode" name="LibraryFilteringMode" class="emby-select-withcolor emby-select">
+                                    <option value="Auto">Auto</option>
+                                    <option value="Strict" selected>Strict</option>
+                                    <option value="Lax" selected>Lax</option>
+                                    <option value="Disabled">Disabled</option>
                                 </select>
                                 <div class="fieldDescription">
                                     <div>Choose how the plugin filters out videos in your new libraries. This option only applies if the VFS is not used.</div>
@@ -256,8 +257,13 @@
                                         Strict filtering means the plugin will filter out any and all unrecognized videos from the library.
                                     </details>
                                     <details style="margin-top: 0.5em">
+                                        <summary style="margin-bottom: 0.25em">What does lax filtering entail?</summary>
+                                        Lax filtering means the plugin will not filter out anything from the library. Use this only if you're having trouble.
+                                    </details>
+                                    <details style="margin-top: 0.5em">
                                         <summary style="margin-bottom: 0.25em">What does disabling filtering entail?</summary>
-                                        Disabling the filtering means the plugin will not filter out anything from the library. Use this only if you're having trouble.
+                                        Disabling the filtering means no filtering at all. Use at your own risk of breaking the library. Also no complaining if you do disable the
+                                        filtering entirely.
                                     </details>
                                 </div>
                             </div>
@@ -284,14 +290,15 @@
                                 </div>
                             </div>
                             <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="MediaFolderLibraryFiltering">Library Filtering:</label>
-                                <select is="emby-select" id="MediaFolderLibraryFiltering" name="MediaFolderLibraryFilteringMode" class="emby-select-withcolor emby-select">
-                                    <option value="null">Auto</option>
-                                    <option value="true" selected>Strict</option>
-                                    <option value="false">Disabled</option>
+                                <label class="selectLabel" for="MediaFolderLibraryFilteringMode">Library Filtering:</label>
+                                <select is="emby-select" id="MediaFolderLibraryFilteringMode" name="MediaFolderLibraryFilteringMode" class="emby-select-withcolor emby-select">
+                                    <option value="Auto">Auto</option>
+                                    <option value="Strict" selected>Strict</option>
+                                    <option value="Lax" selected>Lax</option>
+                                    <option value="Disabled">Disabled</option>
                                 </select>
                                 <div class="fieldDescription">
-                                    <div>Choose how the plugin filters out videos in your library. This option only applies if the VFS is not used.</div>
+                                    <div>Choose how the plugin filters out videos in your new libraries. This option only applies if the VFS is not used.</div>
                                     <details style="margin-top: 0.5em">
                                         <summary style="margin-bottom: 0.25em">What does auto filtering entail?</summary>
                                         Auto filtering means the plugin will only filter out unrecognized videos if no other metadata provider is enabled, otherwise it will leave them in the library.
@@ -301,8 +308,13 @@
                                         Strict filtering means the plugin will filter out any and all unrecognized videos from the library.
                                     </details>
                                     <details style="margin-top: 0.5em">
+                                        <summary style="margin-bottom: 0.25em">What does lax filtering entail?</summary>
+                                        Lax filtering means the plugin will not filter out anything from the library. Use this only if you're having trouble.
+                                    </details>
+                                    <details style="margin-top: 0.5em">
                                         <summary style="margin-bottom: 0.25em">What does disabling filtering entail?</summary>
-                                        Disabling the filtering means the plugin will not filter out anything from the library. Use this only if you're having trouble.
+                                        Disabling the filtering means no filtering at all. Use at your own risk of breaking the library. Also no complaining if you do disable the
+                                        filtering entirely.
                                     </details>
                                 </div>
                             </div>

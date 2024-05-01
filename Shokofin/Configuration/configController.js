@@ -168,7 +168,7 @@ async function loadMediaFolderConfig(form, mediaFolderId, config) {
 
     // Configure the elements within the user container
     form.querySelector("#MediaFolderVirtualFileSystem").checked = mediaFolderConfig.IsVirtualFileSystemEnabled;
-    form.querySelector("#MediaFolderLibraryFiltering").value = `${mediaFolderConfig.IsLibraryFilteringEnabled != null ? mediaFolderConfig.IsLibraryFilteringEnabled : null}`;
+    form.querySelector("#MediaFolderLibraryFilteringMode").value = mediaFolderConfig.LibraryFilteringMode;
 
     // Show the user settings now if it was previously hidden.
     form.querySelector("#MediaFolderDefaultSettingsContainer").setAttribute("hidden", "");
@@ -301,14 +301,13 @@ async function defaultSubmit(form) {
         let mediaFolderId = form.querySelector("#MediaFolderSelector").value;
         let mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
         if (mediaFolderConfig) {
-            const filteringMode = form.querySelector("#MediaFolderLibraryFiltering").value;
+            const filteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
             mediaFolderConfig.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
-            mediaFolderConfig.IsLibraryFilteringEnabled = filteringMode === "true" ? true : filteringMode === "false" ? false : null;
+            mediaFolderConfig.LibraryFilteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
         }
         else {
-            const filteringMode = form.querySelector("#LibraryFiltering").value;
             config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
-            config.LibraryFiltering = filteringMode === "true" ? true : filteringMode === "false" ? false : null;
+            config.LibraryFilteringMode = form.querySelector("#LibraryFilteringMode").value;
         }
 
         // SignalR settings
@@ -534,14 +533,12 @@ async function syncMediaFolderSettings(form) {
     const mediaFolderId = form.querySelector("#MediaFolderSelector").value;
     const mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
     if (mediaFolderConfig) {
-        const filteringMode = form.querySelector("#MediaFolderLibraryFiltering").value;
         mediaFolderConfig.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
-        mediaFolderConfig.IsLibraryFilteringEnabled = filteringMode === "true" ? true : filteringMode === "false" ? false : null;
+        mediaFolderConfig.LibraryFilteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
     }
     else {
-        const filteringMode = form.querySelector("#LibraryFiltering").value;
         config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
-        config.LibraryFiltering = filteringMode === "true" ? true : filteringMode === "false" ? false : null;
+        config.LibraryFilteringMode = form.querySelector("#LibraryFilteringMode").value;
     }
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
@@ -790,7 +787,7 @@ export default function (page) {
 
             // Media Folder settings
             form.querySelector("#VirtualFileSystem").checked = config.VirtualFileSystem != null ? config.VirtualFileSystem : true;
-            form.querySelector("#LibraryFiltering").value = `${config.LibraryFiltering != null ? config.LibraryFiltering : null}`;
+            form.querySelector("#LibraryFilteringMode").value = config.LibraryFilteringMode;
             mediaFolderSelector.innerHTML += config.MediaFolders.map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.MediaFolderPath}</option>`).join("");
 
             // SignalR settings

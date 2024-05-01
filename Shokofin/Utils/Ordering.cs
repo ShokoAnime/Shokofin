@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Shokofin.API.Info;
 using Shokofin.API.Models;
@@ -8,6 +9,33 @@ namespace Shokofin.Utils;
 
 public class Ordering
 {
+    /// <summary>
+    /// Library filtering mode.
+    /// </summary>
+    public enum LibraryFilteringMode
+    {
+        /// <summary>
+        /// Will use either <see cref="Strict"/> or <see cref="Lax"/> depending
+        /// on which metadata providers are enabled for the library.
+        /// </summary>
+        Auto = 0,
+        /// <summary>
+        /// Will only allow files/folders that are recognised and it knows
+        /// should be part of the library.
+        /// </summary>
+        Strict = 1,
+        /// <summary>
+        /// Will premit files/folders that are not recognised to exist in the
+        /// library, but will filter out anything it knows should not be part of
+        /// the library.
+        /// </summary>
+        Lax = 2,
+        /// <summary>
+        /// Use at your own risk. And also don't complain about the results.
+        /// </summary>
+        Disabled = 3,
+    }
+
     /// <summary>
     /// Group series or movie box-sets
     /// </summary>
@@ -118,9 +146,26 @@ public class Ordering
             return offset + index + 1;
         }
 
+        // All normal episodes will find their index in here.
         index = seasonInfo.EpisodeList.FindIndex(ep => ep.Id == episodeInfo.Id);
         if (index == -1)
             index = seasonInfo.AlternateEpisodesList.FindIndex(ep => ep.Id == episodeInfo.Id);
+
+        // Extras that show up in the season because _somebody_ decided to disable filtering.
+        if (index == -1) {
+            offset += seasonInfo.EpisodeList.Count > 0 ? seasonInfo.EpisodeList.Count : seasonInfo.AlternateEpisodesList.Count;
+            index = seasonInfo.ExtrasList.FindIndex(ep => ep.Id == episodeInfo.Id);
+        }
+
+        // All other episodes that show up in the season because _somebody_ decided to disable filtering.
+        if (index == -1) {
+            offset += seasonInfo.ExtrasList.Count;
+            index = seasonInfo.LeftoverList.FindIndex(ep => ep.Id == episodeInfo.Id);
+        }
+
+        // If we still cannot find the episode for whatever reason, then bail. I don't fudging know why, but I know it's not the plugin's fault.
+        if (index == -1)
+            throw new IndexOutOfRangeException($"Unable to find index to use for \"{episodeInfo.Shoko.Name}\". (Episode={episodeInfo.Id},Series={seasonInfo.Id})");
 
         return index + 1;
     }

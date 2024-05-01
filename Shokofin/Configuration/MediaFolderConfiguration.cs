@@ -3,6 +3,8 @@ using System.IO;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
+using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
+
 namespace Shokofin.Configuration;
 
 public class MediaFolderConfiguration
@@ -61,7 +63,7 @@ public class MediaFolderConfiguration
     /// Enable or disable the library filterin on a per-media-folder basis. Do
     /// note that this will only take effect if the VFS is not used.
     /// </summary>
-    public bool? IsLibraryFilteringEnabled { get; set; } = null;
+    public LibraryFilteringMode LibraryFilteringMode { get; set; } = LibraryFilteringMode.Auto;
 
     /// <summary>
     /// Check if a relative path within the import folder is potentially available in this media folder.
