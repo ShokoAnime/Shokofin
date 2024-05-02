@@ -750,7 +750,7 @@ public class ShokoResolveManager
         if (episodeName.Length >= NameCutOff)
             episodeName = episodeName[..NameCutOff].Split(' ').SkipLast(1).Join(' ') + "…";
 
-        var isExtra = season.IsExtraEpisode(episode);
+        var isExtra = file.EpisodeList.Any(eI => season.IsExtraEpisode(eI));
         var nfoFiles = new List<string>();
         var folders = new List<string>();
         var extrasFolder = file.ExtraType switch {
@@ -1273,8 +1273,8 @@ public class ShokoResolveManager
                                         .GetAwaiter()
                                         .GetResult();
 
-                                    // Abort if the file was not recognised.
-                                    if (file == null || file.ExtraType != null)
+                                    // Abort if the file was not recognized.
+                                    if (file == null || file.EpisodeList.Any(eI => season.IsExtraEpisode(eI)))
                                         return null;
 
                                     return new Movie() {
@@ -1455,7 +1455,7 @@ public class ShokoResolveManager
         Logger.LogInformation("Found {EpisodeCount} shoko episode(s) for {SeriesName} (Series={SeriesId},File={FileId})", file.EpisodeList.Count, season.Shoko.Name, season.Id, file.Id);
 
         // We're going to post process this file later, but we don't want to include it in our library for now.
-        if (file.ExtraType != null) {
+        if (file.EpisodeList.Any(eI => season.IsExtraEpisode(eI))) {
             Logger.LogInformation("File was assigned an extra type, ignoring file. (Series={SeriesId},File={FileId})", season.Id, file.Id);
             return true;
         }

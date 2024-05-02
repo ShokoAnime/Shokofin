@@ -192,8 +192,8 @@ public class SeasonInfo
         RelationMap = relationMap;
     }
 
-    public bool IsExtraEpisode(EpisodeInfo episodeInfo)
-        => ExtrasList.Any(eI => eI.Id == episodeInfo.Id);
+    public bool IsExtraEpisode(EpisodeInfo? episodeInfo)
+        => episodeInfo != null && ExtrasList.Any(eI => eI.Id == episodeInfo.Id);
 
     public bool IsEmpty(int offset = 0)
     {

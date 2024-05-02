@@ -120,7 +120,7 @@ public class Ordering
     {
         var index = 0;
         var offset = 0;
-        if (episodeInfo.ExtraType != null) {
+        if (seasonInfo.IsExtraEpisode(episodeInfo)) {
             var seasonIndex = showInfo.SeasonList.FindIndex(s => string.Equals(s.Id, seasonInfo.Id));
             if (seasonIndex == -1)
                 throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
