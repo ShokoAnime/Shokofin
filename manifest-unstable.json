@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.152",
+                "changelog": "refactor: overhaul metadata settings (#52)\n\n- Overhaul the metadata settings section in the plugin settings. By default we let the plugin decide what to do for the main title, alternate title, and description, but each of the three behaviors can be overridden by enabling a checkbox to reveal the new-and-shiny (for the titles at least) advanced selectors. The description selector has also been moved under an override checkbox in this commit, while previously it was always visible.\r\n\r\n- Cleaned up the rest of the metadata settings section to be more tidy by renaming and moving around the other settings.\r\n\r\n- Overhauled the internals to support the new settings. In practice you shouldn't see much difference in behavior compared to the previous options.\r\n\r\n**Warning**: **The title and description settings has been reset to the new default values**, meaning any people that had altered their title/description settings previously should edit them if they don't want to use the new defaults. This is a side-effect of us not having settings migrations. Maybe in the future we will have it, but not now. :slightly_smiling_face",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.152/shoko_3.0.1.152.zip",
+                "checksum": "030d38b5d39be12fe7f72c380953b335",
+                "timestamp": "2024-05-02T02:21:04Z"
+            },
+            {
                 "version": "3.0.1.151",
                 "changelog": "feat: force movie special featurettes\n\n- Added an option to force all specials in a movie series to appear as\n  special featurettes for the movie/season. This option applies across\n  all libraries.\n\n- Added two more automatically recognized extra features types without\n  the new option enabled.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.148/shoko_3.0.1.148.zip",
                 "checksum": "01998cb2c5497930126759f48b9a9155",
                 "timestamp": "2024-05-01T17:20:54Z"
-            },
-            {
-                "version": "3.0.1.147",
-                "changelog": "fix: always remove duplicates + more\n\n- Always remove duplicates and unknown/unwanted seasons/episodes, but\n  conditionally add missing seasons/episodes only if the option to add\n  missing metadata is enabled. This commit will also fix the missing\n  clean-up after disabling the 'add missing metadata' option which\n  will now happen.\n\nmisc: add \"Auto\" to the auto clear cache task [skip ci]",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.147/shoko_3.0.1.147.zip",
-                "checksum": "97599739431efd2da7ef6aec21c4d2c8",
-                "timestamp": "2024-05-01T13:36:26Z"
             }
         ]
     }
