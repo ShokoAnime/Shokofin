@@ -142,7 +142,6 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
         }
 
         if (config.MarkSpecialsWhenGrouped) switch (episode.AniDB.Type) {
-            case EpisodeType.Unknown:
             case EpisodeType.Other:
             case EpisodeType.Normal:
                 break;

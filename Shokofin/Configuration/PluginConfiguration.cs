@@ -1,16 +1,16 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 using MediaBrowser.Model.Plugins;
 using Shokofin.API.Models;
 
 using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
-using DescriptionSource = Shokofin.Utils.Text.DescriptionSource;
+using DescriptionProvider = Shokofin.Utils.Text.DescriptionProvider;
 using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
-using TitleProviderLookupMethod = Shokofin.Utils.Text.TitleProviderLookupMethod;
+using TitleProvider = Shokofin.Utils.Text.TitleProvider;
 
 namespace Shokofin.Configuration;
 
@@ -84,12 +84,12 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Determines how we'll be selecting our main title for entries.
     /// </summary>
-    public TitleProviderLookupMethod[] TitleMainList { get; set; }
+    public TitleProvider[] TitleMainList { get; set; }
 
     /// <summary>
     /// The order of which we will be selecting our main title for entries.
     /// </summary>
-    public TitleProviderLookupMethod[] TitleMainOrder { get; set; }
+    public TitleProvider[] TitleMainOrder { get; set; }
 
     /// <summary>
     /// Determines if we use the overriden settings for how the alternate title is fetched for entries.
@@ -99,12 +99,12 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Determines how we'll be selecting our alternate title for entries.
     /// </summary>
-    public TitleProviderLookupMethod[] TitleAlternateList { get; set; }
+    public TitleProvider[] TitleAlternateList { get; set; }
 
     /// <summary>
     /// The order of which we will be selecting our alternate title for entries.
     /// </summary>
-    public TitleProviderLookupMethod[] TitleAlternateOrder { get; set; }
+    public TitleProvider[] TitleAlternateOrder { get; set; }
 
     /// <summary>
     /// Allow choosing any title in the selected language if no official
@@ -127,12 +127,12 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// The collection of providers for descriptions. Replaces the former `DescriptionSource`.
     /// </summary>
-    public DescriptionSource[] DescriptionSourceList { get; set; }
+    public DescriptionProvider[] DescriptionSourceList { get; set; }
 
     /// <summary>
     /// The prioritisation order of source providers for description sources.
     /// </summary>
-    public DescriptionSource[] DescriptionSourceOrder { get; set; }
+    public DescriptionProvider[] DescriptionSourceOrder { get; set; }
 
     /// <summary>
     /// Clean up links within the AniDB description for entries.
@@ -318,28 +318,34 @@ public class PluginConfiguration : BasePluginConfiguration
         AddAniDBId = true;
         AddTMDBId = true;
         TitleMainOverride = false;
+        TitleMainList = new[] { 
+            TitleProvider.Shoko_Default,
+        };
         TitleMainOrder = new[] { 
-            TitleProviderLookupMethod.Shoko_Default,
-            TitleProviderLookupMethod.AniDb_Default,
-            TitleProviderLookupMethod.AniDb_LibraryLanguage,
-            TitleProviderLookupMethod.AniDb_CountryOfOrigin,
-            TitleProviderLookupMethod.TMDB_Default,
-            TitleProviderLookupMethod.TMDB_LibraryLanguage,
-            TitleProviderLookupMethod.TMDB_CountryOfOrigin,
+            TitleProvider.Shoko_Default,
+            TitleProvider.AniDB_Default,
+            TitleProvider.AniDB_LibraryLanguage,
+            TitleProvider.AniDB_CountryOfOrigin,
+            TitleProvider.TMDB_Default,
+            TitleProvider.TMDB_LibraryLanguage,
+            TitleProvider.TMDB_CountryOfOrigin,
         };
-        TitleMainList = Array.Empty<TitleProviderLookupMethod>();
         TitleAlternateOverride = false;
-        TitleAlternateOrder = TitleMainOrder;
         TitleAlternateList = new[] {
-            TitleProviderLookupMethod.AniDb_LibraryLanguage
+            TitleProvider.AniDB_CountryOfOrigin
         };
+        TitleAlternateOrder = TitleMainOrder.ToArray();
         TitleAllowAny = true;
         DescriptionSourceList = new[] {
-            DescriptionSource.AniDb,
-            DescriptionSource.TvDb,
-            DescriptionSource.TMDB,
+            DescriptionProvider.AniDB,
+            DescriptionProvider.TvDB,
+            DescriptionProvider.TMDB,
         };
-        DescriptionSourceOrder = DescriptionSourceList;
+        DescriptionSourceOrder = new[] {
+            DescriptionProvider.AniDB,
+            DescriptionProvider.TvDB,
+            DescriptionProvider.TMDB,
+        };
         VirtualFileSystem = CanCreateSymbolicLinks;
         VirtualFileSystemThreads = 4;
         UseGroupsForShows = false;

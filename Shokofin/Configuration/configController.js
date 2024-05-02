@@ -281,8 +281,8 @@ async function defaultSubmit(form) {
         setDescriptionSourcesIntoConfig(form, config);
         config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
         config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
-        config.SynopsisCleanMiscLines = form.querySelector("#MinimalAniDBDescriptions").checked;
-        config.SynopsisRemoveSummary = form.querySelector("#MinimalAniDBDescriptions").checked;
+        config.SynopsisCleanMiscLines = form.querySelector("#CleanupAniDBDescriptions").checked;
+        config.SynopsisRemoveSummary = form.querySelector("#CleanupAniDBDescriptions").checked;
 
         // Provider settings
         config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
@@ -472,8 +472,8 @@ async function syncSettings(form) {
     setDescriptionSourcesIntoConfig(form, config);
     config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
     config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
-    config.SynopsisCleanMiscLines = form.querySelector("#MinimalAniDBDescriptions").checked;
-    config.SynopsisRemoveSummary = form.querySelector("#MinimalAniDBDescriptions").checked;
+    config.SynopsisCleanMiscLines = form.querySelector("#CleanupAniDBDescriptions").checked;
+    config.SynopsisRemoveSummary = form.querySelector("#CleanupAniDBDescriptions").checked;
 
     // Provider settings
     config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
@@ -789,8 +789,7 @@ export default function (page) {
             form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null ? config.TitleAddForMultipleEpisodes : true;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
             setDescriptionSourcesFromConfig(form, config);
-            form.querySelector("#CleanupAniDBDescriptions").checked = config.SynopsisCleanMultiEmptyLines || config.SynopsisCleanLinks;
-            form.querySelector("#MinimalAniDBDescriptions").checked = config.SynopsisRemoveSummary || config.SynopsisCleanMiscLines;
+            form.querySelector("#CleanupAniDBDescriptions").checked = config.SynopsisCleanMultiEmptyLines || config.SynopsisCleanLinks || config.SynopsisRemoveSummary || config.SynopsisCleanMiscLines;
 
             // Provider settings
             form.querySelector("#AddAniDBId").checked = config.AddAniDBId;
