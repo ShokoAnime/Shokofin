@@ -165,10 +165,16 @@ public class SeasonInfo
             altEpisodesList = new();
         }
 
-        if (Plugin.Instance.Configuration.MovieSpecialsAsExtraFeaturettes && type == SeriesType.Movie && specialsList.Count > 0) {
-            extrasList.AddRange(specialsList);
-            specialsAnchorDictionary.Clear();
-            specialsList = new();
+        if (Plugin.Instance.Configuration.MovieSpecialsAsExtraFeaturettes && type == SeriesType.Movie) {
+            if (specialsList.Count > 0) {
+                extrasList.AddRange(specialsList);
+                specialsAnchorDictionary.Clear();
+                specialsList = new();
+            }
+            if (altEpisodesList.Count > 0) {
+                extrasList.AddRange(altEpisodesList);
+                altEpisodesList = new();
+            }
         }
 
         Id = seriesId;
