@@ -295,6 +295,7 @@ async function defaultSubmit(form) {
         config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
         config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
         config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
+        config.MovieSpecialsAsExtraFeaturettes = form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked;
         config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
         // Media Folder settings
@@ -484,6 +485,7 @@ async function syncSettings(form) {
     config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
     config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
     config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
+    config.MovieSpecialsAsExtraFeaturettes = form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked;
     config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
     // Tag settings
@@ -783,6 +785,7 @@ export default function (page) {
             form.querySelector("#CollectionGrouping").value = config.CollectionGrouping || "Default";
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies != null ? config.SeparateMovies : true;
             form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
+            form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked = config.MovieSpecialsAsExtraFeaturettes || false;
             form.querySelector("#AddMissingMetadata").checked = config.AddMissingMetadata || false;
 
             // Media Folder settings

@@ -750,10 +750,11 @@ public class ShokoResolveManager
         if (episodeName.Length >= NameCutOff)
             episodeName = episodeName[..NameCutOff].Split(' ').SkipLast(1).Join(' ') + "…";
 
+        var isExtra = season.IsExtraEpisode(episode);
         var nfoFiles = new List<string>();
         var folders = new List<string>();
         var extrasFolder = file.ExtraType switch {
-            null => null,
+            null => isExtra ? "extras" : null,
             ExtraType.ThemeSong => "theme-music",
             ExtraType.ThemeVideo => "backdrops",
             ExtraType.Trailer => "trailers",
@@ -767,7 +768,7 @@ public class ShokoResolveManager
             ExtraType.Scene => "-scene",
             ExtraType.Sample => "-other",
             ExtraType.Unknown => "-other",
-            _ => string.Empty,
+            _ => isExtra ? "-other" : string.Empty,
         };
         if (isMovieSeason && collectionType != CollectionType.TvShows) {
             if (!string.IsNullOrEmpty(extrasFolder)) {

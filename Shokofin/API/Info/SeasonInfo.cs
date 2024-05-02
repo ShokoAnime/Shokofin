@@ -165,6 +165,12 @@ public class SeasonInfo
             altEpisodesList = new();
         }
 
+        if (Plugin.Instance.Configuration.MovieSpecialsAsExtraFeaturettes && type == SeriesType.Movie && specialsList.Count > 0) {
+            extrasList.AddRange(specialsList);
+            specialsAnchorDictionary.Clear();
+            specialsList = new();
+        }
+
         Id = seriesId;
         Shoko = series;
         AniDB = series.AniDBEntity;
@@ -185,6 +191,9 @@ public class SeasonInfo
         Relations = relations;
         RelationMap = relationMap;
     }
+
+    public bool IsExtraEpisode(EpisodeInfo episodeInfo)
+        => ExtrasList.Any(eI => eI.Id == episodeInfo.Id);
 
     public bool IsEmpty(int offset = 0)
     {

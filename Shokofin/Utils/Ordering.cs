@@ -269,9 +269,11 @@ public class Ordering
                 // Interview
                 if (title.Contains("interview", System.StringComparison.OrdinalIgnoreCase))
                     return ExtraType.Interview;
-                // Cinema intro/outro
-                if (title.StartsWith("cinema ", System.StringComparison.OrdinalIgnoreCase) &&
-                (title.Contains("intro", System.StringComparison.OrdinalIgnoreCase) || title.Contains("outro", System.StringComparison.OrdinalIgnoreCase)))
+                // Cinema/theatrical intro/outro
+                if (
+                    (title.StartsWith("cinema ", System.StringComparison.OrdinalIgnoreCase) || title.StartsWith("theatrical ", System.StringComparison.OrdinalIgnoreCase)) &&
+                    (title.Contains("intro", System.StringComparison.OrdinalIgnoreCase) || title.Contains("outro", System.StringComparison.OrdinalIgnoreCase))
+                )
                     return ExtraType.Clip;
                 // Behind the Scenes
                 if (title.Contains("making of", System.StringComparison.CurrentCultureIgnoreCase))
@@ -279,6 +281,8 @@ public class Ordering
                 if (title.Contains("music in", System.StringComparison.CurrentCultureIgnoreCase))
                     return ExtraType.BehindTheScenes;
                 if (title.Contains("advance screening", System.StringComparison.CurrentCultureIgnoreCase))
+                    return ExtraType.BehindTheScenes;
+                if (title.Contains("premiere", System.StringComparison.CurrentCultureIgnoreCase))
                     return ExtraType.BehindTheScenes;
                 return null;
             }

@@ -176,6 +176,12 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool SeparateMovies { get; set; }
 
     /// <summary>
+    /// Append all specials in AniDB movie series as special featurettes for
+    /// the movies.
+    /// </summary>
+    public bool MovieSpecialsAsExtraFeaturettes { get; set; }
+
+    /// <summary>
     /// Determines how collections are made.
     /// </summary>
     public CollectionCreationType CollectionGrouping { get; set; }
@@ -305,6 +311,7 @@ public class PluginConfiguration : BasePluginConfiguration
         VirtualFileSystemThreads = 4;
         UseGroupsForShows = false;
         SeparateMovies = false;
+        MovieSpecialsAsExtraFeaturettes = false;
         SeasonOrdering = OrderType.Default;
         SpecialsPlacement = SpecialOrderType.AfterSeason;
         AddMissingMetadata = true;
