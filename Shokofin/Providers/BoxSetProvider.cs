@@ -66,7 +66,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>
             return result;
         }
 
-        var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(season.AniDB.Titles, season.AniDB.Title, info.MetadataLanguage);
+        var (displayTitle, alternateTitle) = Text.GetSeasonTitles(season, info.MetadataLanguage);
 
         result.Item = new BoxSet {
             Name = displayTitle,

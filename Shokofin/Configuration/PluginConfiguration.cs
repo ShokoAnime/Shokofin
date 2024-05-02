@@ -1,15 +1,16 @@
-using MediaBrowser.Model.Plugins;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
+using MediaBrowser.Model.Plugins;
 using Shokofin.API.Models;
 
 using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
-using DisplayLanguageType = Shokofin.Utils.Text.DisplayLanguageType;
+using DescriptionProvider = Shokofin.Utils.Text.DescriptionProvider;
 using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
-using TextSourceType = Shokofin.Utils.Text.TextSourceType;
+using TitleProvider = Shokofin.Utils.Text.TitleProvider;
 
 namespace Shokofin.Configuration;
 
@@ -76,14 +77,34 @@ public class PluginConfiguration : BasePluginConfiguration
     #region Metadata
 
     /// <summary>
-    /// Determines how we'll be selecting our main title for entries.
+    /// Determines if we use the overridden settings for how the main title is fetched for entries.
     /// </summary>
-    public DisplayLanguageType TitleMainType { get; set; }
+    public bool TitleMainOverride { get; set; }
 
     /// <summary>
-    /// Determines how we'll be selecting the alternate title for our entries.
+    /// Determines how we'll be selecting our main title for entries.
     /// </summary>
-    public DisplayLanguageType TitleAlternateType { get; set; }
+    public TitleProvider[] TitleMainList { get; set; }
+
+    /// <summary>
+    /// The order of which we will be selecting our main title for entries.
+    /// </summary>
+    public TitleProvider[] TitleMainOrder { get; set; }
+
+    /// <summary>
+    /// Determines if we use the overridden settings for how the alternate title is fetched for entries.
+    /// </summary>
+    public bool TitleAlternateOverride { get; set; }
+
+    /// <summary>
+    /// Determines how we'll be selecting our alternate title for entries.
+    /// </summary>
+    public TitleProvider[] TitleAlternateList { get; set; }
+
+    /// <summary>
+    /// The order of which we will be selecting our alternate title for entries.
+    /// </summary>
+    public TitleProvider[] TitleAlternateOrder { get; set; }
 
     /// <summary>
     /// Allow choosing any title in the selected language if no official
@@ -98,20 +119,25 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool TitleAddForMultipleEpisodes { get; set; }
 
     /// <summary>
-    /// Mark any episode that is not considered a normal season epiode with a
+    /// Mark any episode that is not considered a normal season episode with a
     /// prefix and number.
     /// </summary>
     public bool MarkSpecialsWhenGrouped { get; set; }
 
+   /// <summary>
+   /// Determines if we use the overridden settings for how descriptions are fetched for entries.
+   /// </summary>
+    public bool DescriptionSourceOverride { get; set; }
+
     /// <summary>
     /// The collection of providers for descriptions. Replaces the former `DescriptionSource`.
     /// </summary>
-    public TextSourceType[] DescriptionSourceList { get; set; }
+    public DescriptionProvider[] DescriptionSourceList { get; set; }
 
     /// <summary>
     /// The prioritisation order of source providers for description sources.
     /// </summary>
-    public TextSourceType[] DescriptionSourceOrder { get; set; }
+    public DescriptionProvider[] DescriptionSourceOrder { get; set; }
 
     /// <summary>
     /// Clean up links within the AniDB description for entries.
@@ -302,11 +328,36 @@ public class PluginConfiguration : BasePluginConfiguration
         SynopsisCleanMultiEmptyLines = true;
         AddAniDBId = true;
         AddTMDBId = true;
-        TitleMainType = DisplayLanguageType.Default;
-        TitleAlternateType = DisplayLanguageType.Origin;
-        TitleAllowAny = false;
-        DescriptionSourceList = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
-        DescriptionSourceOrder = new[] { TextSourceType.AniDb, TextSourceType.TvDb, TextSourceType.TMDB };
+        TitleMainOverride = false;
+        TitleMainList = new[] { 
+            TitleProvider.Shoko_Default,
+        };
+        TitleMainOrder = new[] { 
+            TitleProvider.Shoko_Default,
+            TitleProvider.AniDB_Default,
+            TitleProvider.AniDB_LibraryLanguage,
+            TitleProvider.AniDB_CountryOfOrigin,
+            TitleProvider.TMDB_Default,
+            TitleProvider.TMDB_LibraryLanguage,
+            TitleProvider.TMDB_CountryOfOrigin,
+        };
+        TitleAlternateOverride = false;
+        TitleAlternateList = new[] {
+            TitleProvider.AniDB_CountryOfOrigin
+        };
+        TitleAlternateOrder = TitleMainOrder.ToArray();
+        TitleAllowAny = true;
+        DescriptionSourceOverride = false;
+        DescriptionSourceList = new[] {
+            DescriptionProvider.AniDB,
+            DescriptionProvider.TvDB,
+            DescriptionProvider.TMDB,
+        };
+        DescriptionSourceOrder = new[] {
+            DescriptionProvider.AniDB,
+            DescriptionProvider.TvDB,
+            DescriptionProvider.TMDB,
+        };
         VirtualFileSystem = CanCreateSymbolicLinks;
         VirtualFileSystemThreads = 4;
         UseGroupsForShows = false;

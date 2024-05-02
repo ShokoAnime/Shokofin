@@ -61,7 +61,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
                 }
             }
 
-            var ( displayTitle, alternateTitle ) = Text.GetSeriesTitles(show.DefaultSeason.AniDB.Titles, show.Name, info.MetadataLanguage);
+            var (displayTitle, alternateTitle) = Text.GetShowTitles(show, info.MetadataLanguage);
             var premiereDate = show.PremiereDate;
             var endDate = show.EndDate;
             result.Item = new Series {

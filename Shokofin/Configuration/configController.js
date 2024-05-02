@@ -46,7 +46,7 @@ function filterReconnectIntervals(value) {
 
     // Convert it back into an array.
     return Array.from(filteredSet).sort((a, b) => a - b);
- }
+}
 
 function adjustSortableListElement(element) {
     const btnSortable = element.querySelector(".btnSortable");
@@ -274,16 +274,15 @@ async function defaultSubmit(form) {
         const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
         // Metadata settings
-        config.TitleMainType = form.querySelector("#TitleMainType").value;
-        config.TitleAlternateType = form.querySelector("#TitleAlternateType").value;
+        ["Main", "Alternate"].forEach((type) => setTitleIntoConfig(form, type, config));
         config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
         config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
         config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
         setDescriptionSourcesIntoConfig(form, config);
         config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
         config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
-        config.SynopsisCleanMiscLines = form.querySelector("#MinimalAniDBDescriptions").checked;
-        config.SynopsisRemoveSummary = form.querySelector("#MinimalAniDBDescriptions").checked;
+        config.SynopsisCleanMiscLines = form.querySelector("#CleanupAniDBDescriptions").checked;
+        config.SynopsisRemoveSummary = form.querySelector("#CleanupAniDBDescriptions").checked;
 
         // Provider settings
         config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
@@ -464,16 +463,15 @@ async function syncSettings(form) {
     const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
     // Metadata settings
-    config.TitleMainType = form.querySelector("#TitleMainType").value;
-    config.TitleAlternateType = form.querySelector("#TitleAlternateType").value;
+    ["Main", "Alternate"].forEach((type) => { setTitleIntoConfig(form, type, config) });
     config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
     config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
     config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
     setDescriptionSourcesIntoConfig(form, config);
     config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
     config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
-    config.SynopsisCleanMiscLines = form.querySelector("#MinimalAniDBDescriptions").checked;
-    config.SynopsisRemoveSummary = form.querySelector("#MinimalAniDBDescriptions").checked;
+    config.SynopsisCleanMiscLines = form.querySelector("#CleanupAniDBDescriptions").checked;
+    config.SynopsisRemoveSummary = form.querySelector("#CleanupAniDBDescriptions").checked;
 
     // Provider settings
     config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
@@ -744,7 +742,23 @@ export default function (page) {
         }
     });
 
-    form.querySelector("#descriptionSourceList").addEventListener("click", onSortableContainerClick);
+    Array.prototype.forEach.call(
+        form.querySelectorAll("#descriptionSourceList, #TitleMainList, #TitleAlternateList"),
+        (el) => el.addEventListener("click", onSortableContainerClick)
+    );
+
+    ["Main", "Alternate"].forEach((type) => {
+        const settingsList = form.querySelector(`#Title${type}List`);
+
+        form.querySelector(`#Title${type}Override`).addEventListener("change", ({ target: { checked } }) => {
+            checked ? settingsList.removeAttribute("hidden") : settingsList.setAttribute("hidden", "");
+        });
+    });
+
+    form.querySelector("#DescriptionSourceOverride").addEventListener("change", ({ target: { checked } }) => {
+        const root = form.querySelector("#descriptionSourceList");
+        checked ? root.removeAttribute("hidden") : root.setAttribute("hidden", "");
+    });
 
     page.addEventListener("viewshow", async function () {
         Dashboard.showLoadingMsg();
@@ -759,14 +773,12 @@ export default function (page) {
             form.querySelector("#Password").value = "";
 
             // Metadata settings
-            form.querySelector("#TitleMainType").value = config.TitleMainType;
-            form.querySelector("#TitleAlternateType").value = config.TitleAlternateType;
+            ["Main", "Alternate"].forEach((t) => { setTitleFromConfig(form, t, config) });
             form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
             form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null ? config.TitleAddForMultipleEpisodes : true;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
-            await setDescriptionSourcesFromConfig(form, config);
-            form.querySelector("#CleanupAniDBDescriptions").checked = config.SynopsisCleanMultiEmptyLines || config.SynopsisCleanLinks;
-            form.querySelector("#MinimalAniDBDescriptions").checked = config.SynopsisRemoveSummary || config.SynopsisCleanMiscLines;
+            setDescriptionSourcesFromConfig(form, config);
+            form.querySelector("#CleanupAniDBDescriptions").checked = config.SynopsisCleanMultiEmptyLines || config.SynopsisCleanLinks || config.SynopsisRemoveSummary || config.SynopsisCleanMiscLines;
 
             // Provider settings
             form.querySelector("#AddAniDBId").checked = config.AddAniDBId;
@@ -879,6 +891,7 @@ export default function (page) {
 }
 
 function setDescriptionSourcesIntoConfig(form, config) {
+    const override = form.querySelector("#DescriptionSourceOverride");
     const descriptionElements = form.querySelectorAll(`#descriptionSourceList .chkDescriptionSource`);
     config.DescriptionSourceList = Array.prototype.filter.call(descriptionElements,
         (el) => el.checked)
@@ -887,11 +900,18 @@ function setDescriptionSourcesIntoConfig(form, config) {
     config.DescriptionSourceOrder = Array.prototype.map.call(descriptionElements,
         (el) => el.dataset.descriptionsource
     );
+
+    config.DescriptionSourceOverride = override.checked;
 }
 
-async function setDescriptionSourcesFromConfig(form, config) {
-    const list = form.querySelector("#descriptionSourceList .checkboxList");
+function setDescriptionSourcesFromConfig(form, config) {
+    const root = form.querySelector("#descriptionSourceList");
+    const override = form.querySelector("#DescriptionSourceOverride");
+    const list = root.querySelector(".checkboxList");
     const listItems = list.querySelectorAll('.listItem');
+
+    override.checked = config.DescriptionSourceOverride;
+    override.checked ? root.removeAttribute("hidden") : root.setAttribute("hidden", "");
 
     for (const item of listItems) {
         const source = item.dataset.descriptionsource;
@@ -909,7 +929,64 @@ async function setDescriptionSourcesFromConfig(form, config) {
             list.append(targetElement);
         }
     }
+
     for (const option of list.querySelectorAll(".sortableOption")) {
         adjustSortableListElement(option)
     };
+}
+
+/** 
+ * This function **must** be called for each type of title separately, lest the config be incomplete.
+ * @param {"Main"|"Alternate"} type
+ */
+function setTitleIntoConfig(form, type, config) {
+    const titleElements = form.querySelectorAll(`#Title${type}List .chkTitleSource`);
+    const getSettingName = (el) => `${el.dataset.titleprovider}_${el.dataset.titlestyle}`;
+
+    config[`Title${type}List`] = Array.prototype.filter.call(titleElements,
+        (el) => el.checked)
+        .map((el) => getSettingName(el));
+    
+    config[`Title${type}Order`] = Array.prototype.map.call(titleElements,
+        (el) => getSettingName(el)
+    );
+
+    config[`Title${type}Override`] = form.querySelector(`#Title${type}Override`).checked
+}
+
+/** 
+ * This function **must** be called for each type of title separately, lest the config be incomplete.
+ * @param {"Main"|"Alternate"} type
+ */
+function setTitleFromConfig(form, type, config) {
+    const root = form.querySelector(`#Title${type}List`);
+    const override = form.querySelector(`#Title${type}Override`);
+    const list = root.querySelector(`.checkboxList`);
+    const listItems = list.querySelectorAll('.listItem');
+
+    override.checked = config[`Title${type}Override`];
+    override.checked ? root.removeAttribute("hidden") : root.setAttribute("hidden", "");
+
+    const getSettingName = (el) => `${el.dataset.titleprovider}_${el.dataset.titlestyle}`;
+
+    for (const item of listItems) {
+        const setting = getSettingName(item);
+        if (config[`Title${type}List`].includes(setting))
+            item.querySelector(".chkTitleSource").checked = true;
+        if (config[`Title${type}Order`].includes(setting))
+            list.removeChild(item);
+    }
+
+    for (const setting of config[`Title${type}Order`]) {
+        const targetElement = Array.prototype.find.call(
+            listItems,
+            (el) => getSettingName(el) === setting
+        );
+        if (targetElement)
+            list.append(targetElement);
+    }
+
+    for (const option of list.querySelectorAll(".sortableOption")) {
+        adjustSortableListElement(option)
+    }
 }
