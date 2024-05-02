@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.155",
+                "changelog": "misc: add more special featurettes detections\n\n- Add more special featurettes detections, but this time for the 'other'\n  type episodes.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.155/shoko_3.0.1.155.zip",
+                "checksum": "e1f7dc6906cb6d2deb61721738197408",
+                "timestamp": "2024-05-02T03:44:12Z"
+            },
+            {
                 "version": "3.0.1.154",
                 "changelog": "fix: one more fix for force movie special featurettes",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.151/shoko_3.0.1.151.zip",
                 "checksum": "8f17f3ecf098e4953c2e2d616ada1921",
                 "timestamp": "2024-05-02T02:04:41Z"
-            },
-            {
-                "version": "3.0.1.150",
-                "changelog": "refactor: remove the true disabled option\n\nThis partially reverts commits bcb4f8239cad89d12009c59f865bdf2884eb571\nand fb06a39a8a9484aa3a65a7843ad0b0168f60b37a because it's not needed\nanymore.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.150/shoko_3.0.1.150.zip",
-                "checksum": "1dd15a38a23b58f4c2cd19ef9e62ae41",
-                "timestamp": "2024-05-01T20:00:40Z"
             }
         ]
     }
