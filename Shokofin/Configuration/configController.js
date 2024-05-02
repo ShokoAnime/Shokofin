@@ -771,9 +771,7 @@ export default function (page) {
             form.querySelector("#Password").value = "";
 
             // Metadata settings
-            ["Main", "Alternate"].forEach((t) => {
-                setTitleFromConfig(form, t, config)
-            });
+            ["Main", "Alternate"].forEach((t) => { setTitleFromConfig(form, t, config) });
             form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
             form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null ? config.TitleAddForMultipleEpisodes : true;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
