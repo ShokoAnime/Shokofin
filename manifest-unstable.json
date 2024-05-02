@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.154",
+                "changelog": "fix: one more fix for force movie special featurettes",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.154/shoko_3.0.1.154.zip",
+                "checksum": "453677e7d05402dbd73e44790944da70",
+                "timestamp": "2024-05-02T03:39:43Z"
+            },
+            {
                 "version": "3.0.1.153",
                 "changelog": "fix: fix force movie special featurettes",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.150/shoko_3.0.1.150.zip",
                 "checksum": "1dd15a38a23b58f4c2cd19ef9e62ae41",
                 "timestamp": "2024-05-01T20:00:40Z"
-            },
-            {
-                "version": "3.0.1.149",
-                "changelog": "fix: don't remove empty seasons that should exist\n\n- Don't remove the empty seasons that should exist, according to our\n  shoko data, not using jellyfin since it's not reliable enough to use\n  for this check.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.149/shoko_3.0.1.149.zip",
-                "checksum": "a646ae721eb48b15067c3c4ba7230129",
-                "timestamp": "2024-05-01T19:45:13Z"
             }
         ]
     }
