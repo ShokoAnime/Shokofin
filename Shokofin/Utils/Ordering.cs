@@ -254,7 +254,6 @@ public class Ordering
         switch (episode.Type)
         {
             case EpisodeType.Normal:
-            case EpisodeType.Other:
                 return null;
             case EpisodeType.ThemeSong:
             case EpisodeType.OpeningSong:
@@ -262,6 +261,21 @@ public class Ordering
                 return ExtraType.ThemeVideo;
             case EpisodeType.Trailer:
                 return ExtraType.Trailer;
+            case EpisodeType.Other: {
+                var title = Text.GetTitlesForLanguage(episode.Titles, false, "en");
+                if (string.IsNullOrEmpty(title))
+                    return null;
+                // Interview
+                if (title.Contains("interview", System.StringComparison.OrdinalIgnoreCase))
+                    return ExtraType.Interview;
+                // Cinema/theatrical intro/outro
+                if (
+                    (title.StartsWith("cinema ", System.StringComparison.OrdinalIgnoreCase) || title.StartsWith("theatrical ", System.StringComparison.OrdinalIgnoreCase)) &&
+                    (title.Contains("intro", System.StringComparison.OrdinalIgnoreCase) || title.Contains("outro", System.StringComparison.OrdinalIgnoreCase))
+                )
+                    return ExtraType.Clip;
+                return null;
+            }
             case EpisodeType.Special: {
                 var title = Text.GetTitlesForLanguage(episode.Titles, false, "en");
                 if (string.IsNullOrEmpty(title))

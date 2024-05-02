@@ -121,7 +121,10 @@ public class SeasonInfo
                     lastNormalEpisode = index;
                     break;
                 case EpisodeType.Other:
-                    altEpisodesList.Add(episode);
+                    if (episode.ExtraType != null)
+                        extrasList.Add(episode);
+                    else
+                        altEpisodesList.Add(episode);
                     break;
                 default:
                     if (episode.ExtraType != null) {
