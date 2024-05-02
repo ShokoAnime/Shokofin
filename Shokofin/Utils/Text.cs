@@ -77,7 +77,7 @@ public static class Text
         Shoko = 1,
 
         /// <summary>
-        /// Proovide the description from AniDB.
+        /// Provide the description from AniDB.
         /// </summary>
         AniDB = 2,
 
@@ -139,12 +139,12 @@ public static class Text
     /// </summary>
     public enum TitleProviderType {
         /// <summary>
-        /// The main title used for metdata entries.
+        /// The main title used for metadata entries.
         /// </summary>
         Main = 0,
 
         /// <summary>
-        /// The secondary title used for metdata entries.
+        /// The secondary title used for metadata entries.
         /// </summary>
         Alternate = 1,
     }
@@ -198,7 +198,7 @@ public static class Text
     }
 
     /// <summary>
-    /// Sanetize the AniDB entry description to something usable by Jellyfin.
+    /// Sanitize the AniDB entry description to something usable by Jellyfin.
     /// </summary>
     /// <remarks>
     /// Based on ShokoMetadata's summary sanitizer which in turn is based on HAMA's summary sanitizer.
@@ -351,7 +351,7 @@ public static class Text
         => titles.FirstOrDefault(t => t.IsDefault)?.Value;
 
     /// <summary>
-    /// Get the first title availalbe for the language, optionally using types
+    /// Get the first title available for the language, optionally using types
     /// to filter the list in addition to the metadata languages provided.
     /// </summary>
     /// <param name="titles">Title list to search.</param>
