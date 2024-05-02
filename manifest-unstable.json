@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.151",
+                "changelog": "feat: force movie special featurettes\n\n- Added an option to force all specials in a movie series to appear as\n  special featurettes for the movie/season. This option applies across\n  all libraries.\n\n- Added two more automatically recognized extra features types without\n  the new option enabled.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.151/shoko_3.0.1.151.zip",
+                "checksum": "8f17f3ecf098e4953c2e2d616ada1921",
+                "timestamp": "2024-05-02T02:04:41Z"
+            },
+            {
                 "version": "3.0.1.150",
                 "changelog": "refactor: remove the true disabled option\n\nThis partially reverts commits bcb4f8239cad89d12009c59f865bdf2884eb571\nand fb06a39a8a9484aa3a65a7843ad0b0168f60b37a because it's not needed\nanymore.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.147/shoko_3.0.1.147.zip",
                 "checksum": "97599739431efd2da7ef6aec21c4d2c8",
                 "timestamp": "2024-05-01T13:36:26Z"
-            },
-            {
-                "version": "3.0.1.146",
-                "changelog": "misc: move resolvers above ignore rules\n\nrefactor: move subtitles and ignore videos\n\n- Refactored the cleanup function to also move subtitles from the VFS\n  back to the source video file, if found. And to ignore extras which\n  are not provided by Shoko placed in the VFS, if found. These two\n  changes should better allow third party plugins to add subtitle\n  files and other features without breaking because of the VFS.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.146/shoko_3.0.1.146.zip",
-                "checksum": "e0b2206cdbf0c0b1240b68e877fe4f56",
-                "timestamp": "2024-04-28T14:43:09Z"
             }
         ]
     }
