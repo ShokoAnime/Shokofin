@@ -462,10 +462,7 @@ async function syncSettings(form) {
     const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
     // Metadata settings
-    ["Main", "Alternate"].forEach((type) => {
-        setTitleIntoConfig(form, type, config)
-        config[`Title${type}Override`] = form.querySelector(`#Title${type}Override`).checked;
-    });
+    ["Main", "Alternate"].forEach((type) => { setTitleIntoConfig(form, type, config) });
     config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
     config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
     config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
@@ -749,17 +746,16 @@ export default function (page) {
     );
 
     ["Main", "Alternate"].forEach((type) => {
-        const showSettings = form.querySelector(`#Title${type}Override`);
         const settingsList = form.querySelector(`#Title${type}List`);
 
-        showSettings.addEventListener("change", () => {
-            if (showSettings.checked) {
-                settingsList.removeAttribute("hidden");
-            }
-            else {
-                settingsList.setAttribute("hidden", "");
-            }
-        })
+        form.querySelector(`#Title${type}Override`).addEventListener("change", ({ target: { checked } }) => {
+            checked ? settingsList.removeAttribute("hidden") : settingsList.setAttribute("hidden", "");
+        });
+    });
+
+    form.querySelector("#DescriptionSourceOverride").addEventListener("change", ({ target: { checked } }) => {
+        const root = form.querySelector("#descriptionSourceList");
+        checked ? root.removeAttribute("hidden") : root.setAttribute("hidden", "");
     });
 
     page.addEventListener("viewshow", async function () {
@@ -776,14 +772,7 @@ export default function (page) {
 
             // Metadata settings
             ["Main", "Alternate"].forEach((t) => {
-                setTitleFromConfig(form, t, config);
-
-                const showSettings = form.querySelector(`#Title${t}Override`);
-                const settingsList = form.querySelector(`#Title${t}List`);
-
-                showSettings.checked = config[`Title${t}Override`];
-                if (!showSettings.checked)
-                    settingsList.setAttribute("hidden", "");
+                setTitleFromConfig(form, t, config)
             });
             form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
             form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null ? config.TitleAddForMultipleEpisodes : true;
@@ -901,6 +890,7 @@ export default function (page) {
 }
 
 function setDescriptionSourcesIntoConfig(form, config) {
+    const override = form.querySelector("#DescriptionSourceOverride");
     const descriptionElements = form.querySelectorAll(`#descriptionSourceList .chkDescriptionSource`);
     config.DescriptionSourceList = Array.prototype.filter.call(descriptionElements,
         (el) => el.checked)
@@ -909,11 +899,18 @@ function setDescriptionSourcesIntoConfig(form, config) {
     config.DescriptionSourceOrder = Array.prototype.map.call(descriptionElements,
         (el) => el.dataset.descriptionsource
     );
+
+    config.DescriptionSourceOverride = override.checked;
 }
 
 function setDescriptionSourcesFromConfig(form, config) {
-    const list = form.querySelector("#descriptionSourceList .checkboxList");
+    const root = form.querySelector("#descriptionSourceList");
+    const override = form.querySelector("#DescriptionSourceOverride");
+    const list = root.querySelector(".checkboxList");
     const listItems = list.querySelectorAll('.listItem');
+
+    override.checked = config.DescriptionSourceOverride;
+    override.checked ? root.removeAttribute("hidden") : root.setAttribute("hidden", "");
 
     for (const item of listItems) {
         const source = item.dataset.descriptionsource;
@@ -952,6 +949,8 @@ function setTitleIntoConfig(form, type, config) {
     config[`Title${type}Order`] = Array.prototype.map.call(titleElements,
         (el) => getSettingName(el)
     );
+
+    config[`Title${type}Override`] = form.querySelector(`#Title${type}Override`).checked
 }
 
 /** 
@@ -959,8 +958,13 @@ function setTitleIntoConfig(form, type, config) {
  * @param {"Main"|"Alternate"} type
  */
 function setTitleFromConfig(form, type, config) {
-    const list = form.querySelector(`#Title${type}List .checkboxList`);
+    const root = form.querySelector(`#Title${type}List`);
+    const override = form.querySelector(`#Title${type}Override`);
+    const list = root.querySelector(`.checkboxList`);
     const listItems = list.querySelectorAll('.listItem');
+
+    override.checked = config[`Title${type}Override`];
+    override.checked ? root.removeAttribute("hidden") : root.setAttribute("hidden", "");
 
     const getSettingName = (el) => `${el.dataset.titleprovider}_${el.dataset.titlestyle}`;
 

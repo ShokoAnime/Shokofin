@@ -77,7 +77,7 @@ public class PluginConfiguration : BasePluginConfiguration
     #region Metadata
 
     /// <summary>
-    /// Determines if we use the overriden settings for how the main title is fetched for entries.
+    /// Determines if we use the overridden settings for how the main title is fetched for entries.
     /// </summary>
     public bool TitleMainOverride { get; set; }
 
@@ -92,7 +92,7 @@ public class PluginConfiguration : BasePluginConfiguration
     public TitleProvider[] TitleMainOrder { get; set; }
 
     /// <summary>
-    /// Determines if we use the overriden settings for how the alternate title is fetched for entries.
+    /// Determines if we use the overridden settings for how the alternate title is fetched for entries.
     /// </summary>
     public bool TitleAlternateOverride { get; set; }
 
@@ -119,10 +119,15 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool TitleAddForMultipleEpisodes { get; set; }
 
     /// <summary>
-    /// Mark any episode that is not considered a normal season epiode with a
+    /// Mark any episode that is not considered a normal season episode with a
     /// prefix and number.
     /// </summary>
     public bool MarkSpecialsWhenGrouped { get; set; }
+
+   /// <summary>
+   /// Determines if we use the overridden settings for how descriptions are fetched for entries.
+   /// </summary>
+    public bool DescriptionSourceOverride { get; set; }
 
     /// <summary>
     /// The collection of providers for descriptions. Replaces the former `DescriptionSource`.
@@ -336,6 +341,7 @@ public class PluginConfiguration : BasePluginConfiguration
         };
         TitleAlternateOrder = TitleMainOrder.ToArray();
         TitleAllowAny = true;
+        DescriptionSourceOverride = false;
         DescriptionSourceList = new[] {
             DescriptionProvider.AniDB,
             DescriptionProvider.TvDB,

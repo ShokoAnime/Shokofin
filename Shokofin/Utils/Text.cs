@@ -171,15 +171,17 @@ public static class Text
     public static string GetDescription(IEnumerable<EpisodeInfo> episodeList)
         => JoinText(episodeList.Select(episode => GetDescription(episode))) ?? string.Empty;
 
+    /// <summary>
+    /// Returns a list of the description providers to check, and in what order
+    /// </summary>
+    private static DescriptionProvider[] GetOrderedDescriptionProviders()
+        => Plugin.Instance.Configuration.DescriptionSourceOverride
+            ? Plugin.Instance.Configuration.DescriptionSourceOrder.Where((t) => Plugin.Instance.Configuration.DescriptionSourceList.Contains(t)).ToArray()
+            : new[] { DescriptionProvider.Shoko, DescriptionProvider.AniDB, DescriptionProvider.TvDB, DescriptionProvider.TMDB };
+
     private static string GetDescriptionByDict(Dictionary<DescriptionProvider, string?> descriptions)
     {
-        // This is what they want if everything is unticked...
-        var providers = Plugin.Instance.Configuration.DescriptionSourceList;
-        if (providers.Length == 0) {
-            return string.Empty;
-        }
-        var providerOrder = Plugin.Instance.Configuration.DescriptionSourceOrder;
-        foreach (var provider in providerOrder.Where(provider => providers.Contains(provider)))
+        foreach (var provider in GetOrderedDescriptionProviders())
         {
             var overview = provider switch
             {
