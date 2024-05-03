@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.156",
+                "changelog": "fix: don't append suffix to theme-videos/trailers",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.156/shoko_3.0.1.156.zip",
+                "checksum": "5811fb06e58a82f2b88bf9a90cf1bbf7",
+                "timestamp": "2024-05-03T23:38:15Z"
+            },
+            {
                 "version": "3.0.1.155",
                 "changelog": "misc: add more special featurettes detections\n\n- Add more special featurettes detections, but this time for the 'other'\n  type episodes.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.152/shoko_3.0.1.152.zip",
                 "checksum": "030d38b5d39be12fe7f72c380953b335",
                 "timestamp": "2024-05-02T02:21:04Z"
-            },
-            {
-                "version": "3.0.1.151",
-                "changelog": "feat: force movie special featurettes\n\n- Added an option to force all specials in a movie series to appear as\n  special featurettes for the movie/season. This option applies across\n  all libraries.\n\n- Added two more automatically recognized extra features types without\n  the new option enabled.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.151/shoko_3.0.1.151.zip",
-                "checksum": "8f17f3ecf098e4953c2e2d616ada1921",
-                "timestamp": "2024-05-02T02:04:41Z"
             }
         ]
     }
