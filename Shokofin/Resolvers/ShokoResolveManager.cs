@@ -768,6 +768,9 @@ public class ShokoResolveManager
             ExtraType.Scene => "-scene",
             ExtraType.Sample => "-other",
             ExtraType.Unknown => "-other",
+            ExtraType.ThemeSong => string.Empty,
+            ExtraType.ThemeVideo => string.Empty,
+            ExtraType.Trailer => string.Empty,
             _ => isExtra ? "-other" : string.Empty,
         };
         if (isMovieSeason && collectionType != CollectionType.TvShows) {
