@@ -8,13 +8,13 @@ namespace Shokofin.SignalR.Models;
 public class FileRenamedEventArgs : FileEventArgs, IFileRelocationEventArgs
 {
     /// <summary>
-    /// The new File name.
+    /// The current file name.
     /// </summary>
     [JsonInclude, JsonPropertyName("FileName")]
     public string FileName  { get; set; } = string.Empty;
 
     /// <summary>
-    /// The old file name.
+    /// The previous file name.
     /// </summary>
     [JsonInclude, JsonPropertyName("PreviousFileName")]
     public string PreviousFileName  { get; set; } = string.Empty;
@@ -72,13 +72,13 @@ public class FileRenamedEventArgs : FileEventArgs, IFileRelocationEventArgs
         }
 
         /// <summary>
-        /// The new File name.
+        /// The current file name.
         /// </summary>
         [JsonInclude, JsonPropertyName("NewFileName")]
         public string FileName  { get; set; } = string.Empty;
 
         /// <summary>
-        /// The old file name.
+        /// The previous file name.
         /// </summary>
         [JsonInclude, JsonPropertyName("OldFileName")]
         public string PreviousFileName  { get; set; } = string.Empty;
