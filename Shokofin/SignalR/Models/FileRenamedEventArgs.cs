@@ -62,7 +62,7 @@ public class FileRenamedEventArgs : FileEventArgs, IFileRelocationEventArgs
             {
                 if (CachedPath != null)
                     return CachedPath;
-                var relativePath = System.IO.Path.DirectorySeparatorChar + InternalPath
+                var relativePath = InternalPath
                     .Replace('/', System.IO.Path.DirectorySeparatorChar)
                     .Replace('\\', System.IO.Path.DirectorySeparatorChar);
                 if (relativePath[0] != System.IO.Path.DirectorySeparatorChar)

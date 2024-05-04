@@ -32,7 +32,7 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
         {
             if (PreviousCachedPath != null)
                 return PreviousCachedPath;
-            var relativePath = System.IO.Path.DirectorySeparatorChar + PreviousInternalPath
+            var relativePath = PreviousInternalPath
                 .Replace('/', System.IO.Path.DirectorySeparatorChar)
                 .Replace('\\', System.IO.Path.DirectorySeparatorChar);
             if (relativePath[0] != System.IO.Path.DirectorySeparatorChar)
@@ -80,7 +80,7 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
             {
                 if (CachedPath != null)
                     return CachedPath;
-                var relativePath = System.IO.Path.DirectorySeparatorChar + InternalPath
+                var relativePath = InternalPath
                     .Replace('/', System.IO.Path.DirectorySeparatorChar)
                     .Replace('\\', System.IO.Path.DirectorySeparatorChar);
                 if (relativePath[0] != System.IO.Path.DirectorySeparatorChar)
@@ -111,7 +111,7 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
             {
                 if (PreviousCachedPath != null)
                     return PreviousCachedPath;
-                var relativePath = System.IO.Path.DirectorySeparatorChar + PreviousInternalPath
+                var relativePath = PreviousInternalPath
                     .Replace('/', System.IO.Path.DirectorySeparatorChar)
                     .Replace('\\', System.IO.Path.DirectorySeparatorChar);
                 if (relativePath[0] != System.IO.Path.DirectorySeparatorChar)
