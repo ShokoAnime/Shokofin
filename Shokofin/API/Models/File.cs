@@ -96,10 +96,20 @@ public class File
         /// the start.
         /// </summary>
         [JsonIgnore]
-        public string RelativePath =>
-            CachedPath ??= System.IO.Path.DirectorySeparatorChar + InternalPath
-                .Replace('/', System.IO.Path.DirectorySeparatorChar)
-                .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+        public string RelativePath
+        {
+            get
+            {
+                if (CachedPath != null)
+                    return CachedPath;
+                var relativePath = System.IO.Path.DirectorySeparatorChar + InternalPath
+                    .Replace('/', System.IO.Path.DirectorySeparatorChar)
+                    .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+                if (relativePath[0] != System.IO.Path.DirectorySeparatorChar)
+                    relativePath = System.IO.Path.DirectorySeparatorChar + relativePath;
+                return CachedPath = relativePath;
+            }
+        }
 
         /// <summary>
         /// True if the server can access the the <see cref="Location.RelativePath"/> at

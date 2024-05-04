@@ -42,7 +42,7 @@ public class FileRenamedEventArgs : FileEventArgs, IFileRelocationEventArgs
         public int ImportFolderId { get; set; }
 
         /// <summary>
-        /// The relative path with no leading slash and directory seperators used on
+        /// The relative path with no leading slash and directory separators used on
         /// the Shoko side.
         /// </summary>
         [JsonInclude, JsonPropertyName("RelativePath")]
@@ -56,10 +56,20 @@ public class FileRenamedEventArgs : FileEventArgs, IFileRelocationEventArgs
 
         /// <inheritdoc/>
         [JsonIgnore]
-        public string RelativePath =>
-            CachedPath ??= System.IO.Path.DirectorySeparatorChar + InternalPath
-                .Replace('/', System.IO.Path.DirectorySeparatorChar)
-                .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+        public string RelativePath
+        {
+            get
+            {
+                if (CachedPath != null)
+                    return CachedPath;
+                var relativePath = System.IO.Path.DirectorySeparatorChar + InternalPath
+                    .Replace('/', System.IO.Path.DirectorySeparatorChar)
+                    .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+                if (relativePath[0] != System.IO.Path.DirectorySeparatorChar)
+                    relativePath = System.IO.Path.DirectorySeparatorChar + relativePath;
+                return CachedPath = relativePath;
+            }
+        }
 
         /// <summary>
         /// The new File name.

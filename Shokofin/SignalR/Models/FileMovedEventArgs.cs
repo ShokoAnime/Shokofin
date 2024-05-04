@@ -26,10 +26,20 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
 
     /// <inheritdoc/>
     [JsonIgnore]
-    public string PreviousRelativePath =>
-        PreviousCachedPath ??= System.IO.Path.DirectorySeparatorChar + PreviousInternalPath
-            .Replace('/', System.IO.Path.DirectorySeparatorChar)
-            .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+    public string PreviousRelativePath
+    {
+        get
+        {
+            if (PreviousCachedPath != null)
+                return PreviousCachedPath;
+            var relativePath = System.IO.Path.DirectorySeparatorChar + PreviousInternalPath
+                .Replace('/', System.IO.Path.DirectorySeparatorChar)
+                .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+            if (relativePath[0] != System.IO.Path.DirectorySeparatorChar)
+                relativePath = System.IO.Path.DirectorySeparatorChar + relativePath;
+            return PreviousCachedPath = relativePath;
+        }
+    }
 
     public class V0 : IFileRelocationEventArgs
     {
@@ -64,10 +74,20 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
 
         /// <inheritdoc/>
         [JsonIgnore]
-        public string RelativePath =>
-            CachedPath ??= System.IO.Path.DirectorySeparatorChar + InternalPath
-                .Replace('/', System.IO.Path.DirectorySeparatorChar)
-                .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+        public string RelativePath
+        {
+            get
+            {
+                if (CachedPath != null)
+                    return CachedPath;
+                var relativePath = System.IO.Path.DirectorySeparatorChar + InternalPath
+                    .Replace('/', System.IO.Path.DirectorySeparatorChar)
+                    .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+                if (relativePath[0] != System.IO.Path.DirectorySeparatorChar)
+                    relativePath = System.IO.Path.DirectorySeparatorChar + relativePath;
+                return CachedPath = relativePath;
+            }
+        }
 
 
         /// <summary>
@@ -85,10 +105,20 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
 
         /// <inheritdoc/>
         [JsonIgnore]
-        public string PreviousRelativePath =>
-            PreviousCachedPath ??= System.IO.Path.DirectorySeparatorChar + PreviousInternalPath
-                .Replace('/', System.IO.Path.DirectorySeparatorChar)
-                .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+        public string PreviousRelativePath
+        {
+            get
+            {
+                if (PreviousCachedPath != null)
+                    return PreviousCachedPath;
+                var relativePath = System.IO.Path.DirectorySeparatorChar + PreviousInternalPath
+                    .Replace('/', System.IO.Path.DirectorySeparatorChar)
+                    .Replace('\\', System.IO.Path.DirectorySeparatorChar);
+                if (relativePath[0] != System.IO.Path.DirectorySeparatorChar)
+                    relativePath = System.IO.Path.DirectorySeparatorChar + relativePath;
+                return PreviousCachedPath = relativePath;
+            }
+        }
 
         /// <inheritdoc/>
         [JsonIgnore]
