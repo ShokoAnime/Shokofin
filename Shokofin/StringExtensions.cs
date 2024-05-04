@@ -90,7 +90,7 @@ public static class StringExtensions
     /// https://github.com/jellyfin/jellyfin/blob/25abe479ebe54a341baa72fd07e7d37cefe21a20/Emby.Server.Implementations/Library/PathExtensions.cs#L19-L62
     /// </remarks>
     /// <param name="text">The string to extract the attribute value from.</param>
-    /// <param name="attribute">The attribibute name to extract.</param>
+    /// <param name="attribute">The attribute name to extract.</param>
     /// <returns>The extracted attribute value, or null.</returns>
     /// <exception cref="ArgumentException"><paramref name="text" /> or <paramref name="attribute" /> is empty.</exception>
     public static string? GetAttributeValue(this string text, string attribute)

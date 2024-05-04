@@ -43,9 +43,7 @@ public static class Text
         '⁈',   // exclamation mark variation
         '❕',   // white exclamation mark
         '❔',   // white question mark
-        '‽',   // interrobang
         '⁉',   // exclamation mark
-        '‽',   // interrobang
         '※',   // reference mark
         '⟩',   // right angle bracket
         '❯',   // right angle bracket

@@ -47,7 +47,7 @@ public class ShokoResolveManager
 
     private readonly GuardedMemoryCache DataCache;
 
-    // Note: Out of the 14k entries in my test shoko database, then only **319** entries have a title longer than 100 chacters.
+    // Note: Out of the 14k entries in my test shoko database, then only **319** entries have a title longer than 100 characters.
     private const int NameCutOff = 64;
 
     private static readonly IReadOnlySet<string> IgnoreFolderNames = new HashSet<string>() {
@@ -761,9 +761,9 @@ public class ShokoResolveManager
             _ => "extras",
         };
         var fileNameSuffix = file.ExtraType switch {
-            ExtraType.BehindTheScenes => "-behindthescenes",
+            ExtraType.BehindTheScenes => "-behindTheScenes",
             ExtraType.Clip => "-clip",
-            ExtraType.DeletedScene => "-deletedscene",
+            ExtraType.DeletedScene => "-deletedScene",
             ExtraType.Interview => "-interview",
             ExtraType.Scene => "-scene",
             ExtraType.Sample => "-other",

@@ -34,7 +34,7 @@ public class Role
     {
         /// <summary>
         /// Main Name, romanized if needed
-        /// ex. Sawano Hiroyuki
+        /// ex. John Smith
         /// </summary>
         public string Name { get; set; } = string.Empty;
 
@@ -46,7 +46,7 @@ public class Role
 
         /// <summary>
         /// A description, bio, etc
-        /// ex. Sawano Hiroyuki was born September 12, 1980 in Tokyo, Japan. He is a composer and arranger.
+        /// ex. John Smith was born September 12, 1980 in Tokyo, Japan. He is a composer and arranger.
         /// </summary>
         public string Description { get; set; } = string.Empty;
 

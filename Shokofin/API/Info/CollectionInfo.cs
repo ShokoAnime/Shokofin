@@ -1,7 +1,6 @@
 
 using System.Collections.Generic;
 using Shokofin.API.Models;
-using Shokofin.Utils;
 
 namespace Shokofin.API.Info;
 

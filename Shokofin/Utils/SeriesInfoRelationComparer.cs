@@ -52,7 +52,7 @@ public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
         return CompareAirDates(a.AniDB.AirDate, b.AniDB.AirDate);
     }
 
-    private int CompareDirectRelations(SeasonInfo a, SeasonInfo b)
+    private static int CompareDirectRelations(SeasonInfo a, SeasonInfo b)
     {
         // We check from both sides because one of the entries may be outdated,
         // so the relation may only present on one of the entries.
@@ -72,7 +72,7 @@ public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
         return 0;
     }
 
-    private int CompareIndirectRelations(SeasonInfo a, SeasonInfo b)
+    private static int CompareIndirectRelations(SeasonInfo a, SeasonInfo b)
     {
         var xRelations = a.Relations
             .Where(r => RelationPriority.ContainsKey(r.Type))
@@ -107,7 +107,7 @@ public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
         return 0;
     }
 
-    private int CompareAirDates(DateTime? a, DateTime? b)
+    private static int CompareAirDates(DateTime? a, DateTime? b)
     {
         return a.HasValue ? b.HasValue ? DateTime.Compare(a.Value, b.Value) : 1 : b.HasValue ? -1 : 0;
     }

@@ -895,10 +895,10 @@ function setDescriptionSourcesIntoConfig(form, config) {
     const descriptionElements = form.querySelectorAll(`#descriptionSourceList .chkDescriptionSource`);
     config.DescriptionSourceList = Array.prototype.filter.call(descriptionElements,
         (el) => el.checked)
-        .map((el) => el.dataset.descriptionsource);
+        .map((el) => el.dataset.descriptionSource);
 
     config.DescriptionSourceOrder = Array.prototype.map.call(descriptionElements,
-        (el) => el.dataset.descriptionsource
+        (el) => el.dataset.descriptionSource
     );
 
     config.DescriptionSourceOverride = override.checked;
@@ -914,7 +914,7 @@ function setDescriptionSourcesFromConfig(form, config) {
     override.checked ? root.removeAttribute("hidden") : root.setAttribute("hidden", "");
 
     for (const item of listItems) {
-        const source = item.dataset.descriptionsource;
+        const source = item.dataset.descriptionSource;
         if (config.DescriptionSourceList.includes(source)) {
             item.querySelector(".chkDescriptionSource").checked = true;
         }
@@ -924,7 +924,7 @@ function setDescriptionSourcesFromConfig(form, config) {
     }
 
     for (const source of config.DescriptionSourceOrder) {
-        const targetElement = Array.prototype.find.call(listItems, (el) => el.dataset.descriptionsource === source);
+        const targetElement = Array.prototype.find.call(listItems, (el) => el.dataset.descriptionSource === source);
         if (targetElement) {
             list.append(targetElement);
         }
@@ -941,7 +941,7 @@ function setDescriptionSourcesFromConfig(form, config) {
  */
 function setTitleIntoConfig(form, type, config) {
     const titleElements = form.querySelectorAll(`#Title${type}List .chkTitleSource`);
-    const getSettingName = (el) => `${el.dataset.titleprovider}_${el.dataset.titlestyle}`;
+    const getSettingName = (el) => `${el.dataset.titleProvider}_${el.dataset.titleStyle}`;
 
     config[`Title${type}List`] = Array.prototype.filter.call(titleElements,
         (el) => el.checked)
@@ -967,7 +967,7 @@ function setTitleFromConfig(form, type, config) {
     override.checked = config[`Title${type}Override`];
     override.checked ? root.removeAttribute("hidden") : root.setAttribute("hidden", "");
 
-    const getSettingName = (el) => `${el.dataset.titleprovider}_${el.dataset.titlestyle}`;
+    const getSettingName = (el) => `${el.dataset.titleProvider}_${el.dataset.titleStyle}`;
 
     for (const item of listItems) {
         const setting = getSettingName(item);

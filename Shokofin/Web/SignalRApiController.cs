@@ -1,21 +1,17 @@
 using System;
-using System.Net.Http;
 using System.Net.Mime;
-using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
-using Shokofin.API;
-using Shokofin.API.Models;
 using Shokofin.SignalR;
 
 namespace Shokofin.Web;
 
 /// <summary>
-/// Pushbullet notifications controller.
+/// Shoko SignalR Control Web Controller.
 /// </summary>
 [ApiController]
 [Route("Plugin/Shokofin/SignalR")]

@@ -27,7 +27,7 @@ public class MediaFolderConfiguration
 
     /// <summary>
     /// The friendly name of the import folder, if any. Stored only for showing
-    /// in the setttings page of the plugin… since it's very hard to get in
+    /// in the settings page of the plugin… since it's very hard to get in
     /// there otherwise.
     /// </summary>
     public string? ImportFolderName { get; set; }
@@ -60,7 +60,7 @@ public class MediaFolderConfiguration
     public bool IsVirtualFileSystemEnabled { get; set; } = true;
 
     /// <summary>
-    /// Enable or disable the library filterin on a per-media-folder basis. Do
+    /// Enable or disable the library filtering on a per-media-folder basis. Do
     /// note that this will only take effect if the VFS is not used.
     /// </summary>
     public LibraryFilteringMode LibraryFilteringMode { get; set; } = LibraryFilteringMode.Auto;

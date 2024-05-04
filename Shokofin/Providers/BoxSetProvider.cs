@@ -110,25 +110,6 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>
         return result;
     }
 
-    private static bool TryGetBoxSetName(BoxSetInfo info, out string boxSetName)
-    {
-        if (string.IsNullOrWhiteSpace(info.Name)) {
-            boxSetName = string.Empty;
-            return false;
-        }
-
-        var name = info.Name.Trim();
-        if (name.EndsWith("[boxset]"))
-            name = name[..^8].TrimEnd();
-        if (string.IsNullOrWhiteSpace(name)) {
-            boxSetName = string.Empty;
-            return false;
-        }
-
-        boxSetName = name;
-        return true;
-    }
-
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(BoxSetInfo searchInfo, CancellationToken cancellationToken)
         => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
 

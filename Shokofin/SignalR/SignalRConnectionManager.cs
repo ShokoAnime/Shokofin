@@ -23,7 +23,7 @@ using File = System.IO.File;
 
 namespace Shokofin.SignalR;
 
-public class SignalRConnectionManager : IDisposable
+public class SignalRConnectionManager
 {
     private static ComponentVersion? ServerVersion =>
         Plugin.Instance.Configuration.ServerVersion;
@@ -61,7 +61,9 @@ public class SignalRConnectionManager : IDisposable
 
     private readonly Dictionary<int, (DateTime LastUpdated, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> List)> ChangesPerFile = new();
 
+#pragma warning disable CA1822
     public bool IsUsable => CanConnect(Plugin.Instance.Configuration);
+#pragma warning restore CA1822
 
     public bool IsActive => Connection != null;
 
@@ -78,13 +80,6 @@ public class SignalRConnectionManager : IDisposable
         FileSystem = fileSystem;
         ChangesDetectionTimer = new() { AutoReset = true, Interval = TimeSpan.FromSeconds(4).TotalMilliseconds };
         ChangesDetectionTimer.Elapsed += OnIntervalElapsed;
-    }
-
-    public void Dispose()
-    {
-        Plugin.Instance.ConfigurationChanged -= OnConfigurationChanged;
-        Disconnect();
-        ChangesDetectionTimer.Elapsed -= OnIntervalElapsed;
     }
 
     #region Connection
@@ -151,16 +146,13 @@ public class SignalRConnectionManager : IDisposable
 
     private Task OnDisconnected(Exception? exception)
     {
-        // Gracefull disconnection.
+        // Graceful disconnection.
         if (exception == null)
             Logger.LogInformation("Gracefully disconnected from Shoko Server.");
         else
             Logger.LogWarning(exception, "Abruptly disconnected from Shoko Server.");
         return Task.CompletedTask;
     }
-
-    public void Disconnect()
-        => DisconnectAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 
     public async Task DisconnectAsync()
     {
@@ -202,6 +194,13 @@ public class SignalRConnectionManager : IDisposable
         Plugin.Instance.ConfigurationChanged += OnConfigurationChanged;
 
         await ResetConnectionAsync(config, config.SignalR_AutoConnectEnabled);
+    }
+
+    public async Task StopAsync()
+    {
+        Plugin.Instance.ConfigurationChanged -= OnConfigurationChanged;
+        await DisconnectAsync();
+        ChangesDetectionTimer.Elapsed -= OnIntervalElapsed;
     }
 
     private void OnConfigurationChanged(object? sender, BasePluginConfiguration baseConfig)
@@ -379,9 +378,9 @@ public class SignalRConnectionManager : IDisposable
                     var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, sourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
                         .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
                         .ToList();
-                    foreach (var (srcLoc, symLnks, nfoFls, imprtDt) in vfsLocations) {
-                        result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLnks, nfoFls, imprtDt!.Value, result.Paths);
-                        foreach (var path in symLnks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
+                    foreach (var (srcLoc, symLinks, nfoFiles, importDate) in vfsLocations) {
+                        result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, nfoFiles, importDate!.Value, result.Paths);
+                        foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
                             topFolders.Add(path);
                     }
 
@@ -446,9 +445,9 @@ public class SignalRConnectionManager : IDisposable
                         var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, newSourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
                             .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
                             .ToList();
-                        foreach (var (srcLoc, symLnks, nfoFls, imprtDt) in vfsLocations) {
-                            result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLnks, nfoFls, imprtDt!.Value, result.Paths);
-                            foreach (var path in symLnks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
+                        foreach (var (srcLoc, symLinks, nfoFiles, importDate) in vfsLocations) {
+                            result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, nfoFiles, importDate!.Value, result.Paths);
+                            foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
                                 topFolders.Add(path);
                         }
                         vfsSymbolicLinks = vfsLocations.Select(tuple => tuple.sourceLocation).ToHashSet();
@@ -572,12 +571,12 @@ public class SignalRConnectionManager : IDisposable
         }
     }
 
-    private async Task ProcessSeriesChanges(string metadataId, List<IMetadataUpdatedEventArgs> changes)
+    private Task ProcessSeriesChanges(string metadataId, List<IMetadataUpdatedEventArgs> changes)
     {
         try {
             Logger.LogInformation("Processing {EventCount} metadata change events… (Metadata={ProviderUniqueId})", changes.Count, metadataId);
 
-            // Refresh all epoisodes and movies linked to the episode.
+            // Refresh all episodes and movies linked to the episode.
 
             // look up the series/season/movie, then check the media folder they're
             // in to check if the refresh event is enabled for the media folder, and
@@ -589,6 +588,7 @@ public class SignalRConnectionManager : IDisposable
         catch (Exception ex) {
             Logger.LogError(ex, "Error processing {EventCount} metadata change events. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
         }
+        return Task.CompletedTask;
     }
 
     #endregion

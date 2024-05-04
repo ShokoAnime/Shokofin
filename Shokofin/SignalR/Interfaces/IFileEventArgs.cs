@@ -24,13 +24,13 @@ public interface IFileEventArgs
     /// <summary>
     /// The relative path from the base of the <see cref="ImportFolder"/> to
     /// where the <see cref="File"/> lies, with a leading slash applied at
-    /// the start and normalised for the local system.
+    /// the start and normalized for the local system.
     /// </summary>
     string RelativePath { get; }
 
     /// <summary>
     /// Indicates that the event has cross references provided. They may still
-    /// be empty, but now we don't need to fetch them seperately.
+    /// be empty, but now we don't need to fetch them separately.
     /// </summary>
     bool HasCrossReferences { get; }
 

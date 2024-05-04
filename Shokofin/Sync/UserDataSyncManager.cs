@@ -112,7 +112,7 @@ public class UserDataSyncManager
         public bool IsPaused;
 
         /// <summary>
-        /// Indicates we've alredy sent the start event.
+        /// Indicates we've already sent the start event.
         /// </summary>
         public bool SentStartEvent;
 

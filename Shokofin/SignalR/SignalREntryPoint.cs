@@ -1,4 +1,5 @@
 
+using System;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Plugins;
 
@@ -11,7 +12,12 @@ public class SignalREntryPoint : IServerEntryPoint
     public SignalREntryPoint(SignalRConnectionManager connectionManager) => ConnectionManager = connectionManager;
 
     public void Dispose()
-        => ConnectionManager.Dispose();
+    {
+        GC.SuppressFinalize(this);
+        ConnectionManager.StopAsync()
+            .GetAwaiter()
+            .GetResult();
+    }
 
     public Task RunAsync()
         => ConnectionManager.RunAsync();

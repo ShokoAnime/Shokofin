@@ -18,12 +18,14 @@ public class PluginConfiguration : BasePluginConfiguration
 {
     #region Connection
 
+#pragma warning disable CA1822
     /// <summary>
     /// Helper for the web ui to show the windows only warning, and to disable
     /// the VFS by default if we cannot create symbolic links.
     /// </summary>
     [XmlIgnore, JsonInclude]
     public bool CanCreateSymbolicLinks => Plugin.Instance.CanCreateSymbolicLinks;
+#pragma warning restore CA1822
 
     /// <summary>
     /// The URL for where to connect to shoko internally.
@@ -135,7 +137,7 @@ public class PluginConfiguration : BasePluginConfiguration
     public DescriptionProvider[] DescriptionSourceList { get; set; }
 
     /// <summary>
-    /// The prioritisation order of source providers for description sources.
+    /// The prioritization order of source providers for description sources.
     /// </summary>
     public DescriptionProvider[] DescriptionSourceOrder { get; set; }
 

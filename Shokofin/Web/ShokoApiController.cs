@@ -13,7 +13,7 @@ using Shokofin.API.Models;
 namespace Shokofin.Web;
 
 /// <summary>
-/// Pushbullet notifications controller.
+/// Shoko API Host Web Controller.
 /// </summary>
 [ApiController]
 [Route("Plugin/Shokofin/Host")]

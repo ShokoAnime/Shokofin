@@ -768,7 +768,7 @@ public class ShokoAPIManager : IDisposable
         if (!Plugin.Instance.Configuration.UseGroupsForShows || group.Sizes.SubGroups > 0)
             return GetOrCreateShowInfoForSeasonInfo(seasonInfo);
 
-        // If we found a movie, and we're assiging movies as stand-alone shows, and we didn't create a stand-alone show
+        // If we found a movie, and we're assigning movies as stand-alone shows, and we didn't create a stand-alone show
         // above, then attach the stand-alone show to the parent group of the group that might other
         if (seasonInfo.Type == SeriesType.Movie && Plugin.Instance.Configuration.SeparateMovies)
             return GetOrCreateShowInfoForSeasonInfo(seasonInfo, group.Size > 0 ? group.IDs.ParentGroup.ToString() : null);
@@ -901,7 +901,7 @@ public class ShokoAPIManager : IDisposable
                     }
                 }
 
-                Logger.LogTrace("Finalising info object for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
+                Logger.LogTrace("Finalizing info object for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
                 var showList = showDict.Values.ToList();
                 var collectionInfo = new CollectionInfo(group, showList, groupList);
                 return collectionInfo;

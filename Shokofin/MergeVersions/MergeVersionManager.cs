@@ -166,7 +166,7 @@ public class MergeVersionsManager
         double currentCount = 0d;
         double totalGroups = duplicationGroups.Count;
         foreach (var movieGroup in duplicationGroups) {
-            // Handle cancelation and update progress.
+            // Handle cancellation and update progress.
             cancellationToken.ThrowIfCancellationRequested();
             var percent = (currentCount++ / totalGroups) * 100;
             progress?.Report(percent);
@@ -192,7 +192,7 @@ public class MergeVersionsManager
         double currentCount = 0d;
         double totalMovies = movies.Count;
         foreach (var movie in movies) {
-            // Handle cancelation and update progress.
+            // Handle cancellation and update progress.
             cancellationToken.ThrowIfCancellationRequested();
             var percent = (currentCount++ / totalMovies) * 100d;
             progress?.Report(percent);
@@ -218,7 +218,7 @@ public class MergeVersionsManager
         double currentCount = 0d;
         double totalCount = movies.Count;
         foreach (var movie in movies) {
-            // Handle cancelation and update progress.
+            // Handle cancellation and update progress.
             cancellationToken.ThrowIfCancellationRequested();
             var percent = (currentCount++ / totalCount) * 50d;
             progress?.Report(percent);
@@ -235,7 +235,7 @@ public class MergeVersionsManager
         currentCount = 0d;
         totalCount = duplicationGroups.Count;
         foreach (var movieGroup in duplicationGroups) {
-            // Handle cancelation and update progress.
+            // Handle cancellation and update progress.
             cancellationToken.ThrowIfCancellationRequested();
             var percent = 50d + ((currentCount++ / totalCount) * 50d);
             progress?.Report(percent);
@@ -301,7 +301,7 @@ public class MergeVersionsManager
         double currentCount = 0d;
         double totalGroups = duplicationGroups.Count;
         foreach (var episodeGroup in duplicationGroups) {
-            // Handle cancelation and update progress.
+            // Handle cancellation and update progress.
             cancellationToken.ThrowIfCancellationRequested();
             var percent = (currentCount++ / totalGroups) * 100d;
             progress?.Report(percent);
@@ -327,7 +327,7 @@ public class MergeVersionsManager
         double currentCount = 0d;
         double totalEpisodes = episodes.Count;
         foreach (var e in episodes) {
-            // Handle cancelation and update progress.
+            // Handle cancellation and update progress.
             cancellationToken.ThrowIfCancellationRequested();
             var percent = (currentCount++ / totalEpisodes) * 100d;
             progress?.Report(percent);
@@ -354,7 +354,7 @@ public class MergeVersionsManager
         double currentCount = 0d;
         double totalCount = episodes.Count;
         foreach (var e in episodes) {
-            // Handle cancelation and update progress.
+            // Handle cancellation and update progress.
             cancellationToken.ThrowIfCancellationRequested();
             var percent = (currentCount++ / totalCount) * 100d;
             progress?.Report(percent);
@@ -372,7 +372,7 @@ public class MergeVersionsManager
         currentCount = 0d;
         totalCount = duplicationGroups.Count;
         foreach (var episodeGroup in duplicationGroups) {
-            // Handle cancelation and update progress.
+            // Handle cancellation and update progress.
             cancellationToken.ThrowIfCancellationRequested();
             var percent = currentCount++ / totalCount * 100d;
             progress?.Report(percent);

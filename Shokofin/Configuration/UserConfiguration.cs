@@ -37,7 +37,7 @@ public class UserConfiguration
 
     /// <summary>
     /// Number of playback events to skip before starting to send the events
-    /// to Shoko. This is to prevent accidentially updating user watch data
+    /// to Shoko. This is to prevent accidentally updating user watch data
     /// when a user miss clicked on a video.
     /// </summary>
     [Range(0, 200)]

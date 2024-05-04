@@ -12,8 +12,6 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
 {
     private readonly ShokoResolveManager ResolveManager;
 
-    public ResolverPriority Priority => ResolverPriority.Plugin;
-
     public ShokoIgnoreRule(ShokoResolveManager resolveManager)
     {
         ResolveManager = resolveManager;

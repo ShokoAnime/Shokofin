@@ -145,25 +145,25 @@ public class Series
         public new int EpisodeCount { get; set; }
 
         [JsonIgnore]
-        private DateTime? _airDate { get; set; } = null;
+        private DateTime? InternalAirDate { get; set; } = null;
 
         /// <summary>
-        /// Air date (2013-02-27, shut up avael). Anything without an air date is going to be missing a lot of info.
+        /// Air date (2013-02-27). Anything without an air date is going to be missing a lot of info.
         /// </summary>
         public DateTime? AirDate
         {
             get
             {
-                return _airDate;
+                return InternalAirDate;
             }
             set
             {
-                _airDate = value.HasValue && (value.Value == DateTime.UnixEpoch || value.Value == DateTime.MinValue || value.Value == DateTime.MaxValue) ? null : value;
+                InternalAirDate = value.HasValue && (value.Value == DateTime.UnixEpoch || value.Value == DateTime.MinValue || value.Value == DateTime.MaxValue) ? null : value;
             }
         }
 
         [JsonIgnore]
-        private DateTime? _endDate { get; set; } = null;
+        private DateTime? InternalEndDate { get; set; } = null;
 
         /// <summary>
         /// End date, can be omitted. Omitted means that it's still airing (2013-02-27)
@@ -172,11 +172,11 @@ public class Series
         {
             get
             {
-                return _endDate;
+                return InternalEndDate;
             }
             set
             {
-                _endDate = value.HasValue && (value.Value == DateTime.UnixEpoch || value.Value == DateTime.MinValue || value.Value == DateTime.MaxValue) ? null : value;
+                InternalEndDate = value.HasValue && (value.Value == DateTime.UnixEpoch || value.Value == DateTime.MinValue || value.Value == DateTime.MaxValue) ? null : value;
             }
         }
     }

@@ -13,7 +13,7 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
 
     /// <summary>
     /// The previous relative path with no leading slash and directory
-    /// seperators used on the Shoko side.
+    /// separators used on the Shoko side.
     /// </summary>
     [JsonInclude, JsonPropertyName("PreviousRelativePath")]
     public string PreviousInternalPath  { get; set; } = string.Empty;
@@ -60,7 +60,7 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
         public int PreviousImportFolderId { get; set; }
 
         /// <summary>
-        /// The relative path with no leading slash and directory seperators used on
+        /// The relative path with no leading slash and directory separators used on
         /// the Shoko side.
         /// </summary>
         [JsonInclude, JsonPropertyName("NewRelativePath")]
@@ -89,10 +89,9 @@ public class FileMovedEventArgs: FileEventArgs, IFileRelocationEventArgs
             }
         }
 
-
         /// <summary>
         /// The previous relative path with no leading slash and directory
-        /// seperators used on the Shoko side.
+        /// separators used on the Shoko side.
         /// </summary>
         [JsonInclude, JsonPropertyName("OldRelativePath")]
         public string PreviousInternalPath  { get; set; } = string.Empty;

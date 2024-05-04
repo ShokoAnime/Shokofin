@@ -63,7 +63,7 @@ public class Image
     /// </summary>
     [JsonIgnore]
     public virtual string Path
-        => $"/api/v3/Image/{Source.ToString()}/{Type.ToString()}/{ID}";
+        => $"/api/v3/Image/{Source}/{Type}/{ID}";
 
     /// <summary>
     /// Get an URL to both download the image on the backend and preview it for

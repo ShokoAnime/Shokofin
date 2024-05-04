@@ -20,12 +20,12 @@ public class Ordering
         /// </summary>
         Auto = 0,
         /// <summary>
-        /// Will only allow files/folders that are recognised and it knows
+        /// Will only allow files/folders that are recognized and it knows
         /// should be part of the library.
         /// </summary>
         Strict = 1,
         /// <summary>
-        /// Will premit files/folders that are not recognised to exist in the
+        /// Will permit files/folders that are not recognized to exist in the
         /// library, but will filter out anything it knows should not be part of
         /// the library.
         /// </summary>
@@ -178,7 +178,7 @@ public class Ordering
                 airsAfterSeasonNumber = seasonNumber;
                 break;
             case SpecialOrderType.InBetweenSeasonByAirDate:
-                byAirdate:
+                byAirDate:
                 // Reset the order if we come from `SpecialOrderType.InBetweenSeasonMixed`.
                 episodeNumber = null;
                 if (seasonInfo.SpecialsAnchors.TryGetValue(episodeInfo, out var previousEpisode))
@@ -196,7 +196,7 @@ public class Ordering
             case SpecialOrderType.InBetweenSeasonByOtherData:
                 // We need to have TvDB/TMDB data in the first place to do this method.
                 if (episodeInfo.TvDB == null) {
-                    if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirdate;
+                    if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirDate;
                     break;
                 }
 
@@ -207,7 +207,7 @@ public class Ordering
                         break;
                     }
 
-                    if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirdate;
+                    if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirDate;
                     airsAfterSeasonNumber = seasonNumber;
                     break;
                 }
@@ -219,7 +219,7 @@ public class Ordering
                     break;
                 }
 
-                if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirdate;
+                if (order == SpecialOrderType.InBetweenSeasonMixed) goto byAirDate;
                 break;
         }
 

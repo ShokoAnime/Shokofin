@@ -62,8 +62,8 @@ public class ApiException : Exception
         }
         var index = text.IndexOf("HEADERS");
         if (index != -1) {
-            var (firstLine, lines) = text.Substring(0, index).TrimEnd().Split('\n');
-            var (name, splitMessage) = firstLine?.Split(':') ?? new string[] {};
+            var (firstLine, lines) = text[..index].TrimEnd().Split('\n');
+            var (name, splitMessage) = firstLine?.Split(':') ?? Array.Empty<string>();
             var message = string.Join(':', splitMessage).Trim();
             var stackTrace = string.Join('\n', lines);
             return new ApiException(response.StatusCode, new RemoteApiException(name ?? "InternalServerException", message, stackTrace));
@@ -93,7 +93,7 @@ public class ApiException : Exception
 
 public static class IListExtension {
     public static void Deconstruct<T>(this IList<T> list, out T? first, out IList<T> rest) {
-        first = list.Count > 0 ? list[0] : default(T); // or throw
+        first = list.Count > 0 ? list[0] : default; // or throw
         rest = list.Skip(1).ToList();
     }
 }
