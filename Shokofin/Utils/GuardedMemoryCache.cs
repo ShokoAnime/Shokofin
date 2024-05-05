@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
 using System.Threading.Tasks;
+using AsyncKeyedLock;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -18,7 +17,9 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
     private IMemoryCache Cache;
 
-    private readonly ConcurrentDictionary<object, SemaphoreSlim> Semaphores = new();
+    private static AsyncKeyedLockOptions AsyncKeyedLockOptions = new() { PoolSize = 20, PoolInitialFill = 1 };
+
+    private AsyncKeyedLocker<object> Semaphores = new(AsyncKeyedLockOptions);
 
     public GuardedMemoryCache(ILogger logger, MemoryCacheOptions options, MemoryCacheEntryOptions? cacheEntryOptions = null)
     {
@@ -33,7 +34,8 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         Logger.LogDebug("Clearing cache…");
         var cache = Cache;
         Cache = new MemoryCache(CacheOptions);
-        Semaphores.Clear();
+        Semaphores.Dispose();
+        Semaphores = new AsyncKeyedLocker<object>(AsyncKeyedLockOptions);
         cache.Dispose();
     }
 
@@ -44,11 +46,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             return value;
         }
 
-        var semaphore = GetSemaphore(key);
-
-        semaphore.Wait();
-
-        try {
+        using (Semaphores.Lock(key)) {
             if (TryGetValue(key, out value)) {
                 foundAction(value);
                 return value;
@@ -62,10 +60,6 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             value = createFactory(entry);
             entry.Value = value;
             return value;
-        }
-        finally {
-            RemoveSemaphore(key);
-            semaphore.Release();
         }
     }
 
@@ -76,11 +70,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             return value;
         }
 
-        var semaphore = GetSemaphore(key);
-
-        await semaphore.WaitAsync();
-
-        try {
+        using (await Semaphores.LockAsync(key).ConfigureAwait(false)) {
             if (TryGetValue(key, out value)) {
                 foundAction(value);
                 return value;
@@ -95,10 +85,6 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             entry.Value = value;
             return value;
         }
-        finally {
-            RemoveSemaphore(key);
-            semaphore.Release();
-        }
     }
 
     public TItem GetOrCreate<TItem>(object key, Func<ICacheEntry, TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
@@ -106,11 +92,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         if (TryGetValue<TItem>(key, out var value))
             return value;
 
-        var semaphore = GetSemaphore(key);
-
-        semaphore.Wait();
-
-        try {
+        using (Semaphores.Lock(key)) {
             if (TryGetValue(key, out value))
                 return value;
 
@@ -123,10 +105,6 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             entry.Value = value;
             return value;
         }
-        finally {
-            RemoveSemaphore(key);
-            semaphore.Release();
-        }
     }
 
     public async Task<TItem> GetOrCreateAsync<TItem>(object key, Func<ICacheEntry, Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
@@ -134,11 +112,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         if (TryGetValue<TItem>(key, out var value))
             return value;
 
-        var semaphore = GetSemaphore(key);
-
-        await semaphore.WaitAsync();
-
-        try {
+        using (await Semaphores.LockAsync(key).ConfigureAwait(false)) {
             if (TryGetValue(key, out value))
                 return value;
 
@@ -151,25 +125,12 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             entry.Value = value;
             return value;
         }
-        finally {
-            RemoveSemaphore(key);
-            semaphore.Release();
-        }
     }
 
     public void Dispose()
     {
-        foreach (var semaphore in Semaphores.Values)
-            semaphore.Release();
+        Semaphores.Dispose();
         Cache.Dispose();
-    }
-
-    SemaphoreSlim GetSemaphore(object key)
-        => Semaphores.GetOrAdd(key, _ => new SemaphoreSlim(1));
-
-    void RemoveSemaphore(object key)
-    {
-        Semaphores.TryRemove(key, out var _);
     }
 
     public ICacheEntry CreateEntry(object key)
