@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="AsyncKeyedLock" Version="6.4.2" />
         <PackageReference Include="Jellyfin.Controller" Version="10.9.0" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="$(SignalRVersion)" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
