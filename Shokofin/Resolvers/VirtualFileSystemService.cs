@@ -801,14 +801,7 @@ public class VirtualFileSystemService
                 if (!File.Exists(symbolicLink)) {
                     result.CreatedVideos++;
                     Logger.LogDebug("Linking {Link} → {LinkTarget}", symbolicLink, sourceLocation);
-                    // In case Jellyfin decided to run the resolver in parallel for whatever reason, then check again.
-                    try {
-                        File.CreateSymbolicLink(symbolicLink, sourceLocation);
-                    }
-                    catch {
-                        if (!File.Exists(symbolicLink))
-                            throw;
-                    }
+                    File.CreateSymbolicLink(symbolicLink, sourceLocation);
                     // Mock the creation date to fake the "date added" order in Jellyfin.
                     File.SetCreationTime(symbolicLink, importedAt);
                 }
@@ -833,15 +826,8 @@ public class VirtualFileSystemService
                         shouldFix = true;
                     }
                     if (shouldFix) {
-                        // In case Jellyfin decided to run the resolver in parallel for whatever reason, then check again.
-                        try {
-                            File.Delete(symbolicLink);
-                            File.CreateSymbolicLink(symbolicLink, sourceLocation);
-                        }
-                        catch {
-                            if (!File.Exists(symbolicLink))
-                                throw;
-                        }
+                        File.Delete(symbolicLink);
+                        File.CreateSymbolicLink(symbolicLink, sourceLocation);
                         // Mock the creation date to fake the "date added" order in Jellyfin.
                         File.SetCreationTime(symbolicLink, importedAt);
                         result.FixedVideos++;
@@ -861,14 +847,7 @@ public class VirtualFileSystemService
                         if (!File.Exists(subtitleLink)) {
                             result.CreatedSubtitles++;
                             Logger.LogDebug("Linking {Link} → {LinkTarget}", subtitleLink, subtitleSource);
-                            // In case Jellyfin decided to run the resolver in parallel for whatever reason, then check again.
-                            try {
-                                File.CreateSymbolicLink(subtitleLink, subtitleSource);
-                            }
-                            catch {
-                                if (!File.Exists(subtitleLink))
-                                    throw;
-                            }
+                            File.CreateSymbolicLink(subtitleLink, subtitleSource);
                         }
                         else {
                             var shouldFix = false;
@@ -885,15 +864,8 @@ public class VirtualFileSystemService
                                 shouldFix = true;
                             }
                             if (shouldFix) {
-                                // In case Jellyfin decided to run the resolver in parallel for whatever reason, then check again.
-                                try {
-                                    File.Delete(subtitleLink);
-                                    File.CreateSymbolicLink(subtitleLink, subtitleSource);
-                                }
-                                catch {
-                                    if (!File.Exists(subtitleLink))
-                                        throw;
-                                }
+                                File.Delete(subtitleLink);
+                                File.CreateSymbolicLink(subtitleLink, subtitleSource);
                                 result.FixedSubtitles++;
                             }
                             else {
