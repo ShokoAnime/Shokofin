@@ -37,7 +37,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>
         try {
             return Plugin.Instance.Configuration.CollectionGrouping switch
             {
-                Ordering.CollectionCreationType.ShokoGroup => await GetShokoGroupedMetadata(info),
+                Ordering.CollectionCreationType.Shared => await GetShokoGroupedMetadata(info),
                 _ => await GetDefaultMetadata(info),
             };
         }

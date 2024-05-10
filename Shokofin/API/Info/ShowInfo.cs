@@ -38,6 +38,12 @@ public class ShowInfo
         Shoko == null;
 
     /// <summary>
+    /// Indicates that this show is consistent of only movies.
+    /// </summary>
+    public bool IsMovieCollection =>
+        IsStandalone && DefaultSeason.Type == SeriesType.Movie;
+
+    /// <summary>
     /// The Shoko Group, if this is not a standalone show entry.
     /// </summary>
     public readonly Group? Shoko;

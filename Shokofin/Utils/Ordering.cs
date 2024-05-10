@@ -33,7 +33,8 @@ public class Ordering
     }
 
     /// <summary>
-    /// Group series or movie box-sets
+    /// Helps determine what the user wants to group into collections
+    /// (AKA "box-sets").
     /// </summary>
     public enum CollectionCreationType
     {
@@ -43,15 +44,15 @@ public class Ordering
         None = 0,
 
         /// <summary>
-        /// Group movies based on Shoko's series.
+        /// Group movies into collections based on Shoko's series.
         /// </summary>
-        ShokoSeries = 1,
+        Movies = 1,
 
         /// <summary>
-        /// Group both movies and shows into collections based on shoko's
+        /// Group both movies and shows into collections based on Shoko's
         /// groups.
         /// </summary>
-        ShokoGroup = 2,
+        Shared = 2,
     }
 
     /// <summary>
