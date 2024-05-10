@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.159",
+                "changelog": "feat: collections be damned\n\n- Hooked up the rest of the half-implemented collection support,\n  though it is 4am, so expect things to break. Good luck if you want\n  to try it before I get to testing it tomorrow. \ud83e\udee1\n\nmisc: the typo squashing commit [skip ci]\nI went full grammar nazi. I have no excuse.\n\nmisc: tweak comments [skip ci]",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.159/shoko_3.0.1.159.zip",
+                "checksum": "18bdf21d61e59910cb5205cd3509240a",
+                "timestamp": "2024-05-10T02:23:45Z"
+            },
+            {
                 "version": "3.0.1.158",
                 "changelog": "fix: remove hard-coded path separator",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.155/shoko_3.0.1.155.zip",
                 "checksum": "e1f7dc6906cb6d2deb61721738197408",
                 "timestamp": "2024-05-02T03:44:12Z"
-            },
-            {
-                "version": "3.0.1.154",
-                "changelog": "fix: one more fix for force movie special featurettes",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.154/shoko_3.0.1.154.zip",
-                "checksum": "453677e7d05402dbd73e44790944da70",
-                "timestamp": "2024-05-02T03:39:43Z"
             }
         ]
     }
