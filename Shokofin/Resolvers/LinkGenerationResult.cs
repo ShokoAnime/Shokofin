@@ -13,16 +13,16 @@ public class LinkGenerationResult
     public ConcurrentBag<string> Paths { get; init; } = new();
 
     public int Total =>
-        TotalVideos + TotalSubtitles + TotalNfos;
+        TotalVideos + TotalSubtitles;
 
     public int Created =>
-        CreatedVideos + CreatedSubtitles + CreatedNfos;
+        CreatedVideos + CreatedSubtitles;
 
     public int Fixed =>
         FixedVideos + FixedSubtitles;
 
     public int Skipped =>
-        SkippedVideos + SkippedSubtitles + SkippedNfos;
+        SkippedVideos + SkippedSubtitles;
 
     public int Removed =>
         RemovedVideos + RemovedSubtitles + RemovedNfos;
@@ -49,31 +49,22 @@ public class LinkGenerationResult
 
     public int RemovedSubtitles { get; set; }
 
-    public int TotalNfos =>
-        CreatedNfos + SkippedNfos;
-
-    public int CreatedNfos { get; set; }
-
-    public int SkippedNfos { get; set; }
-
     public int RemovedNfos { get; set; }
 
     public void Print(ILogger logger, string path)
     {
         var timeSpent = DateTime.Now - CreatedAt;
         logger.LogInformation(
-            "Created {CreatedTotal} ({CreatedMedia},{CreatedSubtitles},{CreatedNFO}), fixed {FixedTotal} ({FixedMedia},{FixedSubtitles}), skipped {SkippedTotal} ({SkippedMedia},{SkippedSubtitles},{SkippedNFO}), and removed {RemovedTotal} ({RemovedMedia},{RemovedSubtitles},{RemovedNFO}) entries in folder at {Path} in {TimeSpan} (Total={Total})",
+            "Created {CreatedTotal} ({CreatedMedia},{CreatedSubtitles}), fixed {FixedTotal} ({FixedMedia},{FixedSubtitles}), skipped {SkippedTotal} ({SkippedMedia},{SkippedSubtitles}), and removed {RemovedTotal} ({RemovedMedia},{RemovedSubtitles},{RemovedNFO}) entries in folder at {Path} in {TimeSpan} (Total={Total})",
             Created,
             CreatedVideos,
             CreatedSubtitles,
-            CreatedNfos,
             Fixed,
             FixedVideos,
             FixedSubtitles,
             Skipped,
             SkippedVideos,
             SkippedSubtitles,
-            SkippedNfos,
             Removed,
             RemovedVideos,
             RemovedSubtitles,
@@ -103,8 +94,6 @@ public class LinkGenerationResult
             FixedSubtitles = a.FixedSubtitles + b.FixedSubtitles,
             SkippedSubtitles = a.SkippedSubtitles + b.SkippedSubtitles,
             RemovedSubtitles = a.RemovedSubtitles + b.RemovedSubtitles,
-            CreatedNfos = a.CreatedNfos + b.CreatedNfos,
-            SkippedNfos = a.SkippedNfos + b.SkippedNfos,
             RemovedNfos = a.RemovedNfos + b.RemovedNfos,
         };
     }

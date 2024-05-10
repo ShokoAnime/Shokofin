@@ -378,8 +378,8 @@ public class SignalRConnectionManager
                     var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, sourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
                         .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
                         .ToList();
-                    foreach (var (srcLoc, symLinks, nfoFiles, importDate) in vfsLocations) {
-                        result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, nfoFiles, importDate!.Value, result.Paths);
+                    foreach (var (srcLoc, symLinks, importDate) in vfsLocations) {
+                        result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, importDate!.Value);
                         foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
                             topFolders.Add(path);
                     }
@@ -445,8 +445,8 @@ public class SignalRConnectionManager
                         var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, newSourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
                             .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
                             .ToList();
-                        foreach (var (srcLoc, symLinks, nfoFiles, importDate) in vfsLocations) {
-                            result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, nfoFiles, importDate!.Value, result.Paths);
+                        foreach (var (srcLoc, symLinks, importDate) in vfsLocations) {
+                            result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, importDate!.Value);
                             foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
                                 topFolders.Add(path);
                         }

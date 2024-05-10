@@ -684,13 +684,13 @@ public class ShokoResolveManager
             try {
                 Logger.LogTrace("Generating links for {Path} (File={FileId},Series={SeriesId})", tuple.sourceLocation, tuple.fileId, tuple.seriesId);
 
-                var (sourceLocation, symbolicLinks, nfoFiles, importedAt) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
+                var (sourceLocation, symbolicLinks, importedAt) = await GenerateLocationsForFile(vfsPath, collectionType, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
 
                 // Skip any source files we weren't meant to have in the library.
                 if (string.IsNullOrEmpty(sourceLocation) || !importedAt.HasValue)
                     return;
 
-                var subResult = GenerateSymbolicLinks(sourceLocation, symbolicLinks, nfoFiles, importedAt.Value, result.Paths);
+                var subResult = GenerateSymbolicLinks(sourceLocation, symbolicLinks, importedAt.Value);
 
                 // Combine the current results with the overall results.
                 lock (semaphore) {
@@ -706,18 +706,18 @@ public class ShokoResolveManager
         return result;
     }
 
-    public async Task<(string sourceLocation, string[] symbolicLinks, string[] nfoFiles, DateTime? importedAt)> GenerateLocationsForFile(Folder mediaFolder, string sourceLocation, string fileId, string seriesId)
+    public async Task<(string sourceLocation, string[] symbolicLinks, DateTime? importedAt)> GenerateLocationsForFile(Folder mediaFolder, string sourceLocation, string fileId, string seriesId)
     {
         var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
         var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
         return await GenerateLocationsForFile(vfsPath, collectionType, sourceLocation, fileId, seriesId);
     }
 
-    private async Task<(string sourceLocation, string[] symbolicLinks, string[] nfoFiles, DateTime? importedAt)> GenerateLocationsForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId)
+    private async Task<(string sourceLocation, string[] symbolicLinks, DateTime? importedAt)> GenerateLocationsForFile(string vfsPath, string? collectionType, string sourceLocation, string fileId, string seriesId)
     {
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId).ConfigureAwait(false);
         if (season == null)
-            return (string.Empty, Array.Empty<string>(), Array.Empty<string>(), null);
+            return (string.Empty, Array.Empty<string>(), null);
 
         var isMovieSeason = season.Type == SeriesType.Movie;
         var shouldAbort = collectionType switch {
@@ -726,19 +726,19 @@ public class ShokoResolveManager
             _ => false,
         };
         if (shouldAbort)
-            return (string.Empty, Array.Empty<string>(), Array.Empty<string>(), null);
+            return (string.Empty, Array.Empty<string>(), null);
 
         var show = await ApiManager.GetShowInfoForSeries(seriesId).ConfigureAwait(false);
         if (show == null)
-            return (string.Empty, Array.Empty<string>(), Array.Empty<string>(), null);
+            return (string.Empty, Array.Empty<string>(), null);
 
         var file = await ApiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false);
         var episode = file?.EpisodeList.FirstOrDefault();
         if (file == null || episode == null)
-            return (string.Empty, Array.Empty<string>(), Array.Empty<string>(), null);
+            return (string.Empty, Array.Empty<string>(), null);
 
         if (season == null || episode == null)
-            return (string.Empty, Array.Empty<string>(), Array.Empty<string>(), null);
+            return (string.Empty, Array.Empty<string>(), null);
 
         var showName = show.DefaultSeason.AniDB.Title?.ReplaceInvalidPathCharacters() ?? $"Shoko Series {show.Id}";
         var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
@@ -751,7 +751,6 @@ public class ShokoResolveManager
             episodeName = episodeName[..NameCutOff].Split(' ').SkipLast(1).Join(' ') + "…";
 
         var isExtra = file.EpisodeList.Any(eI => season.IsExtraEpisode(eI));
-        var nfoFiles = new List<string>();
         var folders = new List<string>();
         var extrasFolder = file.ExtraType switch {
             null => isExtra ? "extras" : null,
@@ -799,14 +798,6 @@ public class ShokoResolveManager
                 folders.Add(Path.Join(vfsPath, showFolder, seasonFolder));
                 episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber.ToString().PadLeft(show.EpisodePadding, '0')}";
             }
-
-            // Add NFO files for the show and season if we're in a mixed library,
-            // to allow the built-in movie resolver to detect the directories
-            // properly as tv shows.
-            if (collectionType == null) {
-                nfoFiles.Add(Path.Join(vfsPath, showFolder, "tvshow.nfo"));
-                nfoFiles.Add(Path.Join(vfsPath, showFolder, seasonFolder, "season.nfo"));
-            }
         }
 
         var fileName = $"{episodeName} [{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileId}]{fileNameSuffix}{Path.GetExtension(sourceLocation)}";
@@ -816,12 +807,12 @@ public class ShokoResolveManager
 
         foreach (var symbolicLink in symbolicLinks)
             ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, file.EpisodeList.Select(episode => episode.Id));
-        return (sourceLocation, symbolicLinks, nfoFiles: nfoFiles.ToArray(), file.Shoko.ImportedAt ?? file.Shoko.CreatedAt);
+        return (sourceLocation, symbolicLinks, file.Shoko.ImportedAt ?? file.Shoko.CreatedAt);
     }
 
 // TODO: Remove this for 10.9
 #pragma warning disable IDE0060
-    public LinkGenerationResult GenerateSymbolicLinks(string sourceLocation, string[] symbolicLinks, string[] nfoFiles, DateTime importedAt, ConcurrentBag<string> allPathsForVFS)
+    public LinkGenerationResult GenerateSymbolicLinks(string sourceLocation, string[] symbolicLinks, DateTime importedAt)
 #pragma warning restore IDE0060
     {
         try {
@@ -940,36 +931,6 @@ public class ShokoResolveManager
                             }
                         }
                     }
-                }
-            }
-
-            // TODO: Remove these two hacks once we have proper support for adding multiple series at once.
-            foreach (var nfoFile in nfoFiles)
-            {
-                if (allPathsForVFS.Contains(nfoFile)) {
-                    if (!result.Paths.Contains(nfoFile))
-                        result.Paths.Add(nfoFile);
-                    continue;
-                }
-                if (result.Paths.Contains(nfoFile)) {
-                    if (!allPathsForVFS.Contains(nfoFile))
-                        allPathsForVFS.Add(nfoFile);
-                    continue;
-                }
-                allPathsForVFS.Add(nfoFile);
-                result.Paths.Add(nfoFile);
-
-                var nfoDirectory = Path.GetDirectoryName(nfoFile)!;
-                if (!Directory.Exists(nfoDirectory))
-                    Directory.CreateDirectory(nfoDirectory);
-
-                if (!File.Exists(nfoFile)) {
-                    result.CreatedNfos++;
-                    Logger.LogDebug("Adding stub show/season NFO file {Target} ", nfoFile);
-                    File.WriteAllText(nfoFile, string.Empty);
-                }
-                else {
-                    result.SkippedNfos++;
                 }
             }
 
