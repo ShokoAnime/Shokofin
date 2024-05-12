@@ -253,9 +253,9 @@ public class ShokoResolveManager
     private async Task<string?> GenerateStructureInVFS(Folder mediaFolder, string path)
     {
         // Skip link generation if we've already generated for the media folder.
-        if (DataCache.TryGetValue<string?>($"should-skip-media-folder:{mediaFolder.Path}", out var vfsPath))
-            return vfsPath;
-        vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
+        var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(mediaFolder);
+        if (DataCache.TryGetValue<bool>($"should-skip-media-folder:{mediaFolder.Path}", out var shouldReturnPath))
+            return shouldReturnPath ? vfsPath : null;
 
         // Check full path and all parent directories if they have been indexed.
         if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
@@ -268,120 +268,121 @@ public class ShokoResolveManager
             }
         }
 
-        var mediaConfig = await GetOrCreateConfigurationForMediaFolder(mediaFolder);
-        if (!mediaConfig.IsMapped)
-            return null;
+        // Only do this once.
+        var key = path.StartsWith(mediaFolder.Path)
+            ? $"should-skip-media-folder:{mediaFolder.Path}"
+            : $"should-skip-vfs-path:{path}";
+        shouldReturnPath = await DataCache.GetOrCreateAsync<bool>(key, async (__) => {
+            var mediaConfig = await GetOrCreateConfigurationForMediaFolder(mediaFolder);
+            if (!mediaConfig.IsMapped)
+                return false;
 
-        // Return early if we're not going to generate them.
-        if (!mediaConfig.IsVirtualFileSystemEnabled)
-            return null;
+            // Return early if we're not going to generate them.
+            if (!mediaConfig.IsVirtualFileSystemEnabled)
+                return false;
 
-        if (!Plugin.Instance.CanCreateSymbolicLinks)
-            throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
+            if (!Plugin.Instance.CanCreateSymbolicLinks)
+                throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
 
-        // Iterate the files already in the VFS.
-        string? pathToClean = null;
-        IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
-        if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
-            var allPaths = GetPathsForMediaFolder(mediaFolder);
-            var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
-            switch (pathSegments.Length) {
-                // show/movie-folder level
-                case 1: {
-                    var seriesName = pathSegments[0];
-                    if (!seriesName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
-                        break;
-
-                    // movie-folder
-                    if (seriesName.TryGetAttributeValue(ShokoEpisodeId.Name, out var episodeId) ) {
-                        if (!int.TryParse(episodeId, out _))
+            // Iterate the files already in the VFS.
+            string? pathToClean = null;
+            IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
+            if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
+                var allPaths = GetPathsForMediaFolder(mediaFolder);
+                var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
+                switch (pathSegments.Length) {
+                    // show/movie-folder level
+                    case 1: {
+                        var seriesName = pathSegments[0];
+                        if (!seriesName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
                             break;
 
+                        // movie-folder
+                        if (seriesName.TryGetAttributeValue(ShokoEpisodeId.Name, out var episodeId) ) {
+                            if (!int.TryParse(episodeId, out _))
+                                break;
+
+                            pathToClean = path;
+                            allFiles = GetFilesForMovie(episodeId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
+                            break;
+                        }
+
+                        // show
                         pathToClean = path;
-                        allFiles = GetFilesForMovie(episodeId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
+                        allFiles = GetFilesForShow(seriesId, null, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
                         break;
                     }
 
-                    // show
-                    pathToClean = path;
-                    allFiles = GetFilesForShow(seriesId, null, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
-                    break;
-                }
-
-                // season/movie level
-                case 2: {
-                    var (seriesName, seasonOrMovieName) = pathSegments;
-                    if (!seriesName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
-                        break;
-
-                    // movie
-                    if (seriesName.TryGetAttributeValue(ShokoEpisodeId.Name, out _)) {
-                        if (!seasonOrMovieName.TryGetAttributeValue(ShokoSeriesId.Name, out seriesId) || !int.TryParse(seriesId, out _))
+                    // season/movie level
+                    case 2: {
+                        var (seriesName, seasonOrMovieName) = pathSegments;
+                        if (!seriesName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
                             break;
 
-                        if (!seasonOrMovieName.TryGetAttributeValue(ShokoFileId.Name, out var fileId) || !int.TryParse(fileId, out _))
+                        // movie
+                        if (seriesName.TryGetAttributeValue(ShokoEpisodeId.Name, out _)) {
+                            if (!seasonOrMovieName.TryGetAttributeValue(ShokoSeriesId.Name, out seriesId) || !int.TryParse(seriesId, out _))
+                                break;
+
+                            if (!seasonOrMovieName.TryGetAttributeValue(ShokoFileId.Name, out var fileId) || !int.TryParse(fileId, out _))
+                                break;
+
+                            allFiles = GetFilesForEpisode(fileId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path);
+                            break;
+                        }
+
+                        // "season" or extras
+                        if (!seasonOrMovieName.StartsWith("Season ") || !int.TryParse(seasonOrMovieName.Split(' ').Last(), out var seasonNumber))
+                            break;
+
+                        pathToClean = path;
+                        allFiles = GetFilesForShow(seriesId, seasonNumber, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
+                        break;
+                    }
+
+                    // episodes level
+                    case 3: {
+                        var (seriesName, seasonName, episodeName) = pathSegments;
+                        if (!seriesName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
+                            break;
+
+                        if (!seasonName.StartsWith("Season ") || !int.TryParse(seasonName.Split(' ').Last(), out _))
+                            break;
+
+                        if (!episodeName.TryGetAttributeValue(ShokoSeriesId.Name, out seriesId) || !int.TryParse(seriesId, out _))
+                            break;
+
+                        if (!episodeName.TryGetAttributeValue(ShokoFileId.Name, out var fileId) || !int.TryParse(fileId, out _))
                             break;
 
                         allFiles = GetFilesForEpisode(fileId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path);
                         break;
                     }
-
-                    // "season" or extras
-                    if (!seasonOrMovieName.StartsWith("Season ") || !int.TryParse(seasonOrMovieName.Split(' ').Last(), out var seasonNumber))
-                        break;
-
-                    pathToClean = path;
-                    allFiles = GetFilesForShow(seriesId, seasonNumber, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
-                    break;
-                }
-
-                // episodes level
-                case 3: {
-                    var (seriesName, seasonName, episodeName) = pathSegments;
-                    if (!seriesName.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
-                        break;
-
-                    if (!seasonName.StartsWith("Season ") || !int.TryParse(seasonName.Split(' ').Last(), out _))
-                        break;
-
-                    if (!episodeName.TryGetAttributeValue(ShokoSeriesId.Name, out seriesId) || !int.TryParse(seriesId, out _))
-                        break;
-
-                    if (!episodeName.TryGetAttributeValue(ShokoFileId.Name, out var fileId) || !int.TryParse(fileId, out _))
-                        break;
-
-                    allFiles = GetFilesForEpisode(fileId, seriesId, mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path);
-                    break;
                 }
             }
-        }
-        // Iterate files in the "real" media folder.
-        else if (path.StartsWith(mediaFolder.Path)) {
-            var allPaths = GetPathsForMediaFolder(mediaFolder);
-            pathToClean = vfsPath;
-            allFiles = GetFilesForImportFolder(mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
-        }
+            // Iterate files in the "real" media folder.
+            else if (path.StartsWith(mediaFolder.Path)) {
+                var allPaths = GetPathsForMediaFolder(mediaFolder);
+                pathToClean = vfsPath;
+                allFiles = GetFilesForImportFolder(mediaConfig.ImportFolderId, mediaConfig.ImportFolderRelativePath, mediaFolder.Path, allPaths);
+            }
 
-        if (allFiles == null)
-            return null;
+            if (allFiles == null)
+                return false;
 
-        // Generate and cleanup the structure in the VFS.
-        var result = await GenerateStructure(mediaFolder, vfsPath, allFiles);
-        if (!string.IsNullOrEmpty(pathToClean))
-            result += CleanupStructure(vfsPath, pathToClean, result.Paths.ToArray());
+            // Generate and cleanup the structure in the VFS.
+            var result = await GenerateStructure(mediaFolder, vfsPath, allFiles);
+            if (!string.IsNullOrEmpty(pathToClean))
+                result += CleanupStructure(vfsPath, pathToClean, result.Paths.ToArray());
 
-        // Save which paths we've already generated so we can skip generation
-        // for them and their sub-paths later, and also print the result.
-        if (path.StartsWith(mediaFolder.Path)) {
-            DataCache.Set($"should-skip-media-folder:{mediaFolder.Path}", vfsPath);
-            result.Print(Logger, mediaFolder.Path);
-        }
-        else {
-            DataCache.Set($"should-skip-vfs-path:{path}", true);
-            result.Print(Logger, path);
-        }
+            // Save which paths we've already generated so we can skip generation
+            // for them and their sub-paths later, and also print the result.
+            result.Print(Logger, path.StartsWith(mediaFolder.Path) ? mediaFolder.Path : path);
 
-        return vfsPath;
+            return true;
+        });
+
+        return shouldReturnPath ? vfsPath : null;
     }
 
     public IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForEpisode(string fileId, string seriesId, int importFolderId, string importFolderSubPath, string mediaFolderPath)
