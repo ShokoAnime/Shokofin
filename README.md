@@ -37,8 +37,7 @@ compatible with what.
 | `1.x.x`    | `10.7`   | `4.1.0-4.1.2` |
 | `2.x.x`    | `10.8`   | `4.1.2`       |
 | `3.x.x`    | `10.8`   | `4.2.0`       |
-| `unstable` | `10.8`   | `4.2.2`       |
-| `N/A`      | `10.9`   | `N/A`         |
+| `unstable` | `10.9`   | `4.2.2`       |
 
 ### Official Repository
 
@@ -91,7 +90,7 @@ compatible with what.
      $ dotnet publish -c Release Shokofin/Shokofin.csproj
      ```
 4. **Copy Built Files:**
-   - After building, go to the `bin/Release/net6.0/` directory.
+   - After building, go to the `bin/Release/net8.0/` directory.
    - Copy all `.dll` files to a folder named `Shoko`.
    - Place this `Shoko` folder in the `plugins` directory of your Jellyfin
      program data directory or inside the portable install directory. For help
