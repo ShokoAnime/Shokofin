@@ -294,9 +294,9 @@ public class ShokoAPIManager : IDisposable
                     if (file.CrossReferences.Count == 1)
                         foreach (var fileLocation in file.Locations)
                             pathSet.Add((Path.GetDirectoryName(fileLocation.RelativePath) ?? string.Empty) + Path.DirectorySeparatorChar);
-                    var xref = file.CrossReferences.First(xref => xref.Series.Shoko.ToString() == seriesId);
-                    foreach (var episodeXRef in xref.Episodes)
-                        episodeIds.Add(episodeXRef.Shoko.ToString());
+                    var xref = file.CrossReferences.First(xref => xref.Series.Shoko.HasValue && xref.Series.Shoko.ToString() == seriesId);
+                    foreach (var episodeXRef in xref.Episodes.Where(e => e.Shoko.HasValue))
+                        episodeIds.Add(episodeXRef.Shoko!.Value.ToString());
                 }
 
                 return (pathSet, episodeIds);
@@ -384,8 +384,8 @@ public class ShokoAPIManager : IDisposable
 
         // Find the correct series based on the path.
         var selectedPath = (Path.GetDirectoryName(fileLocations.First().RelativePath) ?? string.Empty) + Path.DirectorySeparatorChar;
-        foreach (var seriesXRef in file.CrossReferences) {
-            var seriesId = seriesXRef.Series.Shoko.ToString();
+        foreach (var seriesXRef in file.CrossReferences.Where(xref => xref.Series.Shoko.HasValue && xref.Episodes.All(e => e.Shoko.HasValue))) {
+            var seriesId = seriesXRef.Series.Shoko!.Value.ToString();
 
             // Check if the file is in the series folder.
             var pathSet = await GetPathSetForSeries(seriesId).ConfigureAwait(false);
@@ -441,13 +441,14 @@ public class ShokoAPIManager : IDisposable
                 Logger.LogTrace("Creating info object for file. (File={FileId},Series={SeriesId})", fileId, seriesId);
 
                 // Find the cross-references for the selected series.
-                var seriesXRef = file.CrossReferences.FirstOrDefault(xref => xref.Series.Shoko.ToString() == seriesId) ??
+                var seriesXRef = file.CrossReferences.Where(xref => xref.Series.Shoko.HasValue && xref.Episodes.All(e => e.Shoko.HasValue))
+                    .FirstOrDefault(xref => xref.Series.Shoko!.Value.ToString() == seriesId) ??
                     throw new Exception($"Unable to find any cross-references for the specified series for the file. (File={fileId},Series={seriesId})");
 
                 // Find a list of the episode info for each episode linked to the file for the series.
                 var episodeList = new List<EpisodeInfo>();
                 foreach (var episodeXRef in seriesXRef.Episodes) {
-                    var episodeId = episodeXRef.Shoko.ToString();
+                    var episodeId = episodeXRef.Shoko!.Value.ToString();
                     var episodeInfo = await GetEpisodeInfo(episodeId).ConfigureAwait(false) ??
                         throw new Exception($"Unable to find episode cross-reference for the specified series and episode for the file. (File={fileId},Episode={episodeId},Series={seriesId})");
                     if (episodeInfo.Shoko.IsHidden) {

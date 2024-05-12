@@ -442,7 +442,7 @@ public class ShokoResolveManager
         var episodeIds = seasonInfo.ExtrasList.Select(episode => episode.Id).Append(episodeId).ToHashSet();
         var files = ApiClient.GetFilesForSeries(seasonInfo.Id).ConfigureAwait(false).GetAwaiter().GetResult();
         var fileLocations = files
-            .Where(files => files.CrossReferences.Any(xref => xref.Episodes.Any(xrefEp => episodeIds.Contains(xrefEp.Shoko.ToString()))))
+            .Where(files => files.CrossReferences.Any(xref => episodeIds.Overlaps(xref.Episodes.Where(e => e.Shoko.HasValue).Select(e => e.Shoko!.Value.ToString()))))
             .SelectMany(file => file.Locations.Select(location => (file, location)))
             .ToList();
         foreach (var (file, location) in fileLocations) {
@@ -493,7 +493,7 @@ public class ShokoResolveManager
                     var episodeIds = seasonInfo.SpecialsList.Select(episode => episode.Id).ToHashSet();
                     var files = ApiClient.GetFilesForSeries(seasonInfo.Id).ConfigureAwait(false).GetAwaiter().GetResult();
                     var fileLocations = files
-                        .Where(files => files.CrossReferences.Any(xref => xref.Episodes.Any(xrefEp => episodeIds.Contains(xrefEp.Shoko.ToString()))))
+                        .Where(files => files.CrossReferences.Any(xref => episodeIds.Overlaps(xref.Episodes.Where(e => e.Shoko.HasValue).Select(e => e.Shoko!.Value.ToString()))))
                         .SelectMany(file => file.Locations.Select(location => (file, location)))
                         .ToList();
                     foreach (var (file, location) in fileLocations) {
@@ -518,7 +518,7 @@ public class ShokoResolveManager
                     var episodeIds = (offset == 0 ? seasonInfo.EpisodeList.Concat(seasonInfo.ExtrasList) : seasonInfo.AlternateEpisodesList).Select(episode => episode.Id).ToHashSet();
                     var files = ApiClient.GetFilesForSeries(seasonInfo.Id).ConfigureAwait(false).GetAwaiter().GetResult();
                     var fileLocations = files
-                        .Where(files => files.CrossReferences.Any(xref => xref.Episodes.Any(xrefEp => episodeIds.Contains(xrefEp.Shoko.ToString()))))
+                        .Where(files => files.CrossReferences.Any(xref => episodeIds.Overlaps(xref.Episodes.Where(e => e.Shoko.HasValue).Select(e => e.Shoko!.Value.ToString()))))
                         .SelectMany(file => file.Locations.Select(location => (file, location)))
                         .ToList();
                     foreach (var (file, location) in fileLocations) {
@@ -626,7 +626,7 @@ public class ShokoResolveManager
                     continue;
 
                 // Yield all single-series files now, and offset the processing of all multi-series files for later.
-                var seriesIds = file.CrossReferences.Select(x => x.Series.Shoko).ToHashSet();
+                var seriesIds = file.CrossReferences.Where(x => x.Series.Shoko.HasValue && x.Episodes.All(e => e.Shoko.HasValue)).Select(x => x.Series.Shoko!.Value).ToHashSet();
                 if (seriesIds.Count == 1) {
                     totalSingleSeriesFiles++;
                     singleSeriesIds.Add(seriesIds.First());
@@ -645,8 +645,8 @@ public class ShokoResolveManager
         var totalMultiSeriesFiles = 0;
         foreach (var (file, sourceLocation) in multiSeriesFiles) {
             var crossReferences = file.CrossReferences
-                .Where(xref => singleSeriesIds.Contains(xref.Series.Shoko))
-                .Select(xref => xref.Series.Shoko.ToString())
+                .Where(xref => xref.Series.Shoko.HasValue && xref.Episodes.All(e => e.Shoko.HasValue) && singleSeriesIds.Contains(xref.Series.Shoko!.Value))
+                .Select(xref => xref.Series.Shoko!.Value.ToString())
                 .ToHashSet();
             foreach (var seriesId in crossReferences)
                 yield return (sourceLocation, file.Id.ToString(), seriesId);
