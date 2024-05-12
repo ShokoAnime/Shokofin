@@ -439,7 +439,7 @@ public class ShokoResolveManager
             importFolderSubPath
         );
 
-        var episodeIds = seasonInfo.ExtrasList.Select(episode => episode.Id).Append(episodeId).ToHashSet();
+        var episodeIds = seasonInfo.EpisodeList.Concat(seasonInfo.AlternateEpisodesList).Concat(seasonInfo.ExtrasList).Select(episode => episode.Id).Append(episodeId).ToHashSet();
         var files = ApiClient.GetFilesForSeries(seasonInfo.Id).ConfigureAwait(false).GetAwaiter().GetResult();
         var fileLocations = files
             .Where(files => files.CrossReferences.Any(xref => episodeIds.Overlaps(xref.Episodes.Where(e => e.Shoko.HasValue).Select(e => e.Shoko!.Value.ToString()))))
