@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.162",
+                "changelog": "fix: extras \u2192 episodes\n\nmisc: changes to support latest daily server\n\nmisc: remove unuseed references\u00a0[skip ci]",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.162/shoko_3.0.1.162.zip",
+                "checksum": "3d299e615e20b63567b6d247780883c1",
+                "timestamp": "2024-05-12T21:34:42Z"
+            },
+            {
                 "version": "3.0.1.161",
                 "changelog": "misc: supposedly increase performance\nby droping the use of abstract interfaces, according to dotnet8.\n\nfix: use right dict to get collection",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.158/shoko_3.0.1.158.zip",
                 "checksum": "6372792bb2eb41692cd9df8a20bbcce4",
                 "timestamp": "2024-05-04T00:35:52Z"
-            },
-            {
-                "version": "3.0.1.157",
-                "changelog": "fix: fix paths for file events in daily server",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.157/shoko_3.0.1.157.zip",
-                "checksum": "a8922542493cfd0f2842dfa08f00abcb",
-                "timestamp": "2024-05-04T00:07:19Z"
             }
         ]
     }
