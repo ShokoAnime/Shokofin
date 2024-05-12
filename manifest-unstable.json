@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.161",
+                "changelog": "misc: supposedly increase performance\nby droping the use of abstract interfaces, according to dotnet8.\n\nfix: use right dict to get collection",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.161/shoko_3.0.1.161.zip",
+                "checksum": "8059012476cb659621986432db4bf418",
+                "timestamp": "2024-05-12T01:13:27Z"
+            },
+            {
                 "version": "3.0.1.160",
                 "changelog": "misc: remove nfos from mixed libraries\nsince they weren't needed, and were actually causing issues.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.157/shoko_3.0.1.157.zip",
                 "checksum": "a8922542493cfd0f2842dfa08f00abcb",
                 "timestamp": "2024-05-04T00:07:19Z"
-            },
-            {
-                "version": "3.0.1.156",
-                "changelog": "fix: don't append suffix to theme-videos/trailers",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.156/shoko_3.0.1.156.zip",
-                "checksum": "5811fb06e58a82f2b88bf9a90cf1bbf7",
-                "timestamp": "2024-05-03T23:38:15Z"
             }
         ]
     }
