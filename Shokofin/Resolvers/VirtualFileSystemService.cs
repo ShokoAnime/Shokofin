@@ -814,7 +814,7 @@ public class VirtualFileSystemService
 
                             Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
                         }
-                        var date = File.GetCreationTime(symbolicLink);
+                        var date = File.GetCreationTime(symbolicLink).ToLocalTime();
                         if (date != importedAt) {
                             shouldFix = true;
 
