@@ -437,7 +437,7 @@ public class CollectionManager
                 await RemoveCollection(collection, collectionSet, groupId: groupId);
     }
 
-    private async Task RemoveCollection(BoxSet boxSet, ISet<Guid> allBoxSets, string? seriesId = null, string? groupId = null)
+    private async Task RemoveCollection(BoxSet boxSet, HashSet<Guid> allBoxSets, string? seriesId = null, string? groupId = null)
     {
         var parents = boxSet.GetParents().OfType<BoxSet>().ToList();
         var children = boxSet.GetChildren(null, true, new()).Select(x => x.Id).ToList();
@@ -457,7 +457,7 @@ public class CollectionManager
         LibraryManager.DeleteItem(boxSet, new() { DeleteFileLocation = false, DeleteFromExternalProvider = false });
     }
 
-    private IReadOnlyList<Movie> GetMovies()
+    private List<Movie> GetMovies()
     {
         return LibraryManager.GetItemList(new()
         {
@@ -471,7 +471,7 @@ public class CollectionManager
             .ToList();
     }
 
-    private IReadOnlyList<Series> GetShows()
+    private List<Series> GetShows()
     {
         return LibraryManager.GetItemList(new()
         {
@@ -485,7 +485,7 @@ public class CollectionManager
             .ToList();
     }
 
-    private IReadOnlyDictionary<string, IReadOnlyList<BoxSet>> GetSeriesCollections()
+    private Dictionary<string, IReadOnlyList<BoxSet>> GetSeriesCollections()
     {
         return LibraryManager.GetItemList(new()
         {
@@ -501,7 +501,7 @@ public class CollectionManager
             .ToDictionary(x => x.Key, x => x.ToList() as IReadOnlyList<BoxSet>);
     }
 
-    private IReadOnlyDictionary<string, IReadOnlyList<BoxSet>> GetGroupCollections()
+    private Dictionary<string, IReadOnlyList<BoxSet>> GetGroupCollections()
     {
         return LibraryManager.GetItemList(new()
         {
