@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.165",
+                "changelog": "refactor: only build VFS once per path while the cache is filled",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.165/shoko_3.0.1.165.zip",
+                "checksum": "d6426eda03ec5ee698938925f1ea7e2f",
+                "timestamp": "2024-05-12T22:48:04Z"
+            },
+            {
                 "version": "3.0.1.164",
                 "changelog": "fix: fix episode group ordering for files",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.161/shoko_3.0.1.161.zip",
                 "checksum": "8059012476cb659621986432db4bf418",
                 "timestamp": "2024-05-12T01:13:27Z"
-            },
-            {
-                "version": "3.0.1.160",
-                "changelog": "misc: remove nfos from mixed libraries\nsince they weren't needed, and were actually causing issues.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.160/shoko_3.0.1.160.zip",
-                "checksum": "881372c02dc18a6b22e782d77d0e3c7c",
-                "timestamp": "2024-05-10T02:59:42Z"
             }
         ]
     }
