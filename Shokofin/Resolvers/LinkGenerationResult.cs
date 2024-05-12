@@ -1,7 +1,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using MediaBrowser.Controller.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace Shokofin.Resolvers;
