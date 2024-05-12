@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.163",
+                "changelog": "misc: add property watcher\n\nfeat: add file part support for daily server\nwithout breaking stable server support",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.163/shoko_3.0.1.163.zip",
+                "checksum": "0a023e0b4940f387b8621f70812014e8",
+                "timestamp": "2024-05-12T22:01:53Z"
+            },
+            {
                 "version": "3.0.1.162",
                 "changelog": "fix: extras \u2192 episodes\n\nmisc: changes to support latest daily server\n\nmisc: remove unuseed references\u00a0[skip ci]",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.159/shoko_3.0.1.159.zip",
                 "checksum": "18bdf21d61e59910cb5205cd3509240a",
                 "timestamp": "2024-05-10T02:23:45Z"
-            },
-            {
-                "version": "3.0.1.158",
-                "changelog": "fix: remove hard-coded path separator",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.158/shoko_3.0.1.158.zip",
-                "checksum": "6372792bb2eb41692cd9df8a20bbcce4",
-                "timestamp": "2024-05-04T00:35:52Z"
             }
         ]
     }
