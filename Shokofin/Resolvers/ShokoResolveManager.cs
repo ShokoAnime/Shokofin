@@ -66,6 +66,10 @@ public class ShokoResolveManager
 
     public bool IsCacheStalled => DataCache.IsStalled;
 
+    public event EventHandler<MediaConfigurationChangedEventArgs>? AddedConfiguration;
+
+    public event EventHandler<MediaConfigurationChangedEventArgs>? RemovedConfiguration;
+
     public ShokoResolveManager(
         ShokoAPIManager apiManager,
         ShokoAPIClient apiClient,
@@ -120,6 +124,8 @@ public class ShokoResolveManager
                 );
                 Plugin.Instance.Configuration.MediaFolders.Remove(mediaFolderConfig);
                 Plugin.Instance.SaveConfiguration();
+
+                RemovedConfiguration?.Invoke(null, new(mediaFolderConfig, folder));
             }
             var vfsPath = ShokoAPIManager.GetVirtualRootForMediaFolder(folder);
             if (Directory.Exists(vfsPath)) {
@@ -235,6 +241,8 @@ public class ShokoResolveManager
                 DateTime.UtcNow - start
             );
         }
+
+        AddedConfiguration?.Invoke(null, new(mediaFolderConfig, mediaFolder));
 
         return mediaFolderConfig;
     }
