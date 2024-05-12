@@ -462,7 +462,7 @@ public class ShokoAPIManager : IDisposable
                 var groupedEpisodeLists = episodeList
                     .GroupBy(tuple => (type: tuple.Episode.AniDB.Type, percentage: tuple.CrossReference.Percentage?.Size ?? 100))
                     .OrderByDescending(a => Array.IndexOf(EpisodePickOrder, a.Key.type))
-                    .ThenByDescending(a => Array.IndexOf(EpisodePickOrder, a.Key.percentage))
+                    .ThenByDescending(a => a.Key.percentage)
                     .Select(epList => epList.OrderBy(tuple => tuple.Episode.AniDB.EpisodeNumber).ToList())
                     .ToList();
 
