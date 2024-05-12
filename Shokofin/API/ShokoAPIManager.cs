@@ -446,7 +446,7 @@ public class ShokoAPIManager : IDisposable
                     throw new Exception($"Unable to find any cross-references for the specified series for the file. (File={fileId},Series={seriesId})");
 
                 // Find a list of the episode info for each episode linked to the file for the series.
-                var episodeList = new List<EpisodeInfo>();
+                var episodeList = new List<(EpisodeInfo Episode, CrossReference.EpisodeCrossReferenceIDs CrossReference, string Id)>();
                 foreach (var episodeXRef in seriesXRef.Episodes) {
                     var episodeId = episodeXRef.Shoko!.Value.ToString();
                     var episodeInfo = await GetEpisodeInfo(episodeId).ConfigureAwait(false) ??
@@ -455,14 +455,15 @@ public class ShokoAPIManager : IDisposable
                         Logger.LogDebug("Skipped hidden episode linked to file. (File={FileId},Episode={EpisodeId},Series={SeriesId})", fileId, episodeId, seriesId);
                         continue;
                     }
-                    episodeList.Add(episodeInfo);
+                    episodeList.Add((episodeInfo, episodeXRef, episodeId));
                 }
 
                 // Group and order the episodes.
                 var groupedEpisodeLists = episodeList
-                    .GroupBy(episode => episode.AniDB.Type)
-                    .OrderByDescending(a => Array.IndexOf(EpisodePickOrder, a.Key))
-                    .Select(epList => epList.OrderBy(episode => episode.AniDB.EpisodeNumber).ToList())
+                    .GroupBy(tuple => (type: tuple.Episode.AniDB.Type, percentage: tuple.CrossReference.Percentage?.Size ?? 100))
+                    .OrderByDescending(a => Array.IndexOf(EpisodePickOrder, a.Key.type))
+                    .ThenByDescending(a => Array.IndexOf(EpisodePickOrder, a.Key.percentage))
+                    .Select(epList => epList.OrderBy(tuple => tuple.Episode.AniDB.EpisodeNumber).ToList())
                     .ToList();
 
                 var fileInfo = new FileInfo(file, groupedEpisodeLists, seriesId);

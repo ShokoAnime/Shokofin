@@ -732,7 +732,7 @@ public class ShokoResolveManager
             return (string.Empty, Array.Empty<string>(), null);
 
         var file = await ApiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false);
-        var episode = file?.EpisodeList.FirstOrDefault();
+        var (episode, episodeXref, _) = (file?.EpisodeList ?? new()).FirstOrDefault();
         if (file == null || episode == null)
             return (string.Empty, Array.Empty<string>(), null);
 
@@ -749,7 +749,7 @@ public class ShokoResolveManager
         if (episodeName.Length >= NameCutOff)
             episodeName = episodeName[..NameCutOff].Split(' ').SkipLast(1).Join(' ') + "…";
 
-        var isExtra = file.EpisodeList.Any(eI => season.IsExtraEpisode(eI));
+        var isExtra = file.EpisodeList.Any(eI => season.IsExtraEpisode(eI.Episode));
         var folders = new List<string>();
         var extrasFolder = file.ExtraType switch {
             null => isExtra ? "extras" : null,
@@ -771,6 +771,7 @@ public class ShokoResolveManager
             ExtraType.Trailer => string.Empty,
             _ => isExtra ? "-other" : string.Empty,
         };
+        var filePartSuffix = (episodeXref.Percentage?.Size ?? 100) != 100 ? $".pt{episode.Shoko.CrossReferences.Where(xref => xref.ReleaseGroup == episodeXref.ReleaseGroup && xref.Percentage!.Size == episodeXref.Percentage!.Size).ToList().FindIndex(xref => xref.Percentage!.Start == episodeXref.Percentage!.Start && xref.Percentage!.End == episodeXref.Percentage!.End) + 1}" : "";
         if (isMovieSeason && collectionType != CollectionType.TvShows) {
             if (!string.IsNullOrEmpty(extrasFolder)) {
                 foreach (var episodeInfo in season.EpisodeList)
@@ -795,7 +796,7 @@ public class ShokoResolveManager
             }
             else {
                 folders.Add(Path.Join(vfsPath, showFolder, seasonFolder));
-                episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber.ToString().PadLeft(show.EpisodePadding, '0')}";
+                episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber.ToString().PadLeft(show.EpisodePadding, '0')}{filePartSuffix}";
             }
         }
 
@@ -1237,7 +1238,7 @@ public class ShokoResolveManager
                                         .GetResult();
 
                                     // Abort if the file was not recognized.
-                                    if (file == null || file.EpisodeList.Any(eI => season.IsExtraEpisode(eI)))
+                                    if (file == null || file.EpisodeList.Any(eI => season.IsExtraEpisode(eI.Episode)))
                                         return null;
 
                                     return new Movie() {
@@ -1418,7 +1419,7 @@ public class ShokoResolveManager
         Logger.LogInformation("Found {EpisodeCount} shoko episode(s) for {SeriesName} (Series={SeriesId},File={FileId})", file.EpisodeList.Count, season.Shoko.Name, season.Id, file.Id);
 
         // We're going to post process this file later, but we don't want to include it in our library for now.
-        if (file.EpisodeList.Any(eI => season.IsExtraEpisode(eI))) {
+        if (file.EpisodeList.Any(eI => season.IsExtraEpisode(eI.Episode))) {
             Logger.LogInformation("File was assigned an extra type, ignoring file. (Series={SeriesId},File={FileId})", season.Id, file.Id);
             return true;
         }

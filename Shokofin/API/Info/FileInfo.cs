@@ -14,17 +14,17 @@ public class FileInfo
 
     public File Shoko;
 
-    public List<EpisodeInfo> EpisodeList;
+    public List<(EpisodeInfo Episode, CrossReference.EpisodeCrossReferenceIDs CrossReference, string Id)> EpisodeList;
 
-    public List<List<EpisodeInfo>> AlternateEpisodeLists;
+    public List<List<(EpisodeInfo Episode, CrossReference.EpisodeCrossReferenceIDs CrossReference, string Id)>> AlternateEpisodeLists;
 
-    public FileInfo(File file, List<List<EpisodeInfo>> groupedEpisodeLists, string seriesId)
+    public FileInfo(File file, List<List<(EpisodeInfo Episode, CrossReference.EpisodeCrossReferenceIDs CrossReference, string Id)>> groupedEpisodeLists, string seriesId)
     {
         var episodeList = groupedEpisodeLists.FirstOrDefault() ?? new();
         var alternateEpisodeLists = groupedEpisodeLists.Count > 1 ? groupedEpisodeLists.GetRange(1, groupedEpisodeLists.Count - 1) : new();
         Id = file.Id.ToString();
         SeriesId = seriesId;
-        ExtraType = episodeList.FirstOrDefault(episode => episode.ExtraType != null)?.ExtraType;
+        ExtraType = episodeList.FirstOrDefault(tuple => tuple.Episode.ExtraType != null).Episode?.ExtraType;
         Shoko = file;
         EpisodeList = episodeList;
         AlternateEpisodeLists = alternateEpisodeLists;

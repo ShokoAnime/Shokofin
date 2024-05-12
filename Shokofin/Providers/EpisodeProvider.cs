@@ -66,7 +66,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
             }
             else {
                 (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(info.Path);
-                episodeInfo = fileInfo?.EpisodeList.FirstOrDefault();
+                episodeInfo = fileInfo?.EpisodeList.FirstOrDefault().Episode;
             }
 
             // if the episode info is null then the series info and conditionally the group info is also null.
@@ -101,7 +101,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
         if (config.TitleAddForMultipleEpisodes && file != null && file.EpisodeList.Count > 1) {
             var displayTitles = new List<string?>();
             var alternateTitles = new List<string?>();
-            foreach (var episodeInfo in file.EpisodeList) {
+            foreach (var (episodeInfo, _, _) in file.EpisodeList) {
                 string defaultEpisodeTitle = episodeInfo.Shoko.Name;
                 if (
                     // Movies
@@ -122,7 +122,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
             }
             displayTitle = Text.JoinText(displayTitles);
             alternateTitle = Text.JoinText(alternateTitles);
-            description = Text.GetDescription(file.EpisodeList);
+            description = Text.GetDescription(file.EpisodeList.Select(tuple => tuple.Episode));
         }
         else {
             string defaultEpisodeTitle = episode.Shoko.Name;

@@ -44,6 +44,11 @@ public class Episode
     [JsonPropertyName("TvDB")]
     public List<TvDB> TvDBEntityList { get; set; } = new();
 
+    /// <summary>
+    /// File cross-references for the episode.
+    /// </summary>
+    public List<CrossReference.EpisodeCrossReferenceIDs> CrossReferences { get; set; } = new();
+
     public class AniDB
     {
         [JsonPropertyName("ID")]

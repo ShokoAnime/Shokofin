@@ -38,7 +38,7 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>
             var result = new MetadataResult<Movie>();
 
             var (file, season, _) = await ApiManager.GetFileInfoByPath(info.Path);
-            var episode = file?.EpisodeList.FirstOrDefault();
+            var episode = file?.EpisodeList.FirstOrDefault().Episode;
 
             // if file is null then series and episode is also null.
             if (file == null || episode == null || season == null) {
