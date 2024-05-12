@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.164",
+                "changelog": "fix: fix episode group ordering for files",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.164/shoko_3.0.1.164.zip",
+                "checksum": "c7fd8fb2da6ebd71f7becc834b728a19",
+                "timestamp": "2024-05-12T22:21:40Z"
+            },
+            {
                 "version": "3.0.1.163",
                 "changelog": "misc: add property watcher\n\nfeat: add file part support for daily server\nwithout breaking stable server support",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.160/shoko_3.0.1.160.zip",
                 "checksum": "881372c02dc18a6b22e782d77d0e3c7c",
                 "timestamp": "2024-05-10T02:59:42Z"
-            },
-            {
-                "version": "3.0.1.159",
-                "changelog": "feat: collections be damned\n\n- Hooked up the rest of the half-implemented collection support,\n  though it is 4am, so expect things to break. Good luck if you want\n  to try it before I get to testing it tomorrow. \ud83e\udee1\n\nmisc: the typo squashing commit [skip ci]\nI went full grammar nazi. I have no excuse.\n\nmisc: tweak comments [skip ci]",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.159/shoko_3.0.1.159.zip",
-                "checksum": "18bdf21d61e59910cb5205cd3509240a",
-                "timestamp": "2024-05-10T02:23:45Z"
             }
         ]
     }
