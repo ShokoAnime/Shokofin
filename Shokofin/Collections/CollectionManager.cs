@@ -342,7 +342,7 @@ public class CollectionManager
 
             var collectionInfo = finalGroups[groupId];
             var expectedCollections = collectionInfo.SubCollections
-                .Select(subCollectionInfo => finalGroups.TryGetValue(subCollectionInfo.Id, out var boxSet) ? boxSet : null)
+                .Select(subCollectionInfo => toCheck.TryGetValue(subCollectionInfo.Id, out var boxSet) ? boxSet : null)
                 .OfType<BoxSet>()
                 .ToList();
             var missingCollections = expectedCollections
