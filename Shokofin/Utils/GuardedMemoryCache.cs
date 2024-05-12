@@ -17,7 +17,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
     private IMemoryCache Cache;
 
-    private static AsyncKeyedLockOptions AsyncKeyedLockOptions = new() { PoolSize = 20, PoolInitialFill = 1 };
+    private static readonly AsyncKeyedLockOptions AsyncKeyedLockOptions = new() { PoolSize = 50 };
 
     private AsyncKeyedLocker<object> Semaphores = new(AsyncKeyedLockOptions);
 
@@ -35,7 +35,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         var cache = Cache;
         Cache = new MemoryCache(CacheOptions);
         Semaphores.Dispose();
-        Semaphores = new AsyncKeyedLocker<object>(AsyncKeyedLockOptions);
+        Semaphores = new(AsyncKeyedLockOptions);
         cache.Dispose();
     }
 
@@ -145,6 +145,6 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
     public bool TryGetValue<TItem>(object key, [NotNullWhen(true)] out TItem? value)
         => Cache.TryGetValue(key, out value);
 
-    public TItem? Set<TItem>(object key, [NotNullIfNotNull("value")] TItem? value, MemoryCacheEntryOptions? createOptions = null)
+    public TItem? Set<TItem>(object key, [NotNullIfNotNull(nameof(value))] TItem? value, MemoryCacheEntryOptions? createOptions = null)
         => Cache.Set(key, value, createOptions ?? CacheEntryOptions);
 }
