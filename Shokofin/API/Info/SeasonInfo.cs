@@ -166,6 +166,24 @@ public class SeasonInfo
 
             episodesList = altEpisodesList;
             altEpisodesList = new();
+
+            // Re-create the special anchors because the episode list changed.
+            index = 0;
+            lastNormalEpisode = 0;
+            specialsAnchorDictionary.Clear();
+            foreach (var episode in episodes) {
+                if (episodesList.Contains(episode)) {
+                    lastNormalEpisode = index;
+                }
+                else if (specialsList.Contains(episode)) {
+                    var previousEpisode = episodes
+                        .GetRange(lastNormalEpisode, index - lastNormalEpisode)
+                        .FirstOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
+                    if (previousEpisode != null)
+                        specialsAnchorDictionary[episode] = previousEpisode;
+                }
+                index++;
+            }
         }
 
         if (Plugin.Instance.Configuration.MovieSpecialsAsExtraFeaturettes && type == SeriesType.Movie) {
