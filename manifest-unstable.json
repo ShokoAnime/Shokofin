@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.167",
+                "changelog": "misc: cleanup text utility",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.167/shoko_3.0.1.167.zip",
+                "checksum": "51a3e46dfe8862a180eef893407002f6",
+                "timestamp": "2024-05-16T00:10:28Z"
+            },
+            {
                 "version": "3.0.1.166",
                 "changelog": "fix: re-create specials anchors if needed\n\nmisc: add media folder changed events [skip ci]",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.163/shoko_3.0.1.163.zip",
                 "checksum": "0a023e0b4940f387b8621f70812014e8",
                 "timestamp": "2024-05-12T22:01:53Z"
-            },
-            {
-                "version": "3.0.1.162",
-                "changelog": "fix: extras \u2192 episodes\n\nmisc: changes to support latest daily server\n\nmisc: remove unuseed references\u00a0[skip ci]",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.162/shoko_3.0.1.162.zip",
-                "checksum": "3d299e615e20b63567b6d247780883c1",
-                "timestamp": "2024-05-12T21:34:42Z"
             }
         ]
     }
