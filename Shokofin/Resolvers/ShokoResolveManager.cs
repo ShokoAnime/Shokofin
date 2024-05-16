@@ -141,22 +141,15 @@ public class ShokoResolveManager
     #region Media Folder Mapping
 
     private IReadOnlySet<string> GetPathsForMediaFolder(Folder mediaFolder)
-        => DataCache.GetOrCreate<IReadOnlySet<string>>(
-            $"paths-for-media-folder:{mediaFolder.Path}",
-            (paths) => Logger.LogTrace("Reusing {FileCount} files for folder at {Path}", paths.Count, mediaFolder.Path),
-            (_) => {
-                Logger.LogDebug("Looking for files in folder at {Path}", mediaFolder.Path);
-                var start = DateTime.UtcNow;
-                var paths = FileSystem.GetFilePaths(mediaFolder.Path, true)
-                    .Where(path => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
-                    .ToHashSet();
-                Logger.LogDebug("Found {FileCount} files in folder at {Path} in {TimeSpan}.", paths.Count, mediaFolder.Path, DateTime.UtcNow - start);
-                return paths;
-            },
-            new() {
-                SlidingExpiration = TimeSpan.FromMinutes(30),
-            }
-        );
+    {
+        Logger.LogDebug("Looking for files in folder at {Path}", mediaFolder.Path);
+        var start = DateTime.UtcNow;
+        var paths = FileSystem.GetFilePaths(mediaFolder.Path, true)
+            .Where(path => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+            .ToHashSet();
+        Logger.LogDebug("Found {FileCount} files in folder at {Path} in {TimeSpan}.", paths.Count, mediaFolder.Path, DateTime.UtcNow - start);
+        return paths;
+    }
 
     public IReadOnlyList<(MediaFolderConfiguration config, Folder mediaFolder, string vfsPath)> GetAvailableMediaFolders(bool fileEvents = false, bool refreshEvents = false)
         => Plugin.Instance.Configuration.MediaFolders
