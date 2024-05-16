@@ -252,28 +252,46 @@ public static class Text
         return outputText;
     }
 
-    public static (string?, string?) GetEpisodeTitles(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
+    public static (string?, string?) GetEpisodeTitles(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, string metadataLanguage)
         => (
-            GetEpisodeTitleByType(episode, series, TitleProviderType.Main, metadataLanguage),
-            GetEpisodeTitleByType(episode, series, TitleProviderType.Alternate, metadataLanguage)
+            GetEpisodeTitleByType(episodeInfo, seasonInfo, TitleProviderType.Main, metadataLanguage),
+            GetEpisodeTitleByType(episodeInfo, seasonInfo, TitleProviderType.Alternate, metadataLanguage)
         );
 
-    public static (string?, string?) GetSeasonTitles(SeasonInfo series, string metadataLanguage)
+    public static (string?, string?) GetSeasonTitles(SeasonInfo seasonInfo, string metadataLanguage)
+        => GetSeasonTitles(seasonInfo, 0, metadataLanguage);
+
+    public static (string?, string?) GetSeasonTitles(SeasonInfo seasonInfo, int baseSeasonOffset, string metadataLanguage)
+    {
+        var displayTitle = GetSeriesTitleByType(seasonInfo, seasonInfo.Shoko.Name, TitleProviderType.Main, metadataLanguage);
+        var alternateTitle = GetSeriesTitleByType(seasonInfo, seasonInfo.Shoko.Name, TitleProviderType.Alternate, metadataLanguage);
+        if (baseSeasonOffset > 0) {
+            string type = string.Empty;
+            switch (baseSeasonOffset) {
+                default:
+                    break;
+                case 1:
+                    type = "Alternate Version";
+                    break;
+            }
+            if (!string.IsNullOrEmpty(type)) {
+                displayTitle += $" ({type})";
+                alternateTitle += $" ({type})";
+            }
+        }
+        return (displayTitle, alternateTitle);
+    }
+
+    public static (string?, string?) GetShowTitles(ShowInfo showInfo, string metadataLanguage)
         => (
-            GetSeriesTitleByType(series, series.Shoko.Name, TitleProviderType.Main, metadataLanguage),
-            GetSeriesTitleByType(series, series.Shoko.Name, TitleProviderType.Alternate, metadataLanguage)
+            GetSeriesTitleByType(showInfo.DefaultSeason, showInfo.Name, TitleProviderType.Main, metadataLanguage),
+            GetSeriesTitleByType(showInfo.DefaultSeason, showInfo.Name, TitleProviderType.Alternate, metadataLanguage)
         );
 
-    public static (string?, string?) GetShowTitles(ShowInfo series, string metadataLanguage)
+    public static (string?, string?) GetMovieTitles(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, string metadataLanguage)
         => (
-            GetSeriesTitleByType(series.DefaultSeason, series.Name, TitleProviderType.Main, metadataLanguage),
-            GetSeriesTitleByType(series.DefaultSeason, series.Name, TitleProviderType.Alternate, metadataLanguage)
-        );
-
-    public static (string?, string?) GetMovieTitles(EpisodeInfo episode, SeasonInfo series, string metadataLanguage)
-        => (
-            GetMovieTitleByType(episode, series, TitleProviderType.Main, metadataLanguage),
-            GetMovieTitleByType(episode, series, TitleProviderType.Alternate, metadataLanguage)
+            GetMovieTitleByType(episodeInfo, seasonInfo, TitleProviderType.Main, metadataLanguage),
+            GetMovieTitleByType(episodeInfo, seasonInfo, TitleProviderType.Alternate, metadataLanguage)
         );
 
     /// <summary>
@@ -292,28 +310,28 @@ public static class Text
             _ => Array.Empty<TitleProvider>(),
         };
 
-    private static string? GetMovieTitleByType(EpisodeInfo episode, SeasonInfo series, TitleProviderType type, string metadataLanguage)
+    private static string? GetMovieTitleByType(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, TitleProviderType type, string metadataLanguage)
     {
-        var mainTitle = GetSeriesTitleByType(series, series.Shoko.Name, type, metadataLanguage);
-        var subTitle = GetEpisodeTitleByType(episode, series, type, metadataLanguage);
+        var mainTitle = GetSeriesTitleByType(seasonInfo, seasonInfo.Shoko.Name, type, metadataLanguage);
+        var subTitle = GetEpisodeTitleByType(episodeInfo, seasonInfo, type, metadataLanguage);
 
         if (!(string.IsNullOrEmpty(subTitle) || IgnoredSubTitles.Contains(subTitle)))
             return $"{mainTitle}: {subTitle}".Trim();
         return mainTitle?.Trim();
     }
 
-    private static string? GetEpisodeTitleByType(EpisodeInfo episode, SeasonInfo series, TitleProviderType type, string metadataLanguage)
+    private static string? GetEpisodeTitleByType(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, TitleProviderType type, string metadataLanguage)
     {
         foreach (var provider in GetOrderedTitleProvidersByType(type)) {
             var title = provider switch {
                 TitleProvider.Shoko_Default =>
-                    episode.Shoko.Name,
+                    episodeInfo.Shoko.Name,
                 TitleProvider.AniDB_Default =>
-                    GetDefaultTitle(episode.AniDB.Titles),
+                    GetDefaultTitle(episodeInfo.AniDB.Titles),
                 TitleProvider.AniDB_LibraryLanguage =>
-                    GetTitlesForLanguage(episode.AniDB.Titles, false, metadataLanguage),
+                    GetTitlesForLanguage(episodeInfo.AniDB.Titles, false, metadataLanguage),
                 TitleProvider.AniDB_CountryOfOrigin =>
-                    GetTitlesForLanguage(episode.AniDB.Titles, false, GuessOriginLanguage(GetMainLanguage(series.AniDB.Titles))),
+                    GetTitlesForLanguage(episodeInfo.AniDB.Titles, false, GuessOriginLanguage(GetMainLanguage(seasonInfo.AniDB.Titles))),
                 _ => null,
             };
             if (!string.IsNullOrEmpty(title))
@@ -322,18 +340,18 @@ public static class Text
         return null;
     }
 
-    private static string? GetSeriesTitleByType(SeasonInfo series, string defaultName, TitleProviderType type, string metadataLanguage)
+    private static string? GetSeriesTitleByType(SeasonInfo seasonInfo, string defaultName, TitleProviderType type, string metadataLanguage)
     {
         foreach (var provider in GetOrderedTitleProvidersByType(type)) {
             var title = provider switch {
                 TitleProvider.Shoko_Default =>
                     defaultName,
                 TitleProvider.AniDB_Default =>
-                    GetDefaultTitle(series.AniDB.Titles),
+                    GetDefaultTitle(seasonInfo.AniDB.Titles),
                 TitleProvider.AniDB_LibraryLanguage =>
-                    GetTitlesForLanguage(series.AniDB.Titles, true, metadataLanguage),
+                    GetTitlesForLanguage(seasonInfo.AniDB.Titles, true, metadataLanguage),
                 TitleProvider.AniDB_CountryOfOrigin =>
-                    GetTitlesForLanguage(series.AniDB.Titles, true, GuessOriginLanguage(GetMainLanguage(series.AniDB.Titles))),
+                    GetTitlesForLanguage(seasonInfo.AniDB.Titles, true, GuessOriginLanguage(GetMainLanguage(seasonInfo.AniDB.Titles))),
                 _ => null,
             };
             if (!string.IsNullOrEmpty(title))
