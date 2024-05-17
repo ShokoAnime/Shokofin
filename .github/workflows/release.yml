@@ -7,22 +7,24 @@ on:
     branches: master
 
 jobs:
-  build:
+  build_plugin:
     runs-on: ubuntu-latest
-    name: Build & Release
+    name: Build Release
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@master
         with:
           ref: ${{ github.ref }}
-          fetch-depth: 0
+          fetch-depth: 0 # This is set to download the full git history for the repo
 
-      - name: Get release version
-        id: currenttag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      - name: Get Current Version
+        id: release_info
+        uses: revam/gh-action-get-tag-and-version@v1
         with:
-          fallback: 1.0.0
+          branch: true
+          prefix: v
+          prefixRegex: "[vV]?"
 
       - name: Setup .Net
         uses: actions/setup-dotnet@v1
@@ -41,7 +43,9 @@ jobs:
         run: python -m pip install jprm
 
       - name: Run JPRM
-        run: python build_plugin.py --version=${{ steps.currenttag.outputs.tag }}
+        env:
+          CHANGELOG: "" # Add the release's change-log here maybe.
+        run: python build_plugin.py --repo ${{ github.repository }} --version=${{ steps.current_info.outputs.version }}
 
       - name: Update Release
         uses: svenstaro/upload-release-action@v2

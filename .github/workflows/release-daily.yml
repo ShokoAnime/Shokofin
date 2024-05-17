@@ -99,7 +99,7 @@ jobs:
       - name: Run JPRM
         env:
           CHANGELOG: ${{ needs.current_info.outputs.changelog }}
-        run: python build_plugin.py --version=${{ needs.current_info.outputs.version }} --prerelease=True
+        run: python build_plugin.py --repo ${{ github.repository }} --version=${{ needs.current_info.outputs.version }} --prerelease=True
 
       - name: Create Pre-Release
         uses: softprops/action-gh-release@v1
