@@ -71,6 +71,12 @@ public class File
     public class Location
     {
         /// <summary>
+        /// File location ID.
+        /// </summary>
+        [JsonPropertyName("ID")]
+        public int? Id { get; set; }
+
+        /// <summary>
         /// The id of the <see cref="ImportFolder"/> this <see cref="File"/>
         /// resides in.
         /// </summary>

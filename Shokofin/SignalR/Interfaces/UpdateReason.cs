@@ -1,7 +1,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Shokofin.SignalR.Models;
+namespace Shokofin.SignalR.Interfaces;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum UpdateReason

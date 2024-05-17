@@ -9,20 +9,21 @@ public class PropertyWatcher<T>
 
     private bool _continueMonitoring;
 
-    public T LastKnownValue { get; private set; }
+    public T Value { get; private set; }
 
-    public event EventHandler<T> OnValueChanged;
+    public event EventHandler<T>? ValueChanged;
 
     public PropertyWatcher(Func<T> valueGetter)
     {
         _valueGetter = valueGetter;
-        LastKnownValue = _valueGetter();
+        Value = _valueGetter();
     }
 
-    public void StartMonitoring(int delayInMilliseconds)
+    public void StartMonitoring(int delayInSeconds)
     {
+        var delayInMilliseconds = delayInSeconds * 1000;
         _continueMonitoring = true;
-        LastKnownValue = _valueGetter();
+        Value = _valueGetter();
         Task.Run(async () => {
             while (_continueMonitoring) {
                 await Task.Delay(delayInMilliseconds);
@@ -39,9 +40,9 @@ public class PropertyWatcher<T>
     private void CheckForChange()
     {
         var currentValue = _valueGetter()!;
-        if (!LastKnownValue!.Equals(currentValue)) {
-            OnValueChanged?.Invoke(null, currentValue);
-            LastKnownValue = currentValue;
+        if (!Value!.Equals(currentValue)) {
+            ValueChanged?.Invoke(null, currentValue);
+            Value = currentValue;
         }
     }
 }

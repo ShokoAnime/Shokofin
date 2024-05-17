@@ -6,13 +6,13 @@ namespace Shokofin.Resolvers;
 
 public class MediaConfigurationChangedEventArgs : EventArgs
 {
-    public MediaFolderConfiguration Configuration { get; private set; }
+    public MediaFolderConfiguration Configuration { get; private init; }
 
-    public Folder Folder { get; private set; }
+    public Folder MediaFolder { get; private init; }
 
     public MediaConfigurationChangedEventArgs(MediaFolderConfiguration config, Folder folder)
     {
         Configuration = config;
-        Folder = folder;
+        MediaFolder = folder;
     }
 }

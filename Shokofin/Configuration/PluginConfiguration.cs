@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
@@ -254,6 +255,13 @@ public class PluginConfiguration : BasePluginConfiguration
     public LibraryFilteringMode LibraryFilteringMode { get; set; }
 
     /// <summary>
+    /// Reaction time to when a library scan starts/ends, because they don't
+    /// expose it as an event, so we need to poll instead.
+    /// </summary>
+    [Range(1, 10)]
+    public int LibraryScanReactionTimeInSeconds { get; set; }
+
+    /// <summary>
     /// Per media folder configuration.
     /// </summary>
     public List<MediaFolderConfiguration> MediaFolders { get; set; }
@@ -374,6 +382,7 @@ public class PluginConfiguration : BasePluginConfiguration
         MediaFolders = new();
         IgnoredFolders = new[] { ".streams", "@recently-snapshot" };
         LibraryFilteringMode = LibraryFilteringMode.Auto;
+        LibraryScanReactionTimeInSeconds = 1;
         SignalR_AutoConnectEnabled = false;
         SignalR_AutoReconnectInSeconds = new[] { 0, 2, 10, 30, 60, 120, 300 };
         SignalR_RefreshEnabled = false;

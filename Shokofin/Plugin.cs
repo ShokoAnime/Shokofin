@@ -32,10 +32,15 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// </summary>
     public readonly string VirtualRoot;
 
+    /// <summary>
+    /// Gets or sets the event handler that is triggered when this configuration changes.
+    /// </summary>
+    public new event EventHandler<PluginConfiguration>? ConfigurationChanged;
+
     public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
     {
         Instance = this;
-        ConfigurationChanged += OnConfigChanged;
+        base.ConfigurationChanged += OnConfigChanged;
         IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
         VirtualRoot = Path.Join(applicationPaths.ProgramDataPath, "Shokofin", "VFS");
         Logger = logger;
@@ -68,6 +73,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         if (e is not PluginConfiguration config)
             return;
         IgnoredFolders = config.IgnoredFolders.ToHashSet();
+        ConfigurationChanged?.Invoke(sender, config);
     }
 
     public HashSet<string> IgnoredFolders;

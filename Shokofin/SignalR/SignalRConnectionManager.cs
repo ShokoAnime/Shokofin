@@ -1,25 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Timers;
 using Jellyfin.Data.Enums;
-using MediaBrowser.Controller.Library;
-using MediaBrowser.Model.IO;
-using MediaBrowser.Model.Plugins;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Shokofin.API;
 using Shokofin.API.Models;
 using Shokofin.Configuration;
-using Shokofin.ExternalIds;
 using Shokofin.Resolvers;
 using Shokofin.SignalR.Interfaces;
 using Shokofin.SignalR.Models;
-
-using File = System.IO.File;
+using Shokofin.Utils;
 
 namespace Shokofin.SignalR;
 
@@ -35,31 +26,17 @@ public class SignalRConnectionManager
 
     private const string HubUrl = "/signalr/aggregate?feeds=shoko";
 
-    private static readonly TimeSpan DetectChangesThreshold = TimeSpan.FromSeconds(5);
-
     private readonly ILogger<SignalRConnectionManager> Logger;
-
-    private readonly ShokoAPIClient ApiClient;
-
-    private readonly ShokoAPIManager ApiManager;
 
     private readonly ShokoResolveManager ResolveManager;
 
-    private readonly ILibraryManager LibraryManager;
+    private readonly LibraryScanWatcher LibraryScanWatcher;
 
-    private readonly ILibraryMonitor LibraryMonitor;
-
-    private readonly IFileSystem FileSystem;
+    private IDisposable? EventSubmitterLease = null;
 
     private HubConnection? Connection = null;
 
-    private readonly Timer ChangesDetectionTimer;
-
     private string CachedKey = string.Empty;
-
-    private readonly Dictionary<string, (DateTime LastUpdated, List<IMetadataUpdatedEventArgs> List)> ChangesPerSeries = new();
-
-    private readonly Dictionary<int, (DateTime LastUpdated, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> List)> ChangesPerFile = new();
 
 #pragma warning disable CA1822
     public bool IsUsable => CanConnect(Plugin.Instance.Configuration);
@@ -69,17 +46,15 @@ public class SignalRConnectionManager
 
     public HubConnectionState State => Connection == null ? HubConnectionState.Disconnected : Connection.State;
 
-    public SignalRConnectionManager(ILogger<SignalRConnectionManager> logger, ShokoAPIClient apiClient, ShokoAPIManager apiManager, ShokoResolveManager resolveManager, ILibraryManager libraryManager, ILibraryMonitor libraryMonitor, IFileSystem fileSystem)
+    public SignalRConnectionManager(
+        ILogger<SignalRConnectionManager> logger,
+        ShokoResolveManager resolveManager,
+        LibraryScanWatcher libraryScanWatcher
+    )
     {
         Logger = logger;
-        ApiClient = apiClient;
-        ApiManager = apiManager;
         ResolveManager = resolveManager;
-        LibraryManager = libraryManager;
-        LibraryMonitor = libraryMonitor;
-        FileSystem = fileSystem;
-        ChangesDetectionTimer = new() { AutoReset = true, Interval = TimeSpan.FromSeconds(4).TotalMilliseconds };
-        ChangesDetectionTimer.Elapsed += OnIntervalElapsed;
+        LibraryScanWatcher = libraryScanWatcher;
     }
 
     #region Connection
@@ -120,7 +95,7 @@ public class SignalRConnectionManager
             connection.On<FileRenamedEventArgs>("ShokoEvent:FileRenamed", OnFileRelocated);
         }
 
-        ChangesDetectionTimer.Start();
+        EventSubmitterLease = ResolveManager.RegisterEventSubmitter();
         try {
             await connection.StartAsync().ConfigureAwait(false);
 
@@ -167,11 +142,10 @@ public class SignalRConnectionManager
 
         await connection.DisposeAsync();
 
-        ChangesDetectionTimer.Stop();
-        if (ChangesPerFile.Count > 0)
-            ClearFileEvents();
-        if (ChangesPerSeries.Count > 0)
-            ClearAnimeEvents();
+        if (EventSubmitterLease is not null) {
+            EventSubmitterLease.Dispose();
+            EventSubmitterLease = null;
+        }
     }
 
     public Task ResetConnectionAsync()
@@ -200,13 +174,10 @@ public class SignalRConnectionManager
     {
         Plugin.Instance.ConfigurationChanged -= OnConfigurationChanged;
         await DisconnectAsync();
-        ChangesDetectionTimer.Elapsed -= OnIntervalElapsed;
     }
 
-    private void OnConfigurationChanged(object? sender, BasePluginConfiguration baseConfig)
+    private void OnConfigurationChanged(object? sender, PluginConfiguration config)
     {
-        if (baseConfig is not PluginConfiguration config)
-            return;
         var currentKey = ConstructKey(config);
         if (!string.Equals(currentKey, CachedKey))
         {
@@ -226,70 +197,6 @@ public class SignalRConnectionManager
 
     #region Events
 
-    #region Intervals
-
-    private void OnIntervalElapsed(object? sender, ElapsedEventArgs eventArgs)
-    {
-        var filesToProcess = new List<(int, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)>)>();
-        var seriesToProcess = new List<(string, List<IMetadataUpdatedEventArgs>)>();
-        lock (ChangesPerFile) {
-            if (ChangesPerFile.Count > 0) {
-                var now = DateTime.Now;
-                foreach (var (fileId, (lastUpdated, list)) in ChangesPerFile) {
-                    if (now - lastUpdated < DetectChangesThreshold)
-                        continue;
-                    filesToProcess.Add((fileId, list));
-                }
-                foreach (var (fileId, _) in filesToProcess)
-                    ChangesPerFile.Remove(fileId);
-            }
-        }
-        lock (ChangesPerSeries) {
-            if (ChangesPerSeries.Count > 0) {
-                var now = DateTime.Now;
-                foreach (var (metadataId, (lastUpdated, list)) in ChangesPerSeries) {
-                    if (now - lastUpdated < DetectChangesThreshold)
-                        continue;
-                    seriesToProcess.Add((metadataId, list));
-                }
-                foreach (var (metadataId, _) in seriesToProcess)
-                    ChangesPerSeries.Remove(metadataId);
-            }
-        }
-        foreach (var (fileId, changes) in filesToProcess)
-            Task.Run(() => ProcessFileChanges(fileId, changes));
-        foreach (var (metadataId, changes) in seriesToProcess)
-            Task.Run(() => ProcessSeriesChanges(metadataId, changes));
-    }
-
-    private void ClearFileEvents()
-    {
-        var filesToProcess = new List<(int, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)>)>();
-        lock (ChangesPerFile) {
-            foreach (var (fileId, (lastUpdated, list)) in ChangesPerFile) {
-                filesToProcess.Add((fileId, list));
-            }
-            ChangesPerFile.Clear();
-        }
-        foreach (var (fileId, changes) in filesToProcess)
-            Task.Run(() => ProcessFileChanges(fileId, changes));
-    }
-
-    private void ClearAnimeEvents()
-    {
-        var seriesToProcess = new List<(string, List<IMetadataUpdatedEventArgs>)>();
-        lock (ChangesPerSeries) {
-            foreach (var (metadataId, (lastUpdated, list)) in ChangesPerSeries) {
-                seriesToProcess.Add((metadataId, list));
-            }
-            ChangesPerSeries.Clear();
-        }
-        foreach (var (metadataId, changes) in seriesToProcess)
-            Task.Run(() => ProcessSeriesChanges(metadataId, changes));
-    }
-
-    #endregion
-
     #region File Events
 
     private void OnFileMatched(IFileEventArgs eventArgs)
@@ -303,7 +210,16 @@ public class SignalRConnectionManager
             eventArgs.HasCrossReferences
         );
 
-        AddFileEvent(eventArgs.FileId, UpdateReason.Updated, eventArgs.ImportFolderId, eventArgs.RelativePath, eventArgs);
+        if (LibraryScanWatcher.IsScanRunning) {
+            Logger.LogTrace(
+                "Library scan is running. Skipping emit of file event. (File={FileId},Location={LocationId})",
+                eventArgs.FileId,
+                eventArgs.FileLocationId
+            );
+            return;
+        }
+
+        ResolveManager.AddFileEvent(eventArgs.FileId, UpdateReason.Updated, eventArgs.ImportFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     private void OnFileRelocated(IFileRelocationEventArgs eventArgs)
@@ -319,14 +235,23 @@ public class SignalRConnectionManager
             eventArgs.HasCrossReferences
         );
 
-        AddFileEvent(eventArgs.FileId, UpdateReason.Removed, eventArgs.PreviousImportFolderId, eventArgs.PreviousRelativePath, eventArgs);
-        AddFileEvent(eventArgs.FileId, UpdateReason.Added, eventArgs.ImportFolderId, eventArgs.RelativePath, eventArgs);
+        if (LibraryScanWatcher.IsScanRunning) {
+            Logger.LogTrace(
+                "Library scan is running. Skipping emit of file event. (File={FileId},Location={LocationId})",
+                eventArgs.FileId,
+                eventArgs.FileLocationId
+            );
+            return;
+        }
+
+        ResolveManager.AddFileEvent(eventArgs.FileId, UpdateReason.Removed, eventArgs.PreviousImportFolderId, eventArgs.PreviousRelativePath, eventArgs);
+        ResolveManager.AddFileEvent(eventArgs.FileId, UpdateReason.Added, eventArgs.ImportFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     private void OnFileDeleted(IFileEventArgs eventArgs)
     {
         Logger.LogDebug(
-            "File deleted; {ImportFolderIdB} {PathB} (File={FileId},Location={LocationId},CrossReferences={HasCrossReferences})",
+            "File deleted; {ImportFolderId} {Path} (File={FileId},Location={LocationId},CrossReferences={HasCrossReferences})",
             eventArgs.ImportFolderId,
             eventArgs.RelativePath,
             eventArgs.FileId,
@@ -334,214 +259,16 @@ public class SignalRConnectionManager
             eventArgs.HasCrossReferences
         );
 
-        AddFileEvent(eventArgs.FileId, UpdateReason.Removed, eventArgs.ImportFolderId, eventArgs.RelativePath, eventArgs);
-    }
-
-    private void AddFileEvent(int fileId, UpdateReason reason, int importFolderId, string filePath, IFileEventArgs eventArgs)
-    {
-        lock (ChangesPerFile) {
-            if (ChangesPerFile.TryGetValue(fileId, out var tuple))
-                tuple.LastUpdated = DateTime.Now;
-            else
-                ChangesPerFile.Add(fileId, tuple = (DateTime.Now, new()));
-            tuple.List.Add((reason, importFolderId, filePath, eventArgs));
-        }
-    }
-
-    private async Task ProcessFileChanges(int fileId, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> changes)
-    {
-        try {
-            Logger.LogInformation("Processing {EventCount} file change events… (File={FileId})", changes.Count, fileId);
-
-            // Something was added or updated.
-            var locationsToNotify = new List<string>();
-            var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
-            var mediaFolders = ResolveManager.GetAvailableMediaFolders(fileEvents: true);
-            var (reason, importFolderId, relativePath, lastEvent) = changes.Last();
-            if (reason != UpdateReason.Removed) {
-                foreach (var (config, mediaFolder, vfsPath) in mediaFolders) {
-                    if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
-                        continue;
-
-                    var sourceLocation = Path.Join(mediaFolder.Path, relativePath[config.ImportFolderRelativePath.Length..]);
-                    if (!File.Exists(sourceLocation))
-                        continue;
-
-                    // Let the core logic handle the rest.
-                    if (!config.IsVirtualFileSystemEnabled) {
-                        locationsToNotify.Add(sourceLocation);
-                        continue;
-                    }
-
-                    var result = new LinkGenerationResult();
-                    var topFolders = new HashSet<string>();
-                    var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, sourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
-                        .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
-                        .ToList();
-                    foreach (var (srcLoc, symLinks, importDate) in vfsLocations) {
-                        result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, importDate!.Value);
-                        foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
-                            topFolders.Add(path);
-                    }
-
-                    // Remove old links for file.
-                    var videos = LibraryManager
-                        .GetItemList(
-                            new() {
-                                AncestorIds = new[] { mediaFolder.Id },
-                                IncludeItemTypes = new[] { BaseItemKind.Episode, BaseItemKind.Movie },
-                                HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, fileId.ToString() } },
-                                DtoOptions = new(true),
-                            },
-                            true
-                        )
-                        .Where(item => !string.IsNullOrEmpty(item.Path) && item.Path.StartsWith(vfsPath) && !result.Paths.Contains(item.Path))
-                        .ToList();
-                    foreach (var video in videos) {
-                        File.Delete(video.Path);
-                        topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
-                        locationsToNotify.Add(video.Path);
-                        result.RemovedVideos++;
-                    }
-
-                    result.Print(Logger, mediaFolder.Path);
-
-                    // If all the "top-level-folders" exist, then let the core logic handle the rest.
-                    if (topFolders.All(path => LibraryManager.FindByPath(path, true) != null)) {
-                        var old = locationsToNotify.Count;
-                        locationsToNotify.AddRange(vfsLocations.SelectMany(tuple => tuple.symbolicLinks));
-                    }
-                    // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
-                    else {
-                        var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolder.Path, false).FirstOrDefault();
-                        if (!string.IsNullOrEmpty(fileOrFolder))
-                            locationsToNotify.Add(fileOrFolder);
-                    }
-                }
-            }
-            // Something was removed, so assume the location is gone.
-            else if (changes.FirstOrDefault(t => t.Reason == UpdateReason.Removed).Event is IFileRelocationEventArgs firstRemovedEvent) {
-                relativePath = firstRemovedEvent.RelativePath;
-                importFolderId = firstRemovedEvent.ImportFolderId;
-                foreach (var (config, mediaFolder, vfsPath) in mediaFolders) {
-                    if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
-                        continue;
-
-
-                    // Let the core logic handle the rest.
-                    if (!config.IsVirtualFileSystemEnabled) {
-                        var sourceLocation = Path.Join(mediaFolder.Path, relativePath[config.ImportFolderRelativePath.Length..]);
-                        locationsToNotify.Add(sourceLocation);
-                        continue;
-                    }
-
-                    // Check if we can use another location for the file.
-                    var result = new LinkGenerationResult();
-                    var vfsSymbolicLinks = new HashSet<string>();
-                    var topFolders = new HashSet<string>();
-                    var newRelativePath = await GetNewRelativePath(config, fileId, relativePath);
-                    if (!string.IsNullOrEmpty(newRelativePath)) {
-                        var newSourceLocation = Path.Join(mediaFolder.Path, newRelativePath[config.ImportFolderRelativePath.Length..]);
-                        var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, newSourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
-                            .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
-                            .ToList();
-                        foreach (var (srcLoc, symLinks, importDate) in vfsLocations) {
-                            result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, importDate!.Value);
-                            foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
-                                topFolders.Add(path);
-                        }
-                        vfsSymbolicLinks = vfsLocations.Select(tuple => tuple.sourceLocation).ToHashSet();
-                    }
-
-                    // Remove old links for file.
-                    var videos = LibraryManager
-                        .GetItemList(
-                            new() {
-                                AncestorIds = new[] { mediaFolder.Id },
-                                IncludeItemTypes = new[] { BaseItemKind.Episode, BaseItemKind.Movie },
-                                HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, fileId.ToString() } },
-                                DtoOptions = new(true),
-                            },
-                            true
-                        )
-                        .Where(item => !string.IsNullOrEmpty(item.Path) && item.Path.StartsWith(vfsPath) && !result.Paths.Contains(item.Path))
-                        .ToList();
-                    foreach (var video in videos) {
-                        File.Delete(video.Path);
-                        topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
-                        locationsToNotify.Add(video.Path);
-                        result.RemovedVideos++;
-                    }
-
-                    result.Print(Logger, mediaFolder.Path);
-
-                    // If all the "top-level-folders" exist, then let the core logic handle the rest.
-                    if (topFolders.All(path => LibraryManager.FindByPath(path, true) != null)) {
-                        var old = locationsToNotify.Count;
-                        locationsToNotify.AddRange(vfsSymbolicLinks);
-                    }
-                    // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
-                    else {
-                        var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolder.Path, false).FirstOrDefault();
-                        if (!string.IsNullOrEmpty(fileOrFolder))
-                            locationsToNotify.Add(fileOrFolder);
-                    }
-                }
-            }
-
-            // We let jellyfin take it from here.
-            Logger.LogDebug("Notifying Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count, fileId.ToString());
-            foreach (var location in locationsToNotify)
-                LibraryMonitor.ReportFileSystemChanged(location);
-        }
-        catch (Exception ex) {
-            Logger.LogError(ex, "Error processing {EventCount} file change events. (File={FileId})", changes.Count, fileId);
-        }
-    }
-
-    private async Task<IReadOnlySet<string>> GetSeriesIdsForFile(int fileId, IFileEventArgs? fileEvent)
-    {
-        HashSet<string> seriesIds;
-        if (fileEvent != null && fileEvent.CrossReferences.All(xref => xref.ShokoSeriesId.HasValue && xref.ShokoEpisodeId.HasValue))
-            seriesIds = fileEvent.CrossReferences.Select(xref => xref.ShokoSeriesId!.Value.ToString())
-                .Distinct()
-                .ToHashSet();
-        else
-            seriesIds = (await ApiClient.GetFile(fileId.ToString())).CrossReferences
-                .Where(xref => xref.Series.Shoko.HasValue && xref.Episodes.All(e => e.Shoko.HasValue))
-                .Select(xref => xref.Series.Shoko!.Value.ToString())
-                .Distinct()
-                .ToHashSet();
-
-        var filteredSeriesIds = new HashSet<string>();
-        foreach (var seriesId in seriesIds) {
-            var seriesPathSet = await ApiManager.GetPathSetForSeries(seriesId);
-            if (seriesPathSet.Count > 0) {
-                filteredSeriesIds.Add(seriesId);
-            }
+        if (LibraryScanWatcher.IsScanRunning) {
+            Logger.LogTrace(
+                "Library scan is running. Skipping emit of file event. (File={FileId},Location={LocationId})",
+                eventArgs.FileId,
+                eventArgs.FileLocationId
+            );
+            return;
         }
 
-        // Return all series if we only have this file for all of them,
-        // otherwise return only the series were we have other files that are
-        // not linked to other series.
-        return filteredSeriesIds.Count == 0 ? seriesIds : filteredSeriesIds;
-    }
-
-    private async Task<string?> GetNewRelativePath(MediaFolderConfiguration config, int fileId, string relativePath)
-    {
-        // Check if the file still exists, and if it has any other locations we can use.
-        try {
-            var file = await ApiClient.GetFile(fileId.ToString());
-            var usableLocation = file.Locations
-                .Where(loc => loc.ImportFolderId == config.ImportFolderId && config.IsEnabledForPath(loc.RelativePath) && loc.RelativePath != relativePath)
-                .FirstOrDefault();
-            return usableLocation?.RelativePath;
-        }
-        catch (ApiException ex) {
-            if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-                return null;
-            throw;
-        }
+        ResolveManager.AddFileEvent(eventArgs.FileId, UpdateReason.Removed, eventArgs.ImportFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     #endregion
@@ -562,39 +289,18 @@ public class SignalRConnectionManager
             eventArgs.GroupIds
         );
 
+        if (LibraryScanWatcher.IsScanRunning) {
+            Logger.LogTrace(
+                "Library scan is running. Skipping emit of refresh event. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})",
+                eventArgs.EpisodeIds,
+                eventArgs.SeriesIds,
+                eventArgs.GroupIds
+            );
+            return;
+        }
+
         if (eventArgs.Type is BaseItemKind.Episode or BaseItemKind.Series)
-            AddSeriesEvent(eventArgs.ProviderParentUId ?? eventArgs.ProviderUId, eventArgs);
-    }
-
-    private void AddSeriesEvent(string metadataId, IMetadataUpdatedEventArgs eventArgs)
-    {
-        lock (ChangesPerSeries) {
-            if (ChangesPerSeries.TryGetValue(metadataId, out var tuple))
-                tuple.LastUpdated = DateTime.Now;
-            else
-                ChangesPerSeries.Add(metadataId, tuple = (DateTime.Now, new()));
-            tuple.List.Add(eventArgs);
-        }
-    }
-
-    private Task ProcessSeriesChanges(string metadataId, List<IMetadataUpdatedEventArgs> changes)
-    {
-        try {
-            Logger.LogInformation("Processing {EventCount} metadata change events… (Metadata={ProviderUniqueId})", changes.Count, metadataId);
-
-            // Refresh all episodes and movies linked to the episode.
-
-            // look up the series/season/movie, then check the media folder they're
-            // in to check if the refresh event is enabled for the media folder, and
-            // only send out the events if it's enabled.
-
-            // Refresh the show and all entries beneath it, or all movies linked to
-            // the show.
-        }
-        catch (Exception ex) {
-            Logger.LogError(ex, "Error processing {EventCount} metadata change events. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
-        }
-        return Task.CompletedTask;
+            ResolveManager.AddSeriesEvent(eventArgs.ProviderParentUId ?? eventArgs.ProviderUId, eventArgs);
     }
 
     #endregion

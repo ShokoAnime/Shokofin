@@ -64,11 +64,5 @@ public interface IFileEventArgs
         /// </summary>
         [JsonPropertyName("SeriesID")]
         public int? ShokoSeriesId { get; set; }
-
-        /// <summary>
-        /// Shoko group id.
-        /// </summary>
-        [JsonPropertyName("GroupID")]
-        public int? ShokoGroupId { get; set; }
     }
 }

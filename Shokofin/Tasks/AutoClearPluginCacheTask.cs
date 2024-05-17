@@ -6,6 +6,7 @@ using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Resolvers;
+using Shokofin.Utils;
 
 namespace Shokofin.Tasks;
 
@@ -42,16 +43,25 @@ public class AutoClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTa
     private readonly ShokoAPIClient ApiClient;
 
     private readonly ShokoResolveManager ResolveManager;
+    
+    private readonly LibraryScanWatcher LibraryScanWatcher;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AutoClearPluginCacheTask" /> class.
     /// </summary>
-    public AutoClearPluginCacheTask(ILogger<AutoClearPluginCacheTask> logger, ShokoAPIManager apiManager, ShokoAPIClient apiClient, ShokoResolveManager resolveManager)
+    public AutoClearPluginCacheTask(
+        ILogger<AutoClearPluginCacheTask> logger,
+        ShokoAPIManager apiManager,
+        ShokoAPIClient apiClient,
+        ShokoResolveManager resolveManager,
+        LibraryScanWatcher libraryScanWatcher
+    )
     {
         Logger = logger;
         ApiManager = apiManager;
         ApiClient = apiClient;
         ResolveManager = resolveManager;
+        LibraryScanWatcher = libraryScanWatcher;
     }
 
     /// <summary>
@@ -73,6 +83,9 @@ public class AutoClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTa
     /// <returns>Task.</returns>
     public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
+        if (LibraryScanWatcher.IsScanRunning)
+            return Task.CompletedTask;
+
         if (ApiClient.IsCacheStalled || ApiManager.IsCacheStalled || ResolveManager.IsCacheStalled)
             Logger.LogInformation("Automagically clearing cache…");
         if (ApiClient.IsCacheStalled)

@@ -62,9 +62,6 @@ public class ShokoAPIManager : IDisposable
 
     #region Ignore rule
 
-    public static string GetVirtualRootForMediaFolder(Folder mediaFolder)
-        => Path.Join(Plugin.Instance.VirtualRoot, mediaFolder.Id.ToString());
-
     public (Folder mediaFolder, string partialPath) FindMediaFolder(string path, Folder parent, Folder root)
     {
         Folder? mediaFolder = null;
@@ -72,7 +69,7 @@ public class ShokoAPIManager : IDisposable
             var mediaFolderId = Guid.Parse(path[(Plugin.Instance.VirtualRoot.Length + 1)..].Split(Path.DirectorySeparatorChar).First());
             mediaFolder = LibraryManager.GetItemById(mediaFolderId) as Folder;
             if (mediaFolder != null) {
-                var mediaRootVirtualPath = GetVirtualRootForMediaFolder(mediaFolder);
+                var mediaRootVirtualPath = mediaFolder.GetVirtualRoot();
                 return (mediaFolder, path[mediaRootVirtualPath.Length..]);
             }
             return (root, path);
