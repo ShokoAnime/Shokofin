@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.168",
+                "changelog": "misc: update build config\n\nfeat: add real time monitoring support for the VFS\n\n- Added a library scan watcher, responsible for tracking when a library scan starts and ends.\n\n- Fixed it so the signalr events won't be emitted (but still logged) if a library scan is running, preventing the events from interfering with the in-progress library scan. This is how jellyfin core already handles the file events during a scan, and will help prevent double updating the entries during a scan.\n\n- Refactored it so the resolve manager is responsible for processing file events, so it can consume events from both the signalr event events in addition to the the new file events from the newly added library monitor.\n\n- Added an _experimental_ library monitor responsible for emitting file events for the VFS. This should make it so real time monitoring will work with the VFS again, but the implementation haven't been thoroughly tested so there may still be bugs (or not).\n\n- Fixed it so the auto clear cache will **never** run during a library scan. It may still run if the caches idles for too long during a refresh of the library outside the library scan though.\n\nrefactor: don't cache media folder search\nanymore, since it's probably not needed anymore.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.168/shoko_3.0.1.168.zip",
+                "checksum": "5ef4a5c6b976291fd8297e11d4df34d5",
+                "timestamp": "2024-05-17T17:56:27Z"
+            },
+            {
                 "version": "3.0.1.167",
                 "changelog": "misc: cleanup text utility",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.164/shoko_3.0.1.164.zip",
                 "checksum": "c7fd8fb2da6ebd71f7becc834b728a19",
                 "timestamp": "2024-05-12T22:21:40Z"
-            },
-            {
-                "version": "3.0.1.163",
-                "changelog": "misc: add property watcher\n\nfeat: add file part support for daily server\nwithout breaking stable server support",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.163/shoko_3.0.1.163.zip",
-                "checksum": "0a023e0b4940f387b8621f70812014e8",
-                "timestamp": "2024-05-12T22:01:53Z"
             }
         ]
     }
