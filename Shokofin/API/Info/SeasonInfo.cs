@@ -185,6 +185,10 @@ public class SeasonInfo
                 index++;
             }
         }
+        // Also switch the type from movie to web if we're hidden the main movies, but the parts are normal episodes.
+        else if (type == SeriesType.Movie && episodesList.Any(episodeInfo => string.Equals(episodeInfo.AniDB.Titles.FirstOrDefault(title => title.LanguageCode == "en")?.Value, "The Complete Movie", StringComparison.InvariantCultureIgnoreCase) && episodeInfo.Shoko.IsHidden)) {
+            type = SeriesType.Web;
+        }
 
         if (Plugin.Instance.Configuration.MovieSpecialsAsExtraFeaturettes && type == SeriesType.Movie) {
             if (specialsList.Count > 0) {
