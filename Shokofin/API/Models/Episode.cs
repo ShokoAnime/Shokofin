@@ -118,14 +118,14 @@ public class Episode
 public enum EpisodeType
 {
     /// <summary>
-    /// The episode type is unknown.
-    /// </summary>
-    Unknown = 0,
-
-    /// <summary>
     /// A catch-all type for future extensions when a provider can't use a current episode type, but knows what the future type should be.
     /// </summary>
     Other = 1,
+
+    /// <summary>
+    /// The episode type is unknown.
+    /// </summary>
+    Unknown = Other,
 
     /// <summary>
     /// A normal episode.
