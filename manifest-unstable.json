@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.170",
+                "changelog": "feat: react to series/episode events\n\n- Hooked up series/episode events to refresh shows/seasons/episodes/movies. This is untested and good night.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.170/shoko_3.0.1.170.zip",
+                "checksum": "7d2fd951ad580d4d0a42dd7e005cef07",
+                "timestamp": "2024-05-18T04:21:36Z"
+            },
+            {
                 "version": "3.0.1.169",
                 "changelog": "revert: \"misc: update build config (take 2)\"\n\nThis reverts commit 8a85de9296e088406379788c7a8933cdc80ca18e.\n\nfix: another movie exception\n\n- Also switch the type from movie to web if we're hidden the main movies, but the parts are normal episodes.\n\nmisc: update build config (take 2) [skip ci]\n\n- Generalize the build script so it could be used for _any_ plugin.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.166/shoko_3.0.1.166.zip",
                 "checksum": "157852058957d9d08e959ed7828c562d",
                 "timestamp": "2024-05-13T22:00:13Z"
-            },
-            {
-                "version": "3.0.1.165",
-                "changelog": "refactor: only build VFS once per path while the cache is filled",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.165/shoko_3.0.1.165.zip",
-                "checksum": "d6426eda03ec5ee698938925f1ea7e2f",
-                "timestamp": "2024-05-12T22:48:04Z"
             }
         ]
     }
