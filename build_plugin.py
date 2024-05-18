@@ -4,19 +4,6 @@ import yaml
 import argparse
 import re
 
-def find_csproj_file():
-    root_dir = os.getcwd()
-    for file_name in os.listdir(root_dir):
-        if file_name.endswith('.csproj'):
-            return os.path.join(root_dir, file_name)
-    for subdir_name in os.listdir(root_dir):
-        subdir_path = os.path.join(root_dir, subdir_name)
-        if os.path.isdir(subdir_path) and not subdir_name.startswith('.'):
-            for file_name in os.listdir(subdir_path):
-                if file_name.endswith('.csproj'):
-                    return os.path.join(subdir_path, file_name)
-    return None
-
 def extract_target_framework(csproj_path):
     with open(csproj_path, "r") as file:
         content = file.read()
@@ -25,7 +12,7 @@ def extract_target_framework(csproj_path):
     if target_framework_match:
         return target_framework_match.group(1)
     elif target_frameworks_match:
-        return target_frameworks_match.group(1).split(";")[0]
+        return target_frameworks_match.group(1).split(";")[0]  # Return the first framework
     else:
         return None
 
@@ -35,7 +22,7 @@ parser.add_argument("--version", required=True)
 parser.add_argument("--prerelease", default=True)
 opts = parser.parse_args()
 
-framework = extract_target_framework(find_csproj_file())
+framework = extract_target_framework("./Shokofin/Shokofin.csproj")
 version = opts.version
 prerelease = bool(opts.prerelease)
 
@@ -67,7 +54,7 @@ with open(build_file, "w") as file:
 
 zipfile=os.popen("jprm --verbosity=debug plugin build \".\" --output=\"%s\" --version=\"%s\" --dotnet-framework=\"%s\"" % (artifact_dir, version, framework)).read().strip()
 
-jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{version}/{data["name"].lower()}_{version}.zip"
+jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{version}/shoko_{version}.zip"
 
 os.system("jprm repo add --plugin-url=%s %s %s" % (jellyfin_plugin_release_url, jellyfin_repo_file, zipfile))
 
