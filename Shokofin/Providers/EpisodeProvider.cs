@@ -19,9 +19,11 @@ using EpisodeType = Shokofin.API.Models.EpisodeType;
 
 namespace Shokofin.Providers;
 
-public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>
+public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHasOrder
 {
     public string Name => Plugin.MetadataProviderName;
+
+    public int Order => 0;
 
     private readonly IHttpClientFactory HttpClientFactory;
 

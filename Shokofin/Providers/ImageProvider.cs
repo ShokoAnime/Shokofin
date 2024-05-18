@@ -15,9 +15,11 @@ using System.Linq;
 
 namespace Shokofin.Providers;
 
-public class ImageProvider : IRemoteImageProvider
+public class ImageProvider : IRemoteImageProvider, IHasOrder
 {
     public string Name => Plugin.MetadataProviderName;
+
+    public int Order => 0;
 
     private readonly IHttpClientFactory HttpClientFactory;
 

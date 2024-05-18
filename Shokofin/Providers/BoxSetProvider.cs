@@ -15,9 +15,11 @@ using Shokofin.Utils;
 
 namespace Shokofin.Providers;
 
-public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>
+public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasOrder
 {
     public string Name => Plugin.MetadataProviderName;
+
+    public int Order => 0;
 
     private readonly IHttpClientFactory HttpClientFactory;
 

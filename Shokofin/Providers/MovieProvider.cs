@@ -15,9 +15,11 @@ using Shokofin.Utils;
 
 namespace Shokofin.Providers;
 
-public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>
+public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrder
 {
     public string Name => Plugin.MetadataProviderName;
+
+    public int Order => 0;
 
     private readonly IHttpClientFactory HttpClientFactory;
 

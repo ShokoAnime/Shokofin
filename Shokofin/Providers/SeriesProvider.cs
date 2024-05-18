@@ -17,9 +17,11 @@ using Shokofin.Utils;
 
 namespace Shokofin.Providers;
 
-public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>
+public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
 {
     public string Name => Plugin.MetadataProviderName;
+
+    public int Order => 0;
 
     private readonly IHttpClientFactory HttpClientFactory;
 

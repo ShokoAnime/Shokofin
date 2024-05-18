@@ -16,9 +16,11 @@ using Info = Shokofin.API.Info;
 
 namespace Shokofin.Providers;
 
-public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>
+public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasOrder
 {
     public string Name => Plugin.MetadataProviderName;
+
+    public int Order => 0;
 
     private readonly IHttpClientFactory HttpClientFactory;
 
