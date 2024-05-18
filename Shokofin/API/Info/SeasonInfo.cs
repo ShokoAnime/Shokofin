@@ -115,6 +115,8 @@ public class SeasonInfo
         int index = 0;
         int lastNormalEpisode = 0;
         foreach (var episode in episodes) {
+            if (episode.Shoko.IsHidden)
+                continue;
             switch (episode.AniDB.Type) {
                 case EpisodeType.Normal:
                     episodesList.Add(episode);
@@ -186,7 +188,7 @@ public class SeasonInfo
             }
         }
         // Also switch the type from movie to web if we're hidden the main movies, but the parts are normal episodes.
-        else if (type == SeriesType.Movie && episodesList.Any(episodeInfo => string.Equals(episodeInfo.AniDB.Titles.FirstOrDefault(title => title.LanguageCode == "en")?.Value, "The Complete Movie", StringComparison.InvariantCultureIgnoreCase) && episodeInfo.Shoko.IsHidden)) {
+        else if (type == SeriesType.Movie && episodes.Any(episodeInfo => string.Equals(episodeInfo.AniDB.Titles.FirstOrDefault(title => title.LanguageCode == "en")?.Value, "Complete Movie", StringComparison.InvariantCultureIgnoreCase) && episodeInfo.Shoko.IsHidden)) {
             type = SeriesType.Web;
         }
 

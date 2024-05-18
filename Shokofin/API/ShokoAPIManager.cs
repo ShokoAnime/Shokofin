@@ -611,7 +611,6 @@ public class ShokoAPIManager : IDisposable
                 var (earliestImportedAt, lastImportedAt)= await GetEarliestImportedAtForSeries(seriesId).ConfigureAwait(false);
                 var episodes = (await APIClient.GetEpisodesFromSeries(seriesId).ConfigureAwait(false) ?? new()).List
                     .Select(e => CreateEpisodeInfo(e, e.IDs.Shoko.ToString()))
-                    .Where(e => !e.Shoko.IsHidden)
                     .OrderBy(e => e.AniDB.AirDate)
                     .ToList();
                 var cast = await APIClient.GetSeriesCast(seriesId).ConfigureAwait(false);

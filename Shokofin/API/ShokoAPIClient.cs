@@ -325,7 +325,7 @@ public class ShokoAPIClient : IDisposable
 
     public Task<ListResult<Episode>> GetEpisodesFromSeries(string seriesId)
     {
-        return Get<ListResult<Episode>>($"/api/v3/Series/{seriesId}/Episode?pageSize=0&includeMissing=true&includeDataFrom=AniDB,TvDB&includeXRefs=true");
+        return Get<ListResult<Episode>>($"/api/v3/Series/{seriesId}/Episode?pageSize=0&includeHidden=true&includeMissing=true&includeDataFrom=AniDB,TvDB&includeXRefs=true");
     }
 
     public Task<Series> GetSeries(string id)
