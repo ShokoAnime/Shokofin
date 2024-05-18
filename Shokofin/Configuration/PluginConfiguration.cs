@@ -216,6 +216,12 @@ public class PluginConfiguration : BasePluginConfiguration
     public CollectionCreationType CollectionGrouping { get; set; }
 
     /// <summary>
+    /// Add a minimum requirement of two entries with the same collection id
+    /// before creating a collection for them.
+    /// </summary>
+    public bool CollectionMinSizeOfTwo { get; set; }
+
+    /// <summary>
     /// Determines how seasons are ordered within a show.
     /// </summary>
     public OrderType SeasonOrdering { get; set; }
@@ -378,6 +384,7 @@ public class PluginConfiguration : BasePluginConfiguration
         AddMissingMetadata = true;
         MarkSpecialsWhenGrouped = true;
         CollectionGrouping = CollectionCreationType.None;
+        CollectionMinSizeOfTwo = true;
         UserList = new();
         MediaFolders = new();
         IgnoredFolders = new[] { ".streams", "@recently-snapshot" };

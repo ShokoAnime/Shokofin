@@ -28,6 +28,8 @@ public class CollectionManager
 
     private readonly ShokoAPIManager ApiManager;
 
+    private static int MinCollectionSize => Plugin.Instance.Configuration.CollectionMinSizeOfTwo ? 1 : 0;
+
     public CollectionManager(ILibraryManager libraryManager, ICollectionManager collectionManager, ILogger<CollectionManager> logger, IIdLookup lookup, ShokoAPIManager apiManager)
     {
         LibraryManager = libraryManager;
@@ -82,10 +84,12 @@ public class CollectionManager
 
             movieDict.Add(movie, (fileInfo, seasonInfo, showInfo));
         }
+        // Filter to only "seasons" with at least (`MinCollectionSize` + 1) movies in them.
         var seasonDict = movieDict.Values
             .Select(tuple => tuple.seasonInfo)
-            .DistinctBy(seasonInfo => seasonInfo.Id)
-            .ToDictionary(seasonInfo => seasonInfo.Id);
+            .GroupBy(seasonInfo => seasonInfo.Id)
+            .Where(groupBy => groupBy.Count() > MinCollectionSize)
+            .ToDictionary(groupBy => groupBy.Key, groupBy => groupBy.First());
 
         cancellationToken.ThrowIfCancellationRequested();
         progress.Report(30);
@@ -229,15 +233,21 @@ public class CollectionManager
         cancellationToken.ThrowIfCancellationRequested();
         progress.Report(30);
 
+        // Filter to only collections with at least (`MinCollectionSize` + 1) entries in them.
         var groupsDict = await Task
             .WhenAll(
                 movieDict.Values
                     .Select(tuple => tuple.seasonInfo)
-                    .DistinctBy(seasonInfo => seasonInfo.Id)
                     .Select(seasonInfo => seasonInfo.Shoko.IDs.ParentGroup.ToString())
-                    .Concat(showDict.Values.Select(showInfo => showInfo.CollectionId).Where(collectionId => !string.IsNullOrEmpty(collectionId)).OfType<string>())
-                    .Distinct()
-                    .Select(groupId => ApiManager.GetCollectionInfoForGroup(groupId))
+                    .Concat(
+                        showDict.Values
+                            .Select(showInfo => showInfo.CollectionId)
+                            .Where(collectionId => !string.IsNullOrEmpty(collectionId))
+                            .OfType<string>()
+                    )
+                    .GroupBy(collectionId => collectionId)
+                    .Where(groupBy => groupBy.Count() > MinCollectionSize)
+                    .Select(groupBy => ApiManager.GetCollectionInfoForGroup(groupBy.Key))
             )
             .ContinueWith(task => task.Result.ToDictionary(x => x!.Id, x => x!));
         var finalGroups = new Dictionary<string, CollectionInfo>();

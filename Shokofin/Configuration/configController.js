@@ -292,6 +292,7 @@ async function defaultSubmit(form) {
         config.UseGroupsForShows = form.querySelector("#UseGroupsForShows").checked;
         config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
         config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
+        config.CollectionMinSizeOfTwo = form.querySelector("#CollectionMinSizeOfTwo").checked;
         config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
         config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
         config.MovieSpecialsAsExtraFeaturettes = form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked;
@@ -482,6 +483,7 @@ async function syncSettings(form) {
     config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
     config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
     config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
+    config.CollectionMinSizeOfTwo = form.querySelector("#CollectionMinSizeOfTwo").checked;
     config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
     config.MovieSpecialsAsExtraFeaturettes = form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked;
     config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
@@ -795,6 +797,7 @@ export default function (page) {
                 form.querySelector("#SeasonOrderingContainer").setAttribute("hidden", "");
             }
             form.querySelector("#CollectionGrouping").value = config.CollectionGrouping || "Default";
+            form.querySelector("#CollectionMinSizeOfTwo").checked = config.CollectionMinSizeOfTwo != null ? config.CollectionMinSizeOfTwo : true;
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies != null ? config.SeparateMovies : true;
             form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
             form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked = config.MovieSpecialsAsExtraFeaturettes || false;
