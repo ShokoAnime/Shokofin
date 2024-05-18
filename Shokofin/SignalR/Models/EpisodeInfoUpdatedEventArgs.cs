@@ -51,7 +51,7 @@ public class EpisodeInfoUpdatedEventArgs : IMetadataUpdatedEventArgs
 
     #region IMetadataUpdatedEventArgs Impl.
 
-    BaseItemKind IMetadataUpdatedEventArgs.Type => BaseItemKind.Episode;
+    BaseItemKind IMetadataUpdatedEventArgs.Kind => BaseItemKind.Episode;
 
     int? IMetadataUpdatedEventArgs.ProviderParentId => ProviderParentId;
 

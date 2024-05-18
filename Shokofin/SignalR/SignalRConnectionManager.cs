@@ -280,7 +280,7 @@ public class SignalRConnectionManager
         Logger.LogDebug(
             "{ProviderName} {MetadataType} {ProviderId} ({ProviderParentId}) dispatched event with {UpdateReason}. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})",
             eventArgs.ProviderName,
-            eventArgs.Type,
+            eventArgs.Kind,
             eventArgs.ProviderId,
             eventArgs.ProviderParentId,
             eventArgs.Reason,
@@ -299,7 +299,7 @@ public class SignalRConnectionManager
             return;
         }
 
-        if (eventArgs.Type is BaseItemKind.Episode or BaseItemKind.Series)
+        if (eventArgs.Kind is BaseItemKind.Episode or BaseItemKind.Series)
             ResolveManager.AddSeriesEvent(eventArgs.ProviderParentUId ?? eventArgs.ProviderUId, eventArgs);
     }
 

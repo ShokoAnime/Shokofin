@@ -18,6 +18,7 @@ using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using Shokofin.API.Info;
 using Shokofin.API.Models;
 using Shokofin.Configuration;
 using Shokofin.ExternalIds;
@@ -25,6 +26,9 @@ using Shokofin.SignalR.Interfaces;
 using Shokofin.Utils;
 
 using File = System.IO.File;
+using IDirectoryService = MediaBrowser.Controller.Providers.IDirectoryService;
+using ImageType = MediaBrowser.Model.Entities.ImageType;
+using MetadataRefreshMode = MediaBrowser.Controller.Providers.MetadataRefreshMode;
 using Timer = System.Timers.Timer;
 using TvSeries = MediaBrowser.Controller.Entities.TV.Series;
 
@@ -43,6 +47,8 @@ public class ShokoResolveManager
     private readonly ILibraryMonitor LibraryMonitor;
 
     private readonly IFileSystem FileSystem;
+
+    private readonly IDirectoryService DirectoryService;
 
     private readonly ILogger<ShokoResolveManager> Logger;
 
@@ -97,6 +103,7 @@ public class ShokoResolveManager
         ILibraryManager libraryManager,
         ILibraryMonitor libraryMonitor,
         IFileSystem fileSystem,
+        IDirectoryService directoryService,
         ILogger<ShokoResolveManager> logger,
         ILocalizationManager localizationManager,
         NamingOptions namingOptions
@@ -108,6 +115,7 @@ public class ShokoResolveManager
         LibraryManager = libraryManager;
         LibraryMonitor = libraryMonitor;
         FileSystem = fileSystem;
+        DirectoryService = directoryService;
         Logger = logger;
         DataCache = new(logger, TimeSpan.FromMinutes(15), new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1), SlidingExpiration = TimeSpan.FromMinutes(15) });
         NamingOptions = namingOptions;
@@ -1537,7 +1545,7 @@ public class ShokoResolveManager
         foreach (var (fileId, changes) in filesToProcess)
             Task.Run(() => ProcessFileEvents(fileId, changes));
         foreach (var (metadataId, changes) in seriesToProcess)
-            Task.Run(() => ProcessSeriesEvents(metadataId, changes));
+            Task.Run(() => ProcessMetadataEvents(metadataId, changes));
     }
 
     private void ClearFileEvents()
@@ -1563,7 +1571,7 @@ public class ShokoResolveManager
             ChangesPerSeries.Clear();
         }
         foreach (var (metadataId, changes) in seriesToProcess)
-            Task.Run(() => ProcessSeriesEvents(metadataId, changes));
+            Task.Run(() => ProcessMetadataEvents(metadataId, changes));
     }
 
     #endregion
@@ -1746,6 +1754,8 @@ public class ShokoResolveManager
                 .Distinct()
                 .ToHashSet();
 
+        // TODO: Postpone the processing of the file if the episode or series is not available yet.
+
         var filteredSeriesIds = new HashSet<string>();
         foreach (var seriesId in seriesIds) {
             var seriesPathSet = await ApiManager.GetPathSetForSeries(seriesId);
@@ -1792,24 +1802,176 @@ public class ShokoResolveManager
         }
     }
 
-    private Task ProcessSeriesEvents(string metadataId, List<IMetadataUpdatedEventArgs> changes)
+    private async Task ProcessMetadataEvents(string metadataId, List<IMetadataUpdatedEventArgs> changes)
     {
         try {
+            if (!changes.Any(e => e.Kind == BaseItemKind.Episode && e.EpisodeId.HasValue || e.Kind == BaseItemKind.Series && e.SeriesId.HasValue)) {
+                Logger.LogDebug("Skipped processing {EventCount} metadata change events… (Metadata={ProviderUniqueId})", changes.Count, metadataId);
+                return;
+            }
+
             Logger.LogInformation("Processing {EventCount} metadata change events… (Metadata={ProviderUniqueId})", changes.Count, metadataId);
 
-            // Refresh all episodes and movies linked to the episode.
+            // Process series events first, so we have the "season" data for the movies already cached.
+            var seriesId = changes.First(e => e.SeriesId.HasValue).SeriesId!.Value.ToString();
+            var showInfo = await ApiManager.GetShowInfoForSeries(seriesId);
+            if (showInfo is null) {
+                Logger.LogDebug("Unable to find show info for series id. (Series={SeriesId},Metadata={ProviderUniqueId})", seriesId, metadataId);
+                return;
+            }
 
-            // look up the series/season/movie, then check the media folder they're
-            // in to check if the refresh event is enabled for the media folder, and
-            // only send out the events if it's enabled.
+            var seasonInfo = await ApiManager.GetSeasonInfoForSeries(seriesId);
+            if (seasonInfo is null) {
+                Logger.LogDebug("Unable to find season info for series id. (Series={SeriesId},Metadata={ProviderUniqueId})", seriesId, metadataId);
+                return;
+            }
 
-            // Refresh the show and all entries beneath it, or all movies linked to
-            // the show.
+            await ProcessSeriesEvents(showInfo, changes);
+
+            await ProcessMovieEvents(seasonInfo, changes);
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Error processing {EventCount} metadata change events. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
         }
-        return Task.CompletedTask;
+    }
+
+    private async Task ProcessSeriesEvents(ShowInfo showInfo, List<IMetadataUpdatedEventArgs> changes)
+    {
+        // Update the series if we got a series event _or_ an episode removed event.
+        var animeEvent = changes.Find(e => e.Kind == BaseItemKind.Series || e.Kind == BaseItemKind.Episode && e.Reason == UpdateReason.Removed);
+        if (animeEvent is not null) {
+            var shows = LibraryManager
+                .GetItemList(
+                    new() {
+                        IncludeItemTypes = new[] { BaseItemKind.Series },
+                        HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, showInfo.Id } },
+                        DtoOptions = new(true),
+                    },
+                    true
+                )
+                .ToList();
+            foreach (var show in shows) {
+                Logger.LogInformation("Refreshing show {ShowName}. (Show={ShowId},Series={SeriesId})", show.Name, show.Id, showInfo.Id);
+                await show.RefreshMetadata(new(DirectoryService) {
+                    MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
+                    ImageRefreshMode = MetadataRefreshMode.FullRefresh,
+                    ReplaceAllMetadata = true,
+                    ReplaceAllImages = true,
+                    RemoveOldMetadata = true,
+                    ReplaceImages = Enum.GetValues<ImageType>().ToArray(),
+                    IsAutomated = true,
+                    EnableRemoteContentProbe = true,
+                }, CancellationToken.None);
+            }
+        }
+        // Otherwise update all season/episodes where appropriate.
+        else {
+            var episodeIds = changes
+                .Where(e => e.EpisodeId.HasValue && e.Reason != UpdateReason.Removed)
+                .Select(e => e.EpisodeId!.Value.ToString())
+                .ToHashSet();
+            var seasonIds = changes
+                .Where(e => e.EpisodeId.HasValue && e.SeriesId.HasValue && e.Reason == UpdateReason.Removed)
+                .Select(e => e.SeriesId!.Value.ToString())
+                .ToHashSet();
+            var seasonList = showInfo.SeasonList
+                .Where(seasonInfo => seasonIds.Contains(seasonInfo.Id))
+                .ToList();
+            foreach (var seasonInfo in seasonList) {
+                var seasons = LibraryManager
+                    .GetItemList(
+                        new() {
+                            IncludeItemTypes = new[] { BaseItemKind.Season },
+                            HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, seasonInfo.Id } },
+                            DtoOptions = new(true),
+                        },
+                        true
+                    )
+                    .ToList();
+                foreach (var season in seasons) {
+                    Logger.LogInformation("Refreshing season {SeasonName}. (Season={SeasonId},Series={SeriesId})", season.Name, season.Id, seasonInfo.Id);
+                    await season.RefreshMetadata(new(DirectoryService) {
+                        MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
+                        ImageRefreshMode = MetadataRefreshMode.FullRefresh,
+                        ReplaceAllMetadata = true,
+                        ReplaceAllImages = true,
+                        RemoveOldMetadata = true,
+                        ReplaceImages = Enum.GetValues<ImageType>().ToArray(),
+                        IsAutomated = true,
+                        EnableRemoteContentProbe = true,
+                    }, CancellationToken.None);
+                }
+            }
+            var episodeList = showInfo.SeasonList
+                .Except(seasonList)
+                .SelectMany(seasonInfo => seasonInfo.EpisodeList.Concat(seasonInfo.AlternateEpisodesList).Concat(seasonInfo.SpecialsList))
+                .Where(episodeInfo => episodeIds.Contains(episodeInfo.Id))
+                .ToList();
+            foreach (var episodeInfo in episodeList) {
+                var episodes = LibraryManager
+                    .GetItemList(
+                        new() {
+                            IncludeItemTypes = new[] { BaseItemKind.Episode },
+                            HasAnyProviderId = new Dictionary<string, string> { { ShokoEpisodeId.Name, episodeInfo.Id } },
+                            DtoOptions = new(true),
+                        },
+                        true
+                    )
+                    .ToList();
+                foreach (var episode in episodes) {
+                    Logger.LogInformation("Refreshing episode {EpisodeName}. (Episode={EpisodeId},Episode={EpisodeId},Series={SeriesId})", episode.Name, episode.Id, episodeInfo.Id, episodeInfo.Shoko.IDs.Series.ToString());
+                    await episode.RefreshMetadata(new(DirectoryService) {
+                        MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
+                        ImageRefreshMode = MetadataRefreshMode.FullRefresh,
+                        ReplaceAllMetadata = true,
+                        ReplaceAllImages = true,
+                        RemoveOldMetadata = true,
+                        ReplaceImages = Enum.GetValues<ImageType>().ToArray(),
+                        IsAutomated = true,
+                        EnableRemoteContentProbe = true,
+                    }, CancellationToken.None);
+                }
+            }
+        }
+    }
+
+    private async Task ProcessMovieEvents(SeasonInfo seasonInfo, List<IMetadataUpdatedEventArgs> changes)
+    {
+        // Find movies and refresh them.
+        var episodeIds = changes
+            .Where(e => e.EpisodeId.HasValue && e.Reason != UpdateReason.Removed)
+            .Select(e => e.EpisodeId!.Value.ToString())
+            .ToHashSet();
+        var episodeList = seasonInfo.EpisodeList
+            .Concat(seasonInfo.AlternateEpisodesList)
+            .Concat(seasonInfo.SpecialsList)
+            .Where(episodeInfo => episodeIds.Contains(episodeInfo.Id))
+            .ToList();
+        foreach (var episodeInfo in episodeList) {
+            var movies = LibraryManager
+                .GetItemList(
+                    new() {
+                        IncludeItemTypes = new[] { BaseItemKind.Movie },
+                        HasAnyProviderId = new Dictionary<string, string> { { ShokoEpisodeId.Name, episodeInfo.Id } },
+                        DtoOptions = new(true),
+                    },
+                    true
+                )
+                .ToList();
+            foreach (var movie in movies) {
+                Logger.LogInformation("Refreshing movie {MovieName}. (Movie={MovieId},Episode={EpisodeId},Series={SeriesId})", movie.Name, movie.Id, episodeInfo.Id, seasonInfo.Id);
+                await movie.RefreshMetadata(new(DirectoryService) {
+                    MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
+                    ImageRefreshMode = MetadataRefreshMode.FullRefresh,
+                    ReplaceAllMetadata = true,
+                    ReplaceAllImages = true,
+                    RemoveOldMetadata = true,
+                    ReplaceImages = Enum.GetValues<ImageType>().ToArray(),
+                    IsAutomated = true,
+                    EnableRemoteContentProbe = true,
+                }, CancellationToken.None);
+            }
+        }
     }
 
     #endregion

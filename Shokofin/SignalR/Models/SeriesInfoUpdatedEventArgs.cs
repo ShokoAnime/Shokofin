@@ -39,7 +39,7 @@ public class SeriesInfoUpdatedEventArgs : IMetadataUpdatedEventArgs
 
     #region IMetadataUpdatedEventArgs Impl.
 
-    BaseItemKind IMetadataUpdatedEventArgs.Type => BaseItemKind.Series;
+    BaseItemKind IMetadataUpdatedEventArgs.Kind => BaseItemKind.Series;
 
     int? IMetadataUpdatedEventArgs.ProviderParentId => null;
 
