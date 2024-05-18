@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.174",
+                "changelog": "fix: fix incompatibly with stable shoko server",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.174/shoko_3.0.1.174.zip",
+                "checksum": "9f6939a66682869cdaeef5625643a02b",
+                "timestamp": "2024-05-18T22:48:58Z"
+            },
+            {
                 "version": "3.0.1.173",
                 "changelog": "misc: add ordering to providers",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.170/shoko_3.0.1.170.zip",
                 "checksum": "7d2fd951ad580d4d0a42dd7e005cef07",
                 "timestamp": "2024-05-18T04:21:36Z"
-            },
-            {
-                "version": "3.0.1.169",
-                "changelog": "revert: \"misc: update build config (take 2)\"\n\nThis reverts commit 8a85de9296e088406379788c7a8933cdc80ca18e.\n\nfix: another movie exception\n\n- Also switch the type from movie to web if we're hidden the main movies, but the parts are normal episodes.\n\nmisc: update build config (take 2) [skip ci]\n\n- Generalize the build script so it could be used for _any_ plugin.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.169/shoko_3.0.1.169.zip",
-                "checksum": "d776e72a9db0f8ed36ae5256970a4a94",
-                "timestamp": "2024-05-18T03:54:55Z"
             }
         ]
     }
