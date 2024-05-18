@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.171",
+                "changelog": "fix: fix the new movie exception\nfixes 03b2e9d3859b80b2040e8699ae7784d89b0cd338",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.171/shoko_3.0.1.171.zip",
+                "checksum": "1dcfdced8d08683d564214e66a0afef0",
+                "timestamp": "2024-05-18T19:34:53Z"
+            },
+            {
                 "version": "3.0.1.170",
                 "changelog": "feat: react to series/episode events\n\n- Hooked up series/episode events to refresh shows/seasons/episodes/movies. This is untested and good night.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.167/shoko_3.0.1.167.zip",
                 "checksum": "51a3e46dfe8862a180eef893407002f6",
                 "timestamp": "2024-05-16T00:10:28Z"
-            },
-            {
-                "version": "3.0.1.166",
-                "changelog": "fix: re-create specials anchors if needed\n\nmisc: add media folder changed events [skip ci]",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.166/shoko_3.0.1.166.zip",
-                "checksum": "157852058957d9d08e959ed7828c562d",
-                "timestamp": "2024-05-13T22:00:13Z"
             }
         ]
     }
