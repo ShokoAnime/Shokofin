@@ -159,9 +159,6 @@ public class ShokoResolveManager
                 ConfigurationUpdated?.Invoke(sender, new(mediaConfig, mediaFolder));
             }
         }
-        var mediaKeys = Plugin.Instance.Configuration.MediaFolders
-            .ToDictionary(c => c.MediaFolderId, ConstructKey);
-        
     }
 
     private void OnLibraryManagerItemRemoved(object? sender, ItemChangeEventArgs e)
