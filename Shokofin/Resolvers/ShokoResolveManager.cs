@@ -1152,7 +1152,7 @@ public class ShokoResolveManager
             }
         }
 
-        Logger.LogTrace("Cleaned {CleanedCount} directories in {DirectoryToClean} in {TimeSpent} (Total={TotalSpent})", cleaned, directoriesToClean, nextStep - previousStep, nextStep - start);
+        Logger.LogTrace("Cleaned {CleanedCount} directories in {DirectoryToClean} in {TimeSpent} (Total={TotalSpent})", cleaned, directoryToClean, nextStep - previousStep, nextStep - start);
 
         return result;
     }
