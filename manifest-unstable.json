@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.175",
+                "changelog": "fix: fix multi-series file emits in VFS\nwhen emitting for the media folder",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.175/shoko_3.0.1.175.zip",
+                "checksum": "f8e454c4ba217808e8cc389d6a996fbc",
+                "timestamp": "2024-05-19T01:00:25Z"
+            },
+            {
                 "version": "3.0.1.174",
                 "changelog": "fix: fix incompatibly with stable shoko server",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.171/shoko_3.0.1.171.zip",
                 "checksum": "1dcfdced8d08683d564214e66a0afef0",
                 "timestamp": "2024-05-18T19:34:53Z"
-            },
-            {
-                "version": "3.0.1.170",
-                "changelog": "feat: react to series/episode events\n\n- Hooked up series/episode events to refresh shows/seasons/episodes/movies. This is untested and good night.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.170/shoko_3.0.1.170.zip",
-                "checksum": "7d2fd951ad580d4d0a42dd7e005cef07",
-                "timestamp": "2024-05-18T04:21:36Z"
             }
         ]
     }
