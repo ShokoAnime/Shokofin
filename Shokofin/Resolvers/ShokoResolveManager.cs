@@ -28,6 +28,7 @@ using Shokofin.Utils;
 using File = System.IO.File;
 using IDirectoryService = MediaBrowser.Controller.Providers.IDirectoryService;
 using ImageType = MediaBrowser.Model.Entities.ImageType;
+using LibraryOptions = MediaBrowser.Model.Configuration.LibraryOptions;
 using MetadataRefreshMode = MediaBrowser.Controller.Providers.MetadataRefreshMode;
 using Timer = System.Timers.Timer;
 using TvSeries = MediaBrowser.Controller.Entities.TV.Series;
@@ -70,8 +71,13 @@ public class ShokoResolveManager
 
     private readonly Dictionary<int, (DateTime LastUpdated, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> List)> ChangesPerFile = new();
 
+    private readonly Dictionary<string, (int refCount, DateTime delayEnd)> MediaFolderChangeMonitor = new();
+
     // Note: Out of the 14k entries in my test shoko database, then only **319** entries have a title longer than 100 characters.
     private const int NameCutOff = 64;
+
+    // It's so magical that it matches the magical value in the library monitor in JF core. 🪄
+    private const int MagicalDelayValue = 45000;
 
     private static readonly TimeSpan DetectChangesThreshold = TimeSpan.FromSeconds(5);
 
@@ -1609,6 +1615,7 @@ public class ShokoResolveManager
 
             // Something was added or updated.
             var locationsToNotify = new List<string>();
+            var mediaFoldersToNotify = new Dictionary<string, (string pathToReport, Folder mediaFolder)>();
             var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
             var mediaFolders = GetAvailableMediaFolders(fileEvents: true);
             var (reason, importFolderId, relativePath, lastEvent) = changes.Last();
@@ -1669,7 +1676,7 @@ public class ShokoResolveManager
                     else {
                         var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolder.Path, false).FirstOrDefault();
                         if (!string.IsNullOrEmpty(fileOrFolder))
-                            locationsToNotify.Add(fileOrFolder);
+                            mediaFoldersToNotify.TryAdd(mediaFolder.Path, (fileOrFolder, mediaFolder));
                     }
                 }
             }
@@ -1735,19 +1742,20 @@ public class ShokoResolveManager
                     }
                     // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
                     else {
-                        // TODO: MAKE THIS WORK WITH REAL-TIME MONITORING WHEN USING THE VFS.
                         var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolder.Path, false).FirstOrDefault();
                         if (!string.IsNullOrEmpty(fileOrFolder))
-                            locationsToNotify.Add(fileOrFolder);
+                            mediaFoldersToNotify.TryAdd(mediaFolder.Path, (fileOrFolder, mediaFolder));
                     }
                 }
             }
 
             // We let jellyfin take it from here.
             if (!LibraryScanWatcher.IsScanRunning) {
-                Logger.LogDebug("Notifying Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count, fileId.ToString());
+                Logger.LogDebug("Notifying Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count + mediaFoldersToNotify.Count, fileId.ToString());
                 foreach (var location in locationsToNotify)
                     LibraryMonitor.ReportFileSystemChanged(location);
+                if (mediaFoldersToNotify.Count > 0)
+                    await Task.WhenAll(mediaFoldersToNotify.Values.Select(tuple => ReportMediaFolderChanged(tuple.mediaFolder, tuple.pathToReport))).ConfigureAwait(false);
             }
             else {
                 Logger.LogDebug("Skipped notifying Jellyfin about {LocationCount} changes because a library scan is running. (File={FileId})", locationsToNotify.Count, fileId.ToString());
@@ -1801,6 +1809,53 @@ public class ShokoResolveManager
         catch (ApiException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound) {
             return null;
         }
+    }
+
+    private async Task ReportMediaFolderChanged(Folder mediaFolder, string pathToReport)
+    {
+        if (LibraryManager.GetLibraryOptions(mediaFolder) is not LibraryOptions libraryOptions || !libraryOptions.EnableRealtimeMonitor) {
+            LibraryMonitor.ReportFileSystemChanged(pathToReport);
+            return;
+        }
+
+        // Since we're blocking real-time file events on the media folder because
+        // it uses the VFS then we need to temporarily unblock it, then block it
+        // afterwards again.
+        var path = mediaFolder.Path;
+        var delayTime = TimeSpan.Zero;
+        lock (MediaFolderChangeMonitor) {
+            if (MediaFolderChangeMonitor.TryGetValue(path, out var entry)) {
+                MediaFolderChangeMonitor[path] = (entry.refCount + 1, entry.delayEnd);
+                delayTime = entry.delayEnd - DateTime.Now;
+            }
+            else {
+                MediaFolderChangeMonitor[path] = (1, DateTime.Now + TimeSpan.FromMilliseconds(MagicalDelayValue));
+                delayTime = TimeSpan.FromMilliseconds(MagicalDelayValue);
+            }
+        }
+
+        LibraryMonitor.ReportFileSystemChangeComplete(path, false);
+
+        if (delayTime > TimeSpan.Zero)
+            await Task.Delay((int)delayTime.TotalMilliseconds).ConfigureAwait(false);
+
+        LibraryMonitor.ReportFileSystemChanged(pathToReport);
+
+        var shouldResume = false;
+        lock (MediaFolderChangeMonitor) {
+            if (MediaFolderChangeMonitor.TryGetValue(path, out var tuple)) {
+                if (tuple.refCount is 1) {
+                    shouldResume = true;
+                    MediaFolderChangeMonitor.Remove(path);
+                }
+                else {
+                    MediaFolderChangeMonitor[path] = (tuple.refCount - 1, tuple.delayEnd);
+                }
+            }
+        }
+
+        if (shouldResume)
+            LibraryMonitor.ReportFileSystemChangeBeginning(path);
     }
 
     #endregion
