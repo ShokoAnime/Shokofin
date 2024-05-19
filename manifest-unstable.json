@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.176",
+                "changelog": "fix: fix multi-series file emits in VFS (take 2)\n\u2026this time for sure it will work\u2026",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.176/shoko_3.0.1.176.zip",
+                "checksum": "f270ec760c88156cb9ce8dd0739705b5",
+                "timestamp": "2024-05-19T01:30:14Z"
+            },
+            {
                 "version": "3.0.1.175",
                 "changelog": "fix: fix multi-series file emits in VFS\nwhen emitting for the media folder",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.172/shoko_3.0.1.172.zip",
                 "checksum": "fff4c4a37c03ba60f0353dafa352bbac",
                 "timestamp": "2024-05-18T21:12:21Z"
-            },
-            {
-                "version": "3.0.1.171",
-                "changelog": "fix: fix the new movie exception\nfixes 03b2e9d3859b80b2040e8699ae7784d89b0cd338",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.171/shoko_3.0.1.171.zip",
-                "checksum": "1dcfdced8d08683d564214e66a0afef0",
-                "timestamp": "2024-05-18T19:34:53Z"
             }
         ]
     }
