@@ -705,14 +705,37 @@ public class ShokoResolveManager
         // the paths for the series we have. This will fail if an OVA episode is
         // linked to both the OVA and e.g. a specials for the TV Series.
         var totalMultiSeriesFiles = 0;
-        foreach (var (file, sourceLocation) in multiSeriesFiles) {
-            var crossReferences = file.CrossReferences
-                .Where(xref => xref.Series.Shoko.HasValue && xref.Episodes.All(e => e.Shoko.HasValue) && singleSeriesIds.Contains(xref.Series.Shoko!.Value))
-                .Select(xref => xref.Series.Shoko!.Value.ToString())
+        if (multiSeriesFiles.Count > 0) {
+            var mappedSingleSeriesIds = singleSeriesIds
+                .Select(seriesId =>
+                    ApiManager.GetShowInfoForSeries(seriesId.ToString())
+                        .ConfigureAwait(false)
+                        .GetAwaiter()
+                        .GetResult()?.Id
+                )
+                .OfType<string>()
                 .ToHashSet();
-            foreach (var seriesId in crossReferences)
-                yield return (sourceLocation, file.Id.ToString(), seriesId);
-            totalMultiSeriesFiles += crossReferences.Count;
+
+            foreach (var (file, sourceLocation) in multiSeriesFiles) {
+                var seriesIds = file.CrossReferences
+                    .Where(xref => xref.Series.Shoko.HasValue && xref.Episodes.All(e => e.Shoko.HasValue))
+                    .Select(xref => xref.Series.Shoko!.Value.ToString())
+                    .ToHashSet();
+                var mappedSeriesIds = seriesIds
+                    .Select(seriesId =>
+                        ApiManager.GetShowInfoForSeries(seriesId)
+                            .ConfigureAwait(false)
+                            .GetAwaiter()
+                            .GetResult()?.Id
+                    )
+                    .OfType<string>()
+                    .Distinct()
+                    .Intersect(mappedSingleSeriesIds)
+                    .ToHashSet();
+                foreach (var seriesId in mappedSeriesIds)
+                    yield return (sourceLocation, file.Id.ToString(), seriesId);
+                totalMultiSeriesFiles += mappedSeriesIds.Count;
+            }
         }
 
         var timeSpent = DateTime.UtcNow - start;
