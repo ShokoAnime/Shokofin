@@ -1826,9 +1826,6 @@ public class ShokoResolveManager
                 return;
             }
 
-            Logger.LogInformation("Processing {EventCount} metadata change events… (Metadata={ProviderUniqueId})", changes.Count, metadataId);
-
-            // Process series events first, so we have the "season" data for the movies already cached.
             var seriesId = changes.First(e => e.SeriesId.HasValue).SeriesId!.Value.ToString();
             var showInfo = await ApiManager.GetShowInfoForSeries(seriesId);
             if (showInfo is null) {
@@ -1842,18 +1839,22 @@ public class ShokoResolveManager
                 return;
             }
 
-            await ProcessSeriesEvents(showInfo, changes);
+            Logger.LogInformation("Processing {EventCount} metadata change events… (Metadata={ProviderUniqueId})", changes.Count, metadataId);
 
-            await ProcessMovieEvents(seasonInfo, changes);
+            var updateCount = await ProcessSeriesEvents(showInfo, changes);
+            updateCount += await ProcessMovieEvents(seasonInfo, changes);
+
+            Logger.LogInformation("Scheduled {UpdateCount} updates for {EventCount} metadata change events. (Metadata={ProviderUniqueId})", updateCount, changes.Count, metadataId);
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Error processing {EventCount} metadata change events. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
         }
     }
 
-    private async Task ProcessSeriesEvents(ShowInfo showInfo, List<IMetadataUpdatedEventArgs> changes)
+    private async Task<int> ProcessSeriesEvents(ShowInfo showInfo, List<IMetadataUpdatedEventArgs> changes)
     {
         // Update the series if we got a series event _or_ an episode removed event.
+        var updateCount = 0;
         var animeEvent = changes.Find(e => e.Kind == BaseItemKind.Series || e.Kind == BaseItemKind.Episode && e.Reason == UpdateReason.Removed);
         if (animeEvent is not null) {
             var shows = LibraryManager
@@ -1878,6 +1879,7 @@ public class ShokoResolveManager
                     IsAutomated = true,
                     EnableRemoteContentProbe = true,
                 }, CancellationToken.None);
+                updateCount++;
             }
         }
         // Otherwise update all season/episodes where appropriate.
@@ -1916,6 +1918,7 @@ public class ShokoResolveManager
                         IsAutomated = true,
                         EnableRemoteContentProbe = true,
                     }, CancellationToken.None);
+                    updateCount++;
                 }
             }
             var episodeList = showInfo.SeasonList
@@ -1946,14 +1949,17 @@ public class ShokoResolveManager
                         IsAutomated = true,
                         EnableRemoteContentProbe = true,
                     }, CancellationToken.None);
+                    updateCount++;
                 }
             }
         }
+        return updateCount;
     }
 
-    private async Task ProcessMovieEvents(SeasonInfo seasonInfo, List<IMetadataUpdatedEventArgs> changes)
+    private async Task<int> ProcessMovieEvents(SeasonInfo seasonInfo, List<IMetadataUpdatedEventArgs> changes)
     {
         // Find movies and refresh them.
+        var updateCount = 0;
         var episodeIds = changes
             .Where(e => e.EpisodeId.HasValue && e.Reason != UpdateReason.Removed)
             .Select(e => e.EpisodeId!.Value.ToString())
@@ -1986,8 +1992,10 @@ public class ShokoResolveManager
                     IsAutomated = true,
                     EnableRemoteContentProbe = true,
                 }, CancellationToken.None);
+                updateCount++;
             }
         }
+        return updateCount;
     }
 
     #endregion
