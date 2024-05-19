@@ -1052,7 +1052,6 @@ public class ShokoResolveManager
 
     private LinkGenerationResult CleanupStructure(string vfsPath, string directoryToClean, IReadOnlyList<string> allKnownPaths)
     {
-        // Search the selected paths for files to remove.
         Logger.LogDebug("Looking for files to remove in folder at {Path}", directoryToClean);
         var start = DateTime.Now;
         var previousStep = start;
@@ -1069,7 +1068,6 @@ public class ShokoResolveManager
         previousStep = nextStep;
 
         foreach (var (location, extName) in toBeRemoved) {
-            // NFOs.
             if (extName == ".nfo") {
                 try {
                     Logger.LogTrace("Removing NFO file at {Path}", location);
@@ -1081,41 +1079,37 @@ public class ShokoResolveManager
                 }
                 result.RemovedNfos++;
             }
-            // Subtitle files.
             else if (NamingOptions.SubtitleFileExtensions.Contains(extName)) {
-                // Try moving subtitle if possible, otherwise remove it. There is no in-between.
                 if (TryMoveSubtitleFile(allKnownPaths, location)) {
                     result.FixedSubtitles++;
+                    continue;
                 }
-                else {
-                    try {
-                        Logger.LogTrace("Removing subtitle file at {Path}", location);
-                        File.Delete(location);
-                    }
-                    catch (Exception ex) {
-                        Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
-                        continue;
-                    }
-                    result.RemovedSubtitles++;
-                    
+
+                try {
+                    Logger.LogTrace("Removing subtitle file at {Path}", location);
+                    File.Delete(location);
                 }
+                catch (Exception ex) {
+                    Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
+                    continue;
+                }
+                result.RemovedSubtitles++;
             }
-            // Video files.
             else {
                 if (ShouldIgnoreVideo(vfsPath, location)) {
                     result.SkippedVideos++;
+                    continue;
                 }
-                else {
-                    try {
-                        Logger.LogTrace("Removing video file at {Path}", location);
-                        File.Delete(location);
-                    }
-                    catch (Exception ex) {
-                        Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
-                        continue;
-                    }
-                    result.RemovedVideos++;
+
+                try {
+                    Logger.LogTrace("Removing video file at {Path}", location);
+                    File.Delete(location);
                 }
+                catch (Exception ex) {
+                    Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
+                    continue;
+                }
+                result.RemovedVideos++;
             }
         }
 
@@ -1165,9 +1159,7 @@ public class ShokoResolveManager
         if (!TryGetIdsForPath(subtitlePath, out var seriesId, out var fileId))
             return false;
 
-        var symbolicLink = allKnownPaths.FirstOrDefault(knownPath =>
-            TryGetIdsForPath(knownPath, out var knownSeriesId, out var knownFileId) && seriesId == knownSeriesId && fileId == knownFileId
-        );
+        var symbolicLink = allKnownPaths.FirstOrDefault(knownPath => TryGetIdsForPath(knownPath, out var knownSeriesId, out var knownFileId) && seriesId == knownSeriesId && fileId == knownFileId);
         if (string.IsNullOrEmpty(symbolicLink))
             return false;
 
@@ -1204,13 +1196,8 @@ public class ShokoResolveManager
     private static bool TryGetIdsForPath(string path, [NotNullWhen(true)] out string? seriesId, [NotNullWhen(true)] out string? fileId)
     {
         var fileName = Path.GetFileNameWithoutExtension(path);
-        if (!fileName.TryGetAttributeValue(ShokoFileId.Name, out fileId) || !int.TryParse(fileId, out _)) {
-            seriesId = null;
-            fileId = null;
-            return false;
-        }
-
-        if (!fileName.TryGetAttributeValue(ShokoSeriesId.Name, out seriesId) || !int.TryParse(seriesId, out _)) {
+        if (!fileName.TryGetAttributeValue(ShokoFileId.Name, out fileId) || !int.TryParse(fileId, out _) ||
+            !fileName.TryGetAttributeValue(ShokoSeriesId.Name, out seriesId) || !int.TryParse(seriesId, out _)) {
             seriesId = null;
             fileId = null;
             return false;
@@ -1809,10 +1796,8 @@ public class ShokoResolveManager
                 .FirstOrDefault();
             return usableLocation?.RelativePath;
         }
-        catch (ApiException ex) {
-            if (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-                return null;
-            throw;
+        catch (ApiException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound) {
+            return null;
         }
     }
 
