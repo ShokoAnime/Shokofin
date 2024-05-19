@@ -720,21 +720,17 @@ public class ShokoResolveManager
                 var seriesIds = file.CrossReferences
                     .Where(xref => xref.Series.Shoko.HasValue && xref.Episodes.All(e => e.Shoko.HasValue))
                     .Select(xref => xref.Series.Shoko!.Value.ToString())
-                    .ToHashSet();
-                var mappedSeriesIds = seriesIds
-                    .Select(seriesId =>
-                        ApiManager.GetShowInfoForSeries(seriesId)
-                            .ConfigureAwait(false)
-                            .GetAwaiter()
-                            .GetResult()?.Id
-                    )
-                    .OfType<string>()
                     .Distinct()
-                    .Intersect(mappedSingleSeriesIds)
-                    .ToHashSet();
-                foreach (var seriesId in mappedSeriesIds)
+                    .Select(seriesId => (
+                        seriesId,
+                        showId: ApiManager.GetShowInfoForSeries(seriesId).ConfigureAwait(false).GetAwaiter().GetResult()?.Id
+                    ))
+                    .Where(tuple => !string.IsNullOrEmpty(tuple.showId) && mappedSingleSeriesIds.Contains(tuple.showId))
+                    .Select(tuple => tuple.seriesId)
+                    .ToList();
+                foreach (var seriesId in seriesIds)
                     yield return (sourceLocation, file.Id.ToString(), seriesId);
-                totalMultiSeriesFiles += mappedSeriesIds.Count;
+                totalMultiSeriesFiles += seriesIds.Count;
             }
         }
 
