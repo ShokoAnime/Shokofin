@@ -43,8 +43,10 @@ public class ShokoResolveManager
     private readonly IIdLookup Lookup;
 
     private readonly ILibraryManager LibraryManager;
-    
+
     private readonly ILibraryMonitor LibraryMonitor;
+
+    private readonly LibraryScanWatcher LibraryScanWatcher;
 
     private readonly IFileSystem FileSystem;
 
@@ -102,6 +104,7 @@ public class ShokoResolveManager
         IIdLookup lookup,
         ILibraryManager libraryManager,
         ILibraryMonitor libraryMonitor,
+        LibraryScanWatcher libraryScanWatcher,
         IFileSystem fileSystem,
         IDirectoryService directoryService,
         ILogger<ShokoResolveManager> logger,
@@ -114,6 +117,7 @@ public class ShokoResolveManager
         Lookup = lookup;
         LibraryManager = libraryManager;
         LibraryMonitor = libraryMonitor;
+        LibraryScanWatcher = libraryScanWatcher;
         FileSystem = fileSystem;
         DirectoryService = directoryService;
         Logger = logger;
@@ -712,7 +716,6 @@ public class ShokoResolveManager
                 )
                 .OfType<string>()
                 .ToHashSet();
-
             foreach (var (file, sourceLocation) in multiSeriesFiles) {
                 var seriesIds = file.CrossReferences
                     .Where(xref => xref.Series.Shoko.HasValue && xref.Episodes.All(e => e.Shoko.HasValue))
@@ -1608,6 +1611,11 @@ public class ShokoResolveManager
     private async Task ProcessFileEvents(int fileId, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> changes)
     {
         try {
+            if (LibraryScanWatcher.IsScanRunning) {
+                Logger.LogInformation("Skipped processing {EventCount} file change events because a library scan is running. (File={FileId})", changes.Count, fileId);
+                return;
+            }
+
             Logger.LogInformation("Processing {EventCount} file change events… (File={FileId})", changes.Count, fileId);
 
             // Something was added or updated.
@@ -1684,7 +1692,6 @@ public class ShokoResolveManager
                     if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
                         continue;
 
-
                     // Let the core logic handle the rest.
                     if (!config.IsVirtualFileSystemEnabled) {
                         var sourceLocation = Path.Join(mediaFolder.Path, relativePath[config.ImportFolderRelativePath.Length..]);
@@ -1739,6 +1746,7 @@ public class ShokoResolveManager
                     }
                     // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
                     else {
+                        // TODO: MAKE THIS WORK WITH REAL-TIME MONITORING WHEN USING THE VFS.
                         var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolder.Path, false).FirstOrDefault();
                         if (!string.IsNullOrEmpty(fileOrFolder))
                             locationsToNotify.Add(fileOrFolder);
@@ -1747,9 +1755,14 @@ public class ShokoResolveManager
             }
 
             // We let jellyfin take it from here.
-            Logger.LogDebug("Notifying Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count, fileId.ToString());
-            foreach (var location in locationsToNotify)
-                LibraryMonitor.ReportFileSystemChanged(location);
+            if (!LibraryScanWatcher.IsScanRunning) {
+                Logger.LogDebug("Notifying Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count, fileId.ToString());
+                foreach (var location in locationsToNotify)
+                    LibraryMonitor.ReportFileSystemChanged(location);
+            }
+            else {
+                Logger.LogDebug("Skipped notifying Jellyfin about {LocationCount} changes because a library scan is running. (File={FileId})", locationsToNotify.Count, fileId.ToString());
+            }
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Error processing {EventCount} file change events. (File={FileId})", changes.Count, fileId);
@@ -1804,7 +1817,7 @@ public class ShokoResolveManager
     }
 
     #endregion
-    
+
     #region Refresh Events
 
     public void AddSeriesEvent(string metadataId, IMetadataUpdatedEventArgs eventArgs)
@@ -1821,8 +1834,13 @@ public class ShokoResolveManager
     private async Task ProcessMetadataEvents(string metadataId, List<IMetadataUpdatedEventArgs> changes)
     {
         try {
+            if (LibraryScanWatcher.IsScanRunning) {
+                Logger.LogDebug("Skipped processing {EventCount} metadata change events because a library scan is running. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
+                return;
+            }
+
             if (!changes.Any(e => e.Kind == BaseItemKind.Episode && e.EpisodeId.HasValue || e.Kind == BaseItemKind.Series && e.SeriesId.HasValue)) {
-                Logger.LogDebug("Skipped processing {EventCount} metadata change events… (Metadata={ProviderUniqueId})", changes.Count, metadataId);
+                Logger.LogDebug("Skipped processing {EventCount} metadata change events because no series or episode ids to use. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
                 return;
             }
 
