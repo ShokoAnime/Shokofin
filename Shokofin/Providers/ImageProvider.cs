@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
-using System.Linq;
+using Shokofin.ExternalIds;
 
 namespace Shokofin.Providers;
 
@@ -95,7 +96,11 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                     break;
                 }
                 case BoxSet boxSet: {
-                    if (Lookup.TryGetSeriesIdFor(boxSet, out var seriesId)) {
+                    if (!boxSet.ProviderIds.TryGetValue(ShokoCollectionSeriesId.Name, out var seriesId)) {
+                        if (boxSet.ProviderIds.TryGetValue(ShokoCollectionGroupId.Name, out var collectionId))
+                            seriesId = (await ApiManager.GetCollectionInfoForGroup(collectionId))?.Shoko.IDs.MainSeries.ToString();
+                    }
+                    if (!string.IsNullOrEmpty(seriesId)) {
                         var seriesImages = await ApiClient.GetSeriesImages(seriesId);
                         if (seriesImages != null) {
                             AddImagesForSeries(ref list, seriesImages);

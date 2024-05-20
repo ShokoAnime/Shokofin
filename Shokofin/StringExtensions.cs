@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using MediaBrowser.Common.Providers;
@@ -133,6 +134,6 @@ public static class StringExtensions
         return null;
     }
 
-    public static bool TryGetAttributeValue(this string text, string attribute, out string? value)
+    public static bool TryGetAttributeValue(this string text, string attribute, [NotNullWhen(true)] out string? value)
         => !string.IsNullOrEmpty(value = GetAttributeValue(text, attribute));
 }

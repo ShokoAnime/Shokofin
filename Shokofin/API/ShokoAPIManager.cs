@@ -769,7 +769,7 @@ public class ShokoAPIManager : IDisposable
         // If we found a movie, and we're assigning movies as stand-alone shows, and we didn't create a stand-alone show
         // above, then attach the stand-alone show to the parent group of the group that might other
         if (seasonInfo.Type == SeriesType.Movie && Plugin.Instance.Configuration.SeparateMovies)
-            return GetOrCreateShowInfoForSeasonInfo(seasonInfo, group.Size > 0 ? group.IDs.ParentGroup.ToString() : null);
+            return GetOrCreateShowInfoForSeasonInfo(seasonInfo, group.Size > 0 ? group.IDs.ParentGroup?.ToString() : null);
 
         return await CreateShowInfoForGroup(group, group.IDs.Shoko.ToString()).ConfigureAwait(false);
     }

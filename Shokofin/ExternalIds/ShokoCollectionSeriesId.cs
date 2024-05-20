@@ -1,4 +1,3 @@
-using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -6,15 +5,15 @@ using MediaBrowser.Model.Providers;
 
 namespace Shokofin.ExternalIds;
 
-public class ShokoSeriesId : IExternalId
+public class ShokoCollectionSeriesId : IExternalId
 {
-    public const string Name = "Shoko Series";
+    public const string Name = "ShokoCollectionSeries";
 
     public bool Supports(IHasProviderIds item)
-        => item is Series or Season or Episode or Movie;
+        => item is BoxSet;
 
     public string ProviderName
-        => Name;
+        => "Shoko Series";
 
     public string Key
         => Name;

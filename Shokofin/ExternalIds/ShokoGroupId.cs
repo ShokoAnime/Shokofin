@@ -1,10 +1,8 @@
 using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 
-#nullable enable
 namespace Shokofin.ExternalIds;
 
 public class ShokoGroupId : IExternalId
@@ -12,7 +10,7 @@ public class ShokoGroupId : IExternalId
     public const string Name = "Shoko Group";
 
     public bool Supports(IHasProviderIds item)
-        => item is Series or BoxSet;
+        => item is Series;
 
     public string ProviderName
         => Name;

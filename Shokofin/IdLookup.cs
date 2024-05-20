@@ -59,14 +59,6 @@ public interface IIdLookup
     /// <param name="season">The <see cref="MediaBrowser.Controller.Entities.TV.Season" /> to check for.</param>
     /// <param name="seriesId">The variable to put the id in.</param>
     /// <returns>True if it successfully retrieved the id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.</returns>
-    bool TryGetSeriesIdFor(BoxSet boxSet, [NotNullWhen(true)] out string? seriesId);
-
-    /// <summary>
-    /// Try to get the Shoko Series Id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.
-    /// </summary>
-    /// <param name="season">The <see cref="MediaBrowser.Controller.Entities.TV.Season" /> to check for.</param>
-    /// <param name="seriesId">The variable to put the id in.</param>
-    /// <returns>True if it successfully retrieved the id for the <see cref="MediaBrowser.Controller.Entities.TV.Season" />.</returns>
     bool TryGetSeriesIdFor(Movie movie, [NotNullWhen(true)] out string? seriesId);
 
     #endregion
@@ -211,22 +203,6 @@ public class IdLookup : IIdLookup
 
         if (TryGetEpisodeIdFor(movie.Path, out var episodeId) && TryGetSeriesIdFromEpisodeId(episodeId, out seriesId))
             return true;
-
-        return false;
-    }
-
-    public bool TryGetSeriesIdFor(BoxSet boxSet, [NotNullWhen(true)] out string? seriesId)
-    {
-        if (boxSet.ProviderIds.TryGetValue(ShokoSeriesId.Name, out seriesId!) && !string.IsNullOrEmpty(seriesId)) {
-            return true;
-        }
-
-        if (TryGetSeriesIdFor(boxSet.Path, out seriesId)) {
-            if (ApiManager.TryGetDefaultSeriesIdForSeriesId(seriesId, out var defaultSeriesId)) {
-                seriesId = defaultSeriesId!;
-            }
-            return true;
-        }
 
         return false;
     }

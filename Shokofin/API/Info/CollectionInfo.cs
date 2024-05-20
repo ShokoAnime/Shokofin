@@ -10,6 +10,8 @@ public class CollectionInfo
 
     public string? ParentId;
 
+    public string TopLevelId;
+
     public bool IsTopLevel;
 
     public string Name;
@@ -24,6 +26,7 @@ public class CollectionInfo
     {
         Id = group.IDs.Shoko.ToString();
         ParentId = group.IDs.ParentGroup?.ToString();
+        TopLevelId = group.IDs.TopLevelGroup.ToString();
         IsTopLevel = group.IDs.TopLevelGroup == group.IDs.Shoko;
         Name = group.Name;
         Shoko = group;

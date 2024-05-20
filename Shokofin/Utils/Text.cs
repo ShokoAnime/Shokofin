@@ -252,16 +252,16 @@ public static class Text
         return outputText;
     }
 
-    public static (string?, string?) GetEpisodeTitles(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, string metadataLanguage)
+    public static (string?, string?) GetEpisodeTitles(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, string? metadataLanguage)
         => (
             GetEpisodeTitleByType(episodeInfo, seasonInfo, TitleProviderType.Main, metadataLanguage),
             GetEpisodeTitleByType(episodeInfo, seasonInfo, TitleProviderType.Alternate, metadataLanguage)
         );
 
-    public static (string?, string?) GetSeasonTitles(SeasonInfo seasonInfo, string metadataLanguage)
+    public static (string?, string?) GetSeasonTitles(SeasonInfo seasonInfo, string? metadataLanguage)
         => GetSeasonTitles(seasonInfo, 0, metadataLanguage);
 
-    public static (string?, string?) GetSeasonTitles(SeasonInfo seasonInfo, int baseSeasonOffset, string metadataLanguage)
+    public static (string?, string?) GetSeasonTitles(SeasonInfo seasonInfo, int baseSeasonOffset, string? metadataLanguage)
     {
         var displayTitle = GetSeriesTitleByType(seasonInfo, seasonInfo.Shoko.Name, TitleProviderType.Main, metadataLanguage);
         var alternateTitle = GetSeriesTitleByType(seasonInfo, seasonInfo.Shoko.Name, TitleProviderType.Alternate, metadataLanguage);
@@ -282,13 +282,13 @@ public static class Text
         return (displayTitle, alternateTitle);
     }
 
-    public static (string?, string?) GetShowTitles(ShowInfo showInfo, string metadataLanguage)
+    public static (string?, string?) GetShowTitles(ShowInfo showInfo, string? metadataLanguage)
         => (
             GetSeriesTitleByType(showInfo.DefaultSeason, showInfo.Name, TitleProviderType.Main, metadataLanguage),
             GetSeriesTitleByType(showInfo.DefaultSeason, showInfo.Name, TitleProviderType.Alternate, metadataLanguage)
         );
 
-    public static (string?, string?) GetMovieTitles(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, string metadataLanguage)
+    public static (string?, string?) GetMovieTitles(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, string? metadataLanguage)
         => (
             GetMovieTitleByType(episodeInfo, seasonInfo, TitleProviderType.Main, metadataLanguage),
             GetMovieTitleByType(episodeInfo, seasonInfo, TitleProviderType.Alternate, metadataLanguage)
@@ -310,7 +310,7 @@ public static class Text
             _ => Array.Empty<TitleProvider>(),
         };
 
-    private static string? GetMovieTitleByType(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, TitleProviderType type, string metadataLanguage)
+    private static string? GetMovieTitleByType(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, TitleProviderType type, string? metadataLanguage)
     {
         var mainTitle = GetSeriesTitleByType(seasonInfo, seasonInfo.Shoko.Name, type, metadataLanguage);
         var subTitle = GetEpisodeTitleByType(episodeInfo, seasonInfo, type, metadataLanguage);
@@ -320,7 +320,7 @@ public static class Text
         return mainTitle?.Trim();
     }
 
-    private static string? GetEpisodeTitleByType(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, TitleProviderType type, string metadataLanguage)
+    private static string? GetEpisodeTitleByType(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, TitleProviderType type, string? metadataLanguage)
     {
         foreach (var provider in GetOrderedTitleProvidersByType(type)) {
             var title = provider switch {
@@ -340,7 +340,7 @@ public static class Text
         return null;
     }
 
-    private static string? GetSeriesTitleByType(SeasonInfo seasonInfo, string defaultName, TitleProviderType type, string metadataLanguage)
+    private static string? GetSeriesTitleByType(SeasonInfo seasonInfo, string defaultName, TitleProviderType type, string? metadataLanguage)
     {
         foreach (var provider in GetOrderedTitleProvidersByType(type)) {
             var title = provider switch {
@@ -376,9 +376,12 @@ public static class Text
     /// <param name="usingTypes">Search using titles</param>
     /// <param name="metadataLanguages">The metadata languages to search for.</param>
     /// <returns>The first found title in any of the provided metadata languages, or null.</returns>
-    public static string? GetTitlesForLanguage(List<Title> titles, bool usingTypes, params string[] metadataLanguages)
+    public static string? GetTitlesForLanguage(List<Title> titles, bool usingTypes, params string?[] metadataLanguages)
     {
-        foreach (string lang in metadataLanguages) {
+        foreach (var lang in metadataLanguages) {
+            if (string.IsNullOrEmpty(lang))
+                continue;
+
             var titleList = titles.Where(t => t.LanguageCode == lang).ToList();
             if (titleList.Count == 0)
                 continue;

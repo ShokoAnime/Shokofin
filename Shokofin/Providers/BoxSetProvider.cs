@@ -54,7 +54,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
         var result = new MetadataResult<BoxSet>();
 
         // First try to re-use any existing series id.
-        if (!info.ProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId))
+        if (!info.ProviderIds.TryGetValue(ShokoCollectionSeriesId.Name, out var seriesId))
             return result;
 
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId);
@@ -70,6 +70,8 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
 
         var (displayTitle, alternateTitle) = Text.GetSeasonTitles(season, info.MetadataLanguage);
 
+        Logger.LogInformation("Found collection {CollectionName} (Series={SeriesId})", displayTitle, season.Id);
+
         result.Item = new BoxSet {
             Name = displayTitle,
             OriginalTitle = alternateTitle,
@@ -80,7 +82,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
             Tags = season.Tags.ToArray(),
             CommunityRating = season.AniDB.Rating.ToFloat(10),
         };
-        result.Item.SetProviderId(ShokoSeriesId.Name, season.Id);
+        result.Item.SetProviderId(ShokoCollectionSeriesId.Name, season.Id);
         if (Plugin.Instance.Configuration.AddAniDBId)
             result.Item.SetProviderId("AniDB", season.AniDB.Id.ToString());
 
@@ -93,7 +95,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
     {
         // Filter out all manually created collections. We don't help those.
         var result = new MetadataResult<BoxSet>();
-        if (!info.ProviderIds.TryGetValue(ShokoGroupId.Name, out var groupId))
+        if (!info.ProviderIds.TryGetValue(ShokoCollectionGroupId.Name, out var groupId))
             return result;
 
         var collection = await ApiManager.GetCollectionInfoForGroup(groupId);
@@ -102,11 +104,13 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
             return result;
         }
 
+        Logger.LogInformation("Found collection {CollectionName} (Series={SeriesId})", collection.Name, collection.Id);
+
         result.Item = new BoxSet {
             Name = collection.Name,
             Overview = collection.Shoko.Description,
         };
-        result.Item.SetProviderId(ShokoGroupId.Name, collection.Id);
+        result.Item.SetProviderId(ShokoCollectionGroupId.Name, collection.Id);
         result.HasMetadata = true;
 
         return result;
