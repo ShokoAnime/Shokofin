@@ -376,18 +376,20 @@ public class CollectionManager
                         showDict.Values
                             .Select(showInfo => showInfo.CollectionId)
                             .Where(collectionId => !string.IsNullOrEmpty(collectionId))
-                            .OfType<string>()
                     )
-                    .Distinct()
-                    .Select(collectionId => ApiManager.GetCollectionInfoForGroup(collectionId))
+                    .GroupBy(collectionId => collectionId)
+                    .Select(groupBy =>
+                        ApiManager.GetCollectionInfoForGroup(groupBy.Key!)
+                            .ContinueWith(task => (collectionInfo: task.Result, count: groupBy.Count()))
+                    )
             )
             .ContinueWith(task =>
                 task.Result
-                    .OfType<CollectionInfo>()
-                    .GroupBy(collectionInfo => collectionInfo.TopLevelId)
-                    .Where(groupBy => groupBy.Count() > MinCollectionSize)
+                    .Where(tuple => tuple.collectionInfo != null)
+                    .GroupBy(tuple => tuple.collectionInfo!.TopLevelId)
+                    .Where(groupBy => groupBy.Sum(tuple => tuple.count) > MinCollectionSize)
                     .SelectMany(groupBy => groupBy)
-                    .ToDictionary(c => c.Id)
+                    .ToDictionary(c => c.collectionInfo!.Id, c => c.collectionInfo!)
             )
             .ConfigureAwait(false);
         var finalGroups = new Dictionary<string, CollectionInfo>();

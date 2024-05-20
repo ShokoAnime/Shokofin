@@ -225,6 +225,21 @@ public class Series
     public class SeriesSizes
     {
         /// <summary>
+        /// Combined count of all files across all file sources within the series or group.
+        /// </summary>
+        public int Files =>
+            FileSources.Unknown +
+            FileSources.Other +
+            FileSources.TV +
+            FileSources.DVD +
+            FileSources.BluRay +
+            FileSources.Web +
+            FileSources.VHS +
+            FileSources.VCD +
+            FileSources.LaserDisc +
+            FileSources.Camera;
+
+        /// <summary>
         /// Counts of each file source type available within the local collection
         /// </summary>
         public FileSourceCounts FileSources { get; set; } = new();

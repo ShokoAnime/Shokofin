@@ -894,8 +894,8 @@ public class ShokoAPIManager : IDisposable
                         if (showGroupIds.Contains(subGroup.IDs.Shoko.ToString()) && !collectionIds.Contains(subGroup.IDs.Shoko.ToString()))
                             continue;
                         var subCollectionInfo = await CreateCollectionInfo(subGroup, subGroup.IDs.Shoko.ToString()).ConfigureAwait(false);
-
-                        groupList.Add(subCollectionInfo);
+                        if (subCollectionInfo.Shoko.Sizes.Files > 0)
+                            groupList.Add(subCollectionInfo);
                     }
                 }
 
