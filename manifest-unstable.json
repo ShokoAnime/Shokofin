@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.179",
+                "changelog": "refactor: make collections great again!\n\n- Fixed collections. But for real this time, by extensively testing the different paths to both add and remove collections.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.179/shoko_3.0.1.179.zip",
+                "checksum": "c071f804862d18f9a8d78511db62ce94",
+                "timestamp": "2024-05-20T19:57:15Z"
+            },
+            {
                 "version": "3.0.1.178",
                 "changelog": "fix: fix retrieving children of a collection",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.175/shoko_3.0.1.175.zip",
                 "checksum": "f8e454c4ba217808e8cc389d6a996fbc",
                 "timestamp": "2024-05-19T01:00:25Z"
-            },
-            {
-                "version": "3.0.1.174",
-                "changelog": "fix: fix incompatibly with stable shoko server",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.174/shoko_3.0.1.174.zip",
-                "checksum": "9f6939a66682869cdaeef5625643a02b",
-                "timestamp": "2024-05-18T22:48:58Z"
             }
         ]
     }
