@@ -129,7 +129,7 @@ public class CollectionManager
             }
 
             // Remove all children
-            var children = boxSet.GetChildren(null, true, new()).Select(x => x.Id);
+            var children = boxSet.GetLinkedChildren().Select(x => x.Id);
             await Collection.RemoveFromCollectionAsync(id, children);
 
             // Remove the item.
@@ -307,7 +307,7 @@ public class CollectionManager
             }
 
             // Remove all children
-            var children = boxSet.GetChildren(null, true, new()).Select(x => x.Id);
+            var children = boxSet.GetLinkedChildren().Select(x => x.Id);
             await Collection.RemoveFromCollectionAsync(id, children);
 
             // Remove the item.
@@ -450,7 +450,7 @@ public class CollectionManager
     private async Task RemoveCollection(BoxSet boxSet, HashSet<Guid> allBoxSets, string? seriesId = null, string? groupId = null)
     {
         var parents = boxSet.GetParents().OfType<BoxSet>().ToList();
-        var children = boxSet.GetChildren(null, true, new()).Select(x => x.Id).ToList();
+        var children = boxSet.GetLinkedChildren().Select(x => x.Id).ToList();
         Logger.LogTrace("Removing collection {CollectionName} with {ParentCount} parents and {ChildCount} children. (Collection={CollectionId},Series={SeriesId},Group={GroupId})", boxSet.Name, parents.Count, children.Count, boxSet.Id, seriesId, groupId);
 
         // Remove the item from all parents.
