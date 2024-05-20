@@ -4,38 +4,24 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
-using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Collections;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Model.Configuration;
-using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Globalization;
-using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Info;
 using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
-using Directory = System.IO.Directory;
-using Path = System.IO.Path;
-
 namespace Shokofin.Collections;
 
 public class CollectionManager
 {
-    private readonly IApplicationPaths ApplicationPaths;
-
     private readonly ILibraryManager LibraryManager;
 
-    private readonly IFileSystem FileSystem;
-
     private readonly ICollectionManager Collection;
-    
-    private readonly ILocalizationManager LocalizationManager;
 
     private readonly ILogger<CollectionManager> Logger;
 
@@ -46,62 +32,22 @@ public class CollectionManager
     private static int MinCollectionSize => Plugin.Instance.Configuration.CollectionMinSizeOfTwo ? 1 : 0;
 
     public CollectionManager(
-        IApplicationPaths applicationPaths,
         ILibraryManager libraryManager,
-        IFileSystem fileSystem,
         ICollectionManager collectionManager,
-        ILocalizationManager localizationManager,
         ILogger<CollectionManager> logger,
         IIdLookup lookup,
         ShokoAPIManager apiManager
     )
     {
-        ApplicationPaths = applicationPaths;
         LibraryManager = libraryManager;
-        FileSystem = fileSystem;
         Collection = collectionManager;
-        LocalizationManager = localizationManager;
         Logger = logger;
         Lookup = lookup;
         ApiManager = apiManager;
     }
 
-    // TODO: Replace this temp. impl. with the native impl on 10.9 after the migration.
-    public async Task<Folder?> GetCollectionsFolder(bool createIfNeeded)
-    {
-        var path = Path.Combine(ApplicationPaths.DataPath, "collections");
-        var collectionRoot = LibraryManager
-            .RootFolder
-            .Children
-            .OfType<Folder>()
-            .Where(i => FileSystem.AreEqual(path, i.Path) || FileSystem.ContainsSubPath(i.Path, path))
-            .FirstOrDefault();
-        if (collectionRoot is not null)
-            return collectionRoot;
-
-        if (!createIfNeeded)
-            return null;
-
-        Directory.CreateDirectory(path);
-
-        var libraryOptions = new LibraryOptions {
-            PathInfos = new[] { new MediaPathInfo(path) },
-            EnableRealtimeMonitor = false,
-            SaveLocalMetadata = true
-        };
-
-        var name = LocalizationManager.GetLocalizedString("Collections");
-
-        await LibraryManager.AddVirtualFolder(name, CollectionTypeOptions.BoxSets, libraryOptions, true)
-            .ConfigureAwait(false);
-
-        return LibraryManager
-            .RootFolder
-            .Children
-            .OfType<Folder>()
-            .Where(i => FileSystem.AreEqual(path, i.Path) || FileSystem.ContainsSubPath(i.Path, path))
-            .FirstOrDefault();
-    }
+    public Task<Folder?> GetCollectionsFolder(bool createIfNeeded)
+        => Collection.GetCollectionsFolder(createIfNeeded);
 
     public async Task ReconstructCollections(IProgress<double> progress, CancellationToken cancellationToken)
     {
