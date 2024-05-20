@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.178",
+                "changelog": "fix: fix retrieving children of a collection",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.178/shoko_3.0.1.178.zip",
+                "checksum": "b5083a5d0c5b0a2e456a35363f5f4194",
+                "timestamp": "2024-05-20T00:01:12Z"
+            },
+            {
                 "version": "3.0.1.177",
                 "changelog": "fix: add work-around for signalr file events\n\n- Added a work-around for signalr file events for when both\n  real time monitoring _and_ the VFS is enabled for the library,\n  to make it function properly and not ignore the event.\n\nmisc: == \u2192 is / != \u2192 is not\n\nmisc: cleanup cleanup function + more [skip ci]\n\n- Clean-up clean-up function.\n\n- Fix style in try move subtitle file.\n\n- Simplify get ids for path.\n\n- Add when to catch in get new relative path.\n\nmisc: add more guards for library scan [skip ci]\n\nmisc: emit how many updates are scheduled [skip ci]\n\nmisc: fix log point [skip ci]\n\nmisc: remove unused code\u00a0[skip ci]",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.174/shoko_3.0.1.174.zip",
                 "checksum": "9f6939a66682869cdaeef5625643a02b",
                 "timestamp": "2024-05-18T22:48:58Z"
-            },
-            {
-                "version": "3.0.1.173",
-                "changelog": "misc: add ordering to providers",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.173/shoko_3.0.1.173.zip",
-                "checksum": "7bafe38f384169321aa61560c499b4b9",
-                "timestamp": "2024-05-18T21:34:07Z"
             }
         ]
     }
