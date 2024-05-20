@@ -1220,7 +1220,7 @@ public class ShokoResolveManager
 
     public async Task<BaseItem?> ResolveSingle(Folder? parent, string? collectionType, FileSystemMetadata fileInfo)
     {
-        if (collectionType is not CollectionType.TvShows or CollectionType.Movies or null || parent is null || fileInfo is null)
+        if (!(collectionType is CollectionType.TvShows or CollectionType.Movies or null) || parent is null || fileInfo is null)
             return null;
 
         var root = LibraryManager.RootFolder;
@@ -1261,7 +1261,7 @@ public class ShokoResolveManager
 
     public async Task<MultiItemResolverResult?> ResolveMultiple(Folder? parent, string? collectionType, List<FileSystemMetadata> fileInfoList)
     {
-        if (collectionType is not CollectionType.TvShows or CollectionType.Movies or null || parent is null)
+        if (!(collectionType is CollectionType.TvShows or CollectionType.Movies or null) || parent is null)
             return null;
 
         var root = LibraryManager.RootFolder;
