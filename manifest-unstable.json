@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.180",
+                "changelog": "fix: fix VFS resolution for non-tv-show libraries",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.180/shoko_3.0.1.180.zip",
+                "checksum": "1460c4f4772e28c75f3405cb84bc7fa7",
+                "timestamp": "2024-05-20T21:21:23Z"
+            },
+            {
                 "version": "3.0.1.179",
                 "changelog": "refactor: make collections great again!\n\n- Fixed collections. But for real this time, by extensively testing the different paths to both add and remove collections.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.176/shoko_3.0.1.176.zip",
                 "checksum": "f270ec760c88156cb9ce8dd0739705b5",
                 "timestamp": "2024-05-19T01:30:14Z"
-            },
-            {
-                "version": "3.0.1.175",
-                "changelog": "fix: fix multi-series file emits in VFS\nwhen emitting for the media folder",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.175/shoko_3.0.1.175.zip",
-                "checksum": "f8e454c4ba217808e8cc389d6a996fbc",
-                "timestamp": "2024-05-19T01:00:25Z"
             }
         ]
     }
