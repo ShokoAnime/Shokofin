@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.181",
+                "changelog": "fix: fix collection creation criteria",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.181/shoko_3.0.1.181.zip",
+                "checksum": "0af3f33d0e9f94e1bd653d40ea87cb32",
+                "timestamp": "2024-05-20T23:27:13Z"
+            },
+            {
                 "version": "3.0.1.180",
                 "changelog": "fix: fix VFS resolution for non-tv-show libraries",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.177/shoko_3.0.1.177.zip",
                 "checksum": "551621544d7fd5230575d540f4be9460",
                 "timestamp": "2024-05-19T05:20:46Z"
-            },
-            {
-                "version": "3.0.1.176",
-                "changelog": "fix: fix multi-series file emits in VFS (take 2)\n\u2026this time for sure it will work\u2026",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.176/shoko_3.0.1.176.zip",
-                "checksum": "f270ec760c88156cb9ce8dd0739705b5",
-                "timestamp": "2024-05-19T01:30:14Z"
             }
         ]
     }
