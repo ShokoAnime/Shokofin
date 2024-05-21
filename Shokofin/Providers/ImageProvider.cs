@@ -95,17 +95,18 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                     }
                     break;
                 }
-                case BoxSet boxSet: {
-                    if (!boxSet.ProviderIds.TryGetValue(ShokoCollectionSeriesId.Name, out var seriesId)) {
-                        if (boxSet.ProviderIds.TryGetValue(ShokoCollectionGroupId.Name, out var collectionId))
-                            seriesId = (await ApiManager.GetCollectionInfoForGroup(collectionId))?.Shoko.IDs.MainSeries.ToString();
+                case BoxSet collection: {
+                    string? groupId = null;
+                    if (!collection.ProviderIds.TryGetValue(ShokoCollectionSeriesId.Name, out var seriesId)) {
+                        if (collection.ProviderIds.TryGetValue(ShokoCollectionGroupId.Name, out groupId))
+                            seriesId = (await ApiManager.GetCollectionInfoForGroup(groupId))?.Shoko.IDs.MainSeries.ToString();
                     }
                     if (!string.IsNullOrEmpty(seriesId)) {
                         var seriesImages = await ApiClient.GetSeriesImages(seriesId);
                         if (seriesImages != null) {
                             AddImagesForSeries(ref list, seriesImages);
                         }
-                        Logger.LogInformation("Getting {Count} images for box-set {BoxSetName} (Series={SeriesId})", list.Count, boxSet.Name, seriesId);
+                        Logger.LogInformation("Getting {Count} images for collection {CollectionName} (Group={GroupId},Series={SeriesId})", list.Count, collection.Name, groupId, groupId == null ? seriesId : null);
                     }
                     break;
                 }
