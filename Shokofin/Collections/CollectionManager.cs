@@ -338,9 +338,6 @@ public class CollectionManager
         // Create a tree-map of how it's supposed to be.
         var movieDict = new Dictionary<Movie, (FileInfo fileInfo, SeasonInfo seasonInfo, ShowInfo showInfo)>();
         foreach (var movie in movies) {
-            if (!Lookup.TryGetEpisodeIdsFor(movie, out var episodeIds))
-                continue;
-
             var (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(movie.Path).ConfigureAwait(false);
             if (fileInfo == null || seasonInfo == null || showInfo == null)
                 continue;
@@ -367,16 +364,17 @@ public class CollectionManager
         progress.Report(30);
 
         // Filter to only collections with at least (`MinCollectionSize` + 1) entries in them.
+        var movieCollections = movieDict.Values
+            .Select(tuple => tuple.showInfo.CollectionId)
+            .Where(collectionId => !string.IsNullOrEmpty(collectionId))
+            .ToList();
+        var showCollections = showDict.Values
+            .Select(showInfo => showInfo.CollectionId)
+            .Where(collectionId => !string.IsNullOrEmpty(collectionId))
+            .ToList();
         var groupsDict = await Task
             .WhenAll(
-                movieDict.Values
-                    .Select(tuple => tuple.seasonInfo)
-                    .Select(seasonInfo => seasonInfo.Shoko.IDs.ParentGroup.ToString())
-                    .Concat(
-                        showDict.Values
-                            .Select(showInfo => showInfo.CollectionId)
-                            .Where(collectionId => !string.IsNullOrEmpty(collectionId))
-                    )
+                movieCollections.Concat(showCollections)
                     .GroupBy(collectionId => collectionId)
                     .Select(groupBy =>
                         ApiManager.GetCollectionInfoForGroup(groupBy.Key!)
