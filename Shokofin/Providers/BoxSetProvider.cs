@@ -37,11 +37,17 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
     public async Task<MetadataResult<BoxSet>> GetMetadata(BoxSetInfo info, CancellationToken cancellationToken)
     {
         try {
-            return Plugin.Instance.Configuration.CollectionGrouping switch
-            {
-                Ordering.CollectionCreationType.Shared => await GetShokoGroupedMetadata(info),
-                _ => await GetDefaultMetadata(info),
-            };
+            // Try to read the shoko group id
+            if (info.ProviderIds.TryGetValue(ShokoCollectionGroupId.Name, out var collectionId) ||
+               info.Path.TryGetAttributeValue(ShokoCollectionGroupId.Name, out collectionId))
+                return await GetShokoGroupedMetadata(info, collectionId);
+
+            // Try to read the shoko series id
+            if (info.ProviderIds.TryGetValue(ShokoCollectionSeriesId.Name, out var seriesId) ||
+                    info.Path.TryGetAttributeValue(ShokoCollectionSeriesId.Name, out seriesId))
+                return await GetDefaultMetadata(info, seriesId);
+
+            return new();
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
@@ -49,22 +55,13 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
         }
     }
 
-    public async Task<MetadataResult<BoxSet>> GetDefaultMetadata(BoxSetInfo info)
+    public async Task<MetadataResult<BoxSet>> GetDefaultMetadata(BoxSetInfo info, string seriesId)
     {
-        var result = new MetadataResult<BoxSet>();
-
         // First try to re-use any existing series id.
-        if (!info.ProviderIds.TryGetValue(ShokoCollectionSeriesId.Name, out var seriesId))
-            return result;
-
+        var result = new MetadataResult<BoxSet>();
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId);
         if (season == null) {
-                Logger.LogWarning("Unable to find movie box-set info for name {Name} and path {Path}", info.Name, info.Path);
-            return result;
-        }
-
-        if (season.EpisodeList.Count <= 1) {
-            Logger.LogWarning("Series did not contain multiple movies! Skipping path {Path} (Series={SeriesId})", info.Path, season.Id);
+            Logger.LogWarning("Unable to find movie box-set info for name {Name} and path {Path}", info.Name, info.Path);
             return result;
         }
 
@@ -91,13 +88,10 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
         return result;
     }
 
-    private async Task<MetadataResult<BoxSet>> GetShokoGroupedMetadata(BoxSetInfo info)
+    private async Task<MetadataResult<BoxSet>> GetShokoGroupedMetadata(BoxSetInfo info, string groupId)
     {
         // Filter out all manually created collections. We don't help those.
         var result = new MetadataResult<BoxSet>();
-        if (!info.ProviderIds.TryGetValue(ShokoCollectionGroupId.Name, out var groupId))
-            return result;
-
         var collection = await ApiManager.GetCollectionInfoForGroup(groupId);
         if (collection == null) {
             Logger.LogWarning("Unable to find collection info for name {Name} and path {Path}", info.Name, info.Path);
