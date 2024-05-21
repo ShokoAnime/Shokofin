@@ -275,7 +275,31 @@
                                 <option value="Movies">Create collections for movies based upon Shoko's series</option>
                                 <option value="Shared">Create collections for movies and shows based upon Shoko's groups and series</option>
                             </select>
-                            <div class="fieldDescription">Determines what entities to group into collections.</div>
+                            <div class="fieldDescription">
+                                <div>Determines what entities to group into collections.</div>
+                                <details style="margin-top: 0.5em">
+                                    <summary style="margin-bottom: 0.25em">Custom CSS for the collections</summary>
+                                    Here's some optional custom CSS you can add to "rename" the sections in the collections to
+                                    better align with what you'd expect them to be named. If you want it in another language then
+                                    you need to translate it yourself and replace it in the CSS before setting it in your server.
+                                    <pre>
+.collectionItems .verticalSection:has(div[data-type="Movie"]) .sectionTitle.sectionTitle-cards > span {
+    visibility: hidden;
+}
+.collectionItems .verticalSection:has(div[data-type="Movie"]) .sectionTitle.sectionTitle-cards > span::before {
+    visibility: initial;
+    content: "Movies";
+}
+.collectionItems .verticalSection:has(div[data-type="BoxSet"]) .sectionTitle.sectionTitle-cards > span {
+    visibility: hidden;
+}
+.collectionItems .verticalSection:has(div[data-type="BoxSet"]) .sectionTitle.sectionTitle-cards > span::before {
+    visibility: initial;
+    content: "Collections";
+}
+</pre>
+                                </details>
+                            </div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
