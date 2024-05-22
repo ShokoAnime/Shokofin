@@ -9,6 +9,24 @@ namespace Shokofin;
 
 public static class StringExtensions
 {
+    public static string Replace(this string input, Regex regex, string replacement, int count, int startAt)
+        =>  regex.Replace(input, replacement, count, startAt);
+
+    public static string Replace(this string input, Regex regex, MatchEvaluator evaluator, int count, int startAt)
+        =>  regex.Replace(input, evaluator, count, startAt);
+
+    public static string Replace(this string input, Regex regex, MatchEvaluator evaluator, int count)
+        =>  regex.Replace(input, evaluator, count);
+
+    public static string Replace(this string input, Regex regex, MatchEvaluator evaluator)
+        =>  regex.Replace(input, evaluator);
+
+    public static string Replace(this string input, Regex regex, string replacement)
+        =>  regex.Replace(input, replacement);
+
+    public static string Replace(this string input, Regex regex, string replacement, int count)
+        =>  regex.Replace(input, replacement, count);
+
     public static void Deconstruct(this IList<string> list, out string first)
     {
         first = list.Count > 0 ? list[0] : string.Empty;

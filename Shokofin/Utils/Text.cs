@@ -184,7 +184,7 @@ public static class Text
             var overview = provider switch
             {
                 DescriptionProvider.Shoko =>
-                    descriptions.TryGetValue(DescriptionProvider.Shoko, out var desc) ? desc : null,
+                    descriptions.TryGetValue(DescriptionProvider.Shoko, out var desc) ? SanitizeAnidbDescription(desc ?? string.Empty) : null,
                 DescriptionProvider.AniDB =>
                     descriptions.TryGetValue(DescriptionProvider.AniDB, out var desc) ? SanitizeAnidbDescription(desc ?? string.Empty) : null,
                 DescriptionProvider.TvDB =>
@@ -212,19 +212,35 @@ public static class Text
 
         var config = Plugin.Instance.Configuration;
         if (config.SynopsisCleanLinks)
-            summary = Regex.Replace(summary, @"https?:\/\/\w+.\w+(?:\/?\w+)? \[([^\]]+)\]", match => match.Groups[1].Value);
+            summary = summary.Replace(SynopsisCleanLinks, match => $"[{match.Groups[2].Value}]({match.Groups[1].Value})");
 
         if (config.SynopsisCleanMiscLines)
-            summary = Regex.Replace(summary, @"^(\*|--|~) .*", string.Empty, RegexOptions.Multiline);
+            summary = summary.Replace(SynopsisCleanMiscLines, string.Empty);
 
         if (config.SynopsisRemoveSummary)
-            summary = Regex.Replace(summary, @"\n(Source|Note|Summary):.*", string.Empty, RegexOptions.Singleline);
+            summary = summary
+                .Replace(SynopsisRemoveSummary1, match => $"**{match.Groups[1].Value}**: ")
+                .Replace(SynopsisRemoveSummary2, string.Empty);
 
         if (config.SynopsisCleanMultiEmptyLines)
-            summary = Regex.Replace(summary, @"\n{2,}", "\n", RegexOptions.Singleline);
+            summary = summary
+                .Replace(SynopsisConvertNewLines, "\n")
+                .Replace(SynopsisCleanMultiEmptyLines, "\n");
 
         return summary.Trim();
     }
+
+    private static readonly Regex SynopsisCleanLinks = new(@"(https?:\/\/\w+.\w+(?:\/?\w+)?) \[([^\]]+)\]", RegexOptions.Compiled);
+
+    private static readonly Regex SynopsisCleanMiscLines = new(@"^(\*|--|~)\s*", RegexOptions.Multiline | RegexOptions.Compiled);
+
+    private static readonly Regex SynopsisRemoveSummary1 = new(@"\b(Note|Summary):\s*", RegexOptions.Singleline | RegexOptions.Compiled);
+
+    private static readonly Regex SynopsisRemoveSummary2 = new(@"\bSource: [^ ]+", RegexOptions.Singleline | RegexOptions.Compiled);
+
+    private static readonly Regex SynopsisConvertNewLines = new(@"\r\n|\r", RegexOptions.Singleline | RegexOptions.Compiled);
+
+    private static readonly Regex SynopsisCleanMultiEmptyLines = new(@"\n{2,}", RegexOptions.Singleline | RegexOptions.Compiled);
 
     public static string? JoinText(IEnumerable<string?> textList)
     {
