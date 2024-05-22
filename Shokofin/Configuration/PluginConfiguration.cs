@@ -205,10 +205,30 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool SeparateMovies { get; set; }
 
     /// <summary>
-    /// Append all specials in AniDB movie series as special featurettes for
+    /// Append all specials in AniDB movie series as special features for
     /// the movies.
     /// </summary>
     public bool MovieSpecialsAsExtraFeaturettes { get; set; }
+
+    /// <summary>
+    /// Add trailers to entities within the VFS. Trailers within the trailers
+    /// directory when not using the VFS are not affected by this option.
+    /// </summary>
+    public bool AddTrailers { get; set; }
+
+    /// <summary>
+    /// Add all credits as theme videos to entities with in the VFS. In a
+    /// non-VFS library they will just be filtered out since we can't properly
+    /// support them as Jellyfin native features.
+    /// </summary>
+    public bool AddCreditsAsThemeVideos { get; set; }
+
+    /// <summary>
+    /// Add all credits as special features to entities with in the VFS. In a
+    /// non-VFS library they will just be filtered out since we can't properly
+    /// support them as Jellyfin native features.
+    /// </summary>
+    public bool AddCreditsAsSpecialFeatures { get; set; }
 
     /// <summary>
     /// Determines how collections are made.
@@ -379,6 +399,9 @@ public class PluginConfiguration : BasePluginConfiguration
         UseGroupsForShows = false;
         SeparateMovies = false;
         MovieSpecialsAsExtraFeaturettes = false;
+        AddTrailers = true;
+        AddCreditsAsThemeVideos = true;
+        AddCreditsAsSpecialFeatures = false;
         SeasonOrdering = OrderType.Default;
         SpecialsPlacement = SpecialOrderType.AfterSeason;
         AddMissingMetadata = true;

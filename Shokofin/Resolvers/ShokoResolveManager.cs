@@ -806,8 +806,9 @@ public class ShokoResolveManager
             return (string.Empty, Array.Empty<string>(), null);
 
         var isMovieSeason = season.Type is SeriesType.Movie;
+        var config = Plugin.Instance.Configuration;
         var shouldAbort = collectionType switch {
-            CollectionType.TvShows => isMovieSeason && Plugin.Instance.Configuration.SeparateMovies,
+            CollectionType.TvShows => isMovieSeason && config.SeparateMovies,
             CollectionType.Movies => !isMovieSeason,
             _ => false,
         };
@@ -838,33 +839,35 @@ public class ShokoResolveManager
 
         var isExtra = file.EpisodeList.Any(eI => season.IsExtraEpisode(eI.Episode));
         var folders = new List<string>();
-        var extrasFolder = file.ExtraType switch {
-            null => isExtra ? "extras" : null,
-            ExtraType.ThemeSong => "theme-music",
-            ExtraType.ThemeVideo => "backdrops",
-            ExtraType.Trailer => "trailers",
-            _ => "extras",
-        };
-        var fileNameSuffix = file.ExtraType switch {
-            ExtraType.BehindTheScenes => "-behindTheScenes",
-            ExtraType.Clip => "-clip",
-            ExtraType.DeletedScene => "-deletedScene",
-            ExtraType.Interview => "-interview",
-            ExtraType.Scene => "-scene",
-            ExtraType.Sample => "-other",
-            ExtraType.Unknown => "-other",
-            ExtraType.ThemeSong => string.Empty,
-            ExtraType.ThemeVideo => string.Empty,
-            ExtraType.Trailer => string.Empty,
-            _ => isExtra ? "-other" : string.Empty,
+        var extrasFolders = file.ExtraType switch {
+            null => isExtra ? new string[] { "extras" } : null,
+            ExtraType.ThemeSong => new string[] { "theme-music" },
+            ExtraType.ThemeVideo => config.AddCreditsAsThemeVideos && config.AddCreditsAsSpecialFeatures
+                ? new string[] { "backdrops", "extras" }
+                : config.AddCreditsAsThemeVideos
+                ? new string[] { "backdrops" }
+                : config.AddCreditsAsSpecialFeatures
+                ? new string[] { "extras" }
+                : Array.Empty<string>(),
+            ExtraType.Trailer => config.AddTrailers
+                ? new string[] { "trailers" }
+                : Array.Empty<string>(),
+            ExtraType.BehindTheScenes => new string[] { "behind the scenes" },
+            ExtraType.DeletedScene => new string[] { "deleted scenes" },
+            ExtraType.Clip => new string[] { "clips" },
+            ExtraType.Interview => new string[] { "interviews" },
+            ExtraType.Scene => new string[] { "scenes" },
+            ExtraType.Sample => new string[] { "samples" },
+            _ => new string[] { "extras" },
         };
         var filePartSuffix = (episodeXref.Percentage?.Size ?? 100) is not 100
             ? $".pt{episode.Shoko.CrossReferences.Where(xref => xref.ReleaseGroup == episodeXref.ReleaseGroup && xref.Percentage!.Size == episodeXref.Percentage!.Size).ToList().FindIndex(xref => xref.Percentage!.Start == episodeXref.Percentage!.Start && xref.Percentage!.End == episodeXref.Percentage!.End) + 1}"
             : "";
         if (isMovieSeason && collectionType is not CollectionType.TvShows) {
-            if (!string.IsNullOrEmpty(extrasFolder)) {
-                foreach (var episodeInfo in season.EpisodeList)
-                    folders.Add(Path.Join(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}] [{ShokoEpisodeId.Name}={episodeInfo.Id}]", extrasFolder));
+            if (extrasFolders != null) {
+                foreach (var extrasFolder in extrasFolders)
+                    foreach (var episodeInfo in season.EpisodeList)
+                        folders.Add(Path.Join(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}] [{ShokoEpisodeId.Name}={episodeInfo.Id}]", extrasFolder));
             }
             else {
                 folders.Add(Path.Join(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}] [{ShokoEpisodeId.Name}={episode.Id}]"));
@@ -876,12 +879,14 @@ public class ShokoResolveManager
             var seasonNumber = Ordering.GetSeasonNumber(show, season, episode);
             var seasonFolder = $"Season {(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}";
             var showFolder = $"{showName} [{ShokoSeriesId.Name}={show.Id}]";
-            if (!string.IsNullOrEmpty(extrasFolder)) {
-                folders.Add(Path.Join(vfsPath, showFolder, extrasFolder));
+            if (extrasFolders != null) {
+                foreach (var extrasFolder in extrasFolders) {
+                    folders.Add(Path.Join(vfsPath, showFolder, extrasFolder));
 
-                // Only place the extra within the season if we have a season number assigned to the episode.
-                if (seasonNumber is not 0)
-                    folders.Add(Path.Join(vfsPath, showFolder, seasonFolder, extrasFolder));
+                    // Only place the extra within the season if we have a season number assigned to the episode.
+                    if (seasonNumber is not 0)
+                        folders.Add(Path.Join(vfsPath, showFolder, seasonFolder, extrasFolder));
+                }
             }
             else {
                 folders.Add(Path.Join(vfsPath, showFolder, seasonFolder));
@@ -889,7 +894,7 @@ public class ShokoResolveManager
             }
         }
 
-        var fileName = $"{episodeName} [{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileId}]{fileNameSuffix}{Path.GetExtension(sourceLocation)}";
+        var fileName = $"{episodeName} [{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileId}]{Path.GetExtension(sourceLocation)}";
         var symbolicLinks = folders
             .Select(folderPath => Path.Join(folderPath, fileName))
             .ToArray();

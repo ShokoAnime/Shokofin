@@ -311,10 +311,33 @@
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="MovieSpecialsAsExtraFeaturettes" />
-                                <span>Force movie special featurettes</span>
+                                <span>Force movie special features</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Append all specials in AniDB movie series as special featurettes for the movies. By default only some specials will be automatically recognized as special featurettes, but by enabling this option you will force all specials to be used as special featurettes. This setting applies to movie series across all library types, and may break some movie series in a show type library unless appropriate measures are taken.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Append all specials in AniDB movie series as special features for the movies. By default only some specials will be automatically recognized as special features, but by enabling this option you will force all specials to be used as special features. This setting applies to movie series across all library types, and may break some movie series in a show type library unless appropriate measures are taken.</div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddTrailers" />
+                                <span>Add trailers</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add trailers to entities within the VFS. Trailers within the trailers directory when not using the VFS are not affected by this option.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddCreditsAsThemeVideos" />
+                                <span>Add credits as theme videos</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add all credits as theme videos to entities with in the VFS. In a non-VFS library they will just be filtered out since we can't properly support them as Jellyfin native features.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddCreditsAsSpecialFeatures" />
+                                <span>Add credits as special features</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add all credits as special features to entities with in the VFS. In a non-VFS library they will just be filtered out since we can't properly support them as Jellyfin native features.</div>
+                        </div>
+                        <!-- Insert 'include/exclude' credits as theme videos or special features here. -->
+                        <!-- Insert 'include/exclude' trailers. -->
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="AddMissingMetadata" />

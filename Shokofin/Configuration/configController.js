@@ -296,6 +296,9 @@ async function defaultSubmit(form) {
         config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
         config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
         config.MovieSpecialsAsExtraFeaturettes = form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked;
+        config.AddTrailers = form.querySelector("#AddTrailers").checked;
+        config.AddCreditsAsThemeVideos = form.querySelector("#AddCreditsAsThemeVideos").checked;
+        config.AddCreditsAsSpecialFeatures = form.querySelector("#AddCreditsAsSpecialFeatures").checked;
         config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
         // Media Folder settings
@@ -486,6 +489,9 @@ async function syncSettings(form) {
     config.CollectionMinSizeOfTwo = form.querySelector("#CollectionMinSizeOfTwo").checked;
     config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
     config.MovieSpecialsAsExtraFeaturettes = form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked;
+    config.AddTrailers = form.querySelector("#AddTrailers").checked;
+    config.AddCreditsAsThemeVideos = form.querySelector("#AddCreditsAsThemeVideos").checked;
+    config.AddCreditsAsSpecialFeatures = form.querySelector("#AddCreditsAsSpecialFeatures").checked;
     config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
     // Tag settings
@@ -801,6 +807,9 @@ export default function (page) {
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies != null ? config.SeparateMovies : true;
             form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
             form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked = config.MovieSpecialsAsExtraFeaturettes || false;
+            form.querySelector("#AddTrailers").checked = config.AddTrailers || false;
+            form.querySelector("#AddCreditsAsThemeVideos").checked = config.AddCreditsAsThemeVideos || false;
+            form.querySelector("#AddCreditsAsSpecialFeatures").checked = config.AddCreditsAsSpecialFeatures || false;
             form.querySelector("#AddMissingMetadata").checked = config.AddMissingMetadata || false;
 
             // Media Folder settings
