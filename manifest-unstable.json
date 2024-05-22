@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.183",
+                "changelog": "fix: fix up show descriptions + more\n\n- Fixed up show descriptions.\n\n- Fixed up the anidb sanitization in general to convert better to **MarkDown**.\n\nfeat: make trailers/credits optional to include\n\n- Made trailers and credits optional to include, and allowed credits to be added as either theme videos (on by default), or as special features (off by default), or both.\n\nfeat: add trailer & video providers\n\n- Added a trailer and video provider responsible for fetching metadata for theme videos, special featurettes, and trailers __for entities in the VFS__.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.183/shoko_3.0.1.183.zip",
+                "checksum": "77f8b7f416bff24696b4176d3e57ca0f",
+                "timestamp": "2024-05-22T03:51:43Z"
+            },
+            {
                 "version": "3.0.1.182",
                 "changelog": "refactor: update collection provider\n\nfix: fix logging for images for collections\n\nfix: fix shared collections for movies\n\nmisc: add custom css for collections to settings page",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.179/shoko_3.0.1.179.zip",
                 "checksum": "c071f804862d18f9a8d78511db62ce94",
                 "timestamp": "2024-05-20T19:57:15Z"
-            },
-            {
-                "version": "3.0.1.178",
-                "changelog": "fix: fix retrieving children of a collection",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.178/shoko_3.0.1.178.zip",
-                "checksum": "b5083a5d0c5b0a2e456a35363f5f4194",
-                "timestamp": "2024-05-20T00:01:12Z"
             }
         ]
     }
