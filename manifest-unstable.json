@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.184",
+                "changelog": "fix: add xref group from latest daily server",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.184/shoko_3.0.1.184.zip",
+                "checksum": "5fc632851adc8ff1c4be945778f72904",
+                "timestamp": "2024-05-23T00:01:22Z"
+            },
+            {
                 "version": "3.0.1.183",
                 "changelog": "fix: fix up show descriptions + more\n\n- Fixed up show descriptions.\n\n- Fixed up the anidb sanitization in general to convert better to **MarkDown**.\n\nfeat: make trailers/credits optional to include\n\n- Made trailers and credits optional to include, and allowed credits to be added as either theme videos (on by default), or as special features (off by default), or both.\n\nfeat: add trailer & video providers\n\n- Added a trailer and video provider responsible for fetching metadata for theme videos, special featurettes, and trailers __for entities in the VFS__.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.180/shoko_3.0.1.180.zip",
                 "checksum": "1460c4f4772e28c75f3405cb84bc7fa7",
                 "timestamp": "2024-05-20T21:21:23Z"
-            },
-            {
-                "version": "3.0.1.179",
-                "changelog": "refactor: make collections great again!\n\n- Fixed collections. But for real this time, by extensively testing the different paths to both add and remove collections.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.179/shoko_3.0.1.179.zip",
-                "checksum": "c071f804862d18f9a8d78511db62ce94",
-                "timestamp": "2024-05-20T19:57:15Z"
             }
         ]
     }
