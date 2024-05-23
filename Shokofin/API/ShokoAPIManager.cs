@@ -457,9 +457,9 @@ public class ShokoAPIManager : IDisposable
 
                 // Group and order the episodes.
                 var groupedEpisodeLists = episodeList
-                    .GroupBy(tuple => (type: tuple.Episode.AniDB.Type, percentage: tuple.CrossReference.Percentage?.Size ?? 100))
+                    .GroupBy(tuple => (type: tuple.Episode.AniDB.Type, group: tuple.CrossReference.Percentage?.Group ?? 1))
                     .OrderByDescending(a => Array.IndexOf(EpisodePickOrder, a.Key.type))
-                    .ThenByDescending(a => a.Key.percentage)
+                    .ThenBy(a => a.Key.group)
                     .Select(epList => epList.OrderBy(tuple => tuple.Episode.AniDB.EpisodeNumber).ToList())
                     .ToList();
 

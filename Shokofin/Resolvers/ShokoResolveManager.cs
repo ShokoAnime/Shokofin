@@ -860,8 +860,8 @@ public class ShokoResolveManager
             ExtraType.Sample => new string[] { "samples" },
             _ => new string[] { "extras" },
         };
-        var filePartSuffix = (episodeXref.Percentage?.Size ?? 100) is not 100
-            ? $".pt{episode.Shoko.CrossReferences.Where(xref => xref.ReleaseGroup == episodeXref.ReleaseGroup && xref.Percentage!.Size == episodeXref.Percentage!.Size).ToList().FindIndex(xref => xref.Percentage!.Start == episodeXref.Percentage!.Start && xref.Percentage!.End == episodeXref.Percentage!.End) + 1}"
+        var filePartSuffix = (episodeXref.Percentage?.Group ?? 1) is not 1
+            ? $".pt{episode.Shoko.CrossReferences.Where(xref => xref.ReleaseGroup == episodeXref.ReleaseGroup && xref.Percentage!.Group == episodeXref.Percentage!.Group).ToList().FindIndex(xref => xref.Percentage!.Start == episodeXref.Percentage!.Start && xref.Percentage!.End == episodeXref.Percentage!.End) + 1}"
             : "";
         if (isMovieSeason && collectionType is not CollectionType.TvShows) {
             if (extrasFolders != null) {

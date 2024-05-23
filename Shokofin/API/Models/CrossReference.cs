@@ -57,6 +57,12 @@ public class CrossReference
         /// The raw percentage to "group" the cross-references by.
         /// </summary>
         public int Size { get; set; }
+
+        /// <summary>
+        /// The assumed number of groups in the release, to group the
+        /// cross-references by.
+        /// </summary>
+        public int? Group { get; set; }
     }
 
     /// <summary>
