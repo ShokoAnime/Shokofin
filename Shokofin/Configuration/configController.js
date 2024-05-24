@@ -431,6 +431,9 @@ async function defaultSubmit(form) {
             config.ApiKey = response.apikey;
 
             let result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
+
+            await getSignalrStatus().then(refreshSignalr);
+
             Dashboard.processPluginConfigurationUpdateResult(result);
         }
         catch (err) {
@@ -452,6 +455,9 @@ async function resetConnectionSettings(form) {
     config.ServerVersion = null;
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
+
+    await getSignalrStatus().then(refreshSignalr);
+
     Dashboard.processPluginConfigurationUpdateResult(result);
 
     return config;
