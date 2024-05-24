@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/LogoWide.png",
         "versions": [
             {
+                "version": "3.0.1.186",
+                "changelog": "fix: refresh signalr state upon connect/disconnect",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.186/shoko_3.0.1.186.zip",
+                "checksum": "602baee1a7d05c5ef8f47fb0ea24a417",
+                "timestamp": "2024-05-24T22:16:13Z"
+            },
+            {
                 "version": "3.0.1.185",
                 "changelog": "revert: \"fix: extras \u2192 episodes\"\n\nThis reverts commit 2a3eed4dd910386ee373bdf3f8aadd2511f97ab3.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.182/shoko_3.0.1.182.zip",
                 "checksum": "8bd2f8b999d41f2449f0c6568d2de13a",
                 "timestamp": "2024-05-21T01:38:36Z"
-            },
-            {
-                "version": "3.0.1.181",
-                "changelog": "fix: fix collection creation criteria",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.181/shoko_3.0.1.181.zip",
-                "checksum": "0af3f33d0e9f94e1bd653d40ea87cb32",
-                "timestamp": "2024-05-20T23:27:13Z"
             }
         ]
     }
