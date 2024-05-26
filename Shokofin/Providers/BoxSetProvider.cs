@@ -19,7 +19,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
 {
     public string Name => Plugin.MetadataProviderName;
 
-    public int Order => 0;
+    public int Order => -1;
 
     private readonly IHttpClientFactory HttpClientFactory;
 
@@ -40,12 +40,12 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
             // Try to read the shoko group id
             if (info.ProviderIds.TryGetValue(ShokoCollectionGroupId.Name, out var collectionId) ||
                info.Path.TryGetAttributeValue(ShokoCollectionGroupId.Name, out collectionId))
-                return await GetShokoGroupedMetadata(info, collectionId);
+                return await GetShokoGroupMetadata(info, collectionId);
 
             // Try to read the shoko series id
             if (info.ProviderIds.TryGetValue(ShokoCollectionSeriesId.Name, out var seriesId) ||
                     info.Path.TryGetAttributeValue(ShokoCollectionSeriesId.Name, out seriesId))
-                return await GetDefaultMetadata(info, seriesId);
+                return await GetShokoSeriesMetadata(info, seriesId);
 
             return new();
         }
@@ -55,7 +55,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
         }
     }
 
-    public async Task<MetadataResult<BoxSet>> GetDefaultMetadata(BoxSetInfo info, string seriesId)
+    private async Task<MetadataResult<BoxSet>> GetShokoSeriesMetadata(BoxSetInfo info, string seriesId)
     {
         // First try to re-use any existing series id.
         var result = new MetadataResult<BoxSet>();
@@ -80,15 +80,12 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
             CommunityRating = season.AniDB.Rating.ToFloat(10),
         };
         result.Item.SetProviderId(ShokoCollectionSeriesId.Name, season.Id);
-        if (Plugin.Instance.Configuration.AddAniDBId)
-            result.Item.SetProviderId("AniDB", season.AniDB.Id.ToString());
-
         result.HasMetadata = true;
 
         return result;
     }
 
-    private async Task<MetadataResult<BoxSet>> GetShokoGroupedMetadata(BoxSetInfo info, string groupId)
+    private async Task<MetadataResult<BoxSet>> GetShokoGroupMetadata(BoxSetInfo info, string groupId)
     {
         // Filter out all manually created collections. We don't help those.
         var result = new MetadataResult<BoxSet>();

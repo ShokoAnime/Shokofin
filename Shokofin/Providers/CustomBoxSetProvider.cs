@@ -8,6 +8,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Info;
@@ -75,7 +76,7 @@ public class CustomBoxSetProvider : ICustomMetadataProvider<BoxSet>
         if (seasonInfo is null)
             return false;
 
-        var updated = false;
+        var updated = EnsureNoTmdbIdIsSet(collection);
         var metadataLanguage = LibraryManager.GetLibraryOptions(collection)?.PreferredMetadataLanguage;
         var (displayName, alternateTitle) = Text.GetSeasonTitles(seasonInfo, metadataLanguage);
         if (!string.Equals(collection.Name, displayName)) {
@@ -101,7 +102,7 @@ public class CustomBoxSetProvider : ICustomMetadataProvider<BoxSet>
         if (collectionInfo is null)
             return false;
 
-        var updated = false;
+        var updated = EnsureNoTmdbIdIsSet(collection);
         var parent = collectionInfo.IsTopLevel ? collectionRoot : await GetCollectionByGroupId(collectionRoot, collectionInfo.ParentId);
         if (collection.ParentId != parent.Id) {
             collection.SetParent(parent);
@@ -117,6 +118,13 @@ public class CustomBoxSetProvider : ICustomMetadataProvider<BoxSet>
         }
 
         return updated;
+    }
+
+    private bool EnsureNoTmdbIdIsSet(BoxSet collection)
+    {
+        var willRemove = collection.ProviderIds.ContainsKey(MetadataProvider.TmdbCollection.ToString());
+        collection.ProviderIds.Remove(MetadataProvider.TmdbCollection.ToString());
+        return willRemove;
     }
 
     private async Task<BoxSet> GetCollectionByGroupId(Folder collectionRoot, string? collectionId)
