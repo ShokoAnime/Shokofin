@@ -22,17 +22,93 @@ your collection so let Shoko handle all the heavy lifting.
 
 Learn more about Shoko at https://shokoanime.com/.
 
+## Install
+
+There are many ways to install the plugin, but the recommended way is to use
+the official Jellyfin repository. Alternatively, it can be installed from this
+GitHub repository, or you can build it from source.
+
+Below is a version compatibility matrix for which version of Shokofin is
+compatible with what.
+
+| Shokofin   | Jellyfin | Shoko Server  |
+|------------|----------|---------------|
+| `0.x.x`    | `10.7`   | `4.0.0-4.1.2` |
+| `1.x.x`    | `10.7`   | `4.1.0-4.1.2` |
+| `2.x.x`    | `10.8`   | `4.1.2`       |
+| `3.x.x`    | `10.8`   | `4.2.0`       |
+| `unstable` | `10.8`   | `4.2.2`       |
+| `N/A`      | `10.9`   | `N/A`         |
+
+### Official Repository
+
+1. **Access Plugin Repositories:**
+   - Go to `Dashboard` -> `Plugins` -> `Repositories`.
+
+2. **Add New Repository:**
+   - Add a new repository with the following details:
+     * **Repository Name:** `Shokofin Stable`
+     * **Repository URL:** `https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/stable/manifest.json`
+
+3. **Install Shokofin:**
+   - Go to the catalog in the plugins page.
+   - Find and install `Shoko` from the `Metadata` section.
+
+4. **Restart Jellyfin:**
+   - Restart your server to apply the changes.
+
+### Github Releases
+
+1. **Download the Plugin:**
+   - Go to the latest release on GitHub [here](https://github.com/ShokoAnime/shokofin/releases/latest).
+   - Download the `shoko_*.zip` file.
+
+2. **Extract and Place Files:**
+   - Extract all `.dll` files and `meta.json` from the zip file.
+   - Put them in a folder named `Shoko`.
+   - Copy this `Shoko` folder to the `plugins` folder in your Jellyfin program
+     data directory or inside the Jellyfin install directory. For help finding
+     your Jellyfin install location, check the "Data Directory" section on
+     [this page](https://jellyfin.org/docs/general/administration/configuration.html).
+
+3. **Restart Jellyfin:**
+   - Start or restart your Jellyfin server to apply the changes.
+
+### Build Process
+
+1. **Clone or Download the Repository:**
+   - Clone or download the repository from GitHub.
+
+2. **Set Up .NET Core SDK:**
+   - Make sure you have the .NET Core SDK installed on your computer.
+
+3. **Build the Plugin:**
+   - Open a terminal and navigate to the repository directory.
+   - Run the following commands to restore and publish the project:
+
+     ```sh
+     $ dotnet restore Shokofin/Shokofin.csproj
+     $ dotnet publish -c Release Shokofin/Shokofin.csproj
+     ```
+4. **Copy Built Files:**
+   - After building, go to the `bin/Release/dotnet8.0/` directory.
+   - Copy all `.dll` files to a folder named `Shoko`.
+   - Place this `Shoko` folder in the `plugins` directory of your Jellyfin
+     program data directory or inside the portable install directory. For help
+     finding your Jellyfin install location, check the "Data Directory" section
+     on [this page](https://jellyfin.org/docs/general/administration/configuration.html).
+
 ## Feature Overview
 
 - [/] Metadata integration
 
   - [X] Basic metadata, e.g. titles, description, dates, etc.
 
-    - [X] Customisable main title for items
+    - [X] Customizable main title for items
 
-    - [X] Optional customisable alternate/original title for items
+    - [X] Optional customizable alternate/original title for items
 
-    - [X] Customisable description source for items
+    - [X] Customizable description source for items
 
       Choose between AniDB, TvDB, or a mix of the two.
 
@@ -83,7 +159,7 @@ Learn more about Shoko at https://shokoanime.com/.
 
   - [X] Specials and extra features. 
 
-    - [X] Customise how Specials are placed in your library. I.e. if they are
+    - [X] Customize how Specials are placed in your library. I.e. if they are
       mapped to the normal seasons, or if they are strictly kept in season zero.
 
     - [X] Extra features. The plugin will map specials stored in Shoko such as
@@ -106,7 +182,7 @@ Learn more about Shoko at https://shokoanime.com/.
     AniDB, TvDB, TMDB, etc.) on some item types when an ID is available for
     the items in Shoko.
 
-  - [X] Multiple ways to organise your library.
+  - [X] Multiple ways to organize your library.
 
     - [X] Choose between three ways to group your Shows/Seasons; no grouping,
       following TvDB (to-be replaced with TMDB soon™-ish), and using Shoko's
@@ -153,68 +229,3 @@ Learn more about Shoko at https://shokoanime.com/.
       play/resume event or when jumping)
 
   - [X] Import and export user data tasks
-
-## Install
-
-There are many ways to install the plugin, but the recommended way is to use
-the official Jellyfin repository. Alternatively it can be installed from this
-GitHub repository. Or you build it from source.
-
-Below is a version compatibility matrix for which version of Shokofin is
-compatible with what.
-
-| Shokofin   | Jellyfin | Shoko Server  |
-|------------|----------|---------------|
-| `0.x.x`    | `10.7`   | `4.0.0-4.1.2` |
-| `1.x.x`    | `10.7`   | `4.1.0-4.1.2` |
-| `2.x.x`    | `10.8`   | `4.1.2`       |
-| `3.x.x`    | `10.8`   | `4.2.0`       |
-| `unstable` | `10.8`   | `4.2.2`       |
-| `N/A`      | `10.9`   | `N/A`         |
-
-### Official Repository
-
-1. Go to Dashboard -> Plugins -> Repositories
-
-2. Add new repository with the following details
-
-   * Repository Name: `Shokofin Stable`
-
-   * Repository URL:
-   `https://raw.githubusercontent.com/ShokoAnime/Shokofin/master/manifest.json`
-
-3. Go to the catalog in the plugins page
-
-4. Find and install Shokofin from the Metadata section
-
-5. Restart your server to apply the changes.
-
-### Github Releases
-
-1. Download the `shokofin_*.zip` file from the latest release from GitHub
-  [here](https://github.com/ShokoAnime/shokofin/releases/latest).
-
-2. Extract the contained `Shokofin.dll` and `meta.json`, place both the files in
-a folder named `Shokofin` and copy this folder to the `plugins` folder under
-the Jellyfin program data directory or inside the portable install directory.
-Refer to the "Data Directory" section on
-[this page](https://jellyfin.org/docs/general/administration/configuration.html)
-for where to find your jellyfin install.
-
-3. Start or restart your server to apply the changes
-
-### Build Process
-
-1. Clone or download this repository
-
-2. Ensure you have .NET Core SDK setup and installed
-
-3. Build plugin with following command.
-
-```sh
-$ dotnet restore Shokofin/Shokofin.csproj
-$ dotnet publish -c Release Shokofin/Shokofin.csproj
-```
-
-4. Copy the resulting file `bin/Shokofin.dll` to the `plugins` folder under the
-Jellyfin program data directory or inside the portable install directory.

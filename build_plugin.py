@@ -19,22 +19,20 @@ def extract_target_framework(csproj_path):
 parser = argparse.ArgumentParser()
 parser.add_argument("--repo", required=True)
 parser.add_argument("--version", required=True)
+parser.add_argument("--tag", required=True)
 parser.add_argument("--prerelease", default=True)
 opts = parser.parse_args()
 
 framework = extract_target_framework("./Shokofin/Shokofin.csproj")
 version = opts.version
+tag = opts.tag
 prerelease = bool(opts.prerelease)
 
 artifact_dir = os.path.join(os.getcwd(), "artifacts")
 if not os.path.exists(artifact_dir):
     os.mkdir(artifact_dir)
 
-if prerelease:
-    jellyfin_repo_file="./manifest-unstable.json"
-else:
-    jellyfin_repo_file="./manifest.json"
-
+jellyfin_repo_file="./manifest.json"
 jellyfin_repo_url=f"https://github.com/{opts.repo}/releases/download"
 
 # Add changelog to the build yaml before we generate the release.
@@ -54,7 +52,7 @@ with open(build_file, "w") as file:
 
 zipfile=os.popen("jprm --verbosity=debug plugin build \".\" --output=\"%s\" --version=\"%s\" --dotnet-framework=\"%s\"" % (artifact_dir, version, framework)).read().strip()
 
-jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{version}/shoko_{version}.zip"
+jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{tag}/shoko_{version}.zip"
 
 os.system("jprm repo add --plugin-url=%s %s %s" % (jellyfin_plugin_release_url, jellyfin_repo_file, zipfile))
 
