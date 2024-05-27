@@ -49,7 +49,7 @@ jobs:
 
       - name: Fetch Stable Manifest from Metadata Branch
         run: |
-          git checkout origin/metadata -- stable/manifest.json;
+          git checkout metadata -- stable/manifest.json;
           rm manifest.json;
           mv stable/manifest.json manifest.json;
           rmdir stable;
@@ -81,7 +81,7 @@ jobs:
           git add ./artifacts/shoko_${{ needs.current_info.outputs.version }}.zip;
           git stash push -m "Temp release details";
           git reset --hard;
-          git checkout origin/metadata -B metadata;
+          git checkout metadata;
           git stash pop || git stash apply;
           git reset;
 
