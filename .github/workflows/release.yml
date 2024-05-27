@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0 # This is set to download the full git history for the repo
 
       - name: Get Current Version
-        id: previous_release_info
+        id: release_info
         uses: revam/gh-action-get-tag-and-version@v1
         with:
           branch: false
@@ -48,7 +48,7 @@ jobs:
 
       - name: Fetch Stable Manifest from Metadata Branch
         run: |
-          git checkout metadata -- stable/manifest.json;
+          git checkout origin/metadata -- stable/manifest.json;
           rm manifest.json;
           mv stable/manifest.json manifest.json;
           rmdir stable;
@@ -80,7 +80,7 @@ jobs:
           git add ./artifacts/shoko_${{ needs.current_info.outputs.version }}.zip;
           git stash push -m "Temp release details";
           git reset --hard;
-          git checkout metadata;
+          git checkout origin/metadata -B metadata;
           git stash pop || git stash apply;
           git reset;
 
