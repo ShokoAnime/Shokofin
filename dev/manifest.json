@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.188",
+                "changelog": "fix: last fix for GHA\n\nrevert: \"revert: \"misc: correct git ref in GHA\"\"\n\nThis reverts commit 32bfaf83efffd28b7c30a6dce4c29bc30a8d34a1.\n\nrevert: \"misc: correct git ref in GHA\"\n\nThis partially reverts commit 8de8c98bef2c52aabff89ccdfc3ab3821bfd715e.\n\nmisc: set fetch depth 0 for GHA\n\nmisc: correct git ref in GHA\n\nmisc: fix (critical) typo\n\nfix: better season cleanup for shokofin libraries\n\n- Updated the custom series provider for Shokofin managed libraries to also check for excessive seasons with the same number, and remove any extras but moving their children to the selected \"main\" season if there are any.\n\nmisc: update read-me file [skip ci]\n\nSigned-off-by: Mikal S. <7761729+revam@users.noreply.github.com>\nchore: restructure repository [skip ci]\n\nmisc: update unstable manifes",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.188/shoko_3.0.1.188.zip",
+                "checksum": "2a78705d45b1ac790f5f3e723edbd56d",
+                "timestamp": "2024-05-27T03:28:30Z"
+            },
+            {
                 "version": "3.0.1.187",
                 "changelog": "refactor: update collection metadata\n\n- Make sure the provider runs first, since these providers aren't configurable and we need them to run before the built in TMDB provider so it doesn't try to set it's metadata before us.\n\n- Remove any TMDB ids if found, since they shouldn't be needed on the collections managed by the plugin.\n\n- Removed the AniDB Series id for the collection, since in hindsight it doesn't make sense to have it on there.\n\n- General maintenance on the the collection provider. Renamed the methods and changed a public method that should had been private to a private method.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.184/shoko_3.0.1.184.zip",
                 "checksum": "5fc632851adc8ff1c4be945778f72904",
                 "timestamp": "2024-05-23T00:01:22Z"
-            },
-            {
-                "version": "3.0.1.183",
-                "changelog": "fix: fix up show descriptions + more\n\n- Fixed up show descriptions.\n\n- Fixed up the anidb sanitization in general to convert better to **MarkDown**.\n\nfeat: make trailers/credits optional to include\n\n- Made trailers and credits optional to include, and allowed credits to be added as either theme videos (on by default), or as special features (off by default), or both.\n\nfeat: add trailer & video providers\n\n- Added a trailer and video provider responsible for fetching metadata for theme videos, special featurettes, and trailers __for entities in the VFS__.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.183/shoko_3.0.1.183.zip",
-                "checksum": "77f8b7f416bff24696b4176d3e57ca0f",
-                "timestamp": "2024-05-22T03:51:43Z"
             }
         ]
     }
