@@ -88,7 +88,7 @@ jobs:
 
       - name: Fetch Dev Manifest from Metadata Branch
         run: |
-          git checkout manifest -- dev/manifest.json;
+          git checkout metadata -- dev/manifest.json;
           rm manifest.json;
           mv dev/manifest.json manifest.json;
           rmdir dev;

@@ -48,7 +48,7 @@ jobs:
 
       - name: Fetch Stable Manifest from Metadata Branch
         run: |
-          git checkout manifest -- stable/manifest.json;
+          git checkout metadata -- stable/manifest.json;
           rm manifest.json;
           mv stable/manifest.json manifest.json;
           rmdir stable;
