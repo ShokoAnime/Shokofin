@@ -51,10 +51,19 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
 
         // Get the existing seasons and known seasons.
         var itemUpdated = ItemUpdateType.None;
-        var seasons = series.Children
+        var allSeasons = series.Children
             .OfType<Season>()
             .Where(season => season.IndexNumber.HasValue)
-            .ToDictionary(season => season.IndexNumber!.Value);
+            .ToList();
+        var seasons = allSeasons
+            .OrderBy(season => season.IndexNumber!.Value)
+            .ThenBy(season => season.IsVirtualItem)
+            .ThenBy(season => season.Path)
+            .GroupBy(season => season.IndexNumber!.Value)
+            .ToDictionary(groupBy => groupBy.Key, groupBy => groupBy.First());
+        var extraSeasonsToRemove = allSeasons
+            .Except(seasons.Values)
+            .ToList();
         var knownSeasonIds = ShouldAddMetadata
             ? showInfo.SeasonOrderDictionary.Keys.ToHashSet()
             : showInfo.SeasonOrderDictionary
@@ -71,6 +80,23 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
         foreach (var (seasonNumber, season) in toRemoveSeasons) {
             Logger.LogDebug("Removing Season {SeasonNumber} for Series {SeriesName} (Series={SeriesId})", seasonNumber, series.Name, seriesId);
             seasons.Remove(seasonNumber);
+            LibraryManager.DeleteItem(season, new() { DeleteFileLocation = false });
+        }
+
+        foreach (var season in extraSeasonsToRemove) {
+            if (seasons.TryGetValue(season.IndexNumber!.Value, out var mainSeason)) {
+                var episodes = season.Children
+                    .OfType<Episode>()
+                    .Where(episode => !string.IsNullOrEmpty(episode.Path) && episode.ParentId == season.Id)
+                    .ToList();
+                foreach (var episode in episodes) {
+                    Logger.LogInformation("Updating parent of physical episode {EpisodeNumber} {EpisodeName} in Season {SeasonNumber} for {SeriesName} (Series={SeriesId})", episode.IndexNumber, episode.Name, season.IndexNumber, series.Name, seriesId);
+                    episode.SetParent(mainSeason);
+                }
+                await LibraryManager.UpdateItemsAsync(episodes, mainSeason, ItemUpdateType.MetadataEdit, CancellationToken.None);
+            }
+
+            Logger.LogDebug("Removing extra Season {SeasonNumber} for Series {SeriesName} (Series={SeriesId})", season.IndexNumber!.Value, series.Name, seriesId);
             LibraryManager.DeleteItem(season, new() { DeleteFileLocation = false });
         }
 
