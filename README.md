@@ -202,17 +202,12 @@ compatible with what.
     - [X] Supports separating your on-disc library into a two Show and Movie
       libraries.
 
-      _Provided you apply the workaround to do it_.
+      _Provided you apply the workaround to do it_.¹
 
-  - [/] Automatically populates all missing episodes not in your collection, so
+  - [X] Automatically populates all missing episodes not in your collection, so
     you can see at a glance what you are missing out on.
 
-    - [ ] Deleting a missing episode item marks the episode as hidden/ignored
-      in Shoko.
-
-  - [ ] Optionally react to events sent from Shoko.
-
-    Coming soon™-ish
+  - [X] Optionally react to events sent from Shoko.
 
 - [X] User data
 
