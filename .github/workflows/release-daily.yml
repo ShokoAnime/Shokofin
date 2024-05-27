@@ -90,6 +90,7 @@ jobs:
       - name: Fetch Dev Manifest from Metadata Branch
         run: |
           git checkout origin/metadata -- dev/manifest.json;
+          git reset;
           rm manifest.json;
           mv dev/manifest.json manifest.json;
           rmdir dev;
@@ -120,11 +121,10 @@ jobs:
           mkdir dev;
           mv manifest.json dev
           git add ./dev/manifest.json;
-          git add ./artifacts/shoko_${{ needs.current_info.outputs.version }}.zip;
-          git stash push -m "Temp release details";
+          git stash push --staged --message "Temp release details";
           git reset --hard;
           git checkout origin/metadata -B metadata;
-          git stash pop || git stash apply;
+          git stash apply || git checkout --theirs dev/manifest.json;
           git reset;
 
       - name: Create Pre-Release
