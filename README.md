@@ -91,7 +91,7 @@ compatible with what.
      $ dotnet publish -c Release Shokofin/Shokofin.csproj
      ```
 4. **Copy Built Files:**
-   - After building, go to the `bin/Release/dotnet8.0/` directory.
+   - After building, go to the `bin/Release/net6.0/` directory.
    - Copy all `.dll` files to a folder named `Shoko`.
    - Place this `Shoko` folder in the `plugins` directory of your Jellyfin
      program data directory or inside the portable install directory. For help
