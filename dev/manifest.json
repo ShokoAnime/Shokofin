@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.189",
+                "changelog": "fix: start library monitors if enable",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.189/shoko_3.0.1.189.zip",
+                "checksum": "e09d5409460fac5680bf57027ad08e7c",
+                "timestamp": "2024-05-28T02:32:37Z"
+            },
+            {
                 "version": "3.0.1.188",
                 "changelog": "fix: last fix for GHA\n\nrevert: \"revert: \"misc: correct git ref in GHA\"\"\n\nThis reverts commit 32bfaf83efffd28b7c30a6dce4c29bc30a8d34a1.\n\nrevert: \"misc: correct git ref in GHA\"\n\nThis partially reverts commit 8de8c98bef2c52aabff89ccdfc3ab3821bfd715e.\n\nmisc: set fetch depth 0 for GHA\n\nmisc: correct git ref in GHA\n\nmisc: fix (critical) typo\n\nfix: better season cleanup for shokofin libraries\n\n- Updated the custom series provider for Shokofin managed libraries to also check for excessive seasons with the same number, and remove any extras but moving their children to the selected \"main\" season if there are any.\n\nmisc: update read-me file [skip ci]\n\nSigned-off-by: Mikal S. <7761729+revam@users.noreply.github.com>\nchore: restructure repository [skip ci]\n\nmisc: update unstable manifes",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.185/shoko_3.0.1.185.zip",
                 "checksum": "bbf406685377d2d4ab11406d1d17c82c",
                 "timestamp": "2024-05-24T12:48:41Z"
-            },
-            {
-                "version": "3.0.1.184",
-                "changelog": "fix: add xref group from latest daily server",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.184/shoko_3.0.1.184.zip",
-                "checksum": "5fc632851adc8ff1c4be945778f72904",
-                "timestamp": "2024-05-23T00:01:22Z"
             }
         ]
     }
