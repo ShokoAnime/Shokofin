@@ -17,7 +17,6 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddSingleton<MergeVersions.MergeVersionsManager>();
         serviceCollection.AddSingleton<Collections.CollectionManager>();
         serviceCollection.AddSingleton<Resolvers.ShokoResolveManager>();
-        serviceCollection.AddSingleton<Resolvers.ShokoLibraryMonitor>();
         serviceCollection.AddSingleton<SignalR.SignalRConnectionManager>();
     }
 }

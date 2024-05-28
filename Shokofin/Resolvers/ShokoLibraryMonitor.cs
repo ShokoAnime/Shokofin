@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Emby.Naming.Common;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Plugins;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
@@ -15,7 +16,7 @@ using Shokofin.Utils;
 
 namespace Shokofin.Resolvers;
 
-public class ShokoLibraryMonitor
+public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
 {
     private readonly ILogger<ShokoLibraryMonitor> Logger;
 
@@ -64,6 +65,18 @@ public class ShokoLibraryMonitor
         ResolveManager.ConfigurationUpdated  -= OnMediaFolderConfigurationAddedOrUpdated;
         ResolveManager.ConfigurationRemoved -= OnMediaFolderConfigurationRemoved;
         LibraryScanWatcher.ValueChanged -= OnLibraryScanRunningChanged;
+    }
+
+    Task IServerEntryPoint.RunAsync()
+    {
+        StartWatching();
+        return Task.CompletedTask;
+    }
+
+    void IDisposable.Dispose()
+    {
+        GC.SuppressFinalize(this);
+        StopWatching();
     }
 
     public void StartWatching()
