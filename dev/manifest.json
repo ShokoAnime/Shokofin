@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.191",
+                "changelog": "misc: add more ignored sub-title",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.191/shoko_3.0.1.191.zip",
+                "checksum": "b3e41df9e6f840336f2361c0889e549e",
+                "timestamp": "2024-05-29T00:39:32Z"
+            },
+            {
                 "version": "3.0.1.190",
                 "changelog": "fix: fix signalr refresh state on settings page\n\nchore: update desc. for stub. manifest [skip ci]\n\nchore: update read-me [skip ci",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.187/shoko_3.0.1.187.zip",
                 "checksum": "c6ec4cb9b4ad206b3ce2f304c9fd1f62",
                 "timestamp": "2024-05-26T18:48:16Z"
-            },
-            {
-                "version": "3.0.1.186",
-                "changelog": "fix: refresh signalr state upon connect/disconnect",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.186/shoko_3.0.1.186.zip",
-                "checksum": "602baee1a7d05c5ef8f47fb0ea24a417",
-                "timestamp": "2024-05-24T22:16:13Z"
             }
         ]
     }
