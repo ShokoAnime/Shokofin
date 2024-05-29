@@ -432,8 +432,6 @@ async function defaultSubmit(form) {
 
             let result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
 
-            await getSignalrStatus().then(refreshSignalr);
-
             Dashboard.processPluginConfigurationUpdateResult(result);
         }
         catch (err) {
@@ -455,8 +453,6 @@ async function resetConnectionSettings(form) {
     config.ServerVersion = null;
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
-
-    await getSignalrStatus().then(refreshSignalr);
 
     Dashboard.processPluginConfigurationUpdateResult(result);
 
@@ -879,9 +875,21 @@ export default function (page) {
                 Dashboard.showLoadingMsg();
                 syncSettings(form).then(refreshSettings).catch(onError);
                 break;
+            case "establish-connection":
+                Dashboard.showLoadingMsg();
+                defaultSubmit(form)
+                    .then(refreshSettings)
+                    .then(getSignalrStatus)
+                    .then(refreshSignalr)
+                    .catch(onError);
+                break;
             case "reset-connection":
                 Dashboard.showLoadingMsg();
-                resetConnectionSettings(form).then(refreshSettings).catch(onError);
+                resetConnectionSettings(form)
+                    .then(refreshSettings)
+                    .then(getSignalrStatus)
+                    .then(refreshSignalr)
+                    .catch(onError);
                 break;
             case "unlink-user":
                 unlinkUser(form).then(refreshSettings).catch(onError);
