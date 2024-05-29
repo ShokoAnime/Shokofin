@@ -61,7 +61,13 @@ public static class Text
 
     private static readonly HashSet<string> IgnoredSubTitles = new(StringComparer.InvariantCultureIgnoreCase) {
         "Complete Movie",
+        "Music Video",
+        "OAD",
         "OVA",
+        "Short Movie",
+        "Special",
+        "TV Special",
+        "Web",
     };
 
     /// <summary>
