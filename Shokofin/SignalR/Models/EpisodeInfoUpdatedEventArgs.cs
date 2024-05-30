@@ -17,7 +17,7 @@ public class EpisodeInfoUpdatedEventArgs : IMetadataUpdatedEventArgs
     /// The provider metadata source.
     /// </summary>
     [JsonInclude, JsonPropertyName("Source")]
-    public string ProviderName { get; set; } = string.Empty;
+    public ProviderName ProviderName { get; set; } = ProviderName.None;
 
     /// <summary>
     /// The provided metadata episode id.

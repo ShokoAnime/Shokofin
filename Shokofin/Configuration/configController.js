@@ -319,6 +319,7 @@ async function defaultSubmit(form) {
         config.SignalR_AutoConnectEnabled = form.querySelector("#SignalRAutoConnect").checked;
         config.SignalR_AutoReconnectInSeconds = reconnectIntervals;
         form.querySelector("#SignalRAutoReconnectIntervals").value = reconnectIntervals.join(", ");
+        setSignalREventSourcesIntoConfig(form, config);
         mediaFolderId = form.querySelector("#SignalRMediaFolderSelector").value;
         mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
         if (mediaFolderConfig) {
@@ -564,6 +565,7 @@ async function syncSignalrSettings(form) {
 
     config.SignalR_AutoConnectEnabled = form.querySelector("#SignalRAutoConnect").checked;
     config.SignalR_AutoReconnectInSeconds = reconnectIntervals;
+    setSignalREventSourcesIntoConfig(form, config);
     form.querySelector("#SignalRAutoReconnectIntervals").value = reconnectIntervals.join(", ");
 
     const mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
@@ -822,6 +824,7 @@ export default function (page) {
             // SignalR settings
             form.querySelector("#SignalRAutoConnect").checked = config.SignalR_AutoConnectEnabled;
             form.querySelector("#SignalRAutoReconnectIntervals").value = config.SignalR_AutoReconnectInSeconds.join(", ");
+            setSignalREventSourcesFromConfig(form, config);
             signalrMediaFolderSelector.innerHTML += config.MediaFolders.map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.MediaFolderPath}</option>`).join("");
             form.querySelector("#SignalRDefaultFileEvents").checked = config.SignalR_FileEvents;
             form.querySelector("#SignalRDefaultRefreshEvents").checked = config.SignalR_RefreshEnabled;
@@ -1014,5 +1017,30 @@ function setTitleFromConfig(form, type, config) {
 
     for (const option of list.querySelectorAll(".sortableOption")) {
         adjustSortableListElement(option)
+    }
+}
+
+/** @param {HTMLFormElement} form */
+function setSignalREventSourcesIntoConfig(form, config) {
+    /** @type {HTMLInputElement[]} */
+    const checkboxList = form.querySelectorAll(`#SignalREventSources .listItem input[data-signalr-event-source]`);
+    const resultArr = [];
+    for (const item of checkboxList) {
+        if (item.checked) {
+            resultArr.push(item.dataset.signalrEventSource);
+        }
+    }
+    config.SignalR_EventSources = resultArr;
+}
+
+/** @param {HTMLFormElement} form */
+function setSignalREventSourcesFromConfig(form, config) {
+    /** @type {HTMLInputElement[]} */
+    const checkboxList = form.querySelectorAll(`#SignalREventSources .listItem input[data-signalr-event-source]`);
+    for (const item of checkboxList) {
+        const eventSource = item.dataset.signalrEventSource;
+        if (config.SignalR_EventSources.includes(eventSource)) {
+            item.checked = true;
+        }
     }
 }

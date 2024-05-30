@@ -491,6 +491,24 @@
                             <input is="emby-input" type="text" id="SignalRAutoReconnectIntervals" label="Auto Reconnect Intervals:" />
                             <div class="fieldDescription">A comma separated list of intervals in seconds to try re-establish the connection if the plugin gets disconnected from Shoko Server.</div>
                         </div>
+                        <div id="SignalREventSources" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">SignalR Event Sources</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem titleSourceItem">
+                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-signalr-event-source="Shoko"><span></span></label>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">Shoko</h3></div>
+                                </div>
+                                <div class="listItem titleSourceItem">
+                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-signalr-event-source="AniDB"><span></span></label>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB</h3></div>
+                                </div>
+                                <div class="listItem titleSourceItem">
+                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-signalr-event-source="TMDB"><span></span></label>
+                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB</h3></div>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">Which event sources should be listened to via the SignalR connection.</div>
+                        </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="SignalRMediaFolderSelector">Configure settings for:</label>
                             <select is="emby-select" id="SignalRMediaFolderSelector" name="SignalRMediaFolderSelector" value="" class="emby-select-withcolor emby-select">

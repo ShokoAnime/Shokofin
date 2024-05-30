@@ -12,6 +12,7 @@ using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
 using TitleProvider = Shokofin.Utils.Text.TitleProvider;
+using ProviderName = Shokofin.SignalR.Interfaces.ProviderName;
 
 namespace Shokofin.Configuration;
 
@@ -317,6 +318,11 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public bool SignalR_FileEvents { get; set; }
 
+    /// <summary>
+    /// The different SignalR event sources to 'subscribe' to.
+    /// </summary>
+    public ProviderName[] SignalR_EventSources { get; set; }
+
     #endregion
 
     #region Experimental features
@@ -415,6 +421,7 @@ public class PluginConfiguration : BasePluginConfiguration
         LibraryScanReactionTimeInSeconds = 1;
         SignalR_AutoConnectEnabled = false;
         SignalR_AutoReconnectInSeconds = new[] { 0, 2, 10, 30, 60, 120, 300 };
+        SignalR_EventSources = new[] { ProviderName.Shoko, ProviderName.AniDB, ProviderName.TMDB };
         SignalR_RefreshEnabled = false;
         SignalR_FileEvents = false;
         EXPERIMENTAL_AutoMergeVersions = true;
