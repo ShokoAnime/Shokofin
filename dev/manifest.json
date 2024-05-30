@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.194",
+                "changelog": "fix: file events being skipped on valid file",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.194/shoko_3.0.1.194.zip",
+                "checksum": "a7190cc083d5e5d2e481cfd5c786fd36",
+                "timestamp": "2024-05-30T20:54:11Z"
+            },
+            {
                 "version": "3.0.1.193",
                 "changelog": "feat: add SignalR event source settings (#55)\n\n- Added SignalR event source settings for enabling/disabling which provider events to react to. All sources are enabled by default.\nmisc: add C# guard\n\nMisc: Initial settings implementation of new SignalR setting\n\nFeat: Add client implementation of new SignalR Event Sources settin",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.190/shoko_3.0.1.190.zip",
                 "checksum": "9674905e010cd13f89ab5d49400fcd9a",
                 "timestamp": "2024-05-29T00:15:13Z"
-            },
-            {
-                "version": "3.0.1.189",
-                "changelog": "fix: start library monitors if enable",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.189/shoko_3.0.1.189.zip",
-                "checksum": "e09d5409460fac5680bf57027ad08e7c",
-                "timestamp": "2024-05-28T02:32:37Z"
             }
         ]
     }
