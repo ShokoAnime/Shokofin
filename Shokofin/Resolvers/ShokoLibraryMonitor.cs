@@ -248,7 +248,7 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
 
         await Task.Delay(MagicalDelay).ConfigureAwait(false);
 
-        if (File.Exists(path)) {
+        if (!File.Exists(path)) {
             Logger.LogTrace("Skipped path because it is disappeared after awhile before we could process it; {Path}", path);
             return;
         }
