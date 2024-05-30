@@ -19,7 +19,7 @@ public interface IMetadataUpdatedEventArgs
     /// <summary>
     /// The provider metadata source.
     /// </summary>
-    string ProviderName { get; }
+    ProviderName ProviderName { get; }
 
     /// <summary>
     /// The provided metadata episode id.
@@ -29,7 +29,7 @@ public interface IMetadataUpdatedEventArgs
     /// <summary>
     /// Provider unique id.
     /// </summary>
-    string ProviderUId => $"{ProviderName.ToLowerInvariant()}:{ProviderId.ToString(CultureInfo.InvariantCulture)}";
+    string ProviderUId => $"{ProviderName}:{ProviderId.ToString(CultureInfo.InvariantCulture)}";
 
     /// <summary>
     /// The provided metadata series id.
@@ -39,7 +39,7 @@ public interface IMetadataUpdatedEventArgs
     /// <summary>
     /// Provider unique parent id.
     /// </summary>
-    string? ProviderParentUId => ProviderParentId.HasValue ? $"{ProviderName.ToLowerInvariant()}:{ProviderParentId.Value.ToString(CultureInfo.InvariantCulture)}" : null;
+    string? ProviderParentUId => ProviderParentId.HasValue ? $"{ProviderName}:{ProviderParentId.Value.ToString(CultureInfo.InvariantCulture)}" : null;
 
     /// <summary>
     /// The first shoko episode id affected by this update.
