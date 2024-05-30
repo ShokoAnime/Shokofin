@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.192",
+                "changelog": "fix: add delay before processing file events\ufffd",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.192/shoko_3.0.1.192.zip",
+                "checksum": "64be63355607a71dc491887a740a611a",
+                "timestamp": "2024-05-30T02:56:13Z"
+            },
+            {
                 "version": "3.0.1.191",
                 "changelog": "misc: add more ignored sub-title",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.188/shoko_3.0.1.188.zip",
                 "checksum": "2a78705d45b1ac790f5f3e723edbd56d",
                 "timestamp": "2024-05-27T03:28:30Z"
-            },
-            {
-                "version": "3.0.1.187",
-                "changelog": "refactor: update collection metadata\n\n- Make sure the provider runs first, since these providers aren't configurable and we need them to run before the built in TMDB provider so it doesn't try to set it's metadata before us.\n\n- Remove any TMDB ids if found, since they shouldn't be needed on the collections managed by the plugin.\n\n- Removed the AniDB Series id for the collection, since in hindsight it doesn't make sense to have it on there.\n\n- General maintenance on the the collection provider. Renamed the methods and changed a public method that should had been private to a private method.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1.187/shoko_3.0.1.187.zip",
-                "checksum": "c6ec4cb9b4ad206b3ce2f304c9fd1f62",
-                "timestamp": "2024-05-26T18:48:16Z"
             }
         ]
     }
