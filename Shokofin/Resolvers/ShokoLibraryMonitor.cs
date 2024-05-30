@@ -34,6 +34,12 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
 
     private readonly ConcurrentDictionary<string, ShokoWatcher> FileSystemWatchers = new();
 
+    /// <summary>
+    /// A delay so magical it will give Shoko Server some time to finish it's
+    /// rename/move operation before we ask it if it knows the path.
+    /// </summary>
+    private const int MagicalDelay = 5000; // 5 seconds in milliseconds… for now.
+
     // follow the core jf behavior, but use config added/removed instead of library added/removed.
 
     public ShokoLibraryMonitor(
@@ -228,6 +234,8 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
 
     public async Task ReportFileSystemChanged(MediaFolderConfiguration mediaConfig, WatcherChangeTypes changeTypes, string path)
     {
+        Logger.LogTrace("Found potential path with change {ChangeTypes}; {Path}", changeTypes, path);
+
         if (!path.StartsWith(mediaConfig.MediaFolderPath)) {
             Logger.LogTrace("Skipped path because it is not in the watched folder; {Path}", path);
             return;
@@ -235,6 +243,13 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
 
         if (!IsVideoFile(path)) {
             Logger.LogTrace("Skipped path because it is not a video file; {Path}", path);
+            return;
+        }
+
+        await Task.Delay(MagicalDelay).ConfigureAwait(false);
+
+        if (File.Exists(path)) {
+            Logger.LogTrace("Skipped path because it is disappeared after awhile before we could process it; {Path}", path);
             return;
         }
 
