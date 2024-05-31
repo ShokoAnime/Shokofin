@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.196",
+                "changelog": "fix: disable creation time again until 10.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.196/shoko_3.0.1.196.zip",
+                "checksum": "15c4099a4ba600ea51fdd8b018122b25",
+                "timestamp": "2024-05-31T21:47:52Z"
+            },
+            {
                 "version": "3.0.1.195",
                 "changelog": "refactor: split up resolver and move around file",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.192/shoko_3.0.1.192.zip",
                 "checksum": "64be63355607a71dc491887a740a611a",
                 "timestamp": "2024-05-30T02:56:13Z"
-            },
-            {
-                "version": "3.0.1.191",
-                "changelog": "misc: add more ignored sub-title",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.191/shoko_3.0.1.191.zip",
-                "checksum": "b3e41df9e6f840336f2361c0889e549e",
-                "timestamp": "2024-05-29T00:39:32Z"
             }
         ]
     }
