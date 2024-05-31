@@ -10,9 +10,9 @@ using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
 using DescriptionProvider = Shokofin.Utils.Text.DescriptionProvider;
 using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
+using ProviderName = Shokofin.Events.Interfaces.ProviderName;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
 using TitleProvider = Shokofin.Utils.Text.TitleProvider;
-using ProviderName = Shokofin.SignalR.Interfaces.ProviderName;
 
 namespace Shokofin.Configuration;
 

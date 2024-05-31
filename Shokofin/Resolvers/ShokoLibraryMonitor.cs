@@ -10,8 +10,11 @@ using MediaBrowser.Controller.Plugins;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
-using Shokofin.SignalR.Interfaces;
-using Shokofin.SignalR.Models;
+using Shokofin.Configuration.Models;
+using Shokofin.Events;
+using Shokofin.Events.Interfaces;
+using Shokofin.Events.Stub;
+using Shokofin.Resolvers.Models;
 using Shokofin.Utils;
 
 namespace Shokofin.Resolvers;
@@ -22,7 +25,9 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
 
     private readonly ShokoAPIClient ApiClient;
 
-    private readonly ShokoResolveManager ResolveManager;
+    private readonly EventDispatchService Events;
+
+    private readonly MediaFolderConfigurationService ConfigurationService;
 
     private readonly ILibraryManager LibraryManager;
 
@@ -45,7 +50,8 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
     public ShokoLibraryMonitor(
         ILogger<ShokoLibraryMonitor> logger,
         ShokoAPIClient apiClient,
-        ShokoResolveManager resolveManager,
+        EventDispatchService events,
+        MediaFolderConfigurationService configurationService,
         ILibraryManager libraryManager,
         ILibraryMonitor libraryMonitor,
         LibraryScanWatcher libraryScanWatcher,
@@ -54,10 +60,11 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
     {
         Logger = logger;
         ApiClient = apiClient;
-        ResolveManager = resolveManager;
-        ResolveManager.ConfigurationAdded += OnMediaFolderConfigurationAddedOrUpdated;
-        ResolveManager.ConfigurationUpdated += OnMediaFolderConfigurationAddedOrUpdated;
-        ResolveManager.ConfigurationRemoved += OnMediaFolderConfigurationRemoved;
+        Events = events;
+        ConfigurationService = configurationService;
+        ConfigurationService.ConfigurationAdded += OnMediaFolderConfigurationAddedOrUpdated;
+        ConfigurationService.ConfigurationUpdated += OnMediaFolderConfigurationAddedOrUpdated;
+        ConfigurationService.ConfigurationRemoved += OnMediaFolderConfigurationRemoved;
         LibraryManager = libraryManager;
         LibraryMonitor = libraryMonitor;
         LibraryScanWatcher = libraryScanWatcher;
@@ -67,9 +74,9 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
 
     ~ShokoLibraryMonitor()
     {
-        ResolveManager.ConfigurationAdded -= OnMediaFolderConfigurationAddedOrUpdated;
-        ResolveManager.ConfigurationUpdated  -= OnMediaFolderConfigurationAddedOrUpdated;
-        ResolveManager.ConfigurationRemoved -= OnMediaFolderConfigurationRemoved;
+        ConfigurationService.ConfigurationAdded -= OnMediaFolderConfigurationAddedOrUpdated;
+        ConfigurationService.ConfigurationUpdated  -= OnMediaFolderConfigurationAddedOrUpdated;
+        ConfigurationService.ConfigurationRemoved -= OnMediaFolderConfigurationRemoved;
         LibraryScanWatcher.ValueChanged -= OnLibraryScanRunningChanged;
     }
 
@@ -156,7 +163,7 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
                 watcher.Changed += OnWatcherChanged;
                 watcher.Error += OnWatcherError;
 
-                var lease = ResolveManager.RegisterEventSubmitter();
+                var lease = Events.RegisterEventSubmitter();
                 if (FileSystemWatchers.TryAdd(mediaFolder.Path, new(mediaFolder, config, watcher, lease))) {
                     LibraryMonitor.ReportFileSystemChangeBeginning(mediaFolder.Path);
                     watcher.EnableRaisingEvents = true;
@@ -282,7 +289,7 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
             return;
         }
 
-        ResolveManager.AddFileEvent(file.Id, reason, fileLocation.ImportFolderId, relativePath, new FileEventArgsStub(fileLocation, file));
+        Events.AddFileEvent(file.Id, reason, fileLocation.ImportFolderId, relativePath, new FileEventArgsStub(fileLocation, file));
     }
     private bool IsVideoFile(string path)
         => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path));

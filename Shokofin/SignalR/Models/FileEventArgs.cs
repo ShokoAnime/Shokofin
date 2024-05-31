@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using Shokofin.SignalR.Interfaces;
+using Shokofin.Events.Interfaces;
 
 namespace Shokofin.SignalR.Models;
 

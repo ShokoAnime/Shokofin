@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Jellyfin.Data.Enums;
 
-namespace Shokofin.SignalR.Interfaces;
+namespace Shokofin.Events.Interfaces;
 
 public interface IMetadataUpdatedEventArgs
 {

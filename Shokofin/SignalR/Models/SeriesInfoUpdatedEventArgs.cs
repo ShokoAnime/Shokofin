@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Jellyfin.Data.Enums;
-using Shokofin.SignalR.Interfaces;
+using Shokofin.Events.Interfaces;
 
 namespace Shokofin.SignalR.Models;
 

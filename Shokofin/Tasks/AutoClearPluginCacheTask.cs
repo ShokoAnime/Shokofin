@@ -42,7 +42,7 @@ public class AutoClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTa
 
     private readonly ShokoAPIClient ApiClient;
 
-    private readonly ShokoResolveManager ResolveManager;
+    private readonly VirtualFileSystemService VfsService;
     
     private readonly LibraryScanWatcher LibraryScanWatcher;
 
@@ -53,14 +53,14 @@ public class AutoClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTa
         ILogger<AutoClearPluginCacheTask> logger,
         ShokoAPIManager apiManager,
         ShokoAPIClient apiClient,
-        ShokoResolveManager resolveManager,
+        VirtualFileSystemService vfsService,
         LibraryScanWatcher libraryScanWatcher
     )
     {
         Logger = logger;
         ApiManager = apiManager;
         ApiClient = apiClient;
-        ResolveManager = resolveManager;
+        VfsService = vfsService;
         LibraryScanWatcher = libraryScanWatcher;
     }
 
@@ -86,14 +86,14 @@ public class AutoClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTa
         if (LibraryScanWatcher.IsScanRunning)
             return Task.CompletedTask;
 
-        if (ApiClient.IsCacheStalled || ApiManager.IsCacheStalled || ResolveManager.IsCacheStalled)
+        if (ApiClient.IsCacheStalled || ApiManager.IsCacheStalled || VfsService.IsCacheStalled)
             Logger.LogInformation("Automagically clearing cache…");
         if (ApiClient.IsCacheStalled)
             ApiClient.Clear();
         if (ApiManager.IsCacheStalled)
             ApiManager.Clear();
-        if (ResolveManager.IsCacheStalled)
-            ResolveManager.Clear();
+        if (VfsService.IsCacheStalled)
+            VfsService.Clear();
         return Task.CompletedTask;
     }
 }

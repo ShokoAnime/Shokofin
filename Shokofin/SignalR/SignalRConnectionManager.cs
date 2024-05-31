@@ -7,8 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shokofin.API.Models;
 using Shokofin.Configuration;
-using Shokofin.Resolvers;
-using Shokofin.SignalR.Interfaces;
+using Shokofin.Events;
+using Shokofin.Events.Interfaces;
 using Shokofin.SignalR.Models;
 using Shokofin.Utils;
 
@@ -28,7 +28,7 @@ public class SignalRConnectionManager
 
     private readonly ILogger<SignalRConnectionManager> Logger;
 
-    private readonly ShokoResolveManager ResolveManager;
+    private readonly EventDispatchService Events;
 
     private readonly LibraryScanWatcher LibraryScanWatcher;
 
@@ -48,12 +48,12 @@ public class SignalRConnectionManager
 
     public SignalRConnectionManager(
         ILogger<SignalRConnectionManager> logger,
-        ShokoResolveManager resolveManager,
+        EventDispatchService events,
         LibraryScanWatcher libraryScanWatcher
     )
     {
         Logger = logger;
-        ResolveManager = resolveManager;
+        Events = events;
         LibraryScanWatcher = libraryScanWatcher;
     }
 
@@ -95,7 +95,7 @@ public class SignalRConnectionManager
             connection.On<FileRenamedEventArgs>("ShokoEvent:FileRenamed", OnFileRelocated);
         }
 
-        EventSubmitterLease = ResolveManager.RegisterEventSubmitter();
+        EventSubmitterLease = Events.RegisterEventSubmitter();
         try {
             await connection.StartAsync().ConfigureAwait(false);
 
@@ -219,7 +219,7 @@ public class SignalRConnectionManager
             return;
         }
 
-        ResolveManager.AddFileEvent(eventArgs.FileId, UpdateReason.Updated, eventArgs.ImportFolderId, eventArgs.RelativePath, eventArgs);
+        Events.AddFileEvent(eventArgs.FileId, UpdateReason.Updated, eventArgs.ImportFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     private void OnFileRelocated(IFileRelocationEventArgs eventArgs)
@@ -244,8 +244,8 @@ public class SignalRConnectionManager
             return;
         }
 
-        ResolveManager.AddFileEvent(eventArgs.FileId, UpdateReason.Removed, eventArgs.PreviousImportFolderId, eventArgs.PreviousRelativePath, eventArgs);
-        ResolveManager.AddFileEvent(eventArgs.FileId, UpdateReason.Added, eventArgs.ImportFolderId, eventArgs.RelativePath, eventArgs);
+        Events.AddFileEvent(eventArgs.FileId, UpdateReason.Removed, eventArgs.PreviousImportFolderId, eventArgs.PreviousRelativePath, eventArgs);
+        Events.AddFileEvent(eventArgs.FileId, UpdateReason.Added, eventArgs.ImportFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     private void OnFileDeleted(IFileEventArgs eventArgs)
@@ -268,7 +268,7 @@ public class SignalRConnectionManager
             return;
         }
 
-        ResolveManager.AddFileEvent(eventArgs.FileId, UpdateReason.Removed, eventArgs.ImportFolderId, eventArgs.RelativePath, eventArgs);
+        Events.AddFileEvent(eventArgs.FileId, UpdateReason.Removed, eventArgs.ImportFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     #endregion
@@ -315,7 +315,7 @@ public class SignalRConnectionManager
         }
 
         if (eventArgs.Kind is BaseItemKind.Episode or BaseItemKind.Series)
-            ResolveManager.AddSeriesEvent(eventArgs.ProviderParentUId ?? eventArgs.ProviderUId, eventArgs);
+            Events.AddSeriesEvent(eventArgs.ProviderParentUId ?? eventArgs.ProviderUId, eventArgs);
     }
 
     #endregion

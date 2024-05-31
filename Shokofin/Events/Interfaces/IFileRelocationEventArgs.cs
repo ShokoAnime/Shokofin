@@ -1,5 +1,5 @@
 
-namespace Shokofin.SignalR.Interfaces;
+namespace Shokofin.Events.Interfaces;
 
 public interface IFileRelocationEventArgs : IFileEventArgs
 {

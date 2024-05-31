@@ -38,16 +38,16 @@ public class ClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
 
     private readonly ShokoAPIClient ApiClient;
 
-    private readonly ShokoResolveManager ResolveManager;
+    private readonly VirtualFileSystemService VfsService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ClearPluginCacheTask" /> class.
     /// </summary>
-    public ClearPluginCacheTask(ShokoAPIManager apiManager, ShokoAPIClient apiClient, ShokoResolveManager resolveManager)
+    public ClearPluginCacheTask(ShokoAPIManager apiManager, ShokoAPIClient apiClient, VirtualFileSystemService vfsService)
     {
         ApiManager = apiManager;
         ApiClient = apiClient;
-        ResolveManager = resolveManager;
+        VfsService = vfsService;
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public class ClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
     {
         ApiClient.Clear();
         ApiManager.Clear();
-        ResolveManager.Clear();
+        VfsService.Clear();
         return Task.CompletedTask;
     }
 }

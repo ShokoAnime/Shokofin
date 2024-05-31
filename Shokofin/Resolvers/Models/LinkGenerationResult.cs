@@ -3,7 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 
-namespace Shokofin.Resolvers;
+namespace Shokofin.Resolvers.Models;
 
 public class LinkGenerationResult
 {

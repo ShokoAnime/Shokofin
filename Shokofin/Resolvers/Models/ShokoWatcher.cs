@@ -4,7 +4,7 @@ using System.IO;
 using MediaBrowser.Controller.Entities;
 using Shokofin.Configuration;
 
-namespace Shokofin.Resolvers;
+namespace Shokofin.Resolvers.Models;
 
 public class ShokoWatcher
 {

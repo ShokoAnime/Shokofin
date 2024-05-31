@@ -2,7 +2,7 @@ using System;
 using MediaBrowser.Controller.Entities;
 using Shokofin.Configuration;
 
-namespace Shokofin.Resolvers;
+namespace Shokofin.Configuration.Models;
 
 public class MediaConfigurationChangedEventArgs : EventArgs
 {

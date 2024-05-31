@@ -16,17 +16,17 @@ public class PostScanTask : ILibraryPostScanTask
 
     private readonly ShokoAPIClient ApiClient;
 
-    private readonly ShokoResolveManager ResolveManager;
+    private readonly VirtualFileSystemService VfsService;
 
     private readonly MergeVersionsManager VersionsManager;
 
     private readonly CollectionManager CollectionManager;
 
-    public PostScanTask(ShokoAPIManager apiManager, ShokoAPIClient apiClient, ShokoResolveManager resolveManager, MergeVersionsManager versionsManager, CollectionManager collectionManager)
+    public PostScanTask(ShokoAPIManager apiManager, ShokoAPIClient apiClient, VirtualFileSystemService vfsService, MergeVersionsManager versionsManager, CollectionManager collectionManager)
     {
         ApiManager = apiManager;
         ApiClient = apiClient;
-        ResolveManager = resolveManager;
+        VfsService = vfsService;
         VersionsManager = versionsManager;
         CollectionManager = collectionManager;
     }
@@ -57,6 +57,6 @@ public class PostScanTask : ILibraryPostScanTask
         // Clear the cache now, since we don't need it anymore.
         ApiClient.Clear();
         ApiManager.Clear();
-        ResolveManager.Clear();
+        VfsService.Clear();
     }
 }

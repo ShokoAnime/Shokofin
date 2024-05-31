@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
-using Shokofin.SignalR.Interfaces;
+using Shokofin.API.Models;
+using Shokofin.Events.Interfaces;
 
-using File = Shokofin.API.Models.File;
-
-namespace Shokofin.SignalR.Models;
+namespace Shokofin.Events.Stub;
 
 public class FileEventArgsStub : IFileEventArgs
 {

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Shokofin.SignalR.Interfaces;
+namespace Shokofin.Events.Interfaces;
 
 public interface IFileEventArgs
 {
