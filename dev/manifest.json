@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.195",
+                "changelog": "refactor: split up resolver and move around file",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.195/shoko_3.0.1.195.zip",
+                "checksum": "b8e456bf6816d67dd5380dcd6c3ffe0b",
+                "timestamp": "2024-05-31T12:47:45Z"
+            },
+            {
                 "version": "3.0.1.194",
                 "changelog": "fix: file events being skipped on valid file",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.191/shoko_3.0.1.191.zip",
                 "checksum": "b3e41df9e6f840336f2361c0889e549e",
                 "timestamp": "2024-05-29T00:39:32Z"
-            },
-            {
-                "version": "3.0.1.190",
-                "changelog": "fix: fix signalr refresh state on settings page\n\nchore: update desc. for stub. manifest [skip ci]\n\nchore: update read-me [skip ci",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.190/shoko_3.0.1.190.zip",
-                "checksum": "9674905e010cd13f89ab5d49400fcd9a",
-                "timestamp": "2024-05-29T00:15:13Z"
             }
         ]
     }
