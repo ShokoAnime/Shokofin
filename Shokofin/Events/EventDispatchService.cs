@@ -378,7 +378,8 @@ public class EventDispatchService
 
         var filteredSeriesIds = new HashSet<string>();
         foreach (var seriesId in seriesIds) {
-            var seriesPathSet = await ApiManager.GetPathSetForSeries(seriesId);
+            var (primaryId, extraIds) = await ApiManager.GetSeriesIdsForSeason(seriesId);
+            var seriesPathSet = await ApiManager.GetPathSetForSeries(primaryId, extraIds);
             if (seriesPathSet.Count > 0) {
                 filteredSeriesIds.Add(seriesId);
             }
@@ -547,7 +548,7 @@ public class EventDispatchService
                 .Select(e => e.SeriesId!.Value.ToString())
                 .ToHashSet();
             var seasonList = showInfo.SeasonList
-                .Where(seasonInfo => seasonIds.Contains(seasonInfo.Id))
+                .Where(seasonInfo => seasonIds.Contains(seasonInfo.Id) || seasonIds.Overlaps(seasonInfo.ExtraIds))
                 .ToList();
             foreach (var seasonInfo in seasonList) {
                 var seasons = LibraryManager
@@ -561,7 +562,7 @@ public class EventDispatchService
                     )
                     .ToList();
                 foreach (var season in seasons) {
-                    Logger.LogInformation("Refreshing season {SeasonName}. (Season={SeasonId},Series={SeriesId})", season.Name, season.Id, seasonInfo.Id);
+                    Logger.LogInformation("Refreshing season {SeasonName}. (Season={SeasonId},Series={SeriesId},ExtraSeries={ExtraIds})", season.Name, season.Id, seasonInfo.Id, seasonInfo.ExtraIds);
                     await season.RefreshMetadata(new(DirectoryService) {
                         MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
                         ImageRefreshMode = MetadataRefreshMode.FullRefresh,
@@ -635,7 +636,7 @@ public class EventDispatchService
                 )
                 .ToList();
             foreach (var movie in movies) {
-                Logger.LogInformation("Refreshing movie {MovieName}. (Movie={MovieId},Episode={EpisodeId},Series={SeriesId})", movie.Name, movie.Id, episodeInfo.Id, seasonInfo.Id);
+                Logger.LogInformation("Refreshing movie {MovieName}. (Movie={MovieId},Episode={EpisodeId},Series={SeriesId},ExtraSeries={ExtraIds})", movie.Name, movie.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds);
                 await movie.RefreshMetadata(new(DirectoryService) {
                     MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
                     ImageRefreshMode = MetadataRefreshMode.FullRefresh,

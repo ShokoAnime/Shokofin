@@ -13,11 +13,15 @@ using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
 using Path = System.IO.Path;
+using Regex = System.Text.RegularExpressions.Regex;
+using RegexOptions = System.Text.RegularExpressions.RegexOptions;
 
 namespace Shokofin.API;
 
 public class ShokoAPIManager : IDisposable
 {
+    private static readonly Regex YearRegex = new(@"\s+\((?<year>\d{4})\)\s*$", RegexOptions.Compiled);
+
     private readonly ILogger<ShokoAPIManager> Logger;
 
     private readonly ShokoAPIClient APIClient;
@@ -254,15 +258,28 @@ public class ShokoAPIManager : IDisposable
     #endregion
     #region Path Set And Local Episode IDs
 
+    public async Task<List<(File file, string seriesId)>> GetFilesForSeason(SeasonInfo seasonInfo)
+    {
+        // TODO: Optimise/cache this better now that we do it per season.
+        var list = (await APIClient.GetFilesForSeries(seasonInfo.Id)).Select(file => (file, seriesId: seasonInfo.Id)).ToList();
+        foreach (var extraId in seasonInfo.ExtraIds)
+            list.AddRange((await APIClient.GetFilesForSeries(extraId)).Select(file => (file, seriesId: extraId)));
+        return list;
+    }
+
     /// <summary>
     /// Get a set of paths that are unique to the series and don't belong to
     /// any other series.
     /// </summary>
     /// <param name="seriesId">Shoko series id.</param>
     /// <returns>Unique path set for the series</returns>
-    public async Task<HashSet<string>> GetPathSetForSeries(string seriesId)
+    public async Task<HashSet<string>> GetPathSetForSeries(string seriesId, IEnumerable<string> extraIds)
     {
+        // TODO: Optimise/cache this better now that we do it per season.
         var (pathSet, _) = await GetPathSetAndLocalEpisodeIdsForSeries(seriesId).ConfigureAwait(false);
+        foreach (var extraId in extraIds)
+            foreach (var path in await GetPathSetAndLocalEpisodeIdsForSeries(extraId).ContinueWith(task => task.Result.Item1).ConfigureAwait(false))
+                pathSet.Add(path);
         return pathSet;
     }
 
@@ -271,12 +288,13 @@ public class ShokoAPIManager : IDisposable
     /// </summary>
     /// <param name="seriesId">Shoko series id.</param>
     /// <returns>Local episode ids for the series</returns>
-    public HashSet<string> GetLocalEpisodeIdsForSeries(string seriesId)
+    public async Task<HashSet<string>> GetLocalEpisodeIdsForSeason(SeasonInfo seasonInfo)
     {
-        var (_, episodeIds) = GetPathSetAndLocalEpisodeIdsForSeries(seriesId)
-            .ConfigureAwait(false)
-            .GetAwaiter()
-            .GetResult();
+        // TODO: Optimise/cache this better now that we do it per season.
+        var (_, episodeIds) = await GetPathSetAndLocalEpisodeIdsForSeries(seasonInfo.Id).ConfigureAwait(false);
+        foreach (var extraId in seasonInfo.ExtraIds)
+            foreach (var episodeId in await GetPathSetAndLocalEpisodeIdsForSeries(extraId).ContinueWith(task => task.Result.Item2).ConfigureAwait(false))
+                episodeIds.Add(episodeId);
         return episodeIds;
     }
 
@@ -385,17 +403,18 @@ public class ShokoAPIManager : IDisposable
             var seriesId = seriesXRef.Series.Shoko!.Value.ToString();
 
             // Check if the file is in the series folder.
-            var pathSet = await GetPathSetForSeries(seriesId).ConfigureAwait(false);
+            var (primaryId, extraIds) = await GetSeriesIdsForSeason(seriesId);
+            var pathSet = await GetPathSetForSeries(primaryId, extraIds).ConfigureAwait(false);
             if (!pathSet.Contains(selectedPath))
                 continue;
 
             // Find the season info.
-            var seasonInfo = await GetSeasonInfoForSeries(seriesId).ConfigureAwait(false);
+            var seasonInfo = await GetSeasonInfoForSeries(primaryId).ConfigureAwait(false);
             if (seasonInfo == null)
                 return (null, null, null);
 
             // Find the show info.
-            var showInfo =  await GetShowInfoForSeries(seriesId).ConfigureAwait(false);
+            var showInfo =  await GetShowInfoForSeries(primaryId).ConfigureAwait(false);
             if (showInfo == null || showInfo.SeasonList.Count == 0)
                 return (null, null, null);
 
@@ -563,14 +582,8 @@ public class ShokoAPIManager : IDisposable
         if (string.IsNullOrEmpty(seriesId))
             return null;
 
-        var key = $"season:{seriesId}";
-        if (DataCache.TryGetValue<SeasonInfo>(key, out var seasonInfo)) {
-            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId);
-            return seasonInfo;
-        }
-
         var series = await APIClient.GetSeries(seriesId).ConfigureAwait(false);
-        return await CreateSeasonInfo(series, seriesId).ConfigureAwait(false);
+        return await CreateSeasonInfo(series).ConfigureAwait(false);
     }
 
     public async Task<SeasonInfo?> GetSeasonInfoForSeries(string seriesId)
@@ -578,14 +591,8 @@ public class ShokoAPIManager : IDisposable
         if (string.IsNullOrEmpty(seriesId))
             return null;
 
-        var cachedKey = $"season:{seriesId}";
-        if (DataCache.TryGetValue<SeasonInfo>(cachedKey, out var seasonInfo)) {
-            Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId);
-            return seasonInfo;
-        }
-
         var series = await APIClient.GetSeries(seriesId).ConfigureAwait(false);
-        return await CreateSeasonInfo(series, seriesId).ConfigureAwait(false);
+        return await CreateSeasonInfo(series).ConfigureAwait(false);
     }
 
     public async Task<SeasonInfo?> GetSeasonInfoForEpisode(string episodeId)
@@ -595,35 +602,80 @@ public class ShokoAPIManager : IDisposable
             if (series == null)
                 return null;
             seriesId = series.IDs.Shoko.ToString();
-            return await CreateSeasonInfo(series, seriesId).ConfigureAwait(false);
+            return await CreateSeasonInfo(series).ConfigureAwait(false);
         }
 
         return await GetSeasonInfoForSeries(seriesId).ConfigureAwait(false);
     }
 
-    private Task<SeasonInfo> CreateSeasonInfo(Series series, string seriesId)
-        => DataCache.GetOrCreateAsync(
+    private async Task<SeasonInfo> CreateSeasonInfo(Series series)
+    {
+        var (seriesId, extraIds) = await GetSeriesIdsForSeason(series);
+        return await DataCache.GetOrCreateAsync(
             $"season:{seriesId}",
             (seasonInfo) => Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId),
             async (cachedEntry) => {
-                Logger.LogTrace("Creating info object for season {SeriesName}. (Series={SeriesId})", series.Name, seriesId);
+                // We updated the "primary" series id for the merge group, so fetch the new series details from the client cache.
+                if (!string.Equals(series.IDs.Shoko.ToString(), seriesId, StringComparison.Ordinal))
+                    series = await APIClient.GetSeries(seriesId);
 
-                var (earliestImportedAt, lastImportedAt)= await GetEarliestImportedAtForSeries(seriesId).ConfigureAwait(false);
-                var episodes = (await APIClient.GetEpisodesFromSeries(seriesId).ConfigureAwait(false) ?? new()).List
-                    .Select(e => CreateEpisodeInfo(e, e.IDs.Shoko.ToString()))
-                    .OrderBy(e => e.AniDB.AirDate)
+                Logger.LogTrace("Creating info object for season {SeriesName}. (Series={SeriesId},ExtraSeries={ExtraIds})", series.Name, seriesId, extraIds);
+
+                var (earliestImportedAt, lastImportedAt) = await GetEarliestImportedAtForSeries(seriesId).ConfigureAwait(false);
+                var episodes = (await Task.WhenAll(
+                    extraIds.Prepend(seriesId)
+                        .Select(id => APIClient.GetEpisodesFromSeries(id).ContinueWith(task => task.Result.List.Select(e => CreateEpisodeInfo(e, e.IDs.Shoko.ToString()))))
+                ).ConfigureAwait(false))
+                    .SelectMany(list => list)
+                    .OrderBy(episode => episode.AniDB.AirDate)
                     .ToList();
-                var cast = await APIClient.GetSeriesCast(seriesId).ConfigureAwait(false);
-                var relations = await APIClient.GetSeriesRelations(seriesId).ConfigureAwait(false);
-                var genres = await GetGenresForSeries(seriesId).ConfigureAwait(false);
-                var tags = await GetTagsForSeries(seriesId).ConfigureAwait(false);
-                var seasonInfo = new SeasonInfo(series, earliestImportedAt, lastImportedAt, episodes, cast, relations, genres, tags);
+
+                SeasonInfo seasonInfo;
+                if (extraIds.Count > 0) {
+                    var detailsIds = extraIds.Prepend(seriesId).ToList();
+
+                    // Create the tasks.
+                    var castTasks = detailsIds.Select(id => APIClient.GetSeriesCast(id));
+                    var relationsTasks = detailsIds.Select(id => APIClient.GetSeriesRelations(id));
+                    var genresTasks = detailsIds.Select(id => GetGenresForSeries(id));
+                    var tagsTasks = detailsIds.Select(id => GetTagsForSeries(id));
+
+                    // Await the tasks in order.
+                    var cast = (await Task.WhenAll(castTasks))
+                        .SelectMany(c => c)
+                        .Distinct()
+                        .ToList();
+                    var relations = (await Task.WhenAll(relationsTasks))
+                        .SelectMany(r => r)
+                        .Where(r => r.RelatedIDs.Shoko.HasValue && !detailsIds.Contains(r.RelatedIDs.Shoko.Value.ToString()))
+                        .ToList();
+                    var genres = (await Task.WhenAll(genresTasks))
+                        .SelectMany(g => g)
+                        .OrderBy(g => g)
+                        .Distinct()
+                        .ToArray();
+                    var tags = (await Task.WhenAll(tagsTasks))
+                        .SelectMany(t => t)
+                        .OrderBy(t => t)
+                        .Distinct()
+                        .ToArray();
+
+                    // Create the season info using the merged details.
+                    seasonInfo = new SeasonInfo(series, extraIds, earliestImportedAt, lastImportedAt, episodes, cast, relations, genres, tags);
+                } else {
+                    var cast = await APIClient.GetSeriesCast(seriesId).ConfigureAwait(false);
+                    var relations = await APIClient.GetSeriesRelations(seriesId).ConfigureAwait(false);
+                    var genres = await GetGenresForSeries(seriesId).ConfigureAwait(false);
+                    var tags = await GetTagsForSeries(seriesId).ConfigureAwait(false);
+                    seasonInfo = new SeasonInfo(series, extraIds, earliestImportedAt, lastImportedAt, episodes, cast, relations, genres, tags);
+                }
 
                 foreach (var episode in episodes)
                     EpisodeIdToSeriesIdDictionary.TryAdd(episode.Id, seriesId);
                 return seasonInfo;
             }
         );
+    }
 
     private Task<(DateTime?, DateTime?)> GetEarliestImportedAtForSeries(string seriesId)
         => DataCache.GetOrCreateAsync<(DateTime?, DateTime?)>(
@@ -642,6 +694,118 @@ public class ShokoAPIManager : IDisposable
                 );
             },
             new()
+        );
+
+    public async Task<(string primaryId, List<string> extraIds)> GetSeriesIdsForSeason(string seriesId)
+        => await GetSeriesIdsForSeason(await APIClient.GetSeries(seriesId));
+
+    private Task<(string primaryId, List<string> extraIds)> GetSeriesIdsForSeason(Series series)
+        => DataCache.GetOrCreateAsync(
+            $"season-series-ids:{series.IDs.Shoko}",
+            (tuple) => Logger.LogTrace(""),
+            async (cacheEntry) => {
+                var primaryId = series.IDs.Shoko.ToString();
+                var extraIds = new List<string>();
+                if (!Plugin.Instance.Configuration.EXPERIMENTAL_MergeSeasons)
+                    return (primaryId, extraIds);
+
+                if (series.AniDBEntity.AirDate is null)
+                    return (primaryId, extraIds);
+
+                // We potentially have a "follow-up" season candidate, so look for the "primary" season candidate, then jump into that. 
+                var relations = await APIClient.GetSeriesRelations(primaryId).ConfigureAwait(false);
+                var mainTitle = series.AniDBEntity.Titles.First(title => title.Type == TitleType.Main).Value;
+                var result = YearRegex.Match(mainTitle);
+                var maxDaysThreshold = Plugin.Instance.Configuration.EXPERIMENTAL_MergeSeasonsMergeWindowInDays;
+                if (result.Success)
+                {
+                    var adjustedMainTitle = mainTitle[..^result.Length];
+                    var currentDate = series.AniDBEntity.AirDate.Value;
+                    var currentRelations = relations;
+                    while (currentRelations.Count > 0) {
+                        foreach (var prequelRelation in currentRelations.Where(relation => relation.Type == RelationType.Prequel && relation.RelatedIDs.Shoko.HasValue)) {
+                            var prequelSeries = await APIClient.GetSeries(prequelRelation.RelatedIDs.Shoko!.Value.ToString());
+                            if (prequelSeries.IDs.ParentGroup != series.IDs.ParentGroup)
+                                continue;
+
+                            if (prequelSeries.AniDBEntity.Type is SeriesType.Movie or SeriesType.Other or SeriesType.Unknown)
+                                continue;
+
+                            if (prequelSeries.AniDBEntity.AirDate is null)
+                                continue;
+
+                            var prequelDate = prequelSeries.AniDBEntity.AirDate.Value;
+                            if (prequelDate > currentDate)
+                                continue;
+
+                            var deltaDays = (int)Math.Floor((currentDate - prequelDate).TotalDays);
+                            if (deltaDays > maxDaysThreshold)
+                                continue;
+
+                            var prequelMainTitle = prequelSeries.AniDBEntity.Titles.First(title => title.Type == TitleType.Main).Value;
+                            var prequelResult = YearRegex.Match(prequelMainTitle);
+                            if (!prequelResult.Success) {
+                                if (string.Equals(adjustedMainTitle, prequelMainTitle, StringComparison.InvariantCultureIgnoreCase))
+                                    return await GetSeriesIdsForSeason(prequelSeries);
+                                continue;
+                            }
+
+                            var adjustedPrequelMainTitle = prequelMainTitle[..^prequelResult.Length];
+                            if (string.Equals(adjustedMainTitle, adjustedPrequelMainTitle, StringComparison.InvariantCultureIgnoreCase)) {
+                                currentDate = prequelDate;
+                                currentRelations = await APIClient.GetSeriesRelations(prequelSeries.IDs.Shoko.ToString()).ConfigureAwait(false);
+                                goto continuePrequelWhileLoop;
+                            }
+                        }
+                        break;
+                        continuePrequelWhileLoop: continue;
+                    }
+                }
+                // We potentially have a "primary" season candidate, so look for any "follow-up" season candidates.
+                else {
+                    var currentDate = series.AniDBEntity.AirDate.Value;
+                    var adjustedMainTitle = mainTitle;
+                    var currentRelations = relations;
+                    while (currentRelations.Count > 0) {
+                        foreach (var sequelRelation in currentRelations.Where(relation => relation.Type == RelationType.Sequel && relation.RelatedIDs.Shoko.HasValue)) {
+                            var sequelSeries = await APIClient.GetSeries(sequelRelation.RelatedIDs.Shoko!.Value.ToString());
+                            if (sequelSeries.IDs.ParentGroup != series.IDs.ParentGroup)
+                                continue;
+
+                            if (sequelSeries.AniDBEntity.Type is SeriesType.Movie or SeriesType.Other or SeriesType.Unknown)
+                                continue;
+
+                            if (sequelSeries.AniDBEntity.AirDate is null)
+                                continue;
+
+                            var sequelDate = sequelSeries.AniDBEntity.AirDate.Value;
+                            if (sequelDate < currentDate)
+                                continue;
+
+                            var deltaDays = (int)Math.Floor((sequelDate - currentDate).TotalDays);
+                            if (deltaDays > maxDaysThreshold)
+                                continue;
+
+                            var sequelMainTitle = sequelSeries.AniDBEntity.Titles.First(title => title.Type == TitleType.Main).Value;
+                            var sequelResult = YearRegex.Match(sequelMainTitle);
+                            if (!sequelResult.Success)
+                                continue;
+
+                            var adjustedSequelMainTitle = sequelMainTitle[..^sequelResult.Length];
+                            if (string.Equals(adjustedMainTitle, adjustedSequelMainTitle, StringComparison.InvariantCultureIgnoreCase)) {
+                                extraIds.Add(sequelSeries.IDs.Shoko.ToString());
+                                currentDate = sequelDate;
+                                currentRelations = await APIClient.GetSeriesRelations(sequelSeries.IDs.Shoko.ToString()).ConfigureAwait(false);
+                                goto continueSequelWhileLoop;
+                            }
+                        }
+                        break;
+                        continueSequelWhileLoop: continue;
+                    }
+                }
+
+                return (primaryId, extraIds);
+            }
         );
 
     #endregion
@@ -700,16 +864,17 @@ public class ShokoAPIManager : IDisposable
         // the input path.
         foreach (var series in result) {
             seriesId  = series.IDs.Shoko.ToString();
-            var pathSet = await GetPathSetForSeries(seriesId).ConfigureAwait(false);
+            var (primaryId, extraIds) = await GetSeriesIdsForSeason(seriesId);
+            var pathSet = await GetPathSetForSeries(primaryId, extraIds).ConfigureAwait(false);
             foreach (var uniquePath in pathSet) {
                 // Remove the trailing slash before matching.
                 if (!uniquePath[..^1].EndsWith(partialPath))
                     continue;
 
-                PathToSeriesIdDictionary[path] = seriesId;
-                SeriesIdToPathDictionary.TryAdd(seriesId, path);
+                PathToSeriesIdDictionary[path] = primaryId;
+                SeriesIdToPathDictionary.TryAdd(primaryId, path);
 
-                return seriesId;
+                return primaryId;
             }
         }
 
@@ -745,7 +910,6 @@ public class ShokoAPIManager : IDisposable
             return null;
 
         seriesId = series.IDs.Shoko.ToString();
-        EpisodeIdToSeriesIdDictionary.TryAdd(episodeId, seriesId);
         return await GetShowInfoForSeries(seriesId).ConfigureAwait(false);
     }
 
@@ -782,7 +946,9 @@ public class ShokoAPIManager : IDisposable
                 Logger.LogTrace("Creating info object for show {GroupName}. (Group={GroupId})", group.Name, groupId);
 
                 var seriesInGroup = await APIClient.GetSeriesInGroup(groupId).ConfigureAwait(false);
-                var seasonList = (await Task.WhenAll(seriesInGroup.Select(s => CreateSeasonInfo(s, s.IDs.Shoko.ToString()))).ConfigureAwait(false)).ToList();
+                var seasonList = (await Task.WhenAll(seriesInGroup.Select(CreateSeasonInfo)).ConfigureAwait(false))
+                    .DistinctBy(seasonInfo => seasonInfo.Id)
+                    .ToList();
 
                 var length = seasonList.Count;
                 if (Plugin.Instance.Configuration.SeparateMovies) {

@@ -329,12 +329,12 @@ public class VirtualFileSystemService
         );
 
         var episodeIds = seasonInfo.ExtrasList.Select(episode => episode.Id).Append(episodeId).ToHashSet();
-        var files = ApiClient.GetFilesForSeries(seasonInfo.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+        var files = ApiManager.GetFilesForSeason(seasonInfo).ConfigureAwait(false).GetAwaiter().GetResult();
         var fileLocations = files
-            .Where(files => files.CrossReferences.Any(xref => episodeIds.Overlaps(xref.Episodes.Where(e => e.Shoko.HasValue).Select(e => e.Shoko!.Value.ToString()))))
-            .SelectMany(file => file.Locations.Select(location => (file, location)))
+            .Where(tuple => tuple.file.CrossReferences.Any(xref => episodeIds.Overlaps(xref.Episodes.Where(e => e.Shoko.HasValue).Select(e => e.Shoko!.Value.ToString()))))
+            .SelectMany(tuple => tuple.file.Locations.Select(location => (tuple.file, tuple.seriesId, location)))
             .ToList();
-        foreach (var (file, location) in fileLocations) {
+        foreach (var (file, fileSeriesId, location) in fileLocations) {
             if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.RelativePath.StartsWith(importFolderSubPath))
                 continue;
 
@@ -343,7 +343,7 @@ public class VirtualFileSystemService
                 continue;
 
             totalFiles++;
-            yield return (sourceLocation, file.Id.ToString(), seasonInfo.Id);
+            yield return (sourceLocation, file.Id.ToString(), fileSeriesId);
         }
         var timeSpent = DateTime.UtcNow - start;
         Logger.LogDebug(
@@ -380,12 +380,12 @@ public class VirtualFileSystemService
             if (seasonNumber.Value is 0) {
                 foreach (var seasonInfo in showInfo.SeasonList) {
                     var episodeIds = seasonInfo.SpecialsList.Select(episode => episode.Id).ToHashSet();
-                    var files = ApiClient.GetFilesForSeries(seasonInfo.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+                    var files = ApiManager.GetFilesForSeason(seasonInfo).ConfigureAwait(false).GetAwaiter().GetResult();
                     var fileLocations = files
-                        .Where(files => files.CrossReferences.Any(xref => episodeIds.Overlaps(xref.Episodes.Where(e => e.Shoko.HasValue).Select(e => e.Shoko!.Value.ToString()))))
-                        .SelectMany(file => file.Locations.Select(location => (file, location)))
+                        .Where(tuple => tuple.file.CrossReferences.Any(xref => episodeIds.Overlaps(xref.Episodes.Where(e => e.Shoko.HasValue).Select(e => e.Shoko!.Value.ToString()))))
+                        .SelectMany(tuple => tuple.file.Locations.Select(location => (tuple.file, tuple.seriesId, location)))
                         .ToList();
-                    foreach (var (file, location) in fileLocations) {
+                    foreach (var (file, fileSeriesId, location) in fileLocations) {
                         if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.RelativePath.StartsWith(importFolderSubPath))
                             continue;
 
@@ -394,7 +394,7 @@ public class VirtualFileSystemService
                             continue;
 
                         totalFiles++;
-                        yield return (sourceLocation, file.Id.ToString(), seasonInfo.Id);
+                        yield return (sourceLocation, file.Id.ToString(), fileSeriesId);
                     }
                 }
             }
@@ -405,12 +405,12 @@ public class VirtualFileSystemService
                     var baseNumber = showInfo.GetBaseSeasonNumberForSeasonInfo(seasonInfo);
                     var offset = seasonNumber.Value - baseNumber;
                     var episodeIds = (offset is 0 ? seasonInfo.EpisodeList.Concat(seasonInfo.ExtrasList) : seasonInfo.AlternateEpisodesList).Select(episode => episode.Id).ToHashSet();
-                    var files = ApiClient.GetFilesForSeries(seasonInfo.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+                    var files = ApiManager.GetFilesForSeason(seasonInfo).ConfigureAwait(false).GetAwaiter().GetResult();
                     var fileLocations = files
-                        .Where(files => files.CrossReferences.Any(xref => episodeIds.Overlaps(xref.Episodes.Where(e => e.Shoko.HasValue).Select(e => e.Shoko!.Value.ToString()))))
-                        .SelectMany(file => file.Locations.Select(location => (file, location)))
+                        .Where(tuple => tuple.file.CrossReferences.Any(xref => episodeIds.Overlaps(xref.Episodes.Where(e => e.Shoko.HasValue).Select(e => e.Shoko!.Value.ToString()))))
+                        .SelectMany(tuple => tuple.file.Locations.Select(location => (tuple.file, tuple.seriesId, location)))
                         .ToList();
-                    foreach (var (file, location) in fileLocations) {
+                    foreach (var (file, fileSeriesId, location) in fileLocations) {
                         if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.RelativePath.StartsWith(importFolderSubPath))
                             continue;
 
@@ -419,7 +419,7 @@ public class VirtualFileSystemService
                             continue;
 
                         totalFiles++;
-                        yield return (sourceLocation, file.Id.ToString(), seasonInfo.Id);
+                        yield return (sourceLocation, file.Id.ToString(), fileSeriesId);
                     }
                 }
             }
@@ -427,11 +427,11 @@ public class VirtualFileSystemService
         // Return all files for the show.
         else {
             foreach (var seasonInfo in showInfo.SeasonList) {
-                var files = ApiClient.GetFilesForSeries(seasonInfo.Id).ConfigureAwait(false).GetAwaiter().GetResult();
+                var files = ApiManager.GetFilesForSeason(seasonInfo).ConfigureAwait(false).GetAwaiter().GetResult();
                 var fileLocations = files
-                    .SelectMany(file => file.Locations.Select(location => (file, location)))
+                    .SelectMany(tuple => tuple.file.Locations.Select(location => (tuple.file, tuple.seriesId, location)))
                     .ToList();
-                foreach (var (file, location) in fileLocations) {
+                foreach (var (file, fileSeriesId, location) in fileLocations) {
                     if (location.ImportFolderId != importFolderId || importFolderSubPath.Length != 0 && !location.RelativePath.StartsWith(importFolderSubPath))
                         continue;
 
@@ -440,7 +440,7 @@ public class VirtualFileSystemService
                         continue;
 
                     totalFiles++;
-                    yield return (sourceLocation, file.Id.ToString(), seasonInfo.Id);
+                    yield return (sourceLocation, file.Id.ToString(), fileSeriesId);
                 }
             }
         }
@@ -635,7 +635,7 @@ public class VirtualFileSystemService
         if (shouldAbort)
             return (string.Empty, Array.Empty<string>(), null);
 
-        var show = await ApiManager.GetShowInfoForSeries(seriesId).ConfigureAwait(false);
+        var show = await ApiManager.GetShowInfoForSeries(season.Id).ConfigureAwait(false);
         if (show is null)
             return (string.Empty, Array.Empty<string>(), null);
 

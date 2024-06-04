@@ -142,7 +142,7 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
             // Add missing episodes.
             if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly)
                 foreach (var seasonInfo in showInfo.SeasonList) {
-                    foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
+                    foreach (var episodeId in await ApiManager.GetLocalEpisodeIdsForSeason(seasonInfo))
                         existingEpisodes.Add(episodeId);
 
                     foreach (var episodeInfo in seasonInfo.SpecialsList) {
@@ -195,7 +195,7 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
 
             // Add missing episodes.
             if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
-                foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
+                foreach (var episodeId in await ApiManager.GetLocalEpisodeIdsForSeason(seasonInfo))
                     existingEpisodes.Add(episodeId);
 
                 foreach (var episodeInfo in seasonInfo.EpisodeList.Concat(seasonInfo.AlternateEpisodesList)) {

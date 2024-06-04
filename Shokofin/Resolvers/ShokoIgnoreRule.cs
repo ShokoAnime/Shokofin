@@ -132,7 +132,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
                     foreach (var entry in entries) {
                         season = await ApiManager.GetSeasonInfoByPath(entry.FullName).ConfigureAwait(false);
                         if (season is not null) {
-                            Logger.LogDebug("Found shoko series {SeriesName} for sub-directory of path {Path} (Series={SeriesId})", season.Shoko.Name, partialPath, season.Id);
+                            Logger.LogDebug("Found shoko series {SeriesName} for sub-directory of path {Path} (Series={SeriesId},ExtraSeries={ExtraIds})", season.Shoko.Name, partialPath, season.Id, season.ExtraIds);
                             break;
                         }
                     }
@@ -153,13 +153,13 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
         switch (collectionType) {
             case CollectionType.TvShows:
                 if (isMovieSeason && Plugin.Instance.Configuration.SeparateMovies) {
-                    Logger.LogInformation("Found movie in show library and library separation is enabled, ignoring shoko series. (Series={SeriesId})", season.Id);
+                    Logger.LogInformation("Found movie in show library and library separation is enabled, ignoring shoko series. (Series={SeriesId},ExtraSeries={ExtraIds})", season.Id, season.ExtraIds);
                     return true;
                 }
                 break;
             case CollectionType.Movies:
                 if (!isMovieSeason) {
-                    Logger.LogInformation("Found show in movie library, ignoring shoko series. (Series={SeriesId})", season.Id);
+                    Logger.LogInformation("Found show in movie library, ignoring shoko series. (Series={SeriesId},ExtraSeries={ExtraIds})", season.Id, season.ExtraIds);
                     return true;
                 }
                 break;
@@ -167,9 +167,9 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
 
         var show = await ApiManager.GetShowInfoForSeries(season.Id).ConfigureAwait(false)!;
         if (!string.IsNullOrEmpty(show!.GroupId))
-            Logger.LogInformation("Found shoko group {GroupName} (Series={SeriesId},Group={GroupId})", show.Name, season.Id, show.GroupId);
+            Logger.LogInformation("Found shoko group {GroupName} (Series={SeriesId},ExtraSeries={ExtraIds},Group={GroupId})", show.Name, season.Id, season.ExtraIds, show.GroupId);
         else
-            Logger.LogInformation("Found shoko series {SeriesName} (Series={SeriesId})", season.Shoko.Name, season.Id);
+            Logger.LogInformation("Found shoko series {SeriesName} (Series={SeriesId},ExtraSeries={ExtraIds})", season.Shoko.Name, season.Id, season.ExtraIds);
 
         return false;
     }
@@ -187,11 +187,11 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
             return shouldIgnore;
         }
 
-        Logger.LogInformation("Found {EpisodeCount} shoko episode(s) for {SeriesName} (Series={SeriesId},File={FileId})", file.EpisodeList.Count, season.Shoko.Name, season.Id, file.Id);
+        Logger.LogInformation("Found {EpisodeCount} shoko episode(s) for {SeriesName} (Series={SeriesId},ExtraSeries={ExtraIds},File={FileId})", file.EpisodeList.Count, season.Shoko.Name, season.Id, season.ExtraIds, file.Id);
 
         // We're going to post process this file later, but we don't want to include it in our library for now.
         if (file.EpisodeList.Any(eI => season.IsExtraEpisode(eI.Episode))) {
-            Logger.LogInformation("File was assigned an extra type, ignoring file. (Series={SeriesId},File={FileId})", season.Id, file.Id);
+            Logger.LogInformation("File was assigned an extra type, ignoring file. (Series={SeriesId},ExtraSeries={ExtraIds},File={FileId})", season.Id, season.ExtraIds, file.Id);
             return true;
         }
 

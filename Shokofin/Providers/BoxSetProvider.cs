@@ -67,7 +67,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
 
         var (displayTitle, alternateTitle) = Text.GetSeasonTitles(season, info.MetadataLanguage);
 
-        Logger.LogInformation("Found collection {CollectionName} (Series={SeriesId})", displayTitle, season.Id);
+        Logger.LogInformation("Found collection {CollectionName} (Series={SeriesId},ExtraSeries={ExtraIds})", displayTitle, season.Id, season.ExtraIds);
 
         result.Item = new BoxSet {
             Name = displayTitle,

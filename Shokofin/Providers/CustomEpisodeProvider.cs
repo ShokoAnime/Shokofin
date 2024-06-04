@@ -110,7 +110,7 @@ public class CustomEpisodeProvider : ICustomMetadataProvider<Episode>
         var episodeId = libraryManager.GetNewItemId(season.Series.Id + " Season " + seasonInfo.Id + " Episode " + episodeInfo.Id, typeof(Episode));
         var episode = EpisodeProvider.CreateMetadata(showInfo, seasonInfo, episodeInfo, season, episodeId);
 
-        logger.LogInformation("Adding virtual Episode {EpisodeNumber} in Season {SeasonNumber} for Series {SeriesName}. (Episode={EpisodeId},Series={SeriesId},Group={GroupId})", episode.IndexNumber, season.IndexNumber, showInfo.Name, episodeInfo.Id, seasonInfo.Id, showInfo.GroupId);
+        logger.LogInformation("Adding virtual Episode {EpisodeNumber} in Season {SeasonNumber} for Series {SeriesName}. (Episode={EpisodeId},Series={SeriesId},ExtraSeries={ExtraIds},Group={GroupId})", episode.IndexNumber, season.IndexNumber, showInfo.Name, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds, showInfo.GroupId);
 
         season.AddChild(episode);
 

@@ -78,7 +78,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
             }
 
             result.Item = CreateMetadata(showInfo, seasonInfo, episodeInfo, fileInfo, info.MetadataLanguage);
-            Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},Group={GroupId})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seasonInfo.Id, showInfo?.GroupId);
+            Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},ExtraSeries={ExtraIds},Group={GroupId})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds, showInfo?.GroupId);
 
             result.HasMetadata = true;
 

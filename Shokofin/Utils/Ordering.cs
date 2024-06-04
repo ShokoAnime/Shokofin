@@ -124,10 +124,10 @@ public class Ordering
         if (seasonInfo.IsExtraEpisode(episodeInfo)) {
             var seasonIndex = showInfo.SeasonList.FindIndex(s => string.Equals(s.Id, seasonInfo.Id));
             if (seasonIndex == -1)
-                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
+                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds},Episode={episodeInfo.Id})");
             index = seasonInfo.ExtrasList.FindIndex(e => string.Equals(e.Id, episodeInfo.Id));
             if (index == -1)
-                throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
+                throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={showInfo.GroupId},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds},Episode={episodeInfo.Id})");
             offset = showInfo.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.ExtrasList.Count);
             return offset + index + 1;
         }
@@ -135,10 +135,10 @@ public class Ordering
         if (showInfo.IsSpecial(episodeInfo)) {
             var seasonIndex = showInfo.SeasonList.FindIndex(s => string.Equals(s.Id, seasonInfo.Id));
             if (seasonIndex == -1)
-                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
+                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds},Episode={episodeInfo.Id})");
             index = seasonInfo.SpecialsList.FindIndex(e => string.Equals(e.Id, episodeInfo.Id));
             if (index == -1)
-                throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={showInfo.GroupId},Series={seasonInfo.Id},Episode={episodeInfo.Id})");
+                throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={showInfo.GroupId},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds},Episode={episodeInfo.Id})");
             offset = showInfo.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.SpecialsList.Count);
             return offset + index + 1;
         }
@@ -150,7 +150,7 @@ public class Ordering
 
         // If we still cannot find the episode for whatever reason, then bail. I don't fudging know why, but I know it's not the plugin's fault.
         if (index == -1)
-            throw new IndexOutOfRangeException($"Unable to find index to use for \"{episodeInfo.Shoko.Name}\". (Episode={episodeInfo.Id},Series={seasonInfo.Id})");
+            throw new IndexOutOfRangeException($"Unable to find index to use for \"{episodeInfo.Shoko.Name}\". (Episode={episodeInfo.Id},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds})");
 
         return index + 1;
     }

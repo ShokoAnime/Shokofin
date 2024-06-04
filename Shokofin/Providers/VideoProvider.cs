@@ -61,7 +61,7 @@ public class VideoProvider: IRemoteMetadataProvider<Video, ItemLookupInfo>, IHas
                 Overview = description,
                 CommunityRating = episodeInfo.AniDB.Rating.Value > 0 ? episodeInfo.AniDB.Rating.ToFloat(10) : 0,
             };
-            Logger.LogInformation("Found video {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},Group={GroupId})", result.Item.Name, fileInfo.Id, episodeInfo.Id, seasonInfo.Id, showInfo?.GroupId);
+            Logger.LogInformation("Found video {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},ExtraSeries={ExtraIds},Group={GroupId})", result.Item.Name, fileInfo.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds, showInfo?.GroupId);
 
             result.HasMetadata = true;
 

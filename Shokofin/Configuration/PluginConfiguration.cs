@@ -343,9 +343,15 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool EXPERIMENTAL_SplitThenMergeEpisodes { get; set; }
 
     /// <summary>
-    /// Coming soon™.
+    /// Blur the boundaries between AniDB anime further by merging entries which could had just been a single anime entry based on name matching and a configurable merge window.
     /// </summary>
     public bool EXPERIMENTAL_MergeSeasons { get; set; }
+
+    /// <summary>
+    /// Number of days to check between the start of each season, inclusive.
+    /// </summary>
+    /// <value></value>
+    public int EXPERIMENTAL_MergeSeasonsMergeWindowInDays { get; set; }
 
     #endregion
 
@@ -428,5 +434,6 @@ public class PluginConfiguration : BasePluginConfiguration
         EXPERIMENTAL_SplitThenMergeMovies = true;
         EXPERIMENTAL_SplitThenMergeEpisodes = false;
         EXPERIMENTAL_MergeSeasons = false;
+        EXPERIMENTAL_MergeSeasonsMergeWindowInDays = 185;
     }
 }

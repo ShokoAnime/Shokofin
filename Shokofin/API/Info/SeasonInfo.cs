@@ -12,6 +12,8 @@ public class SeasonInfo
 {
     public readonly string Id;
 
+    public readonly IReadOnlyList<string> ExtraIds;
+
     public readonly Series Shoko;
 
     public readonly Series.AniDBWithDate AniDB;
@@ -91,7 +93,7 @@ public class SeasonInfo
     /// </summary>
     public readonly IReadOnlyDictionary<string, RelationType> RelationMap;
 
-    public SeasonInfo(Series series, DateTime? earliestImportedAt, DateTime? lastImportedAt, List<EpisodeInfo> episodes, List<Role> cast, List<Relation> relations, string[] genres, string[] tags)
+    public SeasonInfo(Series series, IEnumerable<string> extraIds, DateTime? earliestImportedAt, DateTime? lastImportedAt, List<EpisodeInfo> episodes, List<Role> cast, List<Relation> relations, string[] genres, string[] tags)
     {
         var seriesId = series.IDs.Shoko.ToString();
         var studios = cast
@@ -104,6 +106,7 @@ public class SeasonInfo
             .ToArray();
         var relationMap = relations
             .Where(r => r.RelatedIDs.Shoko.HasValue)
+            .DistinctBy(r => r.RelatedIDs.Shoko!.Value)
             .ToDictionary(r => r.RelatedIDs.Shoko!.Value.ToString(), r => r.Type);
         var specialsAnchorDictionary = new Dictionary<EpisodeInfo, EpisodeInfo>();
         var specialsList = new List<EpisodeInfo>();
@@ -205,6 +208,7 @@ public class SeasonInfo
         }
 
         Id = seriesId;
+        ExtraIds = extraIds.ToArray();
         Shoko = series;
         AniDB = series.AniDBEntity;
         TvDB = series.TvDBEntityList.FirstOrDefault();

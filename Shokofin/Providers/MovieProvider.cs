@@ -49,7 +49,7 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrde
             }
 
             var (displayTitle, alternateTitle) = Text.GetMovieTitles(episode, season, info.MetadataLanguage);
-            Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId})", displayTitle, file.Id, episode.Id, season.Id);
+            Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},ExtraSeries={ExtraIds})", displayTitle, file.Id, episode.Id, season.Id, season.ExtraIds);
 
             bool isMultiEntry = season.Shoko.Sizes.Total.Episodes > 1;
             bool isMainEntry = episode.AniDB.Type == API.Models.EpisodeType.Normal && episode.Shoko.Name.Trim() == "Complete Movie";

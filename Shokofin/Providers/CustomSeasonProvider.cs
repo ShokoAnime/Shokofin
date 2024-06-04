@@ -103,7 +103,7 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
             // Add missing episodes.
             if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
                 foreach (var sI in showInfo.SeasonList) {
-                    foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(sI.Id))
+                    foreach (var episodeId in await ApiManager.GetLocalEpisodeIdsForSeason(sI))
                         existingEpisodes.Add(episodeId);
 
                     foreach (var episodeInfo in sI.SpecialsList) {
@@ -155,7 +155,7 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
 
             // Add missing episodes.
             if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
-                foreach (var episodeId in ApiManager.GetLocalEpisodeIdsForSeries(seasonInfo.Id))
+                foreach (var episodeId in await ApiManager.GetLocalEpisodeIdsForSeason(seasonInfo))
                     existingEpisodes.Add(episodeId);
 
                 foreach (var episodeInfo in episodeList) {
@@ -258,7 +258,7 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
         var seasonId = libraryManager.GetNewItemId(series.Id + "Season " + seasonNumber.ToString(System.Globalization.CultureInfo.InvariantCulture), typeof(Season));
         var season = SeasonProvider.CreateMetadata(seasonInfo, seasonNumber, offset, series, seasonId);
 
-        logger.LogInformation("Adding virtual Season {SeasonNumber} to Series {SeriesName}. (Series={SeriesId})", seasonNumber, series.Name, seasonInfo.Id);
+        logger.LogInformation("Adding virtual Season {SeasonNumber} to Series {SeriesName}. (Series={SeriesId},ExtraSeries={ExtraIds})", seasonNumber, series.Name, seasonInfo.Id, seasonInfo.ExtraIds);
 
         series.AddChild(season);
 
