@@ -44,6 +44,44 @@
                         <legend>
                             <h3>Metadata Settings</h3>
                         </legend>
+                        <div class="fieldDescription verticalSection-extrabottompadding">
+                            Customize how the plugin will source the metadata for entries.
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
+                                <span>Add prefix to episodes</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add the type and number to the title of some episodes.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="TitleAddForMultipleEpisodes" />
+                                <span>Add all metadata for multi-episode entries</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Will add the title and description for every episode in a multi-episode entry.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="TitleAllowAny" />
+                                <span>Allow any title in selected language</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Will add any title in the selected language if no official title is found.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="CleanupAniDBDescriptions" />
+                                <span>Cleanup AniDB overviews</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Remove links and collapse multiple empty lines into one empty line, and trim any lines starting with '* ', '-- ',  '~ ', 'Note', 'Source', and/or 'Summary'.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="HideUnverifiedTags" />
+                                <span>Ignore unverified tags.</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Will ignore all tags not yet verified on AniDB, so they won't show up as tags/genres for entries.</div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="TitleMainOverride" />
@@ -56,40 +94,89 @@
                         <div id="TitleMainList" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced main title source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="Shoko" data-title-style="Default">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="Shoko" data-title-style="Default"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">Shoko | Let Shoko decide</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable"><span class="material-icons keyboard_arrow_down" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Shoko_Default">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Shoko | Let Shoko decide</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
+                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="AniDB" data-title-style="Default">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="AniDB" data-title-style="Default"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Default title</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB_Default">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB | Default title</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="AniDB" data-title-style="LibraryLanguage">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="AniDB" data-title-style="LibraryLanguage"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Follow metadata language in library</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB_LibraryLanguage">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB | Follow metadata language in library</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="AniDB" data-title-style="CountryOfOrigin">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="AniDB" data-title-style="CountryOfOrigin"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Use the language from the country of origin</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB_CountryOfOrigin">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB | Use the language from the country of origin</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="TMDB" data-title-style="Default">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="TMDB" data-title-style="Default"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Default title</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB_Default">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TMDB | Default title</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="TMDB" data-title-style="LibraryLanguage">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="TMDB" data-title-style="LibraryLanguage"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Follow metadata language in library</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB_LibraryLanguage">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TMDB | Follow metadata language in library</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="TMDB" data-title-style="CountryOfOrigin">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="TMDB" data-title-style="CountryOfOrigin"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Use the language from the country of origin</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB_CountryOfOrigin">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TMDB | Use the language from the country of origin</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of the main title, in priority order.</div>
@@ -106,40 +193,89 @@
                         <div id="TitleAlternateList" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced alternate title source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="Shoko" data-title-style="Default">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="Shoko" data-title-style="Default"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">Shoko | Let Shoko decide</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable"><span class="material-icons keyboard_arrow_down" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Shoko_Default">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Shoko | Let Shoko decide</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
+                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="AniDB" data-title-style="Default">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="AniDB" data-title-style="Default"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Default title</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB_Default">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB | Default title</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="AniDB" data-title-style="LibraryLanguage">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="AniDB" data-title-style="LibraryLanguage"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Follow metadata language in library</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB_LibraryLanguage">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB | Follow metadata language in library</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="AniDB" data-title-style="CountryOfOrigin">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="AniDB" data-title-style="CountryOfOrigin"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB | Use the language from the country of origin</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB_CountryOfOrigin">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB | Use the language from the country of origin</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="TMDB" data-title-style="Default">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="TMDB" data-title-style="Default"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Default title</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB_Default">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TMDB | Default title</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="TMDB" data-title-style="LibraryLanguage">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="TMDB" data-title-style="LibraryLanguage"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Follow metadata language in library</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB_LibraryLanguage">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TMDB | Follow metadata language in library</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem titleSourceItem sortableOption" data-title-provider="TMDB" data-title-style="CountryOfOrigin">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-title-provider="TMDB" data-title-style="CountryOfOrigin"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB | Use the language from the country of origin</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB_CountryOfOrigin">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TMDB | Use the language from the country of origin</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of the alternate title, in priority order.</div>
@@ -153,54 +289,468 @@
                                 Enables the advanced selector for description source selection.
                             </div>
                         </div>
-                        <div id="descriptionSourceList" style="margin-bottom: 2em;">
+                        <div id="DescriptionSourceList" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced description source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
-                                <div class="listItem descriptionSourceItem sortableOption" data-description-source="AniDB">
-                                    <label class="listItemCheckboxContainer"><input class="chkDescriptionSource" type="checkbox" is="emby-checkbox" data-description-source="AniDB"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable"><span class="material-icons keyboard_arrow_down" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption" data-option="AniDB">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB</h3>
+                                        <span></span>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
+                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem descriptionSourceItem sortableOption" data-description-source="TvDB">
-                                    <label class="listItemCheckboxContainer"><input class="chkDescriptionSource" type="checkbox" is="emby-checkbox" data-description-source="TvDB"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TvDB</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption" data-option="TvDB">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TvDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TvDB</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
-                                <div class="listItem descriptionSourceItem sortableOption" data-description-source="TMDB">
-                                    <label class="listItemCheckboxContainer"><input class="chkDescriptionSource" type="checkbox" is="emby-checkbox" data-description-source="TMDB"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB</h3></div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable"><span class="material-icons keyboard_arrow_up" aria-hidden="true"></span></button>
+                                <div class="listItem sortableOption" data-option="TMDB">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TMDB</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
                                 </div>
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of descriptions, in priority order.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="TitleAllowAny" />
-                                <span>Allow any title in selected language</span>
+                                <input is="emby-checkbox" type="checkbox" id="TagOverride" />
+                                <span>Override tag sources</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Will add any title in the selected language if no official title is found.</div>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Enables the advanced selector for tag source selection.
+                            </div>
+                        </div>
+                        <div id="TagSources" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Advanced tag sources:</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="SourceMaterial">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Source Material</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TargetAudience">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Target Audience</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="ContentIndicators">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Content Indicators</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Origin">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Origin</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Elements">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Elements</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Themes">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Themes</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="SettingPlace">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Setting | Place</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="SettingTimePeriod">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Setting | Time Period</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="SettingTimeSeason">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Setting | Yearly Seasons</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="CustomTags">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Custom User Tags</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">The tag sources to use as the source of tags.</div>
+                        </div>
+                        <div id="TagIncludeFilters" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Advanced tag include filters:</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Parent">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Type | Parent Tags</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Child">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Type | Child Tags</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Weightless">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Type | Weightless Tags</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="GlobalSpoiler">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Spoiler | Global Spoiler</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="LocalSpoiler">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Spoiler | Local Spoiler</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">The type of tags to include for tags.</div>
+                        </div>
+                        <div id="TagMinimumWeightContainer" class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="TagMinimumWeight">Advanced minimum tag weight for tags:</label>
+                            <select is="emby-select" id="TagMinimumWeight" name="TagMinimumWeight" class="emby-select-withcolor emby-select">
+                                <option value="Weightless" selected>Disabled (Default)</option>
+                                <option value="One">⯪☆☆</option>
+                                <option value="Two">★☆☆</option>
+                                <option value="Three">★⯪☆</option>
+                                <option value="Four">★★☆</option>
+                                <option value="Five">★★⯪</option>
+                                <option value="Six">★★★</option>
+                            </select>
+                            <div class="fieldDescription">
+                                The minimum weight of tags to be included, except weightless tags, which has their own filtering through the filtering above.
+                            </div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="TitleAddForMultipleEpisodes" />
-                                <span>Add all metadata for multi-episode entries</span>
+                                <input is="emby-checkbox" type="checkbox" id="GenreOverride" />
+                                <span>Override genre sources</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Will add the title and description for every episode in a multi-episode entry.</div>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Enables the advanced selector for genre source selection.
+                            </div>
+                        </div>
+                        <div id="GenreSources" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Advanced genre sources:</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="SourceMaterial">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Source Material</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TargetAudience">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Target Audience</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="ContentIndicators">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Content Indicators</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Origin">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Origin</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Elements">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Elements</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Themes">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Themes</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="SettingPlace">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Setting | Place</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="SettingTimePeriod">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Setting | Time Period</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="SettingTimeSeason">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Setting | Yearly Seasons</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="CustomTags">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Custom User Tags</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">The tag sources to use as the source of genres.</div>
+                        </div>
+                        <div id="GenreIncludeFilters" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Advanced genre include filters:</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Parent">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Type | Parent Tags</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Child">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Type | Child Tags</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Weightless">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Type | Weightless Tags</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="GlobalSpoiler">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Spoiler | Global Spoiler</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="LocalSpoiler">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Spoiler | Local Spoiler</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">The type of tags to include for genres.</div>
+                        </div>
+                        <div id="GenreMinimumWeightContainer" class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="GenreMinimumWeight">Advanced minimum tag weight for genres:</label>
+                            <select is="emby-select" id="GenreMinimumWeight" name="GenreMinimumWeight" class="emby-select-withcolor emby-select">
+                                <option value="Weightless">Disabled</option>
+                                <option value="One">⯪☆☆</option>
+                                <option value="Two">★☆☆</option>
+                                <option value="Three" selected>★⯪☆ (Default)</option>
+                                <option value="Four">★★☆</option>
+                                <option value="Five">★★⯪</option>
+                                <option value="Six">★★★</option>
+                            </select>
+                            <div class="fieldDescription">
+                                The minimum weight of tags to be included, except weightless tags, which has their own filtering through the filtering above.
+                            </div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
-                                <span>Add prefix to episodes</span>
+                                <input is="emby-checkbox" type="checkbox" id="ContentRatingOverride" />
+                                <span>Override content rating sources</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add the type and number to the title of some episodes.</div>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Enables the advanced selector for content rating source selection.
+                            </div>
+                        </div>
+                        <div id="ContentRatingList" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Advanced content rating sources:</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem sortableOption" data-option="AniDB">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
+                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption" data-option="TMDB">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TMDB</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">The metadata providers to use as the source of content ratings, in priority order.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="CleanupAniDBDescriptions" />
-                                <span>Cleanup AniDB descriptions</span>
+                                <input is="emby-checkbox" type="checkbox" id="ProductionLocationOverride" />
+                                <span>Override production location sources</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Remove links and collapse multiple empty lines into one empty line, and trim any lines starting with '* ', '-- ',  '~ ', 'Note', 'Source', and/or 'Summary'.</div>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Enables the advanced selector for production location source selection.
+                            </div>
+                        </div>
+                        <div id="ProductionLocationList" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Advanced production location sources:</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem sortableOption" data-option="AniDB">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
+                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption" data-option="TMDB">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TMDB</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">The metadata providers to use as the source of production locations, in priority order.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -336,8 +886,6 @@
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Add all credits as special features to entities with in the VFS. In a non-VFS library they will just be filtered out since we can't properly support them as Jellyfin native features.</div>
                         </div>
-                        <!-- Insert 'include/exclude' credits as theme videos or special features here. -->
-                        <!-- Insert 'include/exclude' trailers. -->
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="AddMissingMetadata" />
@@ -494,17 +1042,32 @@
                         <div id="SignalREventSources" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">SignalR Event Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
-                                <div class="listItem titleSourceItem">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-signalr-event-source="Shoko"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">Shoko</h3></div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Shoko">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Shoko</h3>
+                                    </div>
                                 </div>
-                                <div class="listItem titleSourceItem">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-signalr-event-source="AniDB"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">AniDB</h3></div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB</h3>
+                                    </div>
                                 </div>
-                                <div class="listItem titleSourceItem">
-                                    <label class="listItemCheckboxContainer"><input class="chkTitleSource" type="checkbox" is="emby-checkbox" data-signalr-event-source="TMDB"><span></span></label>
-                                    <div class="listItemBody"><h3 class="listItemBodyText">TMDB</h3></div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TMDB</h3>
+                                    </div>
                                 </div>
                             </div>
                             <div class="fieldDescription">Which event sources should be listened to via the SignalR connection.</div>
@@ -643,56 +1206,6 @@
                                 <span>Save</span>
                             </button>
                         </div>
-                    </fieldset>
-                    <fieldset id="TagSection" class="verticalSection verticalSection-extrabottompadding" hidden>
-                        <legend>
-                            <h3>Tag Settings</h3>
-                        </legend>
-                        <div class="checkboxContainer">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="HideUnverifiedTags" />
-                                <span>Hide unverified tags.</span>
-                            </label>
-                        </div>
-                        <div class="checkboxContainer">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="HideArtStyleTags" />
-                                <span>Hide art style related tags</span>
-                            </label>
-                        </div>
-                        <div class="checkboxContainer">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="HideMiscTags" />
-                                <span>Hide misc info tags that may be useful</span>
-                            </label>
-                        </div>
-                        <div class="checkboxContainer">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="HidePlotTags" />
-                                <span>Hide potentially plot-spoiling tags</span>
-                            </label>
-                        </div>
-                        <div class="checkboxContainer">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="HideAniDbTags" />
-                                <span>Hide any miscellaneous tags</span>
-                            </label>
-                        </div>
-                        <div class="checkboxContainer">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="HideSettingTags" />
-                                <span>Hide any tags related to the setting — a time or place in which the story occurs.</span>
-                            </label>
-                        </div>
-                        <div class="checkboxContainer">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="HideProgrammingTags" />
-                                <span>Hide any tags that involve how or where it aired, or any awards it got</span>
-                            </label>
-                        </div>
-                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
-                        </button>
                     </fieldset>
                     <fieldset id="ProviderSection" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>

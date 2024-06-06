@@ -12,8 +12,7 @@ public class Ordering
     /// <summary>
     /// Library filtering mode.
     /// </summary>
-    public enum LibraryFilteringMode
-    {
+    public enum LibraryFilteringMode {
         /// <summary>
         /// Will use either <see cref="Strict"/> or <see cref="Lax"/> depending
         /// on which metadata providers are enabled for the library.
@@ -36,8 +35,7 @@ public class Ordering
     /// Helps determine what the user wants to group into collections
     /// (AKA "box-sets").
     /// </summary>
-    public enum CollectionCreationType
-    {
+    public enum CollectionCreationType {
         /// <summary>
         /// No grouping. All series will have their own entry.
         /// </summary>
@@ -58,8 +56,7 @@ public class Ordering
     /// <summary>
     /// Season or movie ordering when grouping series/box-sets using Shoko's groups.
     /// </summary>
-    public enum OrderType
-    {
+    public enum OrderType {
         /// <summary>
         /// Let Shoko decide the order.
         /// </summary>

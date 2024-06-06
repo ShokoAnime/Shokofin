@@ -121,6 +121,8 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
                 Tags = seasonInfo.Tags.ToArray(),
                 Genres = seasonInfo.Genres.ToArray(),
                 Studios = seasonInfo.Studios.ToArray(),
+                ProductionLocations = TagFilter.GetSeasonContentRating(seasonInfo).ToArray(),
+                OfficialRating = ContentRating.GetSeasonContentRating(seasonInfo),
                 CommunityRating = seasonInfo.AniDB.Rating?.ToFloat(10),
                 SeriesId = series.Id,
                 SeriesName = series.Name,
@@ -143,6 +145,8 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
                 Tags = seasonInfo.Tags.ToArray(),
                 Genres = seasonInfo.Genres.ToArray(),
                 Studios = seasonInfo.Studios.ToArray(),
+                ProductionLocations = TagFilter.GetSeasonContentRating(seasonInfo).ToArray(),
+                OfficialRating = ContentRating.GetSeasonContentRating(seasonInfo),
                 CommunityRating = seasonInfo.AniDB.Rating?.ToFloat(10),
             };
         }

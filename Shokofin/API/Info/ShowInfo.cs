@@ -68,12 +68,6 @@ public class ShowInfo
             .LastOrDefault();
 
     /// <summary>
-    /// Overall content rating of the show.
-    /// </summary>
-    public string? OfficialRating =>
-        DefaultSeason.AniDB.Restricted ? "XXX" : null;
-
-    /// <summary>
     /// Custom rating of the show.
     /// </summary>
     public string? CustomRating =>
@@ -106,6 +100,11 @@ public class ShowInfo
     /// All genres from across all seasons.
     /// </summary>
     public readonly IReadOnlyList<string> Genres;
+
+    /// <summary>
+    /// All production locations from across all seasons.
+    /// </summary>
+    public readonly IReadOnlyList<string> ProductionLocations;
 
     /// <summary>
     /// All studios from across all seasons.
@@ -179,6 +178,7 @@ public class ShowInfo
         LastImportedAt = seasonInfo.LastImportedAt;
         Tags = seasonInfo.Tags;
         Genres = seasonInfo.Genres;
+        ProductionLocations = seasonInfo.ProductionLocations;
         Studios = seasonInfo.Studios;
         Staff = seasonInfo.Staff;
         SeasonList = new List<SeasonInfo>() { seasonInfo };
@@ -253,6 +253,7 @@ public class ShowInfo
         LastImportedAt = seasonList.Select(seasonInfo => seasonInfo.LastImportedAt).Max();
         Tags = seasonList.SelectMany(s => s.Tags).Distinct().ToArray();
         Genres = seasonList.SelectMany(s => s.Genres).Distinct().ToArray();
+        ProductionLocations = seasonList.SelectMany(s => s.ProductionLocations).Distinct().ToArray();
         Studios = seasonList.SelectMany(s => s.Studios).Distinct().ToArray();
         Staff = seasonList.SelectMany(s => s.Staff).DistinctBy(p => new { p.Type, p.Name, p.Role }).ToArray();
         SeasonList = seasonList;

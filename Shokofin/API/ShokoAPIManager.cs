@@ -166,93 +166,140 @@ public class ShokoAPIManager : IDisposable
     }
 
     #endregion
-    #region Tags And Genres
+    #region Tags, Genres, And Content Ratings
+
+    public Task<IReadOnlyDictionary<string, ResolvedTag>> GetNamespacedTagsForSeries(string seriesId)
+        => DataCache.GetOrCreateAsync(
+            $"series-linked-tags:{seriesId}",
+            async (_) => {
+                var nextUserTagId = 1;
+                var hasCustomTags = false;
+                var rootTags = new List<Tag>();
+                var tagMap = new Dictionary<string, List<Tag>>();
+                var tags = (await APIClient.GetSeriesTags(seriesId).ConfigureAwait(false))
+                    .OrderBy(tag => tag.Source)
+                    .ThenBy(tag => tag.Source == "User" ? tag.Name.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length : 0)
+                    .ToList();
+                foreach (var tag in tags) {
+                    if (Plugin.Instance.Configuration.HideUnverifiedTags && tag.IsVerified.HasValue && !tag.IsVerified.Value)
+                        continue;
+
+                    switch (tag.Source) {
+                        case "AniDB": {
+                            var parentKey = $"{tag.Source}:{tag.ParentId ?? 0}";
+                            if (!tag.ParentId.HasValue) {
+                                rootTags.Add(tag);
+                                continue;
+                            }
+                            if (!tagMap.TryGetValue(parentKey, out var list))
+                                tagMap[parentKey] = list = new();
+                            // Remove comment on tag name itself.
+                            if (tag.Name.Contains("--"))
+                                tag.Name = tag.Name.Split("--").First().Trim();
+                            list.Add(tag);
+                            break;
+                        }
+                        case "User": {
+                            if (!hasCustomTags) {
+                                rootTags.Add(new() {
+                                    Id = 0,
+                                    Name = "custom user tags",
+                                    Description = string.Empty,
+                                    IsVerified = true,
+                                    IsGlobalSpoiler = false,
+                                    IsLocalSpoiler = false,
+                                    LastUpdated = DateTime.UnixEpoch,
+                                    Source = "Shokofin",
+                                });
+                                hasCustomTags = true;
+                            }
+                            var parentNames = tag.Name.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+                            tag.Name = parentNames.Last();
+                            parentNames.RemoveAt(parentNames.Count - 1);
+                            var customTagsRoot = rootTags.First(tag => tag.Source == "Shokofin" && tag.Id == 0);
+                            var lastParentTag = customTagsRoot;
+                            while (parentNames.Count > 0) {
+                                // Take the first element from the list.
+                                if (!parentNames.TryRemoveAt(0, out var name))
+                                    break;
+
+                                // Make sure the parent's children exists in our map.
+                                var parentKey = $"Shokofin:{lastParentTag.Id}";
+                                if (!tagMap!.TryGetValue(parentKey, out var children))
+                                    tagMap[parentKey] = children = new();
+
+                                // Add the child tag to the parent's children if needed.
+                                var childTag = children.Find(t => string.Equals(name, t.Name, StringComparison.InvariantCultureIgnoreCase));
+                                if (childTag is null)
+                                    children.Add(childTag = new() {
+                                        Id = nextUserTagId++,
+                                        ParentId = lastParentTag.Id,
+                                        Name = name.ToLowerInvariant(),
+                                        IsVerified = true,
+                                        Description = string.Empty,
+                                        IsGlobalSpoiler = false,
+                                        IsLocalSpoiler = false,
+                                        LastUpdated = customTagsRoot.LastUpdated,
+                                        Source = "Shokofin",
+                                    });
+
+                                // Switch to the child tag for the next parent name.
+                                lastParentTag = childTag;
+                            };
+
+                            // Same as above, but for the last parent, be it the root or any other layer.
+                            var lastParentKey = $"Shokofin:{lastParentTag.Id}";
+                            if (!tagMap!.TryGetValue(lastParentKey, out var lastChildren))
+                                tagMap[lastParentKey] = lastChildren = new();
+
+                            if (!lastChildren.Any(childTag => string.Equals(childTag.Name, tag.Name, StringComparison.InvariantCultureIgnoreCase)))
+                                lastChildren.Add(new() {
+                                    Id = nextUserTagId++,
+                                    ParentId = lastParentTag.Id,
+                                    Name = tag.Name,
+                                    Description = tag.Description,
+                                    IsVerified = tag.IsVerified,
+                                    IsGlobalSpoiler = tag.IsGlobalSpoiler,
+                                    IsLocalSpoiler = tag.IsLocalSpoiler,
+                                    Weight = tag.Weight,
+                                    LastUpdated = tag.LastUpdated,
+                                    Source = "Shokofin",
+                                });
+                            break;
+                        }
+                    }
+                }
+                List<Tag>? getChildren(string source, int id) => tagMap.TryGetValue($"{source}:{id}", out var list) ? list : null;
+                return rootTags
+                    .Select(tag => new ResolvedTag(tag, null, getChildren))
+                    .SelectMany(tag => tag.RecursiveNamespacedChildren.Values.Prepend(tag))
+                    .OrderBy(tag => tag.FullName)
+                    .ToDictionary(childTag => childTag.FullName) as IReadOnlyDictionary<string, ResolvedTag>;
+            }
+        );
 
     private async Task<string[]> GetTagsForSeries(string seriesId)
     {
-        return (await APIClient.GetSeriesTags(seriesId, GetTagFilter()).ConfigureAwait(false))
-            .Where(KeepTag)
-            .Select(SelectTagName)
-            .ToArray();
+        var tags = await GetNamespacedTagsForSeries(seriesId);
+        return TagFilter.FilterTags(tags);
     }
 
-    /// <summary>
-    /// Get the tag filter
-    /// </summary>
-    /// <returns></returns>
-    private static ulong GetTagFilter()
+    private async Task<string[]> GetGenresForSeries(string seriesId)
     {
-        var config = Plugin.Instance.Configuration;
-        ulong filter = 132L; // We exclude genres and source by default
-
-        if (config.HideAniDbTags) filter |= 1 << 0;
-        if (config.HideArtStyleTags) filter |= 1 << 1;
-        if (config.HideMiscTags) filter |= 1 << 3;
-        if (config.HideSettingTags) filter |= 1 << 5;
-        if (config.HideProgrammingTags) filter |= 1 << 6;
-
-        return filter;
+        var tags = await GetNamespacedTagsForSeries(seriesId);
+        return TagFilter.FilterGenres(tags);
     }
 
-    public async Task<string[]> GetGenresForSeries(string seriesId)
+    private async Task<string[]> GetProductionLocations(string seriesId)
     {
-        // The following magic number is the filter value to allow only genres in the returned list.
-        var genreSet = (await APIClient.GetSeriesTags(seriesId, 2147483776).ConfigureAwait(false))
-            .Select(SelectTagName)
-            .ToHashSet();
-        var sourceGenre = await GetSourceGenre(seriesId).ConfigureAwait(false);
-        genreSet.Add(sourceGenre);
-        return genreSet.ToArray();
+        var tags = await GetNamespacedTagsForSeries(seriesId);
+        return TagFilter.GetProductionCountriesFromTags(tags);
     }
 
-    private async Task<string> GetSourceGenre(string seriesId)
+    private async Task<string?> GetAssumedContentRating(string seriesId)
     {
-        // The following magic number is the filter value to allow only the source type in the returned list.
-        return(await APIClient.GetSeriesTags(seriesId, 2147483652).ConfigureAwait(false))?.FirstOrDefault()?.Name?.ToLowerInvariant() switch {
-            "american derived" => "Adapted From Western Media",
-            "cartoon" => "Adapted From Western Media",
-            "comic book" => "Adapted From Western Media",
-            "4-koma" => "Adapted From A Manga",
-            "manga" => "Adapted From A Manga",
-            "4-koma manga" => "Adapted From A Manga",
-            "manhua" => "Adapted From A Manhua",
-            "manhwa" => "Adapted from a Manhwa",
-            "movie" => "Adapted From A Movie",
-            "novel" => "Adapted From A Light/Web Novel",
-            "rpg" => "Adapted From A Video Game",
-            "action game" => "Adapted From A Video Game",
-            "game" => "Adapted From A Video Game",
-            "erotic game" => "Adapted From An Eroge",
-            "korean drama" => "Adapted From A Korean Drama",
-            "television programme" => "Adapted From A Live-Action Show",
-            "visual novel" => "Adapted From A Visual Novel",
-            "fan-made" => "Fan-Made",
-            "remake" => "Remake",
-            "radio programme" => "Radio Programme",
-            "biographical film" => "Original Work",
-            "original work" => "Original Work",
-            "new" => "Original Work",
-            "ultra jump" => "Original Work",
-            _ => "Original Work",
-        };
-    }
-
-    private bool KeepTag(Tag tag)
-    {
-        // Filter out unverified tags.
-        if (Plugin.Instance.Configuration.HideUnverifiedTags && tag.IsVerified.HasValue && !tag.IsVerified.Value)
-            return false;
-
-        // Filter out any and all spoiler tags.
-        if (Plugin.Instance.Configuration.HidePlotTags && (tag.IsLocalSpoiler ?? tag.IsSpoiler))
-            return false;
-
-        return true;
-    }
-
-    private string SelectTagName(Tag tag)
-    {
-        return System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(tag.Name);
+        var tags = await GetNamespacedTagsForSeries(seriesId);
+        return ContentRating.GetTagBasedContentRating(tags);
     }
 
     #endregion
@@ -621,6 +668,7 @@ public class ShokoAPIManager : IDisposable
 
                 Logger.LogTrace("Creating info object for season {SeriesName}. (Series={SeriesId},ExtraSeries={ExtraIds})", series.Name, seriesId, extraIds);
 
+                var contentRating = await GetAssumedContentRating(seriesId).ConfigureAwait(false);
                 var (earliestImportedAt, lastImportedAt) = await GetEarliestImportedAtForSeries(seriesId).ConfigureAwait(false);
                 var episodes = (await Task.WhenAll(
                     extraIds.Prepend(seriesId)
@@ -639,6 +687,7 @@ public class ShokoAPIManager : IDisposable
                     var relationsTasks = detailsIds.Select(id => APIClient.GetSeriesRelations(id));
                     var genresTasks = detailsIds.Select(id => GetGenresForSeries(id));
                     var tagsTasks = detailsIds.Select(id => GetTagsForSeries(id));
+                    var productionLocationsTasks = detailsIds.Select(id => GetProductionLocations(id));
 
                     // Await the tasks in order.
                     var cast = (await Task.WhenAll(castTasks))
@@ -659,15 +708,21 @@ public class ShokoAPIManager : IDisposable
                         .OrderBy(t => t)
                         .Distinct()
                         .ToArray();
+                    var productionLocations = (await Task.WhenAll(genresTasks))
+                        .SelectMany(g => g)
+                        .OrderBy(g => g)
+                        .Distinct()
+                        .ToArray();
 
                     // Create the season info using the merged details.
-                    seasonInfo = new SeasonInfo(series, extraIds, earliestImportedAt, lastImportedAt, episodes, cast, relations, genres, tags);
+                    seasonInfo = new SeasonInfo(series, extraIds, earliestImportedAt, lastImportedAt, episodes, cast, relations, genres, tags, productionLocations, contentRating);
                 } else {
                     var cast = await APIClient.GetSeriesCast(seriesId).ConfigureAwait(false);
                     var relations = await APIClient.GetSeriesRelations(seriesId).ConfigureAwait(false);
                     var genres = await GetGenresForSeries(seriesId).ConfigureAwait(false);
                     var tags = await GetTagsForSeries(seriesId).ConfigureAwait(false);
-                    seasonInfo = new SeasonInfo(series, extraIds, earliestImportedAt, lastImportedAt, episodes, cast, relations, genres, tags);
+                    var productionLocations = await GetProductionLocations(seriesId).ConfigureAwait(false);
+                    seasonInfo = new SeasonInfo(series, extraIds, earliestImportedAt, lastImportedAt, episodes, cast, relations, genres, tags, productionLocations, contentRating);
                 }
 
                 foreach (var episode in episodes)

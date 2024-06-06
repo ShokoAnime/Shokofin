@@ -48,33 +48,36 @@ function filterReconnectIntervals(value) {
     return Array.from(filteredSet).sort((a, b) => a - b);
 }
 
-function adjustSortableListElement(element) {
-    const btnSortable = element.querySelector(".btnSortable");
-    const inner = btnSortable.querySelector(".material-icons");
-
-    if (element.previousElementSibling) {
-        btnSortable.title = "Up";
-        btnSortable.classList.add("btnSortableMoveUp");
-        inner.classList.add("keyboard_arrow_up");
-
-        btnSortable.classList.remove("btnSortableMoveDown");
-        inner.classList.remove("keyboard_arrow_down");
+/**
+ * 
+ * @param {HTMLElement} element 
+ * @param {number} index 
+ */
+function adjustSortableListElement(element, index) {
+    const button = element.querySelector(".btnSortable");
+    const icon = button.querySelector(".material-icons");
+    if (index > 0) {
+        button.title = "Up";
+        button.classList.add("btnSortableMoveUp");
+        button.classList.remove("btnSortableMoveDown");
+        icon.classList.add("keyboard_arrow_up");
+        icon.classList.remove("keyboard_arrow_down");
     }
     else {
-        btnSortable.title = "Down";
-        btnSortable.classList.add("btnSortableMoveDown");
-        inner.classList.add("keyboard_arrow_down");
-
-        btnSortable.classList.remove("btnSortableMoveUp");
-        inner.classList.remove("keyboard_arrow_up");
+        button.title = "Down";
+        button.classList.add("btnSortableMoveDown");
+        button.classList.remove("btnSortableMoveUp");
+        icon.classList.add("keyboard_arrow_down");
+        icon.classList.remove("keyboard_arrow_up");
     }
 }
 
-/** @param {PointerEvent} event */
+/**
+ * @param {PointerEvent} event
+ **/
 function onSortableContainerClick(event) {
-    const parentWithClass = (element, className) => {
-        return (element.parentElement.classList.contains(className)) ? element.parentElement : null;
-    }
+    const parentWithClass = (element, className) => 
+        (element.parentElement.classList.contains(className)) ? element.parentElement : null;
     const btnSortable = parentWithClass(event.target, "btnSortable");
     if (btnSortable) {
         const listItem = parentWithClass(btnSortable, "sortableOption");
@@ -93,10 +96,10 @@ function onSortableContainerClick(event) {
                 prev.parentElement.insertBefore(listItem, prev);
             }
         }
-
+        let i = 0;
         for (const option of list.querySelectorAll(".sortableOption")) {
-            adjustSortableListElement(option)
-        };
+            adjustSortableListElement(option, i++);
+        }
     }
 }
 
@@ -274,15 +277,32 @@ async function defaultSubmit(form) {
         const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
         // Metadata settings
-        ["Main", "Alternate"].forEach((type) => setTitleIntoConfig(form, type, config));
+        config.TitleMainOverride = form.querySelector("#TitleMainOverride").checked;
+        ([config.TitleMainList, config.TitleMainOrder] = retrieveSortableList(form, "TitleMainList"));
+        config.TitleAlternateOverride = form.querySelector("#TitleAlternateOverride").checked;
+        ([config.TitleAlternateList, config.TitleAlternateOrder] = retrieveSortableList(form, "TitleAlternateList"));
         config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
         config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
         config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
-        setDescriptionSourcesIntoConfig(form, config);
+        config.DescriptionSourceOverride = form.querySelector("#DescriptionSourceOverride").checked;
+        ([config.DescriptionSourceList, config.DescriptionSourceOrder] = retrieveSortableList(form, "DescriptionSourceList"));
         config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
         config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
         config.SynopsisCleanMiscLines = form.querySelector("#CleanupAniDBDescriptions").checked;
         config.SynopsisRemoveSummary = form.querySelector("#CleanupAniDBDescriptions").checked;
+        config.HideUnverifiedTags = form.querySelector("#HideUnverifiedTags").checked;
+        config.TagOverride = form.querySelector("#TagOverride").checked;
+        config.TagSources = retrieveSimpleList(form, "TagSources").join(", ");
+        config.TagIncludeFilters = retrieveSimpleList(form, "TagIncludeFilters").join(", ");
+        config.TagMinimumWeight = form.querySelector("#TagMinimumWeight").value;
+        config.GenreOverride = form.querySelector("#GenreOverride").checked;
+        config.GenreSources = retrieveSimpleList(form, "GenreSources").join(", ");
+        config.GenreIncludeFilters = retrieveSimpleList(form, "GenreIncludeFilters").join(", ");
+        config.GenreMinimumWeight = form.querySelector("#GenreMinimumWeight").value
+        config.ContentRatingOverride = form.querySelector("#ContentRatingOverride").checked;
+        ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableList(form, "ContentRatingList"));
+        config.ProductionLocationOverride = form.querySelector("#ProductionLocationOverride").checked;
+        ([config.ProductionLocationList, config.ProductionLocationOrder] = retrieveSortableList(form, "ProductionLocationList"));
 
         // Provider settings
         config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
@@ -319,7 +339,7 @@ async function defaultSubmit(form) {
         config.SignalR_AutoConnectEnabled = form.querySelector("#SignalRAutoConnect").checked;
         config.SignalR_AutoReconnectInSeconds = reconnectIntervals;
         form.querySelector("#SignalRAutoReconnectIntervals").value = reconnectIntervals.join(", ");
-        setSignalREventSourcesIntoConfig(form, config);
+        config.SignalR_EventSources = retrieveSimpleList(form, "SignalREventSources");
         mediaFolderId = form.querySelector("#SignalRMediaFolderSelector").value;
         mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
         if (mediaFolderConfig) {
@@ -330,15 +350,6 @@ async function defaultSubmit(form) {
             config.SignalR_FileEvents = form.querySelector("#SignalRDefaultFileEvents").checked;
             config.SignalR_RefreshEnabled = form.querySelector("#SignalRDefaultRefreshEvents").checked;
         }
-
-        // Tag settings
-        config.HideUnverifiedTags = form.querySelector("#HideUnverifiedTags").checked;
-        config.HideArtStyleTags = form.querySelector("#HideArtStyleTags").checked;
-        config.HideMiscTags = form.querySelector("#HideMiscTags").checked;
-        config.HidePlotTags = form.querySelector("#HidePlotTags").checked;
-        config.HideAniDbTags = form.querySelector("#HideAniDbTags").checked;
-        config.HideSettingTags = form.querySelector("#HideSettingTags").checked;
-        config.HideProgrammingTags = form.querySelector("#HideProgrammingTags").checked;
 
         // Advanced settings
         config.PublicUrl = publicUrl;
@@ -470,15 +481,32 @@ async function syncSettings(form) {
     const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
     // Metadata settings
-    ["Main", "Alternate"].forEach((type) => { setTitleIntoConfig(form, type, config) });
+    config.TitleMainOverride = form.querySelector("#TitleMainOverride").checked;
+    ([config.TitleMainList, config.TitleMainOrder] = retrieveSortableList(form, "TitleMainList"));
+    config.TitleAlternateOverride = form.querySelector("#TitleAlternateOverride").checked;
+    ([config.TitleAlternateList, config.TitleAlternateOrder] = retrieveSortableList(form, "TitleAlternateList"));
     config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
     config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
     config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
-    setDescriptionSourcesIntoConfig(form, config);
+    config.DescriptionSourceOverride = form.querySelector("#DescriptionSourceOverride").checked;
+    ([config.DescriptionSourceList, config.DescriptionSourceOrder] = retrieveSortableList(form, "DescriptionSourceList"));
     config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
     config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
     config.SynopsisCleanMiscLines = form.querySelector("#CleanupAniDBDescriptions").checked;
     config.SynopsisRemoveSummary = form.querySelector("#CleanupAniDBDescriptions").checked;
+    config.HideUnverifiedTags = form.querySelector("#HideUnverifiedTags").checked;
+    config.TagOverride = form.querySelector("#TagOverride").checked;
+    config.TagSources = retrieveSimpleList(form, "TagSources").join(", ");
+    config.TagIncludeFilters = retrieveSimpleList(form, "TagIncludeFilters").join(", ");
+    config.TagMinimumWeight = form.querySelector("#TagMinimumWeight").value;
+    config.GenreOverride = form.querySelector("#GenreOverride").checked;
+    config.GenreSources = retrieveSimpleList(form, "GenreSources").join(", ");
+    config.GenreIncludeFilters = retrieveSimpleList(form, "GenreIncludeFilters").join(", ");
+    config.GenreMinimumWeight = form.querySelector("#GenreMinimumWeight").value
+    config.ContentRatingOverride = form.querySelector("#ContentRatingOverride").checked;
+    ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableList(form, "ContentRatingList"));
+    config.ProductionLocationOverride = form.querySelector("#ProductionLocationOverride").checked;
+    ([config.ProductionLocationList, config.ProductionLocationOrder] = retrieveSortableList(form, "ProductionLocationList"));
 
     // Provider settings
     config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
@@ -496,15 +524,6 @@ async function syncSettings(form) {
     config.AddCreditsAsThemeVideos = form.querySelector("#AddCreditsAsThemeVideos").checked;
     config.AddCreditsAsSpecialFeatures = form.querySelector("#AddCreditsAsSpecialFeatures").checked;
     config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
-
-    // Tag settings
-    config.HideUnverifiedTags = form.querySelector("#HideUnverifiedTags").checked;
-    config.HideArtStyleTags = form.querySelector("#HideArtStyleTags").checked;
-    config.HideMiscTags = form.querySelector("#HideMiscTags").checked;
-    config.HidePlotTags = form.querySelector("#HidePlotTags").checked;
-    config.HideAniDbTags = form.querySelector("#HideAniDbTags").checked;
-    config.HideSettingTags = form.querySelector("#HideSettingTags").checked;
-    config.HideProgrammingTags = form.querySelector("#HideProgrammingTags").checked;
 
     // Advanced settings
     config.PublicUrl = publicUrl;
@@ -565,7 +584,7 @@ async function syncSignalrSettings(form) {
 
     config.SignalR_AutoConnectEnabled = form.querySelector("#SignalRAutoConnect").checked;
     config.SignalR_AutoReconnectInSeconds = reconnectIntervals;
-    setSignalREventSourcesIntoConfig(form, config);
+    config.SignalR_EventSources = retrieveSimpleList(form, "SignalREventSources");
     form.querySelector("#SignalRAutoReconnectIntervals").value = reconnectIntervals.join(", ");
 
     const mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
@@ -629,6 +648,7 @@ async function syncUserSettings(form) {
 }
 
 export default function (page) {
+    /** @type {HTMLFormElement} */
     const form = page.querySelector("#ShokoConfigForm");
     const userSelector = form.querySelector("#UserSelector");
     const mediaFolderSelector = form.querySelector("#MediaFolderSelector");
@@ -668,7 +688,6 @@ export default function (page) {
             form.querySelector("#SignalRSection1").removeAttribute("hidden");
             form.querySelector("#SignalRSection2").removeAttribute("hidden");
             form.querySelector("#UserSection").removeAttribute("hidden");
-            form.querySelector("#TagSection").removeAttribute("hidden");
             form.querySelector("#AdvancedSection").removeAttribute("hidden");
             form.querySelector("#ExperimentalSection").removeAttribute("hidden");
         }
@@ -685,7 +704,6 @@ export default function (page) {
             form.querySelector("#SignalRSection1").setAttribute("hidden", "");
             form.querySelector("#SignalRSection2").setAttribute("hidden", "");
             form.querySelector("#UserSection").setAttribute("hidden", "");
-            form.querySelector("#TagSection").setAttribute("hidden", "");
             form.querySelector("#AdvancedSection").setAttribute("hidden", "");
             form.querySelector("#ExperimentalSection").setAttribute("hidden", "");
         }
@@ -754,22 +772,65 @@ export default function (page) {
         }
     });
 
-    Array.prototype.forEach.call(
-        form.querySelectorAll("#descriptionSourceList, #TitleMainList, #TitleAlternateList"),
-        (el) => el.addEventListener("click", onSortableContainerClick)
-    );
+    form.querySelector("#TitleMainList").addEventListener("click", onSortableContainerClick);
+    form.querySelector("#TitleAlternateList").addEventListener("click", onSortableContainerClick);
+    form.querySelector("#DescriptionSourceList").addEventListener("click", onSortableContainerClick);
+    form.querySelector("#ContentRatingList").addEventListener("click", onSortableContainerClick);
+    form.querySelector("#ProductionLocationList").addEventListener("click", onSortableContainerClick);
 
-    ["Main", "Alternate"].forEach((type) => {
-        const settingsList = form.querySelector(`#Title${type}List`);
-
-        form.querySelector(`#Title${type}Override`).addEventListener("change", ({ target: { checked } }) => {
-            checked ? settingsList.removeAttribute("hidden") : settingsList.setAttribute("hidden", "");
-        });
+    form.querySelector("#TitleMainOverride").addEventListener("change", function () {
+        const list = form.querySelector(`#TitleMainList`);
+        this.checked ? list.removeAttribute("hidden") : list.setAttribute("hidden", "");
     });
 
-    form.querySelector("#DescriptionSourceOverride").addEventListener("change", ({ target: { checked } }) => {
-        const root = form.querySelector("#descriptionSourceList");
-        checked ? root.removeAttribute("hidden") : root.setAttribute("hidden", "");
+    form.querySelector("#TitleAlternateOverride").addEventListener("change", function () {
+        const list = form.querySelector(`#TitleAlternateList`);
+        this.checked ? list.removeAttribute("hidden") : list.setAttribute("hidden", "");
+    });
+
+    form.querySelector("#DescriptionSourceOverride").addEventListener("change", function () {
+        const list = form.querySelector("#DescriptionSourceList");
+        this.checked ? list.removeAttribute("hidden") : list.setAttribute("hidden", "");
+    });
+
+    form.querySelector("#TagOverride").addEventListener("change", function () {
+        if (this.checked) {
+            form.querySelector("#TagSources").removeAttribute("hidden");
+            form.querySelector("#TagIncludeFilters").removeAttribute("hidden");
+            form.querySelector("#TagMinimumWeightContainer").removeAttribute("hidden");
+            form.querySelector("#TagMinimumWeightContainer").disabled = false;
+        }
+        else {
+            form.querySelector("#TagSources").setAttribute("hidden", "");
+            form.querySelector("#TagIncludeFilters").setAttribute("hidden", "");
+            form.querySelector("#TagMinimumWeightContainer").setAttribute("hidden", "");
+            form.querySelector("#TagMinimumWeightContainer").disabled = true;
+        }
+    });
+
+    form.querySelector("#GenreOverride").addEventListener("change", function () {
+        if (this.checked) {
+            form.querySelector("#GenreSources").removeAttribute("hidden");
+            form.querySelector("#GenreIncludeFilters").removeAttribute("hidden");
+            form.querySelector("#GenreMinimumWeightContainer").removeAttribute("hidden");
+            form.querySelector("#GenreMinimumWeightContainer").disabled = false;
+        }
+        else {
+            form.querySelector("#GenreSources").setAttribute("hidden", "");
+            form.querySelector("#GenreIncludeFilters").setAttribute("hidden", "");
+            form.querySelector("#GenreMinimumWeightContainer").setAttribute("hidden", "");
+            form.querySelector("#GenreMinimumWeightContainer").disabled = true;
+        }
+    });
+
+    form.querySelector("#ContentRatingOverride").addEventListener("change", function () {
+        const list = form.querySelector("#ContentRatingList");
+        this.checked ? list.removeAttribute("hidden") : list.setAttribute("hidden", "");
+    });
+
+    form.querySelector("#ProductionLocationOverride").addEventListener("change", function () {
+        const list = form.querySelector("#ProductionLocationList");
+        this.checked ? list.removeAttribute("hidden") : list.setAttribute("hidden", "");
     });
 
     page.addEventListener("viewshow", async function () {
@@ -785,31 +846,104 @@ export default function (page) {
             form.querySelector("#Password").value = "";
 
             // Metadata settings
-            ["Main", "Alternate"].forEach((t) => { setTitleFromConfig(form, t, config) });
+            if (form.querySelector("#TitleMainOverride").checked = config.TitleMainOverride) {
+                form.querySelector("#TitleMainList").removeAttribute("hidden");
+            }
+            else {
+                form.querySelector("#TitleMainList").setAttribute("hidden", "");
+            }
+            initSortableList(form, "TitleMainList", config.TitleMainList, config.TitleMainOrder);
+            if (form.querySelector("#TitleAlternateOverride").checked = config.TitleAlternateOverride) {
+                form.querySelector("#TitleAlternateList").removeAttribute("hidden");
+            }
+            else {
+                form.querySelector("#TitleAlternateList").setAttribute("hidden", "");
+            }
+            initSortableList(form, "TitleAlternateList", config.TitleAlternateList, config.TitleAlternateOrder);
             form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
-            form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null ? config.TitleAddForMultipleEpisodes : true;
+            form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null
+                ? config.TitleAddForMultipleEpisodes : true;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
-            setDescriptionSourcesFromConfig(form, config);
-            form.querySelector("#CleanupAniDBDescriptions").checked = config.SynopsisCleanMultiEmptyLines || config.SynopsisCleanLinks || config.SynopsisRemoveSummary || config.SynopsisCleanMiscLines;
+            if (form.querySelector("#DescriptionSourceOverride").checked = config.DescriptionSourceOverride) {
+                form.querySelector("#DescriptionSourceList").removeAttribute("hidden");
+            }
+            else {
+                form.querySelector("#DescriptionSourceList").setAttribute("hidden", "");
+            }
+            initSortableList(form, "DescriptionSourceList", config.DescriptionSourceList, config.DescriptionSourceOrder);
+            form.querySelector("#CleanupAniDBDescriptions").checked = (
+                config.SynopsisCleanMultiEmptyLines ||
+                config.SynopsisCleanLinks ||
+                config.SynopsisRemoveSummary ||
+                config.SynopsisCleanMiscLines
+            );
+            form.querySelector("#HideUnverifiedTags").checked = config.HideUnverifiedTags;
+            if (form.querySelector("#TagOverride").checked = config.TagOverride) {
+                form.querySelector("#TagSources").removeAttribute("hidden");
+                form.querySelector("#TagIncludeFilters").removeAttribute("hidden");
+                form.querySelector("#TagMinimumWeightContainer").removeAttribute("hidden");
+                form.querySelector("#TagMinimumWeightContainer").disabled = false;
+            }
+            else {
+                form.querySelector("#TagSources").setAttribute("hidden", "");
+                form.querySelector("#TagIncludeFilters").setAttribute("hidden", "");
+                form.querySelector("#TagMinimumWeightContainer").setAttribute("hidden", "");
+                form.querySelector("#TagMinimumWeightContainer").disabled = true;
+            }
+            initSimpleList(form, "TagSources", config.TagSources.split(",").map(s => s.trim()).filter(s => s));
+            initSimpleList(form, "TagIncludeFilters", config.TagIncludeFilters.split(",").map(s => s.trim()).filter(s => s));
+            form.querySelector("#TagMinimumWeight").value = config.TagMinimumWeight;
+            if (form.querySelector("#GenreOverride").checked = config.GenreOverride) {
+                form.querySelector("#GenreSources").removeAttribute("hidden");
+                form.querySelector("#GenreIncludeFilters").removeAttribute("hidden");
+                form.querySelector("#GenreMinimumWeightContainer").removeAttribute("hidden");
+                form.querySelector("#GenreMinimumWeightContainer").disabled = false;
+            }
+            else {
+                form.querySelector("#GenreSources").setAttribute("hidden", "");
+                form.querySelector("#GenreIncludeFilters").setAttribute("hidden", "");
+                form.querySelector("#GenreMinimumWeightContainer").setAttribute("hidden", "");
+                form.querySelector("#GenreMinimumWeightContainer").disabled = true;
+            }
+            initSimpleList(form, "GenreSources", config.GenreSources.split(",").map(s => s.trim()).filter(s => s));
+            initSimpleList(form, "GenreIncludeFilters", config.GenreIncludeFilters.split(",").map(s => s.trim()).filter(s => s));
+            form.querySelector("#GenreMinimumWeight").value = config.GenreMinimumWeight;
+            if (form.querySelector("#ContentRatingOverride").checked = config.ContentRatingOverride) {
+                form.querySelector("#ContentRatingList").removeAttribute("hidden");
+            }
+            else {
+                form.querySelector("#ContentRatingList").setAttribute("hidden", "");
+            }
+            initSortableList(form, "ContentRatingList", config.ContentRatingList, config.ContentRatingOrder);
+            if (form.querySelector("#ProductionLocationOverride").checked = config.ProductionLocationOverride) {
+                form.querySelector("#ProductionLocationList").removeAttribute("hidden");
+            }
+            else {
+                form.querySelector("#ProductionLocationList").setAttribute("hidden", "");
+            }
+            initSortableList(form, "ProductionLocationList", config.ProductionLocationList, config.ProductionLocationOrder);
 
             // Provider settings
             form.querySelector("#AddAniDBId").checked = config.AddAniDBId;
             form.querySelector("#AddTMDBId").checked = config.AddTMDBId;
 
             // Library settings
-            form.querySelector("#UseGroupsForShows").checked = config.UseGroupsForShows || false;
-            form.querySelector("#SeasonOrdering").value = config.SeasonOrdering;
-            form.querySelector("#SeasonOrdering").disabled = !form.querySelector("#UseGroupsForShows").checked;
-            if (form.querySelector("#UseGroupsForShows").checked) {
+            if (form.querySelector("#UseGroupsForShows").checked = config.UseGroupsForShows || false) {
                 form.querySelector("#SeasonOrderingContainer").removeAttribute("hidden");
+                form.querySelector("#SeasonOrdering").disabled = false;
             }
             else {
                 form.querySelector("#SeasonOrderingContainer").setAttribute("hidden", "");
+                form.querySelector("#SeasonOrdering").disabled = true;
             }
+            form.querySelector("#SeasonOrdering").value = config.SeasonOrdering;
             form.querySelector("#CollectionGrouping").value = config.CollectionGrouping || "Default";
-            form.querySelector("#CollectionMinSizeOfTwo").checked = config.CollectionMinSizeOfTwo != null ? config.CollectionMinSizeOfTwo : true;
-            form.querySelector("#SeparateMovies").checked = config.SeparateMovies != null ? config.SeparateMovies : true;
-            form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
+            form.querySelector("#CollectionMinSizeOfTwo").checked = config.CollectionMinSizeOfTwo != null
+                ? config.CollectionMinSizeOfTwo : true;
+            form.querySelector("#SeparateMovies").checked = config.SeparateMovies != null
+                ? config.SeparateMovies : true;
+            form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default"
+                ? "AfterSeason" : config.SpecialsPlacement;
             form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked = config.MovieSpecialsAsExtraFeaturettes || false;
             form.querySelector("#AddTrailers").checked = config.AddTrailers || false;
             form.querySelector("#AddCreditsAsThemeVideos").checked = config.AddCreditsAsThemeVideos || false;
@@ -817,29 +951,25 @@ export default function (page) {
             form.querySelector("#AddMissingMetadata").checked = config.AddMissingMetadata || false;
 
             // Media Folder settings
-            form.querySelector("#VirtualFileSystem").checked = config.VirtualFileSystem != null ? config.VirtualFileSystem : true;
+            form.querySelector("#VirtualFileSystem").checked = config.VirtualFileSystem != null
+                ? config.VirtualFileSystem : true;
             form.querySelector("#LibraryFilteringMode").value = config.LibraryFilteringMode;
-            mediaFolderSelector.innerHTML += config.MediaFolders.map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.MediaFolderPath}</option>`).join("");
+            mediaFolderSelector.innerHTML += config.MediaFolders
+                .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.MediaFolderPath}</option>`)
+                .join("");
 
             // SignalR settings
             form.querySelector("#SignalRAutoConnect").checked = config.SignalR_AutoConnectEnabled;
             form.querySelector("#SignalRAutoReconnectIntervals").value = config.SignalR_AutoReconnectInSeconds.join(", ");
-            setSignalREventSourcesFromConfig(form, config);
-            signalrMediaFolderSelector.innerHTML += config.MediaFolders.map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.MediaFolderPath}</option>`).join("");
+            initSimpleList(form, "SignalREventSources", config.SignalR_EventSources);
+            signalrMediaFolderSelector.innerHTML += config.MediaFolders
+                .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.MediaFolderPath}</option>`)
+                .join("");
             form.querySelector("#SignalRDefaultFileEvents").checked = config.SignalR_FileEvents;
             form.querySelector("#SignalRDefaultRefreshEvents").checked = config.SignalR_RefreshEnabled;
 
             // User settings
             userSelector.innerHTML += users.map((user) => `<option value="${user.Id}">${user.Name}</option>`).join("");
-
-            // Tag settings
-            form.querySelector("#HideUnverifiedTags").checked = config.HideUnverifiedTags;
-            form.querySelector("#HideArtStyleTags").checked = config.HideArtStyleTags;
-            form.querySelector("#HideMiscTags").checked = config.HideMiscTags;
-            form.querySelector("#HidePlotTags").checked = config.HidePlotTags;
-            form.querySelector("#HideAniDbTags").checked = config.HideAniDbTags;
-            form.querySelector("#HideSettingTags").checked = config.HideSettingTags;
-            form.querySelector("#HideProgrammingTags").checked = config.HideProgrammingTags;
 
             // Advanced settings
             form.querySelector("#PublicUrl").value = config.PublicUrl;
@@ -847,7 +977,8 @@ export default function (page) {
 
             // Experimental settings
             form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked = config.EXPERIMENTAL_AutoMergeVersions || false;
-            form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked = config.EXPERIMENTAL_SplitThenMergeMovies != null ? config.EXPERIMENTAL_SplitThenMergeMovies : true;
+            form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked = config.EXPERIMENTAL_SplitThenMergeMovies != null
+                ? config.EXPERIMENTAL_SplitThenMergeMovies : true;
             form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked = config.EXPERIMENTAL_SplitThenMergeEpisodes || false;
             form.querySelector("#EXPERIMENTAL_MergeSeasons").checked = config.EXPERIMENTAL_MergeSeasons || false;
 
@@ -919,128 +1050,86 @@ export default function (page) {
     });
 }
 
-function setDescriptionSourcesIntoConfig(form, config) {
-    const override = form.querySelector("#DescriptionSourceOverride");
-    const descriptionElements = form.querySelectorAll(`#descriptionSourceList .chkDescriptionSource`);
-    config.DescriptionSourceList = Array.prototype.filter.call(descriptionElements,
-        (el) => el.checked)
-        .map((el) => el.dataset.descriptionSource);
-
-    config.DescriptionSourceOrder = Array.prototype.map.call(descriptionElements,
-        (el) => el.dataset.descriptionSource
-    );
-
-    config.DescriptionSourceOverride = override.checked;
-}
-
-function setDescriptionSourcesFromConfig(form, config) {
-    const root = form.querySelector("#descriptionSourceList");
-    const override = form.querySelector("#DescriptionSourceOverride");
-    const list = root.querySelector(".checkboxList");
-    const listItems = list.querySelectorAll('.listItem');
-
-    override.checked = config.DescriptionSourceOverride;
-    override.checked ? root.removeAttribute("hidden") : root.setAttribute("hidden", "");
-
-    for (const item of listItems) {
-        const source = item.dataset.descriptionSource;
-        if (config.DescriptionSourceList.includes(source)) {
-            item.querySelector(".chkDescriptionSource").checked = true;
-        }
-        if (config.DescriptionSourceOrder.includes(source)) {
-            list.removeChild(item); // This is safe to be removed as we can re-add it in the next loop
-        }
-    }
-
-    for (const source of config.DescriptionSourceOrder) {
-        const targetElement = Array.prototype.find.call(listItems, (el) => el.dataset.descriptionSource === source);
-        if (targetElement) {
-            list.append(targetElement);
-        }
-    }
-
-    for (const option of list.querySelectorAll(".sortableOption")) {
-        adjustSortableListElement(option)
-    };
-}
-
-/** 
- * This function **must** be called for each type of title separately, lest the config be incomplete.
- * @param {"Main"|"Alternate"} type
+/**
+ * Initialize a selectable list.
+ * 
+ * @param {HTMLFormElement} form
+ * @param {string} name
+ * @param {string[]} enabled
+ * @param {string[]} order
+ * @returns {void}
  */
-function setTitleIntoConfig(form, type, config) {
-    const titleElements = form.querySelectorAll(`#Title${type}List .chkTitleSource`);
-    const getSettingName = (el) => `${el.dataset.titleProvider}_${el.dataset.titleStyle}`;
-
-    config[`Title${type}List`] = Array.prototype.filter.call(titleElements,
-        (el) => el.checked)
-        .map((el) => getSettingName(el));
-    
-    config[`Title${type}Order`] = Array.prototype.map.call(titleElements,
-        (el) => getSettingName(el)
-    );
-
-    config[`Title${type}Override`] = form.querySelector(`#Title${type}Override`).checked
-}
-
-/** 
- * This function **must** be called for each type of title separately, lest the config be incomplete.
- * @param {"Main"|"Alternate"} type
- */
-function setTitleFromConfig(form, type, config) {
-    const root = form.querySelector(`#Title${type}List`);
-    const override = form.querySelector(`#Title${type}Override`);
-    const list = root.querySelector(`.checkboxList`);
-    const listItems = list.querySelectorAll('.listItem');
-
-    override.checked = config[`Title${type}Override`];
-    override.checked ? root.removeAttribute("hidden") : root.setAttribute("hidden", "");
-
-    const getSettingName = (el) => `${el.dataset.titleProvider}_${el.dataset.titleStyle}`;
-
-    for (const item of listItems) {
-        const setting = getSettingName(item);
-        if (config[`Title${type}List`].includes(setting))
-            item.querySelector(".chkTitleSource").checked = true;
-        if (config[`Title${type}Order`].includes(setting))
-            list.removeChild(item);
-    }
-
-    for (const setting of config[`Title${type}Order`]) {
-        const targetElement = Array.prototype.find.call(
-            listItems,
-            (el) => getSettingName(el) === setting
-        );
-        if (targetElement)
-            list.append(targetElement);
-    }
-
-    for (const option of list.querySelectorAll(".sortableOption")) {
-        adjustSortableListElement(option)
+function initSortableList(form, name, enabled, order) {
+    let index = 0;
+    const list = form.querySelector(`#${name} .checkboxList`);
+    const listItems = Array.from(list.querySelectorAll(".listItem"))
+        .map((item) => ({
+            item,
+            checkbox: item.querySelector("input[data-option]"),
+            isSortable: item.className.includes("sortableOption"),
+        }))
+        .map(({ item, checkbox, isSortable }) => ({
+            item,
+            checkbox,
+            isSortable,
+            option: checkbox.dataset.option,
+        }));
+    list.innerHTML = "";
+    for (const option of order) {
+        const { item, checkbox, isSortable } = listItems.find((item) => item.option === option) || {};
+        if (!item)
+            continue;
+        list.append(item);
+        if (enabled.includes(option))
+            checkbox.checked = true;
+        if (isSortable)
+            adjustSortableListElement(item, index++);
     }
 }
 
-/** @param {HTMLFormElement} form */
-function setSignalREventSourcesIntoConfig(form, config) {
-    /** @type {HTMLInputElement[]} */
-    const checkboxList = form.querySelectorAll(`#SignalREventSources .listItem input[data-signalr-event-source]`);
-    const resultArr = [];
-    for (const item of checkboxList) {
-        if (item.checked) {
-            resultArr.push(item.dataset.signalrEventSource);
-        }
-    }
-    config.SignalR_EventSources = resultArr;
-}
-
-/** @param {HTMLFormElement} form */
-function setSignalREventSourcesFromConfig(form, config) {
-    /** @type {HTMLInputElement[]} */
-    const checkboxList = form.querySelectorAll(`#SignalREventSources .listItem input[data-signalr-event-source]`);
-    for (const item of checkboxList) {
-        const eventSource = item.dataset.signalrEventSource;
-        if (config.SignalR_EventSources.includes(eventSource)) {
+/**
+ * @param {HTMLFormElement} form
+ * @param {string} name
+ * @param {string[]} enabled
+ * @returns {void}
+ **/
+function initSimpleList(form, name, enabled) {
+    for (const item of Array.from(form.querySelectorAll(`#${name} .listItem input[data-option]`))) {
+        if (enabled.includes(item.dataset.option))
             item.checked = true;
-        }
     }
+}
+
+/**
+ * Retrieve the enabled state and order list from a sortable list.
+ *
+ * @param {HTMLFormElement} form
+ * @param {string} name
+ * @returns {[boolean, string[], string[]]}
+ */
+function retrieveSortableList(form, name) {
+    const titleElements = Array.from(form.querySelectorAll(`#${name} .listItem input[data-option]`));
+    const getValue = (el) => el.dataset.option;
+    return [
+        titleElements
+            .filter((el) => el.checked)
+            .map(getValue)
+            .sort(),
+        titleElements
+            .map(getValue),
+    ];
+}
+
+/**
+ * Retrieve the enabled state from a simple list.
+ *
+ * @param {HTMLFormElement} form
+ * @param {string} name - Name of the selector list to retrieve.
+ * @returns {string[]}
+ **/
+function retrieveSimpleList(form, name) {
+    return Array.from(form.querySelectorAll(`#${name} .listItem input[data-option]`))
+        .filter(item => item.checked)
+        .map(item => item.dataset.option)
+        .sort();
 }

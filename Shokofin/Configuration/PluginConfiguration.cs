@@ -12,6 +12,9 @@ using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using ProviderName = Shokofin.Events.Interfaces.ProviderName;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
+using TagIncludeFilter = Shokofin.Utils.TagFilter.TagIncludeFilter;
+using TagSource = Shokofin.Utils.TagFilter.TagSource;
+using TagWeight = Shokofin.Utils.TagFilter.TagWeight;
 using TitleProvider = Shokofin.Utils.Text.TitleProvider;
 
 namespace Shokofin.Configuration;
@@ -168,19 +171,84 @@ public class PluginConfiguration : BasePluginConfiguration
 
     #region Tags
 
-    public bool HideArtStyleTags { get; set; }
+    /// <summary>
+    /// Determines if we use the overridden settings for how the tags are set for entries.
+    /// </summary>
+    public bool TagOverride { get; set; }
 
-    public bool HideMiscTags { get; set; }
+    /// <summary>
+    /// All tag sources to use for tags.
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TagSource TagSources { get; set; }
 
-    public bool HidePlotTags { get; set; }
+    /// <summary>
+    /// Filter to include tags as tags based on specific criteria.
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TagIncludeFilter TagIncludeFilters { get; set; }
 
-    public bool HideAniDbTags { get; set; }
+    /// <summary>
+    /// Minimum weight of tags to be included, except weightless tags, which has their own filtering through <seealso cref="TagIncludeFilter.Weightless"/>.
+    /// </summary>
+    public TagWeight TagMinimumWeight { get; set; }
 
-    public bool HideSettingTags { get; set; }
+    /// <summary>
+    /// Determines if we use the overridden settings for how the genres are set for entries.
+    /// </summary>
+    public bool GenreOverride { get; set; }
 
-    public bool HideProgrammingTags { get; set; }
+    /// <summary>
+    /// All tag sources to use for genres.
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TagSource GenreSources { get; set; }
 
+    /// <summary>
+    /// Filter to include tags as genres based on specific criteria.
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TagIncludeFilter GenreIncludeFilters { get; set; }
+
+    /// <summary>
+    /// Minimum weight of tags to be included, except weightless tags, which has their own filtering through <seealso cref="TagIncludeFilter.Weightless"/>.
+    /// </summary>
+    public TagWeight GenreMinimumWeight { get; set; }
+
+    /// <summary>
+    /// Hide tags that are not verified by the AniDB moderators yet.
+    /// </summary>
     public bool HideUnverifiedTags { get; set; }
+
+    /// <summary>
+    /// Determines if we use the overridden settings for how the content/official ratings are set for entries.
+    /// </summary>
+    public bool ContentRatingOverride { get; set; }
+
+    /// <summary>
+    /// Enabled content rating providers.
+    /// </summary>
+    public ProviderName[] ContentRatingList { get; set; }
+
+    /// <summary>
+    /// The order to go through the content rating providers to retrieve a content rating.
+    /// </summary>
+    public ProviderName[] ContentRatingOrder { get; set; }
+
+    /// <summary>
+    /// Determines if we use the overridden settings for how the production locations are set for entries.
+    /// </summary>
+    public bool ProductionLocationOverride { get; set; }
+
+    /// <summary>
+    /// Enabled production location providers.
+    /// </summary>
+    public ProviderName[] ProductionLocationList { get; set; }
+
+    /// <summary>
+    /// The order to go through the production location providers to retrieve a production location.
+    /// </summary>
+    public ProviderName[] ProductionLocationOrder { get; set; }
 
     #endregion
 
@@ -278,7 +346,7 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Enable/disable the filtering for new media-folders/libraries.
     /// </summary>
-        [XmlElement("LibraryFiltering")]
+    [XmlElement("LibraryFiltering")]
     public LibraryFilteringMode LibraryFilteringMode { get; set; }
 
     /// <summary>
@@ -362,13 +430,26 @@ public class PluginConfiguration : BasePluginConfiguration
         PublicUrl = string.Empty;
         Username = "Default";
         ApiKey = string.Empty;
-        HideArtStyleTags = false;
-        HideMiscTags = false;
-        HidePlotTags = true;
-        HideAniDbTags = true;
-        HideSettingTags = false;
-        HideProgrammingTags = true;
+        TagOverride = false;
+        TagSources = TagSource.Elements | TagSource.Themes | TagSource.Fetishes | TagSource.SettingPlace | TagSource.SettingTimePeriod | TagSource.SettingTimeSeason | TagSource.CustomTags;
+        TagIncludeFilters = TagIncludeFilter.Parent | TagIncludeFilter.Child | TagIncludeFilter.Weightless;
+        TagMinimumWeight = TagWeight.Weightless;
+        GenreSources = TagSource.SourceMaterial | TagSource.TargetAudience | TagSource.ContentIndicators | TagSource.Elements;
+        GenreIncludeFilters = TagIncludeFilter.Child | TagIncludeFilter.Weightless;
+        GenreMinimumWeight = TagWeight.Three;
         HideUnverifiedTags = true;
+        ContentRatingOverride = false;
+        ContentRatingList = new[] {
+            ProviderName.AniDB,
+            ProviderName.TMDB,
+        };
+        ContentRatingOrder = ContentRatingList.ToArray();
+        ProductionLocationOverride = false;
+        ProductionLocationList = new[] {
+            ProviderName.AniDB,
+            ProviderName.TMDB,
+        };
+        ProductionLocationOrder = ProductionLocationList.ToArray();
         TitleAddForMultipleEpisodes = true;
         SynopsisCleanLinks = true;
         SynopsisCleanMiscLines = true;

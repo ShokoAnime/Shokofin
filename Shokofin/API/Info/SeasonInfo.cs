@@ -34,9 +34,13 @@ public class SeasonInfo
     /// </summary>
     public readonly DateTime? LastImportedAt;
 
+    public readonly string? AssumedContentRating;
+
     public readonly IReadOnlyList<string> Tags;
 
     public readonly IReadOnlyList<string> Genres;
+
+    public readonly IReadOnlyList<string> ProductionLocations;
 
     public readonly IReadOnlyList<string> Studios;
 
@@ -93,7 +97,7 @@ public class SeasonInfo
     /// </summary>
     public readonly IReadOnlyDictionary<string, RelationType> RelationMap;
 
-    public SeasonInfo(Series series, IEnumerable<string> extraIds, DateTime? earliestImportedAt, DateTime? lastImportedAt, List<EpisodeInfo> episodes, List<Role> cast, List<Relation> relations, string[] genres, string[] tags)
+    public SeasonInfo(Series series, IEnumerable<string> extraIds, DateTime? earliestImportedAt, DateTime? lastImportedAt, List<EpisodeInfo> episodes, List<Role> cast, List<Relation> relations, string[] genres, string[] tags, string[] productionLocations, string? contentRating)
     {
         var seriesId = series.IDs.Shoko.ToString();
         var studios = cast
@@ -215,8 +219,10 @@ public class SeasonInfo
         Type = type;
         EarliestImportedAt = earliestImportedAt;
         LastImportedAt = lastImportedAt;
+        AssumedContentRating = contentRating;
         Tags = tags;
         Genres = genres;
+        ProductionLocations = productionLocations;
         Studios = studios;
         Staff = staff;
         RawEpisodeList = episodes;

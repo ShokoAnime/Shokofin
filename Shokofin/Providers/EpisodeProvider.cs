@@ -198,7 +198,8 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
                 SeriesName = season.Series.Name,
                 SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
                 SeasonName = season.Name,
-                OfficialRating = group.OfficialRating,
+                ProductionLocations = TagFilter.GetSeasonContentRating(series).ToArray(),
+                OfficialRating = ContentRating.GetSeasonContentRating(series),
                 DateLastSaved = DateTime.UtcNow,
                 RunTimeTicks = episode.AniDB.Duration.Ticks,
             };
@@ -215,7 +216,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
                 AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
                 PremiereDate = episode.AniDB.AirDate,
                 Overview = description,
-                OfficialRating = group.OfficialRating,
+                OfficialRating = ContentRating.GetSeasonContentRating(series),
                 CustomRating = group.CustomRating,
                 CommunityRating = episode.AniDB.Rating.Value > 0 ? episode.AniDB.Rating.ToFloat(10) : 0,
             };

@@ -77,7 +77,8 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasO
                 Tags = show.Tags.ToArray(),
                 Genres = show.Genres.ToArray(),
                 Studios = show.Studios.ToArray(),
-                OfficialRating = show.OfficialRating,
+                ProductionLocations = TagFilter.GetShowContentRating(show).ToArray(),
+                OfficialRating = ContentRating.GetShowContentRating(show),
                 CustomRating = show.CustomRating,
                 CommunityRating = show.CommunityRating,
             };
