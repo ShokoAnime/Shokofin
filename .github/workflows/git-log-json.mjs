@@ -104,7 +104,8 @@ const commitsList = commitOrder.slice().reverse()
     }))
     .map((commit) => ({
         ...commit,
-        type: commit.type == "feature" ? "feat" : commit.type === "refacor" ? "refactor" : commit.type,
+        subject: /[a-z]/.test(commit.subject[0]) ? commit.subject[0].toUpperCase() + commit.subject.slice(1) : commit.subject,
+        type: commit.type == "feature" ? "feat" : commit.type === "refacor" ? "refactor" : commit.type == "mics" ? "misc" : commit.type,
     }))
     .filter((commit) => !(commit.type === "misc" && (commit.subject === "update unstable manifest" || commit.subject === "Update repo manifest" || commit.subject === "Update unstable repo manifest")));
 
