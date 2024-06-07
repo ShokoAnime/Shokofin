@@ -100,7 +100,7 @@ compatible with what.
 
 ## Feature Overview
 
-- [/] Metadata integration
+- [ ] Metadata integration
 
   - [X] Basic metadata, e.g. titles, description, dates, etc.
 
@@ -110,34 +110,48 @@ compatible with what.
 
     - [X] Customizable description source for items
 
-      Choose between AniDB, TvDB, or a mix of the two.
+      Choose between AniDB, TvDB, TMDB, or a mix of the three.
 
     - [X] Support optionally adding titles and descriptions for all episodes for
       multi-entry files.
 
   - [X] Genres
 
+    With settings to choose which tags to add as genres.
+
   - [X] Tags
 
-    With some settings to choose which tags to add.
+    With settings to choose which tags to add as tags.
 
-  - [/] Voice Actors
+  - [X] Official Ratings
 
-    - [X] Displayed on the Show/Season/Movie items
+    Currently only _assumed_ ratings using AniDB tags or manual overrides using custom user tags are available. Also with settings to choose which providers to use.
 
-    - [ ] Person provider for image and details
+  - [X] Production Locations
 
-  - [/] General staff (e.g. producer, writer, etc.)
+    With settings to chose which provider to use.
 
-    - [X] Displayed on the Show/Season/Movie items
-
-    - [ ] Person provider for image and details
-
-  - [/] Studios
+  - [ ] Staff
 
     - [X] Displayed on the Show/Season/Movie items
 
-    - [ ] Studio provider for image and details
+    - [X] Images
+
+    - [ ] Metadata Provider
+
+      _Needs to add endpoints to the Shoko Server side first._
+
+  - [ ] Studios
+
+    - [X] Displayed on the Show/Season/Movie items
+
+    - [ ] Images
+
+      _Needs to add support and endpoints to the Shoko Server side **or** fake it client-side first._
+
+    - [ ] Metadata Provider
+
+      _Needs to add support and endpoints to the Shoko Server side **or** fake it client-side first._
 
 - [X] Library integration
 
@@ -148,6 +162,8 @@ compatible with what.
     - [X] Movie library
 
     - [X] Mixed show/movie library.
+
+      _As long as the VFS is in use for the media library. Also keep in mind that this library type is poorly supported in Jellyfin Core, and we can't work around the poor internal support, so you'll have to take what you get or leave it as is._
 
   - [X] Supports adding local trailers
 
@@ -178,31 +194,26 @@ compatible with what.
 
       - [X] Manual merge/split tasks
 
-  - [X] Support optionally setting other provider IDs Shoko knows about (e.g.
-    AniDB, TvDB, TMDB, etc.) on some item types when an ID is available for
-    the items in Shoko.
+  - [X] Support optionally setting other provider IDs Shoko knows about on some item types when an ID is available for the items in Shoko.
+
+    _Only AniDB and TMDB IDs are available for now._
 
   - [X] Multiple ways to organize your library.
 
-    - [X] Choose between three ways to group your Shows/Seasons; no grouping,
-      following TvDB (to-be replaced with TMDB soon™-ish), and using Shoko's
-      groups feature.
+    - [X] Choose between two ways to group your Shows/Seasons; using AniDB Anime structure (the default mode), or using Shoko Groups.
 
-      _For the best compatibility it is **strongly** advised **not** to use
-      "season" folders with anime as it limits which grouping you can use, you
-      can still create "seasons" in the UI using Shoko's groups or using the
-      TvDB/TMDB compatibility mode._
+      _For the best compatibility if you're not using the VFS it is **strongly** advised **not** to use "season" folders with anime as it limits which grouping you can use, you can still create "seasons" in the UI using Shoko's groups._
 
-    - [X] Optionally create Box-Sets for your Movies…
+    - [X] Optionally create Collections for…
 
-      - [X] using the Shoko series.
+      - [X] Movies using the Shoko series.
 
-      - [X] using the Shoko groups.
+      - [X] Movies and Shows using the Shoko groups.
 
     - [X] Supports separating your on-disc library into a two Show and Movie
       libraries.
 
-      _Provided you apply the workaround to do it_.¹
+      _Provided you apply the workaround to support it_.
 
   - [X] Automatically populates all missing episodes not in your collection, so
     you can see at a glance what you are missing out on.
@@ -224,3 +235,7 @@ compatible with what.
       play/resume event or when jumping)
 
   - [X] Import and export user data tasks
+
+- [X] Virtual File System (VFS)
+
+  _Allows us to disregard the underlying disk file structure while automagically meeting Jellyfin's requirements for file organization._
