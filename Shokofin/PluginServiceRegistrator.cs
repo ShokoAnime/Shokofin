@@ -22,6 +22,7 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddSingleton<Events.EventDispatchService>();
         serviceCollection.AddSingleton<SignalR.SignalRConnectionManager>();
         serviceCollection.AddHostedService<SignalR.SignalREntryPoint>();
+        serviceCollection.AddHostedService<Resolvers.ShokoLibraryMonitor>();
         serviceCollection.AddControllers(options => options.Filters.Add<Web.ImageHostUrl>());
     }
 }
