@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.197",
+                "changelog": "refactor: overhaul tag internals + add content ratings\n\n- Overhauled the internals for how we processed tags. We now use the tag hierarchy to filter it locally instead of the flat lists used on the Shoko Server side, which allows us to avoid magical numbers and also gives us more control when searching for tags in the hierarchy.\n\n- Custom tag support have also been overhauled to support a _fake_ hierarchy by using `/` (forward slash) as a separator between levels in the tag name. All top level custom tags without \"child\" tags are added to the list if custom tags have been enabled, while all tags in the second level or below are treated as if they are of the AniDB hierarchy and will follow the other enabled/disabled tag sources, e.g. if you enable \"elements\" tags then it will also affect any custom tags starting with \"elements/\". This overhauled support for custom tags also allows us to better support the next item on the list.\n\n- Added _assumed_ content ratings based on the AniDB tag hierarchy. This will use the `content indicators` tags and `elements` tags in the hierarchy to make an assumption of the content rating for the AniDB anime using the following content indicators;\n  - TV-G\n  - TV-Y\n  - TV-Y7 (optionally with the FV indicator applied)\n  - TV-PG (optionally with D, L, S, and/or V indicators applied)\n  - TV-14 (optionally with D, L, S, and/or V indicators applied)\n  - TV-MA (optionally with L, S, and/or V indicators applied)\n  - XXX (only for H)\n\n  We also support custom overrides through custom tags in the form of the regular expressions (regex);\n\n  ```txt\n  /^\\/?target audience\\/(?:TV)?[_\\-]?(?:G|Y|Y7|PG|14|MA|XXX)[_\\-]?(FV|D|S|L|V){1,5}$/i\n  ```\n\n  A few examples that all resolve to the `TV-PG` rating if you can't read regex;\n  - `target audience/TV-PG` \u2192 `TV-PG`\n  - `Target Audience/TV-PG-DV` \u2192 `TV-PG` + `D` & `V` indicators applied\n  - `Target Audience/TV_PG_ld` \u2192 `TV-PG` + `D` & `L` indicators applied\n  - `/target audience/pgV` \u2192 `TV-PG` + `V` indicator applied\n  - `/TARGET AUDIENCE/tvPGsl` \u2192 `TV-PG` + `L` & `S` indicators applied\n\n  Where you will override the content rating for the series if the custom tag is applied in Shoko Server/Shoko Desktop.\n\n- Added production locations based on the AniDB tag hierarchy. This is much simpler, as it's a 1:N mapping for the relevant AniDB tags to production locations.\n\n- Overhauled the settings page to accommodate the new settings added in this commit under the Metadata section while also removing the old Tags section. In case it wasn't obvious, **THIS IS A BREAKING CHANGE**. \ud83d\ude42\n\n**Note**: TMDB content ratings and production locations will be usable when when the data is available in Shoko Server.\n\nfeat: add automagic season merging\n\n- Added an **EXPERIMENTAL** implementation for automagic season merging. The logic may need to be tweaked further, but for now it needs testing",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.197/shoko_3.0.1.197.zip",
+                "checksum": "ead2b2fe416530f2add8a48ead8d57bf",
+                "timestamp": "2024-06-07T03:23:48Z"
+            },
+            {
                 "version": "3.0.1.196",
                 "changelog": "fix: disable creation time again until 10.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.193/shoko_3.0.1.193.zip",
                 "checksum": "cc4c02bb2d219b06045864e34dbb90b4",
                 "timestamp": "2024-05-30T04:51:19Z"
-            },
-            {
-                "version": "3.0.1.192",
-                "changelog": "fix: add delay before processing file events\ufffd",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.192/shoko_3.0.1.192.zip",
-                "checksum": "64be63355607a71dc491887a740a611a",
-                "timestamp": "2024-05-30T02:56:13Z"
             }
         ]
     }
