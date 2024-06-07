@@ -69,8 +69,8 @@ jobs:
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "CHANGELOG<<$EOF" >> "$GITHUB_OUTPUT"
-          git log $PREVIOUS_COMMIT..$NEXT_COMMIT --pretty=format:"%B" | head -c -2 >> "$GITHUB_OUTPUT"
-          echo -e "\n$EOF" >> "$GITHUB_OUTPUT"
+          node .github/workflows/git-log-json.mjs $PREVIOUS_COMMIT..$NEXT_COMMIT | jq -r '.[] | "`\(.type)`: **\(.subject)**" + if .body != null and .body != "" then ":\n\n\(.body)\n" else "" end' >> "$GITHUB_OUTPUT"
+          echo -e "$EOF" >> "$GITHUB_OUTPUT"
 
   build_plugin:
     runs-on: ubuntu-latest
@@ -177,4 +177,5 @@ jobs:
             Update your plugin using the [dev manifest](https://raw.githubusercontent.com/${{ github.repository }}/metadata/dev/manifest.json) or by downloading the release from [GitHub Releases](https://github.com/${{ github.repository }}/releases/tag/${{ needs.current_info.outputs.tag }}) and installing it manually!
 
             **Changes since last build**:
+
             ${{ needs.current_info.outputs.changelog }}
