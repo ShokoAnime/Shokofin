@@ -23,6 +23,12 @@ public class SeasonInfo
     public readonly SeriesType Type;
 
     /// <summary>
+    /// Indicates that the season have been mapped to a different type, either
+    /// manually or automagically.
+    /// </summary>
+    public bool IsCustomType => Type != AniDB.Type;
+
+    /// <summary>
     /// The date of the earliest imported file, or when the series was created
     /// in shoko if no files are imported yet.
     /// </summary>
@@ -97,7 +103,7 @@ public class SeasonInfo
     /// </summary>
     public readonly IReadOnlyDictionary<string, RelationType> RelationMap;
 
-    public SeasonInfo(Series series, IEnumerable<string> extraIds, DateTime? earliestImportedAt, DateTime? lastImportedAt, List<EpisodeInfo> episodes, List<Role> cast, List<Relation> relations, string[] genres, string[] tags, string[] productionLocations, string? contentRating)
+    public SeasonInfo(Series series, SeriesType? customType, IEnumerable<string> extraIds, DateTime? earliestImportedAt, DateTime? lastImportedAt, List<EpisodeInfo> episodes, List<Role> cast, List<Relation> relations, string[] genres, string[] tags, string[] productionLocations, string? contentRating)
     {
         var seriesId = series.IDs.Shoko.ToString();
         var studios = cast
@@ -167,10 +173,10 @@ public class SeasonInfo
 
         // Replace the normal episodes if we've hidden all the normal episodes and we have at least one
         // alternate episode locally.
-        var type = series.AniDBEntity.Type;
+        var type = customType ?? series.AniDBEntity.Type;
         if (episodesList.Count == 0 && altEpisodesList.Count > 0) {
             // Switch the type from movie to web if we've hidden the main movie, and we have some of the parts.
-            if (type == SeriesType.Movie)
+            if (!customType.HasValue && type == SeriesType.Movie)
                 type = SeriesType.Web;
 
             episodesList = altEpisodesList;
@@ -195,7 +201,7 @@ public class SeasonInfo
             }
         }
         // Also switch the type from movie to web if we're hidden the main movies, but the parts are normal episodes.
-        else if (type == SeriesType.Movie && episodes.Any(episodeInfo => string.Equals(episodeInfo.AniDB.Titles.FirstOrDefault(title => title.LanguageCode == "en")?.Value, "Complete Movie", StringComparison.InvariantCultureIgnoreCase) && episodeInfo.Shoko.IsHidden)) {
+        else if (!customType.HasValue && type == SeriesType.Movie && episodes.Any(episodeInfo => episodeInfo.AniDB.Titles.Any(title => title.LanguageCode == "en" && string.Equals(title.Value, "Complete Movie", StringComparison.InvariantCultureIgnoreCase)) && episodeInfo.Shoko.IsHidden)) {
             type = SeriesType.Web;
         }
 

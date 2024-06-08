@@ -302,6 +302,26 @@ public class ShokoAPIManager : IDisposable
         return ContentRating.GetTagBasedContentRating(tags);
     }
 
+    private async Task<SeriesType?> GetCustomSeriesType(string seriesId)
+    {
+        var tags = await GetNamespacedTagsForSeries(seriesId);
+        if (tags.TryGetValue("/custom user tags/series type", out var seriesTypeTag) &&
+            seriesTypeTag.Children.Count is > 1 &&
+            Enum.TryParse<SeriesType>(NormalizeCustomSeriesType(seriesTypeTag.Children.Keys.First()), out var seriesType) &&
+            seriesType is not SeriesType.Unknown
+        )
+            return seriesType;
+        return null;
+    }
+
+    private static string NormalizeCustomSeriesType(string seriesType)
+    {
+        seriesType = seriesType.ToLowerInvariant().Replace(" ", "");
+        if (seriesType[^1] == 's')
+          seriesType = seriesType[..^1];
+        return seriesType;
+    }
+
     #endregion
     #region Path Set And Local Episode IDs
 
@@ -668,6 +688,7 @@ public class ShokoAPIManager : IDisposable
 
                 Logger.LogTrace("Creating info object for season {SeriesName}. (Series={SeriesId},ExtraSeries={ExtraIds})", series.Name, seriesId, extraIds);
 
+                var customSeriesType = await GetCustomSeriesType(seriesId).ConfigureAwait(false);
                 var contentRating = await GetAssumedContentRating(seriesId).ConfigureAwait(false);
                 var (earliestImportedAt, lastImportedAt) = await GetEarliestImportedAtForSeries(seriesId).ConfigureAwait(false);
                 var episodes = (await Task.WhenAll(
@@ -715,14 +736,14 @@ public class ShokoAPIManager : IDisposable
                         .ToArray();
 
                     // Create the season info using the merged details.
-                    seasonInfo = new SeasonInfo(series, extraIds, earliestImportedAt, lastImportedAt, episodes, cast, relations, genres, tags, productionLocations, contentRating);
+                    seasonInfo = new SeasonInfo(series, customSeriesType, extraIds, earliestImportedAt, lastImportedAt, episodes, cast, relations, genres, tags, productionLocations, contentRating);
                 } else {
                     var cast = await APIClient.GetSeriesCast(seriesId).ConfigureAwait(false);
                     var relations = await APIClient.GetSeriesRelations(seriesId).ConfigureAwait(false);
                     var genres = await GetGenresForSeries(seriesId).ConfigureAwait(false);
                     var tags = await GetTagsForSeries(seriesId).ConfigureAwait(false);
                     var productionLocations = await GetProductionLocations(seriesId).ConfigureAwait(false);
-                    seasonInfo = new SeasonInfo(series, extraIds, earliestImportedAt, lastImportedAt, episodes, cast, relations, genres, tags, productionLocations, contentRating);
+                    seasonInfo = new SeasonInfo(series, customSeriesType, extraIds, earliestImportedAt, lastImportedAt, episodes, cast, relations, genres, tags, productionLocations, contentRating);
                 }
 
                 foreach (var episode in episodes)
