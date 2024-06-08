@@ -69,7 +69,7 @@ jobs:
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "CHANGELOG<<$EOF" >> "$GITHUB_OUTPUT"
-          node .github/workflows/git-log-json.mjs $PREVIOUS_COMMIT..$NEXT_COMMIT | jq -r '.[] | "\n`\(.type)`: **\(.subject)**" + if .body != null and .body != "" then ":\n\n\(.body)" else "." end' >> "$GITHUB_OUTPUT"
+          node .github/workflows/git-log-json.mjs $PREVIOUS_COMMIT..$NEXT_COMMIT | jq -r '.[] | "\n`\(.type)`: **\(.subject)**" + if .body != null and .body != "" then if .isSkipCI then ": (_Skip CI_)\n\n\(.body)" else ":\n\n\(.body)" end else if .isSkipCI then ". (_Skip CI_)" else "." end end' >> "$GITHUB_OUTPUT"
           echo -e "\n$EOF" >> "$GITHUB_OUTPUT"
 
   build_plugin:
@@ -140,7 +140,7 @@ jobs:
             ${{ needs.current_info.outputs.changelog }}
           prerelease: true
           fail_on_unmatched_files: true
-          generate_release_notes: true
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

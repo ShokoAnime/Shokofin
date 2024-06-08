@@ -78,8 +78,8 @@ const commitsList = commitOrder.slice().reverse()
         commit,
         parents,
         tree,
-        subject: /^\w+: /i.test(subject) ? subject.split(":").slice(1).join(":").trim() : subject.trim(),
-        type: /^\w+: /i.test(subject) ?
+        subject: /^\s*\w+: /i.test(subject) ? subject.split(":").slice(1).join(":").trim() : subject.trim(),
+        type: /^\s*\w+: /i.test(subject) ?
                 subject.split(":")[0].toLowerCase()
             : subject.startsWith("Partially revert ") ?
                 "revert"
@@ -106,6 +106,12 @@ const commitsList = commitOrder.slice().reverse()
         ...commit,
         subject: /[a-z]/.test(commit.subject[0]) ? commit.subject[0].toUpperCase() + commit.subject.slice(1) : commit.subject,
         type: commit.type == "feature" ? "feat" : commit.type === "refacor" ? "refactor" : commit.type == "mics" ? "misc" : commit.type,
+    }))
+    .map((commit) => ({
+        ...commit,
+        subject: commit.subject.replace(/\[(?:skip|no) *ci\]/ig, "").trim().replace(/[\.:]+^/, ""),
+        body: commit.body ? commit.body.replace(/\[(?:skip|no) *ci\]/ig, "").trimEnd() : commit.body,
+        isSkipCI: /\[(?:skip|no) *ci\]/i.test(commit.subject) || Boolean(commit.body && /\[(?:skip|no) *ci\]/i.test(commit.body)),
     }))
     .filter((commit) => !(commit.type === "misc" && (commit.subject === "update unstable manifest" || commit.subject === "Update repo manifest" || commit.subject === "Update unstable repo manifest")));
 
