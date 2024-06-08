@@ -62,8 +62,9 @@ public class ShowInfo
     /// Ended date of the show.
     /// </summary>
     public DateTime? EndDate =>
-        SeasonList.Any(s => s.AniDB.EndDate == null) ? null : SeasonList
-            .Select(s => s.AniDB.AirDate)
+        SeasonList.Any(s => s.AniDB.AirDate.HasValue && s.AniDB.AirDate.Value < DateTime.Now && s.AniDB.EndDate == null) ? null : SeasonList
+            .Where(s => s.AniDB.EndDate.HasValue)
+            .Select(s => s.AniDB.EndDate!.Value)
             .OrderBy(s => s)
             .LastOrDefault();
 
