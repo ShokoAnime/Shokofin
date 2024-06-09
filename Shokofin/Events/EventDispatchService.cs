@@ -49,7 +49,7 @@ public class EventDispatchService
 
     private readonly IDirectoryService DirectoryService;
 
-    private readonly ILogger<VirtualFileSystemService> Logger;
+    private readonly ILogger<EventDispatchService> Logger;
 
     private int ChangesDetectionSubmitterCount = 0;
 
@@ -76,7 +76,7 @@ public class EventDispatchService
         LibraryScanWatcher libraryScanWatcher,
         IFileSystem fileSystem,
         IDirectoryService directoryService,
-        ILogger<VirtualFileSystemService> logger
+        ILogger<EventDispatchService> logger
     )
     {
         ApiManager = apiManager;
@@ -214,6 +214,7 @@ public class EventDispatchService
             var mediaFolders = ConfigurationService.GetAvailableMediaFolders(fileEvents: true);
             var (reason, importFolderId, relativePath, lastEvent) = changes.Last();
             if (reason is not UpdateReason.Removed) {
+                Logger.LogTrace("Processing file changed. (File={FileId})", fileId);
                 foreach (var (config, mediaFolder, vfsPath) in mediaFolders) {
                     if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
                         continue;
@@ -244,16 +245,20 @@ public class EventDispatchService
                         .GetItemList(
                             new() {
                                 AncestorIds = new Guid[] { mediaFolder.Id },
-                                IncludeItemTypes = new BaseItemKind[] { BaseItemKind.Episode, BaseItemKind.Movie },
                                 HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, fileId.ToString() } },
                                 DtoOptions = new(true),
                             },
                             true
-                        )
-                        .Where(item => !string.IsNullOrEmpty(item.Path) && item.Path.StartsWith(vfsPath) && !result.Paths.Contains(item.Path))
-                        .ToList();
+                        );
+                    Logger.LogTrace("Found {Count} potential videos to remove", videos.Count);
                     foreach (var video in videos) {
-                        File.Delete(video.Path);
+                        if (string.IsNullOrEmpty(video.Path) || !video.Path.StartsWith(vfsPath) || result.Paths.Contains(video.Path)) {
+                            Logger.LogTrace("Skipped a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
+                            continue;
+                        }
+                        Logger.LogTrace("Found a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
+                        if (File.Exists(video.Path))
+                            File.Delete(video.Path);
                         topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
                         locationsToNotify.Add(video.Path);
                         result.RemovedVideos++;
@@ -262,8 +267,7 @@ public class EventDispatchService
                     result.Print(Logger, mediaFolder.Path);
 
                     // If all the "top-level-folders" exist, then let the core logic handle the rest.
-                    if (topFolders.All(path => LibraryManager.FindByPath(path, true) != null)) {
-                        var old = locationsToNotify.Count;
+                    if (topFolders.All(path => LibraryManager.FindByPath(path, true) is not null)) {
                         locationsToNotify.AddRange(vfsLocations.SelectMany(tuple => tuple.symbolicLinks));
                     }
                     // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
@@ -275,7 +279,8 @@ public class EventDispatchService
                 }
             }
             // Something was removed, so assume the location is gone.
-            else if (changes.FirstOrDefault(t => t.Reason is UpdateReason.Removed).Event is IFileRelocationEventArgs firstRemovedEvent) {
+            else if (changes.FirstOrDefault(t => t.Reason is UpdateReason.Removed).Event is IFileEventArgs firstRemovedEvent) {
+                Logger.LogTrace("Processing file removed. (File={FileId})", fileId);
                 relativePath = firstRemovedEvent.RelativePath;
                 importFolderId = firstRemovedEvent.ImportFolderId;
                 foreach (var (config, mediaFolder, vfsPath) in mediaFolders) {
@@ -293,9 +298,8 @@ public class EventDispatchService
                     var result = new LinkGenerationResult();
                     var vfsSymbolicLinks = new HashSet<string>();
                     var topFolders = new HashSet<string>();
-                    var newRelativePath = await GetNewRelativePath(config, fileId, relativePath);
-                    if (!string.IsNullOrEmpty(newRelativePath)) {
-                        var newSourceLocation = Path.Join(mediaFolder.Path, newRelativePath[config.ImportFolderRelativePath.Length..]);
+                    var newSourceLocation = await GetNewSourceLocation(config, fileId, relativePath, mediaFolder.Path);
+                    if (!string.IsNullOrEmpty(newSourceLocation)) {
                         var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, newSourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
                             .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
                             .ToList();
@@ -311,17 +315,20 @@ public class EventDispatchService
                     var videos = LibraryManager
                         .GetItemList(
                             new() {
-                                AncestorIds = new Guid[] { mediaFolder.Id },
-                                IncludeItemTypes = new BaseItemKind[] { BaseItemKind.Episode, BaseItemKind.Movie },
                                 HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, fileId.ToString() } },
                                 DtoOptions = new(true),
                             },
                             true
-                        )
-                        .Where(item => !string.IsNullOrEmpty(item.Path) && item.Path.StartsWith(vfsPath) && !result.Paths.Contains(item.Path))
-                        .ToList();
+                        );
+                    Logger.LogTrace("Found {Count} potential videos to remove", videos.Count);
                     foreach (var video in videos) {
-                        File.Delete(video.Path);
+                        if (string.IsNullOrEmpty(video.Path) || !video.Path.StartsWith(vfsPath) || result.Paths.Contains(video.Path)) {
+                            Logger.LogTrace("Skipped a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
+                            continue;
+                        }
+                        Logger.LogTrace("Found a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
+                        if (File.Exists(video.Path))
+                            File.Delete(video.Path);
                         topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
                         locationsToNotify.Add(video.Path);
                         result.RemovedVideos++;
@@ -331,7 +338,6 @@ public class EventDispatchService
 
                     // If all the "top-level-folders" exist, then let the core logic handle the rest.
                     if (topFolders.All(path => LibraryManager.FindByPath(path, true) is not null)) {
-                        var old = locationsToNotify.Count;
                         locationsToNotify.AddRange(vfsSymbolicLinks);
                     }
                     // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
@@ -343,17 +349,17 @@ public class EventDispatchService
                 }
             }
 
-            // We let jellyfin take it from here.
-            if (!LibraryScanWatcher.IsScanRunning) {
-                Logger.LogDebug("Notifying Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count + mediaFoldersToNotify.Count, fileId.ToString());
-                foreach (var location in locationsToNotify)
-                    LibraryMonitor.ReportFileSystemChanged(location);
-                if (mediaFoldersToNotify.Count > 0)
-                    await Task.WhenAll(mediaFoldersToNotify.Values.Select(tuple => ReportMediaFolderChanged(tuple.mediaFolder, tuple.pathToReport))).ConfigureAwait(false);
-            }
-            else {
+            if (LibraryScanWatcher.IsScanRunning) {
                 Logger.LogDebug("Skipped notifying Jellyfin about {LocationCount} changes because a library scan is running. (File={FileId})", locationsToNotify.Count, fileId.ToString());
+                return;
             }
+
+            // We let jellyfin take it from here.
+            Logger.LogDebug("Notifying Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count + mediaFoldersToNotify.Count, fileId.ToString());
+            foreach (var location in locationsToNotify)
+                LibraryMonitor.ReportFileSystemChanged(location);
+            if (mediaFoldersToNotify.Count > 0)
+                await Task.WhenAll(mediaFoldersToNotify.Values.Select(tuple => ReportMediaFolderChanged(tuple.mediaFolder, tuple.pathToReport))).ConfigureAwait(false);
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Error processing {EventCount} file change events. (File={FileId})", changes.Count, fileId);
@@ -363,16 +369,24 @@ public class EventDispatchService
     private async Task<IReadOnlySet<string>> GetSeriesIdsForFile(int fileId, IFileEventArgs? fileEvent)
     {
         HashSet<string> seriesIds;
-        if (fileEvent is not null && fileEvent.CrossReferences.All(xref => xref.ShokoSeriesId.HasValue && xref.ShokoEpisodeId.HasValue))
+        if (fileEvent is not null && fileEvent.CrossReferences.All(xref => xref.ShokoSeriesId.HasValue && xref.ShokoEpisodeId.HasValue)) {
             seriesIds = fileEvent.CrossReferences.Select(xref => xref.ShokoSeriesId!.Value.ToString())
                 .Distinct()
                 .ToHashSet();
-        else
-            seriesIds = (await ApiClient.GetFile(fileId.ToString())).CrossReferences
-                .Where(xref => xref.Series.Shoko.HasValue && xref.Episodes.All(e => e.Shoko.HasValue))
-                .Select(xref => xref.Series.Shoko!.Value.ToString())
-                .Distinct()
-                .ToHashSet();
+        }
+        else {
+            try {
+                var file = await ApiClient.GetFile(fileId.ToString());
+                seriesIds = file.CrossReferences
+                    .Where(xref => xref.Series.Shoko.HasValue && xref.Episodes.All(e => e.Shoko.HasValue))
+                    .Select(xref => xref.Series.Shoko!.Value.ToString())
+                    .Distinct()
+                    .ToHashSet();
+            }
+            catch (ApiException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound) {
+                return new HashSet<string>();
+            }
+        }
 
         // TODO: Postpone the processing of the file if the episode or series is not available yet.
 
@@ -391,7 +405,7 @@ public class EventDispatchService
         return filteredSeriesIds.Count is 0 ? seriesIds : filteredSeriesIds;
     }
 
-    private async Task<string?> GetNewRelativePath(MediaFolderConfiguration config, int fileId, string relativePath)
+    private async Task<string?> GetNewSourceLocation(MediaFolderConfiguration config, int fileId, string relativePath, string mediaFolderPath)
     {
         // Check if the file still exists, and if it has any other locations we can use.
         try {
@@ -399,7 +413,14 @@ public class EventDispatchService
             var usableLocation = file.Locations
                 .Where(loc => loc.ImportFolderId == config.ImportFolderId && config.IsEnabledForPath(loc.RelativePath) && loc.RelativePath != relativePath)
                 .FirstOrDefault();
-            return usableLocation?.RelativePath;
+            if (usableLocation is null)
+                return null;
+
+            var sourceLocation = Path.Join(mediaFolderPath, usableLocation.RelativePath[config.ImportFolderRelativePath.Length..]);
+            if (!File.Exists(sourceLocation))
+                return null;
+
+            return sourceLocation;
         }
         catch (ApiException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound) {
             return null;

@@ -511,7 +511,15 @@ public class ShokoAPIManager : IDisposable
         if (DataCache.TryGetValue<FileInfo>(cacheKey, out var fileInfo))
             return fileInfo;
 
-        var file = await APIClient.GetFile(fileId).ConfigureAwait(false);
+        // Gracefully return if we can't find the file.
+        File file;
+        try {
+            file = await APIClient.GetFile(fileId).ConfigureAwait(false);
+        }
+        catch (ApiException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound) {
+            return null;
+        }
+
         return await CreateFileInfo(file, fileId, seriesId).ConfigureAwait(false);
     }
 

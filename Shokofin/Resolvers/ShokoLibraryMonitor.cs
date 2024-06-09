@@ -14,8 +14,11 @@ using Shokofin.Configuration.Models;
 using Shokofin.Events;
 using Shokofin.Events.Interfaces;
 using Shokofin.Events.Stub;
+using Shokofin.ExternalIds;
 using Shokofin.Resolvers.Models;
 using Shokofin.Utils;
+
+using ApiException = Shokofin.API.Models.ApiException;
 
 namespace Shokofin.Resolvers;
 
@@ -36,6 +39,8 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
     private readonly LibraryScanWatcher LibraryScanWatcher;
 
     private readonly NamingOptions NamingOptions;
+
+    private readonly GuardedMemoryCache Cache;
 
     private readonly ConcurrentDictionary<string, ShokoWatcher> FileSystemWatchers = new();
 
@@ -70,6 +75,7 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
         LibraryScanWatcher = libraryScanWatcher;
         LibraryScanWatcher.ValueChanged += OnLibraryScanRunningChanged;
         NamingOptions = namingOptions;
+        Cache = new(logger, TimeSpan.FromSeconds(1), new() { ExpirationScanFrequency = TimeSpan.FromSeconds(30) }, new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(1) });
     }
 
     ~ShokoLibraryMonitor()
@@ -255,43 +261,78 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
 
         await Task.Delay(MagicalDelay).ConfigureAwait(false);
 
-        if (!File.Exists(path)) {
+        if (changeTypes is not WatcherChangeTypes.Deleted && !File.Exists(path)) {
             Logger.LogTrace("Skipped path because it is disappeared after awhile before we could process it; {Path}", path);
             return;
         }
 
-        var relativePath = path[mediaConfig.MediaFolderPath.Length..];
-        var files = await ApiClient.GetFileByPath(relativePath);
-        var file = files.FirstOrDefault(file => file.Locations.Any(location => location.ImportFolderId == mediaConfig.ImportFolderId && location.RelativePath == relativePath));
-        if (file is null) {
-            Logger.LogTrace("Skipped file because it is not a shoko managed file; {Path}", path);
-            return;
-        }
+        await Cache.GetOrCreateAsync(
+            path,
+            (_) => Logger.LogTrace("Skipped path because it was handled within a second ago; {Path}", path),
+            async (_) => {
+                string? fileId = null;
+                IFileEventArgs eventArgs;
+                var reason = changeTypes is WatcherChangeTypes.Deleted ? UpdateReason.Removed : changeTypes is WatcherChangeTypes.Created ? UpdateReason.Added : UpdateReason.Updated;
+                var relativePath = path[mediaConfig.MediaFolderPath.Length..];
+                try {
+                    var files = await ApiClient.GetFileByPath(relativePath);
+                    var file = files.FirstOrDefault(file => file.Locations.Any(location => location.ImportFolderId == mediaConfig.ImportFolderId && location.RelativePath == relativePath));
+                    if (file is null) {
+                        if (reason is not UpdateReason.Removed) {
+                            Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
+                            return null;
+                        }
+                        if (LibraryManager.FindByPath(path, false) is not Video video) {
+                            Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
+                            return null;
+                        }
+                        if (!video.ProviderIds.TryGetValue(ShokoFileId.Name, out fileId)) {
+                            Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
+                            return null;
+                        }
+                        // It may throw an ApiException with 404 here,
+                        file = await ApiClient.GetFile(fileId);
+                    }
 
-        var reason = changeTypes == WatcherChangeTypes.Deleted ? UpdateReason.Removed : changeTypes == WatcherChangeTypes.Created ? UpdateReason.Added : UpdateReason.Updated;
-        var fileLocation = file.Locations.First(location => location.ImportFolderId == mediaConfig.ImportFolderId && location.RelativePath == relativePath);
-        Logger.LogDebug(
-            "File {EventName}; {ImportFolderId} {Path} (File={FileId},Location={LocationId},CrossReferences={HasCrossReferences})",
-            reason,
-            fileLocation.ImportFolderId,
-            relativePath,
-            file.Id,
-            fileLocation.Id,
-            true
+                    var fileLocation = file.Locations.First(location => location.ImportFolderId == mediaConfig.ImportFolderId && location.RelativePath == relativePath);
+                    eventArgs = new FileEventArgsStub(fileLocation, file);
+                }
+                // which we catch here.
+                catch (ApiException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound) {
+                    if (fileId is null) {
+                        Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
+                        return null;
+                    }
+
+                    Logger.LogTrace("Failed to get file info from Shoko during a file deleted event. (File={FileId})", fileId);
+                    eventArgs = new FileEventArgsStub(int.Parse(fileId), null, mediaConfig.ImportFolderId, relativePath, Array.Empty<IFileEventArgs.FileCrossReference>());
+                }
+
+                Logger.LogDebug(
+                    "File {EventName}; {ImportFolderId} {Path} (File={FileId},Location={LocationId},CrossReferences={HasCrossReferences})",
+                    reason,
+                    eventArgs.ImportFolderId,
+                    relativePath,
+                    eventArgs.FileId,
+                    eventArgs.FileLocationId,
+                    true
+                );
+
+                if (LibraryScanWatcher.IsScanRunning) {
+                    Logger.LogTrace(
+                        "Library scan is running. Skipping emit of file event. (File={FileId},Location={LocationId})",
+                        eventArgs.FileId,
+                        eventArgs.FileLocationId
+                    );
+                    return null;
+                }
+
+                Events.AddFileEvent(eventArgs.FileId, reason, eventArgs.ImportFolderId, relativePath, eventArgs);
+                return eventArgs;
+            }
         );
-
-        if (LibraryScanWatcher.IsScanRunning) {
-            Logger.LogTrace(
-                "Library scan is running. Skipping emit of file event. (File={FileId},Location={LocationId})",
-                file.Id,
-                fileLocation.Id
-            );
-            return;
-        }
-
-        Events.AddFileEvent(file.Id, reason, fileLocation.ImportFolderId, relativePath, new FileEventArgsStub(fileLocation, file));
     }
+
     private bool IsVideoFile(string path)
         => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path));
-
 }

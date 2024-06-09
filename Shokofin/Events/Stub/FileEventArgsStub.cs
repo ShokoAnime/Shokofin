@@ -25,16 +25,21 @@ public class FileEventArgsStub : IFileEventArgs
     /// <inheritdoc/>
     public List<IFileEventArgs.FileCrossReference> CrossReferences { get; private init; }
 
+    public FileEventArgsStub(int fileId, int? fileLocationId, int importFolderId, string relativePath, IEnumerable<IFileEventArgs.FileCrossReference> xrefs)
+    {
+        FileId = fileId;
+        FileLocationId = fileLocationId;
+        ImportFolderId = importFolderId;
+        RelativePath = relativePath;
+        CrossReferences = xrefs.ToList();
+    }
+
     public FileEventArgsStub(File.Location location, File file)
     {
         FileId = file.Id;
-        ImportFolderId = location.ImportFolderId;
-        RelativePath = location.RelativePath
-            .Replace('/', System.IO.Path.DirectorySeparatorChar)
-            .Replace('\\', System.IO.Path.DirectorySeparatorChar);
-        if (RelativePath[0] != System.IO.Path.DirectorySeparatorChar)
-            RelativePath = System.IO.Path.DirectorySeparatorChar + RelativePath;
         FileLocationId = location.Id;
+        ImportFolderId = location.ImportFolderId;
+        RelativePath = location.RelativePath;
         CrossReferences = file.CrossReferences
             .SelectMany(xref => xref.Episodes.Select(episodeXref => new IFileEventArgs.FileCrossReference() {
                 AnidbEpisodeId = episodeXref.AniDB,
