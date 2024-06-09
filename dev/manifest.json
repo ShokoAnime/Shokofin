@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.199",
+                "changelog": "`chore`: **Fix release changelog (again)**. (_Skip CI_)\n\n`fix`: **Fix library monitor + more**:\n\n- Fixed the Shoko library monitor that runs if you enable real time monitoring on a library with the VFS enabled, so it properly only sends a single event per change per second.\n\n- Fixed the Shoko library monitor so it properly can send a deleted/removed event even if the file data is gone from shoko.\n\n- Fixed the event dispatcher so it uses the correct logger.\n\n- Fixed the event dispatcher so it properly removes the files and notifies jellyfin core when a file has been removed.\n\n- Added more verbose/trace logging statements.\n\n- Fixed it so it will gracefully continue if a file is not found in shoko when generating VFS links.\n\n`chore`: **Fix ember icon in discord notification**.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.199/shoko_3.0.1.199.zip",
+                "checksum": "ce88130a12f5c8a2f45a8f423d600e84",
+                "timestamp": "2024-06-09T17:25:21Z"
+            },
+            {
                 "version": "3.0.1.198",
                 "changelog": "`misc`: **Fix release changelog order [skip ci]**:\n\n- Fixed the release changelog's item order by adding the overkill `git-log-json.mjs` script I use in combination with `jq` to format the log.\n\n`misc`: **Fix release changelog order (take 2) [skip ci]**:\n\n- Added the missing type and better formatting.\n\n`chore`: **Update read-me. [skip ci]**.\n\n`feat`: **Add custom series type override**:\n\n- Added support for manually overriding the series type of a shoko series if needed using custom tags, e.g. to map _that one_ movie series you've been thinking should had been a show and not a collection of movies in your library, etc.. Use at your own discretion. \ud83d\ude42\n\n    To set an override you will simply assign it one of the following custom user tags;\n\n    - `series type/tv` \u2192 `TV`\n    - `series type/tvspecial` \u2192 `TVSpecial`\n    - `series type/tvspecials` \u2192 `TVSpecial`\n    - `series type/tv special` \u2192 `Series`\n    - `series type/tv specials` \u2192 `Series`\n    - `series type/web` \u2192 `Web`\n    - `series type/movie` \u2192 `Movie`\n    - `series type/movies` \u2192 `Movie`\n    - `series type/ova` \u2192 `OVA`\n    - `series type/ovas` \u2192 `OVA`\n    - `series type/other` \u2192 `Other`\n    - `series type/others` \u2192 `Other`\n\n    The tags are case insensitive, and the trailing 's' is optional in case you want to use plural form for the tag. Setting multiple tags will make it set the type from the first assigned tag, but it won't break anything.\n\n`fix`: **Fix ending date for shows with \"unaired\" seasons in them.**.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.195/shoko_3.0.1.195.zip",
                 "checksum": "b8e456bf6816d67dd5380dcd6c3ffe0b",
                 "timestamp": "2024-05-31T12:47:45Z"
-            },
-            {
-                "version": "3.0.1.194",
-                "changelog": "fix: file events being skipped on valid file",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.194/shoko_3.0.1.194.zip",
-                "checksum": "a7190cc083d5e5d2e481cfd5c786fd36",
-                "timestamp": "2024-05-30T20:54:11Z"
             }
         ]
     }
