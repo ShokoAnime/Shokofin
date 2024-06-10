@@ -169,5 +169,12 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
         => item is Series or Season or Episode or Movie or BoxSet;
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+    {
+        var internalUrl = Plugin.Instance.Configuration.Url;
+        var prettyUrl = Plugin.Instance.Configuration.PrettyUrl;
+        if (!string.Equals(internalUrl, prettyUrl) && url.StartsWith(prettyUrl))
+            url = internalUrl + url[prettyUrl.Length..];
+
+        return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+    }
 }
