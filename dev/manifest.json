@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.200",
+                "changelog": "`fix`: **Properly resolve public url**:\n\n- Fix a long standing issue where Jellyfin cannot properly resolve the image when a public url is set because it cannot resolve the public url.\n\n- Closes #57.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.200/shoko_3.0.1.200.zip",
+                "checksum": "076ca54cb1313654fd31a77d053d3072",
+                "timestamp": "2024-06-10T21:06:10Z"
+            },
+            {
                 "version": "3.0.1.199",
                 "changelog": "`chore`: **Fix release changelog (again)**. (_Skip CI_)\n\n`fix`: **Fix library monitor + more**:\n\n- Fixed the Shoko library monitor that runs if you enable real time monitoring on a library with the VFS enabled, so it properly only sends a single event per change per second.\n\n- Fixed the Shoko library monitor so it properly can send a deleted/removed event even if the file data is gone from shoko.\n\n- Fixed the event dispatcher so it uses the correct logger.\n\n- Fixed the event dispatcher so it properly removes the files and notifies jellyfin core when a file has been removed.\n\n- Added more verbose/trace logging statements.\n\n- Fixed it so it will gracefully continue if a file is not found in shoko when generating VFS links.\n\n`chore`: **Fix ember icon in discord notification**.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.196/shoko_3.0.1.196.zip",
                 "checksum": "15c4099a4ba600ea51fdd8b018122b25",
                 "timestamp": "2024-05-31T21:47:52Z"
-            },
-            {
-                "version": "3.0.1.195",
-                "changelog": "refactor: split up resolver and move around file",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.195/shoko_3.0.1.195.zip",
-                "checksum": "b8e456bf6816d67dd5380dcd6c3ffe0b",
-                "timestamp": "2024-05-31T12:47:45Z"
             }
         ]
     }
