@@ -92,7 +92,7 @@ public class MediaFolderConfigurationService
                     mediaFolderConfig.ImportFolderRelativePath
                 );
                 Plugin.Instance.Configuration.MediaFolders.Remove(mediaFolderConfig);
-                Plugin.Instance.SaveConfiguration();
+                Plugin.Instance.UpdateConfiguration();
 
                 MediaFolderChangeKeys.Remove(folder.Id);
                 ConfigurationRemoved?.Invoke(null, new(mediaFolderConfig, folder));
@@ -168,7 +168,7 @@ public class MediaFolderConfigurationService
         // Store and log the result.
         MediaFolderChangeKeys[mediaFolder.Id] = ConstructKey(mediaFolderConfig);
         config.MediaFolders.Add(mediaFolderConfig);
-        Plugin.Instance.SaveConfiguration(config);
+        Plugin.Instance.UpdateConfiguration(config);
         if (mediaFolderConfig.IsMapped) {
             Logger.LogInformation(
                 "Found a match for media folder at {Path} in {TimeSpan} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path},Attempts={Attempts})",

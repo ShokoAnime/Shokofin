@@ -94,7 +94,7 @@ public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
             }
         }
         if (updated) {
-            Plugin.Instance.SaveConfiguration();
+            Plugin.Instance.UpdateConfiguration();
         }
     }
 }

@@ -118,7 +118,7 @@ public class ShokoAPIClient : IDisposable
                 ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
             Plugin.Instance.Configuration.ServerVersion = version;
-            Plugin.Instance.SaveConfiguration();
+            Plugin.Instance.UpdateConfiguration();
         }
 
         try {
@@ -170,7 +170,7 @@ public class ShokoAPIClient : IDisposable
                 ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
             Plugin.Instance.Configuration.ServerVersion = version;
-            Plugin.Instance.SaveConfiguration();
+            Plugin.Instance.UpdateConfiguration();
         }
 
         try {
@@ -208,7 +208,7 @@ public class ShokoAPIClient : IDisposable
                 ?? throw new HttpRequestException("Unable to connect to Shoko Server to read the version.", null, HttpStatusCode.BadGateway);
 
             Plugin.Instance.Configuration.ServerVersion = version;
-            Plugin.Instance.SaveConfiguration();
+            Plugin.Instance.UpdateConfiguration();
         }
 
         var postData = JsonSerializer.Serialize(new Dictionary<string, string>

@@ -76,6 +76,11 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         Logger.LogDebug("Can create symbolic links; {Value}", CanCreateSymbolicLinks);
     }
 
+    public void UpdateConfiguration()
+    {
+        UpdateConfiguration(this.Configuration);
+    }
+
     public void OnConfigChanged(object? sender, BasePluginConfiguration e)
     {
         if (e is not PluginConfiguration config)
