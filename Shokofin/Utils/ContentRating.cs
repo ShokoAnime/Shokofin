@@ -38,6 +38,16 @@ public static class ContentRating
         None = 0,
 
         /// <summary>
+        /// Most parents would find this program suitable for all ages. Although
+        /// this rating does not signify a program designed specifically for
+        /// children, most parents may let younger children watch this program
+        /// unattended. It contains little or no violence, no strong language
+        /// and little or no sexual dialogue or situations.
+        /// </summary>
+        [Description("TV-G")]
+        TvG,
+
+        /// <summary>
         /// This program is designed to be appropriate for all children. Whether
         /// animated or live-action, the themes and elements in this program are
         /// specifically designed for a very young audience, including children
@@ -62,16 +72,6 @@ public static class ContentRating
         [Description("TV-Y7")]
         [TvContentIndicators(TvContentIndicator.FV)]
         TvY7,
-
-        /// <summary>
-        /// Most parents would find this program suitable for all ages. Although
-        /// this rating does not signify a program designed specifically for
-        /// children, most parents may let younger children watch this program
-        /// unattended. It contains little or no violence, no strong language
-        /// and little or no sexual dialogue or situations.
-        /// </summary>
-        [Description("TV-G")]
-        TvG,
 
         /// <summary>
         /// This program contains material that parents may find unsuitable for
@@ -207,8 +207,8 @@ public static class ContentRating
     public static string? GetTagBasedContentRating(IReadOnlyDictionary<string, ResolvedTag> tags)
     {
         // User overridden content rating.
-        if (tags.TryGetValue("/custom user tags/target audience", out var targetAudience)) {
-            var audience = targetAudience.Children.Count == 1 ? targetAudience.Children.Values.First() : null;
+        if (tags.TryGetValue("/custom user tags/target audience", out var tag)) {
+            var audience = tag.Children.Count == 1 ? tag.Children.Values.First() : null;
             if (TryConvertRatingFromText(audience?.Name.ToLowerInvariant().Replace("-", ""), out var cR, out var cI))
                 return ConvertRatingToText(cR, cI);
         }
@@ -216,8 +216,8 @@ public static class ContentRating
         // Base rating.
         var contentRating = TvRating.None;
         var contentIndicators = new HashSet<TvContentIndicator>();
-        if (tags.TryGetValue("/target audience", out targetAudience)) {
-            var audience = targetAudience.Children.Count == 1 ? targetAudience.Children.Values.First() : null;
+        if (tags.TryGetValue("/target audience", out tag)) {
+            var audience = tag.Children.Count == 1 ? tag.Children.Values.First() : null;
             contentRating = (audience?.Name.ToLowerInvariant()) switch {
                 "mina" => TvRating.TvG,
                 "kodomo" => TvRating.TvY,
@@ -231,34 +231,54 @@ public static class ContentRating
         }
 
         // "Upgrade" the content rating if it contains any of these tags.
-        if (tags.TryGetValue("/elements", out var elements)) {
-            if (contentRating is < TvRating.TvMA && elements.RecursiveNamespacedChildren.ContainsKey("/ecchi/borderline porn"))
-                contentRating = TvRating.TvMA;
-            if (elements.Children.TryGetValue("ecchi", out var ecchi)) {
-                if (contentRating is < TvRating.Tv14 && ecchi.Weight is >= TagWeight.Four)
-                    contentRating = TvRating.Tv14;
-                else if (contentRating is < TvRating.TvPG && ecchi.Weight is >= TagWeight.Two)
-                    contentRating = TvRating.TvPG;
-            }
+        if (contentRating is < TvRating.TvMA && tags.ContainsKey("/elements/ecchi/borderline porn"))
+            contentRating = TvRating.TvMA;
+        if (tags.TryGetValue("/elements/ecchi", out tag)) {
+            if (contentRating is < TvRating.Tv14 && tag.Weight is >= TagWeight.Four)
+                contentRating = TvRating.Tv14;
+            else if (contentRating is < TvRating.TvPG && tag.Weight is >= TagWeight.Three)
+                contentRating = TvRating.TvPG;
+            else if (contentRating is < TvRating.TvY7 && tag.Weight is >= TagWeight.Two)
+                contentRating = TvRating.TvY7;
         }
+        if (contentRating is < TvRating.Tv14 && tags.ContainsKey("/content indicators/sex"))
+            contentRating = TvRating.Tv14;
+        if (tags.TryGetValue("/content indicators/nudity", out tag)) {
+            if (contentRating is < TvRating.Tv14 && tag.Weight is >= TagWeight.Four)
+                contentRating = TvRating.Tv14;
+            else if (contentRating is < TvRating.TvPG && tag.Weight is >= TagWeight.Three)
+                contentRating = TvRating.TvPG;
+            else if (contentRating is < TvRating.TvY7 && tag.Weight is >= TagWeight.Two)
+                contentRating = TvRating.TvY7;
+        }
+        if (tags.TryGetValue("/content indicators/violence", out tag)) {
+            if (contentRating is > TvRating.TvG && contentRating is < TvRating.Tv14 && tag.Weight is >= TagWeight.Four)
+                contentRating = TvRating.Tv14;
+            if (contentRating is > TvRating.TvG && contentRating is < TvRating.TvY7 && tag.Weight is >= TagWeight.Two)
+                contentRating = TvRating.TvY7;
+        }
+        if (contentRating is < TvRating.TvPG && tags.ContainsKey("/technical aspects/very bloody wound in low-pg series"))
+            contentRating = TvRating.TvPG;
+        if (contentRating is > TvRating.TvG && contentRating is < TvRating.TvY7 && tags.ContainsKey("/content indicators/violence/gore"))
+                contentRating = TvRating.TvY7;
 
         // Content indicators.
-        if (tags.TryGetValue("/elements/sexual humour", out var _))
+        if (tags.ContainsKey("/elements/sexual humour"))
             contentIndicators.Add(TvContentIndicator.D);
-        if (tags.TryGetValue("/content indicators/sex", out var sex)) {
-            if (sex.Weight is <= TagWeight.Two)
+        if (tags.TryGetValue("/content indicators/sex", out tag)) {
+            if (tag.Weight is <= TagWeight.Two)
                 contentIndicators.Add(TvContentIndicator.D);
             else
                 contentIndicators.Add(TvContentIndicator.S);
         }
-        if (tags.TryGetValue("/content indicators/nudity", out var nudity)) {
-            if (nudity.Weight >= TagWeight.Four)
+        if (tags.TryGetValue("/content indicators/nudity", out tag)) {
+            if (tag.Weight >= TagWeight.Four)
                 contentIndicators.Add(TvContentIndicator.S);
         }
-        if (tags.TryGetValue("/content indicators/violence", out var violence)) {
+        if (tags.TryGetValue("/content indicators/violence", out tag)) {
             if (tags.ContainsKey("/elements/speculative fiction/fantasy"))
                 contentIndicators.Add(TvContentIndicator.FV);
-            if (violence.Weight is >= TagWeight.Two)
+            if (tag.Weight is >= TagWeight.Two)
                 contentIndicators.Add(TvContentIndicator.V);
         }
 
