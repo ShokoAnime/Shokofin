@@ -793,6 +793,9 @@ public class ShokoAPIManager : IDisposable
                 if (!Plugin.Instance.Configuration.EXPERIMENTAL_MergeSeasons)
                     return (primaryId, extraIds);
 
+                if (series.AniDBEntity.Type is SeriesType.Movie or SeriesType.Other or SeriesType.Unknown)
+                    return (primaryId, extraIds);
+
                 if (series.AniDBEntity.AirDate is null)
                     return (primaryId, extraIds);
 
