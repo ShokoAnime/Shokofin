@@ -790,10 +790,11 @@ public class ShokoAPIManager : IDisposable
             async (cacheEntry) => {
                 var primaryId = series.IDs.Shoko.ToString();
                 var extraIds = new List<string>();
-                if (!Plugin.Instance.Configuration.EXPERIMENTAL_MergeSeasons)
+                var config = Plugin.Instance.Configuration;
+                if (!config.EXPERIMENTAL_MergeSeasons)
                     return (primaryId, extraIds);
 
-                if (series.AniDBEntity.Type is SeriesType.Movie or SeriesType.Other or SeriesType.Unknown)
+                if (!config.EXPERIMENTAL_MergeSeasonsTypes.Contains(await GetCustomSeriesType(series.IDs.Shoko.ToString()) ?? series.AniDBEntity.Type))
                     return (primaryId, extraIds);
 
                 if (series.AniDBEntity.AirDate is null)
@@ -803,7 +804,7 @@ public class ShokoAPIManager : IDisposable
                 var relations = await APIClient.GetSeriesRelations(primaryId).ConfigureAwait(false);
                 var mainTitle = series.AniDBEntity.Titles.First(title => title.Type == TitleType.Main).Value;
                 var result = YearRegex.Match(mainTitle);
-                var maxDaysThreshold = Plugin.Instance.Configuration.EXPERIMENTAL_MergeSeasonsMergeWindowInDays;
+                var maxDaysThreshold = config.EXPERIMENTAL_MergeSeasonsMergeWindowInDays;
                 if (result.Success)
                 {
                     var adjustedMainTitle = mainTitle[..^result.Length];
@@ -815,7 +816,7 @@ public class ShokoAPIManager : IDisposable
                             if (prequelSeries.IDs.ParentGroup != series.IDs.ParentGroup)
                                 continue;
 
-                            if (prequelSeries.AniDBEntity.Type is SeriesType.Movie or SeriesType.Other or SeriesType.Unknown)
+                            if (!config.EXPERIMENTAL_MergeSeasonsTypes.Contains(await GetCustomSeriesType(prequelSeries.IDs.Shoko.ToString()) ?? prequelSeries.AniDBEntity.Type))
                                 continue;
 
                             if (prequelSeries.AniDBEntity.AirDate is null)
@@ -825,9 +826,11 @@ public class ShokoAPIManager : IDisposable
                             if (prequelDate > currentDate)
                                 continue;
 
-                            var deltaDays = (int)Math.Floor((currentDate - prequelDate).TotalDays);
-                            if (deltaDays > maxDaysThreshold)
-                                continue;
+                            if (maxDaysThreshold > 0) {
+                                var deltaDays = (int)Math.Floor((currentDate - prequelDate).TotalDays);
+                                if (deltaDays > maxDaysThreshold)
+                                    continue;
+                            }
 
                             var prequelMainTitle = prequelSeries.AniDBEntity.Titles.First(title => title.Type == TitleType.Main).Value;
                             var prequelResult = YearRegex.Match(prequelMainTitle);
@@ -859,7 +862,7 @@ public class ShokoAPIManager : IDisposable
                             if (sequelSeries.IDs.ParentGroup != series.IDs.ParentGroup)
                                 continue;
 
-                            if (sequelSeries.AniDBEntity.Type is SeriesType.Movie or SeriesType.Other or SeriesType.Unknown)
+                            if (!config.EXPERIMENTAL_MergeSeasonsTypes.Contains(await GetCustomSeriesType(sequelSeries.IDs.Shoko.ToString()) ?? sequelSeries.AniDBEntity.Type))
                                 continue;
 
                             if (sequelSeries.AniDBEntity.AirDate is null)
@@ -869,9 +872,11 @@ public class ShokoAPIManager : IDisposable
                             if (sequelDate < currentDate)
                                 continue;
 
-                            var deltaDays = (int)Math.Floor((sequelDate - currentDate).TotalDays);
-                            if (deltaDays > maxDaysThreshold)
-                                continue;
+                            if (maxDaysThreshold > 0) {
+                                var deltaDays = (int)Math.Floor((sequelDate - currentDate).TotalDays);
+                                if (deltaDays > maxDaysThreshold)
+                                    continue;
+                            }
 
                             var sequelMainTitle = sequelSeries.AniDBEntity.Titles.First(title => title.Type == TitleType.Main).Value;
                             var sequelResult = YearRegex.Match(sequelMainTitle);

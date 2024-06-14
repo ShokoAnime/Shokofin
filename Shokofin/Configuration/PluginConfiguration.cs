@@ -416,6 +416,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool EXPERIMENTAL_MergeSeasons { get; set; }
 
     /// <summary>
+    /// Series types to attempt to merge. Will respect custom series type overrides.
+    /// </summary>
+    public SeriesType[] EXPERIMENTAL_MergeSeasonsTypes { get; set; }
+
+    /// <summary>
     /// Number of days to check between the start of each season, inclusive.
     /// </summary>
     /// <value></value>
@@ -515,6 +520,7 @@ public class PluginConfiguration : BasePluginConfiguration
         EXPERIMENTAL_SplitThenMergeMovies = true;
         EXPERIMENTAL_SplitThenMergeEpisodes = false;
         EXPERIMENTAL_MergeSeasons = false;
+        EXPERIMENTAL_MergeSeasonsTypes = new[] { SeriesType.OVA, SeriesType.TV, SeriesType.TVSpecial, SeriesType.Web, SeriesType.OVA };
         EXPERIMENTAL_MergeSeasonsMergeWindowInDays = 185;
     }
 }
