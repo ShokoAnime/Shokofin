@@ -349,7 +349,7 @@ public static class Text
                 TitleProvider.Shoko_Default =>
                     episodeInfo.Shoko.Name,
                 TitleProvider.AniDB_Default =>
-                    GetDefaultTitle(episodeInfo.AniDB.Titles),
+                    episodeInfo.AniDB.Titles.FirstOrDefault(title => title.LanguageCode == "en")?.Value,
                 TitleProvider.AniDB_LibraryLanguage =>
                     GetTitlesForLanguage(episodeInfo.AniDB.Titles, false, metadataLanguage),
                 TitleProvider.AniDB_CountryOfOrigin =>
@@ -369,7 +369,7 @@ public static class Text
                 TitleProvider.Shoko_Default =>
                     defaultName,
                 TitleProvider.AniDB_Default =>
-                    GetDefaultTitle(seasonInfo.AniDB.Titles),
+                    seasonInfo.AniDB.Titles.FirstOrDefault(title => title.Type == TitleType.Main)?.Value,
                 TitleProvider.AniDB_LibraryLanguage =>
                     GetTitlesForLanguage(seasonInfo.AniDB.Titles, true, metadataLanguage),
                 TitleProvider.AniDB_CountryOfOrigin =>
@@ -381,14 +381,6 @@ public static class Text
         }
         return null;
     }
-
-    /// <summary>
-    /// Get the default title from the title list.
-    /// </summary>
-    /// <param name="titles"></param>
-    /// <returns>The default title.</returns>
-    private static string? GetDefaultTitle(List<Title> titles)
-        => titles.FirstOrDefault(t => t.IsDefault)?.Value;
 
     /// <summary>
     /// Get the first title available for the language, optionally using types
