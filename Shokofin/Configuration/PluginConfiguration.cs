@@ -194,6 +194,12 @@ public class PluginConfiguration : BasePluginConfiguration
     public TagWeight TagMinimumWeight { get; set; }
 
     /// <summary>
+    /// The maximum relative depth of the tag from it's source type to use for tags.
+    /// </summary>
+    [Range(0, 10)]
+    public int TagMaximumDepth { get; set; }
+
+    /// <summary>
     /// Determines if we use the overridden settings for how the genres are set for entries.
     /// </summary>
     public bool GenreOverride { get; set; }
@@ -214,6 +220,12 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Minimum weight of tags to be included, except weightless tags, which has their own filtering through <seealso cref="TagIncludeFilter.Weightless"/>.
     /// </summary>
     public TagWeight GenreMinimumWeight { get; set; }
+
+    /// <summary>
+    /// The maximum relative depth of the tag from it's source type to use for genres.
+    /// </summary>
+    [Range(0, 10)]
+    public int GenreMaximumDepth { get; set; }
 
     /// <summary>
     /// Hide tags that are not verified by the AniDB moderators yet.
@@ -449,12 +461,19 @@ public class PluginConfiguration : BasePluginConfiguration
         Username = "Default";
         ApiKey = string.Empty;
         TagOverride = false;
-        TagSources = TagSource.Elements | TagSource.Themes | TagSource.Fetishes | TagSource.SettingPlace | TagSource.SettingTimePeriod | TagSource.SettingTimeSeason | TagSource.CustomTags;
-        TagIncludeFilters = TagIncludeFilter.Parent | TagIncludeFilter.Child | TagIncludeFilter.Weightless;
+        TagSources = TagSource.ContentIndicators | TagSource.Dynamic | TagSource.DynamicCast | TagSource.DynamicEnding | TagSource.Elements |
+            TagSource.ElementsPornographyAndSexualAbuse | TagSource.ElementsTropesAndMotifs | TagSource.Fetishes |
+            TagSource.OriginProduction | TagSource.OriginDevelopment | TagSource.SourceMaterial | TagSource.SettingPlace |
+            TagSource.SettingTimePeriod | TagSource.SettingTimeSeason | TagSource.TargetAudience | TagSource.TechnicalAspects |
+            TagSource.TechnicalAspectsAdaptions | TagSource.TechnicalAspectsAwards | TagSource.TechnicalAspectsMultiAnimeProjects |
+            TagSource.Themes | TagSource.ThemesDeath | TagSource.ThemesTales | TagSource.CustomTags;
+        TagIncludeFilters = TagIncludeFilter.Parent | TagIncludeFilter.Child | TagIncludeFilter.Abstract | TagIncludeFilter.Weightless | TagIncludeFilter.Weighted;
         TagMinimumWeight = TagWeight.Weightless;
-        GenreSources = TagSource.SourceMaterial | TagSource.TargetAudience | TagSource.ContentIndicators | TagSource.Elements;
-        GenreIncludeFilters = TagIncludeFilter.Child | TagIncludeFilter.Weightless;
-        GenreMinimumWeight = TagWeight.Three;
+        TagMaximumDepth = 0;
+        GenreSources = TagSource.SourceMaterial | TagSource.TargetAudience | TagSource.Elements;
+        GenreIncludeFilters = TagIncludeFilter.Parent | TagIncludeFilter.Child | TagIncludeFilter.Abstract | TagIncludeFilter.Weightless | TagIncludeFilter.Weighted;
+        GenreMinimumWeight = TagWeight.Four;
+        GenreMaximumDepth = 1;
         HideUnverifiedTags = true;
         ContentRatingOverride = false;
         ContentRatingList = new[] {

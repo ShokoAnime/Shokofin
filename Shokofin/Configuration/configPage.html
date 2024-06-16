@@ -346,24 +346,6 @@
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="SourceMaterial">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Source Material</h3>
-                                    </div>
-                                </div>
-                                <div class="listItem">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="TargetAudience">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Target Audience</h3>
-                                    </div>
-                                </div>
-                                <div class="listItem">
-                                    <label class="listItemCheckboxContainer">
                                         <input is="emby-checkbox" type="checkbox" data-option="ContentIndicators">
                                         <span></span>
                                     </label>
@@ -373,11 +355,29 @@
                                 </div>
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="Origin">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Dynamic">
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Origin</h3>
+                                        <h3 class="listItemBodyText">Dynamic | General</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="DynamicCast">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Dynamic | Cast</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="DynamicEnding">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Dynamic | Ending</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -386,16 +386,52 @@
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Elements</h3>
+                                        <h3 class="listItemBodyText">Elements | General</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="Themes">
+                                        <input is="emby-checkbox" type="checkbox" data-option="ElementsPornographyAndSexualAbuse">
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Themes</h3>
+                                        <h3 class="listItemBodyText">Elements | Pornography & Sexual Abuse</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="ElementsTropesAndMotifs">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Elements | Tropes & Motifs</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Fetishes">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Fetishes</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="OriginProduction">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Origin | Production</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="OriginDevelopment">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Origin | Development</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -423,6 +459,105 @@
                                     </label>
                                     <div class="listItemBody">
                                         <h3 class="listItemBodyText">Setting | Yearly Seasons</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="SourceMaterial">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Source Material</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TargetAudience">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Target Audience</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TechnicalAspects">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Technical Aspects | General</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TechnicalAspectsAdaptions">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Technical Aspects | Adaptions</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TechnicalAspectsAwards">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Technical Aspects | Awards</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TechnicalAspectsMultiAnimeProjects">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Technical Aspects | Multi-Anime Projects</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Themes">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Themes | General</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="ThemesDeath">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Themes | Death</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="ThemesTales">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Themes | Tales</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Ungrouped">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Ungrouped</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Unsorted">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Unsorted</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -460,11 +595,29 @@
                                 </div>
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Abstract">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Type | Abstract Tags</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
                                         <input is="emby-checkbox" type="checkbox" data-option="Weightless">
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
                                         <h3 class="listItemBodyText">Type | Weightless Tags</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Weighted">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Type | Weighted Tags</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -517,24 +670,6 @@
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="SourceMaterial">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Source Material</h3>
-                                    </div>
-                                </div>
-                                <div class="listItem">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="TargetAudience">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Target Audience</h3>
-                                    </div>
-                                </div>
-                                <div class="listItem">
-                                    <label class="listItemCheckboxContainer">
                                         <input is="emby-checkbox" type="checkbox" data-option="ContentIndicators">
                                         <span></span>
                                     </label>
@@ -544,11 +679,29 @@
                                 </div>
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="Origin">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Dynamic">
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Origin</h3>
+                                        <h3 class="listItemBodyText">Dynamic | General</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="DynamicCast">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Dynamic | Cast</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="DynamicEnding">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Dynamic | Ending</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -557,16 +710,52 @@
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Elements</h3>
+                                        <h3 class="listItemBodyText">Elements | General</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="Themes">
+                                        <input is="emby-checkbox" type="checkbox" data-option="ElementsPornographyAndSexualAbuse">
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Themes</h3>
+                                        <h3 class="listItemBodyText">Elements | Pornography & Sexual Abuse</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="ElementsTropesAndMotifs">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Elements | Tropes & Motifs</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Fetishes">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Fetishes</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="OriginProduction">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Origin | Production</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="OriginDevelopment">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Origin | Development</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -594,6 +783,105 @@
                                     </label>
                                     <div class="listItemBody">
                                         <h3 class="listItemBodyText">Setting | Yearly Seasons</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="SourceMaterial">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Source Material</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TargetAudience">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Target Audience</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TechnicalAspects">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Technical Aspects | General</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TechnicalAspectsAdaptions">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Technical Aspects | Adaptions</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TechnicalAspectsAwards">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Technical Aspects | Awards</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TechnicalAspectsMultiAnimeProjects">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Technical Aspects | Multi-Anime Projects</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Themes">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Themes | General</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="ThemesDeath">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Themes | Death</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="ThemesTales">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Themes | Tales</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Ungrouped">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Ungrouped</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Unsorted">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Unsorted</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -631,11 +919,29 @@
                                 </div>
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Abstract">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Type | Abstract Tags</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
                                         <input is="emby-checkbox" type="checkbox" data-option="Weightless">
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
                                         <h3 class="listItemBodyText">Type | Weightless Tags</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Weighted">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Type | Weighted Tags</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -665,8 +971,8 @@
                                 <option value="Weightless">Disabled</option>
                                 <option value="One">⯪☆☆</option>
                                 <option value="Two">★☆☆</option>
-                                <option value="Three" selected>★⯪☆ (Default)</option>
-                                <option value="Four">★★☆</option>
+                                <option value="Three" selected>★⯪☆</option>
+                                <option value="Four">★★☆ (Default)</option>
                                 <option value="Five">★★⯪</option>
                                 <option value="Six">★★★</option>
                             </select>

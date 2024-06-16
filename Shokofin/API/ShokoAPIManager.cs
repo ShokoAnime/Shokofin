@@ -201,7 +201,9 @@ public class ShokoAPIManager : IDisposable
                             if (!tagMap.TryGetValue(parentKey, out var list))
                                 tagMap[parentKey] = list = new();
                             // Remove comment on tag name itself.
-                            if (tag.Name.Contains("--"))
+                            if (tag.Name.Contains(" - "))
+                                tag.Name = tag.Name.Split(" - ").First().Trim();
+                            else if (tag.Name.Contains("--"))
                                 tag.Name = tag.Name.Split("--").First().Trim();
                             list.Add(tag);
                             break;
@@ -277,11 +279,20 @@ public class ShokoAPIManager : IDisposable
                     }
                 }
                 List<Tag>? getChildren(string source, int id) => tagMap.TryGetValue($"{source}:{id}", out var list) ? list : null;
-                return rootTags
+                var allResolvedTags = rootTags
                     .Select(tag => new ResolvedTag(tag, null, getChildren))
                     .SelectMany(tag => tag.RecursiveNamespacedChildren.Values.Prepend(tag))
-                    .OrderBy(tag => tag.FullName)
-                    .ToDictionary(childTag => childTag.FullName) as IReadOnlyDictionary<string, ResolvedTag>;
+                    .ToDictionary(tag => tag.FullName);
+                // We reassign the children because they may have been moved to a different namespace.
+                foreach (var groupBy in allResolvedTags.Values.GroupBy(tag => tag.Namespace).OrderByDescending(pair => pair.Key)) {
+                    if (!allResolvedTags.TryGetValue(groupBy.Key[..^1], out var nsTag))
+                        continue;
+                    nsTag.Children = groupBy.ToDictionary(childTag => childTag.Name);
+                    nsTag.RecursiveNamespacedChildren = nsTag.Children.Values
+                        .SelectMany(childTag => childTag.RecursiveNamespacedChildren.Values.Prepend(childTag))
+                        .ToDictionary(childTag => childTag.FullName[nsTag.FullName.Length..]);
+                }
+                return allResolvedTags as IReadOnlyDictionary<string, ResolvedTag>;
             }
         );
 
