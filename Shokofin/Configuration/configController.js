@@ -295,10 +295,12 @@ async function defaultSubmit(form) {
         config.TagSources = retrieveSimpleList(form, "TagSources").join(", ");
         config.TagIncludeFilters = retrieveSimpleList(form, "TagIncludeFilters").join(", ");
         config.TagMinimumWeight = form.querySelector("#TagMinimumWeight").value;
+        config.TagMaximumDepth = parseInt(form.querySelector("#TagMaximumDepth").value, 10);
         config.GenreOverride = form.querySelector("#GenreOverride").checked;
         config.GenreSources = retrieveSimpleList(form, "GenreSources").join(", ");
         config.GenreIncludeFilters = retrieveSimpleList(form, "GenreIncludeFilters").join(", ");
-        config.GenreMinimumWeight = form.querySelector("#GenreMinimumWeight").value
+        config.GenreMinimumWeight = form.querySelector("#GenreMinimumWeight").value;
+        config.GenreMaximumDepth = parseInt(form.querySelector("#GenreMaximumDepth").value, 10);
         config.ContentRatingOverride = form.querySelector("#ContentRatingOverride").checked;
         ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableList(form, "ContentRatingList"));
         config.ProductionLocationOverride = form.querySelector("#ProductionLocationOverride").checked;
@@ -499,10 +501,12 @@ async function syncSettings(form) {
     config.TagSources = retrieveSimpleList(form, "TagSources").join(", ");
     config.TagIncludeFilters = retrieveSimpleList(form, "TagIncludeFilters").join(", ");
     config.TagMinimumWeight = form.querySelector("#TagMinimumWeight").value;
+    config.TagMaximumDepth = parseInt(form.querySelector("#TagMaximumDepth").value, 10);
     config.GenreOverride = form.querySelector("#GenreOverride").checked;
     config.GenreSources = retrieveSimpleList(form, "GenreSources").join(", ");
     config.GenreIncludeFilters = retrieveSimpleList(form, "GenreIncludeFilters").join(", ");
-    config.GenreMinimumWeight = form.querySelector("#GenreMinimumWeight").value
+    config.GenreMinimumWeight = form.querySelector("#GenreMinimumWeight").value;
+    config.GenreMaximumDepth = parseInt(form.querySelector("#GenreMaximumDepth").value, 10);
     config.ContentRatingOverride = form.querySelector("#ContentRatingOverride").checked;
     ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableList(form, "ContentRatingList"));
     config.ProductionLocationOverride = form.querySelector("#ProductionLocationOverride").checked;
@@ -682,13 +686,11 @@ export default function (page) {
             form.querySelector("#ConnectionResetContainer").removeAttribute("hidden");
             form.querySelector("#ConnectionSection").removeAttribute("hidden");
             form.querySelector("#MetadataSection").removeAttribute("hidden");
-            form.querySelector("#ProviderSection").removeAttribute("hidden");
             form.querySelector("#LibrarySection").removeAttribute("hidden");
             form.querySelector("#MediaFolderSection").removeAttribute("hidden");
             form.querySelector("#SignalRSection1").removeAttribute("hidden");
             form.querySelector("#SignalRSection2").removeAttribute("hidden");
             form.querySelector("#UserSection").removeAttribute("hidden");
-            form.querySelector("#AdvancedSection").removeAttribute("hidden");
             form.querySelector("#ExperimentalSection").removeAttribute("hidden");
         }
         else {
@@ -698,13 +700,11 @@ export default function (page) {
             form.querySelector("#ConnectionResetContainer").setAttribute("hidden", "");
             form.querySelector("#ConnectionSection").removeAttribute("hidden");
             form.querySelector("#MetadataSection").setAttribute("hidden", "");
-            form.querySelector("#ProviderSection").setAttribute("hidden", "");
             form.querySelector("#LibrarySection").setAttribute("hidden", "");
             form.querySelector("#MediaFolderSection").setAttribute("hidden", "");
             form.querySelector("#SignalRSection1").setAttribute("hidden", "");
             form.querySelector("#SignalRSection2").setAttribute("hidden", "");
             form.querySelector("#UserSection").setAttribute("hidden", "");
-            form.querySelector("#AdvancedSection").setAttribute("hidden", "");
             form.querySelector("#ExperimentalSection").setAttribute("hidden", "");
         }
 
@@ -799,12 +799,16 @@ export default function (page) {
             form.querySelector("#TagIncludeFilters").removeAttribute("hidden");
             form.querySelector("#TagMinimumWeightContainer").removeAttribute("hidden");
             form.querySelector("#TagMinimumWeightContainer").disabled = false;
+            form.querySelector("#TagMaximumDepthContainer").removeAttribute("hidden");
+            form.querySelector("#TagMaximumDepthContainer").disabled = false;
         }
         else {
             form.querySelector("#TagSources").setAttribute("hidden", "");
             form.querySelector("#TagIncludeFilters").setAttribute("hidden", "");
             form.querySelector("#TagMinimumWeightContainer").setAttribute("hidden", "");
             form.querySelector("#TagMinimumWeightContainer").disabled = true;
+            form.querySelector("#TagMaximumDepthContainer").setAttribute("hidden", "");
+            form.querySelector("#TagMaximumDepthContainer").disabled = true;
         }
     });
 
@@ -814,12 +818,16 @@ export default function (page) {
             form.querySelector("#GenreIncludeFilters").removeAttribute("hidden");
             form.querySelector("#GenreMinimumWeightContainer").removeAttribute("hidden");
             form.querySelector("#GenreMinimumWeightContainer").disabled = false;
+            form.querySelector("#GenreMaximumDepthContainer").removeAttribute("hidden");
+            form.querySelector("#GenreMaximumDepthContainer").disabled = false;
         }
         else {
             form.querySelector("#GenreSources").setAttribute("hidden", "");
             form.querySelector("#GenreIncludeFilters").setAttribute("hidden", "");
             form.querySelector("#GenreMinimumWeightContainer").setAttribute("hidden", "");
             form.querySelector("#GenreMinimumWeightContainer").disabled = true;
+            form.querySelector("#GenreMaximumDepthContainer").setAttribute("hidden", "");
+            form.querySelector("#GenreMaximumDepthContainer").disabled = true;
         }
     });
 
@@ -883,31 +891,42 @@ export default function (page) {
                 form.querySelector("#TagIncludeFilters").removeAttribute("hidden");
                 form.querySelector("#TagMinimumWeightContainer").removeAttribute("hidden");
                 form.querySelector("#TagMinimumWeightContainer").disabled = false;
+                form.querySelector("#TagMaximumDepthContainer").removeAttribute("hidden");
+                form.querySelector("#TagMaximumDepthContainer").disabled = false;
             }
             else {
                 form.querySelector("#TagSources").setAttribute("hidden", "");
                 form.querySelector("#TagIncludeFilters").setAttribute("hidden", "");
                 form.querySelector("#TagMinimumWeightContainer").setAttribute("hidden", "");
                 form.querySelector("#TagMinimumWeightContainer").disabled = true;
+                form.querySelector("#TagMaximumDepthContainer").setAttribute("hidden", "");
+                form.querySelector("#TagMaximumDepthContainer").disabled = true;
             }
             initSimpleList(form, "TagSources", config.TagSources.split(",").map(s => s.trim()).filter(s => s));
             initSimpleList(form, "TagIncludeFilters", config.TagIncludeFilters.split(",").map(s => s.trim()).filter(s => s));
             form.querySelector("#TagMinimumWeight").value = config.TagMinimumWeight;
+            form.querySelector("#TagMaximumDepth").value = config.TagMaximumDepth.toString();
             if (form.querySelector("#GenreOverride").checked = config.GenreOverride) {
                 form.querySelector("#GenreSources").removeAttribute("hidden");
                 form.querySelector("#GenreIncludeFilters").removeAttribute("hidden");
                 form.querySelector("#GenreMinimumWeightContainer").removeAttribute("hidden");
                 form.querySelector("#GenreMinimumWeightContainer").disabled = false;
+                form.querySelector("#GenreMaximumDepthContainer").removeAttribute("hidden");
+                form.querySelector("#GenreMaximumDepthContainer").disabled = false;
             }
             else {
                 form.querySelector("#GenreSources").setAttribute("hidden", "");
                 form.querySelector("#GenreIncludeFilters").setAttribute("hidden", "");
                 form.querySelector("#GenreMinimumWeightContainer").setAttribute("hidden", "");
                 form.querySelector("#GenreMinimumWeightContainer").disabled = true;
+                form.querySelector("#GenreMaximumDepthContainer").setAttribute("hidden", "");
+                form.querySelector("#GenreMaximumDepthContainer").disabled = true;
             }
             initSimpleList(form, "GenreSources", config.GenreSources.split(",").map(s => s.trim()).filter(s => s));
             initSimpleList(form, "GenreIncludeFilters", config.GenreIncludeFilters.split(",").map(s => s.trim()).filter(s => s));
             form.querySelector("#GenreMinimumWeight").value = config.GenreMinimumWeight;
+            form.querySelector("#GenreMaximumDepth").value = config.GenreMaximumDepth.toString();
+            
             if (form.querySelector("#ContentRatingOverride").checked = config.ContentRatingOverride) {
                 form.querySelector("#ContentRatingList").removeAttribute("hidden");
             }
