@@ -52,17 +52,24 @@ public class ShokoAPIManager : IDisposable
 
     private readonly ConcurrentDictionary<string, List<string>> FileAndSeriesIdToEpisodeIdDictionary = new();
 
+    private readonly GuardedMemoryCache DataCache;
+
     public ShokoAPIManager(ILogger<ShokoAPIManager> logger, ShokoAPIClient apiClient, ILibraryManager libraryManager)
     {
         Logger = logger;
         APIClient = apiClient;
         LibraryManager = libraryManager;
-        DataCache = new(logger, TimeSpan.FromMinutes(15), new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { AbsoluteExpirationRelativeToNow = new(2, 30, 0) });
+        DataCache = new(logger, new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { AbsoluteExpirationRelativeToNow = new(2, 30, 0) });
+        Plugin.Instance.Tracker.Stalled += OnTrackerStalled;
     }
 
-    public bool IsCacheStalled => DataCache.IsStalled;
+    ~ShokoAPIManager()
+    {
+        Plugin.Instance.Tracker.Stalled -= OnTrackerStalled;
+    }
 
-    private readonly GuardedMemoryCache DataCache;
+    private void OnTrackerStalled(object? sender, EventArgs eventArgs)
+        => Clear();
 
     #region Ignore rule
 

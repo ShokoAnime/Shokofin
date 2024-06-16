@@ -35,7 +35,7 @@ public class ReconstructCollectionsTask : IScheduledTask, IConfigurableScheduled
     public bool IsLogged => true;
 
     private readonly CollectionManager CollectionManager;
-    
+
     private readonly LibraryScanWatcher LibraryScanWatcher;
 
     public ReconstructCollectionsTask(CollectionManager collectionManager, LibraryScanWatcher libraryScanWatcher)
@@ -58,6 +58,8 @@ public class ReconstructCollectionsTask : IScheduledTask, IConfigurableScheduled
         if (LibraryScanWatcher.IsScanRunning)
             return;
 
-        await CollectionManager.ReconstructCollections(progress, cancellationToken);
+        using (Plugin.Instance.Tracker.Enter("Reconstruct Collections Task")) {
+            await CollectionManager.ReconstructCollections(progress, cancellationToken);
+        }
     }
 }

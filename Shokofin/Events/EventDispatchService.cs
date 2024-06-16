@@ -55,9 +55,9 @@ public class EventDispatchService
 
     private readonly Timer ChangesDetectionTimer;
 
-    private readonly Dictionary<string, (DateTime LastUpdated, List<IMetadataUpdatedEventArgs> List)> ChangesPerSeries = new();
+    private readonly Dictionary<string, (DateTime LastUpdated, List<IMetadataUpdatedEventArgs> List, Guid trackerId)> ChangesPerSeries = new();
 
-    private readonly Dictionary<int, (DateTime LastUpdated, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> List)> ChangesPerFile = new();
+    private readonly Dictionary<int, (DateTime LastUpdated, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> List, Guid trackerId)> ChangesPerFile = new();
 
     private readonly Dictionary<string, (int refCount, DateTime delayEnd)> MediaFolderChangeMonitor = new();
 
@@ -124,62 +124,62 @@ public class EventDispatchService
 
     private void OnIntervalElapsed(object? sender, ElapsedEventArgs eventArgs)
     {
-        var filesToProcess = new List<(int, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)>)>();
-        var seriesToProcess = new List<(string, List<IMetadataUpdatedEventArgs>)>();
+        var filesToProcess = new List<(int, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)>, Guid trackerId)>();
+        var seriesToProcess = new List<(string, List<IMetadataUpdatedEventArgs>, Guid trackerId)>();
         lock (ChangesPerFile) {
             if (ChangesPerFile.Count > 0) {
                 var now = DateTime.Now;
-                foreach (var (fileId, (lastUpdated, list)) in ChangesPerFile) {
+                foreach (var (fileId, (lastUpdated, list, trackerId)) in ChangesPerFile) {
                     if (now - lastUpdated < DetectChangesThreshold)
                         continue;
-                    filesToProcess.Add((fileId, list));
+                    filesToProcess.Add((fileId, list, trackerId));
                 }
-                foreach (var (fileId, _) in filesToProcess)
+                foreach (var (fileId, _, _) in filesToProcess)
                     ChangesPerFile.Remove(fileId);
             }
         }
         lock (ChangesPerSeries) {
             if (ChangesPerSeries.Count > 0) {
                 var now = DateTime.Now;
-                foreach (var (metadataId, (lastUpdated, list)) in ChangesPerSeries) {
+                foreach (var (metadataId, (lastUpdated, list, trackerId)) in ChangesPerSeries) {
                     if (now - lastUpdated < DetectChangesThreshold)
                         continue;
-                    seriesToProcess.Add((metadataId, list));
+                    seriesToProcess.Add((metadataId, list, trackerId));
                 }
-                foreach (var (metadataId, _) in seriesToProcess)
+                foreach (var (metadataId, _, _) in seriesToProcess)
                     ChangesPerSeries.Remove(metadataId);
             }
         }
-        foreach (var (fileId, changes) in filesToProcess)
-            Task.Run(() => ProcessFileEvents(fileId, changes));
-        foreach (var (metadataId, changes) in seriesToProcess)
-            Task.Run(() => ProcessMetadataEvents(metadataId, changes));
+        foreach (var (fileId, changes, trackerId) in filesToProcess)
+            Task.Run(() => ProcessFileEvents(fileId, changes, trackerId));
+        foreach (var (metadataId, changes, trackerId) in seriesToProcess)
+            Task.Run(() => ProcessMetadataEvents(metadataId, changes, trackerId));
     }
 
     private void ClearFileEvents()
     {
-        var filesToProcess = new List<(int, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)>)>();
+        var filesToProcess = new List<(int, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)>, Guid trackerId)>();
         lock (ChangesPerFile) {
-            foreach (var (fileId, (lastUpdated, list)) in ChangesPerFile) {
-                filesToProcess.Add((fileId, list));
+            foreach (var (fileId, (lastUpdated, list, trackerId)) in ChangesPerFile) {
+                filesToProcess.Add((fileId, list, trackerId));
             }
             ChangesPerFile.Clear();
         }
-        foreach (var (fileId, changes) in filesToProcess)
-            Task.Run(() => ProcessFileEvents(fileId, changes));
+        foreach (var (fileId, changes, trackerId) in filesToProcess)
+            Task.Run(() => ProcessFileEvents(fileId, changes, trackerId));
     }
 
     private void ClearMetadataUpdatedEvents()
     {
-        var seriesToProcess = new List<(string, List<IMetadataUpdatedEventArgs>)>();
+        var seriesToProcess = new List<(string, List<IMetadataUpdatedEventArgs>, Guid trackerId)>();
         lock (ChangesPerSeries) {
-            foreach (var (metadataId, (lastUpdated, list)) in ChangesPerSeries) {
-                seriesToProcess.Add((metadataId, list));
+            foreach (var (metadataId, (lastUpdated, list, trackerId)) in ChangesPerSeries) {
+                seriesToProcess.Add((metadataId, list, trackerId));
             }
             ChangesPerSeries.Clear();
         }
-        foreach (var (metadataId, changes) in seriesToProcess)
-            Task.Run(() => ProcessMetadataEvents(metadataId, changes));
+        foreach (var (metadataId, changes, trackerId) in seriesToProcess)
+            Task.Run(() => ProcessMetadataEvents(metadataId, changes, trackerId));
     }
 
     #endregion
@@ -192,12 +192,12 @@ public class EventDispatchService
             if (ChangesPerFile.TryGetValue(fileId, out var tuple))
                 tuple.LastUpdated = DateTime.Now;
             else
-                ChangesPerFile.Add(fileId, tuple = (DateTime.Now, new()));
+                ChangesPerFile.Add(fileId, tuple = (DateTime.Now, new(), Plugin.Instance.Tracker.Add($"File event. (Reason=\"{reason}\",ImportFolder={eventArgs.ImportFolderId},RelativePath=\"{eventArgs.RelativePath}\")")));
             tuple.List.Add((reason, importFolderId, filePath, eventArgs));
         }
     }
 
-    private async Task ProcessFileEvents(int fileId, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> changes)
+    private async Task ProcessFileEvents(int fileId, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> changes, Guid trackerId)
     {
         try {
             if (LibraryScanWatcher.IsScanRunning) {
@@ -364,6 +364,9 @@ public class EventDispatchService
         catch (Exception ex) {
             Logger.LogError(ex, "Error processing {EventCount} file change events. (File={FileId})", changes.Count, fileId);
         }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
+        }
     }
 
     private async Task<IReadOnlySet<string>> GetSeriesIdsForFile(int fileId, IFileEventArgs? fileEvent)
@@ -484,12 +487,12 @@ public class EventDispatchService
             if (ChangesPerSeries.TryGetValue(metadataId, out var tuple))
                 tuple.LastUpdated = DateTime.Now;
             else
-                ChangesPerSeries.Add(metadataId, tuple = (DateTime.Now, new()));
+                ChangesPerSeries.Add(metadataId, tuple = (DateTime.Now, new(), Plugin.Instance.Tracker.Add($"Metadata event. (Reason=\"{eventArgs.Reason}\",Kind=\"{eventArgs.Kind}\",ProviderUId=\"{eventArgs.ProviderUId}\")")));
             tuple.List.Add(eventArgs);
         }
     }
 
-    private async Task ProcessMetadataEvents(string metadataId, List<IMetadataUpdatedEventArgs> changes)
+    private async Task ProcessMetadataEvents(string metadataId, List<IMetadataUpdatedEventArgs> changes, Guid trackerId)
     {
         try {
             if (LibraryScanWatcher.IsScanRunning) {
@@ -524,6 +527,9 @@ public class EventDispatchService
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Error processing {EventCount} metadata change events. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
+        }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
         }
     }
 

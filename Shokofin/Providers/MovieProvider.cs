@@ -36,9 +36,9 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrde
 
     public async Task<MetadataResult<Movie>> GetMetadata(MovieInfo info, CancellationToken cancellationToken)
     {
+        var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Movie \"{info.Name}\". (Path=\"{info.Path}\")");
         try {
             var result = new MetadataResult<Movie>();
-
             var (file, season, _) = await ApiManager.GetFileInfoByPath(info.Path);
             var episode = file?.EpisodeList.FirstOrDefault().Episode;
 
@@ -85,6 +85,9 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrde
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             return new MetadataResult<Movie>();
+        }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
         }
     }
 

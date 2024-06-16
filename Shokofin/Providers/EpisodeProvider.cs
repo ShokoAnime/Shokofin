@@ -40,6 +40,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
 
     public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
     {
+        var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Episode \"{info.Name}\". (Path=\"{info.Path}\",IsMissingEpisode={info.IsMissingEpisode})");
         try {
             var result = new MetadataResult<Episode>();
             var config = Plugin.Instance.Configuration;
@@ -87,6 +88,9 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             return new MetadataResult<Episode>();
+        }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
         }
     }
 

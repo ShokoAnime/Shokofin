@@ -9,6 +9,7 @@ using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using Microsoft.Extensions.Logging;
 using Shokofin.Configuration;
+using Shokofin.Utils;
 
 namespace Shokofin;
 
@@ -25,6 +26,11 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// </summary>
     public readonly bool CanCreateSymbolicLinks;
 
+    /// <summary>
+    /// Usage tracker for automagically clearing the caches when nothing is using them.
+    /// </summary>
+    public readonly UsageTracker Tracker;
+
     private readonly ILogger<Plugin> Logger;
 
     /// <summary>
@@ -37,12 +43,12 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// </summary>
     public new event EventHandler<PluginConfiguration>? ConfigurationChanged;
 
-    public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
+    public Plugin(ILoggerFactory loggerFactory, IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
     {
         Instance = this;
         base.ConfigurationChanged += OnConfigChanged;
-        IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
         VirtualRoot = Path.Join(applicationPaths.ProgramDataPath, "Shokofin", "VFS");
+        Tracker = new(loggerFactory.CreateLogger<UsageTracker>(), TimeSpan.FromSeconds(60));
         Logger = logger;
         CanCreateSymbolicLinks = true;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
@@ -64,6 +70,8 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
                     File.Delete(target);
             }
         }
+        IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
+        Tracker.UpdateTimeout(TimeSpan.FromSeconds(Configuration.UsageTracker_StalledTimeInSeconds));
         Logger.LogDebug("Virtual File System Location; {Path}", VirtualRoot);
         Logger.LogDebug("Can create symbolic links; {Value}", CanCreateSymbolicLinks);
     }
@@ -73,6 +81,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         if (e is not PluginConfiguration config)
             return;
         IgnoredFolders = config.IgnoredFolders.ToHashSet();
+        Tracker.UpdateTimeout(TimeSpan.FromSeconds(Configuration.UsageTracker_StalledTimeInSeconds));
         ConfigurationChanged?.Invoke(sender, config);
     }
 

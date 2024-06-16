@@ -41,6 +41,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasO
 
     public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
     {
+        var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Series \"{info.Name}\". (Path=\"{info.Path}\")");
         try {
             var result = new MetadataResult<Series>();
             var show = await ApiManager.GetShowInfoByPath(info.Path);
@@ -96,6 +97,9 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasO
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             return new MetadataResult<Series>();
+        }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
         }
     }
 

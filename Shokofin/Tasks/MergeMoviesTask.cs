@@ -4,12 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Model.Tasks;
 using Shokofin.MergeVersions;
+using Shokofin.Utils;
 
 namespace Shokofin.Tasks;
 
-/// <summary>
-/// Class MergeMoviesTask.
-/// </summary>
 public class MergeMoviesTask : IScheduledTask, IConfigurableScheduledTask
 {
     /// <inheritdoc />
@@ -33,33 +31,26 @@ public class MergeMoviesTask : IScheduledTask, IConfigurableScheduledTask
     /// <inheritdoc />
     public bool IsLogged => true;
 
-    /// <summary>
-    /// The merge-versions manager.
-    /// </summary>
     private readonly MergeVersionsManager VersionsManager;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MergeMoviesTask" /> class.
-    /// </summary>
-    public MergeMoviesTask(MergeVersionsManager userSyncManager)
+    private readonly LibraryScanWatcher LibraryScanWatcher;
+
+    public MergeMoviesTask(MergeVersionsManager userSyncManager, LibraryScanWatcher libraryScanWatcher)
     {
         VersionsManager = userSyncManager;
+        LibraryScanWatcher = libraryScanWatcher;
     }
 
-    /// <summary>
-    /// Creates the triggers that define when the task will run.
-    /// </summary>
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         => Array.Empty<TaskTriggerInfo>();
 
-    /// <summary>
-    /// Returns the task to be executed.
-    /// </summary>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <param name="progress">The progress.</param>
-    /// <returns>Task.</returns>
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
-        await VersionsManager.MergeAllMovies(progress, cancellationToken);
+        if (LibraryScanWatcher.IsScanRunning)
+            return;
+
+        using (Plugin.Instance.Tracker.Enter("Merge Movies Task")) {
+            await VersionsManager.MergeAllMovies(progress, cancellationToken);
+        }
     }
 }

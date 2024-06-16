@@ -14,7 +14,7 @@ namespace Shokofin.Tasks;
 public class ClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
 {
     /// <inheritdoc />
-    public string Name => "Clear Plugin Cache (Force)";
+    public string Name => "Clear Plugin Cache";
 
     /// <inheritdoc />
     public string Description => "Forcefully clear the plugin cache. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.";
@@ -40,9 +40,6 @@ public class ClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
 
     private readonly VirtualFileSystemService VfsService;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ClearPluginCacheTask" /> class.
-    /// </summary>
     public ClearPluginCacheTask(ShokoAPIManager apiManager, ShokoAPIClient apiClient, VirtualFileSystemService vfsService)
     {
         ApiManager = apiManager;
@@ -50,18 +47,9 @@ public class ClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
         VfsService = vfsService;
     }
 
-    /// <summary>
-    /// Creates the triggers that define when the task will run.
-    /// </summary>
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         => Array.Empty<TaskTriggerInfo>();
 
-    /// <summary>
-    /// Returns the task to be executed.
-    /// </summary>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <param name="progress">The progress.</param>
-    /// <returns>Task.</returns>
     public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         ApiClient.Clear();

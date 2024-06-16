@@ -68,6 +68,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
         if (fileInfo.FullName.StartsWith(Plugin.Instance.VirtualRoot))
             return false;
 
+        var trackerId = Plugin.Instance.Tracker.Add($"Should ignore path \"{fileInfo.FullName}\".");
         try {
             // Enable the scanner if we selected to use the Shoko provider for any metadata type on the current root folder.
             if (!Lookup.IsEnabledForItem(parent, out var isSoleProvider))
@@ -115,6 +116,9 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             throw;
+        }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
         }
     }
 

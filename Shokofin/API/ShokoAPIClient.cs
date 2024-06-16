@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Shokofin.API.Models;
@@ -33,8 +34,6 @@ public class ShokoAPIClient : IDisposable
     private static bool UseOlderImportFolderFileEndpoints =>
         ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == "4.2.2.0") || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < ImportFolderCutOffDate));
 
-    public bool IsCacheStalled => _cache.IsStalled;
-
     private readonly GuardedMemoryCache _cache;
 
     public ShokoAPIClient(ILogger<ShokoAPIClient> logger)
@@ -43,8 +42,17 @@ public class ShokoAPIClient : IDisposable
             Timeout = TimeSpan.FromMinutes(10),
         };
         Logger = logger;
-        _cache = new(logger, TimeSpan.FromMinutes(30), new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { SlidingExpiration = new(2, 30, 0) });
+        _cache = new(logger, new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { SlidingExpiration = new(2, 30, 0) });
+        Plugin.Instance.Tracker.Stalled += OnTrackerStalled;
     }
+
+    ~ShokoAPIClient()
+    {
+        Plugin.Instance.Tracker.Stalled -= OnTrackerStalled;
+    }
+
+    private void OnTrackerStalled(object? sender, EventArgs eventArgs)
+        => Clear();
 
     #region Base Implementation
 
@@ -218,17 +226,18 @@ public class ShokoAPIClient : IDisposable
 
     public async Task<ComponentVersion?> GetVersion()
     {
-        var apiBaseUrl = Plugin.Instance.Configuration.Url;
-        var response = await _httpClient.GetAsync($"{apiBaseUrl}/api/v3/Init/Version");
-        if (response.StatusCode == HttpStatusCode.OK) {
-            try {
+        try {
+            var apiBaseUrl = Plugin.Instance.Configuration.Url;
+            var source = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            var response = await _httpClient.GetAsync($"{apiBaseUrl}/api/v3/Init/Version", source.Token);
+            if (response.StatusCode == HttpStatusCode.OK) {
                 var componentVersionSet = await JsonSerializer.DeserializeAsync<ComponentVersionSet>(response.Content.ReadAsStreamAsync().Result);
                 return componentVersionSet?.Server;
             }
-            catch (Exception e) {
-                Logger.LogTrace("Unable to connect to Shoko Server to read the version. Exception; {e}", e.Message);
-                return null;
-            }
+        }
+        catch (Exception e) {
+            Logger.LogTrace("Unable to connect to Shoko Server to read the version. Exception; {e}", e.Message);
+            return null;
         }
 
         return null;

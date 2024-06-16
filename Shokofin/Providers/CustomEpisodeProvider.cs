@@ -43,11 +43,10 @@ public class CustomEpisodeProvider : ICustomMetadataProvider<Episode>
             return Task.FromResult(ItemUpdateType.None);
 
         // Abort if we're unable to get the shoko episode id
-        if (!Lookup.TryGetEpisodeIdFor(episode, out var episodeId))
-            return Task.FromResult(ItemUpdateType.None);
-
-        if (RemoveDuplicates(LibraryManager, Logger, episodeId, episode, series.GetPresentationUniqueKey()))
-            return Task.FromResult(ItemUpdateType.MetadataEdit);
+        if (episode.ProviderIds.TryGetValue(ShokoEpisodeId.Name, out var episodeId))
+            using (Plugin.Instance.Tracker.Enter($"Providing custom info for Episode \"{episode.Name}\". (Path=\"{episode.Path}\",IsMissingEpisode={episode.IsMissingEpisode})"))
+                if (RemoveDuplicates(LibraryManager, Logger, episodeId, episode, series.GetPresentationUniqueKey()))
+                    return Task.FromResult(ItemUpdateType.MetadataEdit);
 
         return Task.FromResult(ItemUpdateType.None);
     }

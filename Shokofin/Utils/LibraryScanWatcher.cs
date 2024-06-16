@@ -9,6 +9,8 @@ public class LibraryScanWatcher
 
     private readonly PropertyWatcher<bool> Watcher;
 
+    private Guid? TrackerId = null;
+
     public bool IsScanRunning => Watcher.Value;
 
     public event EventHandler<bool>? ValueChanged;
@@ -28,5 +30,18 @@ public class LibraryScanWatcher
     }
 
     private void OnLibraryScanRunningChanged(object? sender, bool isScanRunning)
-        => ValueChanged?.Invoke(sender, isScanRunning);
+    {
+        if (isScanRunning) {
+            if (!TrackerId.HasValue) {
+                TrackerId = Plugin.Instance.Tracker.Add("Library Scan Watcher");
+            }
+        }
+        else {
+            if (TrackerId.HasValue) {
+                Plugin.Instance.Tracker.Remove(TrackerId.Value);
+                TrackerId = null;
+            }
+        }
+        ValueChanged?.Invoke(sender, isScanRunning);
+    }
 }

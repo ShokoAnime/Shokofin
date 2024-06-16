@@ -62,8 +62,6 @@ public class VirtualFileSystemService
         "trailers",
     };
 
-    public bool IsCacheStalled => DataCache.IsStalled;
-
     public VirtualFileSystemService(
         ShokoAPIManager apiManager,
         ShokoAPIClient apiClient,
@@ -81,17 +79,22 @@ public class VirtualFileSystemService
         LibraryManager = libraryManager;
         FileSystem = fileSystem;
         Logger = logger;
-        DataCache = new(logger, TimeSpan.FromMinutes(15), new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1), SlidingExpiration = TimeSpan.FromMinutes(15) });
+        DataCache = new(logger, new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1), SlidingExpiration = TimeSpan.FromMinutes(15) });
         NamingOptions = namingOptions;
         ExternalPathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Subtitle);
         LibraryManager.ItemRemoved += OnLibraryManagerItemRemoved;
+        Plugin.Instance.Tracker.Stalled += OnTrackerStalled;
     }
 
     ~VirtualFileSystemService()
     {
         LibraryManager.ItemRemoved -= OnLibraryManagerItemRemoved;
+        Plugin.Instance.Tracker.Stalled -= OnTrackerStalled;
         DataCache.Dispose();
     }
+
+    private void OnTrackerStalled(object? sender, EventArgs eventArgs)
+        => Clear();
 
     public void Clear()
     {

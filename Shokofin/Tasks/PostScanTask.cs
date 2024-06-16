@@ -12,21 +12,12 @@ namespace Shokofin.Tasks;
 
 public class PostScanTask : ILibraryPostScanTask
 {
-    private readonly ShokoAPIManager ApiManager;
-
-    private readonly ShokoAPIClient ApiClient;
-
-    private readonly VirtualFileSystemService VfsService;
-
     private readonly MergeVersionsManager VersionsManager;
 
     private readonly CollectionManager CollectionManager;
 
-    public PostScanTask(ShokoAPIManager apiManager, ShokoAPIClient apiClient, VirtualFileSystemService vfsService, MergeVersionsManager versionsManager, CollectionManager collectionManager)
+    public PostScanTask(MergeVersionsManager versionsManager, CollectionManager collectionManager)
     {
-        ApiManager = apiManager;
-        ApiClient = apiClient;
-        VfsService = vfsService;
         VersionsManager = versionsManager;
         CollectionManager = collectionManager;
     }
@@ -53,10 +44,5 @@ public class PostScanTask : ILibraryPostScanTask
             // Reconstruct collections.
             await CollectionManager.ReconstructCollections(progress, token);
         }
-
-        // Clear the cache now, since we don't need it anymore.
-        ApiClient.Clear();
-        ApiManager.Clear();
-        VfsService.Clear();
     }
 }

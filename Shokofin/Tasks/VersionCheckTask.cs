@@ -47,9 +47,6 @@ public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
         ApiClient = apiClient;
     }
 
-    /// <summary>
-    /// Creates the triggers that define when the task will run.
-    /// </summary>
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         => new TaskTriggerInfo[2] {
             new() {
@@ -61,12 +58,6 @@ public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
             },
         };
 
-    /// <summary>
-    /// Returns the task to be executed.
-    /// </summary>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <param name="progress">The progress.</param>
-    /// <returns>Task.</returns>
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         var updated = false;

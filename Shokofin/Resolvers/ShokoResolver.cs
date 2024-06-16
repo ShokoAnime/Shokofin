@@ -65,6 +65,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
         if (root is null || parent == root)
             return null;
 
+        var trackerId = Plugin.Instance.Tracker.Add($"Resolve path \"{fileInfo.FullName}\".");
         try {
             if (!Lookup.IsEnabledForItem(parent))
                 return null;
@@ -95,6 +96,9 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             throw;
         }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
+        }
     }
 
     public async Task<MultiItemResolverResult?> ResolveMultiple(Folder? parent, string? collectionType, List<FileSystemMetadata> fileInfoList)
@@ -106,6 +110,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
         if (root is null || parent == root)
             return null;
 
+        var trackerId = Plugin.Instance.Tracker.Add($"Resolve children of \"{parent.Path}\". (Children={fileInfoList.Count})");
         try {
             if (!Lookup.IsEnabledForItem(parent))
                 return null;
@@ -188,6 +193,9 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             throw;
+        }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
         }
     }
 

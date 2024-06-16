@@ -393,6 +393,19 @@ public class PluginConfiguration : BasePluginConfiguration
 
     #endregion
 
+    #region Usage Tracker
+
+    /// <summary>
+    /// Amount of seconds that needs to pass before the usage tracker considers the usage as stalled and resets it's tracking and dispatches it's <seealso cref="Utils.UsageTracker.Stalled"/> event.
+    /// </summary>
+    /// <remarks>
+    /// It can be configured between 1 second and 3 hours.
+    /// </remarks>
+    [Range(1, 10800)]
+    public int UsageTracker_StalledTimeInSeconds { get; set; }
+
+    #endregion
+
     #region Experimental features
 
     /// <summary>
@@ -516,6 +529,7 @@ public class PluginConfiguration : BasePluginConfiguration
         SignalR_EventSources = new[] { ProviderName.Shoko, ProviderName.AniDB, ProviderName.TMDB };
         SignalR_RefreshEnabled = false;
         SignalR_FileEvents = false;
+        UsageTracker_StalledTimeInSeconds = 60;
         EXPERIMENTAL_AutoMergeVersions = true;
         EXPERIMENTAL_SplitThenMergeMovies = true;
         EXPERIMENTAL_SplitThenMergeEpisodes = false;

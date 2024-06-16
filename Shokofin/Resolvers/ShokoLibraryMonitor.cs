@@ -75,7 +75,7 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
         LibraryScanWatcher = libraryScanWatcher;
         LibraryScanWatcher.ValueChanged += OnLibraryScanRunningChanged;
         NamingOptions = namingOptions;
-        Cache = new(logger, TimeSpan.FromSeconds(1), new() { ExpirationScanFrequency = TimeSpan.FromSeconds(30) }, new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(1) });
+        Cache = new(logger, new() { ExpirationScanFrequency = TimeSpan.FromSeconds(30) }, new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(1) });
     }
 
     ~ShokoLibraryMonitor()
@@ -274,6 +274,7 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
                 IFileEventArgs eventArgs;
                 var reason = changeTypes is WatcherChangeTypes.Deleted ? UpdateReason.Removed : changeTypes is WatcherChangeTypes.Created ? UpdateReason.Added : UpdateReason.Updated;
                 var relativePath = path[mediaConfig.MediaFolderPath.Length..];
+                var trackerId = Plugin.Instance.Tracker.Add($"Library Monitor: Path=\"{path}\"");
                 try {
                     var files = await ApiClient.GetFileByPath(relativePath);
                     var file = files.FirstOrDefault(file => file.Locations.Any(location => location.ImportFolderId == mediaConfig.ImportFolderId && location.RelativePath == relativePath));
@@ -306,6 +307,9 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
 
                     Logger.LogTrace("Failed to get file info from Shoko during a file deleted event. (File={FileId})", fileId);
                     eventArgs = new FileEventArgsStub(int.Parse(fileId), null, mediaConfig.ImportFolderId, relativePath, Array.Empty<IFileEventArgs.FileCrossReference>());
+                }
+                finally {
+                    Plugin.Instance.Tracker.Remove(trackerId);
                 }
 
                 Logger.LogDebug(

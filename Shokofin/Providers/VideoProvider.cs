@@ -36,13 +36,13 @@ public class VideoProvider: IRemoteMetadataProvider<Video, ItemLookupInfo>, IHas
 
     public async Task<MetadataResult<Video>> GetMetadata(ItemLookupInfo info, CancellationToken cancellationToken)
     {
-        try {
-            var result = new MetadataResult<Video>();
-            var config = Plugin.Instance.Configuration;
-            if (string.IsNullOrEmpty(info.Path) || !info.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar)) {
-                return result;
-            }
+        var result = new MetadataResult<Video>();
+        if (string.IsNullOrEmpty(info.Path) || !info.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar)) {
+            return result;
+        }
 
+        var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Video \"{info.Name}\". (Path=\"{info.Path}\")");
+        try {
             var (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(info.Path);
             var episodeInfo = fileInfo?.EpisodeList.FirstOrDefault().Episode;
             if (fileInfo == null || episodeInfo == null || seasonInfo == null || showInfo == null) {
@@ -70,6 +70,9 @@ public class VideoProvider: IRemoteMetadataProvider<Video, ItemLookupInfo>, IHas
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             return new MetadataResult<Video>();
+        }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
         }
     }
 

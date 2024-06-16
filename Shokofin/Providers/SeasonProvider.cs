@@ -37,33 +37,34 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
 
     public async Task<MetadataResult<Season>> GetMetadata(SeasonInfo info, CancellationToken cancellationToken)
     {
+        var result = new MetadataResult<Season>();
+        if (!info.IndexNumber.HasValue)
+            return result;
+
+        // Special handling of the "Specials" season (pun intended).
+        if (info.IndexNumber.Value == 0) {
+            // We're forcing the sort names to start with "ZZ" to make it
+            // always appear last in the UI.
+            var seasonName = info.Name;
+            result.Item = new Season {
+                Name = seasonName,
+                IndexNumber = info.IndexNumber,
+                SortName = $"ZZ - {seasonName}",
+                ForcedSortName = $"ZZ - {seasonName}",
+            };
+            result.HasMetadata = true;
+
+            return result;
+        }
+
+        if (!info.SeriesProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId) || !info.IndexNumber.HasValue) {
+            Logger.LogDebug("Unable refresh Season {SeasonNumber} {SeasonName}", info.IndexNumber, info.Name);
+            return result;
+        }
+
+        var seasonNumber = info.IndexNumber.Value;
+        var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Season \"{info.Name}\". (Path=\"{info.Path}\",Series=\"{seriesId}\",Season={seasonNumber})");
         try {
-            var result = new MetadataResult<Season>();
-            if (!info.IndexNumber.HasValue)
-                return result;
-
-            // Special handling of the "Specials" season (pun intended).
-            if (info.IndexNumber.Value == 0) {
-                // We're forcing the sort names to start with "ZZ" to make it
-                // always appear last in the UI.
-                var seasonName = info.Name;
-                result.Item = new Season {
-                    Name = seasonName,
-                    IndexNumber = info.IndexNumber,
-                    SortName = $"ZZ - {seasonName}",
-                    ForcedSortName = $"ZZ - {seasonName}",
-                };
-                result.HasMetadata = true;
-
-                return result;
-            }
-
-            if (!info.SeriesProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId) || !info.IndexNumber.HasValue) {
-                Logger.LogDebug("Unable refresh Season {SeasonNumber} {SeasonName}", info.IndexNumber, info.Name);
-                return result;
-            }
-
-            var seasonNumber = info.IndexNumber.Value;
             var showInfo = await ApiManager.GetShowInfoForSeries(seriesId);
             if (showInfo == null) {
                 Logger.LogWarning("Unable to find show info for Season {SeasonNumber}. (Series={SeriesId})", seasonNumber, seriesId);
@@ -91,6 +92,9 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             return new MetadataResult<Season>();
+        }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
         }
     }
 

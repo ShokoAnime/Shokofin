@@ -20,22 +20,12 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
     private readonly ConcurrentDictionary<object, SemaphoreSlim> Semaphores = new();
 
-    public DateTime LastClearedAt { get; private set; }
-
-    public DateTime LastAccessedAt { get; private set; }
-
-    public readonly TimeSpan StallTime;
-
-    public bool IsStalled => LastAccessedAt - LastClearedAt > StallTime;
-
-    public GuardedMemoryCache(ILogger logger, TimeSpan stallTime, MemoryCacheOptions options, MemoryCacheEntryOptions? cacheEntryOptions = null)
+    public GuardedMemoryCache(ILogger logger, MemoryCacheOptions options, MemoryCacheEntryOptions? cacheEntryOptions = null)
     {
         Logger = logger;
         CacheOptions = options;
         CacheEntryOptions = cacheEntryOptions;
         Cache = new MemoryCache(CacheOptions);
-        StallTime = stallTime;
-        LastClearedAt = LastAccessedAt = DateTime.Now;
     }
 
     public void Clear()
@@ -44,7 +34,6 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         var cache = Cache;
         Cache = new MemoryCache(CacheOptions);
         Semaphores.Clear();
-        LastClearedAt = LastAccessedAt = DateTime.Now;
         cache.Dispose();
     }
 
@@ -193,14 +182,8 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         => Cache.TryGetValue(key, out value);
 
     public bool TryGetValue<TItem>(object key, [NotNullWhen(true)] out TItem? value)
-    {
-        LastAccessedAt = DateTime.Now;
-        return Cache.TryGetValue(key, out value);
-    }
+        => Cache.TryGetValue(key, out value);
 
     public TItem? Set<TItem>(object key, [NotNullIfNotNull("value")] TItem? value, MemoryCacheEntryOptions? createOptions = null)
-    {
-        LastAccessedAt = DateTime.Now;
-        return Cache.Set(key, value, createOptions ?? CacheEntryOptions);
-    }
+        => Cache.Set(key, value, createOptions ?? CacheEntryOptions);
 }

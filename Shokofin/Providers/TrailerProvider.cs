@@ -36,13 +36,13 @@ public class TrailerProvider: IRemoteMetadataProvider<Trailer, TrailerInfo>, IHa
 
     public async Task<MetadataResult<Trailer>> GetMetadata(TrailerInfo info, CancellationToken cancellationToken)
     {
-        try {
-            var result = new MetadataResult<Trailer>();
-            var config = Plugin.Instance.Configuration;
-            if (string.IsNullOrEmpty(info.Path) || !info.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar)) {
-                return result;
-            }
+        var result = new MetadataResult<Trailer>();
+        if (string.IsNullOrEmpty(info.Path) || !info.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar)) {
+            return result;
+        }
 
+        var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Trailer \"{info.Name}\". (Path=\"{info.Path}\")");
+        try {
             var (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(info.Path);
             var episodeInfo = fileInfo?.EpisodeList.FirstOrDefault().Episode;
             if (fileInfo == null || episodeInfo == null || seasonInfo == null || showInfo == null) {
@@ -70,6 +70,9 @@ public class TrailerProvider: IRemoteMetadataProvider<Trailer, TrailerInfo>, IHa
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             return new MetadataResult<Trailer>();
+        }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
         }
     }
 

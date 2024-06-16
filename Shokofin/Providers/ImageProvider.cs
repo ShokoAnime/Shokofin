@@ -44,6 +44,8 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
     public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken)
     {
         var list = new List<RemoteImageInfo>();
+        var baseKind = item.GetBaseItemKind();
+        var trackerId = Plugin.Instance.Tracker.Add($"Providing images for {baseKind} \"{item.Name}\". (Path=\"{item.Path}\")");
         try {
             switch (item) {
                 case Episode episode: {
@@ -131,6 +133,9 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
             return list;
+        }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
         }
     }
 
