@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.201",
+                "changelog": "`fix`: **Fix default anidb title for entries**.\n\n`fix`: **Don't try to merge seasons for movies**.\n\n`feat`: **Allow tweaking series types to merge**:\n\n- Add a configuration option to allow tweaking the series types to merge during season merging.\n\n- Allow disabling the time window by setting it to 0 (or below, but please don't set it to a negative value).\n\n`refactor`: **Tweak content ratings**:\n\n- Tweaked the content rating criteria to catch more edge cases.\n\n`refactor`: **Smarter usage tracking**:\n\n- Replace tracking the last access time on the data caches with usage tracking on when something entered a plugin path and may be using the cache, which allows us to more swiftly clear the cache when nothing is using it. Oh, and the timeout before clearing the cache is configurable in the XML for advanced users btw. \ud83d\ude09\n\n- Remove the auto clear cache task, since it's not needed anymore.\n\n- Removed all unneeded comments from all tasks.\n\n`refactor`: **Add remaining tag sources + more**:\n\n- Added the remaining tag sources, and new inclusion/exclusion filters for abstract tags and/or weighted tags.\n\n- Internally the filtering have been rewritten to use attributes on the tag sources instead of hard coding all the paths. This makes it easier to maintain in the long run.\n\n`cleanup`: **Style fixes**:\n\n- Remove brackets on singular blocks in id lookup.\n\n- Use more `var` in guarded memory cache.\n\n- Fix bracket position in content rating.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.201/shoko_3.0.1.201.zip",
+                "checksum": "7aa198d97beba906ffcd6a88d091ec55",
+                "timestamp": "2024-06-16T17:04:11Z"
+            },
+            {
                 "version": "3.0.1.200",
                 "changelog": "`fix`: **Properly resolve public url**:\n\n- Fix a long standing issue where Jellyfin cannot properly resolve the image when a public url is set because it cannot resolve the public url.\n\n- Closes #57.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.197/shoko_3.0.1.197.zip",
                 "checksum": "ead2b2fe416530f2add8a48ead8d57bf",
                 "timestamp": "2024-06-07T03:23:48Z"
-            },
-            {
-                "version": "3.0.1.196",
-                "changelog": "fix: disable creation time again until 10.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.196/shoko_3.0.1.196.zip",
-                "checksum": "15c4099a4ba600ea51fdd8b018122b25",
-                "timestamp": "2024-05-31T21:47:52Z"
             }
         ]
     }
