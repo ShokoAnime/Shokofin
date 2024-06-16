@@ -167,19 +167,14 @@ public class IdLookup : IIdLookup
 
     public bool TryGetSeriesIdFor(Series series, [NotNullWhen(true)] out string? seriesId)
     {
-        if (series.ProviderIds.TryGetValue(ShokoSeriesId.Name, out seriesId!) && !string.IsNullOrEmpty(seriesId)) {
+        if (series.ProviderIds.TryGetValue(ShokoSeriesId.Name, out seriesId!) && !string.IsNullOrEmpty(seriesId))
             return true;
-        }
 
         if (TryGetSeriesIdFor(series.Path, out seriesId)) {
-            // Set the ShokoGroupId.Name and ShokoSeriesId.Name provider ids for the series, since it haven't been set again. It doesn't matter if it's not saved to the database, since we only need it while running the following code.
-            if (ApiManager.TryGetDefaultSeriesIdForSeriesId(seriesId, out var defaultSeriesId)) {
+            if (ApiManager.TryGetDefaultSeriesIdForSeriesId(seriesId, out var defaultSeriesId))
                 SeriesProvider.AddProviderIds(series, defaultSeriesId);
-            }
-            // Same as above, but only set the ShokoSeriesId.Name id.
-            else {
+            else
                 SeriesProvider.AddProviderIds(series, seriesId);
-            }
             // Make sure the presentation unique is not cached, so we won't reuse the cache key.
             series.PresentationUniqueKey = null;
             return true;
@@ -258,14 +253,12 @@ public class IdLookup : IIdLookup
     public bool TryGetEpisodeIdsFor(BaseItem item, [NotNullWhen(true)] out List<string>? episodeIds)
     {
         // This will account for virtual episodes and existing episodes
-        if (item.ProviderIds.TryGetValue(ShokoFileId.Name, out var fileId) && item.ProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId) && ApiManager.TryGetEpisodeIdsForFileId(fileId, seriesId, out episodeIds!)) {
+        if (item.ProviderIds.TryGetValue(ShokoFileId.Name, out var fileId) && item.ProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId) && ApiManager.TryGetEpisodeIdsForFileId(fileId, seriesId, out episodeIds!))
             return true;
-        }
 
         // This will account for new episodes that haven't received their first metadata update yet.
-        if (TryGetEpisodeIdsFor(item.Path, out episodeIds)) {
+        if (TryGetEpisodeIdsFor(item.Path, out episodeIds))
             return true;
-        }
 
         return false;
     }

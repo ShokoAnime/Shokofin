@@ -353,8 +353,7 @@ public static class ContentRating
     private static string? ConvertRatingToText(TvRating value, IEnumerable<TvContentIndicator>? contentIndicators)
     {
         var field = value.GetType().GetField(value.ToString());
-        if (field?.GetCustomAttributes(typeof(DescriptionAttribute), false) is DescriptionAttribute[] attributes && attributes.Length != 0)
-        {
+        if (field?.GetCustomAttributes(typeof(DescriptionAttribute), false) is DescriptionAttribute[] attributes && attributes.Length != 0) {
             var contentRating = attributes.First().Description;
             var allowedIndicators = (
                 (field.GetCustomAttributes(typeof(TvContentIndicatorsAttribute), false) as TvContentIndicatorsAttribute[] ?? Array.Empty<TvContentIndicatorsAttribute>()).FirstOrDefault()?.Values ?? Array.Empty<TvContentIndicator>()

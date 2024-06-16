@@ -54,7 +54,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
                 return value;
             }
 
-            using ICacheEntry entry = Cache.CreateEntry(key);
+            using var entry = Cache.CreateEntry(key);
             createOptions ??= CacheEntryOptions;
             if (createOptions != null)
                 entry.SetOptions(createOptions);
@@ -86,7 +86,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
                 return value;
             }
 
-            using ICacheEntry entry = Cache.CreateEntry(key);
+            using var entry = Cache.CreateEntry(key);
             createOptions ??= CacheEntryOptions;
             if (createOptions != null)
                 entry.SetOptions(createOptions);
@@ -114,7 +114,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             if (TryGetValue(key, out value))
                 return value;
 
-            using ICacheEntry entry = Cache.CreateEntry(key);
+            using var entry = Cache.CreateEntry(key);
             createOptions ??= CacheEntryOptions;
             if (createOptions != null)
                 entry.SetOptions(createOptions);
@@ -142,7 +142,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
             if (TryGetValue(key, out value))
                 return value;
 
-            using ICacheEntry entry = Cache.CreateEntry(key);
+            using var entry = Cache.CreateEntry(key);
             createOptions ??= CacheEntryOptions;
             if (createOptions != null)
                 entry.SetOptions(createOptions);
