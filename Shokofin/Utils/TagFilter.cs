@@ -438,24 +438,28 @@ public static class TagFilter
         var includeTags = new List<KeyValuePair<string, ResolvedTag>>();
         var field = source.GetType().GetField(source.ToString())!;
         var includeAttributes = field.GetCustomAttributes<TagSourceIncludeAttribute>();
-        foreach (var tagName in includeAttributes.First().Values)
-            if (tags.TryGetValue(tagName, out var tag))
-                includeTags.AddRange(tag.RecursiveNamespacedChildren);
+        if (includeAttributes.Length is 1)
+            foreach (var tagName in includeAttributes.First().Values)
+                if (tags.TryGetValue(tagName, out var tag))
+                    includeTags.AddRange(tag.RecursiveNamespacedChildren);
 
         var includeOnlyAttributes = field.GetCustomAttributes<TagSourceIncludeOnlyAttribute>();
-        foreach (var tagName in includeOnlyAttributes.First().Values)
-            if (tags.TryGetValue(tagName, out var tag))
-                includeTags.Add(KeyValuePair.Create($"/{tag.Name}", tag));
+        if (includeOnlyAttributes.Length is 1)
+            foreach (var tagName in includeOnlyAttributes.First().Values)
+                if (tags.TryGetValue(tagName, out var tag))
+                    includeTags.Add(KeyValuePair.Create($"/{tag.Name}", tag));
 
         var excludeAttributes = field.GetCustomAttributes<TagSourceExcludeAttribute>();
-        foreach (var tagName in excludeAttributes.First().Values)
-            if (tags.TryGetValue(tagName, out var tag))
-                exceptTags.AddRange(tag.RecursiveNamespacedChildren.Values.Append(tag));
+        if (excludeAttributes.Length is 1)
+            foreach (var tagName in excludeAttributes.First().Values)
+                if (tags.TryGetValue(tagName, out var tag))
+                    exceptTags.AddRange(tag.RecursiveNamespacedChildren.Values.Append(tag));
 
         var excludeOnlyAttributes = field.GetCustomAttributes<TagSourceExcludeOnlyAttribute>();
-        foreach (var tagName in excludeOnlyAttributes.First().Values)
-            if (tags.TryGetValue(tagName, out var tag))
-                exceptTags.Add(tag);
+        if (excludeOnlyAttributes.Length is 1)
+            foreach (var tagName in excludeOnlyAttributes.First().Values)
+                if (tags.TryGetValue(tagName, out var tag))
+                    exceptTags.Add(tag);
 
         includeTags = includeTags
             .DistinctBy(pair => $"{pair.Value.Source}:{pair.Value.Id}")
