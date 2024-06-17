@@ -517,7 +517,7 @@ public class ShokoAPIManager : IDisposable
             return new(fileInfo, seasonInfo, showInfo);
         }
 
-        throw new Exception($"Unable to find the series to use for the file. (File={fileId})");
+        throw new Exception($"Unable to determine the series to use for the file based on it's location because the file resides within a mixed folder with multiple AniDB anime in it. You will either have to fix your file structure or use the VFS to avoid this issue. (File={fileId})\nFile location; {path}");
     }
 
     public async Task<FileInfo?> GetFileInfo(string fileId, string seriesId)
