@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.204",
+                "changelog": "`misc`: **Update exception message**:\n\n- Updated the exception message for when we're unable to determine the series to use for the file based on it's location because the file resides within a mixed folder with multiple AniDB anime in it. They will either have to fix their file structure or use the VFS.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.204/shoko_3.0.1.204.zip",
+                "checksum": "a5cfb5620b9179c9bc1d772a21b3909e",
+                "timestamp": "2024-06-17T18:31:24Z"
+            },
+            {
                 "version": "3.0.1.203",
                 "changelog": "`cleanup`: **Simplify attribute usage**.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.200/shoko_3.0.1.200.zip",
                 "checksum": "076ca54cb1313654fd31a77d053d3072",
                 "timestamp": "2024-06-10T21:06:10Z"
-            },
-            {
-                "version": "3.0.1.199",
-                "changelog": "`chore`: **Fix release changelog (again)**. (_Skip CI_)\n\n`fix`: **Fix library monitor + more**:\n\n- Fixed the Shoko library monitor that runs if you enable real time monitoring on a library with the VFS enabled, so it properly only sends a single event per change per second.\n\n- Fixed the Shoko library monitor so it properly can send a deleted/removed event even if the file data is gone from shoko.\n\n- Fixed the event dispatcher so it uses the correct logger.\n\n- Fixed the event dispatcher so it properly removes the files and notifies jellyfin core when a file has been removed.\n\n- Added more verbose/trace logging statements.\n\n- Fixed it so it will gracefully continue if a file is not found in shoko when generating VFS links.\n\n`chore`: **Fix ember icon in discord notification**.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.199/shoko_3.0.1.199.zip",
-                "checksum": "ce88130a12f5c8a2f45a8f423d600e84",
-                "timestamp": "2024-06-09T17:25:21Z"
             }
         ]
     }
