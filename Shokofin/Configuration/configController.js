@@ -177,6 +177,13 @@ async function loadMediaFolderConfig(form, mediaFolderId, config) {
     form.querySelector("#MediaFolderDefaultSettingsContainer").setAttribute("hidden", "");
     form.querySelector("#MediaFolderPerFolderSettingsContainer").removeAttribute("hidden");
 
+    if (mediaFolderConfig.IsMapped) {
+        form.querySelector("#MediaFolderDeleteContainer").setAttribute("hidden", "");
+    }
+    else {
+        form.querySelector("#MediaFolderDeleteContainer").removeAttribute("hidden");
+    }
+
     Dashboard.hideLoadingMsg();
 }
 
@@ -559,6 +566,23 @@ async function unlinkUser(form) {
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config)
     Dashboard.processPluginConfigurationUpdateResult(result);
 
+    return config;
+}
+
+async function removeMediaFolder(form) {
+    const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
+    const mediaFolderId = form.querySelector("#MediaFolderSelector").value;
+    if (!mediaFolderId) return;
+
+    const index = config.MediaFolders.findIndex((m) => m.MediaFolderId === mediaFolderId);
+    if (index !== -1) {
+        config.MediaFolders.splice(index, 1);
+    }
+
+    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config)
+    form.querySelector("#MediaFolderSelector").value = "";
+
+    Dashboard.processPluginConfigurationUpdateResult(result);
     return config;
 }
 
@@ -1043,6 +1067,9 @@ export default function (page) {
                     .then(getSignalrStatus)
                     .then(refreshSignalr)
                     .catch(onError);
+                break;
+            case "remove-media-folder":
+                removeMediaFolder(form).then(refreshSettings).catch(onError);
                 break;
             case "unlink-user":
                 unlinkUser(form).then(refreshSettings).catch(onError);
