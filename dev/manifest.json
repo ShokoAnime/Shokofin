@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.206",
+                "changelog": "`fix`: **Fix regression**:\n\nFixes a regression introduced in 686785c4b004c29b02b267f8d35a9242f84f9b5b by accidentally removing _a few_ (4) critical checks before using some values",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.206/shoko_3.0.1.206.zip",
+                "checksum": "81aa5f496cc1d8efbf8c856bee1ade5b",
+                "timestamp": "2024-06-17T22:56:52Z"
+            },
+            {
                 "version": "3.0.1.205",
                 "changelog": "`misc`: **Add remove mapping button to settings**:\n\n- Added a button to remove the mapping for a media folder if it's unmapped, so it's easier to attempt to remap it without resorting to manual edits of the settings file or fiddling with the browser dev. tools.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.202/shoko_3.0.1.202.zip",
                 "checksum": "0a5ad9c671ef2df77b04554e3f7a894c",
                 "timestamp": "2024-06-16T18:25:26Z"
-            },
-            {
-                "version": "3.0.1.201",
-                "changelog": "`fix`: **Fix default anidb title for entries**.\n\n`fix`: **Don't try to merge seasons for movies**.\n\n`feat`: **Allow tweaking series types to merge**:\n\n- Add a configuration option to allow tweaking the series types to merge during season merging.\n\n- Allow disabling the time window by setting it to 0 (or below, but please don't set it to a negative value).\n\n`refactor`: **Tweak content ratings**:\n\n- Tweaked the content rating criteria to catch more edge cases.\n\n`refactor`: **Smarter usage tracking**:\n\n- Replace tracking the last access time on the data caches with usage tracking on when something entered a plugin path and may be using the cache, which allows us to more swiftly clear the cache when nothing is using it. Oh, and the timeout before clearing the cache is configurable in the XML for advanced users btw. \ud83d\ude09\n\n- Remove the auto clear cache task, since it's not needed anymore.\n\n- Removed all unneeded comments from all tasks.\n\n`refactor`: **Add remaining tag sources + more**:\n\n- Added the remaining tag sources, and new inclusion/exclusion filters for abstract tags and/or weighted tags.\n\n- Internally the filtering have been rewritten to use attributes on the tag sources instead of hard coding all the paths. This makes it easier to maintain in the long run.\n\n`cleanup`: **Style fixes**:\n\n- Remove brackets on singular blocks in id lookup.\n\n- Use more `var` in guarded memory cache.\n\n- Fix bracket position in content rating.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.201/shoko_3.0.1.201.zip",
-                "checksum": "7aa198d97beba906ffcd6a88d091ec55",
-                "timestamp": "2024-06-16T17:04:11Z"
             }
         ]
     }
