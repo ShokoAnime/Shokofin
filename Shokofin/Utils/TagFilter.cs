@@ -434,26 +434,28 @@ public static class TagFilter
             return new() { GetSourceMaterial(tags) };
 
         var tagSet = new HashSet<string>();
-        var includeTags = new List<KeyValuePair<string, ResolvedTag>>();
         var exceptTags = new List<ResolvedTag>();
-        var field = source.GetType().GetField(source.ToString());
-        if (field?.GetCustomAttributes(typeof(TagSourceIncludeAttribute), false) is TagSourceIncludeAttribute[] includeAttributes && includeAttributes.Length is not 0)
-            foreach (var tagName in includeAttributes.First().Values)
-                if (tags.TryGetValue(tagName, out var tag))
-                    includeTags.AddRange(tag.RecursiveNamespacedChildren);
-        if (field?.GetCustomAttributes(typeof(TagSourceIncludeOnlyAttribute), false) is TagSourceIncludeOnlyAttribute[] includeOnlyAttributes && includeOnlyAttributes.Length is not 0)
-            foreach (var tagName in includeOnlyAttributes.First().Values)
-                if (tags.TryGetValue(tagName, out var tag))
-                    includeTags.Add(KeyValuePair.Create($"/{tag.Name}", tag));
-        if (field?.GetCustomAttributes(typeof(TagSourceExcludeAttribute), false) is TagSourceExcludeAttribute[] excludeAttributes && excludeAttributes.Length is not 0)
-            foreach (var tagName in excludeAttributes.First().Values)
-                if (tags.TryGetValue(tagName, out var tag))
-                    exceptTags.AddRange(tag.RecursiveNamespacedChildren.Values.Append(tag));
+        var includeTags = new List<KeyValuePair<string, ResolvedTag>>();
+        var field = source.GetType().GetField(source.ToString())!;
+        var includeAttributes = field.GetCustomAttributes<TagSourceIncludeAttribute>();
+        foreach (var tagName in includeAttributes.First().Values)
+            if (tags.TryGetValue(tagName, out var tag))
+                includeTags.AddRange(tag.RecursiveNamespacedChildren);
 
-        if (field?.GetCustomAttributes(typeof(TagSourceExcludeOnlyAttribute), false) is TagSourceExcludeOnlyAttribute[] excludeOnlyAttributes && excludeOnlyAttributes.Length is not 0)
-            foreach (var tagName in excludeOnlyAttributes.First().Values)
-                if (tags.TryGetValue(tagName, out var tag))
-                    exceptTags.Add(tag);
+        var includeOnlyAttributes = field.GetCustomAttributes<TagSourceIncludeOnlyAttribute>();
+        foreach (var tagName in includeOnlyAttributes.First().Values)
+            if (tags.TryGetValue(tagName, out var tag))
+                includeTags.Add(KeyValuePair.Create($"/{tag.Name}", tag));
+
+        var excludeAttributes = field.GetCustomAttributes<TagSourceExcludeAttribute>();
+        foreach (var tagName in excludeAttributes.First().Values)
+            if (tags.TryGetValue(tagName, out var tag))
+                exceptTags.AddRange(tag.RecursiveNamespacedChildren.Values.Append(tag));
+
+        var excludeOnlyAttributes = field.GetCustomAttributes<TagSourceExcludeOnlyAttribute>();
+        foreach (var tagName in excludeOnlyAttributes.First().Values)
+            if (tags.TryGetValue(tagName, out var tag))
+                exceptTags.Add(tag);
 
         includeTags = includeTags
             .DistinctBy(pair => $"{pair.Value.Source}:{pair.Value.Id}")

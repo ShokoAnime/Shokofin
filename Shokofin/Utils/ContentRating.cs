@@ -350,20 +350,23 @@ public static class ContentRating
         return true;
     }
 
+    internal static T[] GetCustomAttributes<T>(this System.Reflection.FieldInfo? fieldInfo, bool inherit = false)
+        => fieldInfo?.GetCustomAttributes(typeof(T), inherit) is T[] attributes ? attributes : Array.Empty<T>();
+
     private static string? ConvertRatingToText(TvRating value, IEnumerable<TvContentIndicator>? contentIndicators)
     {
-        var field = value.GetType().GetField(value.ToString());
-        if (field?.GetCustomAttributes(typeof(DescriptionAttribute), false) is DescriptionAttribute[] attributes && attributes.Length != 0) {
-            var contentRating = attributes.First().Description;
-            var allowedIndicators = (
-                (field.GetCustomAttributes(typeof(TvContentIndicatorsAttribute), false) as TvContentIndicatorsAttribute[] ?? Array.Empty<TvContentIndicatorsAttribute>()).FirstOrDefault()?.Values ?? Array.Empty<TvContentIndicator>()
-            )
-                .Intersect(contentIndicators ?? Array.Empty<TvContentIndicator>())
-                .ToList();
-            if (allowedIndicators.Count is > 0)
-                contentRating += $"-{allowedIndicators.Select(cI => cI.ToString()).Join("")}";
-            return contentRating;
-        }
-        return null;
+        var field = value.GetType().GetField(value.ToString())!;
+        var attributes = field.GetCustomAttributes<DescriptionAttribute>();
+        if (attributes.Length is 0)
+            return null;
+
+        var contentRating = attributes.First().Description;
+        var allowedIndicators = (field.GetCustomAttributes<TvContentIndicatorsAttribute>().FirstOrDefault()?.Values ?? Array.Empty<TvContentIndicator>())
+            .Intersect(contentIndicators ?? Array.Empty<TvContentIndicator>())
+            .ToList();
+        if (allowedIndicators.Count is > 0)
+            contentRating += $"-{allowedIndicators.Select(cI => cI.ToString()).Join("")}";
+
+        return contentRating;
     }
 }
