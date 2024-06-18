@@ -233,6 +233,18 @@ public static class ContentRating
         // "Upgrade" the content rating if it contains any of these tags.
         if (contentRating is < TvRating.TvMA && tags.ContainsKey("/elements/ecchi/borderline porn"))
             contentRating = TvRating.TvMA;
+        if (contentRating is < TvRating.Tv14 && (
+            tags.ContainsKey("/elements/ecchi/Gainax bounce") ||
+            tags.ContainsKey("/elements/ecchi/breast fondling") ||
+            tags.ContainsKey("/elements/ecchi/paper clothes") ||
+            tags.ContainsKey("/elements/ecchi/skimpy clothing")
+        ))
+            contentRating = TvRating.Tv14;
+        if (contentRating is < TvRating.TvPG && (
+            tags.ContainsKey("/elements/sexual humour") ||
+            tags.ContainsKey("/technical aspects/very bloody wound in low-pg series")
+        ))
+            contentRating = TvRating.TvPG;
         if (tags.TryGetValue("/elements/ecchi", out tag)) {
             if (contentRating is < TvRating.Tv14 && tag.Weight is >= TagWeight.Four)
                 contentRating = TvRating.Tv14;
@@ -257,8 +269,6 @@ public static class ContentRating
             if (contentRating is > TvRating.TvG && contentRating is < TvRating.TvY7 && tag.Weight is >= TagWeight.Two)
                 contentRating = TvRating.TvY7;
         }
-        if (contentRating is < TvRating.TvPG && tags.ContainsKey("/technical aspects/very bloody wound in low-pg series"))
-            contentRating = TvRating.TvPG;
         if (contentRating is > TvRating.TvG && contentRating is < TvRating.TvY7 && tags.ContainsKey("/content indicators/violence/gore"))
                 contentRating = TvRating.TvY7;
 
