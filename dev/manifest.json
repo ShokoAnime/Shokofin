@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.208",
+                "changelog": "`fix`: **Fix saving images from the image modal**:\n\n- Fixed saving images from the \"Edit Images\" modal for all users regardless of how they host Jellyfin and Shoko Server. Just don't ask _how_ it's fixed. Just know\u2026 that it is now fixed.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.208/shoko_3.0.1.208.zip",
+                "checksum": "4b2493f72fdaa1783c94e7aa97b1d153",
+                "timestamp": "2024-06-18T20:36:39Z"
+            },
+            {
                 "version": "3.0.1.207",
                 "changelog": "`fix`: **Add even more tags to consider for content ratings**.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.204/shoko_3.0.1.204.zip",
                 "checksum": "a5cfb5620b9179c9bc1d772a21b3909e",
                 "timestamp": "2024-06-17T18:31:24Z"
-            },
-            {
-                "version": "3.0.1.203",
-                "changelog": "`cleanup`: **Simplify attribute usage**.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.203/shoko_3.0.1.203.zip",
-                "checksum": "78cde941e76c6b8029e5f39b88582b1e",
-                "timestamp": "2024-06-17T18:16:52Z"
             }
         ]
     }
