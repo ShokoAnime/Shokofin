@@ -173,13 +173,12 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
     public bool Supports(BaseItem item)
         => item is Series or Season or Episode or Movie or BoxSet;
 
-    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
+    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
     {
-        var internalUrl = Plugin.Instance.Configuration.Url;
-        var prettyUrl = Plugin.Instance.Configuration.PrettyUrl;
-        if (!string.Equals(internalUrl, prettyUrl) && url.StartsWith(prettyUrl))
-            url = internalUrl + url[prettyUrl.Length..];
-
-        return HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+        var index = url.IndexOf("Plugin/Shokofin/Host");
+        if (index is -1)
+            return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
+        url = $"{Plugin.Instance.Configuration.Url}/api/v3{url[(index + 20)..]}";
+        return await HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
     }
 }

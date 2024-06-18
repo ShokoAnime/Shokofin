@@ -20,5 +20,6 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddSingleton<Resolvers.VirtualFileSystemService>();
         serviceCollection.AddSingleton<Events.EventDispatchService>();
         serviceCollection.AddSingleton<SignalR.SignalRConnectionManager>();
+        serviceCollection.AddControllers(options => options.Filters.Add<Web.ImageHostUrl>());
     }
 }

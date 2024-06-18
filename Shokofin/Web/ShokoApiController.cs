@@ -1,7 +1,7 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Net.Mime;
-using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -76,6 +76,27 @@ public class ShokoApiController : ControllerBase
             Logger.LogError(ex, "Failed to create an API-key for user {Username} — unable to complete the request.", body.Username);
             return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Simple forward to grab the image from Shoko Server.
+    /// </summary>
+    [ResponseCache(Duration = 3600 /* 1 hour in seconds */)]
+    [ProducesResponseType(typeof(FileStreamResult), 200)]
+    [ProducesResponseType(404)]
+    [HttpGet("Image/{ImageSource}/{ImageType}/{ImageId}")]
+    [HttpHead("Image/{ImageSource}/{ImageType}/{ImageId}")]
+    public async Task<ActionResult> GetImageAsync([FromRoute] ImageSource imageSource, [FromRoute] ImageType imageType, [FromRoute, Range(1, int.MaxValue)] int imageId
+    )
+    {
+        var response = await APIClient.GetImageAsync(imageSource, imageType, imageId);
+        if (response.StatusCode is System.Net.HttpStatusCode.NotFound)
+            return NotFound();
+        if (response.StatusCode is not System.Net.HttpStatusCode.OK)
+            return StatusCode((int)response.StatusCode);
+        var stream = await response.Content.ReadAsStreamAsync();
+        var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/ocelot-stream";
+        return File(stream, contentType);
     }
 }
 

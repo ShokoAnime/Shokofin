@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 
 namespace Shokofin.API.Models;
@@ -59,13 +60,6 @@ public class Image
         => !string.IsNullOrEmpty(LocalPath);
 
     /// <summary>
-    /// The remote path to retrieve the image.
-    /// </summary>
-    [JsonIgnore]
-    public virtual string Path
-        => $"/api/v3/Image/{Source}/{Type}/{ID}";
-
-    /// <summary>
     /// Get an URL to both download the image on the backend and preview it for
     /// the clients.
     /// </summary>
@@ -75,7 +69,7 @@ public class Image
     /// </remarks>
     /// <returns>The image URL</returns>
     public string ToURLString()
-        => string.Concat(Plugin.Instance.Configuration.PrettyUrl, Path);
+        => new Uri(new Uri(Web.ImageHostUrl.Value), $"/Plugin/Shokofin/Host/Image/{Source}/{Type}/{ID}").ToString();
 }
 
 /// <summary>

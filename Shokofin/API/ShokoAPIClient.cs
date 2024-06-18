@@ -103,13 +103,13 @@ public class ShokoAPIClient : IDisposable
         );
     }
 
-    private async Task<HttpResponseMessage> Get(string url, HttpMethod method, string? apiKey = null)
+    private async Task<HttpResponseMessage> Get(string url, HttpMethod method, string? apiKey = null, bool skipApiKey = false)
     {
         // Use the default key if no key was provided.
         apiKey ??= Plugin.Instance.Configuration.ApiKey;
 
         // Check if we have a key to use.
-        if (string.IsNullOrEmpty(apiKey))
+        if (string.IsNullOrEmpty(apiKey) && !skipApiKey)
             throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
         var version = Plugin.Instance.Configuration.ServerVersion;
@@ -127,7 +127,8 @@ public class ShokoAPIClient : IDisposable
 
             using var requestMessage = new HttpRequestMessage(method, remoteUrl);
             requestMessage.Content = new StringContent(string.Empty);
-            requestMessage.Headers.Add("apikey", apiKey);
+            if (!string.IsNullOrEmpty(apiKey))
+                requestMessage.Headers.Add("apikey", apiKey);
             var response = await _httpClient.SendAsync(requestMessage).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.Unauthorized)
                 throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection or deleting and re-adding the user in the plugin settings.", null, HttpStatusCode.Unauthorized);
@@ -242,6 +243,9 @@ public class ShokoAPIClient : IDisposable
 
         return null;
     }
+
+    public Task<HttpResponseMessage> GetImageAsync(ImageSource imageSource, ImageType imageType, int imageId)
+        => Get($"/api/v3/Image/{imageSource}/{imageType}/{imageId}", HttpMethod.Get, null, true);
 
     public async Task<ImportFolder?> GetImportFolder(int id)
     {
