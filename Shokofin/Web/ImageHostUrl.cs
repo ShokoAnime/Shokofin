@@ -12,7 +12,7 @@ namespace Shokofin.Web;
 public class ImageHostUrl : IAsyncActionFilter
 {
     /// <summary>
-    /// 
+    /// The current image host url base to use.
     /// </summary>
     public static string Value { get; private set; } = "http://localhost:8096/";
 
