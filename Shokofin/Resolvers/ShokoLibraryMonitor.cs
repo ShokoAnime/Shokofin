@@ -267,10 +267,11 @@ public class ShokoLibraryMonitor : IHostedService
             return;
         }
 
+        // Using a "cache" here is more to ensure we only run for the same path once in a given time span.
         await Cache.GetOrCreateAsync(
             path,
             (_) => Logger.LogTrace("Skipped path because it was handled within a second ago; {Path}", path),
-            async (_) => {
+            async () => {
                 string? fileId = null;
                 IFileEventArgs eventArgs;
                 var reason = changeTypes is WatcherChangeTypes.Deleted ? UpdateReason.Removed : changeTypes is WatcherChangeTypes.Created ? UpdateReason.Added : UpdateReason.Updated;

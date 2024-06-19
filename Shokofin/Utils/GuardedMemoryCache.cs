@@ -40,7 +40,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         cache.Dispose();
     }
 
-    public TItem GetOrCreate<TItem>(object key, Action<TItem> foundAction, Func<ICacheEntry, TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
+    public TItem GetOrCreate<TItem>(object key, Action<TItem> foundAction, Func<TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
         if (TryGetValue<TItem>(key, out var value)) {
             foundAction(value);
@@ -59,7 +59,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
                 if (createOptions != null)
                     entry.SetOptions(createOptions);
 
-                value = createFactory(entry);
+                value = createFactory();
                 entry.Value = value;
                 return value;
             }
@@ -82,7 +82,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         }
     }
 
-    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Action<TItem> foundAction, Func<ICacheEntry, Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
+    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Action<TItem> foundAction, Func<Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
         if (TryGetValue<TItem>(key, out var value)) {
             foundAction(value);
@@ -101,7 +101,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
                 if (createOptions != null)
                     entry.SetOptions(createOptions);
 
-                value = await createFactory(entry).ConfigureAwait(false);
+                value = await createFactory().ConfigureAwait(false);
                 entry.Value = value;
                 return value;
             }
@@ -124,7 +124,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         }
     }
 
-    public TItem GetOrCreate<TItem>(object key, Func<ICacheEntry, TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
+    public TItem GetOrCreate<TItem>(object key, Func<TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
         if (TryGetValue<TItem>(key, out var value))
             return value;
@@ -139,7 +139,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
                 if (createOptions != null)
                     entry.SetOptions(createOptions);
 
-                value = createFactory(entry);
+                value = createFactory();
                 entry.Value = value;
                 return value;
             }
@@ -161,7 +161,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         }
     }
 
-    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Func<ICacheEntry, Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
+    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Func<Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
         if (TryGetValue<TItem>(key, out var value))
             return value;
@@ -176,7 +176,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
                 if (createOptions != null)
                     entry.SetOptions(createOptions);
 
-                value = await createFactory(entry).ConfigureAwait(false);
+                value = await createFactory().ConfigureAwait(false);
                 entry.Value = value;
                 return value;
             }

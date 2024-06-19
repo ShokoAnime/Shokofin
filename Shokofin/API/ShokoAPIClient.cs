@@ -89,7 +89,7 @@ public class ShokoAPIClient : IDisposable
         return await _cache.GetOrCreateAsync(
             $"apiKey={apiKey ?? "default"},method={method},url={url},object",
             (_) => Logger.LogTrace("Reusing object for {Method} {URL}", method, url),
-            async (_) => {
+            async () => {
                 Logger.LogTrace("Creating object for {Method} {URL}", method, url);
                 var response = await Get(url, method, apiKey).ConfigureAwait(false);
                 if (response.StatusCode != HttpStatusCode.OK)
