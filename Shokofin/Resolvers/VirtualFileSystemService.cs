@@ -161,7 +161,7 @@ public class VirtualFileSystemService
         var key = mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath))
             ? $"should-skip-vfs-path:{vfsPath}"
             : $"should-skip-vfs-path:{path}";
-        shouldReturnPath = await DataCache.GetOrCreateAsync<bool>(key, async (__) => {
+        shouldReturnPath = await DataCache.GetOrCreateAsync<bool>(key, async () => {
             // Iterate the files already in the VFS.
             string? pathToClean = null;
             IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
