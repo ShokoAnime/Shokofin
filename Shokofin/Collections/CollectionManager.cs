@@ -106,6 +106,8 @@ public class CollectionManager
     public async Task ReconstructCollections(IProgress<double> progress, CancellationToken cancellationToken)
     {
         try {
+            // This check is to prevent creating the collections root if we don't have any libraries yet.
+            if (LibraryManager.GetVirtualFolders().Count is 0) return;
             switch (Plugin.Instance.Configuration.CollectionGrouping)
             {
                 default:
