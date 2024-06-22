@@ -101,7 +101,7 @@ public class ShokoLibraryMonitor : IServerEntryPoint, IDisposable
     public void StartWatching()
     {
         // add blockers/watchers for every media folder with VFS enabled and real time monitoring enabled.
-        foreach (var mediaConfig in Plugin.Instance.Configuration.MediaFolders) {
+        foreach (var mediaConfig in Plugin.Instance.Configuration.MediaFolders.ToList()) {
             if (LibraryManager.GetItemById(mediaConfig.MediaFolderId) is not Folder mediaFolder)
                 continue;
 

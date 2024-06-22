@@ -211,70 +211,72 @@ public class EventDispatchService
             var locationsToNotify = new List<string>();
             var mediaFoldersToNotify = new Dictionary<string, (string pathToReport, Folder mediaFolder)>();
             var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
-            var mediaFolders = ConfigurationService.GetAvailableMediaFolders(fileEvents: true);
+            var libraries = ConfigurationService.GetAvailableMediaFoldersForLibraries(c => c.IsFileEventsEnabled);
             var (reason, importFolderId, relativePath, lastEvent) = changes.Last();
             if (reason is not UpdateReason.Removed) {
                 Logger.LogTrace("Processing file changed. (File={FileId})", fileId);
-                foreach (var (config, mediaFolder, vfsPath) in mediaFolders) {
-                    if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
-                        continue;
+                foreach (var (vfsPath, collectionType, mediaConfigs) in libraries) {
+                    foreach (var (importFolderSubPath, vfsEnabled, mediaFolderPaths) in mediaConfigs.ToImportFolderList(importFolderId, relativePath)) {
+                        foreach (var mediaFolderPath in mediaFolderPaths) {
+                            var sourceLocation = Path.Join(mediaFolderPath, relativePath[importFolderSubPath.Length..]);
+                            if (!File.Exists(sourceLocation))
+                                continue;
 
-                    var sourceLocation = Path.Join(mediaFolder.Path, relativePath[config.ImportFolderRelativePath.Length..]);
-                    if (!File.Exists(sourceLocation))
-                        continue;
+                            // Let the core logic handle the rest.
+                            if (!vfsEnabled) {
+                                locationsToNotify.Add(sourceLocation);
+                                break;
+                            }
 
-                    // Let the core logic handle the rest.
-                    if (!config.IsVirtualFileSystemEnabled) {
-                        locationsToNotify.Add(sourceLocation);
-                        continue;
-                    }
+                            var result = new LinkGenerationResult();
+                            var topFolders = new HashSet<string>();
+                            var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
+                                .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
+                                .ToList();
+                            foreach (var (srcLoc, symLinks, importDate) in vfsLocations) {
+                                result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, importDate!.Value);
+                                foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
+                                    topFolders.Add(path);
+                            }
 
-                    var result = new LinkGenerationResult();
-                    var topFolders = new HashSet<string>();
-                    var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, sourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
-                        .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
-                        .ToList();
-                    foreach (var (srcLoc, symLinks, importDate) in vfsLocations) {
-                        result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, importDate!.Value);
-                        foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
-                            topFolders.Add(path);
-                    }
+                            // Remove old links for file.
+                            var videos = LibraryManager
+                                .GetItemList(
+                                    new() {
+                                        AncestorIds = mediaConfigs.Select(c => c.MediaFolderId).ToArray(),
+                                        HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, fileId.ToString() } },
+                                        DtoOptions = new(true),
+                                    },
+                                    true
+                                );
+                            Logger.LogTrace("Found {Count} potential videos to remove", videos.Count);
+                            foreach (var video in videos) {
+                                if (string.IsNullOrEmpty(video.Path) || !video.Path.StartsWith(vfsPath) || result.Paths.Contains(video.Path)) {
+                                    Logger.LogTrace("Skipped a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
+                                    continue;
+                                }
+                                Logger.LogTrace("Found a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
+                                if (File.Exists(video.Path))
+                                    File.Delete(video.Path);
+                                topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
+                                locationsToNotify.Add(video.Path);
+                                result.RemovedVideos++;
+                            }
 
-                    // Remove old links for file.
-                    var videos = LibraryManager
-                        .GetItemList(
-                            new() {
-                                AncestorIds = new Guid[] { mediaFolder.Id },
-                                HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, fileId.ToString() } },
-                                DtoOptions = new(true),
-                            },
-                            true
-                        );
-                    Logger.LogTrace("Found {Count} potential videos to remove", videos.Count);
-                    foreach (var video in videos) {
-                        if (string.IsNullOrEmpty(video.Path) || !video.Path.StartsWith(vfsPath) || result.Paths.Contains(video.Path)) {
-                            Logger.LogTrace("Skipped a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
-                            continue;
+                            result.Print(Logger, mediaFolderPath);
+
+                            // If all the "top-level-folders" exist, then let the core logic handle the rest.
+                            if (topFolders.All(path => LibraryManager.FindByPath(path, true) is not null)) {
+                                locationsToNotify.AddRange(vfsLocations.SelectMany(tuple => tuple.symbolicLinks));
+                            }
+                            // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
+                            else {
+                                var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolderPath, false).FirstOrDefault();
+                                if (!string.IsNullOrEmpty(fileOrFolder))
+                                    mediaFoldersToNotify.TryAdd(mediaFolderPath, (fileOrFolder, mediaFolderPath.GetFolderForPath()));
+                            }
+                            break;
                         }
-                        Logger.LogTrace("Found a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
-                        if (File.Exists(video.Path))
-                            File.Delete(video.Path);
-                        topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
-                        locationsToNotify.Add(video.Path);
-                        result.RemovedVideos++;
-                    }
-
-                    result.Print(Logger, mediaFolder.Path);
-
-                    // If all the "top-level-folders" exist, then let the core logic handle the rest.
-                    if (topFolders.All(path => LibraryManager.FindByPath(path, true) is not null)) {
-                        locationsToNotify.AddRange(vfsLocations.SelectMany(tuple => tuple.symbolicLinks));
-                    }
-                    // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
-                    else {
-                        var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolder.Path, false).FirstOrDefault();
-                        if (!string.IsNullOrEmpty(fileOrFolder))
-                            mediaFoldersToNotify.TryAdd(mediaFolder.Path, (fileOrFolder, mediaFolder));
                     }
                 }
             }
@@ -283,68 +285,70 @@ public class EventDispatchService
                 Logger.LogTrace("Processing file removed. (File={FileId})", fileId);
                 relativePath = firstRemovedEvent.RelativePath;
                 importFolderId = firstRemovedEvent.ImportFolderId;
-                foreach (var (config, mediaFolder, vfsPath) in mediaFolders) {
-                    if (config.ImportFolderId != importFolderId || !config.IsEnabledForPath(relativePath))
-                        continue;
+                foreach (var (vfsPath, collectionType, mediaConfigs) in libraries) {
+                    foreach (var (importFolderSubPath, vfsEnabled, mediaFolderPaths) in mediaConfigs.ToImportFolderList(importFolderId, relativePath)) {
+                        foreach (var mediaFolderPath in mediaFolderPaths) {
+                            // Let the core logic handle the rest.
+                            if (!vfsEnabled) {
+                                var sourceLocation = Path.Join(mediaFolderPath, relativePath[importFolderSubPath.Length..]);
+                                locationsToNotify.Add(sourceLocation);
+                                break;
+                            }
 
-                    // Let the core logic handle the rest.
-                    if (!config.IsVirtualFileSystemEnabled) {
-                        var sourceLocation = Path.Join(mediaFolder.Path, relativePath[config.ImportFolderRelativePath.Length..]);
-                        locationsToNotify.Add(sourceLocation);
-                        continue;
-                    }
+                            // Check if we can use another location for the file.
+                            var result = new LinkGenerationResult();
+                            var vfsSymbolicLinks = new HashSet<string>();
+                            var topFolders = new HashSet<string>();
+                            var newSourceLocation = await GetNewSourceLocation(importFolderId, importFolderSubPath, fileId, relativePath, mediaFolderPath);
+                            if (!string.IsNullOrEmpty(newSourceLocation)) {
+                                var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(collectionType, vfsPath, newSourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
+                                    .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
+                                    .ToList();
+                                foreach (var (srcLoc, symLinks, importDate) in vfsLocations) {
+                                    result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, importDate!.Value);
+                                    foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
+                                        topFolders.Add(path);
+                                }
+                                vfsSymbolicLinks = vfsLocations.Select(tuple => tuple.sourceLocation).ToHashSet();
+                            }
 
-                    // Check if we can use another location for the file.
-                    var result = new LinkGenerationResult();
-                    var vfsSymbolicLinks = new HashSet<string>();
-                    var topFolders = new HashSet<string>();
-                    var newSourceLocation = await GetNewSourceLocation(config, fileId, relativePath, mediaFolder.Path);
-                    if (!string.IsNullOrEmpty(newSourceLocation)) {
-                        var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(mediaFolder, newSourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
-                            .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
-                            .ToList();
-                        foreach (var (srcLoc, symLinks, importDate) in vfsLocations) {
-                            result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, importDate!.Value);
-                            foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
-                                topFolders.Add(path);
+                            // Remove old links for file.
+                            var videos = LibraryManager
+                                .GetItemList(
+                                    new() {
+                                        HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, fileId.ToString() } },
+                                        DtoOptions = new(true),
+                                    },
+                                    true
+                                );
+                            Logger.LogTrace("Found {Count} potential videos to remove", videos.Count);
+                            foreach (var video in videos) {
+                                if (string.IsNullOrEmpty(video.Path) || !video.Path.StartsWith(vfsPath) || result.Paths.Contains(video.Path)) {
+                                    Logger.LogTrace("Skipped a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
+                                    continue;
+                                }
+                                Logger.LogTrace("Found a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
+                                if (File.Exists(video.Path))
+                                    File.Delete(video.Path);
+                                topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
+                                locationsToNotify.Add(video.Path);
+                                result.RemovedVideos++;
+                            }
+
+                            result.Print(Logger, mediaFolderPath);
+
+                            // If all the "top-level-folders" exist, then let the core logic handle the rest.
+                            if (topFolders.All(path => LibraryManager.FindByPath(path, true) is not null)) {
+                                locationsToNotify.AddRange(vfsSymbolicLinks);
+                            }
+                            // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
+                            else {
+                                var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolderPath, false).FirstOrDefault();
+                                if (!string.IsNullOrEmpty(fileOrFolder))
+                                    mediaFoldersToNotify.TryAdd(mediaFolderPath, (fileOrFolder, mediaFolderPath.GetFolderForPath()));
+                            }
+                            break;
                         }
-                        vfsSymbolicLinks = vfsLocations.Select(tuple => tuple.sourceLocation).ToHashSet();
-                    }
-
-                    // Remove old links for file.
-                    var videos = LibraryManager
-                        .GetItemList(
-                            new() {
-                                HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, fileId.ToString() } },
-                                DtoOptions = new(true),
-                            },
-                            true
-                        );
-                    Logger.LogTrace("Found {Count} potential videos to remove", videos.Count);
-                    foreach (var video in videos) {
-                        if (string.IsNullOrEmpty(video.Path) || !video.Path.StartsWith(vfsPath) || result.Paths.Contains(video.Path)) {
-                            Logger.LogTrace("Skipped a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
-                            continue;
-                        }
-                        Logger.LogTrace("Found a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
-                        if (File.Exists(video.Path))
-                            File.Delete(video.Path);
-                        topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
-                        locationsToNotify.Add(video.Path);
-                        result.RemovedVideos++;
-                    }
-
-                    result.Print(Logger, mediaFolder.Path);
-
-                    // If all the "top-level-folders" exist, then let the core logic handle the rest.
-                    if (topFolders.All(path => LibraryManager.FindByPath(path, true) is not null)) {
-                        locationsToNotify.AddRange(vfsSymbolicLinks);
-                    }
-                    // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
-                    else {
-                        var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolder.Path, false).FirstOrDefault();
-                        if (!string.IsNullOrEmpty(fileOrFolder))
-                            mediaFoldersToNotify.TryAdd(mediaFolder.Path, (fileOrFolder, mediaFolder));
                     }
                 }
             }
@@ -408,18 +412,18 @@ public class EventDispatchService
         return filteredSeriesIds.Count is 0 ? seriesIds : filteredSeriesIds;
     }
 
-    private async Task<string?> GetNewSourceLocation(MediaFolderConfiguration config, int fileId, string relativePath, string mediaFolderPath)
+    private async Task<string?> GetNewSourceLocation(int importFolderId, string importFolderSubPath, int fileId, string relativePath, string mediaFolderPath)
     {
         // Check if the file still exists, and if it has any other locations we can use.
         try {
             var file = await ApiClient.GetFile(fileId.ToString());
             var usableLocation = file.Locations
-                .Where(loc => loc.ImportFolderId == config.ImportFolderId && config.IsEnabledForPath(loc.RelativePath) && loc.RelativePath != relativePath)
+                .Where(loc => loc.ImportFolderId == importFolderId && (string.IsNullOrEmpty(importFolderSubPath) || relativePath.StartsWith(importFolderSubPath + Path.DirectorySeparatorChar)) && loc.RelativePath != relativePath)
                 .FirstOrDefault();
             if (usableLocation is null)
                 return null;
 
-            var sourceLocation = Path.Join(mediaFolderPath, usableLocation.RelativePath[config.ImportFolderRelativePath.Length..]);
+            var sourceLocation = Path.Join(mediaFolderPath, usableLocation.RelativePath[importFolderSubPath.Length..]);
             if (!File.Exists(sourceLocation))
                 return null;
 

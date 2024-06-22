@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
@@ -39,22 +41,21 @@ public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
 
     private readonly ILogger<VersionCheckTask> Logger;
 
+    private readonly ILibraryManager LibraryManager;
+
     private readonly ShokoAPIClient ApiClient;
 
-    public VersionCheckTask(ILogger<VersionCheckTask> logger, ShokoAPIClient apiClient)
+    public VersionCheckTask(ILogger<VersionCheckTask> logger, ILibraryManager libraryManager, ShokoAPIClient apiClient)
     {
         Logger = logger;
+        LibraryManager = libraryManager;
         ApiClient = apiClient;
     }
 
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-        => new TaskTriggerInfo[2] {
+        => new TaskTriggerInfo[1] {
             new() {
                 Type = TaskTriggerInfo.TriggerStartup,
-            },
-            new() {
-                Type = TaskTriggerInfo.TriggerDaily,
-                TimeOfDayTicks = new TimeSpan(3, 0, 0).Ticks,
             },
         };
 
@@ -71,7 +72,7 @@ public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
             updated = true;
         }
 
-        var mediaFolders = Plugin.Instance.Configuration.MediaFolders;
+        var mediaFolders = Plugin.Instance.Configuration.MediaFolders.ToList();
         var importFolderNameMap = await Task
             .WhenAll(
                 mediaFolders
@@ -83,13 +84,21 @@ public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
             )
             .ContinueWith(task => task.Result.OfType<ImportFolder>().ToDictionary(i => i.Id, i => i.Name))
             .ConfigureAwait(false);
-        foreach (var mediaFolder in mediaFolders) {
-            if (!importFolderNameMap.TryGetValue(mediaFolder.ImportFolderId, out var importFolderName))
+        foreach (var mediaFolderConfig in mediaFolders) {
+            if (!importFolderNameMap.TryGetValue(mediaFolderConfig.ImportFolderId, out var importFolderName))
                 importFolderName = null;
 
-            if (!string.Equals(mediaFolder.ImportFolderName, importFolderName)) {
-                Logger.LogInformation("Found new name for import folder; {name} (ImportFolder={ImportFolderId})", importFolderName, mediaFolder.ImportFolderId);
-                mediaFolder.ImportFolderName = importFolderName;
+            if (mediaFolderConfig.LibraryId == Guid.Empty && LibraryManager.GetItemById(mediaFolderConfig.MediaFolderId) is Folder mediaFolder &&
+                LibraryManager.GetVirtualFolders().FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path)) is { } library &&
+                Guid.TryParse(library.ItemId, out var libraryId)) {
+                Logger.LogInformation("Found new library for media folder; {LibraryName} (Library={LibraryId},MediaFolder={MediaFolderPath})", library.Name, libraryId, mediaFolder.Path);
+                mediaFolderConfig.LibraryId = libraryId;
+                updated = true;
+            }
+
+            if (!string.Equals(mediaFolderConfig.ImportFolderName, importFolderName)) {
+                Logger.LogInformation("Found new name for import folder; {name} (ImportFolder={ImportFolderId})", importFolderName, mediaFolderConfig.ImportFolderId);
+                mediaFolderConfig.ImportFolderName = importFolderName;
                 updated = true;
             }
         }

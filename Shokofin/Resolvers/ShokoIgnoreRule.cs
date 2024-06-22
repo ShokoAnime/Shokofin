@@ -88,7 +88,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
             var (mediaFolder, partialPath) = ApiManager.FindMediaFolder(fullPath, parent, root);
 
             // Ignore any media folders that aren't mapped to shoko.
-            var mediaFolderConfig = await ConfigurationService.GetOrCreateConfigurationForMediaFolder(mediaFolder);
+            var mediaFolderConfig = ConfigurationService.GetOrCreateConfigurationForMediaFolder(mediaFolder);
             if (!mediaFolderConfig.IsMapped) {
                 Logger.LogDebug("Skipped media folder for path {Path} (MediaFolder={MediaFolderId})", fileInfo.FullName, mediaFolderConfig.MediaFolderId);
                 return false;

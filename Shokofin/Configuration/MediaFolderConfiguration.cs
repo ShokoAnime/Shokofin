@@ -2,13 +2,27 @@ using System;
 using System.IO;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
-
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Library;
 using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 
 namespace Shokofin.Configuration;
 
 public class MediaFolderConfiguration
 {
+    /// <summary>
+    /// The jellyfin library id.
+    /// </summary>
+    public Guid LibraryId { get; set; }
+
+    /// <summary>
+    /// The Jellyfin library's name. Only for displaying on the plugin
+    /// configuration page.
+    /// </summary>
+    [XmlIgnore]
+    [JsonInclude]
+    public string? LibraryName => BaseItem.LibraryManager.GetItemById(LibraryId)?.Name;
+
     /// <summary>
     /// The jellyfin media folder id.
     /// </summary>

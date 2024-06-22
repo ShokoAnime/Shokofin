@@ -76,71 +76,29 @@ public class ShokoAPIManager : IDisposable
     public (Folder mediaFolder, string partialPath) FindMediaFolder(string path, Folder parent, Folder root)
     {
         Folder? mediaFolder = null;
-        if (path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar)) {
-            var mediaFolderId = Guid.Parse(path[(Plugin.Instance.VirtualRoot.Length + 1)..].Split(Path.DirectorySeparatorChar).First());
-            mediaFolder = LibraryManager.GetItemById(mediaFolderId) as Folder;
-            if (mediaFolder != null) {
-                var mediaRootVirtualPath = mediaFolder.GetVirtualRoot();
-                return (mediaFolder, path[mediaRootVirtualPath.Length..]);
-            }
-            return (root, path);
-        }
-        lock (MediaFolderListLock) {
+        lock (MediaFolderListLock)
             mediaFolder = MediaFolderList.FirstOrDefault((folder) => path.StartsWith(folder.Path + Path.DirectorySeparatorChar));
-        }
-        if (mediaFolder != null) {
+        if (mediaFolder is not null)
             return (mediaFolder, path[mediaFolder.Path.Length..]);
-        }
-
-        // Look for the root folder for the current item.
-        mediaFolder = parent;
-        while (!mediaFolder.ParentId.Equals(root.Id)) {
-            if (mediaFolder.GetParent() == null) {
-                break;
-            }
-            mediaFolder = (Folder)mediaFolder.GetParent();
-        }
-
-        lock (MediaFolderListLock) {
-            MediaFolderList.Add(mediaFolder);
-        }
-        return (mediaFolder, path[mediaFolder.Path.Length..]);
+        if (parent.GetTopParent() is not Folder topParent)
+            return (root, path);
+        lock (MediaFolderListLock)
+            MediaFolderList.Add(topParent);
+        return (topParent, path[topParent.Path.Length..]);
     }
 
     public string StripMediaFolder(string fullPath)
     {
         Folder? mediaFolder = null;
-        lock (MediaFolderListLock) {
+        lock (MediaFolderListLock) 
             mediaFolder = MediaFolderList.FirstOrDefault((folder) => fullPath.StartsWith(folder.Path + Path.DirectorySeparatorChar));
-        }
-        if (mediaFolder != null) {
+        if (mediaFolder is not null) 
             return fullPath[mediaFolder.Path.Length..];
-        }
-
-        // Try to get the media folder by loading the parent and navigating upwards till we reach the root.
-        var directoryPath = System.IO.Path.GetDirectoryName(fullPath);
-        if (string.IsNullOrEmpty(directoryPath)) {
+        if (Path.GetDirectoryName(fullPath) is not string directoryPath || LibraryManager.FindByPath(directoryPath, true)?.GetTopParent() is not Folder topParent)
             return fullPath;
-        }
-
-        mediaFolder = (LibraryManager.FindByPath(directoryPath, true) as Folder);
-        if (mediaFolder == null || string.IsNullOrEmpty(mediaFolder?.Path)) {
-            return fullPath;
-        }
-
-        // Look for the root folder for the current item.
-        var root = LibraryManager.RootFolder;
-        while (!mediaFolder.ParentId.Equals(root.Id)) {
-            if (mediaFolder.GetParent() == null) {
-                break;
-            }
-            mediaFolder = (Folder)mediaFolder.GetParent();
-        }
-
-        lock (MediaFolderListLock) {
-            MediaFolderList.Add(mediaFolder);
-        }
-        return fullPath[mediaFolder.Path.Length..];
+        lock (MediaFolderListLock)
+            MediaFolderList.Add(topParent);
+        return fullPath[topParent.Path.Length..];
     }
 
     #endregion
@@ -158,9 +116,8 @@ public class ShokoAPIManager : IDisposable
         EpisodeIdToEpisodePathDictionary.Clear();
         EpisodeIdToSeriesIdDictionary.Clear();
         FileAndSeriesIdToEpisodeIdDictionary.Clear();
-        lock (MediaFolderListLock) {
+        lock (MediaFolderListLock)
             MediaFolderList.Clear();
-        }
         PathToEpisodeIdsDictionary.Clear();
         PathToFileIdAndSeriesIdDictionary.Clear();
         PathToSeriesIdDictionary.Clear();

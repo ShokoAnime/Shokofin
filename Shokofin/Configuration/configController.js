@@ -177,7 +177,7 @@ async function loadMediaFolderConfig(form, mediaFolderId, config) {
     form.querySelector("#MediaFolderDefaultSettingsContainer").setAttribute("hidden", "");
     form.querySelector("#MediaFolderPerFolderSettingsContainer").removeAttribute("hidden");
 
-    if (mediaFolderConfig.IsMapped) {
+    if (mediaFolderConfig.IsMapped && mediaFolderConfig.LibraryName) {
         form.querySelector("#MediaFolderDeleteContainer").setAttribute("hidden", "");
     }
     else {
@@ -334,9 +334,11 @@ async function defaultSubmit(form) {
         let mediaFolderId = form.querySelector("#MediaFolderSelector").value;
         let mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
         if (mediaFolderConfig) {
-            const filteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
-            mediaFolderConfig.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
-            mediaFolderConfig.LibraryFilteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
+            const libraryId = mediaFolderConfig.LibraryId;
+            for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
+                c.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
+                c.LibraryFilteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
+            }
         }
         else {
             config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
@@ -352,8 +354,11 @@ async function defaultSubmit(form) {
         mediaFolderId = form.querySelector("#SignalRMediaFolderSelector").value;
         mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
         if (mediaFolderConfig) {
-            mediaFolderConfig.IsFileEventsEnabled = form.querySelector("#SignalRFileEvents").checked;
-            mediaFolderConfig.IsRefreshEventsEnabled = form.querySelector("#SignalRRefreshEvents").checked;
+            const libraryId = mediaFolderConfig.LibraryId;
+            for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
+                c.IsFileEventsEnabled = form.querySelector("#SignalRFileEvents").checked;
+                c.IsRefreshEventsEnabled = form.querySelector("#SignalRRefreshEvents").checked;
+            }
         }
         else {
             config.SignalR_FileEvents = form.querySelector("#SignalRDefaultFileEvents").checked;
@@ -579,8 +584,14 @@ async function removeMediaFolder(form) {
         config.MediaFolders.splice(index, 1);
     }
 
-    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config)
+    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
     form.querySelector("#MediaFolderSelector").value = "";
+    form.querySelector("#MediaFolderSelector").innerHTML += config.MediaFolders
+        .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.LibraryName} (${mediaFolder.MediaFolderPath})</option>`)
+        .join("");
+    form.querySelector("#SignalRMediaFolderSelector").innerHTML += config.MediaFolders
+        .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.LibraryName} (${mediaFolder.MediaFolderPath})</option>`)
+        .join("");
 
     Dashboard.processPluginConfigurationUpdateResult(result);
     return config;
@@ -591,8 +602,11 @@ async function syncMediaFolderSettings(form) {
     const mediaFolderId = form.querySelector("#MediaFolderSelector").value;
     const mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
     if (mediaFolderConfig) {
-        mediaFolderConfig.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
-        mediaFolderConfig.LibraryFilteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
+        const libraryId = mediaFolderConfig.LibraryId;
+        for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
+            c.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
+            c.LibraryFilteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
+        }
     }
     else {
         config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
@@ -617,8 +631,11 @@ async function syncSignalrSettings(form) {
 
     const mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
     if (mediaFolderConfig) {
-        mediaFolderConfig.IsFileEventsEnabled = form.querySelector("#SignalRFileEvents").checked;
-        mediaFolderConfig.IsRefreshEventsEnabled = form.querySelector("#SignalRRefreshEvents").checked;
+        const libraryId = mediaFolderConfig.LibraryId;
+        for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
+            c.IsFileEventsEnabled = form.querySelector("#SignalRFileEvents").checked;
+            c.IsRefreshEventsEnabled = form.querySelector("#SignalRRefreshEvents").checked;
+        }
     }
     else {
         config.SignalR_FileEvents = form.querySelector("#SignalRDefaultFileEvents").checked;
@@ -998,7 +1015,7 @@ export default function (page) {
                 ? config.VirtualFileSystem : true;
             form.querySelector("#LibraryFilteringMode").value = config.LibraryFilteringMode;
             mediaFolderSelector.innerHTML += config.MediaFolders
-                .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.MediaFolderPath}</option>`)
+                .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.LibraryName} (${mediaFolder.MediaFolderPath})</option>`)
                 .join("");
 
             // SignalR settings
@@ -1006,7 +1023,7 @@ export default function (page) {
             form.querySelector("#SignalRAutoReconnectIntervals").value = config.SignalR_AutoReconnectInSeconds.join(", ");
             initSimpleList(form, "SignalREventSources", config.SignalR_EventSources);
             signalrMediaFolderSelector.innerHTML += config.MediaFolders
-                .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.MediaFolderPath}</option>`)
+                .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.LibraryName} (${mediaFolder.MediaFolderPath})</option>`)
                 .join("");
             form.querySelector("#SignalRDefaultFileEvents").checked = config.SignalR_FileEvents;
             form.querySelector("#SignalRDefaultRefreshEvents").checked = config.SignalR_RefreshEnabled;
