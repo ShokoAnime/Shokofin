@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.209",
+                "changelog": "`fix`: **Send config updated event**.\n\n`refactor`: **Create one VFS per library**:\n\n- Refactored the internals to create one VFS per library, and not per media folder. So if you attach multiple media libraries to a single library then they will share the same VFS. Just in case it wasn't obvious, but **THIS CHANGE WILL BREAK EXISTING VFSs.** \ud83d\ude42 Luckily for you, all you need to do is to run the new cleanup task and refresh or recreate the library.\n\n- Added a cleanup task to clean up old VFS roots.\n\n`fix`: **Don't run collection reconstruction if we don't have any libraries**.\n\n`misc`: **Reduce stall time from 60 to 10 seconds**.\n\n`fix`: **Only track enabled items in resolvers and ignore rule**.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.209/shoko_3.0.1.209.zip",
+                "checksum": "b2f1c5e20a35697356d93e1df86850eb",
+                "timestamp": "2024-06-22T17:18:02Z"
+            },
+            {
                 "version": "3.0.1.208",
                 "changelog": "`fix`: **Fix saving images from the image modal**:\n\n- Fixed saving images from the \"Edit Images\" modal for all users regardless of how they host Jellyfin and Shoko Server. Just don't ask _how_ it's fixed. Just know\u2026 that it is now fixed.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.205/shoko_3.0.1.205.zip",
                 "checksum": "f2c54f1bd197abf0c076a8f21709f959",
                 "timestamp": "2024-06-17T19:17:59Z"
-            },
-            {
-                "version": "3.0.1.204",
-                "changelog": "`misc`: **Update exception message**:\n\n- Updated the exception message for when we're unable to determine the series to use for the file based on it's location because the file resides within a mixed folder with multiple AniDB anime in it. They will either have to fix their file structure or use the VFS.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.204/shoko_3.0.1.204.zip",
-                "checksum": "a5cfb5620b9179c9bc1d772a21b3909e",
-                "timestamp": "2024-06-17T18:31:24Z"
             }
         ]
     }
