@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.210",
+                "changelog": "`fix`: **Don't attempt to look up library id if it's empty**.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.210/shoko_3.0.1.210.zip",
+                "checksum": "7fbcac1ff47a2cdfe7c6900f58b6214c",
+                "timestamp": "2024-06-22T21:02:39Z"
+            },
+            {
                 "version": "3.0.1.209",
                 "changelog": "`fix`: **Send config updated event**.\n\n`refactor`: **Create one VFS per library**:\n\n- Refactored the internals to create one VFS per library, and not per media folder. So if you attach multiple media libraries to a single library then they will share the same VFS. Just in case it wasn't obvious, but **THIS CHANGE WILL BREAK EXISTING VFSs.** \ud83d\ude42 Luckily for you, all you need to do is to run the new cleanup task and refresh or recreate the library.\n\n- Added a cleanup task to clean up old VFS roots.\n\n`fix`: **Don't run collection reconstruction if we don't have any libraries**.\n\n`misc`: **Reduce stall time from 60 to 10 seconds**.\n\n`fix`: **Only track enabled items in resolvers and ignore rule**.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.206/shoko_3.0.1.206.zip",
                 "checksum": "81aa5f496cc1d8efbf8c856bee1ade5b",
                 "timestamp": "2024-06-17T22:56:52Z"
-            },
-            {
-                "version": "3.0.1.205",
-                "changelog": "`misc`: **Add remove mapping button to settings**:\n\n- Added a button to remove the mapping for a media folder if it's unmapped, so it's easier to attempt to remap it without resorting to manual edits of the settings file or fiddling with the browser dev. tools.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.205/shoko_3.0.1.205.zip",
-                "checksum": "f2c54f1bd197abf0c076a8f21709f959",
-                "timestamp": "2024-06-17T19:17:59Z"
             }
         ]
     }
