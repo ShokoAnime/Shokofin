@@ -21,7 +21,7 @@ public class MediaFolderConfiguration
     /// </summary>
     [XmlIgnore]
     [JsonInclude]
-    public string? LibraryName => BaseItem.LibraryManager.GetItemById(LibraryId)?.Name;
+    public string? LibraryName => LibraryId == Guid.Empty ? null : BaseItem.LibraryManager.GetItemById(LibraryId)?.Name;
 
     /// <summary>
     /// The jellyfin media folder id.
