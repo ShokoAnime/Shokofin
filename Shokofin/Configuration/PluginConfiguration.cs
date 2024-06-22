@@ -548,7 +548,7 @@ public class PluginConfiguration : BasePluginConfiguration
         SignalR_EventSources = new[] { ProviderName.Shoko, ProviderName.AniDB, ProviderName.TMDB };
         SignalR_RefreshEnabled = false;
         SignalR_FileEvents = false;
-        UsageTracker_StalledTimeInSeconds = 60;
+        UsageTracker_StalledTimeInSeconds = 10;
         EXPERIMENTAL_AutoMergeVersions = true;
         EXPERIMENTAL_SplitThenMergeMovies = true;
         EXPERIMENTAL_SplitThenMergeEpisodes = false;
