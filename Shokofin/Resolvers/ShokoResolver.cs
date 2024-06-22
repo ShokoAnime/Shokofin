@@ -65,7 +65,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
         if (root is null || parent == root)
             return null;
 
-        var trackerId = Plugin.Instance.Tracker.Add($"Resolve path \"{fileInfo.FullName}\".");
+        Guid? trackerId = null;
         try {
             if (!Lookup.IsEnabledForItem(parent))
                 return null;
@@ -77,6 +77,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
             if (parent.GetTopParent() is not Folder mediaFolder)
                 return null;
 
+            trackerId = Plugin.Instance.Tracker.Add($"Resolve path \"{fileInfo.FullName}\".");
             var vfsPath = await ResolveManager.GenerateStructureInVFS(mediaFolder, fileInfo.FullName).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath))
                 return null;
@@ -97,7 +98,8 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
             throw;
         }
         finally {
-            Plugin.Instance.Tracker.Remove(trackerId);
+            if (trackerId.HasValue)
+                Plugin.Instance.Tracker.Remove(trackerId.Value);
         }
     }
 
@@ -110,7 +112,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
         if (root is null || parent == root)
             return null;
 
-        var trackerId = Plugin.Instance.Tracker.Add($"Resolve children of \"{parent.Path}\". (Children={fileInfoList.Count})");
+        Guid? trackerId = null;
         try {
             if (!Lookup.IsEnabledForItem(parent))
                 return null;
@@ -118,6 +120,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
             if (parent.GetTopParent() is not Folder mediaFolder)
                 return null;
 
+            trackerId = Plugin.Instance.Tracker.Add($"Resolve children of \"{parent.Path}\". (Children={fileInfoList.Count})");
             var vfsPath = await ResolveManager.GenerateStructureInVFS(mediaFolder, parent.Path).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath))
                 return null;
@@ -195,7 +198,8 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
             throw;
         }
         finally {
-            Plugin.Instance.Tracker.Remove(trackerId);
+            if (trackerId.HasValue)
+                Plugin.Instance.Tracker.Remove(trackerId.Value);
         }
     }
 

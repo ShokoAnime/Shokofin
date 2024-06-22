@@ -68,12 +68,13 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
         if (fileInfo.FullName.StartsWith(Plugin.Instance.VirtualRoot))
             return false;
 
-        var trackerId = Plugin.Instance.Tracker.Add($"Should ignore path \"{fileInfo.FullName}\".");
+        Guid? trackerId = null;
         try {
             // Enable the scanner if we selected to use the Shoko provider for any metadata type on the current root folder.
             if (!Lookup.IsEnabledForItem(parent, out var isSoleProvider))
                 return false;
 
+            trackerId = Plugin.Instance.Tracker.Add($"Should ignore path \"{fileInfo.FullName}\".");
             if (fileInfo.IsDirectory && Plugin.Instance.IgnoredFolders.Contains(Path.GetFileName(fileInfo.FullName).ToLowerInvariant())) {
                 Logger.LogDebug("Skipped excluded folder at path {Path}", fileInfo.FullName);
                 return true;
@@ -118,7 +119,8 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
             throw;
         }
         finally {
-            Plugin.Instance.Tracker.Remove(trackerId);
+            if (trackerId.HasValue)
+                Plugin.Instance.Tracker.Remove(trackerId.Value);
         }
     }
 
