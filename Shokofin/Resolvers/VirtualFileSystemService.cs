@@ -131,13 +131,16 @@ public class VirtualFileSystemService
     /// <returns>The VFS path, if it succeeded.</returns>
     public async Task<string?> GenerateStructureInVFS(Folder mediaFolder, string path)
     {
-        // Skip link generation if we've already generated for the media folder.
         var (vfsPath, collectionType, mediaConfigs) = ConfigurationService.GetAvailableMediaFoldersForLibrary(mediaFolder, config => config.IsVirtualFileSystemEnabled);
         if (string.IsNullOrEmpty(vfsPath) || mediaConfigs.Count is 0)
             return null;
 
         if (!Plugin.Instance.CanCreateSymbolicLinks)
             throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
+
+        // Skip link generation if we've already generated for the library.
+        if (DataCache.TryGetValue<bool>($"should-skip-vfs-path:{vfsPath}", out var shouldReturnPath))
+            return shouldReturnPath ? vfsPath : null;
 
         // Check full path and all parent directories if they have been indexed.
         if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
@@ -154,7 +157,7 @@ public class VirtualFileSystemService
         var key = mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath))
             ? $"should-skip-vfs-path:{vfsPath}"
             : $"should-skip-vfs-path:{path}";
-        var shouldReturnPath = await DataCache.GetOrCreateAsync<bool>(key, async (__) => {
+        shouldReturnPath = await DataCache.GetOrCreateAsync<bool>(key, async (__) => {
             // Iterate the files already in the VFS.
             string? pathToClean = null;
             IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
