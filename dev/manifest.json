@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.211",
+                "changelog": "`fix`: **Fix episode order when using season merging**.\n\n`fix`: **Fix regression for link generation**:\n\n- Add back the check for if the VFS has already been generated for the ~~media folder~~ library.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.211/shoko_3.0.1.211.zip",
+                "checksum": "aa851f5dc22a6ee50299d94ca7b46c56",
+                "timestamp": "2024-06-24T10:13:05Z"
+            },
+            {
                 "version": "3.0.1.210",
                 "changelog": "`fix`: **Don't attempt to look up library id if it's empty**.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.207/shoko_3.0.1.207.zip",
                 "checksum": "ad7923048738bcfb1857f8dae28af15b",
                 "timestamp": "2024-06-18T14:40:14Z"
-            },
-            {
-                "version": "3.0.1.206",
-                "changelog": "`fix`: **Fix regression**:\n\nFixes a regression introduced in 686785c4b004c29b02b267f8d35a9242f84f9b5b by accidentally removing _a few_ (4) critical checks before using some values",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.206/shoko_3.0.1.206.zip",
-                "checksum": "81aa5f496cc1d8efbf8c856bee1ade5b",
-                "timestamp": "2024-06-17T22:56:52Z"
             }
         ]
     }
