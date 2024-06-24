@@ -161,14 +161,21 @@ public class SeasonInfo
         // We order the lists after sorting them into buckets because the bucket
         // sort we're doing above have the episodes ordered by air date to get
         // the previous episode anchors right.
+        var seriesIdOrder = new string[] { seriesId }.Concat(extraIds).ToList();
         episodesList = episodesList
-            .OrderBy(e => e.AniDB.EpisodeNumber)
+            .OrderBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.Series.ToString()))
+            .ThenBy(e => e.AniDB.Type)
+            .ThenBy(e => e.AniDB.EpisodeNumber)
             .ToList();
         specialsList = specialsList
-            .OrderBy(e => e.AniDB.EpisodeNumber)
+            .OrderBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.Series.ToString()))
+            .ThenBy(e => e.AniDB.Type)
+            .ThenBy(e => e.AniDB.EpisodeNumber)
             .ToList();
         altEpisodesList = altEpisodesList
-            .OrderBy(e => e.AniDB.EpisodeNumber)
+            .OrderBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.Series.ToString()))
+            .ThenBy(e => e.AniDB.Type)
+            .ThenBy(e => e.AniDB.EpisodeNumber)
             .ToList();
 
         // Replace the normal episodes if we've hidden all the normal episodes and we have at least one
