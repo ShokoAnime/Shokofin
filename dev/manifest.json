@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.212",
+                "changelog": "`fix`: **Use one media folder for vfs**:\n\n- If the library contains multiple media folders then the VFS will only be attached to the first media folder, so the other media folders will \"virtually\" be empty. This is a technical change to prevent giving the same children to multiple base items causing errors internally in Jellyfin.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.212/shoko_3.0.1.212.zip",
+                "checksum": "e6629842e7d2305c0cf5ca7a4fac3dde",
+                "timestamp": "2024-06-25T19:08:26Z"
+            },
+            {
                 "version": "3.0.1.211",
                 "changelog": "`fix`: **Fix episode order when using season merging**.\n\n`fix`: **Fix regression for link generation**:\n\n- Add back the check for if the VFS has already been generated for the ~~media folder~~ library.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.208/shoko_3.0.1.208.zip",
                 "checksum": "4b2493f72fdaa1783c94e7aa97b1d153",
                 "timestamp": "2024-06-18T20:36:39Z"
-            },
-            {
-                "version": "3.0.1.207",
-                "changelog": "`fix`: **Add even more tags to consider for content ratings**.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.207/shoko_3.0.1.207.zip",
-                "checksum": "ad7923048738bcfb1857f8dae28af15b",
-                "timestamp": "2024-06-18T14:40:14Z"
             }
         ]
     }
