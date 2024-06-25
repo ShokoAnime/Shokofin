@@ -129,18 +129,21 @@ public class VirtualFileSystemService
     /// <param name="mediaFolder">The media folder to generate a structure for.</param>
     /// <param name="path">The file or folder within the media folder to generate a structure for.</param>
     /// <returns>The VFS path, if it succeeded.</returns>
-    public async Task<string?> GenerateStructureInVFS(Folder mediaFolder, string path)
+    public async Task<(string?, bool)> GenerateStructureInVFS(Folder mediaFolder, string path)
     {
-        var (vfsPath, collectionType, mediaConfigs) = ConfigurationService.GetAvailableMediaFoldersForLibrary(mediaFolder, config => config.IsVirtualFileSystemEnabled);
-        if (string.IsNullOrEmpty(vfsPath) || mediaConfigs.Count is 0)
-            return null;
+        var (vfsPath, mainMediaFolderPath, collectionType, mediaConfigs) = ConfigurationService.GetAvailableMediaFoldersForLibrary(mediaFolder, config => config.IsVirtualFileSystemEnabled);
+        if (string.IsNullOrEmpty(vfsPath) || string.IsNullOrEmpty(mainMediaFolderPath) || mediaConfigs.Count is 0)
+            return (null, false);
 
         if (!Plugin.Instance.CanCreateSymbolicLinks)
             throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
 
         // Skip link generation if we've already generated for the library.
         if (DataCache.TryGetValue<bool>($"should-skip-vfs-path:{vfsPath}", out var shouldReturnPath))
-            return shouldReturnPath ? vfsPath : null;
+            return (
+                shouldReturnPath ? vfsPath : null,
+                path.StartsWith(vfsPath + Path.DirectorySeparatorChar) || path == mainMediaFolderPath
+            );
 
         // Check full path and all parent directories if they have been indexed.
         if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
@@ -148,7 +151,7 @@ public class VirtualFileSystemService
             while (pathSegments.Length > 1) {
                 var subPath = Path.Join(pathSegments);
                 if (DataCache.TryGetValue<bool>($"should-skip-vfs-path:{subPath}", out _))
-                    return vfsPath;
+                    return (vfsPath, true);
                 pathSegments = pathSegments.SkipLast(1).ToArray();
             }
         }
@@ -256,7 +259,10 @@ public class VirtualFileSystemService
             return true;
         });
 
-        return shouldReturnPath ? vfsPath : null;
+        return (
+            shouldReturnPath ? vfsPath : null,
+            path.StartsWith(vfsPath + Path.DirectorySeparatorChar) || path == mainMediaFolderPath
+        );
     }
 
     private HashSet<string> GetPathsForMediaFolder(IReadOnlyList<MediaFolderConfiguration> mediaConfigs)

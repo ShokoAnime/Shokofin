@@ -78,8 +78,8 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve path \"{fileInfo.FullName}\".");
-            var vfsPath = await ResolveManager.GenerateStructureInVFS(mediaFolder, fileInfo.FullName).ConfigureAwait(false);
-            if (string.IsNullOrEmpty(vfsPath))
+            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, fileInfo.FullName).ConfigureAwait(false);
+            if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
             if (parent.Id == mediaFolder.Id && fileInfo.IsDirectory) {
@@ -121,8 +121,8 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve children of \"{parent.Path}\". (Children={fileInfoList.Count})");
-            var vfsPath = await ResolveManager.GenerateStructureInVFS(mediaFolder, parent.Path).ConfigureAwait(false);
-            if (string.IsNullOrEmpty(vfsPath))
+            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, parent.Path).ConfigureAwait(false);
+            if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
             // Redirect children of a VFS managed media folder to the VFS.

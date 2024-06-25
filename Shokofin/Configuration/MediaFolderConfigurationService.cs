@@ -128,36 +128,46 @@ public class MediaFolderConfigurationService
 
     #region Media Folder Mapping
 
-    public IReadOnlyList<(string vfsPath, string? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)> GetAvailableMediaFoldersForLibraries(Func<MediaFolderConfiguration, bool>? filter = null)
+    public IReadOnlyList<(string vfsPath, string mainMediaFolderPath, string? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)> GetAvailableMediaFoldersForLibraries(Func<MediaFolderConfiguration, bool>? filter = null)
     {
-        lock (LockObj)
+
+        lock (LockObj) {
+            var virtualFolders = LibraryManager.GetVirtualFolders();
             return Plugin.Instance.Configuration.MediaFolders
                 .Where(config => config.IsMapped && (filter is null || filter(config)) && LibraryManager.GetItemById(config.MediaFolderId) is Folder)
                 .GroupBy(config => config.LibraryId)
                 .Select(groupBy => (
                     libraryFolder: LibraryManager.GetItemById(groupBy.Key) as Folder,
+                    virtualFolder: virtualFolders.FirstOrDefault(folder => Guid.TryParse(folder.ItemId, out var guid) && guid == groupBy.Key),
                     mediaList: groupBy
                         .Where(config => LibraryManager.GetItemById(config.MediaFolderId) is Folder)
                         .ToList() as IReadOnlyList<MediaFolderConfiguration>
                 ))
-                .Where(tuple => tuple.libraryFolder is not null && tuple.mediaList.Count is > 0)
-                .Select(tuple => (tuple.libraryFolder!.GetVirtualRoot(), LibraryManager.GetConfiguredContentType(tuple.libraryFolder!) ?? null, tuple.mediaList))
+                .Where(tuple => tuple.libraryFolder is not null && tuple.virtualFolder is not null && tuple.virtualFolder.Locations.Length is > 0 && tuple.mediaList.Count is > 0)
+                .Select(tuple => (tuple.libraryFolder!.GetVirtualRoot(), tuple.virtualFolder!.Locations[0], LibraryManager.GetConfiguredContentType(tuple.libraryFolder!) ?? null, tuple.mediaList))
                 .ToList();
+        }
     }
 
-    public (string? vfsPath, string? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList) GetAvailableMediaFoldersForLibrary(Folder mediaFolder, Func<MediaFolderConfiguration, bool>? filter = null)
+    public (string vfsPath, string mainMediaFolderPath, string? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList) GetAvailableMediaFoldersForLibrary(Folder mediaFolder, Func<MediaFolderConfiguration, bool>? filter = null)
     {
         var mediaFolderConfig = GetOrCreateConfigurationForMediaFolder(mediaFolder);
-        if (LibraryManager.GetItemById(mediaFolderConfig.LibraryId) is not Folder libraryFolder)
-            return (null, null, new List<MediaFolderConfiguration>());
-        lock (LockObj)
+        lock (LockObj) {
+            if (LibraryManager.GetItemById(mediaFolderConfig.LibraryId) is not Folder libraryFolder)
+                return (string.Empty, string.Empty, null, new List<MediaFolderConfiguration>());
+            var virtualFolder = LibraryManager.GetVirtualFolders()
+                .FirstOrDefault(folder => Guid.TryParse(folder.ItemId, out var guid) && guid == mediaFolderConfig.LibraryId);
+            if (virtualFolder is null || virtualFolder.Locations.Length is 0)
+                return (string.Empty, string.Empty, null, new List<MediaFolderConfiguration>());
             return (
-                    libraryFolder.GetVirtualRoot(),
-                    LibraryManager.GetConfiguredContentType(libraryFolder),
-                    Plugin.Instance.Configuration.MediaFolders
-                        .Where(config => config.IsMapped && config.LibraryId == mediaFolderConfig.LibraryId && (filter is null || filter(config)) && LibraryManager.GetItemById(config.MediaFolderId) is Folder)
-                        .ToList()
-                );
+                libraryFolder.GetVirtualRoot(),
+                virtualFolder.Locations[0],
+                LibraryManager.GetConfiguredContentType(libraryFolder),
+                Plugin.Instance.Configuration.MediaFolders
+                    .Where(config => config.IsMapped && config.LibraryId == mediaFolderConfig.LibraryId && (filter is null || filter(config)) && LibraryManager.GetItemById(config.MediaFolderId) is Folder)
+                    .ToList()
+            );
+        }
     }
 
     public MediaFolderConfiguration GetOrCreateConfigurationForMediaFolder(Folder mediaFolder)

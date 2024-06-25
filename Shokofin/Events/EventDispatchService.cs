@@ -215,7 +215,7 @@ public class EventDispatchService
             var (reason, importFolderId, relativePath, lastEvent) = changes.Last();
             if (reason is not UpdateReason.Removed) {
                 Logger.LogTrace("Processing file changed. (File={FileId})", fileId);
-                foreach (var (vfsPath, collectionType, mediaConfigs) in libraries) {
+                foreach (var (vfsPath, mainMediaFolderPath, collectionType, mediaConfigs) in libraries) {
                     foreach (var (importFolderSubPath, vfsEnabled, mediaFolderPaths) in mediaConfigs.ToImportFolderList(importFolderId, relativePath)) {
                         foreach (var mediaFolderPath in mediaFolderPaths) {
                             var sourceLocation = Path.Join(mediaFolderPath, relativePath[importFolderSubPath.Length..]);
@@ -271,9 +271,9 @@ public class EventDispatchService
                             }
                             // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
                             else {
-                                var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolderPath, false).FirstOrDefault();
+                                var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mainMediaFolderPath, false).FirstOrDefault();
                                 if (!string.IsNullOrEmpty(fileOrFolder))
-                                    mediaFoldersToNotify.TryAdd(mediaFolderPath, (fileOrFolder, mediaFolderPath.GetFolderForPath()));
+                                    mediaFoldersToNotify.TryAdd(mainMediaFolderPath, (fileOrFolder, mainMediaFolderPath.GetFolderForPath()));
                             }
                             break;
                         }
@@ -285,7 +285,7 @@ public class EventDispatchService
                 Logger.LogTrace("Processing file removed. (File={FileId})", fileId);
                 relativePath = firstRemovedEvent.RelativePath;
                 importFolderId = firstRemovedEvent.ImportFolderId;
-                foreach (var (vfsPath, collectionType, mediaConfigs) in libraries) {
+                foreach (var (vfsPath, mainMediaFolderPath, collectionType, mediaConfigs) in libraries) {
                     foreach (var (importFolderSubPath, vfsEnabled, mediaFolderPaths) in mediaConfigs.ToImportFolderList(importFolderId, relativePath)) {
                         foreach (var mediaFolderPath in mediaFolderPaths) {
                             // Let the core logic handle the rest.
@@ -343,9 +343,9 @@ public class EventDispatchService
                             }
                             // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
                             else {
-                                var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mediaFolderPath, false).FirstOrDefault();
+                                var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mainMediaFolderPath, false).FirstOrDefault();
                                 if (!string.IsNullOrEmpty(fileOrFolder))
-                                    mediaFoldersToNotify.TryAdd(mediaFolderPath, (fileOrFolder, mediaFolderPath.GetFolderForPath()));
+                                    mediaFoldersToNotify.TryAdd(mainMediaFolderPath, (fileOrFolder, mainMediaFolderPath.GetFolderForPath()));
                             }
                             break;
                         }
