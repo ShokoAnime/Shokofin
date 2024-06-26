@@ -17,7 +17,7 @@ namespace Shokofin.Configuration;
 public static class MediaFolderConfigurationExtensions
 {
     public static Folder GetFolderForPath(this string mediaFolderPath)
-        => BaseItem.LibraryManager.GetItemById(mediaFolderPath) as Folder ??
+        => BaseItem.LibraryManager.FindByPath(mediaFolderPath, true) as Folder ??
             throw new Exception($"Unable to find folder by path \"{mediaFolderPath}\".");
 
     public static IReadOnlyList<(int importFolderId, string importFolderSubPath, IReadOnlyList<string> mediaFolderPaths)> ToImportFolderList(this IEnumerable<MediaFolderConfiguration> mediaConfigs)
