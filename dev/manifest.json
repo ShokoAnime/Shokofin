@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.213",
+                "changelog": "`fix`: **Make file events great again!**:\n\n- Fix the the extension method to get the media folder from a path to refresh the library itself when adding files for new series not in the media library.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.213/shoko_3.0.1.213.zip",
+                "checksum": "91d66e9b5fcc3c2b289bcb3b6c754ebd",
+                "timestamp": "2024-06-26T09:44:40Z"
+            },
+            {
                 "version": "3.0.1.212",
                 "changelog": "`fix`: **Use one media folder for vfs**:\n\n- If the library contains multiple media folders then the VFS will only be attached to the first media folder, so the other media folders will \"virtually\" be empty. This is a technical change to prevent giving the same children to multiple base items causing errors internally in Jellyfin.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.209/shoko_3.0.1.209.zip",
                 "checksum": "b2f1c5e20a35697356d93e1df86850eb",
                 "timestamp": "2024-06-22T17:18:02Z"
-            },
-            {
-                "version": "3.0.1.208",
-                "changelog": "`fix`: **Fix saving images from the image modal**:\n\n- Fixed saving images from the \"Edit Images\" modal for all users regardless of how they host Jellyfin and Shoko Server. Just don't ask _how_ it's fixed. Just know\u2026 that it is now fixed.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.208/shoko_3.0.1.208.zip",
-                "checksum": "4b2493f72fdaa1783c94e7aa97b1d153",
-                "timestamp": "2024-06-18T20:36:39Z"
             }
         ]
     }
