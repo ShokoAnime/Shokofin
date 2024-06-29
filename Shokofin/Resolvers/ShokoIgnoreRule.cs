@@ -86,7 +86,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
             }
 
             var fullPath = fileInfo.FullName;
-            var (mediaFolder, partialPath) = ApiManager.FindMediaFolder(fullPath, parent, root);
+            var (mediaFolder, partialPath) = ApiManager.FindMediaFolder(fullPath, parent);
 
             // Ignore any media folders that aren't mapped to shoko.
             var mediaFolderConfig = ConfigurationService.GetOrCreateConfigurationForMediaFolder(mediaFolder);

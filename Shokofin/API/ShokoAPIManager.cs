@@ -73,7 +73,19 @@ public class ShokoAPIManager : IDisposable
 
     #region Ignore rule
 
-    public (Folder mediaFolder, string partialPath) FindMediaFolder(string path, Folder parent, Folder root)
+    /// <summary>
+    /// We'll let the ignore rule "scan" for the media folder, and populate our
+    /// dictionary for later use, then we'll use said dictionary to lookup the
+    /// media folder by path later in the ignore rule and when stripping the
+    /// media folder from the path to get the relative path in
+    /// <see cref="StripMediaFolder"/>.
+    /// </summary>
+    /// <param name="path">The path to find the media folder for.</param>
+    /// <param name="parent">The parent folder of <paramref name="path"/>.
+    /// </param>
+    /// <returns>The media folder and partial string within said folder for
+    /// <paramref name="path"/>.</returns>
+    public (Folder mediaFolder, string partialPath) FindMediaFolder(string path, Folder parent)
     {
         Folder? mediaFolder = null;
         lock (MediaFolderListLock)
@@ -81,12 +93,18 @@ public class ShokoAPIManager : IDisposable
         if (mediaFolder is not null)
             return (mediaFolder, path[mediaFolder.Path.Length..]);
         if (parent.GetTopParent() is not Folder topParent)
-            return (root, path);
+            throw new Exception($"Unable to find media folder for path \"{path}\"");
         lock (MediaFolderListLock)
             MediaFolderList.Add(topParent);
         return (topParent, path[topParent.Path.Length..]);
     }
 
+    /// <summary>
+    /// Strip the media folder from the full path, leaving only the partial
+    /// path to use when searching Shoko for a match.
+    /// </summary>
+    /// <param name="fullPath">The full path to strip.</param>
+    /// <returns>The partial path, void of the media folder.</returns>
     public string StripMediaFolder(string fullPath)
     {
         Folder? mediaFolder = null;
