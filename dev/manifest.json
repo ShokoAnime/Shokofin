@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.214",
+                "changelog": "`feat`: **Add more optional metadata to VFS paths**:\n\n- Added two _optional_ pieces of metadata to add to the VFS path purely for user QoL, but with some drawbacks, which is why they're **opt-in** and not opt-out. Read the warnings if you want to know more.\n\n`refactor`: **Disable caching of paths again**:\n\n- Disabled the caching of paths in the media folders again, since we once again know that the VFS will only run once for the top-most folder we're scanning.\n\n`misc`: **Update comment**.\n\n`fix`: **Throw if we can't find the media folder**:\n\n- Throw if we can't find the media folder during scanning for non-VFS libraries, instead of silently continuing while using the root folder (which is not a media folder!).\n\n- Added doc-comments for the find media folder and strip media folder methods.\n\n`fix`: **Add better removal of symbolic links in event dispatcher**.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.214/shoko_3.0.1.214.zip",
+                "checksum": "e3342cf6fb9dd3b00d4945e323341f5d",
+                "timestamp": "2024-06-29T14:40:51Z"
+            },
+            {
                 "version": "3.0.1.213",
                 "changelog": "`fix`: **Make file events great again!**:\n\n- Fix the the extension method to get the media folder from a path to refresh the library itself when adding files for new series not in the media library.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.210/shoko_3.0.1.210.zip",
                 "checksum": "7fbcac1ff47a2cdfe7c6900f58b6214c",
                 "timestamp": "2024-06-22T21:02:39Z"
-            },
-            {
-                "version": "3.0.1.209",
-                "changelog": "`fix`: **Send config updated event**.\n\n`refactor`: **Create one VFS per library**:\n\n- Refactored the internals to create one VFS per library, and not per media folder. So if you attach multiple media libraries to a single library then they will share the same VFS. Just in case it wasn't obvious, but **THIS CHANGE WILL BREAK EXISTING VFSs.** \ud83d\ude42 Luckily for you, all you need to do is to run the new cleanup task and refresh or recreate the library.\n\n- Added a cleanup task to clean up old VFS roots.\n\n`fix`: **Don't run collection reconstruction if we don't have any libraries**.\n\n`misc`: **Reduce stall time from 60 to 10 seconds**.\n\n`fix`: **Only track enabled items in resolvers and ignore rule**.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.209/shoko_3.0.1.209.zip",
-                "checksum": "b2f1c5e20a35697356d93e1df86850eb",
-                "timestamp": "2024-06-22T17:18:02Z"
             }
         ]
     }
