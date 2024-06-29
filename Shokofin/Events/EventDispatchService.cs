@@ -256,8 +256,7 @@ public class EventDispatchService
                                     continue;
                                 }
                                 Logger.LogTrace("Found a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
-                                if (File.Exists(video.Path))
-                                    File.Delete(video.Path);
+                                RemoveSymbolicLink(video.Path);
                                 topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
                                 locationsToNotify.Add(video.Path);
                                 result.RemovedVideos++;
@@ -328,8 +327,7 @@ public class EventDispatchService
                                     continue;
                                 }
                                 Logger.LogTrace("Found a {Kind} to remove with path {Path}", video.GetBaseItemKind(), video.Path);
-                                if (File.Exists(video.Path))
-                                    File.Delete(video.Path);
+                                RemoveSymbolicLink(video.Path);
                                 topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
                                 locationsToNotify.Add(video.Path);
                                 result.RemovedVideos++;
@@ -431,6 +429,35 @@ public class EventDispatchService
         }
         catch (ApiException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound) {
             return null;
+        }
+    }
+
+    private void RemoveSymbolicLink(string filePath)
+    {
+        // TODO: If this works better, the move it to an utility and also use it in the VFS if needed, or remove this comment if it's not needed.
+        try {
+            var fileExists = File.Exists(filePath);
+            var fileInfo = new System.IO.FileInfo(filePath);
+            var fileInfoExists = fileInfo.Exists;
+            var reparseFlag = fileInfo.Attributes.HasFlag(FileAttributes.ReparsePoint);
+            Logger.LogTrace(
+                "Result for if file is a reparse point; {FilePath} (Exists1={FileExists},Exists2={FileInfoExists},ReparsePoint={IsReparsePoint},Attributes={AllAttributes})",
+                filePath,
+                fileExists,
+                fileInfoExists,
+                reparseFlag,
+                fileInfo.Attributes
+            );
+
+            try {
+                File.Delete(filePath);
+            }
+            catch (Exception ex) {
+                Logger.LogError(ex, "Unable to remove symbolic link at path {Path}; {ErrorMessage}", filePath, ex.Message);
+            }
+        }
+        catch (Exception ex) {
+            Logger.LogTrace(ex, "Unable to check if file path exists and is a reparse point; {FilePath}", filePath);
         }
     }
 
