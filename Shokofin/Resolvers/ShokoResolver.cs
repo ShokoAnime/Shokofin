@@ -179,7 +179,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                     .OfType<BaseItem>()
                     .ToList();
 
-                // TODO: uncomment the code snippet once the PR is in stable JF.
+                // TODO: uncomment the code snippet once we reach JF 10.10.
                 // return new() { Items = items, ExtraFiles = new() };
 
                 // TODO: Remove these two hacks once we have proper support for adding multiple series at once.
