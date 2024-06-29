@@ -266,28 +266,25 @@ public class VirtualFileSystemService
     }
 
     private HashSet<string> GetPathsForMediaFolder(IReadOnlyList<MediaFolderConfiguration> mediaConfigs)
-        => DataCache.GetOrCreate(
-            $"path-set-for-library:{mediaConfigs[0].LibraryId}",
-            (_) => {
-                var libraryId = mediaConfigs[0].LibraryId;
-                Logger.LogDebug("Looking for files in library across {Count} folders. (Library={LibraryId})", mediaConfigs.Count, libraryId);
-                var start = DateTime.UtcNow;
-                var paths = new HashSet<string>();
-                foreach (var mediaConfig in mediaConfigs) {
-                    Logger.LogDebug("Looking for files in folder at {Path}. (Library={LibraryId})", mediaConfig.MediaFolderPath, libraryId);
-                    var folderStart = DateTime.UtcNow;
-                    var before = paths.Count;
-                    paths.UnionWith(
-                        FileSystem.GetFilePaths(mediaConfig.MediaFolderPath, true)
-                            .Where(path => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
-                    );
-                    Logger.LogDebug("Found {FileCount} files in folder at {Path} in {TimeSpan}. (Library={LibraryId})", paths.Count - before, mediaConfig.MediaFolderPath, DateTime.UtcNow - folderStart, libraryId);
-                }
+    {
+        var libraryId = mediaConfigs[0].LibraryId;
+        Logger.LogDebug("Looking for files in library across {Count} folders. (Library={LibraryId})", mediaConfigs.Count, libraryId);
+        var start = DateTime.UtcNow;
+        var paths = new HashSet<string>();
+        foreach (var mediaConfig in mediaConfigs) {
+            Logger.LogDebug("Looking for files in folder at {Path}. (Library={LibraryId})", mediaConfig.MediaFolderPath, libraryId);
+            var folderStart = DateTime.UtcNow;
+            var before = paths.Count;
+            paths.UnionWith(
+                FileSystem.GetFilePaths(mediaConfig.MediaFolderPath, true)
+                    .Where(path => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+            );
+            Logger.LogDebug("Found {FileCount} files in folder at {Path} in {TimeSpan}. (Library={LibraryId})", paths.Count - before, mediaConfig.MediaFolderPath, DateTime.UtcNow - folderStart, libraryId);
+        }
 
-                Logger.LogDebug("Found {FileCount} files in library across {Count} in {TimeSpan}. (Library={LibraryId})", paths.Count, mediaConfigs.Count, DateTime.UtcNow - start, libraryId);
-                return paths;
-            }
-        );
+        Logger.LogDebug("Found {FileCount} files in library across {Count} in {TimeSpan}. (Library={LibraryId})", paths.Count, mediaConfigs.Count, DateTime.UtcNow - start, libraryId);
+        return paths;
+    }
 
     private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForEpisode(string fileId, string seriesId, IReadOnlyList<MediaFolderConfiguration> mediaConfigs, HashSet<string> fileSet)
     {
