@@ -348,12 +348,24 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Enable/disable the VFS for new media-folders/libraries.
     /// </summary>
-    public bool VirtualFileSystem { get; set; }
+    [XmlElement("VirtualFileSystem")]
+    public bool VFS_Enabled { get; set; }
 
     /// <summary>
     /// Number of threads to concurrently generate links for the VFS.
     /// </summary>
-    public int VirtualFileSystemThreads { get; set; }
+    [XmlElement("VirtualFileSystemThreads")]
+    public int VFS_Threads { get; set; }
+
+    /// <summary>
+    /// Add release group to the file name of VFS entries.
+    /// </summary>
+    public bool VFS_AddReleaseGroup { get; set; }
+
+    /// <summary>
+    /// Add resolution to the file name of VFS entries.
+    /// </summary>
+    public bool VFS_AddResolution { get; set; }
 
     /// <summary>
     /// Enable/disable the filtering for new media-folders/libraries.
@@ -524,8 +536,10 @@ public class PluginConfiguration : BasePluginConfiguration
             DescriptionProvider.TvDB,
             DescriptionProvider.TMDB,
         };
-        VirtualFileSystem = CanCreateSymbolicLinks;
-        VirtualFileSystemThreads = 4;
+        VFS_Enabled = CanCreateSymbolicLinks;
+        VFS_Threads = 4;
+        VFS_AddReleaseGroup = false;
+        VFS_AddResolution = false;
         UseGroupsForShows = false;
         SeparateMovies = false;
         MovieSpecialsAsExtraFeaturettes = false;

@@ -641,7 +641,7 @@ public class VirtualFileSystemService
     private async Task<LinkGenerationResult> GenerateStructure(string? collectionType, string vfsPath, IEnumerable<(string sourceLocation, string fileId, string seriesId)> allFiles)
     {
         var result = new LinkGenerationResult();
-        var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VirtualFileSystemThreads);
+        var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VFS_Threads);
         await Task.WhenAll(allFiles.Select(async (tuple) => {
             await semaphore.WaitAsync().ConfigureAwait(false);
 
@@ -765,7 +765,20 @@ public class VirtualFileSystemService
             }
         }
 
-        var fileName = $"{episodeName} [{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileId}]{Path.GetExtension(sourceLocation)}";
+        var extraDetails = new List<string>();
+        if (config.VFS_AddReleaseGroup)
+            extraDetails.Add(
+                file.Shoko.AniDBData is not null
+                    ? !string.IsNullOrEmpty(file.Shoko.AniDBData.ReleaseGroup.Name)
+                        ? file.Shoko.AniDBData.ReleaseGroup.Name
+                        : !string.IsNullOrEmpty(file.Shoko.AniDBData.ReleaseGroup.ShortName)
+                            ? file.Shoko.AniDBData.ReleaseGroup.ShortName
+                            : $"Release group {file.Shoko.AniDBData.ReleaseGroup.Id}"
+                : "No Group"
+            );
+        if (config.VFS_AddResolution && !string.IsNullOrEmpty(file.Shoko.Resolution))
+            extraDetails.Add(file.Shoko.Resolution);
+        var fileName = $"{episodeName} {(extraDetails.Count is > 0 ? $"[{extraDetails.Join("] [")}] " : "")}[{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileId}]{Path.GetExtension(sourceLocation)}";
         var symbolicLinks = folders
             .Select(folderPath => Path.Join(folderPath, fileName))
             .ToArray();

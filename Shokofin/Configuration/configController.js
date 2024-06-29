@@ -333,6 +333,10 @@ async function defaultSubmit(form) {
         // Media Folder settings
         let mediaFolderId = form.querySelector("#MediaFolderSelector").value;
         let mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
+        config.IgnoredFolders = ignoredFolders;
+        form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
+        config.VFS_AddReleaseGroup = form.querySelector("#VFS_AddReleaseGroup").checked;
+        config.VFS_AddResolution = form.querySelector("#VFS_AddResolution").checked;
         if (mediaFolderConfig) {
             const libraryId = mediaFolderConfig.LibraryId;
             for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
@@ -341,7 +345,7 @@ async function defaultSubmit(form) {
             }
         }
         else {
-            config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
+            config.VFS_Enabled = form.querySelector("#VFS_Enabled").checked;
             config.LibraryFilteringMode = form.querySelector("#LibraryFilteringMode").value;
         }
 
@@ -365,10 +369,6 @@ async function defaultSubmit(form) {
             config.SignalR_RefreshEnabled = form.querySelector("#SignalRDefaultRefreshEvents").checked;
         }
 
-        // Advanced settings
-        config.PublicUrl = publicUrl;
-        config.IgnoredFolders = ignoredFolders;
-        form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
 
         // Experimental settings
         config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
@@ -439,11 +439,18 @@ async function defaultSubmit(form) {
         if (url.endsWith("/")) {
             url = url.slice(0, -1);
         }
+        let publicUrl = form.querySelector("#PublicUrl").value;
+        if (publicUrl.endsWith("/")) {
+            publicUrl = publicUrl.slice(0, -1);
+            form.querySelector("#PublicUrl").value = publicUrl;
+        }
+        config.PublicUrl = publicUrl;
 
         // Update the url if needed.
-        if (config.Url !== url) {
+        if (config.Url !== url || config.PublicUrl !== publicUrl) {
             config.Url = url;
             form.querySelector("#Url").value = url;
+            form.querySelector("#PublicUrl").value = publicUrl;
             let result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
             Dashboard.processPluginConfigurationUpdateResult(result);
         }
@@ -487,12 +494,6 @@ async function resetConnectionSettings(form) {
 
 async function syncSettings(form) {
     const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
-    let publicUrl = form.querySelector("#PublicUrl").value;
-    if (publicUrl.endsWith("/")) {
-        publicUrl = publicUrl.slice(0, -1);
-        form.querySelector("#PublicUrl").value = publicUrl;
-    }
-    const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
     // Metadata settings
     config.TitleMainOverride = form.querySelector("#TitleMainOverride").checked;
@@ -540,11 +541,6 @@ async function syncSettings(form) {
     config.AddCreditsAsThemeVideos = form.querySelector("#AddCreditsAsThemeVideos").checked;
     config.AddCreditsAsSpecialFeatures = form.querySelector("#AddCreditsAsSpecialFeatures").checked;
     config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
-
-    // Advanced settings
-    config.PublicUrl = publicUrl;
-    config.IgnoredFolders = ignoredFolders;
-    form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
 
     // Experimental settings
     config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
@@ -601,6 +597,12 @@ async function syncMediaFolderSettings(form) {
     const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
     const mediaFolderId = form.querySelector("#MediaFolderSelector").value;
     const mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
+    const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
+
+    config.IgnoredFolders = ignoredFolders;
+    form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
+    config.VFS_AddReleaseGroup = form.querySelector("#VFS_AddReleaseGroup").checked;
+    config.VFS_AddResolution = form.querySelector("#VFS_AddResolution").checked;
     if (mediaFolderConfig) {
         const libraryId = mediaFolderConfig.LibraryId;
         for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
@@ -609,7 +611,7 @@ async function syncMediaFolderSettings(form) {
         }
     }
     else {
-        config.VirtualFileSystem = form.querySelector("#VirtualFileSystem").checked;
+        config.VFS_Enabled = form.querySelector("#VFS_Enabled").checked;
         config.LibraryFilteringMode = form.querySelector("#LibraryFilteringMode").value;
     }
 
@@ -721,6 +723,7 @@ export default function (page) {
         }
         if (config.ApiKey) {
             form.querySelector("#Url").setAttribute("disabled", "");
+            form.querySelector("#PublicUrl").setAttribute("disabled", "");
             form.querySelector("#Username").setAttribute("disabled", "");
             form.querySelector("#Password").value = "";
             form.querySelector("#ConnectionSetContainer").setAttribute("hidden", "");
@@ -736,6 +739,7 @@ export default function (page) {
         }
         else {
             form.querySelector("#Url").removeAttribute("disabled");
+            form.querySelector("#PublicUrl").removeAttribute("disabled");
             form.querySelector("#Username").removeAttribute("disabled");
             form.querySelector("#ConnectionSetContainer").removeAttribute("hidden");
             form.querySelector("#ConnectionResetContainer").setAttribute("hidden", "");
@@ -891,6 +895,7 @@ export default function (page) {
 
             // Connection settings
             form.querySelector("#Url").value = config.Url;
+            form.querySelector("#PublicUrl").value = config.PublicUrl;
             form.querySelector("#Username").value = config.Username;
             form.querySelector("#Password").value = "";
 
@@ -988,7 +993,7 @@ export default function (page) {
             form.querySelector("#AddTMDBId").checked = config.AddTMDBId;
 
             // Library settings
-            if (form.querySelector("#UseGroupsForShows").checked = config.UseGroupsForShows || false) {
+            if (form.querySelector("#UseGroupsForShows").checked = config.UseGroupsForShows) {
                 form.querySelector("#SeasonOrderingContainer").removeAttribute("hidden");
                 form.querySelector("#SeasonOrdering").disabled = false;
             }
@@ -997,22 +1002,22 @@ export default function (page) {
                 form.querySelector("#SeasonOrdering").disabled = true;
             }
             form.querySelector("#SeasonOrdering").value = config.SeasonOrdering;
-            form.querySelector("#CollectionGrouping").value = config.CollectionGrouping || "Default";
-            form.querySelector("#CollectionMinSizeOfTwo").checked = config.CollectionMinSizeOfTwo != null
-                ? config.CollectionMinSizeOfTwo : true;
-            form.querySelector("#SeparateMovies").checked = config.SeparateMovies != null
-                ? config.SeparateMovies : true;
-            form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default"
-                ? "AfterSeason" : config.SpecialsPlacement;
-            form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked = config.MovieSpecialsAsExtraFeaturettes || false;
-            form.querySelector("#AddTrailers").checked = config.AddTrailers || false;
-            form.querySelector("#AddCreditsAsThemeVideos").checked = config.AddCreditsAsThemeVideos || false;
-            form.querySelector("#AddCreditsAsSpecialFeatures").checked = config.AddCreditsAsSpecialFeatures || false;
-            form.querySelector("#AddMissingMetadata").checked = config.AddMissingMetadata || false;
+            form.querySelector("#CollectionGrouping").value = config.CollectionGrouping;
+            form.querySelector("#CollectionMinSizeOfTwo").checked = config.CollectionMinSizeOfTwo;
+            form.querySelector("#SeparateMovies").checked = config.SeparateMovies;
+            form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
+            form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked = config.MovieSpecialsAsExtraFeaturettes;
+            form.querySelector("#AddTrailers").checked = config.AddTrailers;
+            form.querySelector("#AddCreditsAsThemeVideos").checked = config.AddCreditsAsThemeVideos;
+            form.querySelector("#AddCreditsAsSpecialFeatures").checked = config.AddCreditsAsSpecialFeatures;
+            form.querySelector("#AddMissingMetadata").checked = config.AddMissingMetadata;
 
             // Media Folder settings
-            form.querySelector("#VirtualFileSystem").checked = config.VirtualFileSystem != null
-                ? config.VirtualFileSystem : true;
+
+            form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
+            form.querySelector("#VFS_AddReleaseGroup").checked = config.VFS_AddReleaseGroup;
+            form.querySelector("#VFS_AddResolution").checked = config.VFS_AddResolution;
+            form.querySelector("#VFS_Enabled").checked = config.VFS_Enabled;
             form.querySelector("#LibraryFilteringMode").value = config.LibraryFilteringMode;
             mediaFolderSelector.innerHTML += config.MediaFolders
                 .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.LibraryName} (${mediaFolder.MediaFolderPath})</option>`)
@@ -1030,10 +1035,6 @@ export default function (page) {
 
             // User settings
             userSelector.innerHTML += users.map((user) => `<option value="${user.Id}">${user.Name}</option>`).join("");
-
-            // Advanced settings
-            form.querySelector("#PublicUrl").value = config.PublicUrl;
-            form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
 
             // Experimental settings
             form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked = config.EXPERIMENTAL_AutoMergeVersions || false;

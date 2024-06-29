@@ -1240,6 +1240,20 @@
                             <input is="emby-input" type="text" id="IgnoredFolders" label="Ignored folder names:" />
                             <div class="fieldDescription">A comma separated list of folder names which will be ignored during library filtering.</div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_AddReleaseGroup" />
+                                <span>Add Release Group to VFS entries</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the full or short release group name to all automatically linked files in the VFS, and "No Group" for all manually linked files in the VFS. <strong>Warning</strong>: The release group in the file name may change if the release group info is incomplete, unavailable, or otherwise updated in Shoko at a later date, and thus may cause episode/movie entries to be "removed" and "added" as new entries when that happens. <strong>Use at your own risk.</strong></div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_AddResolution" />
+                                <span>Add Resolution to VFS entries</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the standardized resolution (e.g. 480p, 1080p, 4K, etc.) to all files in the VFS, <strong>IF</strong> it's available. <strong>Warning</strong>: Though rare, we may have failed to read the media info in Shoko when the files were first added (e.g. because of a corrupt file, encountering an unsupported <i>new</i> codec, etc.), then reading it later. This may lead to episode/movie entries to be "removed" and "added" as new entries the next time they are refreshed after the metadata has been added. <strong>Use at your own risk.</strong></div>
+                        </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="MediaFolderSelector">Configure settings for:</label>
                             <select is="emby-select" id="MediaFolderSelector" name="MediaFolderSelector" value="" class="emby-select-withcolor emby-select">
@@ -1250,7 +1264,7 @@
                         <div id="MediaFolderDefaultSettingsContainer">
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="VirtualFileSystem" />
+                                    <input is="emby-checkbox" type="checkbox" id="VFS_Enabled" />
                                     <span>Virtual File System&trade;</span>
                                 </label>
                                 <div class="fieldDescription checkboxFieldDescription">
