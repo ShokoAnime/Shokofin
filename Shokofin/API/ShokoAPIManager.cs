@@ -659,7 +659,13 @@ public class ShokoAPIManager : IDisposable
         if (string.IsNullOrEmpty(seriesId))
             return null;
 
-        var series = await APIClient.GetSeries(seriesId).ConfigureAwait(false);
+        Series series;
+        try {
+            series = await APIClient.GetSeries(seriesId).ConfigureAwait(false);
+        }
+        catch (ApiException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound) {
+            return null;
+        }
         return await CreateSeasonInfo(series).ConfigureAwait(false);
     }
 
