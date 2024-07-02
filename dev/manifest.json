@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.215",
+                "changelog": "`fix`: **Fix VFS resolver when series in shoko doesn't exist**:\n\n- Fixed the VFS media folder resolution when the series in shoko has been removed.\n\n`misc`: **Add missing trace logging for method**.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.215/shoko_3.0.1.215.zip",
+                "checksum": "2e8c5dfdacb9254f8a49951caf3c84a4",
+                "timestamp": "2024-07-02T21:23:33Z"
+            },
+            {
                 "version": "3.0.1.214",
                 "changelog": "`feat`: **Add more optional metadata to VFS paths**:\n\n- Added two _optional_ pieces of metadata to add to the VFS path purely for user QoL, but with some drawbacks, which is why they're **opt-in** and not opt-out. Read the warnings if you want to know more.\n\n`refactor`: **Disable caching of paths again**:\n\n- Disabled the caching of paths in the media folders again, since we once again know that the VFS will only run once for the top-most folder we're scanning.\n\n`misc`: **Update comment**.\n\n`fix`: **Throw if we can't find the media folder**:\n\n- Throw if we can't find the media folder during scanning for non-VFS libraries, instead of silently continuing while using the root folder (which is not a media folder!).\n\n- Added doc-comments for the find media folder and strip media folder methods.\n\n`fix`: **Add better removal of symbolic links in event dispatcher**.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.211/shoko_3.0.1.211.zip",
                 "checksum": "aa851f5dc22a6ee50299d94ca7b46c56",
                 "timestamp": "2024-06-24T10:13:05Z"
-            },
-            {
-                "version": "3.0.1.210",
-                "changelog": "`fix`: **Don't attempt to look up library id if it's empty**.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.210/shoko_3.0.1.210.zip",
-                "checksum": "7fbcac1ff47a2cdfe7c6900f58b6214c",
-                "timestamp": "2024-06-22T21:02:39Z"
             }
         ]
     }
