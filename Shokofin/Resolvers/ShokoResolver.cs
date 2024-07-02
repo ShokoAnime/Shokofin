@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,6 +16,7 @@ using Shokofin.API;
 using Shokofin.API.Models;
 using Shokofin.ExternalIds;
 
+using File = System.IO.File;
 using IDirectoryService = MediaBrowser.Controller.Providers.IDirectoryService;
 using TvSeries = MediaBrowser.Controller.Entities.TV.Series;
 
@@ -128,6 +130,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
             // Redirect children of a VFS managed media folder to the VFS.
             if (parent.IsTopParent) {
                 var createMovies = collectionType is CollectionType.Movies || (collectionType is null && Plugin.Instance.Configuration.SeparateMovies);
+                var pathsToRemoveBag = new ConcurrentBag<(string, bool)>();
                 var items = FileSystem.GetDirectories(vfsPath)
                     .AsParallel()
                     .SelectMany(dirInfo => {
@@ -138,8 +141,10 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                             .ConfigureAwait(false)
                             .GetAwaiter()
                             .GetResult();
-                        if (season is null)
+                        if (season is null) {
+                            pathsToRemoveBag.Add((dirInfo.FullName, true));
                             return Array.Empty<BaseItem>();
+                        }
 
                         if (createMovies && season.Type is SeriesType.Movie) {
                             return FileSystem.GetFiles(dirInfo.FullName)
@@ -160,7 +165,13 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                                         .GetResult();
 
                                     // Abort if the file was not recognized.
-                                    if (file is null || file.EpisodeList.Any(eI => season.IsExtraEpisode(eI.Episode)))
+                                    if (file is null) {
+                                        pathsToRemoveBag.Add((fileInfo.FullName, false));
+                                        return null;
+                                    }
+
+                                    // Or if it's a recognized extra.
+                                    if (file.EpisodeList.Any(eI => season.IsExtraEpisode(eI.Episode)))
                                         return null;
 
                                     return new Movie() {
@@ -178,6 +189,32 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                     })
                     .OfType<BaseItem>()
                     .ToList();
+
+                if (!pathsToRemoveBag.IsEmpty) {
+                    var start = DateTime.Now;
+                    var pathsToRemove = pathsToRemoveBag.ToArray().DistinctBy(tuple => tuple.Item1).ToList();
+                    Logger.LogDebug("Cleaning up {Count} removed entries in {Path}", pathsToRemove.Count, mediaFolder.Path);
+                    foreach (var (pathToRemove, isDirectory) in pathsToRemove) {
+                        try {
+                            if (isDirectory) {
+                                Logger.LogTrace("Removing directory: {Path}", pathToRemove);
+                                Directory.Delete(pathToRemove, true);
+                                Logger.LogTrace("Removed directory: {Path}", pathToRemove);
+                                
+                            }
+                            else {
+                                Logger.LogTrace("Removing file: {Path}", pathToRemove);
+                                File.Delete(pathToRemove);
+                                Logger.LogTrace("Removed file: {Path}", pathToRemove);
+                            }
+                        }
+                        catch (Exception ex) {
+                            Logger.LogTrace(ex, "Failed to remove ");
+                        }
+                    }
+                    var deltaTime = DateTime.Now - start;
+                    Logger.LogDebug("Cleaned up {Count} removed entries in {Time}", pathsToRemove.Count, deltaTime);
+                }
 
                 // TODO: uncomment the code snippet once we reach JF 10.10.
                 // return new() { Items = items, ExtraFiles = new() };
