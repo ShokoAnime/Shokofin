@@ -785,7 +785,19 @@ public class ShokoAPIManager : IDisposable
     private Task<(string primaryId, List<string> extraIds)> GetSeriesIdsForSeason(Series series)
         => DataCache.GetOrCreateAsync(
             $"season-series-ids:{series.IDs.Shoko}",
-            (tuple) => Logger.LogTrace(""),
+            (tuple) => {
+                var config = Plugin.Instance.Configuration;
+                if (!config.EXPERIMENTAL_MergeSeasons)
+                    return;
+
+                if (!config.EXPERIMENTAL_MergeSeasonsTypes.Contains(GetCustomSeriesType(series.IDs.Shoko.ToString()).ConfigureAwait(false).GetAwaiter().GetResult() ?? series.AniDBEntity.Type))
+                    return;
+
+                if (series.AniDBEntity.AirDate is null)
+                    return;
+
+                Logger.LogTrace("Reusing existing series-to-season mapping for series. (Series={SeriesId},ExtraSeries={ExtraIds})", tuple.primaryId, tuple.extraIds);
+            },
             async (cacheEntry) => {
                 var primaryId = series.IDs.Shoko.ToString();
                 var extraIds = new List<string>();
@@ -798,6 +810,8 @@ public class ShokoAPIManager : IDisposable
 
                 if (series.AniDBEntity.AirDate is null)
                     return (primaryId, extraIds);
+
+                Logger.LogTrace("Creating new series-to-season mapping for series. (Series={SeriesId})", primaryId);
 
                 // We potentially have a "follow-up" season candidate, so look for the "primary" season candidate, then jump into that. 
                 var relations = await APIClient.GetSeriesRelations(primaryId).ConfigureAwait(false);
@@ -834,8 +848,10 @@ public class ShokoAPIManager : IDisposable
                             var prequelMainTitle = prequelSeries.AniDBEntity.Titles.First(title => title.Type == TitleType.Main).Value;
                             var prequelResult = YearRegex.Match(prequelMainTitle);
                             if (!prequelResult.Success) {
-                                if (string.Equals(adjustedMainTitle, prequelMainTitle, StringComparison.InvariantCultureIgnoreCase))
-                                    return await GetSeriesIdsForSeason(prequelSeries);
+                                if (string.Equals(adjustedMainTitle, prequelMainTitle, StringComparison.InvariantCultureIgnoreCase)) {
+                                    (primaryId, extraIds) = await GetSeriesIdsForSeason(prequelSeries);
+                                    goto breakPrequelWhileLoop;
+                                }
                                 continue;
                             }
 
@@ -846,7 +862,7 @@ public class ShokoAPIManager : IDisposable
                                 goto continuePrequelWhileLoop;
                             }
                         }
-                        break;
+                        breakPrequelWhileLoop: break;
                         continuePrequelWhileLoop: continue;
                     }
                 }
@@ -894,6 +910,8 @@ public class ShokoAPIManager : IDisposable
                         continueSequelWhileLoop: continue;
                     }
                 }
+
+                Logger.LogTrace("Created new series-to-season mapping for series. (Series={SeriesId},ExtraSeries={ExtraIds})", primaryId, extraIds);
 
                 return (primaryId, extraIds);
             }
