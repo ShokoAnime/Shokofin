@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "3.0.1.216",
+                "changelog": "`fix`: **Add basic cleanup of removed series in the VFS**:\n\n- Added some basic cleanup logic to remove series and movies that have been removed from shoko upon a refresh or scan of the library.",
+                "targetAbi": "10.8.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.216/shoko_3.0.1.216.zip",
+                "checksum": "8c8f43c7f0dd4bebae29d16b275d7292",
+                "timestamp": "2024-07-02T22:03:38Z"
+            },
+            {
                 "version": "3.0.1.215",
                 "changelog": "`fix`: **Fix VFS resolver when series in shoko doesn't exist**:\n\n- Fixed the VFS media folder resolution when the series in shoko has been removed.\n\n`misc`: **Add missing trace logging for method**.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.212/shoko_3.0.1.212.zip",
                 "checksum": "e6629842e7d2305c0cf5ca7a4fac3dde",
                 "timestamp": "2024-06-25T19:08:26Z"
-            },
-            {
-                "version": "3.0.1.211",
-                "changelog": "`fix`: **Fix episode order when using season merging**.\n\n`fix`: **Fix regression for link generation**:\n\n- Add back the check for if the VFS has already been generated for the ~~media folder~~ library.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.211/shoko_3.0.1.211.zip",
-                "checksum": "aa851f5dc22a6ee50299d94ca7b46c56",
-                "timestamp": "2024-06-24T10:13:05Z"
             }
         ]
     }
