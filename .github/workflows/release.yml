@@ -1,0 +1,102 @@
+name: Build Stable Release
+
+on:
+  release:
+    types:
+      - released
+
+jobs:
+  current_info:
+    runs-on: ubuntu-latest
+
+    name: Current Information
+
+    outputs:
+      version: ${{ steps.release_info.outputs.version }}
+      tag: ${{ steps.release_info.outputs.tag }}
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@master
+        with:
+          ref: "${{ github.ref }}"
+          fetch-depth: 0 # This is set to download the full git history for the repo
+
+      - name: Get Current Version
+        id: release_info
+        uses: revam/gh-action-get-tag-and-version@v1
+        with:
+          branch: false
+          prefix: "v"
+          prefixRegex: "[vV]?"
+          suffixRegex: "dev"
+          suffix: "dev"
+
+  build_plugin:
+    runs-on: ubuntu-latest
+
+    needs:
+      - current_info
+
+    name: Build Release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0 # This is set to download the full git history for the repo
+
+      - name: Fetch Stable Manifest from Metadata Branch
+        run: |
+          git checkout origin/metadata -- stable/manifest.json;
+          git reset;
+          rm manifest.json;
+          mv stable/manifest.json manifest.json;
+          rmdir stable;
+
+      - name: Setup .Net
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore Nuget Packages
+        run: dotnet restore Shokofin/Shokofin.csproj
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install JPRM
+        run: python -m pip install jprm
+
+      - name: Run JPRM
+        run: python build_plugin.py --repo ${{ github.repository }} --version=${{ needs.current_info.outputs.version }} --tag=${{ needs.current_info.outputs.tag }}
+
+      - name: Change to Metadata Branch
+        run: |
+          mkdir stable;
+          mv manifest.json stable
+          git add ./stable/manifest.json;
+          git stash push  --staged --message "Temp release details";
+          git reset --hard;
+          git checkout origin/metadata -B metadata;
+          git stash apply || git checkout --theirs stable/manifest.json;
+          git reset;
+
+      - name: Update Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./artifacts/shoko_*.zip
+          tag: ${{ github.ref }}
+          file_glob: true
+
+      - name: Update Stable Manifest
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          branch: metadata
+          commit_message: "misc: update stable manifest"
+          file_pattern: stable/manifest.json
+          skip_fetch: true

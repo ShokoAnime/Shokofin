@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <SignalRVersion>8.0.3</SignalRVersion>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AsyncKeyedLock" Version="6.4.2" />
+        <PackageReference Include="Jellyfin.Controller" Version="10.9.0" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="$(SignalRVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    </ItemGroup>
+
+    <Target Name="CopySignalRDLLsToOutputPath" AfterTargets="Build">
+        <ItemGroup>
+            <BasePackage Include="$(NuGetPackageRoot)\microsoft.aspnetcore.signalr.client\$(SignalRVersion)\lib\$(TargetFramework)\Microsoft.AspNetCore.SignalR.Client.dll" />
+            <CorePackage Include="$(NuGetPackageRoot)\microsoft.aspnetcore.signalr.client.core\$(SignalRVersion)\lib\$(TargetFramework)\Microsoft.AspNetCore.SignalR.Client.Core.dll" />
+            <HttpPackage Include="$(NuGetPackageRoot)\microsoft.aspnetcore.http.connections.client\$(SignalRVersion)\lib\$(TargetFramework)\Microsoft.AspNetCore.Http.Connections.Client.dll" />
+        </ItemGroup>
+        <Copy SourceFiles="@(BasePackage)" DestinationFolder="$(OutputPath)" />
+        <Copy SourceFiles="@(CorePackage)" DestinationFolder="$(OutputPath)" />
+        <Copy SourceFiles="@(HttpPackage)" DestinationFolder="$(OutputPath)" />
+    </Target>
+
+    <ItemGroup>
+        <None Remove="Configuration\configController.js" />
+        <None Remove="Configuration\configPage.html" />
+        <EmbeddedResource Include="Configuration\configController.js" />
+        <EmbeddedResource Include="Configuration\configPage.html" />
+    </ItemGroup>
+</Project>

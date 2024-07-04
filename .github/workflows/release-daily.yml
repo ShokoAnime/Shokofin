@@ -1,0 +1,180 @@
+name: Build & Publish Dev Release
+
+on:
+  push:
+    branches: 
+    - dev
+
+jobs:
+  current_info:
+    runs-on: ubuntu-latest
+
+    name: Current Information
+
+    outputs:
+      version: ${{ steps.release_info.outputs.version }}
+      tag: ${{ steps.release_info.outputs.tag }}
+      date: ${{ steps.commit_date_iso8601.outputs.date }}
+      sha: ${{ github.sha }}
+      sha_short: ${{ steps.commit_info.outputs.sha }}
+      changelog: ${{ steps.generate_changelog.outputs.CHANGELOG }}
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@master
+        with:
+          ref: "${{ github.ref }}"
+          fetch-depth: 0 # This is set to download the full git history for the repo
+
+      - name: Get Previous Version
+        id: previous_release_info
+        uses: revam/gh-action-get-tag-and-version@v1
+        with:
+          branch: false
+          prefix: "v"
+          prefixRegex: "[vV]?"
+          suffixRegex: "dev"
+          suffix: "dev"
+
+      - name: Get Current Version
+        id: release_info
+        uses: revam/gh-action-get-tag-and-version@v1
+        with:
+          branch: false
+          increment: suffix
+          prefix: "v"
+          prefixRegex: "[vV]?"
+          suffixRegex: "dev"
+          suffix: "dev"
+
+      - name: Get Commit Date (as ISO8601)
+        id: commit_date_iso8601
+        shell: bash
+        run: |
+          echo "date=$(git --no-pager show -s --format=%aI ${{ github.sha }})" >> "$GITHUB_OUTPUT"
+
+      - id: commit_info
+        name: Shorten Commit Hash
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const sha = context.sha.substring(0, 7);
+            core.setOutput("sha", sha);
+
+      - name: Generate Changelog
+        id: generate_changelog
+        env:
+          PREVIOUS_COMMIT: ${{ steps.previous_release_info.outputs.commit }}
+          NEXT_COMMIT: ${{ github.sha }}
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "CHANGELOG<<$EOF" >> "$GITHUB_OUTPUT"
+          node .github/workflows/git-log-json.mjs $PREVIOUS_COMMIT..$NEXT_COMMIT | jq -r '.[] | "\n`\(.type)`: **\(.subject)**" + if .body != null and .body != "" then if .isSkipCI then ": (_Skip CI_)\n\n\(.body)" else ":\n\n\(.body)" end else if .isSkipCI then ". (_Skip CI_)" else "." end end' >> "$GITHUB_OUTPUT"
+          echo -e "\n$EOF" >> "$GITHUB_OUTPUT"
+
+  build_plugin:
+    runs-on: ubuntu-latest
+
+    needs:
+      - current_info
+
+    name: Build & Release (Dev)
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0 # This is set to download the full git history for the repo
+
+      - name: Fetch Dev Manifest from Metadata Branch
+        run: |
+          git checkout origin/metadata -- dev/manifest.json;
+          git reset;
+          rm manifest.json;
+          mv dev/manifest.json manifest.json;
+          rmdir dev;
+
+      - name: Setup .Net
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Restore Nuget Packages
+        run: dotnet restore Shokofin/Shokofin.csproj
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install JPRM
+        run: python -m pip install jprm
+
+      - name: Run JPRM
+        env:
+          CHANGELOG: ${{ needs.current_info.outputs.changelog }}
+        run: python build_plugin.py --repo ${{ github.repository }} --version=${{ needs.current_info.outputs.version }} --tag=${{ needs.current_info.outputs.tag }} --prerelease=True
+
+      - name: Change to Metadata Branch
+        run: |
+          mkdir dev;
+          mv manifest.json dev
+          git add ./dev/manifest.json;
+          git stash push --staged --message "Temp release details";
+          git reset --hard;
+          git checkout origin/metadata -B metadata;
+          git stash apply || git checkout --theirs dev/manifest.json;
+          git reset;
+
+      - name: Create Pre-Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./artifacts/shoko_*.zip
+          name: "Shokofin Dev ${{ needs.current_info.outputs.version }}"
+          tag_name: ${{ needs.current_info.outputs.tag }}
+          body: |
+            Update your plugin using the [dev manifest](https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/dev/manifest.json) or by downloading the release from [GitHub Releases](https://github.com/ShokoAnime/Shokofin/releases/tag/${{ needs.current_info.outputs.tag }}) and installing it manually!
+
+            **Changes since last build**:
+            ${{ needs.current_info.outputs.changelog }}
+          prerelease: true
+          fail_on_unmatched_files: true
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Dev Manifest
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          branch: metadata
+          commit_message: "misc: update dev manifest"
+          file_pattern: dev/manifest.json
+          skip_fetch: true
+
+  discord-notify:
+    runs-on: ubuntu-latest
+
+    name: Send notifications about the new daily build
+
+    needs:
+      - current_info
+      - build_plugin
+
+    steps:
+      - name: Notify Discord Users
+        uses: tsickert/discord-webhook@v6.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          embed-color: 9985983
+          embed-timestamp: ${{ needs.current_info.outputs.date }}
+          embed-author-name: Shokofin | New Dev Build
+          embed-author-icon-url: https://raw.githubusercontent.com/${{ github.repository }}/dev/.github/images/jellyfin.png
+          embed-author-url: https://github.com/${{ github.repository }}
+          embed-description: |
+            **Version**: `${{ needs.current_info.outputs.version }}` (`${{ needs.current_info.outputs.sha_short }}`)
+
+            Update your plugin using the [dev manifest](https://raw.githubusercontent.com/${{ github.repository }}/metadata/dev/manifest.json) or by downloading the release from [GitHub Releases](https://github.com/${{ github.repository }}/releases/tag/${{ needs.current_info.outputs.tag }}) and installing it manually!
+
+            **Changes since last build**:
+            ${{ needs.current_info.outputs.changelog }}
