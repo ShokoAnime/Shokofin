@@ -43,14 +43,14 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
 
         // Special handling of the "Specials" season (pun intended).
         if (info.IndexNumber.Value == 0) {
-            // We're forcing the sort names to start with "ZZ" to make it
-            // always appear last in the UI.
+            // We're forcing the sort names to start with "AA" to make it
+            // always appear first in the UI.
             var seasonName = info.Name;
             result.Item = new Season {
                 Name = seasonName,
                 IndexNumber = info.IndexNumber,
-                SortName = $"ZZ - {seasonName}",
-                ForcedSortName = $"ZZ - {seasonName}",
+                SortName = $"AA - {seasonName}",
+                ForcedSortName = $"AA - {seasonName}",
             };
             result.HasMetadata = true;
 

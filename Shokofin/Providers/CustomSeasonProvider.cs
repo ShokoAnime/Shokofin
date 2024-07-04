@@ -238,8 +238,8 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
         var season = new Season {
             Name = seasonName,
             IndexNumber = 0,
-            SortName = seasonName,
-            ForcedSortName = seasonName,
+            SortName = $"AA - {seasonName}",
+            ForcedSortName = $"AA - {seasonName}",
             Id = libraryManager.GetNewItemId(series.Id + "Season 0", typeof(Season)),
             IsVirtualItem = true,
             SeriesId = series.Id,
