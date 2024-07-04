@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.0.0.1",
+                "changelog": "`fix`: **Sort specials season first**:\n\n- Sort the Specials season first, because otherwise the auto-play order will be messed up for specials placed in-between normal episodes.\n\n`misc`: **Update release-daily.yml**.",
+                "targetAbi": "10.9.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.0.0-dev.1/shoko_4.0.0.1.zip",
+                "checksum": "499a5352d04eb64efc3700b5e064a05b",
+                "timestamp": "2024-07-04T22:16:05Z"
+            },
+            {
                 "version": "3.0.1.216",
                 "changelog": "`fix`: **Add basic cleanup of removed series in the VFS**:\n\n- Added some basic cleanup logic to remove series and movies that have been removed from shoko upon a refresh or scan of the library.",
                 "targetAbi": "10.8.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.213/shoko_3.0.1.213.zip",
                 "checksum": "91d66e9b5fcc3c2b289bcb3b6c754ebd",
                 "timestamp": "2024-06-26T09:44:40Z"
-            },
-            {
-                "version": "3.0.1.212",
-                "changelog": "`fix`: **Use one media folder for vfs**:\n\n- If the library contains multiple media folders then the VFS will only be attached to the first media folder, so the other media folders will \"virtually\" be empty. This is a technical change to prevent giving the same children to multiple base items causing errors internally in Jellyfin.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.212/shoko_3.0.1.212.zip",
-                "checksum": "e6629842e7d2305c0cf5ca7a4fac3dde",
-                "timestamp": "2024-06-25T19:08:26Z"
             }
         ]
     }
