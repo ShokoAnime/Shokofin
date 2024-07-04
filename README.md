@@ -38,7 +38,7 @@ compatible with what.
 | `2.x.x`    | `10.8`   | `4.1.2`       |
 | `3.x.x`    | `10.8`   | `4.2.0`       |
 | `4.x.x`    | `10.9`   | `4.2.2`       |
-| `unstable` | `10.9`   | `dev`         |
+| `dev`      | `10.9`   | `4.2.2`       |
 
 ### Official Repository
 
