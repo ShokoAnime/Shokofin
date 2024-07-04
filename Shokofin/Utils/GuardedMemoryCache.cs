@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncKeyedLock;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -18,7 +18,9 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
     private IMemoryCache Cache;
 
-    private readonly ConcurrentDictionary<object, SemaphoreSlim> Semaphores = new();
+    private static readonly AsyncKeyedLockOptions AsyncKeyedLockOptions = new() { MaxCount = 1, PoolSize = 50 };
+
+    private AsyncKeyedLocker<object> Semaphores = new(AsyncKeyedLockOptions);
 
     public GuardedMemoryCache(ILogger logger, MemoryCacheOptions options, MemoryCacheEntryOptions? cacheEntryOptions = null)
     {
@@ -33,143 +35,173 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
         Logger.LogDebug("Clearing cache…");
         var cache = Cache;
         Cache = new MemoryCache(CacheOptions);
-        Semaphores.Clear();
+        Semaphores.Dispose();
+        Semaphores = new(AsyncKeyedLockOptions);
         cache.Dispose();
     }
 
-    public TItem GetOrCreate<TItem>(object key, Action<TItem> foundAction, Func<ICacheEntry, TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
+    public TItem GetOrCreate<TItem>(object key, Action<TItem> foundAction, Func<TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
         if (TryGetValue<TItem>(key, out var value)) {
             foundAction(value);
             return value;
         }
 
-        var semaphore = GetSemaphore(key);
-
-        semaphore.Wait();
-
         try {
+            using (Semaphores.Lock(key)) {
+                if (TryGetValue(key, out value)) {
+                    foundAction(value);
+                    return value;
+                }
+
+                using var entry = Cache.CreateEntry(key);
+                createOptions ??= CacheEntryOptions;
+                if (createOptions != null)
+                    entry.SetOptions(createOptions);
+
+                value = createFactory();
+                entry.Value = value;
+                return value;
+            }
+        }
+        catch (SemaphoreFullException) {
+            Logger.LogWarning("Got a semaphore full exception for key: {Key}", key);
+
+            if (value is not null) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was assigned for key: {Key}", key);
+                return value;
+            }
+
             if (TryGetValue(key, out value)) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was in the cache for key: {Key}", key);
                 foundAction(value);
                 return value;
             }
 
-            using var entry = Cache.CreateEntry(key);
-            createOptions ??= CacheEntryOptions;
-            if (createOptions != null)
-                entry.SetOptions(createOptions);
-
-            value = createFactory(entry);
-            entry.Value = value;
-            return value;
-        }
-        finally {
-            RemoveSemaphore(key);
-            semaphore.Release();
+            throw;
         }
     }
 
-    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Action<TItem> foundAction, Func<ICacheEntry, Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
+    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Action<TItem> foundAction, Func<Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
         if (TryGetValue<TItem>(key, out var value)) {
             foundAction(value);
             return value;
         }
 
-        var semaphore = GetSemaphore(key);
-
-        await semaphore.WaitAsync();
-
         try {
+            using (await Semaphores.LockAsync(key).ConfigureAwait(false)) {
+                if (TryGetValue(key, out value)) {
+                    foundAction(value);
+                    return value;
+                }
+
+                using var entry = Cache.CreateEntry(key);
+                createOptions ??= CacheEntryOptions;
+                if (createOptions != null)
+                    entry.SetOptions(createOptions);
+
+                value = await createFactory().ConfigureAwait(false);
+                entry.Value = value;
+                return value;
+            }
+        }
+        catch (SemaphoreFullException) {
+            Logger.LogWarning("Got a semaphore full exception for key: {Key}", key);
+
+            if (value is not null) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was assigned for key: {Key}", key);
+                return value;
+            }
+
             if (TryGetValue(key, out value)) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was in the cache for key: {Key}", key);
                 foundAction(value);
                 return value;
             }
 
-            using var entry = Cache.CreateEntry(key);
-            createOptions ??= CacheEntryOptions;
-            if (createOptions != null)
-                entry.SetOptions(createOptions);
-
-            value = await createFactory(entry).ConfigureAwait(false);
-            entry.Value = value;
-            return value;
-        }
-        finally {
-            RemoveSemaphore(key);
-            semaphore.Release();
+            throw;
         }
     }
 
-    public TItem GetOrCreate<TItem>(object key, Func<ICacheEntry, TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
+    public TItem GetOrCreate<TItem>(object key, Func<TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
         if (TryGetValue<TItem>(key, out var value))
             return value;
 
-        var semaphore = GetSemaphore(key);
-
-        semaphore.Wait();
-
         try {
-            if (TryGetValue(key, out value))
+            using (Semaphores.Lock(key)) {
+                if (TryGetValue(key, out value))
+                    return value;
+
+                using var entry = Cache.CreateEntry(key);
+                createOptions ??= CacheEntryOptions;
+                if (createOptions != null)
+                    entry.SetOptions(createOptions);
+
+                value = createFactory();
+                entry.Value = value;
                 return value;
-
-            using var entry = Cache.CreateEntry(key);
-            createOptions ??= CacheEntryOptions;
-            if (createOptions != null)
-                entry.SetOptions(createOptions);
-
-            value = createFactory(entry);
-            entry.Value = value;
-            return value;
+            }
         }
-        finally {
-            RemoveSemaphore(key);
-            semaphore.Release();
+        catch (SemaphoreFullException) {
+            Logger.LogWarning("Got a semaphore full exception for key: {Key}", key);
+
+            if (value is not null) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was assigned for key: {Key}", key);
+                return value;
+            }
+
+            if (TryGetValue(key, out value)) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was in the cache for key: {Key}", key);
+                return value;
+            }
+
+            throw;
         }
     }
 
-    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Func<ICacheEntry, Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
+    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Func<Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
     {
         if (TryGetValue<TItem>(key, out var value))
             return value;
 
-        var semaphore = GetSemaphore(key);
-
-        await semaphore.WaitAsync();
-
         try {
-            if (TryGetValue(key, out value))
+            using (await Semaphores.LockAsync(key).ConfigureAwait(false)) {
+                if (TryGetValue(key, out value))
+                    return value;
+
+                using var entry = Cache.CreateEntry(key);
+                createOptions ??= CacheEntryOptions;
+                if (createOptions != null)
+                    entry.SetOptions(createOptions);
+
+                value = await createFactory().ConfigureAwait(false);
+                entry.Value = value;
                 return value;
-
-            using var entry = Cache.CreateEntry(key);
-            createOptions ??= CacheEntryOptions;
-            if (createOptions != null)
-                entry.SetOptions(createOptions);
-
-            value = await createFactory(entry).ConfigureAwait(false);
-            entry.Value = value;
-            return value;
+            }
         }
-        finally {
-            RemoveSemaphore(key);
-            semaphore.Release();
+        catch (SemaphoreFullException) {
+            Logger.LogWarning("Got a semaphore full exception for key: {Key}", key);
+
+            if (value is not null) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was assigned for key: {Key}", key);
+                return value;
+            }
+
+            if (TryGetValue(key, out value)) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was in the cache for key: {Key}", key);
+                return value;
+            }
+
+            throw;
         }
     }
 
     public void Dispose()
     {
-        foreach (var semaphore in Semaphores.Values)
-            semaphore.Release();
+        Semaphores.Dispose();
         Cache.Dispose();
-    }
-
-    SemaphoreSlim GetSemaphore(object key)
-        => Semaphores.GetOrAdd(key, _ => new SemaphoreSlim(1));
-
-    void RemoveSemaphore(object key)
-    {
-        Semaphores.TryRemove(key, out var _);
     }
 
     public ICacheEntry CreateEntry(object key)
@@ -184,6 +216,6 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
     public bool TryGetValue<TItem>(object key, [NotNullWhen(true)] out TItem? value)
         => Cache.TryGetValue(key, out value);
 
-    public TItem? Set<TItem>(object key, [NotNullIfNotNull("value")] TItem? value, MemoryCacheEntryOptions? createOptions = null)
+    public TItem? Set<TItem>(object key, [NotNullIfNotNull(nameof(value))] TItem? value, MemoryCacheEntryOptions? createOptions = null)
         => Cache.Set(key, value, createOptions ?? CacheEntryOptions);
 }

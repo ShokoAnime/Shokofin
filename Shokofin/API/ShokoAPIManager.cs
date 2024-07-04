@@ -153,7 +153,7 @@ public class ShokoAPIManager : IDisposable
     public Task<IReadOnlyDictionary<string, ResolvedTag>> GetNamespacedTagsForSeries(string seriesId)
         => DataCache.GetOrCreateAsync(
             $"series-linked-tags:{seriesId}",
-            async (_) => {
+            async () => {
                 var nextUserTagId = 1;
                 var hasCustomTags = false;
                 var rootTags = new List<Tag>();
@@ -362,7 +362,7 @@ public class ShokoAPIManager : IDisposable
     private Task<(HashSet<string>, HashSet<string>)> GetPathSetAndLocalEpisodeIdsForSeries(string seriesId)
         => DataCache.GetOrCreateAsync(
             $"series-path-set-and-episode-ids:${seriesId}",
-            async (_) => {
+            async () => {
                 var pathSet = new HashSet<string>();
                 var episodeIds = new HashSet<string>();
                 foreach (var file in await APIClient.GetFilesForSeries(seriesId).ConfigureAwait(false)) {
@@ -521,7 +521,7 @@ public class ShokoAPIManager : IDisposable
     private Task<FileInfo> CreateFileInfo(File file, string fileId, string seriesId)
         => DataCache.GetOrCreateAsync(
             $"file:{fileId}:{seriesId}",
-            async (_) => {
+            async () => {
                 Logger.LogTrace("Creating info object for file. (File={FileId},Series={SeriesId})", fileId, seriesId);
 
                 // Find the cross-references for the selected series.
@@ -587,7 +587,7 @@ public class ShokoAPIManager : IDisposable
     private EpisodeInfo CreateEpisodeInfo(Episode episode, string episodeId)
         => DataCache.GetOrCreate(
             $"episode:{episodeId}",
-            (cachedEntry) => {
+            () => {
                 Logger.LogTrace("Creating info object for episode {EpisodeName}. (Episode={EpisodeId})", episode.Name, episodeId);
 
                 return new EpisodeInfo(episode);
@@ -688,7 +688,7 @@ public class ShokoAPIManager : IDisposable
         return await DataCache.GetOrCreateAsync(
             $"season:{seriesId}",
             (seasonInfo) => Logger.LogTrace("Reusing info object for season {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seriesId),
-            async (cachedEntry) => {
+            async () => {
                 // We updated the "primary" series id for the merge group, so fetch the new series details from the client cache.
                 if (!string.Equals(series.IDs.Shoko.ToString(), seriesId, StringComparison.Ordinal))
                     series = await APIClient.GetSeries(seriesId);
@@ -763,7 +763,7 @@ public class ShokoAPIManager : IDisposable
     private Task<(DateTime?, DateTime?)> GetEarliestImportedAtForSeries(string seriesId)
         => DataCache.GetOrCreateAsync<(DateTime?, DateTime?)>(
             $"series-earliest-imported-at:${seriesId}",
-            async (_) => {
+            async () => {
                 var files = await APIClient.GetFilesForSeries(seriesId).ConfigureAwait(false);
                 if (!files.Any(f => f.ImportedAt.HasValue))
                     return (null, null);
@@ -798,7 +798,7 @@ public class ShokoAPIManager : IDisposable
 
                 Logger.LogTrace("Reusing existing series-to-season mapping for series. (Series={SeriesId},ExtraSeries={ExtraIds})", tuple.primaryId, tuple.extraIds);
             },
-            async (cacheEntry) => {
+            async () => {
                 var primaryId = series.IDs.Shoko.ToString();
                 var extraIds = new List<string>();
                 var config = Plugin.Instance.Configuration;
@@ -1051,7 +1051,7 @@ public class ShokoAPIManager : IDisposable
         => DataCache.GetOrCreateAsync(
             $"show:by-group-id:{groupId}",
             (showInfo) => Logger.LogTrace("Reusing info object for show {GroupName}. (Group={GroupId})", showInfo?.Name, groupId),
-            async (cachedEntry) => {
+            async () => {
                 Logger.LogTrace("Creating info object for show {GroupName}. (Group={GroupId})", group.Name, groupId);
 
                 var seriesInGroup = await APIClient.GetSeriesInGroup(groupId).ConfigureAwait(false);
@@ -1088,7 +1088,7 @@ public class ShokoAPIManager : IDisposable
         => DataCache.GetOrCreate(
             $"show:by-series-id:{seasonInfo.Id}",
             (showInfo) => Logger.LogTrace("Reusing info object for show {GroupName}. (Series={SeriesId})", showInfo.Name, seasonInfo.Id),
-            (cachedEntry) => {
+            () => {
                 Logger.LogTrace("Creating info object for show {SeriesName}. (Series={SeriesId})", seasonInfo.Shoko.Name, seasonInfo.Id);
 
                 var showInfo = new ShowInfo(seasonInfo, collectionId);
@@ -1139,7 +1139,7 @@ public class ShokoAPIManager : IDisposable
         => DataCache.GetOrCreateAsync(
             $"collection:by-group-id:{groupId}",
             (collectionInfo) => Logger.LogTrace("Reusing info object for collection {GroupName}. (Group={GroupId})", collectionInfo.Name, groupId),
-            async (cachedEntry) => {
+            async () => {
                 Logger.LogTrace("Creating info object for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
                 Logger.LogTrace("Fetching show info objects for collection {GroupName}. (Group={GroupId})", group.Name, groupId);
 
