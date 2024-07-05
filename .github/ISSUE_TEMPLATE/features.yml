@@ -2,8 +2,7 @@ name: Shokofin Feature Request 101
 description: Request your features here!
 labels: []
 projects: []
-assignees:
-  - revam
+assignees: []
 body:
   - type: markdown
     attributes:
