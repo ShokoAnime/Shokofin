@@ -2,8 +2,7 @@ name: Shokofin Bug Report 101
 description: Report any bugs here!
 labels: []
 projects: []
-assignees:
-  - revam
+assignees: []
 body:
   - type: markdown
     attributes:
