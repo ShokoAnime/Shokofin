@@ -147,7 +147,7 @@ public class Ordering
 
         // If we still cannot find the episode for whatever reason, then bail. I don't fudging know why, but I know it's not the plugin's fault.
         if (index == -1)
-            throw new IndexOutOfRangeException($"Unable to find index to use for \"{episodeInfo.Shoko.Name}\". (Episode={episodeInfo.Id},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds})");
+            throw new IndexOutOfRangeException($"Unable to find index to use for \"{episodeInfo.Shoko.Name}\". (Group=\"{showInfo.GroupId}\",Series=\"{seasonInfo.Id}\",ExtraSeries={(seasonInfo.ExtraIds.Count > 0 ? $"[\"{seasonInfo.ExtraIds.Join("\",\"")}\"]" : "[]")},Episode={episodeInfo.Id})");
 
         return index + 1;
     }
