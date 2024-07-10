@@ -982,9 +982,9 @@ public class ShokoAPIManager : IDisposable
 
                 PathToSeriesIdDictionary[path] = primaryId;
                 SeriesIdToPathDictionary.TryAdd(primaryId, path);
-
-                return primaryId;
             }
+
+            return primaryId;
         }
 
         // In the edge case for series with only files with multiple
