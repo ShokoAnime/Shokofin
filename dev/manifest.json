@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.0.1.1",
+                "changelog": "`misc`: **Fix stable manifest for future releases**. (_Skip CI_)\n\n`fix`: **Fix mapping for series id on episode model**.\n\n`misc`: **Update exception message**.\n\n`fix`: **Populate all lookup tables before returning**.",
+                "targetAbi": "10.9.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.0.1-dev.1/shoko_4.0.1.1.zip",
+                "checksum": "2a13a55c0b9f3e1531f53e9ddbe5aee1",
+                "timestamp": "2024-07-10T15:25:41Z"
+            },
+            {
                 "version": "4.0.0.1",
                 "changelog": "`fix`: **Sort specials season first**:\n\n- Sort the Specials season first, because otherwise the auto-play order will be messed up for specials placed in-between normal episodes.\n\n`misc`: **Update release-daily.yml**.",
                 "targetAbi": "10.9.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.214/shoko_3.0.1.214.zip",
                 "checksum": "e3342cf6fb9dd3b00d4945e323341f5d",
                 "timestamp": "2024-06-29T14:40:51Z"
-            },
-            {
-                "version": "3.0.1.213",
-                "changelog": "`fix`: **Make file events great again!**:\n\n- Fix the the extension method to get the media folder from a path to refresh the library itself when adding files for new series not in the media library.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.213/shoko_3.0.1.213.zip",
-                "checksum": "91d66e9b5fcc3c2b289bcb3b6c754ebd",
-                "timestamp": "2024-06-26T09:44:40Z"
             }
         ]
     }
