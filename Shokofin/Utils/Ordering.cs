@@ -288,6 +288,8 @@ public class Ordering
                 )
                     return ExtraType.Clip;
                 // Behind the Scenes
+                if (title.Contains("behind the scenes", System.StringComparison.CurrentCultureIgnoreCase))
+                    return ExtraType.BehindTheScenes;
                 if (title.Contains("making of", System.StringComparison.CurrentCultureIgnoreCase))
                     return ExtraType.BehindTheScenes;
                 if (title.Contains("music in", System.StringComparison.CurrentCultureIgnoreCase))
