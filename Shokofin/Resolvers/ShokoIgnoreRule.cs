@@ -164,7 +164,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
                 }
                 break;
             case CollectionType.movies:
-                if (!isMovieSeason) {
+                if (!isMovieSeason && Plugin.Instance.Configuration.FilterMovieLibraries) {
                     Logger.LogInformation("Found show in movie library, ignoring shoko series. (Series={SeriesId},ExtraSeries={ExtraIds})", season.Id, season.ExtraIds);
                     return true;
                 }

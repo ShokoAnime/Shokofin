@@ -323,6 +323,7 @@ async function defaultSubmit(form) {
         config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
         config.CollectionMinSizeOfTwo = form.querySelector("#CollectionMinSizeOfTwo").checked;
         config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
+        config.FilterMovieLibraries = form.querySelector("#FilterMovieLibraries").checked;
         config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
         config.MovieSpecialsAsExtraFeaturettes = form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked;
         config.AddTrailers = form.querySelector("#AddTrailers").checked;
@@ -533,6 +534,7 @@ async function syncSettings(form) {
     config.UseGroupsForShows = form.querySelector("#UseGroupsForShows").checked;
     config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
     config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
+    config.FilterMovieLibraries = form.querySelector("#FilterMovieLibraries").checked;
     config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
     config.CollectionMinSizeOfTwo = form.querySelector("#CollectionMinSizeOfTwo").checked;
     config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
@@ -1005,6 +1007,7 @@ export default function (page) {
             form.querySelector("#CollectionGrouping").value = config.CollectionGrouping;
             form.querySelector("#CollectionMinSizeOfTwo").checked = config.CollectionMinSizeOfTwo;
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies;
+            form.querySelector("#FilterMovieLibraries").checked = config.FilterMovieLibraries;
             form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
             form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked = config.MovieSpecialsAsExtraFeaturettes;
             form.querySelector("#AddTrailers").checked = config.AddTrailers;

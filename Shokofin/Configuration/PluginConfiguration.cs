@@ -286,6 +286,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool SeparateMovies { get; set; }
 
     /// <summary>
+    /// Filter out anything that's not a movie in a movie library.
+    /// </summary>
+    public bool FilterMovieLibraries { get; set; }
+
+    /// <summary>
     /// Append all specials in AniDB movie series as special features for
     /// the movies.
     /// </summary>
@@ -542,6 +547,7 @@ public class PluginConfiguration : BasePluginConfiguration
         VFS_AddResolution = false;
         UseGroupsForShows = false;
         SeparateMovies = false;
+        FilterMovieLibraries = true;
         MovieSpecialsAsExtraFeaturettes = false;
         AddTrailers = true;
         AddCreditsAsThemeVideos = true;

@@ -678,7 +678,7 @@ public class VirtualFileSystemService
         var config = Plugin.Instance.Configuration;
         var shouldAbort = collectionType switch {
             CollectionType.tvshows => isMovieSeason && config.SeparateMovies,
-            CollectionType.movies => !isMovieSeason,
+            CollectionType.movies => !isMovieSeason && config.FilterMovieLibraries,
             _ => false,
         };
         if (shouldAbort)

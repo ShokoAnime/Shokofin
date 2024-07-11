@@ -146,7 +146,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                             return Array.Empty<BaseItem>();
                         }
 
-                        if (createMovies && season.Type is SeriesType.Movie) {
+                        if (createMovies && (season.Type is SeriesType.Movie || collectionType is CollectionType.movies && !Plugin.Instance.Configuration.FilterMovieLibraries)) {
                             return FileSystem.GetFiles(dirInfo.FullName)
                                 .AsParallel()
                                 .Select(fileInfo => {
