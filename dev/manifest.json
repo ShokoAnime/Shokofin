@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.0.1.2",
+                "changelog": "`misc`: **Add another extra type conditional**.",
+                "targetAbi": "10.9.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.0.1-dev.2/shoko_4.0.1.2.zip",
+                "checksum": "538a6d8ee920c56a963469d0fa0f7287",
+                "timestamp": "2024-07-11T00:16:32Z"
+            },
+            {
                 "version": "4.0.1.1",
                 "changelog": "`misc`: **Fix stable manifest for future releases**. (_Skip CI_)\n\n`fix`: **Fix mapping for series id on episode model**.\n\n`misc`: **Update exception message**.\n\n`fix`: **Populate all lookup tables before returning**.",
                 "targetAbi": "10.9.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.215/shoko_3.0.1.215.zip",
                 "checksum": "2e8c5dfdacb9254f8a49951caf3c84a4",
                 "timestamp": "2024-07-02T21:23:33Z"
-            },
-            {
-                "version": "3.0.1.214",
-                "changelog": "`feat`: **Add more optional metadata to VFS paths**:\n\n- Added two _optional_ pieces of metadata to add to the VFS path purely for user QoL, but with some drawbacks, which is why they're **opt-in** and not opt-out. Read the warnings if you want to know more.\n\n`refactor`: **Disable caching of paths again**:\n\n- Disabled the caching of paths in the media folders again, since we once again know that the VFS will only run once for the top-most folder we're scanning.\n\n`misc`: **Update comment**.\n\n`fix`: **Throw if we can't find the media folder**:\n\n- Throw if we can't find the media folder during scanning for non-VFS libraries, instead of silently continuing while using the root folder (which is not a media folder!).\n\n- Added doc-comments for the find media folder and strip media folder methods.\n\n`fix`: **Add better removal of symbolic links in event dispatcher**.",
-                "targetAbi": "10.8.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v3.0.1-dev.214/shoko_3.0.1.214.zip",
-                "checksum": "e3342cf6fb9dd3b00d4945e323341f5d",
-                "timestamp": "2024-06-29T14:40:51Z"
             }
         ]
     }
