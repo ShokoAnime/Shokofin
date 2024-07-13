@@ -38,12 +38,12 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
     {
         try {
             // Try to read the shoko group id
-            if (info.ProviderIds.TryGetValue(ShokoCollectionGroupId.Name, out var collectionId) || info.Path.TryGetAttributeValue(ShokoCollectionGroupId.Name, out collectionId))
+            if (info.TryGetProviderId(ShokoCollectionGroupId.Name, out var collectionId) || info.Path.TryGetAttributeValue(ShokoCollectionGroupId.Name, out collectionId))
                 using (Plugin.Instance.Tracker.Enter($"Providing info for Collection \"{info.Name}\". (Path=\"{info.Path}\",Collection=\"{collectionId}\")"))
                     return await GetShokoGroupMetadata(info, collectionId);
 
             // Try to read the shoko series id
-            if (info.ProviderIds.TryGetValue(ShokoCollectionSeriesId.Name, out var seriesId) || info.Path.TryGetAttributeValue(ShokoCollectionSeriesId.Name, out seriesId))
+            if (info.TryGetProviderId(ShokoCollectionSeriesId.Name, out var seriesId) || info.Path.TryGetAttributeValue(ShokoCollectionSeriesId.Name, out seriesId))
                 using (Plugin.Instance.Tracker.Enter($"Providing info for Collection \"{info.Name}\". (Path=\"{info.Path}\",Series=\"{seriesId}\")"))
                     return await GetShokoSeriesMetadata(info, seriesId);
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.ExternalIds;
@@ -40,7 +41,7 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
     public async Task<ItemUpdateType> FetchAsync(Series series, MetadataRefreshOptions options, CancellationToken cancellationToken)
     {
         // Abort if we're unable to get the shoko series id
-        if (!series.ProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId))
+        if (!series.TryGetProviderId(ShokoSeriesId.Name, out var seriesId))
             return ItemUpdateType.None;
 
         var trackerId = Plugin.Instance.Tracker.Add($"Providing custom info for Series \"{series.Name}\". (Series=\"{seriesId}\")");

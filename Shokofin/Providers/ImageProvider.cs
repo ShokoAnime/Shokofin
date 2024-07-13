@@ -116,8 +116,8 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                 }
                 case BoxSet collection: {
                     string? groupId = null;
-                    if (!collection.ProviderIds.TryGetValue(ShokoCollectionSeriesId.Name, out var seriesId) &&
-                        collection.ProviderIds.TryGetValue(ShokoCollectionGroupId.Name, out groupId))
+                    if (!collection.TryGetProviderId(ShokoCollectionSeriesId.Name, out var seriesId) &&
+                        collection.TryGetProviderId(ShokoCollectionGroupId.Name, out groupId))
                             seriesId = (await ApiManager.GetCollectionInfoForGroup(groupId))?.Shoko.IDs.MainSeries.ToString();
                     if (!string.IsNullOrEmpty(seriesId)) {
                         var seriesImages = await ApiClient.GetSeriesImages(seriesId);
