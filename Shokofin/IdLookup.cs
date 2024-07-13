@@ -6,7 +6,6 @@ using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
-
 using Shokofin.API;
 using Shokofin.ExternalIds;
 using Shokofin.Providers;
@@ -64,11 +63,6 @@ public interface IIdLookup
     bool TryGetSeriesIdFor(Movie movie, [NotNullWhen(true)] out string? seriesId);
 
     #endregion
-    #region Series Path
-
-    bool TryGetPathForSeriesId(string seriesId, [NotNullWhen(true)] out string? path);
-
-    #endregion
     #region Episode Id
 
     bool TryGetEpisodeIdFor(string path, [NotNullWhen(true)] out string? episodeId);
@@ -78,11 +72,6 @@ public interface IIdLookup
     bool TryGetEpisodeIdsFor(string path, [NotNullWhen(true)] out List<string>? episodeIds);
 
     bool TryGetEpisodeIdsFor(BaseItem item, [NotNullWhen(true)] out List<string>? episodeIds);
-
-    #endregion
-    #region Episode Path
-
-    bool TryGetPathForEpisodeId(string episodeId, [NotNullWhen(true)] out string? path);
 
     #endregion
     #region File Id
@@ -151,7 +140,7 @@ public class IdLookup : IIdLookup
 
     public bool TryGetSeriesIdFor(string path, [NotNullWhen(true)] out string? seriesId)
     {
-        if (ApiManager.TryGetSeriesIdForPath(path, out seriesId!))
+        if (ApiManager.TryGetSeriesIdForPath(path, out seriesId))
             return true;
 
         seriesId = string.Empty;
@@ -160,7 +149,7 @@ public class IdLookup : IIdLookup
 
     public bool TryGetSeriesIdFromEpisodeId(string episodeId, [NotNullWhen(true)] out string? seriesId)
     {
-        if (ApiManager.TryGetSeriesIdForEpisodeId(episodeId, out seriesId!))
+        if (ApiManager.TryGetSeriesIdForEpisodeId(episodeId, out seriesId))
             return true;
 
         seriesId = string.Empty;
@@ -169,8 +158,7 @@ public class IdLookup : IIdLookup
 
     public bool TryGetSeriesIdFor(Series series, [NotNullWhen(true)] out string? seriesId)
     {
-        if (series.TryGetProviderId(ShokoSeriesId.Name, out seriesId) 
-            && series.TryGetProviderId(MetadataProvider.Custom, out _))
+        if (series.TryGetProviderId(ShokoSeriesId.Name, out seriesId))
             return true;
 
         if (TryGetSeriesIdFor(series.Path, out seriesId)) {
@@ -196,7 +184,7 @@ public class IdLookup : IIdLookup
 
     public bool TryGetSeriesIdFor(Movie movie, [NotNullWhen(true)] out string? seriesId)
     {
-        if (movie.TryGetProviderId(ShokoSeriesId.Name, out seriesId!))
+        if (movie.TryGetProviderId(ShokoSeriesId.Name, out seriesId))
             return true;
 
         if (TryGetEpisodeIdFor(movie.Path, out var episodeId) && TryGetSeriesIdFromEpisodeId(episodeId, out seriesId))
@@ -206,23 +194,11 @@ public class IdLookup : IIdLookup
     }
 
     #endregion
-    #region Series Path
-
-    public bool TryGetPathForSeriesId(string seriesId, [NotNullWhen(true)] out string? path)
-    {
-        if (ApiManager.TryGetSeriesPathForId(seriesId, out path!))
-            return true;
-
-        path = string.Empty;
-        return false;
-    }
-
-    #endregion
     #region Episode Id
 
     public bool TryGetEpisodeIdFor(string path, [NotNullWhen(true)] out string? episodeId)
     {
-        if (ApiManager.TryGetEpisodeIdForPath(path, out episodeId!))
+        if (ApiManager.TryGetEpisodeIdForPath(path, out episodeId))
             return true;
 
         episodeId = string.Empty;
@@ -232,7 +208,7 @@ public class IdLookup : IIdLookup
     public bool TryGetEpisodeIdFor(BaseItem item, [NotNullWhen(true)] out string? episodeId)
     {
         // This will account for virtual episodes and existing episodes
-        if (item.TryGetProviderId(ShokoEpisodeId.Name, out episodeId!)) {
+        if (item.TryGetProviderId(ShokoEpisodeId.Name, out episodeId)) {
             return true;
         }
 
@@ -246,7 +222,7 @@ public class IdLookup : IIdLookup
 
     public bool TryGetEpisodeIdsFor(string path, [NotNullWhen(true)] out List<string>? episodeIds)
     {
-        if (ApiManager.TryGetEpisodeIdsForPath(path, out episodeIds!))
+        if (ApiManager.TryGetEpisodeIdsForPath(path, out episodeIds))
             return true;
 
         episodeIds = new();
@@ -255,26 +231,20 @@ public class IdLookup : IIdLookup
 
     public bool TryGetEpisodeIdsFor(BaseItem item, [NotNullWhen(true)] out List<string>? episodeIds)
     {
-        // This will account for virtual episodes and existing episodes
-        if (item.TryGetProviderId(ShokoFileId.Name, out var fileId) && item.TryGetProviderId(ShokoSeriesId.Name, out var seriesId) && ApiManager.TryGetEpisodeIdsForFileId(fileId, seriesId, out episodeIds!))
+        // This will account for existing episodes.
+        if (item.TryGetProviderId(ShokoFileId.Name, out var fileId) && item.TryGetProviderId(ShokoSeriesId.Name, out var seriesId) && ApiManager.TryGetEpisodeIdsForFileId(fileId, seriesId, out episodeIds))
             return true;
 
         // This will account for new episodes that haven't received their first metadata update yet.
         if (TryGetEpisodeIdsFor(item.Path, out episodeIds))
             return true;
 
-        return false;
-    }
-
-    #endregion
-    #region Episode Path
-
-    public bool TryGetPathForEpisodeId(string episodeId, [NotNullWhen(true)] out string? path)
-    {
-        if (ApiManager.TryGetEpisodePathForId(episodeId, out path!))
+        // This will account for "missing" episodes.
+        if (item.TryGetProviderId(ShokoEpisodeId.Name, out var episodeId)) {
+            episodeIds = [episodeId];
             return true;
+        }
 
-        path = string.Empty;
         return false;
     }
 
@@ -283,10 +253,10 @@ public class IdLookup : IIdLookup
 
     public bool TryGetFileIdFor(BaseItem episode, [NotNullWhen(true)] out string? fileId)
     {
-        if (episode.TryGetProviderId(ShokoFileId.Name, out fileId!))
+        if (episode.TryGetProviderId(ShokoFileId.Name, out fileId))
             return true;
 
-        if (ApiManager.TryGetFileIdForPath(episode.Path, out fileId!))
+        if (ApiManager.TryGetFileIdForPath(episode.Path, out fileId))
             return true;
 
         fileId = string.Empty;
