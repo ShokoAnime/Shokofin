@@ -40,13 +40,9 @@ public class ShokoAPIManager : IDisposable
 
     private readonly ConcurrentDictionary<string, (string FileId, string SeriesId)> PathToFileIdAndSeriesIdDictionary = new();
 
-    private readonly ConcurrentDictionary<string, string> SeriesIdToPathDictionary = new();
-
     private readonly ConcurrentDictionary<string, string> SeriesIdToDefaultSeriesIdDictionary = new();
 
     private readonly ConcurrentDictionary<string, string?> SeriesIdToCollectionIdDictionary = new();
-
-    private readonly ConcurrentDictionary<string, string> EpisodeIdToEpisodePathDictionary = new();
 
     private readonly ConcurrentDictionary<string, string> EpisodeIdToSeriesIdDictionary = new();
 
@@ -108,9 +104,9 @@ public class ShokoAPIManager : IDisposable
     public string StripMediaFolder(string fullPath)
     {
         Folder? mediaFolder = null;
-        lock (MediaFolderListLock) 
+        lock (MediaFolderListLock)
             mediaFolder = MediaFolderList.FirstOrDefault((folder) => fullPath.StartsWith(folder.Path + Path.DirectorySeparatorChar));
-        if (mediaFolder is not null) 
+        if (mediaFolder is not null)
             return fullPath[mediaFolder.Path.Length..];
         if (Path.GetDirectoryName(fullPath) is not string directoryPath || LibraryManager.FindByPath(directoryPath, true)?.GetTopParent() is not Folder topParent)
             return fullPath;
@@ -131,7 +127,6 @@ public class ShokoAPIManager : IDisposable
     public void Clear()
     {
         Logger.LogDebug("Clearing data…");
-        EpisodeIdToEpisodePathDictionary.Clear();
         EpisodeIdToSeriesIdDictionary.Clear();
         FileAndSeriesIdToEpisodeIdDictionary.Clear();
         lock (MediaFolderListLock)
@@ -142,7 +137,6 @@ public class ShokoAPIManager : IDisposable
         NameToSeriesIdDictionary.Clear();
         SeriesIdToDefaultSeriesIdDictionary.Clear();
         SeriesIdToCollectionIdDictionary.Clear();
-        SeriesIdToPathDictionary.Clear();
         DataCache.Clear();
         Logger.LogDebug("Cleanup complete.");
     }
@@ -482,10 +476,6 @@ public class ShokoAPIManager : IDisposable
             var fileInfo = await CreateFileInfo(file, fileId, seriesId).ConfigureAwait(false);
 
             // Add pointers for faster lookup.
-            foreach (var episodeInfo in fileInfo.EpisodeList)
-                EpisodeIdToEpisodePathDictionary.TryAdd(episodeInfo.Id, path);
-
-            // Add pointers for faster lookup.
             AddFileLookupIds(path, fileId, seriesId, fileInfo.EpisodeList.Select(episode => episode.Id));
 
             // Return the result.
@@ -557,10 +547,24 @@ public class ShokoAPIManager : IDisposable
             }
         );
 
-    public bool TryGetFileIdForPath(string path, out string? fileId)
+    public bool TryGetFileIdForPath(string path, [NotNullWhen(true)] out string? fileId)
     {
-        if (!string.IsNullOrEmpty(path) && PathToFileIdAndSeriesIdDictionary.TryGetValue(path, out var pair)) {
+        if (string.IsNullOrEmpty(path)) {
+            fileId = null;
+            return false;
+        }
+
+        // Fast path; using the lookup.
+        if (PathToFileIdAndSeriesIdDictionary.TryGetValue(path, out var pair)) {
             fileId = pair.FileId;
+            return true;
+        }
+
+        // Slow path; getting the show from cache or remote and finding the default season's id.
+        Logger.LogDebug("Trying to find file id using the slow path. (Path={FullPath})", path);
+        if (GetFileInfoByPath(path).ConfigureAwait(false).GetAwaiter().GetResult() is { } tuple && tuple.Item1 is not null) {
+            var (fileInfo, _, _) = tuple;
+            fileId = fileInfo.Id;
             return true;
         }
 
@@ -594,51 +598,85 @@ public class ShokoAPIManager : IDisposable
             }
         );
 
-    public bool TryGetEpisodeIdForPath(string path, out string? episodeId)
+    public bool TryGetEpisodeIdForPath(string path, [NotNullWhen(true)] out string? episodeId)
     {
         if (string.IsNullOrEmpty(path)) {
             episodeId = null;
             return false;
         }
-        var result = PathToEpisodeIdsDictionary.TryGetValue(path, out var episodeIds);
+
+        var result = TryGetEpisodeIdsForPath(path, out var episodeIds);
         episodeId = episodeIds?.FirstOrDefault();
         return result;
     }
 
-    public bool TryGetEpisodeIdsForPath(string path, out List<string>? episodeIds)
+    public bool TryGetEpisodeIdsForPath(string path, [NotNullWhen(true)] out List<string>? episodeIds)
     {
         if (string.IsNullOrEmpty(path)) {
             episodeIds = null;
             return false;
         }
-        return PathToEpisodeIdsDictionary.TryGetValue(path, out episodeIds);
+
+        // Fast path; using the lookup.
+        if (PathToEpisodeIdsDictionary.TryGetValue(path, out episodeIds))
+            return true;
+
+        // Slow path; getting the show from cache or remote and finding the default season's id.
+        Logger.LogDebug("Trying to find episode ids using the slow path. (Path={FullPath})", path);
+        if (GetFileInfoByPath(path).ConfigureAwait(false).GetAwaiter().GetResult() is { } tuple && tuple.Item1 is not null) {
+            var (fileInfo, _, _) = tuple;
+            episodeIds = fileInfo.EpisodeList.Select(episodeInfo => episodeInfo.Id).ToList();
+            return episodeIds.Count is > 0;
+        }
+
+        episodeIds = null;
+        return false;
     }
 
-    public bool TryGetEpisodeIdsForFileId(string fileId, string seriesId, out List<string>? episodeIds)
+    public bool TryGetEpisodeIdsForFileId(string fileId, string seriesId, [NotNullWhen(true)] out List<string>? episodeIds)
     {
         if (string.IsNullOrEmpty(fileId) || string.IsNullOrEmpty(seriesId)) {
             episodeIds = null;
             return false;
         }
-        return FileAndSeriesIdToEpisodeIdDictionary.TryGetValue($"{fileId}:{seriesId}", out episodeIds);
-    }
 
-    public bool TryGetEpisodePathForId(string episodeId, out string? path)
-    {
-        if (string.IsNullOrEmpty(episodeId)) {
-            path = null;
-            return false;
+        // Fast path; using the lookup.
+        if (FileAndSeriesIdToEpisodeIdDictionary.TryGetValue($"{fileId}:{seriesId}", out episodeIds))
+            return true;
+
+        // Slow path; getting the show from cache or remote and finding the default season's id.
+        Logger.LogDebug("Trying to find episode ids using the slow path. (Series={SeriesId},File={FileId})", seriesId, fileId);
+        if (GetFileInfo(fileId, seriesId).ConfigureAwait(false).GetAwaiter().GetResult() is { } fileInfo) {
+            episodeIds = fileInfo.EpisodeList.Select(episodeInfo => episodeInfo.Id).ToList();
+            return true;
         }
-        return EpisodeIdToEpisodePathDictionary.TryGetValue(episodeId, out path);
+
+        episodeIds = null;
+        return false;
     }
 
-    public bool TryGetSeriesIdForEpisodeId(string episodeId, out string? seriesId)
+    public bool TryGetSeriesIdForEpisodeId(string episodeId, [NotNullWhen(true)] out string? seriesId)
     {
         if (string.IsNullOrEmpty(episodeId)) {
             seriesId = null;
             return false;
         }
-        return EpisodeIdToSeriesIdDictionary.TryGetValue(episodeId, out seriesId);
+
+        // Fast path; using the lookup.
+        if (EpisodeIdToSeriesIdDictionary.TryGetValue(episodeId, out seriesId))
+            return true;
+
+        // Slow path; asking the http client to get the series from remote to look up it's id.
+        Logger.LogDebug("Trying to find episode ids using the slow path. (Episode={EpisodeId})", episodeId);
+        try {
+            var series = APIClient.GetSeriesFromEpisode(episodeId).ConfigureAwait(false).GetAwaiter().GetResult();
+            seriesId = series.IDs.Shoko.ToString();
+            return true;
+        }
+        catch (ApiException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound) {
+            seriesId = null;
+            return false;
+        }
     }
 
     #endregion
@@ -813,7 +851,7 @@ public class ShokoAPIManager : IDisposable
 
                 Logger.LogTrace("Creating new series-to-season mapping for series. (Series={SeriesId})", primaryId);
 
-                // We potentially have a "follow-up" season candidate, so look for the "primary" season candidate, then jump into that. 
+                // We potentially have a "follow-up" season candidate, so look for the "primary" season candidate, then jump into that.
                 var relations = await APIClient.GetSeriesRelations(primaryId).ConfigureAwait(false);
                 var mainTitle = series.AniDBEntity.Titles.First(title => title.Type == TitleType.Main).Value;
                 var result = YearRegex.Match(mainTitle);
@@ -926,16 +964,20 @@ public class ShokoAPIManager : IDisposable
             seriesId = null;
             return false;
         }
-        return PathToSeriesIdDictionary.TryGetValue(path, out seriesId);
-    }
 
-    public bool TryGetSeriesPathForId(string seriesId, [NotNullWhen(true)] out string? path)
-    {
-        if (string.IsNullOrEmpty(seriesId)) {
-            path = null;
-            return false;
+        // Fast path; using the lookup.
+        if (PathToSeriesIdDictionary.TryGetValue(path, out seriesId))
+            return true;
+
+        // Slow path; getting the show from cache or remote and finding the season's series id.
+        Logger.LogDebug("Trying to find the season's series id for {Path} using the slow path.", path);
+        if (GetSeasonInfoByPath(path).ConfigureAwait(false).GetAwaiter().GetResult() is { } seasonInfo) {
+            seriesId = seasonInfo.Id;
+            return true;
         }
-        return SeriesIdToPathDictionary.TryGetValue(seriesId, out path);
+
+        seriesId = null;
+        return false;
     }
 
     public bool TryGetDefaultSeriesIdForSeriesId(string seriesId, [NotNullWhen(true)] out string? defaultSeriesId)
@@ -944,7 +986,20 @@ public class ShokoAPIManager : IDisposable
             defaultSeriesId = null;
             return false;
         }
-        return SeriesIdToDefaultSeriesIdDictionary.TryGetValue(seriesId, out defaultSeriesId);
+
+        // Fast path; using the lookup.
+        if (SeriesIdToDefaultSeriesIdDictionary.TryGetValue(seriesId, out defaultSeriesId))
+            return true;
+
+        // Slow path; getting the show from cache or remote and finding the default season's id.
+        Logger.LogDebug("Trying to find the default series id for series using the slow path. (Series={SeriesId})", seriesId);
+        if (GetShowInfoForSeries(seriesId).ConfigureAwait(false).GetAwaiter().GetResult() is { } showInfo) {
+            defaultSeriesId = showInfo.Id;
+            return true;
+        }
+
+        defaultSeriesId = null;
+        return false;
     }
 
     private async Task<string?> GetSeriesIdForPath(string path)
@@ -959,8 +1014,6 @@ public class ShokoAPIManager : IDisposable
                 return null;
 
             PathToSeriesIdDictionary[path] = seriesId;
-            SeriesIdToPathDictionary.TryAdd(seriesId, path);
-
             return seriesId;
         }
 
@@ -981,7 +1034,6 @@ public class ShokoAPIManager : IDisposable
                     continue;
 
                 PathToSeriesIdDictionary[path] = primaryId;
-                SeriesIdToPathDictionary.TryAdd(primaryId, path);
             }
 
             return primaryId;
