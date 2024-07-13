@@ -5,6 +5,8 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Entities;
+
 using Shokofin.API;
 using Shokofin.ExternalIds;
 using Shokofin.Providers;
@@ -167,7 +169,8 @@ public class IdLookup : IIdLookup
 
     public bool TryGetSeriesIdFor(Series series, [NotNullWhen(true)] out string? seriesId)
     {
-        if (series.ProviderIds.TryGetValue(ShokoSeriesId.Name, out seriesId!) && !string.IsNullOrEmpty(seriesId))
+        if (series.TryGetProviderId(ShokoSeriesId.Name, out seriesId) 
+            && series.TryGetProviderId(MetadataProvider.Custom, out _))
             return true;
 
         if (TryGetSeriesIdFor(series.Path, out seriesId)) {
@@ -185,7 +188,7 @@ public class IdLookup : IIdLookup
 
     public bool TryGetSeriesIdFor(Season season, [NotNullWhen(true)] out string? seriesId)
     {
-        if (season.ProviderIds.TryGetValue(ShokoSeriesId.Name, out seriesId) && !string.IsNullOrEmpty(seriesId))
+        if (season.TryGetProviderId(ShokoSeriesId.Name, out seriesId))
             return true;
 
         return TryGetSeriesIdFor(season.Path, out seriesId);
@@ -193,7 +196,7 @@ public class IdLookup : IIdLookup
 
     public bool TryGetSeriesIdFor(Movie movie, [NotNullWhen(true)] out string? seriesId)
     {
-        if (movie.ProviderIds.TryGetValue(ShokoSeriesId.Name, out seriesId!) && !string.IsNullOrEmpty(seriesId))
+        if (movie.TryGetProviderId(ShokoSeriesId.Name, out seriesId!))
             return true;
 
         if (TryGetEpisodeIdFor(movie.Path, out var episodeId) && TryGetSeriesIdFromEpisodeId(episodeId, out seriesId))
@@ -229,7 +232,7 @@ public class IdLookup : IIdLookup
     public bool TryGetEpisodeIdFor(BaseItem item, [NotNullWhen(true)] out string? episodeId)
     {
         // This will account for virtual episodes and existing episodes
-        if (item.ProviderIds.TryGetValue(ShokoEpisodeId.Name, out episodeId!) && !string.IsNullOrEmpty(episodeId)) {
+        if (item.TryGetProviderId(ShokoEpisodeId.Name, out episodeId!)) {
             return true;
         }
 
@@ -253,7 +256,7 @@ public class IdLookup : IIdLookup
     public bool TryGetEpisodeIdsFor(BaseItem item, [NotNullWhen(true)] out List<string>? episodeIds)
     {
         // This will account for virtual episodes and existing episodes
-        if (item.ProviderIds.TryGetValue(ShokoFileId.Name, out var fileId) && item.ProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId) && ApiManager.TryGetEpisodeIdsForFileId(fileId, seriesId, out episodeIds!))
+        if (item.TryGetProviderId(ShokoFileId.Name, out var fileId) && item.TryGetProviderId(ShokoSeriesId.Name, out var seriesId) && ApiManager.TryGetEpisodeIdsForFileId(fileId, seriesId, out episodeIds!))
             return true;
 
         // This will account for new episodes that haven't received their first metadata update yet.
@@ -280,7 +283,7 @@ public class IdLookup : IIdLookup
 
     public bool TryGetFileIdFor(BaseItem episode, [NotNullWhen(true)] out string? fileId)
     {
-        if (episode.ProviderIds.TryGetValue(ShokoFileId.Name, out fileId!))
+        if (episode.TryGetProviderId(ShokoFileId.Name, out fileId!))
             return true;
 
         if (ApiManager.TryGetFileIdForPath(episode.Path, out fileId!))

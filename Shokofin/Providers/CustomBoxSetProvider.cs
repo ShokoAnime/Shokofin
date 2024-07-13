@@ -54,13 +54,13 @@ public class CustomBoxSetProvider : ICustomMetadataProvider<BoxSet>
             return ItemUpdateType.None;
 
         // Try to read the shoko group id
-        if (collection.ProviderIds.TryGetValue(ShokoCollectionGroupId.Name, out var collectionId) || collection.Path.TryGetAttributeValue(ShokoCollectionGroupId.Name, out collectionId))
+        if (collection.TryGetProviderId(ShokoCollectionGroupId.Name, out var collectionId) || collection.Path.TryGetAttributeValue(ShokoCollectionGroupId.Name, out collectionId))
             using (Plugin.Instance.Tracker.Enter($"Providing custom info for Collection \"{collection.Name}\". (Path=\"{collection.Path}\",Collection=\"{collectionId}\")"))
                 if (await EnsureGroupCollectionIsCorrect(collectionRoot, collection, collectionId, cancellationToken))
                     return ItemUpdateType.MetadataEdit;
 
         // Try to read the shoko series id
-        if (collection.ProviderIds.TryGetValue(ShokoCollectionSeriesId.Name, out var seriesId) || collection.Path.TryGetAttributeValue(ShokoCollectionSeriesId.Name, out seriesId))
+        if (collection.TryGetProviderId(ShokoCollectionSeriesId.Name, out var seriesId) || collection.Path.TryGetAttributeValue(ShokoCollectionSeriesId.Name, out seriesId))
             using (Plugin.Instance.Tracker.Enter($"Providing custom info for Collection \"{collection.Name}\". (Path=\"{collection.Path}\",Series=\"{seriesId}\")"))
                 if (await EnsureSeriesCollectionIsCorrect(collection, seriesId, cancellationToken))
                     return ItemUpdateType.MetadataEdit;
@@ -120,8 +120,8 @@ public class CustomBoxSetProvider : ICustomMetadataProvider<BoxSet>
 
     private bool EnsureNoTmdbIdIsSet(BoxSet collection)
     {
-        var willRemove = collection.ProviderIds.ContainsKey(MetadataProvider.TmdbCollection.ToString());
-        collection.ProviderIds.Remove(MetadataProvider.TmdbCollection.ToString());
+        var willRemove = collection.HasProviderId(MetadataProvider.TmdbCollection);
+        collection.SetProviderId(MetadataProvider.TmdbCollection.ToString(), null);
         return willRemove;
     }
 

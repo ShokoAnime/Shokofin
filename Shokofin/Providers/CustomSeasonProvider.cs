@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.ExternalIds;
@@ -53,7 +54,7 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
 
         // Silently abort if we're unable to get the shoko series id.
         var series = season.Series;
-        if (!series.ProviderIds.TryGetValue(ShokoSeriesId.Name, out var seriesId))
+        if (!series.TryGetProviderId(ShokoSeriesId.Name, out var seriesId))
             return ItemUpdateType.None;
 
         var seasonNumber = season.IndexNumber!.Value;

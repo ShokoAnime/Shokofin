@@ -52,7 +52,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
             Info.ShowInfo? showInfo = null;
             if (info.IsMissingEpisode || string.IsNullOrEmpty(info.Path)) {
                 // We're unable to fetch the latest metadata for the virtual episode.
-                if (!info.ProviderIds.TryGetValue(ShokoEpisodeId.Name, out var episodeId))
+                if (!info.TryGetProviderId(ShokoEpisodeId.Name, out var episodeId))
                     return result;
 
                 episodeInfo = await ApiManager.GetEpisodeInfo(episodeId);
