@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.0.1.5",
+                "changelog": "`fix`: **Change the direct access on ProviderIds**.\n\n`fix`: **Add fallback if lookup fails**:\n\n- Added a fallback for when the lookup tables fails. The fallback will be slower, but at least it will provide a value and populate the lookup table for the next time.\n\n- Trimmed trailing whitespaces.",
+                "targetAbi": "10.9.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.0.1-dev.5/shoko_4.0.1.5.zip",
+                "checksum": "b9f4eca8eca8dc7b7b6e53c2e364eba3",
+                "timestamp": "2024-07-14T18:31:46Z"
+            },
+            {
                 "version": "4.0.1.4",
                 "changelog": "`fix`: **Change custom id format**:\n\n- Fixes #62\n\n- The previous custom id format caused problems because it contained a '=', which is not usable in the id (for now at least).",
                 "targetAbi": "10.9.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.0.1-dev.1/shoko_4.0.1.1.zip",
                 "checksum": "2a13a55c0b9f3e1531f53e9ddbe5aee1",
                 "timestamp": "2024-07-10T15:25:41Z"
-            },
-            {
-                "version": "4.0.0.1",
-                "changelog": "`fix`: **Sort specials season first**:\n\n- Sort the Specials season first, because otherwise the auto-play order will be messed up for specials placed in-between normal episodes.\n\n`misc`: **Update release-daily.yml**.",
-                "targetAbi": "10.9.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.0.0-dev.1/shoko_4.0.0.1.zip",
-                "checksum": "499a5352d04eb64efc3700b5e064a05b",
-                "timestamp": "2024-07-04T22:16:05Z"
             }
         ]
     }
