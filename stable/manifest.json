@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.0.0",
+                "changelog": "",
+                "targetAbi": "10.9.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.0/shoko_4.1.0.0.zip",
+                "checksum": "c4b463397e0f97d83ba83b055ab27cc7",
+                "timestamp": "2024-07-14T18:53:05Z"
+            },
+            {
                 "version": "4.0.1.0",
                 "changelog": "",
                 "targetAbi": "10.9.0.0",
@@ -231,7 +239,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.0.0/shokojellyfin_1.0.0.zip",
                 "checksum": "184c723247ccdc4b0143dc46f5b6d50d",
                 "timestamp": "2020-09-07T14:43:45Z"
-
             }
         ]
     }
