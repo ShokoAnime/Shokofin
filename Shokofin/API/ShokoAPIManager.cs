@@ -562,10 +562,15 @@ public class ShokoAPIManager : IDisposable
 
         // Slow path; getting the show from cache or remote and finding the default season's id.
         Logger.LogDebug("Trying to find file id using the slow path. (Path={FullPath})", path);
-        if (GetFileInfoByPath(path).ConfigureAwait(false).GetAwaiter().GetResult() is { } tuple && tuple.Item1 is not null) {
-            var (fileInfo, _, _) = tuple;
-            fileId = fileInfo.Id;
-            return true;
+        try {
+            if (GetFileInfoByPath(path).ConfigureAwait(false).GetAwaiter().GetResult() is { } tuple && tuple.Item1 is not null) {
+                var (fileInfo, _, _) = tuple;
+                fileId = fileInfo.Id;
+                return true;
+            }
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Encountered an error while trying to lookup the file id for {Path}", path);
         }
 
         fileId = null;
