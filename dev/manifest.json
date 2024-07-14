@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.0.1",
+                "changelog": "`fix`: **Add catch in try get method**:\n\n- Don't throw in the try get method for retrieving the file id.",
+                "targetAbi": "10.9.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.0-dev.1/shoko_4.1.0.1.zip",
+                "checksum": "a7dc433876287ad6361f452a6ad577d0",
+                "timestamp": "2024-07-14T21:01:49Z"
+            },
+            {
                 "version": "4.0.1.5",
                 "changelog": "`fix`: **Change the direct access on ProviderIds**.\n\n`fix`: **Add fallback if lookup fails**:\n\n- Added a fallback for when the lookup tables fails. The fallback will be slower, but at least it will provide a value and populate the lookup table for the next time.\n\n- Trimmed trailing whitespaces.",
                 "targetAbi": "10.9.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.0.1-dev.2/shoko_4.0.1.2.zip",
                 "checksum": "538a6d8ee920c56a963469d0fa0f7287",
                 "timestamp": "2024-07-11T00:16:32Z"
-            },
-            {
-                "version": "4.0.1.1",
-                "changelog": "`misc`: **Fix stable manifest for future releases**. (_Skip CI_)\n\n`fix`: **Fix mapping for series id on episode model**.\n\n`misc`: **Update exception message**.\n\n`fix`: **Populate all lookup tables before returning**.",
-                "targetAbi": "10.9.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.0.1-dev.1/shoko_4.0.1.1.zip",
-                "checksum": "2a13a55c0b9f3e1531f53e9ddbe5aee1",
-                "timestamp": "2024-07-10T15:25:41Z"
             }
         ]
     }
