@@ -22,6 +22,19 @@ public static class SyncExtensions
         };
     }
 
+    public static void CopyFrom(this UserItemData userData, UserItemData otherUserData)
+    {
+        userData.LastPlayedDate = otherUserData.LastPlayedDate;
+        userData.IsFavorite = otherUserData.IsFavorite;
+        userData.AudioStreamIndex = otherUserData.AudioStreamIndex;
+        userData.Likes = otherUserData.Likes;
+        userData.PlaybackPositionTicks = otherUserData.PlaybackPositionTicks;
+        userData.PlayCount = otherUserData.PlayCount;
+        userData.Played = otherUserData.Played;
+        userData.Rating = otherUserData.Rating;
+        userData.SubtitleStreamIndex = otherUserData.SubtitleStreamIndex;
+    }
+
     public static UserItemData MergeWithFileUserStats(this UserItemData userData, File.UserStats userStats)
     {
         userData.Played = userStats.LastWatchedAt.HasValue;
