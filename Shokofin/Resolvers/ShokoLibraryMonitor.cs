@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Emby.Naming.Common;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
@@ -289,7 +290,7 @@ public class ShokoLibraryMonitor : IHostedService
                             Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
                             return null;
                         }
-                        if (!video.ProviderIds.TryGetValue(ShokoFileId.Name, out fileId)) {
+                        if (!video.TryGetProviderId(ShokoFileId.Name, out fileId)) {
                             Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
                             return null;
                         }

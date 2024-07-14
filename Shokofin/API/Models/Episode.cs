@@ -106,7 +106,7 @@ public class Episode
 
     public class EpisodeIDs : IDs
     {
-        public int Series { get; set; }
+        public int ParentSeries { get; set; }
 
         public int AniDB { get; set; }
 

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
@@ -154,9 +155,10 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
                 CommunityRating = seasonInfo.AniDB.Rating?.ToFloat(10),
             };
         }
-        season.ProviderIds.Add(ShokoSeriesId.Name, seasonInfo.Id);
+        season.SetProviderId(ShokoSeriesId.Name, seasonInfo.Id);
+
         if (Plugin.Instance.Configuration.AddAniDBId)
-            season.ProviderIds.Add("AniDB", seasonInfo.AniDB.Id.ToString());
+            season.SetProviderId("AniDB", seasonInfo.AniDB.Id.ToString());
 
         return season;
     }

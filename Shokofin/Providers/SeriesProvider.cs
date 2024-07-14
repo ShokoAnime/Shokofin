@@ -105,7 +105,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasO
 
     public static void AddProviderIds(IHasProviderIds item, string seriesId, string? groupId = null, string? anidbId = null, string? tmdbId = null)
     {
-        item.SetProviderId(MetadataProvider.Custom, $"shoko://shoko-series={seriesId}");
+        item.SetProviderId(MetadataProvider.Custom, $"shoko://series/{seriesId}");
 
         var config = Plugin.Instance.Configuration;
         item.SetProviderId(ShokoSeriesId.Name, seriesId);

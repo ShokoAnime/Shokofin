@@ -163,17 +163,17 @@ public class SeasonInfo
         // the previous episode anchors right.
         var seriesIdOrder = new string[] { seriesId }.Concat(extraIds).ToList();
         episodesList = episodesList
-            .OrderBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.Series.ToString()))
+            .OrderBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.ParentSeries.ToString()))
             .ThenBy(e => e.AniDB.Type)
             .ThenBy(e => e.AniDB.EpisodeNumber)
             .ToList();
         specialsList = specialsList
-            .OrderBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.Series.ToString()))
+            .OrderBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.ParentSeries.ToString()))
             .ThenBy(e => e.AniDB.Type)
             .ThenBy(e => e.AniDB.EpisodeNumber)
             .ToList();
         altEpisodesList = altEpisodesList
-            .OrderBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.Series.ToString()))
+            .OrderBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.ParentSeries.ToString()))
             .ThenBy(e => e.AniDB.Type)
             .ThenBy(e => e.AniDB.EpisodeNumber)
             .ToList();

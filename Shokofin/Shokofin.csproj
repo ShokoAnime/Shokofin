@@ -2,13 +2,13 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <OutputType>Library</OutputType>
-        <SignalRVersion>8.0.3</SignalRVersion>
+        <SignalRVersion>8.0.7</SignalRVersion>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="AsyncKeyedLock" Version="6.4.2" />
-        <PackageReference Include="Jellyfin.Controller" Version="10.9.0" />
+        <PackageReference Include="Jellyfin.Controller" Version="10.9.7" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="$(SignalRVersion)" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     </ItemGroup>

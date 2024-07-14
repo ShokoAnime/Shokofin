@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
+using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.ExternalIds;
 
@@ -43,7 +44,7 @@ public class CustomEpisodeProvider : ICustomMetadataProvider<Episode>
             return Task.FromResult(ItemUpdateType.None);
 
         // Abort if we're unable to get the shoko episode id
-        if (episode.ProviderIds.TryGetValue(ShokoEpisodeId.Name, out var episodeId))
+        if (episode.TryGetProviderId(ShokoEpisodeId.Name, out var episodeId))
             using (Plugin.Instance.Tracker.Enter($"Providing custom info for Episode \"{episode.Name}\". (Path=\"{episode.Path}\",IsMissingEpisode={episode.IsMissingEpisode})"))
                 if (RemoveDuplicates(LibraryManager, Logger, episodeId, episode, series.GetPresentationUniqueKey()))
                     return Task.FromResult(ItemUpdateType.MetadataEdit);

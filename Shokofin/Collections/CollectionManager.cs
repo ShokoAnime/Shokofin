@@ -9,6 +9,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Info;
@@ -666,7 +667,7 @@ public class CollectionManager
             Recursive = true,
         })
             .Cast<BoxSet>()
-            .Select(x => x.ProviderIds.TryGetValue(ShokoCollectionSeriesId.Name, out var seriesId) && !string.IsNullOrEmpty(seriesId) ? new { SeriesId = seriesId, BoxSet = x } : null)
+            .Select(x => x.TryGetProviderId(ShokoCollectionSeriesId.Name, out var seriesId) ? new { SeriesId = seriesId, BoxSet = x } : null)
             .Where(x => x != null)
             .GroupBy(x => x!.SeriesId, x => x!.BoxSet)
             .ToDictionary(x => x.Key, x => x.ToList() as IReadOnlyList<BoxSet>);
@@ -683,7 +684,7 @@ public class CollectionManager
             Recursive = true,
         })
             .Cast<BoxSet>()
-            .Select(x => x.ProviderIds.TryGetValue(ShokoCollectionGroupId.Name, out var groupId) && !string.IsNullOrEmpty(groupId) ? new { GroupId = groupId, BoxSet = x } : null)
+            .Select(x => x.TryGetProviderId(ShokoCollectionGroupId.Name, out var groupId) ? new { GroupId = groupId, BoxSet = x } : null)
             .Where(x => x != null)
             .GroupBy(x => x!.GroupId, x => x!.BoxSet)
             .ToDictionary(x => x.Key, x => x.ToList() as IReadOnlyList<BoxSet>);

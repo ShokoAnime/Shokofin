@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--repo", required=True)
 parser.add_argument("--version", required=True)
 parser.add_argument("--tag", required=True)
-parser.add_argument("--prerelease", default=True)
+parser.add_argument("--prerelease", default=False)
 opts = parser.parse_args()
 
 framework = extract_target_framework("./Shokofin/Shokofin.csproj")
