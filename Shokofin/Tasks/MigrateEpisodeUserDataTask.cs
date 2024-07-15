@@ -48,21 +48,17 @@ public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduled
 
     private readonly ILibraryManager LibraryManager;
 
-    private readonly IIdLookup Lookup;
-
     public MigrateEpisodeUserDataTask(
         ILogger<MigrateEpisodeUserDataTask> logger,
         IUserDataManager userDataManager,
         IUserManager userManager,
-        ILibraryManager libraryManager,
-        IIdLookup lookup
+        ILibraryManager libraryManager
     )
     {
         Logger = logger;
         UserDataManager = userDataManager;
         UserManager = userManager;
         LibraryManager = libraryManager;
-        Lookup = lookup;
     }
 
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
@@ -71,7 +67,7 @@ public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduled
     public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         var foundEpisodeCount = 0;
-        var seriesDict = new Dictionary<Guid, (Series series, List<Episode> episodes)>();
+        var seriesDict = new Dictionary<string, (Series series, List<Episode> episodes)>();
         var users = UserManager.Users.ToList();
         var allEpisodes = LibraryManager.GetItemList(new InternalItemsQuery {
             IncludeItemTypes = [BaseItemKind.Episode],
@@ -86,37 +82,33 @@ public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduled
         })
             .OfType<Episode>()
             .ToList();
-        Logger.LogInformation("Attempting to migrate user watch data across {EpisodeCount} episodes and {UserCount} users.", allEpisodes.Count, users.Count);
+        Logger.LogDebug("Attempting to migrate user watch data across {EpisodeCount} episodes and {UserCount} users.", allEpisodes.Count, users.Count);
         foreach (var episode in allEpisodes) {
             cancellationToken.ThrowIfCancellationRequested();
 
             if (!episode.ParentIndexNumber.HasValue || !episode.IndexNumber.HasValue ||
-                !Lookup.TryGetFileIdFor(episode, out var fileId) || episode.Series is not Series series)
+                !episode.TryGetProviderId(ShokoFileId.Name, out var fileId) ||
+                episode.Series is not Series series || !series.TryGetProviderId(ShokoSeriesId.Name, out var seriesId))
                 continue;
-            if (!seriesDict.TryGetValue(series.Id, out var tuple))
-                seriesDict[series.Id] = tuple = (series, []);
+
+            if (!seriesDict.TryGetValue(seriesId, out var tuple))
+                seriesDict[seriesId] = tuple = (series, []);
 
             tuple.episodes.Add(episode);
             foundEpisodeCount++;
         }
 
-        Logger.LogInformation("Found {SeriesCount} series and {EpisodeCount} episodes across {AllEpisodeCount} initial episodes to search for user watch data.", foundEpisodeCount, allEpisodes.Count);
+        Logger.LogInformation("Found {SeriesCount} series and {EpisodeCount} episodes across {AllEpisodeCount} total episodes to search for user watch data to migrate.", seriesDict.Count, foundEpisodeCount, allEpisodes.Count);
         var savedCount = 0;
         var numComplete = 0;
         var numTotal = foundEpisodeCount * users.Count;
         var userDataDict = users.ToDictionary(user => user, user => (UserDataManager.GetAllUserData(user.Id).DistinctBy(data => data.Key).ToDictionary(data => data.Key), new List<UserItemData>()));
         var userDataToRemove = new List<UserItemData>();
-        foreach (var (series, episodes) in seriesDict.Values) {
+        foreach (var (seriesId, (series, episodes)) in seriesDict) {
             cancellationToken.ThrowIfCancellationRequested();
-
-            if (!Lookup.TryGetSeriesIdFor(series, out var seriesId))
-                continue;
 
             SeriesProvider.AddProviderIds(series, seriesId);
             var seriesUserKeys = series.GetUserDataKeys();
-            if (seriesUserKeys.Count > 1)
-                seriesUserKeys = seriesUserKeys.TakeLast(1).ToList();
-
             // 10.9 post-4.1 id format
             var primaryKey = seriesUserKeys.First();
             var keysToSearch = seriesUserKeys.Skip(1)
@@ -125,37 +117,29 @@ public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduled
                 // 10.8 id format
                 .Prepend($"INVALID-BUT-DO-NOT-TOUCH:{seriesId}")
                 .ToList();
-            Logger.LogInformation("Migrating user watch data for series {SeriesName}. (Series={SeriesId},Primary={PrimaryKey},Search={SearchKeys})", series.Name, seriesId, primaryKey, keysToSearch);
+            Logger.LogTrace("Migrating user watch data for series {SeriesName}. (Series={SeriesId},Primary={PrimaryKey},Search={SearchKeys})", series.Name, seriesId, primaryKey, keysToSearch);
             foreach (var episode in episodes) {
                 cancellationToken.ThrowIfCancellationRequested();
-                
+
                 if (!episode.TryGetProviderId(ShokoFileId.Name, out var fileId))
                     continue;
 
                 var suffix = episode.ParentIndexNumber!.Value.ToString("000", CultureInfo.InvariantCulture) + episode.IndexNumber!.Value.ToString("000", CultureInfo.InvariantCulture);
                 var videoUserDataKeys = (episode as Video).GetUserDataKeys();
-                var episodeKeyToUse = primaryKey + suffix;
-                var episodeKeysToSearch = keysToSearch.Select(key => key + suffix).Concat(videoUserDataKeys).ToList();
-                Logger.LogInformation("Migrating user watch data for season {SeasonNumber}, episode {EpisodeNumber} - {EpisodeName}. (Series={SeriesId},File={FileId},Primary={PrimaryKey},Search={SearchKeys})", episode.ParentIndexNumber, episode.IndexNumber, episode.Name, seriesId, fileId, episodeKeyToUse, episodeKeysToSearch);
+                var episodeKeysToSearch = keysToSearch.Select(key => key + suffix).Prepend(primaryKey + suffix).Concat(videoUserDataKeys).ToList();
+                Logger.LogTrace("Migrating user watch data for season {SeasonNumber}, episode {EpisodeNumber} - {EpisodeName}. (Series={SeriesId},File={FileId},Search={SearchKeys})", episode.ParentIndexNumber, episode.IndexNumber, episode.Name, seriesId, fileId, episodeKeysToSearch);
                 foreach (var (user, (dataDict, dataList)) in userDataDict) {
                     var userData = UserDataManager.GetUserData(user, episode);
-                    if (dataDict.TryGetValue(episodeKeyToUse, out var primaryUserData)) {
-                        Logger.LogInformation("Found user data to migrate. (Key={SearchKey})", episodeKeyToUse);
-                        userData.CopyFrom(primaryUserData);
-                        dataList.Add(userData);
-                            savedCount++;
-                    }
-                    else {
-                        foreach (var secondaryKey in episodeKeysToSearch) {
-                            if (!dataDict.TryGetValue(episodeKeyToUse, out var secondaryUserData))
-                                continue;
+                    foreach (var searchKey in episodeKeysToSearch) {
+                        if (!dataDict.TryGetValue(searchKey, out var searchUserData))
+                            continue;
 
-                            Logger.LogInformation("Found user data to migrate. (Key={SearchKey})", secondaryKey);
-                            userData.CopyFrom(secondaryUserData);
+                        if (userData.CopyFrom(searchUserData)) {
+                            Logger.LogInformation("Found user data to migrate. (Series={SeriesId},File={FileId},Search={SearchKeys},Key={SearchKey},User={UserId})", seriesId, fileId, episodeKeysToSearch, searchKey, user.Id);
                             dataList.Add(userData);
                             savedCount++;
-                            break;
                         }
+                        break;
                     }
 
                     numComplete++;
@@ -170,7 +154,7 @@ public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduled
         // Last attempt to cancel before we save all the changes.
         cancellationToken.ThrowIfCancellationRequested();
 
-        Logger.LogInformation("Saving {UserDataCount} user watch data entries across {UserCount} users", savedCount, users.Count);
+        Logger.LogDebug("Saving {UserDataCount} user watch data entries across {UserCount} users", savedCount, users.Count);
         foreach (var (user, (dataDict, dataList)) in userDataDict) {
             if (dataList.Count is 0)
                 continue;
