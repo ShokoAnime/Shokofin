@@ -202,7 +202,7 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
                     foreach (var episodeId in await ApiManager.GetLocalEpisodeIdsForSeason(seasonInfo))
                         existingEpisodes.Add(episodeId);
 
-                    foreach (var episodeInfo in seasonInfo.EpisodeList.Concat(seasonInfo.AlternateEpisodesList)) {
+                    foreach (var episodeInfo in episodeList) {
                         var episodeParentIndex = Ordering.GetSeasonNumber(showInfo, seasonInfo, episodeInfo);
                         if (episodeParentIndex != seasonNumber)
                             continue;
