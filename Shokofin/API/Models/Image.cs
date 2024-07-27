@@ -69,7 +69,7 @@ public class Image
     /// </remarks>
     /// <returns>The image URL</returns>
     public string ToURLString()
-        => new Uri(new Uri(Web.ImageHostUrl.Value), $"/Plugin/Shokofin/Host/Image/{Source}/{Type}/{ID}").ToString();
+        => new Uri(new Uri(Web.ImageHostUrl.BaseUrl), $"{Web.ImageHostUrl.BasePath}/Plugin/Shokofin/Host/Image/{Source}/{Type}/{ID}").ToString();
 }
 
 /// <summary>

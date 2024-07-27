@@ -12,9 +12,14 @@ namespace Shokofin.Web;
 public class ImageHostUrl : IAsyncActionFilter
 {
     /// <summary>
-    /// The current image host url base to use.
+    /// The current image host base url to use.
     /// </summary>
-    public static string Value { get; private set; } = "http://localhost:8096/";
+    public static string BaseUrl { get; private set; } = "http://localhost:8096/";
+
+    /// <summary>
+    /// The current image host base path to use.
+    /// </summary>
+    public static string BasePath { get; private set; } = "/";
 
     private readonly object LockObj = new();
 
@@ -26,12 +31,16 @@ public class ImageHostUrl : IAsyncActionFilter
         var uriBuilder = new UriBuilder(request.Scheme, request.Host.Host, request.Host.Port ?? (request.Scheme == "https" ? 443 : 80), $"{request.PathBase}{request.Path}", request.QueryString.HasValue ? request.QueryString.Value : null);
         var result = RemoteImagesRegex.Match(uriBuilder.Path);
         if (result.Success) {
-            uriBuilder.Path = result.Length == uriBuilder.Path.Length ? "/" : uriBuilder.Path[..^result.Length] + "/";
+            var path = result.Length == uriBuilder.Path.Length ? "" : uriBuilder.Path[..^result.Length];
+            uriBuilder.Path = "";
             uriBuilder.Query = "";
             var uri = uriBuilder.ToString();
-            lock (LockObj)
-                if (!string.Equals(uri, Value))
-                    Value = uri;
+            lock (LockObj) {
+                if (!string.Equals(uri, BaseUrl))
+                    BaseUrl = uri;
+                if (!string.Equals(path, BasePath))
+                    BasePath = path;
+            }
         }
         await next();
     }
