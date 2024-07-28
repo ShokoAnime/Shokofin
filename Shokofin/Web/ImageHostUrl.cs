@@ -19,7 +19,7 @@ public class ImageHostUrl : IAsyncActionFilter
     /// <summary>
     /// The current image host base path to use.
     /// </summary>
-    public static string BasePath { get; private set; } = "/";
+    public static string BasePath { get; private set; } = "";
 
     private readonly object LockObj = new();
 
