@@ -19,7 +19,7 @@ public class Image
     /// The image's id. Usually an int, but in the case of <see cref="ImageType.Static"/> resources
     /// then it is the resource name.
     /// </summary>
-    public string ID { get; set; } = string.Empty;
+    public int ID { get; set; } = 0;
 
 
     /// <summary>
@@ -123,7 +123,12 @@ public enum ImageType
     /// <summary>
     ///
     /// </summary>
-    Fanart = 4,
+    Backdrop = 4,
+
+    /// <summary>
+    ///
+    /// </summary>
+    Fanart = Backdrop,
 
     /// <summary>
     ///
@@ -134,6 +139,11 @@ public enum ImageType
     ///
     /// </summary>
     Staff = 6,
+
+    /// <summary>
+    /// Clear-text logo.
+    /// </summary>
+    Logo = 7,
 
     /// <summary>
     /// Static resources are only valid if the <see cref="Image.Source"/> is set to <see cref="ImageSource.Shoko"/>.

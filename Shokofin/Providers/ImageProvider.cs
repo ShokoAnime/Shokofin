@@ -148,7 +148,7 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
     {
         foreach (var image in images.Posters.OrderByDescending(image => image.IsDefault))
             AddImage(ref list, ImageType.Primary, image);
-        foreach (var image in images.Fanarts.OrderByDescending(image => image.IsDefault))
+        foreach (var image in images.Backdrops.OrderByDescending(image => image.IsDefault))
             AddImage(ref list, ImageType.Backdrop, image);
         foreach (var image in images.Banners.OrderByDescending(image => image.IsDefault))
             AddImage(ref list, ImageType.Banner, image);

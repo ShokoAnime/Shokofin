@@ -7,7 +7,7 @@ namespace Shokofin.API.Models;
 public class Series
 {
     public string Name { get; set; } = string.Empty;
-    
+
     public int Size { get; set; }
 
     /// <summary>
@@ -40,7 +40,7 @@ public class Series
     /// </summary>
     [JsonPropertyName("TvDB")]
     public List<TvDB> TvDBEntityList { get; set; }= new();
-    
+
     public SeriesSizes Sizes { get; set; } = new();
 
     /// <summary>
@@ -106,7 +106,7 @@ public class Series
         public int? EpisodeCount { get; set; }
 
         /// <summary>
-        /// The average rating for the anime. Only available on 
+        /// The average rating for the anime. Only available on
         /// </summary>
         public Rating? Rating { get; set; }
 
@@ -135,7 +135,7 @@ public class Series
         public new List<Title> Titles { get; set; } = new();
 
         /// <summary>
-        /// The average rating for the anime. Only available on 
+        /// The average rating for the anime. Only available on
         /// </summary>
         public new Rating Rating { get; set; } = new();
 
@@ -210,13 +210,18 @@ public class Series
 
         public List<int> TvDB { get; set; } = new List<int>();
 
-        public List<int> TMDB { get; set; } = new List<int>();
+        public TmdbSeriesIDs TMDB { get; set; } = new();
 
         public List<int> MAL { get; set; } = new List<int>();
 
         public List<string> TraktTv { get; set; } = new List<string>();
 
-        public List<int> AniList { get; set; } = new List<int>();
+        public class TmdbSeriesIDs
+        {
+            public List<int> Movie { get; init; } = new List<int>();
+
+            public List<int> Show { get; init; } = new List<int>();
+        }
     }
 
     /// <summary>
