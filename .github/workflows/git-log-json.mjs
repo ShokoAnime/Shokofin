@@ -10,6 +10,13 @@ const RangeOrHash = process.argv[2] || "";
 // Form the git log command
 const GitLogCommandBase = `git log ${RangeOrHash}`;
 
+const EndingMarkers = new Set([
+    ".",
+    ",",
+    "!",
+    "?",
+]);
+
 const Placeholders = {
     "H": "commit",
     "P": "parents",
@@ -72,7 +79,7 @@ for (const commit of Object.values(commits)) {
 }
 
 // Convert commits object to a list of values
-const commitsList = commitOrder.slice().reverse()
+const commitsList = commitOrder.reverse()
     .map((commitId) => commits[commitId])
     .map(({ commit, parents, tree, subject, body, author_name, author_email, author_date, committer_name, committer_email, committer_date }) => ({
         commit,
@@ -104,14 +111,19 @@ const commitsList = commitOrder.slice().reverse()
     }))
     .map((commit) => ({
         ...commit,
-        subject: /[a-z]/.test(commit.subject[0]) ? commit.subject[0].toUpperCase() + commit.subject.slice(1) : commit.subject,
+        subject: commit.subject.replace(/\[(?:skip|no) *ci\]/ig, "").trim().replace(/[\.:]+^/, ""),
+        body: commit.body ? commit.body.replace(/\[(?:skip|no) *ci\]/ig, "").trimEnd() : commit.body,
+        isSkipCI: /\[(?:skip|no) *ci\]/i.test(commit.subject) || Boolean(commit.body && /\[(?:skip|no) *ci\]/i.test(commit.body)),
         type: commit.type == "feature" ? "feat" : commit.type === "refacor" ? "refactor" : commit.type == "mics" ? "misc" : commit.type,
     }))
     .map((commit) => ({
         ...commit,
-        subject: commit.subject.replace(/\[(?:skip|no) *ci\]/ig, "").trim().replace(/[\.:]+^/, ""),
-        body: commit.body ? commit.body.replace(/\[(?:skip|no) *ci\]/ig, "").trimEnd() : commit.body,
-        isSkipCI: /\[(?:skip|no) *ci\]/i.test(commit.subject) || Boolean(commit.body && /\[(?:skip|no) *ci\]/i.test(commit.body)),
+        subject: ((subject) => {
+            subject = (/[a-z]/.test(subject[0]) ? subject[0].toUpperCase() + subject.slice(1) : subject).trim();
+            if (subject.length > 0 && EndingMarkers.has(subject[subject.length - 1]))
+                subject = subject.slice(0, subject.length - 1);
+            return subject;
+        })(commit.subject),
     }))
     .filter((commit) => !(commit.type === "misc" && (commit.subject === "update unstable manifest" || commit.subject === "Update repo manifest" || commit.subject === "Update unstable repo manifest")));
 
