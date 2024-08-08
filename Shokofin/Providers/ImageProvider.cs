@@ -152,11 +152,13 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
             AddImage(ref list, ImageType.Backdrop, image);
         foreach (var image in images.Banners.OrderByDescending(image => image.IsDefault))
             AddImage(ref list, ImageType.Banner, image);
+        foreach (var image in images.Logos.OrderByDescending(image => image.IsDefault))
+            AddImage(ref list, ImageType.Logo, image);
     }
 
     private static void AddImage(ref List<RemoteImageInfo> list, ImageType imageType, API.Models.Image? image)
     {
-        if (image == null || !image.IsAvailable)
+        if (image == null)
             return;
         list.Add(new RemoteImageInfo {
             ProviderName = Plugin.MetadataProviderName,

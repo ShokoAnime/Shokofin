@@ -39,7 +39,7 @@ public class Series
     /// The TvDB entries, if any.
     /// </summary>
     [JsonPropertyName("TvDB")]
-    public List<TvDB> TvDBEntityList { get; set; }= new();
+    public List<TvDB> TvDBEntityList { get; set; }= [];
 
     public SeriesSizes Sizes { get; set; } = new();
 
@@ -132,7 +132,7 @@ public class Series
         /// <summary>
         /// There should always be at least one of these, the <see cref="Title"/>. May be omitted if needed.
         /// </summary>
-        public new List<Title> Titles { get; set; } = new();
+        public new List<Title> Titles { get; set; } = [];
 
         /// <summary>
         /// The average rating for the anime. Only available on
@@ -207,21 +207,6 @@ public class Series
         public int TopLevelGroup { get; set; } = 0;
 
         public int AniDB { get; set; } = 0;
-
-        public List<int> TvDB { get; set; } = new List<int>();
-
-        public TmdbSeriesIDs TMDB { get; set; } = new();
-
-        public List<int> MAL { get; set; } = new List<int>();
-
-        public List<string> TraktTv { get; set; } = new List<string>();
-
-        public class TmdbSeriesIDs
-        {
-            public List<int> Movie { get; init; } = new List<int>();
-
-            public List<int> Show { get; init; } = new List<int>();
-        }
     }
 
     /// <summary>

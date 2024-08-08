@@ -19,8 +19,8 @@ public class Image
     /// The image's id. Usually an int, but in the case of <see cref="ImageType.Static"/> resources
     /// then it is the resource name.
     /// </summary>
+    [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
     public int ID { get; set; } = 0;
-
 
     /// <summary>
     /// True if the image is marked as the default for the given <see cref="ImageType"/>.
