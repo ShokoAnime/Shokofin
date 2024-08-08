@@ -16,8 +16,7 @@ public class Image
     public ImageType Type { get; set; } = ImageType.Poster;
 
     /// <summary>
-    /// The image's id. Usually an int, but in the case of <see cref="ImageType.Static"/> resources
-    /// then it is the resource name.
+    /// The image's id.
     /// </summary>
     [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
     public int ID { get; set; } = 0;
@@ -144,9 +143,4 @@ public enum ImageType
     /// Clear-text logo.
     /// </summary>
     Logo = 7,
-
-    /// <summary>
-    /// Static resources are only valid if the <see cref="Image.Source"/> is set to <see cref="ImageSource.Shoko"/>.
-    /// </summary>
-    Static = 100
 }
