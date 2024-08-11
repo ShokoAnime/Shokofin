@@ -146,13 +146,13 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
 
     private static void AddImagesForSeries(ref List<RemoteImageInfo> list, API.Models.Images images)
     {
-        foreach (var image in images.Posters.OrderByDescending(image => image.IsDefault))
+        foreach (var image in images.Posters.OrderByDescending(image => image.IsPreferred))
             AddImage(ref list, ImageType.Primary, image);
-        foreach (var image in images.Backdrops.OrderByDescending(image => image.IsDefault))
+        foreach (var image in images.Backdrops.OrderByDescending(image => image.IsPreferred))
             AddImage(ref list, ImageType.Backdrop, image);
-        foreach (var image in images.Banners.OrderByDescending(image => image.IsDefault))
+        foreach (var image in images.Banners.OrderByDescending(image => image.IsPreferred))
             AddImage(ref list, ImageType.Banner, image);
-        foreach (var image in images.Logos.OrderByDescending(image => image.IsDefault))
+        foreach (var image in images.Logos.OrderByDescending(image => image.IsPreferred))
             AddImage(ref list, ImageType.Logo, image);
     }
 

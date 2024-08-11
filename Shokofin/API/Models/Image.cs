@@ -22,14 +22,16 @@ public class Image
     public int ID { get; set; } = 0;
 
     /// <summary>
-    /// True if the image is marked as the default for the given <see cref="ImageType"/>.
-    /// Only one default is possible for a given <see cref="ImageType"/>.
+    /// True if the image is marked as the preferred for the given
+    /// <see cref="ImageType"/>. Only one preferred is possible for a given
+    /// <see cref="ImageType"/>.
     /// </summary>
     [JsonPropertyName("Preferred")]
-    public bool IsDefault { get; set; } = false;
+    public bool IsPreferred { get; set; } = false;
 
     /// <summary>
-    /// True if the image has been disabled. You must explicitly ask for these, for obvious reasons.
+    /// True if the image has been disabled. You must explicitly ask for these,
+    /// for hopefully obvious reasons.
     /// </summary>
     [JsonPropertyName("Disabled")]
     public bool IsDisabled { get; set; } = false;
@@ -117,7 +119,12 @@ public enum ImageType
     /// <summary>
     ///
     /// </summary>
-    Thumb = 3,
+    Thumbnail = 3,
+
+    /// <summary>
+    ///
+    /// </summary>
+    Thumb = Thumbnail,
 
     /// <summary>
     ///
