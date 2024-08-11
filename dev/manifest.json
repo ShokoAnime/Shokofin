@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.6",
+                "changelog": "`misc`: **Remove static image type**. (_Skip CI_)\n\n`misc`: **Update git to json helper \u2026to fix this exact message in the changelog**. (_Skip CI_)\n\n`misc`: **Update image DTO model**:\n\n- Renamed `IsDefault` to `IsPreferred` on the image DTO model.\n\n- Added `Thumbnail` as a synonym to `Thumb`.\n\n- Updated descriptions on image DTO model.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.6/shoko_4.1.1.6.zip",
+                "checksum": "52bbc0609a03029be3a78cea4001e7c6",
+                "timestamp": "2024-08-11T23:35:36Z"
+            },
+            {
                 "version": "4.1.1.5",
                 "changelog": "`fix`: **Fix models for stable server \u2026because we shouldn't break those yet.**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.2/shoko_4.1.1.2.zip",
                 "checksum": "608d74dad42ddbcfb259981bde0cfa62",
                 "timestamp": "2024-07-27T23:18:21Z"
-            },
-            {
-                "version": "4.1.1.1",
-                "changelog": "`fix`: **Use local var**.\n\n`misc`: **Update target abi**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.1/shoko_4.1.1.1.zip",
-                "checksum": "1306775bf02151f91ea752957b6b1757",
-                "timestamp": "2024-07-16T22:02:54Z"
             }
         ]
     }
