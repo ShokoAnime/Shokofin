@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.7",
+                "changelog": "`fix`: **Advertise support for logos**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.7/shoko_4.1.1.7.zip",
+                "checksum": "abe9959af6523315a6ed678930f6c537",
+                "timestamp": "2024-08-12T23:00:53Z"
+            },
+            {
                 "version": "4.1.1.6",
                 "changelog": "`misc`: **Remove static image type**. (_Skip CI_)\n\n`misc`: **Update git to json helper \u2026to fix this exact message in the changelog**. (_Skip CI_)\n\n`misc`: **Update image DTO model**:\n\n- Renamed `IsDefault` to `IsPreferred` on the image DTO model.\n\n- Added `Thumbnail` as a synonym to `Thumb`.\n\n- Updated descriptions on image DTO model.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.3/shoko_4.1.1.3.zip",
                 "checksum": "2ab05e4fa64dca65d93a27e208afef86",
                 "timestamp": "2024-07-28T18:30:04Z"
-            },
-            {
-                "version": "4.1.1.2",
-                "changelog": "`fix`: **Append base path to image urls**:\n\n- Append the base path to image urls served by the plugin, instead of overwriting the existing base path set on the base url.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.2/shoko_4.1.1.2.zip",
-                "checksum": "608d74dad42ddbcfb259981bde0cfa62",
-                "timestamp": "2024-07-27T23:18:21Z"
             }
         ]
     }
