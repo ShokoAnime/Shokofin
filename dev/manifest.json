@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.10",
+                "changelog": "`revert`: **\"fix: fix duplication bug in drop down menus\"**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.10/shoko_4.1.1.10.zip",
+                "checksum": "dc9e6e9ef135514259ad3590a89b603d",
+                "timestamp": "2024-08-12T23:45:06Z"
+            },
+            {
                 "version": "4.1.1.9",
                 "changelog": "`fix`: **Fix duplication bug in drop down menus**.\n\n`misc`: **Always show delete media folder mapping button**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.6/shoko_4.1.1.6.zip",
                 "checksum": "52bbc0609a03029be3a78cea4001e7c6",
                 "timestamp": "2024-08-11T23:35:36Z"
-            },
-            {
-                "version": "4.1.1.5",
-                "changelog": "`fix`: **Fix models for stable server \u2026because we shouldn't break those yet.**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.5/shoko_4.1.1.5.zip",
-                "checksum": "413140995c016bcce99de43f62610d2e",
-                "timestamp": "2024-08-08T12:03:54Z"
             }
         ]
     }
