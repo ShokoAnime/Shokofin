@@ -177,13 +177,6 @@ async function loadMediaFolderConfig(form, mediaFolderId, config) {
     form.querySelector("#MediaFolderDefaultSettingsContainer").setAttribute("hidden", "");
     form.querySelector("#MediaFolderPerFolderSettingsContainer").removeAttribute("hidden");
 
-    if (mediaFolderConfig.IsMapped && mediaFolderConfig.LibraryName) {
-        form.querySelector("#MediaFolderDeleteContainer").setAttribute("hidden", "");
-    }
-    else {
-        form.querySelector("#MediaFolderDeleteContainer").removeAttribute("hidden");
-    }
-
     Dashboard.hideLoadingMsg();
 }
 
