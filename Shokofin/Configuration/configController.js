@@ -276,11 +276,6 @@ async function defaultSubmit(form) {
     let config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
 
     if (config.ApiKey !== "") {
-        let publicUrl = form.querySelector("#PublicUrl").value;
-        if (publicUrl.endsWith("/")) {
-            publicUrl = publicUrl.slice(0, -1);
-            form.querySelector("#PublicUrl").value = publicUrl;
-        }
         const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
 
         // Metadata settings
@@ -445,11 +440,11 @@ async function defaultSubmit(form) {
             publicUrl = publicUrl.slice(0, -1);
             form.querySelector("#PublicUrl").value = publicUrl;
         }
-        config.PublicUrl = publicUrl;
 
         // Update the url if needed.
         if (config.Url !== url || config.PublicUrl !== publicUrl) {
             config.Url = url;
+            config.PublicUrl = publicUrl;
             form.querySelector("#Url").value = url;
             form.querySelector("#PublicUrl").value = publicUrl;
             let result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
