@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.11",
+                "changelog": "`misc`: **Update read-me**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.11/shoko_4.1.1.11.zip",
+                "checksum": "b6bbf4fa04d96b5ca0f1b0c7ea95443f",
+                "timestamp": "2024-08-13T13:12:54Z"
+            },
+            {
                 "version": "4.1.1.10",
                 "changelog": "`revert`: **\"fix: fix duplication bug in drop down menus\"**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.7/shoko_4.1.1.7.zip",
                 "checksum": "abe9959af6523315a6ed678930f6c537",
                 "timestamp": "2024-08-12T23:00:53Z"
-            },
-            {
-                "version": "4.1.1.6",
-                "changelog": "`misc`: **Remove static image type**. (_Skip CI_)\n\n`misc`: **Update git to json helper \u2026to fix this exact message in the changelog**. (_Skip CI_)\n\n`misc`: **Update image DTO model**:\n\n- Renamed `IsDefault` to `IsPreferred` on the image DTO model.\n\n- Added `Thumbnail` as a synonym to `Thumb`.\n\n- Updated descriptions on image DTO model.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.6/shoko_4.1.1.6.zip",
-                "checksum": "52bbc0609a03029be3a78cea4001e7c6",
-                "timestamp": "2024-08-11T23:35:36Z"
             }
         ]
     }
