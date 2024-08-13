@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.12",
+                "changelog": "`fix`: **Better base url for `Person` images & in general**:\n\nCloses #67\n\n`fix`: **Add back and fix is available check**.\n\n`misc`: **Xml ignore pretty url**.\n\n`misc`: **Don't set public url on page twice when changed**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.12/shoko_4.1.1.12.zip",
+                "checksum": "e244e0abb00c149f283c0c1baf30e16e",
+                "timestamp": "2024-08-13T21:28:36Z"
+            },
+            {
                 "version": "4.1.1.11",
                 "changelog": "`misc`: **Update read-me**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.8/shoko_4.1.1.8.zip",
                 "checksum": "34dcfeaaf905829a2e5f7a640530ed9b",
                 "timestamp": "2024-08-12T23:12:49Z"
-            },
-            {
-                "version": "4.1.1.7",
-                "changelog": "`fix`: **Advertise support for logos**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.7/shoko_4.1.1.7.zip",
-                "checksum": "abe9959af6523315a6ed678930f6c537",
-                "timestamp": "2024-08-12T23:00:53Z"
             }
         ]
     }
