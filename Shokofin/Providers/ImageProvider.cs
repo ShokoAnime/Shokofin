@@ -158,7 +158,7 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
 
     private static void AddImage(ref List<RemoteImageInfo> list, ImageType imageType, API.Models.Image? image)
     {
-        if (image == null)
+        if (image == null || !image.IsAvailable)
             return;
         list.Add(new RemoteImageInfo {
             ProviderName = Plugin.MetadataProviderName,
