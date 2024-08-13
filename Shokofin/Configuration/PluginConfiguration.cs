@@ -49,6 +49,7 @@ public class PluginConfiguration : BasePluginConfiguration
     [XmlElement("PublicHost")]
     public string PublicUrl { get; set; }
 
+    [XmlIgnore]
     [JsonIgnore]
     public virtual string PrettyUrl
         => string.IsNullOrEmpty(PublicUrl) ? Url : PublicUrl;
