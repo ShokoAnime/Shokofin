@@ -431,7 +431,6 @@ async function defaultSubmit(form) {
         let publicUrl = form.querySelector("#PublicUrl").value;
         if (publicUrl.endsWith("/")) {
             publicUrl = publicUrl.slice(0, -1);
-            form.querySelector("#PublicUrl").value = publicUrl;
         }
 
         // Update the url if needed.
