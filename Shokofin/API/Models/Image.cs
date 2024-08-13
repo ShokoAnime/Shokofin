@@ -69,8 +69,8 @@ public class Image
     /// set up, but better than nothing.
     /// </remarks>
     /// <returns>The image URL</returns>
-    public string ToURLString()
-        => new Uri(new Uri(Web.ImageHostUrl.BaseUrl), $"{Web.ImageHostUrl.BasePath}/Plugin/Shokofin/Host/Image/{Source}/{Type}/{ID}").ToString();
+    public string ToURLString(bool internalUrl = false)
+        => new Uri(new Uri(internalUrl ? Plugin.Instance.BaseUrl : Web.ImageHostUrl.BaseUrl), $"{Web.ImageHostUrl.BasePath}/Plugin/Shokofin/Host/Image/{Source}/{Type}/{ID}").ToString();
 }
 
 /// <summary>

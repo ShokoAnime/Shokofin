@@ -266,7 +266,7 @@ public class SeasonInfo
     }
 
     private static string? GetImagePath(Image image)
-        => image != null && image.IsAvailable ? image.ToURLString() : null;
+        => image != null && image.IsAvailable ? image.ToURLString(internalUrl: true) : null;
 
     private static PersonInfo? RoleToPersonInfo(Role role)
         => role.Type switch

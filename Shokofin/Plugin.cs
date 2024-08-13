@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using MediaBrowser.Common.Configuration;
+using MediaBrowser.Common.Net;
 using MediaBrowser.Common.Plugins;
+using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using Microsoft.Extensions.Logging;
@@ -15,6 +17,8 @@ namespace Shokofin;
 
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
+    private readonly IServerConfigurationManager ConfigurationManager;
+
     public const string MetadataProviderName = "Shoko";
 
     public override string Name => MetadataProviderName;
@@ -39,12 +43,26 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public readonly string VirtualRoot;
 
     /// <summary>
+    /// Base URL where the Jellyfin is running.
+    /// </summary>
+    public string BaseUrl => ConfigurationManager.GetNetworkConfiguration() is { } networkOptions
+        ? $"{
+            (networkOptions.RequireHttps && networkOptions.EnableHttps ? "https" : "http")
+        }://{
+            (networkOptions.LocalNetworkAddresses.FirstOrDefault() is { } address && address is not "0.0.0.0" ? address : "localhost")
+        }:{
+            (networkOptions.RequireHttps && networkOptions.EnableHttps ? networkOptions.InternalHttpsPort : networkOptions.InternalHttpPort)
+        }/"
+        : "http://localhost:8096/";
+
+    /// <summary>
     /// Gets or sets the event handler that is triggered when this configuration changes.
     /// </summary>
     public new event EventHandler<PluginConfiguration>? ConfigurationChanged;
 
-    public Plugin(ILoggerFactory loggerFactory, IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
+    public Plugin(ILoggerFactory loggerFactory, IServerConfigurationManager configurationManager, IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
     {
+        ConfigurationManager = configurationManager;
         Instance = this;
         base.ConfigurationChanged += OnConfigChanged;
         VirtualRoot = Path.Join(applicationPaths.ProgramDataPath, "Shokofin", "VFS");

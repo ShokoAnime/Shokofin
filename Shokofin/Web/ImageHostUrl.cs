@@ -12,9 +12,15 @@ namespace Shokofin.Web;
 public class ImageHostUrl : IAsyncActionFilter
 {
     /// <summary>
+    /// The internal base url. Will be null if the base url haven't been used
+    /// yet.
+    /// </summary>
+    private static string? InternalBaseUrl { get; set; } = null;
+
+    /// <summary>
     /// The current image host base url to use.
     /// </summary>
-    public static string BaseUrl { get; private set; } = "http://localhost:8096/";
+    public static string BaseUrl { get => InternalBaseUrl ??= Plugin.Instance.BaseUrl; }
 
     /// <summary>
     /// The current image host base path to use.
@@ -37,7 +43,7 @@ public class ImageHostUrl : IAsyncActionFilter
             var uri = uriBuilder.ToString();
             lock (LockObj) {
                 if (!string.Equals(uri, BaseUrl))
-                    BaseUrl = uri;
+                    InternalBaseUrl = uri;
                 if (!string.Equals(path, BasePath))
                     BasePath = path;
             }
