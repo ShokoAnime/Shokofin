@@ -183,21 +183,7 @@ public class Series
 
     public class TvDB
     {
-        /// <summary>
-        /// TvDB Id.
-        /// </summary>
-        [JsonPropertyName("ID")]
-        public int Id { get; set; }
-
-        public DateTime? AirDate { get; set; }
-
-        public DateTime? EndDate { get; set; }
-
-        public string Title { get; set; } = string.Empty;
-
         public string Description { get; set; } = string.Empty;
-
-        public Rating Rating { get; set; } = new();
     }
 
     public class SeriesIDs : IDs

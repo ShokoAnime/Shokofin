@@ -75,31 +75,19 @@ public class Episode
 
     public class TvDB
     {
-        [JsonPropertyName("ID")]
-        public int Id { get; set; }
-
         [JsonPropertyName("Season")]
         public int SeasonNumber { get; set; }
 
         [JsonPropertyName("Number")]
         public int EpisodeNumber { get; set; }
 
-        [JsonPropertyName("AbsoluteNumber")]
-        public int AbsoluteEpisodeNumber { get; set; }
-
-        public string Title { get; set; } = string.Empty;
-
         public string Description { get; set; } = string.Empty;
-
-        public DateTime? AirDate { get; set; }
 
         public int? AirsAfterSeason { get; set; }
 
         public int? AirsBeforeSeason { get; set; }
 
         public int? AirsBeforeEpisode { get; set; }
-
-        public Rating? Rating { get; set; }
 
         public Image Thumbnail { get; set; } = new();
     }
