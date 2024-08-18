@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -33,6 +34,9 @@ public class ShokoAPIClient : IDisposable
 
     private static bool UseOlderImportFolderFileEndpoints =>
         ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == "4.2.2.0") || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < ImportFolderCutOffDate));
+
+    public static bool AllowEpisodeImages =>
+        ServerVersion is { } serverVersion && serverVersion.Version[0..6] is not "4.2.2." && serverVersion.Version.Split('.').Last() is not "0";
 
     private readonly GuardedMemoryCache _cache;
 
@@ -336,6 +340,21 @@ public class ShokoAPIClient : IDisposable
         return Get<Episode>($"/api/v3/Episode/{id}?includeDataFrom=AniDB,TvDB&includeXRefs=true");
     }
 
+    public async Task<EpisodeImages?> GetEpisodeImages(string id)
+    {
+        try {
+            if (AllowEpisodeImages)
+                return await Get<EpisodeImages>($"/api/v3/Episode/{id}/Images");
+            var episode = await GetEpisode(id);
+            return new() {
+                Thumbnails = episode.TvDBEntityList.FirstOrDefault()?.Thumbnail is { } thumbnail ? [thumbnail] : [],
+            };
+        }
+        catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound) {
+            return null;
+        }
+    }
+
     public Task<ListResult<Episode>> GetEpisodesFromSeries(string seriesId)
     {
         return Get<ListResult<Episode>>($"/api/v3/Series/{seriesId}/Episode?pageSize=0&includeHidden=true&includeMissing=true&includeDataFrom=AniDB,TvDB&includeXRefs=true");
@@ -366,9 +385,14 @@ public class ShokoAPIClient : IDisposable
         return Get<List<Relation>>($"/api/v3/Series/{id}/Relations");
     }
 
-    public Task<Images> GetSeriesImages(string id)
+    public async Task<Images?> GetSeriesImages(string id)
     {
-        return Get<Images>($"/api/v3/Series/{id}/Images");
+        try {
+            return await Get<Images>($"/api/v3/Series/{id}/Images");
+        }
+        catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound) {
+            return null;
+        }
     }
 
     public Task<List<Series>> GetSeriesPathEndsWith(string dirname)

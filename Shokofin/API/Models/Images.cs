@@ -19,3 +19,8 @@ public class Images
 
     public List<Image> Logos { get; set; } = [];
 }
+
+public class EpisodeImages : Images
+{
+    public List<Image> Thumbnails { get; set; } = [];
+}
