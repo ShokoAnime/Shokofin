@@ -58,7 +58,7 @@ public class Image
     /// </summary>
     [JsonIgnore]
     public virtual bool IsAvailable
-        => !string.IsNullOrEmpty(LocalPath) || (Plugin.Instance.Configuration.ServerVersion?.Version is {} version && version is not "4.2.2.0");
+        => !string.IsNullOrEmpty(LocalPath) || (Plugin.Instance.Configuration.ServerVersion?.Version is {} version && version > new Version("4.2.2.0"));
 
     /// <summary>
     /// Get an URL to both download the image on the backend and preview it for

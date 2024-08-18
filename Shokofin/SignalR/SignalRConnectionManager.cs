@@ -22,7 +22,7 @@ public class SignalRConnectionManager
     private static readonly DateTime EventChangedDate = DateTime.Parse("2024-04-01T04:04:00.000Z");
 
     private static bool UseOlderEvents =>
-        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == "4.2.2.0") || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < EventChangedDate));
+        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == new Version("4.2.2.0")) || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < EventChangedDate));
 
     private const string HubUrl = "/signalr/aggregate?feeds=shoko";
 

@@ -28,15 +28,15 @@ public class ShokoAPIClient : IDisposable
     private static readonly DateTime StableCutOffDate = DateTime.Parse("2023-12-16T00:00:00.000Z");
 
     private static bool UseOlderSeriesAndFileEndpoints =>
-        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == "4.2.2.0") || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < StableCutOffDate));
+        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == new Version("4.2.2.0")) || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < StableCutOffDate));
 
     private static readonly DateTime ImportFolderCutOffDate = DateTime.Parse("2024-03-28T00:00:00.000Z");
 
     private static bool UseOlderImportFolderFileEndpoints =>
-        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == "4.2.2.0") || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < ImportFolderCutOffDate));
+        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == new Version("4.2.2.0")) || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < ImportFolderCutOffDate));
 
     public static bool AllowEpisodeImages =>
-        ServerVersion is { } serverVersion && serverVersion.Version[0..6] is not "4.2.2." && serverVersion.Version.Split('.').Last() is not "0";
+        ServerVersion is { } serverVersion && serverVersion.Version > new Version("4.2.2.0");
 
     private readonly GuardedMemoryCache _cache;
 
