@@ -37,6 +37,11 @@ public class Image
     public bool IsDisabled { get; set; } = false;
 
     /// <summary>
+    /// The language code for the image, if available.
+    /// </summary>
+    public string? LanguageCode { get; set; } = null;
+
+    /// <summary>
     /// Width of the image, if available.
     /// </summary>
     public int? Width { get; set; }

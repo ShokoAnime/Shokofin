@@ -52,7 +52,7 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                     if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId)) {
                         var episodeImages = await ApiClient.GetEpisodeImages(episodeId);
                         if (episodeImages is not null)
-                            AddImagesUsingList(ref list, episodeImages);
+                            AddImagesForEpisode(ref list, episodeImages);
                         Logger.LogInformation("Getting {Count} images for episode {EpisodeName} (Episode={EpisodeId})", list.Count, episode.Name, episodeId);
                     }
                     break;
@@ -61,19 +61,19 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                     if (Lookup.TryGetSeriesIdFor(series, out var seriesId)) {
                         var seriesImages = await ApiClient.GetSeriesImages(seriesId);
                         if (seriesImages is not null)
-                            AddImagesUsingList(ref list, seriesImages);
+                            AddImagesForSeries(ref list, seriesImages);
                         // Also attach any images linked to the "seasons" (AKA series within the group).
                         var showInfo = await ApiManager.GetShowInfoForSeries(seriesId);
                         if (showInfo is not null && !showInfo.IsStandalone) {
                             foreach (var seasonInfo in showInfo.SeasonList) {
                                 seriesImages = await ApiClient.GetSeriesImages(seasonInfo.Id);
                                 if (seriesImages is not null)
-                                    AddImagesUsingList(ref list, seriesImages);
+                                    AddImagesForSeries(ref list, seriesImages);
                                 if (seasonInfo?.ExtraIds is not null) {
                                     foreach (var extraId in seasonInfo.ExtraIds) {
                                         seriesImages = await ApiClient.GetSeriesImages(extraId);
                                         if (seriesImages is not null)
-                                            AddImagesUsingList(ref list, seriesImages);
+                                            AddImagesForSeries(ref list, seriesImages);
                                     }
                                 }
                             }
@@ -90,12 +90,12 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                         var seasonInfo = await ApiManager.GetSeasonInfoForSeries(seriesId);
                         var seriesImages = await ApiClient.GetSeriesImages(seriesId);
                         if (seriesImages is not null)
-                            AddImagesUsingList(ref list, seriesImages);
+                            AddImagesForSeries(ref list, seriesImages);
                         if (seasonInfo?.ExtraIds is not null) {
                             foreach (var extraId in seasonInfo.ExtraIds) {
                                 seriesImages = await ApiClient.GetSeriesImages(extraId);
                                 if (seriesImages is not null)
-                                    AddImagesUsingList(ref list, seriesImages);
+                                    AddImagesForSeries(ref list, seriesImages);
                             }
                             list =  list
                                 .DistinctBy(image => image.Url)
@@ -109,7 +109,7 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                     if (Lookup.TryGetSeriesIdFor(movie, out var seriesId)) {
                         var seriesImages = await ApiClient.GetSeriesImages(seriesId);
                         if (seriesImages is not null)
-                            AddImagesUsingList(ref list, seriesImages);
+                            AddImagesForSeries(ref list, seriesImages);
                         Logger.LogInformation("Getting {Count} images for movie {MovieName} (Series={SeriesId})", list.Count, movie.Name, seriesId);
                     }
                     break;
@@ -122,7 +122,7 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                     if (!string.IsNullOrEmpty(seriesId)) {
                         var seriesImages = await ApiClient.GetSeriesImages(seriesId);
                         if (seriesImages is not null)
-                            AddImagesUsingList(ref list, seriesImages);
+                            AddImagesForSeries(ref list, seriesImages);
                         Logger.LogInformation("Getting {Count} images for collection {CollectionName} (Group={GroupId},Series={SeriesId})", list.Count, collection.Name, groupId, groupId == null ? seriesId : null);
                     }
                     break;
@@ -139,7 +139,13 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
         }
     }
 
-    private static void AddImagesUsingList(ref List<RemoteImageInfo> list, API.Models.Images images)
+    public static void AddImagesForEpisode(ref List<RemoteImageInfo> list, API.Models.EpisodeImages images)
+    {
+        foreach (var image in images.Thumbnails.OrderByDescending(image => image.IsPreferred))
+            AddImage(ref list, ImageType.Primary, image);
+    }
+
+    private static void AddImagesForSeries(ref List<RemoteImageInfo> list, API.Models.Images images)
     {
         foreach (var image in images.Posters.OrderByDescending(image => image.IsPreferred))
             AddImage(ref list, ImageType.Primary, image);
