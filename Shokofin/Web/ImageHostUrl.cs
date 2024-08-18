@@ -23,9 +23,15 @@ public class ImageHostUrl : IAsyncActionFilter
     public static string BaseUrl { get => InternalBaseUrl ??= Plugin.Instance.BaseUrl; }
 
     /// <summary>
+    /// The internal base path. Will be null if the base path haven't been used
+    /// yet.
+    /// </summary>
+    private static string? InternalBasePath { get; set; } = null;
+
+    /// <summary>
     /// The current image host base path to use.
     /// </summary>
-    public static string BasePath { get; private set; } = "";
+    public static string BasePath { get => InternalBasePath ??= Plugin.Instance.BasePath; }
 
     private readonly object LockObj = new();
 
@@ -42,10 +48,10 @@ public class ImageHostUrl : IAsyncActionFilter
             uriBuilder.Query = "";
             var uri = uriBuilder.ToString();
             lock (LockObj) {
-                if (!string.Equals(uri, BaseUrl))
+                if (!string.Equals(uri, InternalBaseUrl))
                     InternalBaseUrl = uri;
-                if (!string.Equals(path, BasePath))
-                    BasePath = path;
+                if (!string.Equals(path, InternalBasePath))
+                    InternalBasePath = path;
             }
         }
         await next();

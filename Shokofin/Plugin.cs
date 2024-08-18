@@ -21,40 +21,88 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     private readonly IServerConfigurationManager _configurationManager;
 
-    private readonly ILogger<Plugin> _logger;
-
-    private DateTime? _lastBaseUrlUpdate = null;
-
-    private string? _baseUrl = null;
+    private readonly ILogger<Plugin> Logger;
 
     /// <summary>
-    /// Base URL where the Jellyfin is running.
+    /// The last time the base URL and base path was updated.
+    /// </summary>
+    private DateTime? LastBaseUrlUpdate = null;
+
+    /// <summary>
+    /// Cached base URL of the Jellyfin server, to avoid calculating it all the
+    /// time.
+    /// </summary>
+    private string? CachedBaseUrl = null;
+
+    /// <summary>
+    /// Base URL where the Jellyfin server is running.
     /// </summary>
     public string BaseUrl
     {
         get
         {
-            if (_baseUrl is not null && _lastBaseUrlUpdate is not null && DateTime.Now - _lastBaseUrlUpdate < BaseUrlUpdateDelay)
-                return _baseUrl;
+            if (CachedBaseUrl is not null && LastBaseUrlUpdate is not null && DateTime.Now - LastBaseUrlUpdate < BaseUrlUpdateDelay)
+                return CachedBaseUrl;
 
-            _lastBaseUrlUpdate = DateTime.Now;
-            if (_configurationManager.GetNetworkConfiguration() is not { } networkOptions)
-            {
-                _baseUrl = "http://localhost:8096/";
-                return _baseUrl;
+            lock(this) {
+                LastBaseUrlUpdate = DateTime.Now;
+                if (_configurationManager.GetNetworkConfiguration() is not { } networkOptions)
+                {
+                    CachedBaseUrl = "http://localhost:8096/";
+                    CachedBasePath = string.Empty;
+                    return CachedBaseUrl;
+                }
+
+                var protocol = networkOptions.RequireHttps && networkOptions.EnableHttps ? "https" : "http";
+                var hostname = networkOptions.LocalNetworkAddresses.FirstOrDefault() is { } address && address is not "0.0.0.0" and not "::" ? address : "localhost";
+                var port = networkOptions.RequireHttps && networkOptions.EnableHttps ? networkOptions.InternalHttpsPort : networkOptions.InternalHttpPort;
+                var basePath = networkOptions.BaseUrl is { } baseUrl ? baseUrl : string.Empty;
+                if (basePath.Length > 0 && basePath[0] == '/')
+                    basePath = basePath[1..];
+                CachedBaseUrl = new UriBuilder(protocol, hostname, port).ToString();
+                CachedBasePath = basePath;
+                return CachedBaseUrl;
             }
-
-            var protocol = networkOptions.RequireHttps && networkOptions.EnableHttps ? "https" : "http";
-            var hostname = networkOptions.LocalNetworkAddresses.FirstOrDefault() is { } address && address is not "0.0.0.0" and not "::" ? address : "localhost";
-            var port = networkOptions.RequireHttps && networkOptions.EnableHttps ? networkOptions.InternalHttpsPort : networkOptions.InternalHttpPort;
-            var basePath = networkOptions.BaseUrl is { } baseUrl ? baseUrl : string.Empty;
-            if (basePath.Length > 0 && basePath[0] != '/')
-                basePath = "/" + basePath;
-            _baseUrl = new UriBuilder(protocol, hostname, port, basePath).ToString();
-            return _baseUrl;
         }
     }
 
+    /// <summary>
+    /// Cached base path of the Jellyfin server, to avoid calculating it all the
+    /// time.
+    /// </summary>
+    private string? CachedBasePath = null;
+
+    /// <summary>
+    /// Base path where the Jellyfin server is running on the domain.
+    /// </summary>
+    public string BasePath
+    {
+        get
+        {
+            if (CachedBasePath is not null && LastBaseUrlUpdate is not null && DateTime.Now - LastBaseUrlUpdate < BaseUrlUpdateDelay)
+                return CachedBasePath;
+
+            lock(this) {
+                LastBaseUrlUpdate = DateTime.Now;
+                if (_configurationManager.GetNetworkConfiguration() is not { } networkOptions)
+                {
+                    CachedBaseUrl = "http://localhost:8096/";
+                    CachedBasePath = string.Empty;
+                    return CachedBaseUrl;
+                }
+
+                var protocol = networkOptions.RequireHttps && networkOptions.EnableHttps ? "https" : "http";
+                var hostname = networkOptions.LocalNetworkAddresses.FirstOrDefault() is { } address && address is not "0.0.0.0" and not "::" ? address : "localhost";
+                var port = networkOptions.RequireHttps && networkOptions.EnableHttps ? networkOptions.InternalHttpsPort : networkOptions.InternalHttpPort;
+                var basePath = networkOptions.BaseUrl is { } baseUrl ? baseUrl : string.Empty;
+                if (basePath.Length > 0 && basePath[0] == '/')
+                    basePath = basePath[1..];
+                CachedBaseUrl = new UriBuilder(protocol, hostname, port).ToString();
+                CachedBasePath = basePath;
+                return CachedBasePath;
+            }
+        }
+    }
 
     public const string MetadataProviderName = "Shoko";
 
@@ -89,7 +137,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         base.ConfigurationChanged += OnConfigChanged;
         VirtualRoot = Path.Join(applicationPaths.ProgramDataPath, "Shokofin", "VFS");
         Tracker = new(loggerFactory.CreateLogger<UsageTracker>(), TimeSpan.FromSeconds(60));
-        _logger = logger;
+        Logger = logger;
         CanCreateSymbolicLinks = true;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
             var target = Path.Join(Path.GetDirectoryName(VirtualRoot)!, "TestTarget.txt");
@@ -112,8 +160,8 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         }
         IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
         Tracker.UpdateTimeout(TimeSpan.FromSeconds(Configuration.UsageTracker_StalledTimeInSeconds));
-        _logger.LogDebug("Virtual File System Location; {Path}", VirtualRoot);
-        _logger.LogDebug("Can create symbolic links; {Value}", CanCreateSymbolicLinks);
+        Logger.LogDebug("Virtual File System Location; {Path}", VirtualRoot);
+        Logger.LogDebug("Can create symbolic links; {Value}", CanCreateSymbolicLinks);
     }
 
     public void UpdateConfiguration()
