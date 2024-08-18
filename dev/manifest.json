@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.15",
+                "changelog": "`fix`: **Split base path from base url**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.15/shoko_4.1.1.15.zip",
+                "checksum": "cabe96a54aedf4b5dd1986b4d77578b2",
+                "timestamp": "2024-08-18T14:41:21Z"
+            },
+            {
                 "version": "4.1.1.14",
                 "changelog": "`fix`: **Add base path and cache url for 15m**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.11/shoko_4.1.1.11.zip",
                 "checksum": "b6bbf4fa04d96b5ca0f1b0c7ea95443f",
                 "timestamp": "2024-08-13T13:12:54Z"
-            },
-            {
-                "version": "4.1.1.10",
-                "changelog": "`revert`: **\"fix: fix duplication bug in drop down menus\"**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.10/shoko_4.1.1.10.zip",
-                "checksum": "dc9e6e9ef135514259ad3590a89b603d",
-                "timestamp": "2024-08-12T23:45:06Z"
             }
         ]
     }
