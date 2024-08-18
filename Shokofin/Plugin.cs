@@ -17,7 +17,44 @@ namespace Shokofin;
 
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
-    private readonly IServerConfigurationManager ConfigurationManager;
+    private static TimeSpan BaseUrlUpdateDelay => TimeSpan.FromMinutes(15);
+
+    private readonly IServerConfigurationManager _configurationManager;
+
+    private readonly ILogger<Plugin> _logger;
+
+    private DateTime? _lastBaseUrlUpdate = null;
+
+    private string? _baseUrl = null;
+
+    /// <summary>
+    /// Base URL where the Jellyfin is running.
+    /// </summary>
+    public string BaseUrl
+    {
+        get
+        {
+            if (_baseUrl is not null && _lastBaseUrlUpdate is not null && DateTime.Now - _lastBaseUrlUpdate < BaseUrlUpdateDelay)
+                return _baseUrl;
+
+            _lastBaseUrlUpdate = DateTime.Now;
+            if (_configurationManager.GetNetworkConfiguration() is not { } networkOptions)
+            {
+                _baseUrl = "http://localhost:8096/";
+                return _baseUrl;
+            }
+
+            var protocol = networkOptions.RequireHttps && networkOptions.EnableHttps ? "https" : "http";
+            var hostname = networkOptions.LocalNetworkAddresses.FirstOrDefault() is { } address && address is not "0.0.0.0" and not "::" ? address : "localhost";
+            var port = networkOptions.RequireHttps && networkOptions.EnableHttps ? networkOptions.InternalHttpsPort : networkOptions.InternalHttpPort;
+            var basePath = networkOptions.BaseUrl is { } baseUrl ? baseUrl : string.Empty;
+            if (basePath.Length > 0 && basePath[0] != '/')
+                basePath = "/" + basePath;
+            _baseUrl = new UriBuilder(protocol, hostname, port, basePath).ToString();
+            return _baseUrl;
+        }
+    }
+
 
     public const string MetadataProviderName = "Shoko";
 
@@ -35,25 +72,10 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// </summary>
     public readonly UsageTracker Tracker;
 
-    private readonly ILogger<Plugin> Logger;
-
     /// <summary>
     /// "Virtual" File System Root Directory.
     /// </summary>
     public readonly string VirtualRoot;
-
-    /// <summary>
-    /// Base URL where the Jellyfin is running.
-    /// </summary>
-    public string BaseUrl => ConfigurationManager.GetNetworkConfiguration() is { } networkOptions
-        ? $"{
-            (networkOptions.RequireHttps && networkOptions.EnableHttps ? "https" : "http")
-        }://{
-            (networkOptions.LocalNetworkAddresses.FirstOrDefault() is { } address && address is not "0.0.0.0" ? address : "localhost")
-        }:{
-            (networkOptions.RequireHttps && networkOptions.EnableHttps ? networkOptions.InternalHttpsPort : networkOptions.InternalHttpPort)
-        }/"
-        : "http://localhost:8096/";
 
     /// <summary>
     /// Gets or sets the event handler that is triggered when this configuration changes.
@@ -62,12 +84,12 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     public Plugin(ILoggerFactory loggerFactory, IServerConfigurationManager configurationManager, IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
     {
-        ConfigurationManager = configurationManager;
+        _configurationManager = configurationManager;
         Instance = this;
         base.ConfigurationChanged += OnConfigChanged;
         VirtualRoot = Path.Join(applicationPaths.ProgramDataPath, "Shokofin", "VFS");
         Tracker = new(loggerFactory.CreateLogger<UsageTracker>(), TimeSpan.FromSeconds(60));
-        Logger = logger;
+        _logger = logger;
         CanCreateSymbolicLinks = true;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
             var target = Path.Join(Path.GetDirectoryName(VirtualRoot)!, "TestTarget.txt");
@@ -90,8 +112,8 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         }
         IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
         Tracker.UpdateTimeout(TimeSpan.FromSeconds(Configuration.UsageTracker_StalledTimeInSeconds));
-        Logger.LogDebug("Virtual File System Location; {Path}", VirtualRoot);
-        Logger.LogDebug("Can create symbolic links; {Value}", CanCreateSymbolicLinks);
+        _logger.LogDebug("Virtual File System Location; {Path}", VirtualRoot);
+        _logger.LogDebug("Can create symbolic links; {Value}", CanCreateSymbolicLinks);
     }
 
     public void UpdateConfiguration()
