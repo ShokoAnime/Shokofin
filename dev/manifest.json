@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.14",
+                "changelog": "`fix`: **Add base path and cache url for 15m**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.14/shoko_4.1.1.14.zip",
+                "checksum": "f5f587856c33cff962c4a4ae1619e93c",
+                "timestamp": "2024-08-18T14:25:48Z"
+            },
+            {
                 "version": "4.1.1.13",
                 "changelog": "`fix`: **Remove all unused tvdb fields**:\n\nCloses #69 (nice)",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.10/shoko_4.1.1.10.zip",
                 "checksum": "dc9e6e9ef135514259ad3590a89b603d",
                 "timestamp": "2024-08-12T23:45:06Z"
-            },
-            {
-                "version": "4.1.1.9",
-                "changelog": "`fix`: **Fix duplication bug in drop down menus**.\n\n`misc`: **Always show delete media folder mapping button**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.9/shoko_4.1.1.9.zip",
-                "checksum": "e622d28e875150c0222487436df085f4",
-                "timestamp": "2024-08-12T23:16:25Z"
             }
         ]
     }
