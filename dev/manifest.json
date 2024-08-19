@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.24",
+                "changelog": "`fix`: **Remove image language code again**:\n\n- Removed the language code for images, since it was interfering with the _preferred_ image selection done by shoko. It seems Jellyfin has it's own image selection logic, and it doesn't just pick the first image available\u2026 it picks the first image available in the metadata language of the library\u2026 which defaults to `\"en\"` if not set\u2026 and that might not be preferred for our use case. We'll see if we can partially add it back later for some image types, e.g. logos, etc., but for now it's gone.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.24/shoko_4.1.1.24.zip",
+                "checksum": "c35b7797f5174e710d52804ceb2da5ce",
+                "timestamp": "2024-08-19T22:55:50Z"
+            },
+            {
                 "version": "4.1.1.23",
                 "changelog": "`fix`: **Don't look up crew/cast images if it's not available locally in the server**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.20/shoko_4.1.1.20.zip",
                 "checksum": "82d33eca346655bcda5271251032a707",
                 "timestamp": "2024-08-19T03:03:18Z"
-            },
-            {
-                "version": "4.1.1.19",
-                "changelog": "`fix`: **Sanitize collection overview**:\n\n- Sanitize collection overview as if it were a description from AniDB, because 99% of the time it is.\n\n- Closes #71",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.19/shoko_4.1.1.19.zip",
-                "checksum": "6f7c59921afcfae087c182bbb51826e2",
-                "timestamp": "2024-08-19T02:51:43Z"
             }
         ]
     }
