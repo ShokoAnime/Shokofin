@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.22",
+                "changelog": "`fix`: **Check if plugin is enabled for item before looking up id**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.22/shoko_4.1.1.22.zip",
+                "checksum": "f832648b2d8efb2b53e234a4bebfa44b",
+                "timestamp": "2024-08-19T21:46:52Z"
+            },
+            {
                 "version": "4.1.1.21",
                 "changelog": "`fix`: **Fix wrong variable check**:\n\nCloses #72",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.18/shoko_4.1.1.18.zip",
                 "checksum": "42cf72bc6208a6e2e2ab3c8dec002a72",
                 "timestamp": "2024-08-19T02:46:17Z"
-            },
-            {
-                "version": "4.1.1.17",
-                "changelog": "`fix`: **Fix thumbnails\u2026 again**.\n\n`feat`: **Add image language code**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.17/shoko_4.1.1.17.zip",
-                "checksum": "58003a199d3d76b1cd5026dbc6e5721d",
-                "timestamp": "2024-08-18T19:23:42Z"
             }
         ]
     }
