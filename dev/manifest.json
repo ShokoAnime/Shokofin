@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.23",
+                "changelog": "`fix`: **Don't look up crew/cast images if it's not available locally in the server**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.23/shoko_4.1.1.23.zip",
+                "checksum": "103466b66f9cf1090320fbaae60b6acc",
+                "timestamp": "2024-08-19T21:52:51Z"
+            },
+            {
                 "version": "4.1.1.22",
                 "changelog": "`fix`: **Check if plugin is enabled for item before looking up id**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.19/shoko_4.1.1.19.zip",
                 "checksum": "6f7c59921afcfae087c182bbb51826e2",
                 "timestamp": "2024-08-19T02:51:43Z"
-            },
-            {
-                "version": "4.1.1.18",
-                "changelog": "`fix`: **Expect the unexpected**:\n\n- Handle the case where no cross-reference exists for the file for the given series, even though we asked for files for the given series. Don't ask me why. I'm just as confused as you are. \ud83d\ude15\n\n- Closes #70\n\n`fix`: **Add missing query parameter in series file endpoint**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.18/shoko_4.1.1.18.zip",
-                "checksum": "42cf72bc6208a6e2e2ab3c8dec002a72",
-                "timestamp": "2024-08-19T02:46:17Z"
             }
         ]
     }
