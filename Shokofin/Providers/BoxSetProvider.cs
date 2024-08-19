@@ -99,7 +99,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
 
         result.Item = new BoxSet {
             Name = collection.Name,
-            Overview = collection.Shoko.Description,
+            Overview = Text.SanitizeAnidbDescription(collection.Shoko.Description),
         };
         result.Item.SetProviderId(ShokoCollectionGroupId.Name, collection.Id);
         result.HasMetadata = true;
