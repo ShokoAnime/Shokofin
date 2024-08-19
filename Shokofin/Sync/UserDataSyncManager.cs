@@ -191,6 +191,7 @@ public class UserDataSyncManager
             if (!(
                     (e.Item is Movie || e.Item is Episode) &&
                     TryGetUserConfiguration(e.UserId, out var userConfig) &&
+                    Lookup.IsEnabledForItem(e.Item) &&
                     Lookup.TryGetFileIdFor(e.Item, out var fileId) &&
                     Lookup.TryGetEpisodeIdFor(e.Item, out var episodeId) &&
                     (userConfig!.SyncRestrictedVideos || e.Item.CustomRating != "XXX")
