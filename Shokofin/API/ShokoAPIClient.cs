@@ -279,7 +279,7 @@ public class ShokoAPIClient : IDisposable
     public async Task<IReadOnlyList<File>> GetFilesForSeries(string seriesId)
     {
         if (UseOlderSeriesAndFileEndpoints)
-            return await Get<List<File>>($"/api/v3/Series/{seriesId}/File?&includeXRefs=true&includeDataFrom=AniDB").ConfigureAwait(false);
+            return await Get<List<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&includeXRefs=true&includeDataFrom=AniDB").ConfigureAwait(false);
 
         var listResult = await Get<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false);
         return listResult.List;
