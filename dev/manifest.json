@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.19",
+                "changelog": "`fix`: **Sanitize collection overview**:\n\n- Sanitize collection overview as if it were a description from AniDB, because 99% of the time it is.\n\n- Closes #71",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.19/shoko_4.1.1.19.zip",
+                "checksum": "6f7c59921afcfae087c182bbb51826e2",
+                "timestamp": "2024-08-19T02:51:43Z"
+            },
+            {
                 "version": "4.1.1.18",
                 "changelog": "`fix`: **Expect the unexpected**:\n\n- Handle the case where no cross-reference exists for the file for the given series, even though we asked for files for the given series. Don't ask me why. I'm just as confused as you are. \ud83d\ude15\n\n- Closes #70\n\n`fix`: **Add missing query parameter in series file endpoint**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.15/shoko_4.1.1.15.zip",
                 "checksum": "cabe96a54aedf4b5dd1986b4d77578b2",
                 "timestamp": "2024-08-18T14:41:21Z"
-            },
-            {
-                "version": "4.1.1.14",
-                "changelog": "`fix`: **Add base path and cache url for 15m**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.14/shoko_4.1.1.14.zip",
-                "checksum": "f5f587856c33cff962c4a4ae1619e93c",
-                "timestamp": "2024-08-18T14:25:48Z"
             }
         ]
     }
