@@ -179,6 +179,11 @@ public class Ordering
                 byAirDate:
                 // Reset the order if we come from `SpecialOrderType.InBetweenSeasonMixed`.
                 episodeNumber = null;
+                if (seasonInfo.SpecialsBeforeEpisodes.Contains(episodeInfo.Id)) {
+                    airsBeforeSeasonNumber = seasonNumber;
+                    break;
+                }
+
                 if (seasonInfo.SpecialsAnchors.TryGetValue(episodeInfo, out var previousEpisode))
                     episodeNumber = GetEpisodeNumber(showInfo, seasonInfo, previousEpisode);
 

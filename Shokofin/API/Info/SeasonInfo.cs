@@ -81,6 +81,11 @@ public class SeasonInfo
     public readonly List<EpisodeInfo> ExtrasList;
 
     /// <summary>
+    /// A list of special episodes that come before normal episodes.
+    /// </summary>
+    public readonly IReadOnlySet<string> SpecialsBeforeEpisodes;
+
+    /// <summary>
     /// A dictionary holding mappings for the previous normal episode for every special episode in a series.
     /// </summary>
     public readonly IReadOnlyDictionary<EpisodeInfo, EpisodeInfo> SpecialsAnchors;
@@ -118,6 +123,7 @@ public class SeasonInfo
             .Where(r => r.RelatedIDs.Shoko.HasValue)
             .DistinctBy(r => r.RelatedIDs.Shoko!.Value)
             .ToDictionary(r => r.RelatedIDs.Shoko!.Value.ToString(), r => r.Type);
+        var specialsBeforeEpisodes = new HashSet<string>();
         var specialsAnchorDictionary = new Dictionary<EpisodeInfo, EpisodeInfo>();
         var specialsList = new List<EpisodeInfo>();
         var episodesList = new List<EpisodeInfo>();
@@ -126,7 +132,7 @@ public class SeasonInfo
 
         // Iterate over the episodes once and store some values for later use.
         int index = 0;
-        int lastNormalEpisode = 0;
+        int lastNormalEpisode = -1;
         foreach (var episode in episodes) {
             if (episode.Shoko.IsHidden)
                 continue;
@@ -147,11 +153,16 @@ public class SeasonInfo
                     }
                     else if (episode.AniDB.Type == EpisodeType.Special) {
                         specialsList.Add(episode);
-                        var previousEpisode = episodes
-                            .GetRange(lastNormalEpisode, index - lastNormalEpisode)
-                            .FirstOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
-                        if (previousEpisode != null)
-                            specialsAnchorDictionary[episode] = previousEpisode;
+                        if (index == -1) {
+                            specialsBeforeEpisodes.Add(episode.Id);
+                        }
+                        else {
+                            var previousEpisode = episodes
+                                .GetRange(lastNormalEpisode, index - lastNormalEpisode)
+                                .FirstOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
+                            if (previousEpisode != null)
+                                specialsAnchorDictionary[episode] = previousEpisode;
+                        }
                     }
                     break;
             }
@@ -191,18 +202,24 @@ public class SeasonInfo
 
             // Re-create the special anchors because the episode list changed.
             index = 0;
-            lastNormalEpisode = 0;
+            lastNormalEpisode = -1;
+            specialsBeforeEpisodes.Clear();
             specialsAnchorDictionary.Clear();
             foreach (var episode in episodes) {
                 if (episodesList.Contains(episode)) {
                     lastNormalEpisode = index;
                 }
                 else if (specialsList.Contains(episode)) {
-                    var previousEpisode = episodes
-                        .GetRange(lastNormalEpisode, index - lastNormalEpisode)
-                        .FirstOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
-                    if (previousEpisode != null)
-                        specialsAnchorDictionary[episode] = previousEpisode;
+                    if (index == -1) {
+                        specialsBeforeEpisodes.Add(episode.Id);
+                    }
+                    else {
+                        var previousEpisode = episodes
+                            .GetRange(lastNormalEpisode, index - lastNormalEpisode)
+                            .FirstOrDefault(e => specialsList.Contains(e));
+                        if (previousEpisode != null)
+                            specialsAnchorDictionary[episode] = previousEpisode;
+                    }
                 }
                 index++;
             }
@@ -242,6 +259,7 @@ public class SeasonInfo
         EpisodeList = episodesList;
         AlternateEpisodesList = altEpisodesList;
         ExtrasList = extrasList;
+        SpecialsBeforeEpisodes = specialsBeforeEpisodes;
         SpecialsAnchors = specialsAnchorDictionary;
         SpecialsList = specialsList;
         Relations = relations;
