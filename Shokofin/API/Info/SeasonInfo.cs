@@ -153,7 +153,7 @@ public class SeasonInfo
                     }
                     else if (episode.AniDB.Type == EpisodeType.Special) {
                         specialsList.Add(episode);
-                        if (index == -1) {
+                        if (lastNormalEpisode == -1) {
                             specialsBeforeEpisodes.Add(episode.Id);
                         }
                         else {
@@ -210,7 +210,7 @@ public class SeasonInfo
                     lastNormalEpisode = index;
                 }
                 else if (specialsList.Contains(episode)) {
-                    if (index == -1) {
+                    if (lastNormalEpisode == -1) {
                         specialsBeforeEpisodes.Add(episode.Id);
                     }
                     else {
