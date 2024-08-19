@@ -163,7 +163,6 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
             return;
         list.Add(new RemoteImageInfo {
             ProviderName = Plugin.MetadataProviderName,
-            Language = image.LanguageCode,
             Type = imageType,
             Width = image.Width,
             Height = image.Height,
