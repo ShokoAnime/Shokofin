@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.18",
+                "changelog": "`fix`: **Expect the unexpected**:\n\n- Handle the case where no cross-reference exists for the file for the given series, even though we asked for files for the given series. Don't ask me why. I'm just as confused as you are. \ud83d\ude15\n\n- Closes #70\n\n`fix`: **Add missing query parameter in series file endpoint**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.18/shoko_4.1.1.18.zip",
+                "checksum": "42cf72bc6208a6e2e2ab3c8dec002a72",
+                "timestamp": "2024-08-19T02:46:17Z"
+            },
+            {
                 "version": "4.1.1.17",
                 "changelog": "`fix`: **Fix thumbnails\u2026 again**.\n\n`feat`: **Add image language code**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.14/shoko_4.1.1.14.zip",
                 "checksum": "f5f587856c33cff962c4a4ae1619e93c",
                 "timestamp": "2024-08-18T14:25:48Z"
-            },
-            {
-                "version": "4.1.1.13",
-                "changelog": "`fix`: **Remove all unused tvdb fields**:\n\nCloses #69 (nice)",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.13/shoko_4.1.1.13.zip",
-                "checksum": "f6f87388343f4a00ccd0ae4f7affad32",
-                "timestamp": "2024-08-17T00:42:39Z"
             }
         ]
     }
