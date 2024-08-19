@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.20",
+                "changelog": "`fix`: **Fix specials placement by air date**:\n\n- Fixed specials that should had been placed within a season before all episodes.\n\n- Closes #66",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.20/shoko_4.1.1.20.zip",
+                "checksum": "82d33eca346655bcda5271251032a707",
+                "timestamp": "2024-08-19T03:03:18Z"
+            },
+            {
                 "version": "4.1.1.19",
                 "changelog": "`fix`: **Sanitize collection overview**:\n\n- Sanitize collection overview as if it were a description from AniDB, because 99% of the time it is.\n\n- Closes #71",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.16/shoko_4.1.1.16.zip",
                 "checksum": "8a6a6c9e4754983f3aa63b37a84ce49f",
                 "timestamp": "2024-08-18T19:00:33Z"
-            },
-            {
-                "version": "4.1.1.15",
-                "changelog": "`fix`: **Split base path from base url**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.15/shoko_4.1.1.15.zip",
-                "checksum": "cabe96a54aedf4b5dd1986b4d77578b2",
-                "timestamp": "2024-08-18T14:41:21Z"
             }
         ]
     }
