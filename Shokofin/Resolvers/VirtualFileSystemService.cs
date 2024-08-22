@@ -767,16 +767,16 @@ public class VirtualFileSystemService
         if (config.VFS_AddReleaseGroup)
             extraDetails.Add(
                 file.Shoko.AniDBData is not null
-                    ? !string.IsNullOrEmpty(file.Shoko.AniDBData.ReleaseGroup.Name)
-                        ? file.Shoko.AniDBData.ReleaseGroup.Name
-                        : !string.IsNullOrEmpty(file.Shoko.AniDBData.ReleaseGroup.ShortName)
-                            ? file.Shoko.AniDBData.ReleaseGroup.ShortName
+                    ? !string.IsNullOrEmpty(file.Shoko.AniDBData.ReleaseGroup.ShortName)
+                        ? file.Shoko.AniDBData.ReleaseGroup.ShortName
+                        : !string.IsNullOrEmpty(file.Shoko.AniDBData.ReleaseGroup.Name)
+                            ? file.Shoko.AniDBData.ReleaseGroup.Name
                             : $"Release group {file.Shoko.AniDBData.ReleaseGroup.Id}"
                 : "No Group"
             );
         if (config.VFS_AddResolution && !string.IsNullOrEmpty(file.Shoko.Resolution))
             extraDetails.Add(file.Shoko.Resolution);
-        var fileName = $"{episodeName} {(extraDetails.Count is > 0 ? $"[{extraDetails.Join("] [")}] " : "")}[{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileId}]{Path.GetExtension(sourceLocation)}";
+        var fileName = $"{episodeName} {(extraDetails.Count is > 0 ? $"[{extraDetails.Select(a => a.ReplaceInvalidPathCharacters()).Join("] [")}] " : "")}[{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileId}]{Path.GetExtension(sourceLocation)}";
         var symbolicLinks = folders
             .Select(folderPath => Path.Join(folderPath, fileName))
             .ToArray();
