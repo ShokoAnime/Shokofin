@@ -7,6 +7,7 @@ using Emby.Naming.Common;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
@@ -42,6 +43,8 @@ public class MediaFolderConfigurationService
 
     private readonly IFileSystem FileSystem;
 
+    private readonly IDirectoryService DirectoryService;
+
     private readonly ShokoAPIClient ApiClient;
 
     private readonly NamingOptions NamingOptions;
@@ -60,6 +63,7 @@ public class MediaFolderConfigurationService
         ILogger<MediaFolderConfigurationService> logger,
         ILibraryManager libraryManager,
         IFileSystem fileSystem,
+        IDirectoryService directoryService,
         ShokoAPIClient apiClient,
         NamingOptions namingOptions
     )
@@ -67,6 +71,7 @@ public class MediaFolderConfigurationService
         Logger = logger;
         LibraryManager = libraryManager;
         FileSystem = fileSystem;
+        DirectoryService = directoryService;
         ApiClient = apiClient;
         NamingOptions = namingOptions;
 
@@ -161,7 +166,7 @@ public class MediaFolderConfigurationService
                 return (string.Empty, string.Empty, null, new List<MediaFolderConfiguration>());
             return (
                 libraryFolder.GetVirtualRoot(),
-                virtualFolder.Locations[0],
+                virtualFolder.Locations.FirstOrDefault(a => DirectoryService.IsAccessible(a)) ?? string.Empty,
                 LibraryManager.GetConfiguredContentType(libraryFolder),
                 Plugin.Instance.Configuration.MediaFolders
                     .Where(config => config.IsMapped && config.LibraryId == mediaFolderConfig.LibraryId && (filter is null || filter(config)) && LibraryManager.GetItemById(config.MediaFolderId) is Folder)
