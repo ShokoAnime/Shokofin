@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.26",
+                "changelog": "`fix`: **Attach VFS children to first available media folder**:\n\n- Attach VFS children to the first available media folder, instead of the first media folder in the list. If no media folders are available at all, then the VFS generation will be skipped (and Jellyfin will also internally skip the iteration of the children of the media folder if that were the case, so the shows/movies won't just disappear).",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.26/shoko_4.1.1.26.zip",
+                "checksum": "b60bdb7a0076b8583b89beb46655a051",
+                "timestamp": "2024-08-24T02:33:52Z"
+            },
+            {
                 "version": "4.1.1.25",
                 "changelog": "`fix`: **Sanitize release groups in vfs file names**:\n\n- Sanitized release groups (and resolution) before we use them.\n\n- Swapped release group so we first try the short name, then the full name.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.22/shoko_4.1.1.22.zip",
                 "checksum": "f832648b2d8efb2b53e234a4bebfa44b",
                 "timestamp": "2024-08-19T21:46:52Z"
-            },
-            {
-                "version": "4.1.1.21",
-                "changelog": "`fix`: **Fix wrong variable check**:\n\nCloses #72",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.21/shoko_4.1.1.21.zip",
-                "checksum": "d32dfb396fb9e572c347480b11e39c3d",
-                "timestamp": "2024-08-19T16:13:59Z"
             }
         ]
     }
