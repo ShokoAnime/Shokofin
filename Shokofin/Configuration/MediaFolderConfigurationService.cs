@@ -135,7 +135,6 @@ public class MediaFolderConfigurationService
 
     public IReadOnlyList<(string vfsPath, string mainMediaFolderPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)> GetAvailableMediaFoldersForLibraries(Func<MediaFolderConfiguration, bool>? filter = null)
     {
-
         lock (LockObj) {
             var virtualFolders = LibraryManager.GetVirtualFolders();
             return Plugin.Instance.Configuration.MediaFolders
