@@ -149,7 +149,13 @@ public class MediaFolderConfigurationService
                         .ToList() as IReadOnlyList<MediaFolderConfiguration>
                 ))
                 .Where(tuple => tuple.libraryFolder is not null && tuple.virtualFolder is not null && tuple.virtualFolder.Locations.Length is > 0 && tuple.mediaList.Count is > 0)
-                .Select(tuple => (tuple.libraryFolder!.GetVirtualRoot(), tuple.virtualFolder!.Locations[0], LibraryManager.GetConfiguredContentType(tuple.libraryFolder!), tuple.mediaList))
+                .Select(tuple => (
+                    vfsPath: tuple.libraryFolder!.GetVirtualRoot(),
+                    mainMediaFolderPath: tuple.virtualFolder!.Locations.FirstOrDefault(a => DirectoryService.IsAccessible(a)) ?? string.Empty,
+                    collectionType: LibraryManager.GetConfiguredContentType(tuple.libraryFolder!),
+                    tuple.mediaList
+                ))
+                .Where(tuple => !string.IsNullOrEmpty(tuple.vfsPath) && !string.IsNullOrEmpty(tuple.mainMediaFolderPath))
                 .ToList();
         }
     }
