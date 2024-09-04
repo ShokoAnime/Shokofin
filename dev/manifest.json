@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.28",
+                "changelog": "`cleanup`: **Remove empty line**. (_Skip CI_)\n\n`fix`: **Stop fetching remote images**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.28/shoko_4.1.1.28.zip",
+                "checksum": "9dc54220787099a60fe58cebaade81aa",
+                "timestamp": "2024-09-04T18:45:38Z"
+            },
+            {
                 "version": "4.1.1.27",
                 "changelog": "`fix`: **Also fix it for events**:\n\n- Same as previous commit, but for the the method that gets all available folders.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.24/shoko_4.1.1.24.zip",
                 "checksum": "c35b7797f5174e710d52804ceb2da5ce",
                 "timestamp": "2024-08-19T22:55:50Z"
-            },
-            {
-                "version": "4.1.1.23",
-                "changelog": "`fix`: **Don't look up crew/cast images if it's not available locally in the server**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.23/shoko_4.1.1.23.zip",
-                "checksum": "103466b66f9cf1090320fbaae60b6acc",
-                "timestamp": "2024-08-19T21:52:51Z"
             }
         ]
     }
