@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.29",
+                "changelog": "`misc`: **Add 'manners movie' as extras**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.29/shoko_4.1.1.29.zip",
+                "checksum": "b919959cde8730558b94258c31ccb40e",
+                "timestamp": "2024-09-08T18:03:06Z"
+            },
+            {
                 "version": "4.1.1.28",
                 "changelog": "`cleanup`: **Remove empty line**. (_Skip CI_)\n\n`fix`: **Stop fetching remote images**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.25/shoko_4.1.1.25.zip",
                 "checksum": "7c758706e97a17aa4c1d7021a98f0af5",
                 "timestamp": "2024-08-22T18:49:41Z"
-            },
-            {
-                "version": "4.1.1.24",
-                "changelog": "`fix`: **Remove image language code again**:\n\n- Removed the language code for images, since it was interfering with the _preferred_ image selection done by shoko. It seems Jellyfin has it's own image selection logic, and it doesn't just pick the first image available\u2026 it picks the first image available in the metadata language of the library\u2026 which defaults to `\"en\"` if not set\u2026 and that might not be preferred for our use case. We'll see if we can partially add it back later for some image types, e.g. logos, etc., but for now it's gone.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.24/shoko_4.1.1.24.zip",
-                "checksum": "c35b7797f5174e710d52804ceb2da5ce",
-                "timestamp": "2024-08-19T22:55:50Z"
             }
         ]
     }
