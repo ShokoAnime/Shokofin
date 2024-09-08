@@ -289,7 +289,8 @@ public class Ordering
                 // Cinema/theatrical intro/outro
                 if (
                     (title.StartsWith("cinema ", System.StringComparison.OrdinalIgnoreCase) || title.StartsWith("theatrical ", System.StringComparison.OrdinalIgnoreCase)) &&
-                    (title.Contains("intro", System.StringComparison.OrdinalIgnoreCase) || title.Contains("outro", System.StringComparison.OrdinalIgnoreCase))
+                    (title.Contains("intro", System.StringComparison.OrdinalIgnoreCase) || title.Contains("outro", System.StringComparison.OrdinalIgnoreCase)) ||
+                    title.Contains("manners movie", System.StringComparison.OrdinalIgnoreCase)
                 )
                     return ExtraType.Clip;
                 // Behind the Scenes
