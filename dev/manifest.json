@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.30",
+                "changelog": "`misc`: **Merge paths for special and other type episodes**:\n\n\u2026because they should had probably been merged into one earlier\u2026",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.30/shoko_4.1.1.30.zip",
+                "checksum": "6de2fdfd3eac26bff920247dda85c92d",
+                "timestamp": "2024-09-08T18:26:57Z"
+            },
+            {
                 "version": "4.1.1.29",
                 "changelog": "`misc`: **Add 'manners movie' as extras**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.26/shoko_4.1.1.26.zip",
                 "checksum": "b60bdb7a0076b8583b89beb46655a051",
                 "timestamp": "2024-08-24T02:33:52Z"
-            },
-            {
-                "version": "4.1.1.25",
-                "changelog": "`fix`: **Sanitize release groups in vfs file names**:\n\n- Sanitized release groups (and resolution) before we use them.\n\n- Swapped release group so we first try the short name, then the full name.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.25/shoko_4.1.1.25.zip",
-                "checksum": "7c758706e97a17aa4c1d7021a98f0af5",
-                "timestamp": "2024-08-22T18:49:41Z"
             }
         ]
     }
