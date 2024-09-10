@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.32",
+                "changelog": "`misc`: **Mark chronological season ordering as experimental (again)**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.32/shoko_4.1.1.32.zip",
+                "checksum": "9b9c05588d820da87b611ed4d1d89d88",
+                "timestamp": "2024-09-10T00:39:58Z"
+            },
+            {
                 "version": "4.1.1.31",
                 "changelog": "`refactor`: **Always split & merge entries**.\n\n`misc`: **Add files per commit for git-log-json.mjs**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.28/shoko_4.1.1.28.zip",
                 "checksum": "9dc54220787099a60fe58cebaade81aa",
                 "timestamp": "2024-09-04T18:45:38Z"
-            },
-            {
-                "version": "4.1.1.27",
-                "changelog": "`fix`: **Also fix it for events**:\n\n- Same as previous commit, but for the the method that gets all available folders.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.27/shoko_4.1.1.27.zip",
-                "checksum": "8b890d8e1796294598d865957def6ced",
-                "timestamp": "2024-08-24T02:47:32Z"
             }
         ]
     }
