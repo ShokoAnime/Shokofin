@@ -444,16 +444,6 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool EXPERIMENTAL_AutoMergeVersions { get; set; }
 
     /// <summary>
-    /// Split all movies up before merging them back together.
-    /// </summary>
-    public bool EXPERIMENTAL_SplitThenMergeMovies { get; set; }
-
-    /// <summary>
-    /// Split all episodes up before merging them back together.
-    /// </summary>
-    public bool EXPERIMENTAL_SplitThenMergeEpisodes { get; set; }
-
-    /// <summary>
     /// Blur the boundaries between AniDB anime further by merging entries which could had just been a single anime entry based on name matching and a configurable merge window.
     /// </summary>
     public bool EXPERIMENTAL_MergeSeasons { get; set; }
@@ -571,8 +561,6 @@ public class PluginConfiguration : BasePluginConfiguration
         SignalR_FileEvents = false;
         UsageTracker_StalledTimeInSeconds = 10;
         EXPERIMENTAL_AutoMergeVersions = true;
-        EXPERIMENTAL_SplitThenMergeMovies = true;
-        EXPERIMENTAL_SplitThenMergeEpisodes = false;
         EXPERIMENTAL_MergeSeasons = false;
         EXPERIMENTAL_MergeSeasonsTypes = new[] { SeriesType.OVA, SeriesType.TV, SeriesType.TVSpecial, SeriesType.Web, SeriesType.OVA };
         EXPERIMENTAL_MergeSeasonsMergeWindowInDays = 185;

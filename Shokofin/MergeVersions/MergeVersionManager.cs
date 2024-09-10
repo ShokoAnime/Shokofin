@@ -147,23 +147,31 @@ public class MergeVersionsManager
     /// complete.</returns>
     public async Task MergeAllMovies(IProgress<double> progress, CancellationToken cancellationToken)
     {
-        if (Plugin.Instance.Configuration.EXPERIMENTAL_SplitThenMergeMovies) {
-            await SplitAndMergeAllMovies(progress, cancellationToken);
-            return;
+        // Split up any existing merged movies.
+        var movies = GetMoviesFromLibrary();
+        double currentCount = 0d;
+        double totalCount = movies.Count;
+        foreach (var movie in movies) {
+            // Handle cancellation and update progress.
+            cancellationToken.ThrowIfCancellationRequested();
+            var percent = (currentCount++ / totalCount) * 50d;
+            progress?.Report(percent);
+
+            // Remove all alternate sources linked to the movie.
+            await RemoveAlternateSources(movie);
         }
 
-        // Merge all movies with more than one version.
-        var movies = GetMoviesFromLibrary();
+        // Merge all movies with more than one version (again).
         var duplicationGroups = movies
-            .GroupBy(x => (x.GetTopParent()?.Path, x.GetProviderId(ShokoEpisodeId.Name)))
-            .Where(x => x.Count() > 1)
+            .GroupBy(movie => (movie.GetTopParent()?.Path, movie.GetProviderId(ShokoEpisodeId.Name)))
+            .Where(movie => movie.Count() > 1)
             .ToList();
-        double currentCount = 0d;
-        double totalGroups = duplicationGroups.Count;
+        currentCount = 0d;
+        totalCount = duplicationGroups.Count;
         foreach (var movieGroup in duplicationGroups) {
             // Handle cancellation and update progress.
             cancellationToken.ThrowIfCancellationRequested();
-            var percent = (currentCount++ / totalGroups) * 100;
+            var percent = 50d + ((currentCount++ / totalCount) * 50d);
             progress?.Report(percent);
 
             // Link the movies together as alternate sources.
@@ -199,49 +207,6 @@ public class MergeVersionsManager
         progress?.Report(100);
     }
 
-    /// <summary>
-    ///
-    /// </summary>
-    /// <param name="progress">Progress indicator.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An async task that will silently complete when the splitting
-    /// followed by merging is complete.</returns>
-    private async Task SplitAndMergeAllMovies(IProgress<double> progress, CancellationToken cancellationToken)
-    {
-        // Split up any existing merged movies.
-        var movies = GetMoviesFromLibrary();
-        double currentCount = 0d;
-        double totalCount = movies.Count;
-        foreach (var movie in movies) {
-            // Handle cancellation and update progress.
-            cancellationToken.ThrowIfCancellationRequested();
-            var percent = (currentCount++ / totalCount) * 50d;
-            progress?.Report(percent);
-
-            // Remove all alternate sources linked to the movie.
-            await RemoveAlternateSources(movie);
-        }
-
-        // Merge all movies with more than one version (again).
-        var duplicationGroups = movies
-            .GroupBy(movie => (movie.GetTopParent()?.Path, movie.GetProviderId(ShokoEpisodeId.Name)))
-            .Where(movie => movie.Count() > 1)
-            .ToList();
-        currentCount = 0d;
-        totalCount = duplicationGroups.Count;
-        foreach (var movieGroup in duplicationGroups) {
-            // Handle cancellation and update progress.
-            cancellationToken.ThrowIfCancellationRequested();
-            var percent = 50d + ((currentCount++ / totalCount) * 50d);
-            progress?.Report(percent);
-
-            // Link the movies together as alternate sources.
-            await MergeMovies(movieGroup);
-        }
-
-        progress?.Report(100);
-    }
-
     #endregion Movies
     #region Episodes
 
@@ -272,69 +237,6 @@ public class MergeVersionsManager
         => await MergeVideos(episodes.Cast<Video>().OrderBy(e => e.Id).ToList());
 
     /// <summary>
-    /// Split up all existing merged versions of each movie and merge them
-    /// again afterwards. Only applied to movies with a Shoko Episode ID set.
-    /// </summary>
-    /// <param name="progress">Progress indicator.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An async task that will silently complete when the merging is
-    /// complete.</returns>
-    public async Task MergeAllEpisodes(IProgress<double> progress, CancellationToken cancellationToken)
-    {
-        if (Plugin.Instance.Configuration.EXPERIMENTAL_SplitThenMergeEpisodes) {
-            await SplitAndMergeAllEpisodes(progress, cancellationToken);
-            return;
-        }
-
-        // Merge episodes with more than one version, and with the same number
-        // of additional episodes.
-        var episodes = GetEpisodesFromLibrary();
-        var duplicationGroups = episodes
-            .GroupBy(e => (e.GetTopParent()?.Path, $"{e.GetProviderId(ShokoEpisodeId.Name)}-{(e.IndexNumberEnd ?? e.IndexNumber ?? 1) - (e.IndexNumber ?? 1)}"))
-            .Where(e => e.Count() > 1)
-            .ToList();
-        double currentCount = 0d;
-        double totalGroups = duplicationGroups.Count;
-        foreach (var episodeGroup in duplicationGroups) {
-            // Handle cancellation and update progress.
-            cancellationToken.ThrowIfCancellationRequested();
-            var percent = (currentCount++ / totalGroups) * 100d;
-            progress?.Report(percent);
-
-            // Link the episodes together as alternate sources.
-            await MergeEpisodes(episodeGroup);
-        }
-
-        progress?.Report(100);
-    }
-
-    /// <summary>
-    /// Split up all existing merged episodes with a Shoko Episode ID set.
-    /// </summary>
-    /// <param name="progress">Progress indicator.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An async task that will silently complete when the splitting is
-    /// complete.</returns>
-    public async Task SplitAllEpisodes(IProgress<double> progress, CancellationToken cancellationToken)
-    {
-        // Split up any existing merged episodes.
-        var episodes = GetEpisodesFromLibrary();
-        double currentCount = 0d;
-        double totalEpisodes = episodes.Count;
-        foreach (var e in episodes) {
-            // Handle cancellation and update progress.
-            cancellationToken.ThrowIfCancellationRequested();
-            var percent = (currentCount++ / totalEpisodes) * 100d;
-            progress?.Report(percent);
-
-            // Remove all alternate sources linked to the episode.
-            await RemoveAlternateSources(e);
-        }
-
-        progress?.Report(100);
-    }
-
-    /// <summary>
     /// Split up all existing merged versions of each episode and merge them
     /// again afterwards. Only applied to episodes with a Shoko Episode ID set.
     /// </summary>
@@ -342,7 +244,7 @@ public class MergeVersionsManager
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async task that will silently complete when the splitting
     /// followed by merging is complete.</returns>
-    private async Task SplitAndMergeAllEpisodes(IProgress<double> progress, CancellationToken cancellationToken)
+    public async Task MergeAllEpisodes(IProgress<double> progress, CancellationToken cancellationToken)
     {
         // Split up any existing merged episodes.
         var episodes = GetEpisodesFromLibrary();
@@ -375,6 +277,32 @@ public class MergeVersionsManager
             // Link the episodes together as alternate sources.
             await MergeEpisodes(episodeGroup);
         }
+    }
+
+    /// <summary>
+    /// Split up all existing merged episodes with a Shoko Episode ID set.
+    /// </summary>
+    /// <param name="progress">Progress indicator.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async task that will silently complete when the splitting is
+    /// complete.</returns>
+    public async Task SplitAllEpisodes(IProgress<double> progress, CancellationToken cancellationToken)
+    {
+        // Split up any existing merged episodes.
+        var episodes = GetEpisodesFromLibrary();
+        double currentCount = 0d;
+        double totalEpisodes = episodes.Count;
+        foreach (var e in episodes) {
+            // Handle cancellation and update progress.
+            cancellationToken.ThrowIfCancellationRequested();
+            var percent = (currentCount++ / totalEpisodes) * 100d;
+            progress?.Report(percent);
+
+            // Remove all alternate sources linked to the episode.
+            await RemoveAlternateSources(e);
+        }
+
+        progress?.Report(100);
     }
 
     #endregion Episodes
