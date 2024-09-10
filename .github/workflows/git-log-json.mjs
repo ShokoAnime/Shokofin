@@ -69,6 +69,41 @@ for (const [placeholder, name] of Object.entries(Placeholders)) {
     }
 }
 
+// Add file-level changes to each commit
+for (const commitId of commitOrder) {
+    const fileStatusOutput = execSync(`git diff --name-status ${commitId}^ ${commitId}`).toString();
+    const lineChangesOutput = execSync(`git diff --numstat ${commitId}^ ${commitId}`).toString();
+
+    const files = [];
+    const fileStatusLines = fileStatusOutput.split(/\r\n|\r|\n/g).filter(a => a);
+    const lineChangesLines = lineChangesOutput.split(/\r\n|\r|\n/g).filter(a => a);
+
+    for (const [index, line] of fileStatusLines.entries()) {
+        const [rawStatus, path] = line.split(/\t/);
+        const status = rawStatus === "M" ?
+            "modified"
+        : rawStatus === "A" ?
+            "added"
+        : rawStatus === "D" ?
+            "deleted"
+        : rawStatus === "R" ?
+            "renamed"
+        : "untracked";
+        const lineChangeParts = lineChangesLines[index].split(/\t/);
+        const addedLines = parseInt(lineChangeParts[0] || "0", 10);
+        const removedLines = parseInt(lineChangeParts[1] || "0", 10);
+
+        files.push({
+            path,
+            status,
+            addedLines,
+            removedLines,
+        });
+    }
+
+    commits[commitId].files = files;
+}
+
 // Trim trailing newlines from all values in the commits object
 for (const commit of Object.values(commits)) {
     for (const key in commit) {
@@ -81,7 +116,7 @@ for (const commit of Object.values(commits)) {
 // Convert commits object to a list of values
 const commitsList = commitOrder.reverse()
     .map((commitId) => commits[commitId])
-    .map(({ commit, parents, tree, subject, body, author_name, author_email, author_date, committer_name, committer_email, committer_date }) => ({
+    .map(({ commit, parents, tree, subject, body, author_name, author_email, author_date, committer_name, committer_email, committer_date, files }) => ({
         commit,
         parents,
         tree,
@@ -108,6 +143,7 @@ const commitsList = commitOrder.reverse()
             date: new Date(committer_date).toISOString(),
             timeZone: committer_date.substring(19) === "Z" ? "+00:00" : committer_date.substring(19),
         },
+        files,
     }))
     .map((commit) => ({
         ...commit,
