@@ -121,12 +121,6 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool TitleAllowAny { get; set; }
 
     /// <summary>
-    /// This will combine the titles for multi episodes entries into a single
-    /// title, instead of just showing the title for the first episode.
-    /// </summary>
-    public bool TitleAddForMultipleEpisodes { get; set; }
-
-    /// <summary>
     /// Mark any episode that is not considered a normal season episode with a
     /// prefix and number.
     /// </summary>
@@ -496,7 +490,6 @@ public class PluginConfiguration : BasePluginConfiguration
             ProviderName.TMDB,
         };
         ProductionLocationOrder = ProductionLocationList.ToArray();
-        TitleAddForMultipleEpisodes = true;
         SynopsisCleanLinks = true;
         SynopsisCleanMiscLines = true;
         SynopsisRemoveSummary = true;

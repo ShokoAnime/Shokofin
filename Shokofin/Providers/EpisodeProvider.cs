@@ -104,7 +104,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
     {
         var config = Plugin.Instance.Configuration;
         string? displayTitle, alternateTitle, description;
-        if (config.TitleAddForMultipleEpisodes && file != null && file.EpisodeList.Count > 1) {
+        if (file != null && file.EpisodeList.Count > 1) {
             var displayTitles = new List<string?>();
             var alternateTitles = new List<string?>();
             foreach (var (episodeInfo, _, _) in file.EpisodeList) {

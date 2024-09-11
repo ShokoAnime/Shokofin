@@ -277,7 +277,6 @@ async function defaultSubmit(form) {
         config.TitleAlternateOverride = form.querySelector("#TitleAlternateOverride").checked;
         ([config.TitleAlternateList, config.TitleAlternateOrder] = retrieveSortableList(form, "TitleAlternateList"));
         config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
-        config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
         config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
         config.DescriptionSourceOverride = form.querySelector("#DescriptionSourceOverride").checked;
         ([config.DescriptionSourceList, config.DescriptionSourceOrder] = retrieveSortableList(form, "DescriptionSourceList"));
@@ -487,7 +486,6 @@ async function syncSettings(form) {
     config.TitleAlternateOverride = form.querySelector("#TitleAlternateOverride").checked;
     ([config.TitleAlternateList, config.TitleAlternateOrder] = retrieveSortableList(form, "TitleAlternateList"));
     config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
-    config.TitleAddForMultipleEpisodes = form.querySelector("#TitleAddForMultipleEpisodes").checked;
     config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
     config.DescriptionSourceOverride = form.querySelector("#DescriptionSourceOverride").checked;
     ([config.DescriptionSourceList, config.DescriptionSourceOrder] = retrieveSortableList(form, "DescriptionSourceList"));
@@ -900,8 +898,6 @@ export default function (page) {
             }
             initSortableList(form, "TitleAlternateList", config.TitleAlternateList, config.TitleAlternateOrder);
             form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
-            form.querySelector("#TitleAddForMultipleEpisodes").checked = config.TitleAddForMultipleEpisodes != null
-                ? config.TitleAddForMultipleEpisodes : true;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
             if (form.querySelector("#DescriptionSourceOverride").checked = config.DescriptionSourceOverride) {
                 form.querySelector("#DescriptionSourceList").removeAttribute("hidden");
