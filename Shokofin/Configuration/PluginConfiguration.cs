@@ -514,7 +514,7 @@ public class PluginConfiguration : BasePluginConfiguration
             TitleProvider.AniDB_CountryOfOrigin
         };
         TitleAlternateOrder = TitleMainOrder.ToArray();
-        TitleAllowAny = true;
+        TitleAllowAny = false;
         DescriptionSourceOverride = false;
         DescriptionSourceList = new[] {
             DescriptionProvider.AniDB,
