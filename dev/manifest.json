@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.33",
+                "changelog": "`refactor`: **Promote auto merge version from the experimental section**:\n\n- Promote the auto-merge multiple versions setting from the experimental section to the library section. The name is kept in the xml settings for now so people won't have to manually re-enable it.\n\n- Remove the split & merge options from the settings UI, since I forgot when I removed them from the code earlier.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.33/shoko_4.1.1.33.zip",
+                "checksum": "3b465f0bd04bdbd67d9198597db4fe62",
+                "timestamp": "2024-09-11T00:41:09Z"
+            },
+            {
                 "version": "4.1.1.32",
                 "changelog": "`misc`: **Mark chronological season ordering as experimental (again)**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.29/shoko_4.1.1.29.zip",
                 "checksum": "b919959cde8730558b94258c31ccb40e",
                 "timestamp": "2024-09-08T18:03:06Z"
-            },
-            {
-                "version": "4.1.1.28",
-                "changelog": "`cleanup`: **Remove empty line**. (_Skip CI_)\n\n`fix`: **Stop fetching remote images**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.28/shoko_4.1.1.28.zip",
-                "checksum": "9dc54220787099a60fe58cebaade81aa",
-                "timestamp": "2024-09-04T18:45:38Z"
             }
         ]
     }
