@@ -1097,6 +1097,13 @@
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AutoMergeVersions" />
+                                <span>Automatically merge multiple versions of videos</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription"><div>Automatically merge multiple versions of the same video together after a library scan or refresh. Only applies to videos with Shoko IDs set.</div></div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="UseGroupsForShows" />
                                 <span>Use shoko groups for shows</span>
                             </label>
@@ -1575,27 +1582,6 @@
                             <h3>Experimental Settings</h3>
                         </legend>
                         <div class="fieldDescription verticalSection-extrabottompadding">Any features/settings in this section is still considered to be in an experimental state. <strong>You can enable them, but at the risk if them messing up your library.</strong></div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_AutoMergeVersions" />
-                                <span>Automatically merge multiple versions</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription"><div>Automatically merge multiple versions of the same item together after a library scan. Only applies to items with a Shoko ID set.</div></div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_SplitThenMergeMovies" />
-                                <span>Always split existing versions of movies before merging multiple versions</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription"><div>Always split existing merged items before starting the merge.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What is this setting for?</summary>Enabling this setting will make sure there will be no merge conflicts by splitting up all the existing merged versions. It will probably also make the plugin do a lot of unneeded work 99.5% of the time, but will help for the last 0.5% that actually need this to be done before every merge. An example is ensuring multiple parts of a movie series (e.g. "Part 1", "Part 2", etc.) are not merged in core Jellyfin because they contain the same Shoko Series Id.</details></div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_SplitThenMergeEpisodes" />
-                                <span>Always split existing versions of episodes before merging multiple versions</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription"><div>Always split existing merged items before starting the merge.</div><details style="margin-top: 0.5em"><summary style="margin-bottom: 0.25em">What is this setting for?</summary>Enabling this setting will make sure there will be no merge conflicts by splitting up all the existing merged versions. It will probably also make the plugin do a lot of unneeded work 99.5% of the time, but will help for the last 0.5% that actually need this to be done before every merge.</details></div>
-                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_MergeSeasons" />

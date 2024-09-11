@@ -277,6 +277,12 @@ public class PluginConfiguration : BasePluginConfiguration
     #region Library
 
     /// <summary>
+    /// Automagically merge alternate versions after a library scan.
+    /// </summary>
+    [XmlElement("EXPERIMENTAL_AutoMergeVersions")]
+    public bool AutoMergeVersions { get; set; }
+
+    /// <summary>
     /// Use Shoko Groups to group Shoko Series together to create the show entries.
     /// </summary>
     public bool UseGroupsForShows { get; set; }
@@ -439,11 +445,6 @@ public class PluginConfiguration : BasePluginConfiguration
     #region Experimental features
 
     /// <summary>
-    /// Automagically merge alternate versions after a library scan.
-    /// </summary>
-    public bool EXPERIMENTAL_AutoMergeVersions { get; set; }
-
-    /// <summary>
     /// Blur the boundaries between AniDB anime further by merging entries which could had just been a single anime entry based on name matching and a configurable merge window.
     /// </summary>
     public bool EXPERIMENTAL_MergeSeasons { get; set; }
@@ -536,6 +537,7 @@ public class PluginConfiguration : BasePluginConfiguration
         VFS_Threads = 4;
         VFS_AddReleaseGroup = false;
         VFS_AddResolution = false;
+        AutoMergeVersions = true;
         UseGroupsForShows = false;
         SeparateMovies = false;
         FilterMovieLibraries = true;
@@ -560,7 +562,6 @@ public class PluginConfiguration : BasePluginConfiguration
         SignalR_RefreshEnabled = false;
         SignalR_FileEvents = false;
         UsageTracker_StalledTimeInSeconds = 10;
-        EXPERIMENTAL_AutoMergeVersions = true;
         EXPERIMENTAL_MergeSeasons = false;
         EXPERIMENTAL_MergeSeasonsTypes = new[] { SeriesType.OVA, SeriesType.TV, SeriesType.TVSpecial, SeriesType.Web, SeriesType.OVA };
         EXPERIMENTAL_MergeSeasonsMergeWindowInDays = 185;

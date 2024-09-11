@@ -306,6 +306,7 @@ async function defaultSubmit(form) {
         config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
 
         // Library settings
+        config.AutoMergeVersions = form.querySelector("#AutoMergeVersions").checked;
         config.UseGroupsForShows = form.querySelector("#UseGroupsForShows").checked;
         config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
         config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
@@ -360,9 +361,6 @@ async function defaultSubmit(form) {
 
 
         // Experimental settings
-        config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
-        config.EXPERIMENTAL_SplitThenMergeMovies = form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked;
-        config.EXPERIMENTAL_SplitThenMergeEpisodes = form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked;
         config.EXPERIMENTAL_MergeSeasons = form.querySelector("#EXPERIMENTAL_MergeSeasons").checked;
 
         // User settings
@@ -518,6 +516,7 @@ async function syncSettings(form) {
     config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
 
     // Library settings
+    config.AutoMergeVersions = form.querySelector("#AutoMergeVersions").checked;
     config.UseGroupsForShows = form.querySelector("#UseGroupsForShows").checked;
     config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
     config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
@@ -532,9 +531,6 @@ async function syncSettings(form) {
     config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
     // Experimental settings
-    config.EXPERIMENTAL_AutoMergeVersions = form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked;
-    config.EXPERIMENTAL_SplitThenMergeMovies = form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked;
-    config.EXPERIMENTAL_SplitThenMergeEpisodes = form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked;
     config.EXPERIMENTAL_MergeSeasons = form.querySelector("#EXPERIMENTAL_MergeSeasons").checked;
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
@@ -982,6 +978,7 @@ export default function (page) {
             form.querySelector("#AddTMDBId").checked = config.AddTMDBId;
 
             // Library settings
+            form.querySelector("#AutoMergeVersions").checked = config.AutoMergeVersions || false;
             if (form.querySelector("#UseGroupsForShows").checked = config.UseGroupsForShows) {
                 form.querySelector("#SeasonOrderingContainer").removeAttribute("hidden");
                 form.querySelector("#SeasonOrdering").disabled = false;
@@ -1027,10 +1024,6 @@ export default function (page) {
             userSelector.innerHTML += users.map((user) => `<option value="${user.Id}">${user.Name}</option>`).join("");
 
             // Experimental settings
-            form.querySelector("#EXPERIMENTAL_AutoMergeVersions").checked = config.EXPERIMENTAL_AutoMergeVersions || false;
-            form.querySelector("#EXPERIMENTAL_SplitThenMergeMovies").checked = config.EXPERIMENTAL_SplitThenMergeMovies != null
-                ? config.EXPERIMENTAL_SplitThenMergeMovies : true;
-            form.querySelector("#EXPERIMENTAL_SplitThenMergeEpisodes").checked = config.EXPERIMENTAL_SplitThenMergeEpisodes || false;
             form.querySelector("#EXPERIMENTAL_MergeSeasons").checked = config.EXPERIMENTAL_MergeSeasons || false;
 
             if (!config.ApiKey) {

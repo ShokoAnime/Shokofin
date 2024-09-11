@@ -24,7 +24,7 @@ public class PostScanTask : ILibraryPostScanTask
     public async Task Run(IProgress<double> progress, CancellationToken token)
     {
         // Merge versions now if the setting is enabled.
-        if (Plugin.Instance.Configuration.EXPERIMENTAL_AutoMergeVersions) {
+        if (Plugin.Instance.Configuration.AutoMergeVersions) {
             // Setup basic progress tracking
             var baseProgress = 0d;
             var simpleProgress = new Progress<double>(value => progress.Report(baseProgress + (value / 2d)));
