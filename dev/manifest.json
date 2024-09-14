@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.34",
+                "changelog": "`misc`: **Log which key is throwing from the guarded memory cache**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.34/shoko_4.1.1.34.zip",
+                "checksum": "55b587ef8f005c2fc2ec1a9deb244621",
+                "timestamp": "2024-09-14T14:43:21Z"
+            },
+            {
                 "version": "4.1.1.33",
                 "changelog": "`refactor`: **Promote auto merge version from the experimental section**:\n\n- Promote the auto-merge multiple versions setting from the experimental section to the library section. The name is kept in the xml settings for now so people won't have to manually re-enable it.\n\n- Remove the split & merge options from the settings UI, since I forgot when I removed them from the code earlier.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.30/shoko_4.1.1.30.zip",
                 "checksum": "6de2fdfd3eac26bff920247dda85c92d",
                 "timestamp": "2024-09-08T18:26:57Z"
-            },
-            {
-                "version": "4.1.1.29",
-                "changelog": "`misc`: **Add 'manners movie' as extras**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.29/shoko_4.1.1.29.zip",
-                "checksum": "b919959cde8730558b94258c31ccb40e",
-                "timestamp": "2024-09-08T18:03:06Z"
             }
         ]
     }
