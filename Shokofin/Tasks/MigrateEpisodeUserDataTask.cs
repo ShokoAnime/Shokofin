@@ -35,7 +35,7 @@ public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduled
     public bool IsHidden => false;
 
     /// <inheritdoc />
-    public bool IsEnabled => false;
+    public bool IsEnabled => true;
 
     /// <inheritdoc />
     public bool IsLogged => true;
