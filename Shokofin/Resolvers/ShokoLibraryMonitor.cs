@@ -309,7 +309,7 @@ public class ShokoLibraryMonitor : IHostedService
                     }
 
                     Logger.LogTrace("Failed to get file info from Shoko during a file deleted event. (File={FileId})", fileId);
-                    eventArgs = new FileEventArgsStub(int.Parse(fileId), null, mediaConfig.ImportFolderId, relativePath, Array.Empty<IFileEventArgs.FileCrossReference>());
+                    eventArgs = new FileEventArgsStub(int.Parse(fileId), null, mediaConfig.ImportFolderId, relativePath, []);
                 }
                 finally {
                     Plugin.Instance.Tracker.Remove(trackerId);

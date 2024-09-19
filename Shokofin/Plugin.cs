@@ -186,8 +186,8 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     public IEnumerable<PluginPageInfo> GetPages()
     {
-        return new[]
-        {
+        return
+        [
             new PluginPageInfo
             {
                 Name = Name,
@@ -198,6 +198,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
                 Name = "ShokoController.js",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configController.js",
             },
-        };
+        ];
     }
 }

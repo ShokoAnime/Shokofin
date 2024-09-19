@@ -156,7 +156,7 @@ public class CollectionManager
             if (parentDict.TryGetValue(collection.Id, out var parents)) {
                 foreach (var parentId in parents) {
                     if (!toRemove.ContainsKey(parentId) && collection.ParentId != parentId)
-                        await Collection.RemoveFromCollectionAsync(parentId, new[] { id }).ConfigureAwait(false);
+                        await Collection.RemoveFromCollectionAsync(parentId, [id]).ConfigureAwait(false);
                 }
             }
 
@@ -178,7 +178,7 @@ public class CollectionManager
                 ProviderIds = new() { { ShokoCollectionSeriesId.Name, missingId } },
             }).ConfigureAwait(false);
 
-            childDict.Add(collection.Id, new());
+            childDict.Add(collection.Id, []);
             toCheck.Add(missingId, collection);
         }
 
@@ -400,7 +400,7 @@ public class CollectionManager
             if (parentDict.TryGetValue(collection.Id, out var parents)) {
                 foreach (var parentId in parents) {
                     if (!toRemove.ContainsKey(parentId) && collection.ParentId != parentId)
-                        await Collection.RemoveFromCollectionAsync(parentId, new[] { id }).ConfigureAwait(false);
+                        await Collection.RemoveFromCollectionAsync(parentId, [id]).ConfigureAwait(false);
                 }
             }
 
@@ -431,7 +431,7 @@ public class CollectionManager
                 ProviderIds = new() { { ShokoCollectionGroupId.Name, missingId } },
             }).ConfigureAwait(false);
 
-            childDict.Add(collection.Id, new());
+            childDict.Add(collection.Id, []);
             toCheck.Add(missingId, collection);
             toAdd.RemoveAt(index);
         }
@@ -633,7 +633,7 @@ public class CollectionManager
     {
         return LibraryManager.GetItemList(new()
         {
-            IncludeItemTypes = new[] { BaseItemKind.Movie },
+            IncludeItemTypes = [BaseItemKind.Movie],
             HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, string.Empty } },
             IsVirtualItem = false,
             Recursive = true,
@@ -647,7 +647,7 @@ public class CollectionManager
     {
         return LibraryManager.GetItemList(new()
         {
-            IncludeItemTypes = new[] { BaseItemKind.Series },
+            IncludeItemTypes = [BaseItemKind.Series],
             HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, string.Empty } },
             IsVirtualItem = false,
             Recursive = true,
@@ -661,7 +661,7 @@ public class CollectionManager
     {
         return LibraryManager.GetItemList(new()
         {
-            IncludeItemTypes = new[] { BaseItemKind.BoxSet },
+            IncludeItemTypes = [BaseItemKind.BoxSet],
             HasAnyProviderId = new Dictionary<string, string> { { ShokoCollectionSeriesId.Name, string.Empty } },
             IsVirtualItem = false,
             Recursive = true,
@@ -677,7 +677,7 @@ public class CollectionManager
     {
         return LibraryManager.GetItemList(new()
         {
-            IncludeItemTypes = new[] { BaseItemKind.BoxSet },
+            IncludeItemTypes = [BaseItemKind.BoxSet],
 
             HasAnyProviderId = new Dictionary<string, string> { { ShokoCollectionGroupId.Name, string.Empty } },
             IsVirtualItem = false,

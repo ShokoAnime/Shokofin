@@ -135,7 +135,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                     .AsParallel()
                     .SelectMany(dirInfo => {
                         if (!dirInfo.Name.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
-                            return Array.Empty<BaseItem>();
+                            return [];
 
                         var season = ApiManager.GetSeasonInfoForSeries(seriesId)
                             .ConfigureAwait(false)
@@ -143,7 +143,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                             .GetResult();
                         if (season is null) {
                             pathsToRemoveBag.Add((dirInfo.FullName, true));
-                            return Array.Empty<BaseItem>();
+                            return [];
                         }
 
                         if (createMovies && (season.Type is SeriesType.Movie || collectionType is CollectionType.movies && !Plugin.Instance.Configuration.FilterMovieLibraries)) {
@@ -181,11 +181,11 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                                 .ToArray();
                         }
 
-                        return new BaseItem[1] {
+                        return [
                             new TvSeries() {
                                 Path = dirInfo.FullName,
                             },
-                        };
+                        ];
                     })
                     .OfType<BaseItem>()
                     .ToList();

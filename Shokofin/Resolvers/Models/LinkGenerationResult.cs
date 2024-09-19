@@ -9,7 +9,7 @@ public class LinkGenerationResult
 {
     private DateTime CreatedAt { get; init; } = DateTime.Now;
 
-    public ConcurrentBag<string> Paths { get; init; } = new();
+    public ConcurrentBag<string> Paths { get; init; } = [];
 
     public int Total =>
         TotalVideos + TotalSubtitles;

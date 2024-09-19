@@ -892,7 +892,7 @@ public class VirtualFileSystemService
             return externalPaths;
 
         var files = FileSystem.GetFilePaths(folderPath)
-            .Except(new[] { sourcePath })
+            .Except([sourcePath])
             .ToList();
         var sourcePrefix = Path.GetFileNameWithoutExtension(sourcePath);
         foreach (var file in files) {

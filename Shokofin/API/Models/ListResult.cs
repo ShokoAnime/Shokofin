@@ -19,5 +19,5 @@ public class ListResult<T>
     /// <summary>
     /// A sliced page or the whole list of <typeparamref name="T"/> entries.
     /// </summary>
-    public IReadOnlyList<T> List { get; set; } = new T[] {};
+    public IReadOnlyList<T> List { get; set; } = [];
 }

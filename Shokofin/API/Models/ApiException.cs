@@ -14,7 +14,7 @@ public class ApiException : Exception
 
     private record ValidationResponse
     {
-        public Dictionary<string, string[]> errors = new();
+        public Dictionary<string, string[]> errors = [];
 
         public string title = string.Empty;
 
@@ -33,7 +33,7 @@ public class ApiException : Exception
     {
         StatusCode = statusCode;
         Type = ApiExceptionType.Simple;
-        ValidationErrors = new();
+        ValidationErrors = [];
     }
 
     protected ApiException(HttpStatusCode statusCode, RemoteApiException inner) : base(inner.Message, inner)
@@ -41,14 +41,14 @@ public class ApiException : Exception
         StatusCode = statusCode;
         Type = ApiExceptionType.RemoteException;
         Inner = inner;
-        ValidationErrors = new();
+        ValidationErrors = [];
     }
 
     protected ApiException(HttpStatusCode statusCode, string source, string? message, Dictionary<string, string[]>? validationErrors = null): base(string.IsNullOrEmpty(message) ? source : $"{source}: {message}")
     {
         StatusCode = statusCode;
         Type = ApiExceptionType.ValidationErrors;
-        ValidationErrors = validationErrors ?? new();
+        ValidationErrors = validationErrors ?? [];
     }
 
     public static ApiException FromResponse(HttpResponseMessage response)
@@ -63,7 +63,7 @@ public class ApiException : Exception
         var index = text.IndexOf("HEADERS");
         if (index != -1) {
             var (firstLine, lines) = text[..index].TrimEnd().Split('\n');
-            var (name, splitMessage) = firstLine?.Split(':') ?? Array.Empty<string>();
+            var (name, splitMessage) = firstLine?.Split(':') ?? [];
             var message = string.Join(':', splitMessage).Trim();
             var stackTrace = string.Join('\n', lines);
             return new ApiException(response.StatusCode, new RemoteApiException(name ?? "InternalServerException", message, stackTrace));

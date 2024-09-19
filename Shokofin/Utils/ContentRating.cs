@@ -156,7 +156,7 @@ public static class ContentRating
     private static ProviderName[] GetOrderedProviders()
         => Plugin.Instance.Configuration.ContentRatingOverride
             ? Plugin.Instance.Configuration.ContentRatingOrder.Where((t) => Plugin.Instance.Configuration.ContentRatingList.Contains(t)).ToArray()
-            : new ProviderName[] { ProviderName.AniDB, ProviderName.TMDB };
+            : [ProviderName.AniDB, ProviderName.TMDB];
 
 #pragma warning disable IDE0060
     public static string? GetMovieContentRating(SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
@@ -195,7 +195,7 @@ public static class ContentRating
             .Select(seasonInfo => GetSeasonContentRating(seasonInfo))
             .Where(contentRating => !string.IsNullOrEmpty(contentRating))
             .Distinct()
-            .Select(text => TryConvertRatingFromText(text, out var cR, out var cI) ? (contentRating: cR, contentIndicators: cI ?? new()) : (contentRating: TvRating.None, contentIndicators: new()))
+            .Select(text => TryConvertRatingFromText(text, out var cR, out var cI) ? (contentRating: cR, contentIndicators: cI ?? []) : (contentRating: TvRating.None, contentIndicators: []))
             .Where(tuple => tuple.contentRating is not TvRating.None)
             .GroupBy(tuple => tuple.contentRating)
             .OrderByDescending(groupBy => groupBy.Key)
@@ -345,7 +345,7 @@ public static class ContentRating
         }
 
         // Parse indicators.
-        contentIndicators = new();
+        contentIndicators = [];
         if (value.Length <= offset)
             return true;
         foreach (var raw in value[offset..]) {
@@ -361,7 +361,7 @@ public static class ContentRating
     }
 
     internal static T[] GetCustomAttributes<T>(this System.Reflection.FieldInfo? fieldInfo, bool inherit = false)
-        => fieldInfo?.GetCustomAttributes(typeof(T), inherit) is T[] attributes ? attributes : Array.Empty<T>();
+        => fieldInfo?.GetCustomAttributes(typeof(T), inherit) is T[] attributes ? attributes : [];
 
     private static string? ConvertRatingToText(TvRating value, IEnumerable<TvContentIndicator>? contentIndicators)
     {
@@ -371,8 +371,8 @@ public static class ContentRating
             return null;
 
         var contentRating = attributes.First().Description;
-        var allowedIndicators = (field.GetCustomAttributes<TvContentIndicatorsAttribute>().FirstOrDefault()?.Values ?? Array.Empty<TvContentIndicator>())
-            .Intersect(contentIndicators ?? Array.Empty<TvContentIndicator>())
+        var allowedIndicators = (field.GetCustomAttributes<TvContentIndicatorsAttribute>().FirstOrDefault()?.Values ?? [])
+            .Intersect(contentIndicators ?? [])
             .ToList();
         if (allowedIndicators.Count is > 0)
             contentRating += $"-{allowedIndicators.Select(cI => cI.ToString()).Join("")}";

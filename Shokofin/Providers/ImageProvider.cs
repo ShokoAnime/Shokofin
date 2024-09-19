@@ -171,7 +171,7 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
     }
 
     public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
-        => new[] { ImageType.Primary, ImageType.Backdrop, ImageType.Banner, ImageType.Logo };
+        => [ImageType.Primary, ImageType.Backdrop, ImageType.Banner, ImageType.Logo];
 
     public bool Supports(BaseItem item)
         => item is Series or Season or Episode or Movie or BoxSet;

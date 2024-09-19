@@ -54,7 +54,7 @@ public class FileEventArgs : IFileEventArgs
 
     /// <inheritdoc/>
     [JsonIgnore]
-    public List<IFileEventArgs.FileCrossReference> CrossReferences { get; set; } = new();
+    public List<IFileEventArgs.FileCrossReference> CrossReferences { get; set; } = [];
 
 #pragma warning disable IDE0051
     /// <summary>

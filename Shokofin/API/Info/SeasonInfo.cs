@@ -198,7 +198,7 @@ public class SeasonInfo
                 type = SeriesType.Web;
 
             episodesList = altEpisodesList;
-            altEpisodesList = new();
+            altEpisodesList = [];
 
             // Re-create the special anchors because the episode list changed.
             index = 0;
@@ -233,11 +233,11 @@ public class SeasonInfo
             if (specialsList.Count > 0) {
                 extrasList.AddRange(specialsList);
                 specialsAnchorDictionary.Clear();
-                specialsList = new();
+                specialsList = [];
             }
             if (altEpisodesList.Count > 0) {
                 extrasList.AddRange(altEpisodesList);
-                altEpisodesList = new();
+                altEpisodesList = [];
             }
         }
 

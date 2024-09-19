@@ -42,12 +42,12 @@ public class Episode
     /// is included in the data to add.
     /// </summary>
     [JsonPropertyName("TvDB")]
-    public List<TvDB> TvDBEntityList { get; set; } = new();
+    public List<TvDB> TvDBEntityList { get; set; } = [];
 
     /// <summary>
     /// File cross-references for the episode.
     /// </summary>
-    public List<CrossReference.EpisodeCrossReferenceIDs> CrossReferences { get; set; } = new();
+    public List<CrossReference.EpisodeCrossReferenceIDs> CrossReferences { get; set; } = [];
 
     public class AniDB
     {
@@ -66,7 +66,7 @@ public class Episode
 
         public DateTime? AirDate { get; set; }
 
-        public List<Title> Titles { get; set; } = new();
+        public List<Title> Titles { get; set; } = [];
 
         public string Description { get; set; } = string.Empty;
 
@@ -98,7 +98,7 @@ public class Episode
 
         public int AniDB { get; set; }
 
-        public List<int> TvDB { get; set; } = new();
+        public List<int> TvDB { get; set; } = [];
     }
 }
 

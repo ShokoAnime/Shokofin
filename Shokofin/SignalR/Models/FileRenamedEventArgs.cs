@@ -97,6 +97,6 @@ public class FileRenamedEventArgs : FileEventArgs, IFileRelocationEventArgs
 
         /// <inheritdoc/>
         [JsonIgnore]
-        public List<IFileEventArgs.FileCrossReference> CrossReferences => new();
+        public List<IFileEventArgs.FileCrossReference> CrossReferences => [];
     }
 }

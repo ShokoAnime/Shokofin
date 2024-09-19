@@ -30,7 +30,7 @@ public class ShokoAPIManager : IDisposable
 
     private readonly object MediaFolderListLock = new();
 
-    private readonly List<Folder> MediaFolderList = new();
+    private readonly List<Folder> MediaFolderList = [];
 
     private readonly ConcurrentDictionary<string, string> PathToSeriesIdDictionary = new();
 
@@ -168,7 +168,7 @@ public class ShokoAPIManager : IDisposable
                                 continue;
                             }
                             if (!tagMap.TryGetValue(parentKey, out var list))
-                                tagMap[parentKey] = list = new();
+                                tagMap[parentKey] = list = [];
                             // Remove comment on tag name itself.
                             if (tag.Name.Contains(" - "))
                                 tag.Name = tag.Name.Split(" - ").First().Trim();
@@ -204,7 +204,7 @@ public class ShokoAPIManager : IDisposable
                                 // Make sure the parent's children exists in our map.
                                 var parentKey = $"Shokofin:{lastParentTag.Id}";
                                 if (!tagMap!.TryGetValue(parentKey, out var children))
-                                    tagMap[parentKey] = children = new();
+                                    tagMap[parentKey] = children = [];
 
                                 // Add the child tag to the parent's children if needed.
                                 var childTag = children.Find(t => string.Equals(name, t.Name, StringComparison.InvariantCultureIgnoreCase));
@@ -228,7 +228,7 @@ public class ShokoAPIManager : IDisposable
                             // Same as above, but for the last parent, be it the root or any other layer.
                             var lastParentKey = $"Shokofin:{lastParentTag.Id}";
                             if (!tagMap!.TryGetValue(lastParentKey, out var lastChildren))
-                                tagMap[lastParentKey] = lastChildren = new();
+                                tagMap[lastParentKey] = lastChildren = [];
 
                             if (!lastChildren.Any(childTag => string.Equals(childTag.Name, tag.Name, StringComparison.InvariantCultureIgnoreCase)))
                                 lastChildren.Add(new() {
@@ -506,7 +506,7 @@ public class ShokoAPIManager : IDisposable
         return await CreateFileInfo(file, fileId, seriesId).ConfigureAwait(false);
     }
 
-    private static readonly EpisodeType[] EpisodePickOrder = { EpisodeType.Special, EpisodeType.Normal, EpisodeType.Other };
+    private static readonly EpisodeType[] EpisodePickOrder = [EpisodeType.Special, EpisodeType.Normal, EpisodeType.Other];
 
     private Task<FileInfo> CreateFileInfo(File file, string fileId, string seriesId)
         => DataCache.GetOrCreateAsync(

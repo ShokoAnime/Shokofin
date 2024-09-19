@@ -57,9 +57,9 @@ public class CustomEpisodeProvider : ICustomMetadataProvider<Episode>
         // Remove any extra virtual episodes that matches the newly refreshed episode.
         var searchList = libraryManager.GetItemList(
             new() {
-                ExcludeItemIds = new[] { episode.Id },
+                ExcludeItemIds = [episode.Id],
                 HasAnyProviderId = new() { { ShokoEpisodeId.Name, episodeId } },
-                IncludeItemTypes = new[] { Jellyfin.Data.Enums.BaseItemKind.Episode },
+                IncludeItemTypes = [Jellyfin.Data.Enums.BaseItemKind.Episode],
                 GroupByPresentationUniqueKey = false,
                 GroupBySeriesPresentationUniqueKey = true,
                 SeriesPresentationUniqueKey = seriesPresentationUniqueKey,
@@ -86,7 +86,7 @@ public class CustomEpisodeProvider : ICustomMetadataProvider<Episode>
     {
         var searchList = libraryManager.GetItemList(
             new() {
-                IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Episode },
+                IncludeItemTypes = [Jellyfin.Data.Enums.BaseItemKind.Episode],
                 HasAnyProviderId = new() { { ShokoEpisodeId.Name, episodeId } },
                 GroupByPresentationUniqueKey = false,
                 GroupBySeriesPresentationUniqueKey = true,

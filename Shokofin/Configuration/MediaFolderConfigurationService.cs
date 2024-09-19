@@ -49,7 +49,7 @@ public class MediaFolderConfigurationService
 
     private readonly NamingOptions NamingOptions;
 
-    private readonly Dictionary<Guid, string> MediaFolderChangeKeys = new();
+    private readonly Dictionary<Guid, string> MediaFolderChangeKeys = [];
 
     private readonly object LockObj = new();
 
@@ -164,11 +164,11 @@ public class MediaFolderConfigurationService
         var mediaFolderConfig = GetOrCreateConfigurationForMediaFolder(mediaFolder);
         lock (LockObj) {
             if (LibraryManager.GetItemById(mediaFolderConfig.LibraryId) is not Folder libraryFolder)
-                return (string.Empty, string.Empty, null, new List<MediaFolderConfiguration>());
+                return (string.Empty, string.Empty, null, []);
             var virtualFolder = LibraryManager.GetVirtualFolders()
                 .FirstOrDefault(folder => Guid.TryParse(folder.ItemId, out var guid) && guid == mediaFolderConfig.LibraryId);
             if (virtualFolder is null || virtualFolder.Locations.Length is 0)
-                return (string.Empty, string.Empty, null, new List<MediaFolderConfiguration>());
+                return (string.Empty, string.Empty, null, []);
             return (
                 libraryFolder.GetVirtualRoot(),
                 virtualFolder.Locations.FirstOrDefault(a => DirectoryService.IsAccessible(a)) ?? string.Empty,

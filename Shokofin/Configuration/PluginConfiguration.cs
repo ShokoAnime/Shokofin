@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 using MediaBrowser.Model.Plugins;
@@ -479,17 +478,17 @@ public class PluginConfiguration : BasePluginConfiguration
         GenreMaximumDepth = 1;
         HideUnverifiedTags = true;
         ContentRatingOverride = false;
-        ContentRatingList = new[] {
+        ContentRatingList = [
             ProviderName.AniDB,
             ProviderName.TMDB,
-        };
-        ContentRatingOrder = ContentRatingList.ToArray();
+        ];
+        ContentRatingOrder = [.. ContentRatingList];
         ProductionLocationOverride = false;
-        ProductionLocationList = new[] {
+        ProductionLocationList = [
             ProviderName.AniDB,
             ProviderName.TMDB,
-        };
-        ProductionLocationOrder = ProductionLocationList.ToArray();
+        ];
+        ProductionLocationOrder = [.. ProductionLocationList];
         SynopsisCleanLinks = true;
         SynopsisCleanMiscLines = true;
         SynopsisRemoveSummary = true;
@@ -497,10 +496,10 @@ public class PluginConfiguration : BasePluginConfiguration
         AddAniDBId = true;
         AddTMDBId = true;
         TitleMainOverride = false;
-        TitleMainList = new[] { 
+        TitleMainList = [ 
             TitleProvider.Shoko_Default,
-        };
-        TitleMainOrder = new[] { 
+        ];
+        TitleMainOrder = [ 
             TitleProvider.Shoko_Default,
             TitleProvider.AniDB_Default,
             TitleProvider.AniDB_LibraryLanguage,
@@ -508,24 +507,24 @@ public class PluginConfiguration : BasePluginConfiguration
             TitleProvider.TMDB_Default,
             TitleProvider.TMDB_LibraryLanguage,
             TitleProvider.TMDB_CountryOfOrigin,
-        };
+        ];
         TitleAlternateOverride = false;
-        TitleAlternateList = new[] {
+        TitleAlternateList = [
             TitleProvider.AniDB_CountryOfOrigin
-        };
-        TitleAlternateOrder = TitleMainOrder.ToArray();
+        ];
+        TitleAlternateOrder = [.. TitleMainOrder];
         TitleAllowAny = false;
         DescriptionSourceOverride = false;
-        DescriptionSourceList = new[] {
+        DescriptionSourceList = [
             DescriptionProvider.AniDB,
             DescriptionProvider.TvDB,
             DescriptionProvider.TMDB,
-        };
-        DescriptionSourceOrder = new[] {
+        ];
+        DescriptionSourceOrder = [
             DescriptionProvider.AniDB,
             DescriptionProvider.TvDB,
             DescriptionProvider.TMDB,
-        };
+        ];
         VFS_Enabled = CanCreateSymbolicLinks;
         VFS_Threads = 4;
         VFS_AddReleaseGroup = false;
@@ -544,19 +543,19 @@ public class PluginConfiguration : BasePluginConfiguration
         MarkSpecialsWhenGrouped = true;
         CollectionGrouping = CollectionCreationType.None;
         CollectionMinSizeOfTwo = true;
-        UserList = new();
-        MediaFolders = new();
-        IgnoredFolders = new[] { ".streams", "@recently-snapshot" };
+        UserList = [];
+        MediaFolders = [];
+        IgnoredFolders = [".streams", "@recently-snapshot"];
         LibraryFilteringMode = LibraryFilteringMode.Auto;
         LibraryScanReactionTimeInSeconds = 1;
         SignalR_AutoConnectEnabled = false;
-        SignalR_AutoReconnectInSeconds = new[] { 0, 2, 10, 30, 60, 120, 300 };
-        SignalR_EventSources = new[] { ProviderName.Shoko, ProviderName.AniDB, ProviderName.TMDB };
+        SignalR_AutoReconnectInSeconds = [0, 2, 10, 30, 60, 120, 300];
+        SignalR_EventSources = [ProviderName.Shoko, ProviderName.AniDB, ProviderName.TMDB];
         SignalR_RefreshEnabled = false;
         SignalR_FileEvents = false;
         UsageTracker_StalledTimeInSeconds = 10;
         EXPERIMENTAL_MergeSeasons = false;
-        EXPERIMENTAL_MergeSeasonsTypes = new[] { SeriesType.OVA, SeriesType.TV, SeriesType.TVSpecial, SeriesType.Web, SeriesType.OVA };
+        EXPERIMENTAL_MergeSeasonsTypes = [SeriesType.OVA, SeriesType.TV, SeriesType.TVSpecial, SeriesType.Web, SeriesType.OVA];
         EXPERIMENTAL_MergeSeasonsMergeWindowInDays = 185;
     }
 }

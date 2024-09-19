@@ -173,7 +173,7 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
 
                 // Get known episodes, existing episodes, and episodes to remove.
                 var episodeList = Math.Abs(seasonNumber - baseSeasonNumber) == 0 ? seasonInfo.EpisodeList : seasonInfo.AlternateEpisodesList;
-                var knownEpisodeIds = ShouldAddMetadata ? episodeList.Select(episodeInfo => episodeInfo.Id).ToHashSet() : new HashSet<string>();
+                var knownEpisodeIds = ShouldAddMetadata ? episodeList.Select(episodeInfo => episodeInfo.Id).ToHashSet() : [];
                 var existingEpisodes = new HashSet<string>();
                 var toRemoveEpisodes = new List<Episode>();
                 foreach (var episode in season.Children.OfType<Episode>()) {

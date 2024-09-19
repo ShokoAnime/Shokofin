@@ -375,13 +375,13 @@ public class UserDataSyncManager
         }
 
         var videos = LibraryManager.GetItemList(new InternalItemsQuery {
-            MediaTypes = new[] { MediaType.Video },
+            MediaTypes = [MediaType.Video],
             IsFolder = false,
             Recursive = true,
             DtoOptions = new DtoOptions(false) {
                 EnableImages = false
             },
-            SourceTypes = new SourceType[] { SourceType.Library },
+            SourceTypes = [SourceType.Library],
             IsVirtualItem = false,
         })
             .OfType<Video>()

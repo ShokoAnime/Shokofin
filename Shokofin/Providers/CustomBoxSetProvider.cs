@@ -139,7 +139,7 @@ public class CustomBoxSetProvider : ICustomMetadataProvider<BoxSet>
 
         var list = LibraryManager.GetItemList(new()
         {
-            IncludeItemTypes = new[] { BaseItemKind.BoxSet },
+            IncludeItemTypes = [BaseItemKind.BoxSet],
 
             HasAnyProviderId = new() { { ShokoCollectionGroupId.Name, collectionId } },
             IsVirtualItem = false,

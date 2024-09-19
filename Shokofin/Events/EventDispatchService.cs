@@ -55,11 +55,11 @@ public class EventDispatchService
 
     private readonly Timer ChangesDetectionTimer;
 
-    private readonly Dictionary<string, (DateTime LastUpdated, List<IMetadataUpdatedEventArgs> List, Guid trackerId)> ChangesPerSeries = new();
+    private readonly Dictionary<string, (DateTime LastUpdated, List<IMetadataUpdatedEventArgs> List, Guid trackerId)> ChangesPerSeries = [];
 
-    private readonly Dictionary<int, (DateTime LastUpdated, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> List, Guid trackerId)> ChangesPerFile = new();
+    private readonly Dictionary<int, (DateTime LastUpdated, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> List, Guid trackerId)> ChangesPerFile = [];
 
-    private readonly Dictionary<string, (int refCount, DateTime delayEnd)> MediaFolderChangeMonitor = new();
+    private readonly Dictionary<string, (int refCount, DateTime delayEnd)> MediaFolderChangeMonitor = [];
 
     // It's so magical that it matches the magical value in the library monitor in JF core. 🪄
     private const int MagicalDelayValue = 45000;
@@ -192,7 +192,7 @@ public class EventDispatchService
             if (ChangesPerFile.TryGetValue(fileId, out var tuple))
                 tuple.LastUpdated = DateTime.Now;
             else
-                ChangesPerFile.Add(fileId, tuple = (DateTime.Now, new(), Plugin.Instance.Tracker.Add($"File event. (Reason=\"{reason}\",ImportFolder={eventArgs.ImportFolderId},RelativePath=\"{eventArgs.RelativePath}\")")));
+                ChangesPerFile.Add(fileId, tuple = (DateTime.Now, [], Plugin.Instance.Tracker.Add($"File event. (Reason=\"{reason}\",ImportFolder={eventArgs.ImportFolderId},RelativePath=\"{eventArgs.RelativePath}\")")));
             tuple.List.Add((reason, importFolderId, filePath, eventArgs));
         }
     }
@@ -518,7 +518,7 @@ public class EventDispatchService
             if (ChangesPerSeries.TryGetValue(metadataId, out var tuple))
                 tuple.LastUpdated = DateTime.Now;
             else
-                ChangesPerSeries.Add(metadataId, tuple = (DateTime.Now, new(), Plugin.Instance.Tracker.Add($"Metadata event. (Reason=\"{eventArgs.Reason}\",Kind=\"{eventArgs.Kind}\",ProviderUId=\"{eventArgs.ProviderUId}\")")));
+                ChangesPerSeries.Add(metadataId, tuple = (DateTime.Now, [], Plugin.Instance.Tracker.Add($"Metadata event. (Reason=\"{eventArgs.Reason}\",Kind=\"{eventArgs.Kind}\",ProviderUId=\"{eventArgs.ProviderUId}\")")));
             tuple.List.Add(eventArgs);
         }
     }
@@ -573,7 +573,7 @@ public class EventDispatchService
             var shows = LibraryManager
                 .GetItemList(
                     new() {
-                        IncludeItemTypes = new BaseItemKind[] { BaseItemKind.Series },
+                        IncludeItemTypes = [BaseItemKind.Series],
                         HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, showInfo.Id } },
                         DtoOptions = new(true),
                     },
@@ -612,7 +612,7 @@ public class EventDispatchService
                 var seasons = LibraryManager
                     .GetItemList(
                         new() {
-                            IncludeItemTypes = new BaseItemKind[] { BaseItemKind.Season },
+                            IncludeItemTypes = [BaseItemKind.Season],
                             HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, seasonInfo.Id } },
                             DtoOptions = new(true),
                         },
@@ -643,7 +643,7 @@ public class EventDispatchService
                 var episodes = LibraryManager
                     .GetItemList(
                         new() {
-                            IncludeItemTypes = new BaseItemKind[] { BaseItemKind.Episode },
+                            IncludeItemTypes = [BaseItemKind.Episode],
                             HasAnyProviderId = new Dictionary<string, string> { { ShokoEpisodeId.Name, episodeInfo.Id } },
                             DtoOptions = new(true),
                         },
@@ -686,7 +686,7 @@ public class EventDispatchService
             var movies = LibraryManager
                 .GetItemList(
                     new() {
-                        IncludeItemTypes = new BaseItemKind[] { BaseItemKind.Movie },
+                        IncludeItemTypes = [BaseItemKind.Movie],
                         HasAnyProviderId = new Dictionary<string, string> { { ShokoEpisodeId.Name, episodeInfo.Id } },
                         DtoOptions = new(true),
                     },

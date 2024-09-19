@@ -119,7 +119,7 @@ public class MergeVersionsManager
     private List<Movie> GetMoviesFromLibrary()
     {
         return LibraryManager.GetItemList(new() {
-                IncludeItemTypes = new[] { BaseItemKind.Movie },
+                IncludeItemTypes = [BaseItemKind.Movie],
                 IsVirtualItem = false,
                 Recursive = true,
                 HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, string.Empty } },
@@ -217,7 +217,7 @@ public class MergeVersionsManager
     private List<Episode> GetEpisodesFromLibrary()
     {
         return LibraryManager.GetItemList(new() {
-                IncludeItemTypes = new[] { BaseItemKind.Episode },
+                IncludeItemTypes = [BaseItemKind.Episode],
                 HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, string.Empty } },
                 IsVirtualItem = false,
                 Recursive = true,
@@ -350,7 +350,7 @@ public class MergeVersionsManager
 
             // Reset the linked alternate versions for the linked videos.
             if (video.LinkedAlternateVersions.Length > 0)
-                video.LinkedAlternateVersions = Array.Empty<LinkedChild>();
+                video.LinkedAlternateVersions = [];
 
             // Save the changes back to the repository.
             await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
@@ -389,14 +389,14 @@ public class MergeVersionsManager
         foreach (var linkedVideo in video.GetLinkedAlternateVersions())
         {
             linkedVideo.SetPrimaryVersionId(null);
-            linkedVideo.LinkedAlternateVersions = Array.Empty<LinkedChild>();
+            linkedVideo.LinkedAlternateVersions = [];
             await linkedVideo.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
                 .ConfigureAwait(false);
         }
 
         // Remove the link for the primary video.
         video.SetPrimaryVersionId(null);
-        video.LinkedAlternateVersions = Array.Empty<LinkedChild>();
+        video.LinkedAlternateVersions = [];
         await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
             .ConfigureAwait(false);
     }

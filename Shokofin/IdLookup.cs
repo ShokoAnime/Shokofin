@@ -95,7 +95,7 @@ public class IdLookup : IIdLookup
 
     #region Base Item
 
-    private readonly HashSet<string> AllowedTypes = new() { nameof(Series), nameof(Season), nameof(Episode), nameof(Movie) };
+    private readonly HashSet<string> AllowedTypes = [nameof(Series), nameof(Season), nameof(Episode), nameof(Movie)];
 
     public bool IsEnabledForItem(BaseItem item) =>
         IsEnabledForItem(item, out var _);
@@ -225,7 +225,7 @@ public class IdLookup : IIdLookup
         if (ApiManager.TryGetEpisodeIdsForPath(path, out episodeIds))
             return true;
 
-        episodeIds = new();
+        episodeIds = [];
         return false;
     }
 

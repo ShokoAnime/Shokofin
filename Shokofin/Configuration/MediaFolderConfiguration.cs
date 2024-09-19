@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Library;
+
 using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 
 namespace Shokofin.Configuration;

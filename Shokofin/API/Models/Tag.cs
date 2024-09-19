@@ -72,7 +72,7 @@ public class Tag
 public class ResolvedTag : Tag
 {
     // All the abstract tags I know about.
-    private static readonly HashSet<string> AbstractTags = new() {
+    private static readonly HashSet<string> AbstractTags = [
         "/content indicators",
         "/dynamic",
         "/dynamic/cast",
@@ -113,7 +113,7 @@ public class ResolvedTag : Tag
         "/unsorted/character related tags which need deleting or merging",
         "/unsorted/ending tags that need merging",
         "/unsorted/old animetags",
-    };
+    ];
 
     private static readonly Dictionary<string, string> TagNameOverrides = new() {
         { "/fetishes/housewives", "MILF" },
@@ -204,7 +204,7 @@ public class ResolvedTag : Tag
         LastUpdated = tag.LastUpdated;
         Source = tag.Source;
         Namespace = TagNamespaceOverride.TryGetValue(ns + "/" + tag.Name, out var newNs) ? newNs : ns;
-        Children = (getChildren(Source, Id) ?? Array.Empty<Tag>())
+        Children = (getChildren(Source, Id) ?? [])
             .DistinctBy(childTag => childTag.Name)
             .Select(childTag => new ResolvedTag(childTag, this, getChildren, FullName + "/"))
             .ToDictionary(childTag => childTag.Name);

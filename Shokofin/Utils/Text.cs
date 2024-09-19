@@ -9,7 +9,7 @@ namespace Shokofin.Utils;
 
 public static class Text
 {
-    private static readonly HashSet<char> PunctuationMarks = new() {
+    private static readonly HashSet<char> PunctuationMarks = [
         // Common punctuation marks
         '.',   // period
         ',',   // comma
@@ -57,7 +57,7 @@ public static class Text
         '⦊',   // right angle bracket
         '⦌',   // right angle bracket
         '⦎',   // right angle bracket
-    };
+    ];
 
     private static readonly HashSet<string> IgnoredSubTitles = new(StringComparer.InvariantCultureIgnoreCase) {
         "Complete Movie",
@@ -181,7 +181,7 @@ public static class Text
     private static DescriptionProvider[] GetOrderedDescriptionProviders()
         => Plugin.Instance.Configuration.DescriptionSourceOverride
             ? Plugin.Instance.Configuration.DescriptionSourceOrder.Where((t) => Plugin.Instance.Configuration.DescriptionSourceList.Contains(t)).ToArray()
-            : new[] { DescriptionProvider.Shoko, DescriptionProvider.AniDB, DescriptionProvider.TvDB, DescriptionProvider.TMDB };
+            : [DescriptionProvider.Shoko, DescriptionProvider.AniDB, DescriptionProvider.TvDB, DescriptionProvider.TMDB];
 
     private static string GetDescriptionByDict(Dictionary<DescriptionProvider, string?> descriptions)
     {
@@ -324,12 +324,12 @@ public static class Text
             TitleProviderType.Main =>
                 Plugin.Instance.Configuration.TitleMainOverride
                     ? Plugin.Instance.Configuration.TitleMainOrder.Where((t) => Plugin.Instance.Configuration.TitleMainList.Contains(t)).ToArray()
-                    : new[] { TitleProvider.Shoko_Default },
+                    : [TitleProvider.Shoko_Default],
             TitleProviderType.Alternate =>
                 Plugin.Instance.Configuration.TitleAlternateOverride
                     ? Plugin.Instance.Configuration.TitleAlternateOrder.Where((t) => Plugin.Instance.Configuration.TitleAlternateList.Contains(t)).ToArray()
-                    : new[] { TitleProvider.AniDB_CountryOfOrigin, TitleProvider.TMDB_CountryOfOrigin },
-            _ => Array.Empty<TitleProvider>(),
+                    : [TitleProvider.AniDB_CountryOfOrigin, TitleProvider.TMDB_CountryOfOrigin],
+            _ => [],
         };
 
     private static string? GetMovieTitleByType(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, TitleProviderType type, string? metadataLanguage)
@@ -431,9 +431,9 @@ public static class Text
     /// <returns>The list of origin language codes to try and use.</returns>
     private static string[] GuessOriginLanguage(string langCode)
         => langCode switch {
-            "x-other" => new string[] { "ja" },
-            "x-jat" => new string[] { "ja" },
-            "x-zht" => new string[] { "zn-hans", "zn-hant", "zn-c-mcm", "zn" },
-            _ => new string[] { langCode },
+            "x-other" => ["ja"],
+            "x-jat" => ["ja"],
+            "x-zht" => ["zn-hans", "zn-hant", "zn-c-mcm", "zn"],
+            _ => [langCode],
         };
 }

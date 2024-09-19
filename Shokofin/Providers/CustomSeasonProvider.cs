@@ -133,7 +133,7 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
                 var episodeList = Math.Abs(seasonNumber - baseSeasonNumber) == 0 ? seasonInfo.EpisodeList : seasonInfo.AlternateEpisodesList;
                 var knownEpisodeIds = ShouldAddMetadata
                     ? episodeList.Select(episodeInfo => episodeInfo.Id).ToHashSet()
-                    : new HashSet<string>();
+                    : [];
                 var existingEpisodes = new HashSet<string>();
                 var toRemoveEpisodes = new List<Episode>();
                 foreach (var episode in season.Children.OfType<Episode>()) {
@@ -186,8 +186,8 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
             .GetItemList(
                 new() {
                     ParentId = season.ParentId,
-                    IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Season },
-                    ExcludeItemIds = new [] { season.Id },
+                    IncludeItemTypes = [Jellyfin.Data.Enums.BaseItemKind.Season],
+                    ExcludeItemIds = [season.Id],
                     IndexNumber = seasonNumber,
                     DtoOptions = new(true),
                 },
@@ -212,7 +212,7 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
     {
         var searchList = libraryManager.GetItemList(
             new() {
-                IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Season },
+                IncludeItemTypes = [Jellyfin.Data.Enums.BaseItemKind.Season],
                 IndexNumber = seasonNumber,
                 GroupByPresentationUniqueKey = false,
                 GroupBySeriesPresentationUniqueKey = true,
