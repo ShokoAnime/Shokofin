@@ -563,10 +563,10 @@ async function removeMediaFolder(form) {
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
     form.querySelector("#MediaFolderSelector").value = "";
-    form.querySelector("#MediaFolderSelector").innerHTML += config.MediaFolders
+    form.querySelector("#MediaFolderSelector").innerHTML = `<option value="">Default settings for new media folders</option>` + config.MediaFolders
         .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.LibraryName} (${mediaFolder.MediaFolderPath})</option>`)
         .join("");
-    form.querySelector("#SignalRMediaFolderSelector").innerHTML += config.MediaFolders
+    form.querySelector("#SignalRMediaFolderSelector").innerHTML = `<option value="">Default settings for new media folders</option>` + config.MediaFolders
         .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.LibraryName} (${mediaFolder.MediaFolderPath})</option>`)
         .join("");
 
@@ -999,7 +999,7 @@ export default function (page) {
             form.querySelector("#VFS_AddResolution").checked = config.VFS_AddResolution;
             form.querySelector("#VFS_Enabled").checked = config.VFS_Enabled;
             form.querySelector("#LibraryFilteringMode").value = config.LibraryFilteringMode;
-            mediaFolderSelector.innerHTML += config.MediaFolders
+            mediaFolderSelector.innerHTML = `<option value="">Default settings for new media folders</option>` + config.MediaFolders
                 .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.LibraryName} (${mediaFolder.MediaFolderPath})</option>`)
                 .join("");
 
@@ -1007,14 +1007,14 @@ export default function (page) {
             form.querySelector("#SignalRAutoConnect").checked = config.SignalR_AutoConnectEnabled;
             form.querySelector("#SignalRAutoReconnectIntervals").value = config.SignalR_AutoReconnectInSeconds.join(", ");
             initSimpleList(form, "SignalREventSources", config.SignalR_EventSources);
-            signalrMediaFolderSelector.innerHTML += config.MediaFolders
+            signalrMediaFolderSelector.innerHTML = `<option value="">Default settings for new media folders</option>` + config.MediaFolders
                 .map((mediaFolder) => `<option value="${mediaFolder.MediaFolderId}">${mediaFolder.LibraryName} (${mediaFolder.MediaFolderPath})</option>`)
                 .join("");
             form.querySelector("#SignalRDefaultFileEvents").checked = config.SignalR_FileEvents;
             form.querySelector("#SignalRDefaultRefreshEvents").checked = config.SignalR_RefreshEnabled;
 
             // User settings
-            userSelector.innerHTML += users.map((user) => `<option value="${user.Id}">${user.Name}</option>`).join("");
+            userSelector.innerHTML = `<option value="">Click here to select a user</option>` + users.map((user) => `<option value="${user.Id}">${user.Name}</option>`).join("");
 
             // Experimental settings
             form.querySelector("#EXPERIMENTAL_MergeSeasons").checked = config.EXPERIMENTAL_MergeSeasons || false;
