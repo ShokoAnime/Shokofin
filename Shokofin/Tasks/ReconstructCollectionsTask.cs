@@ -9,15 +9,19 @@ using Shokofin.Utils;
 namespace Shokofin.Tasks;
 
 /// <summary>
-/// Reconstruct all Shoko collections outside a Library Scan.
+/// Reconstruct all Shoko collections outside a Library Scan. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.
 /// </summary>
-public class ReconstructCollectionsTask : IScheduledTask, IConfigurableScheduledTask
+public class ReconstructCollectionsTask(CollectionManager collectionManager, LibraryScanWatcher libraryScanWatcher) : IScheduledTask, IConfigurableScheduledTask
 {
+    private readonly CollectionManager _collectionManager = collectionManager;
+
+    private readonly LibraryScanWatcher _libraryScanWatcher = libraryScanWatcher;
+
     /// <inheritdoc />
     public string Name => "Reconstruct Collections";
 
     /// <inheritdoc />
-    public string Description => "Reconstruct all Shoko collections outside a Library Scan.";
+    public string Description => "Reconstruct all Shoko collections outside a Library Scan. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.";
 
     /// <inheritdoc />
     public string Category => "Shokofin";
@@ -26,40 +30,26 @@ public class ReconstructCollectionsTask : IScheduledTask, IConfigurableScheduled
     public string Key => "ShokoReconstructCollections";
 
     /// <inheritdoc />
-    public bool IsHidden => false;
+    public bool IsHidden => !Plugin.Instance.Configuration.ExpertMode;
 
     /// <inheritdoc />
-    public bool IsEnabled => true;
+    public bool IsEnabled => Plugin.Instance.Configuration.ExpertMode;
 
     /// <inheritdoc />
     public bool IsLogged => true;
 
-    private readonly CollectionManager CollectionManager;
-
-    private readonly LibraryScanWatcher LibraryScanWatcher;
-
-    public ReconstructCollectionsTask(CollectionManager collectionManager, LibraryScanWatcher libraryScanWatcher)
-    {
-        CollectionManager = collectionManager;
-        LibraryScanWatcher = libraryScanWatcher;
-    }
-
+    /// <inheritdoc />
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-        => Array.Empty<TaskTriggerInfo>();
+        => [];
 
-    /// <summary>
-    /// Returns the task to be executed.
-    /// </summary>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <param name="progress">The progress.</param>
-    /// <returns>Task.</returns>
+    /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
-        if (LibraryScanWatcher.IsScanRunning)
+        if (_libraryScanWatcher.IsScanRunning)
             return;
 
         using (Plugin.Instance.Tracker.Enter("Reconstruct Collections Task")) {
-            await CollectionManager.ReconstructCollections(progress, cancellationToken);
+            await _collectionManager.ReconstructCollections(progress, cancellationToken);
         }
     }
 }

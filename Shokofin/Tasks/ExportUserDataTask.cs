@@ -7,7 +7,7 @@ using Shokofin.Sync;
 
 namespace Shokofin.Tasks;
 
-public class ExportUserDataTask : IScheduledTask, IConfigurableScheduledTask
+public class ExportUserDataTask(UserDataSyncManager userSyncManager) : IScheduledTask, IConfigurableScheduledTask
 {
     /// <inheritdoc />
     public string Name => "Export User Data";
@@ -30,14 +30,10 @@ public class ExportUserDataTask : IScheduledTask, IConfigurableScheduledTask
     /// <inheritdoc />
     public bool IsLogged => true;
 
-    private readonly UserDataSyncManager _userSyncManager;
+    private readonly UserDataSyncManager _userSyncManager = userSyncManager;
 
-    public ExportUserDataTask(UserDataSyncManager userSyncManager)
-    {
-        _userSyncManager = userSyncManager;
-    }
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-        => Array.Empty<TaskTriggerInfo>();
+        => [];
 
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {

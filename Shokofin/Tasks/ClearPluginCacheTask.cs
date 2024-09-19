@@ -11,7 +11,7 @@ namespace Shokofin.Tasks;
 /// <summary>
 /// Forcefully clear the plugin cache. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.
 /// </summary>
-public class ClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
+public class ClearPluginCacheTask(ShokoAPIManager apiManager, ShokoAPIClient apiClient, VirtualFileSystemService vfsService) : IScheduledTask, IConfigurableScheduledTask
 {
     /// <inheritdoc />
     public string Name => "Clear Plugin Cache";
@@ -26,35 +26,28 @@ public class ClearPluginCacheTask : IScheduledTask, IConfigurableScheduledTask
     public string Key => "ShokoClearPluginCache";
 
     /// <inheritdoc />
-    public bool IsHidden => false;
+    public bool IsHidden => !Plugin.Instance.Configuration.ExpertMode;
 
     /// <inheritdoc />
-    public bool IsEnabled => true;
+    public bool IsEnabled => Plugin.Instance.Configuration.ExpertMode;
 
     /// <inheritdoc />
     public bool IsLogged => true;
 
-    private readonly ShokoAPIManager ApiManager;
+    private readonly ShokoAPIManager _apiManager = apiManager;
 
-    private readonly ShokoAPIClient ApiClient;
+    private readonly ShokoAPIClient _apiClient = apiClient;
 
-    private readonly VirtualFileSystemService VfsService;
-
-    public ClearPluginCacheTask(ShokoAPIManager apiManager, ShokoAPIClient apiClient, VirtualFileSystemService vfsService)
-    {
-        ApiManager = apiManager;
-        ApiClient = apiClient;
-        VfsService = vfsService;
-    }
+    private readonly VirtualFileSystemService _vfsService = vfsService;
 
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-        => Array.Empty<TaskTriggerInfo>();
+        => [];
 
     public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
-        ApiClient.Clear();
-        ApiManager.Clear();
-        VfsService.Clear();
+        _apiClient.Clear();
+        _apiManager.Clear();
+        _vfsService.Clear();
         return Task.CompletedTask;
     }
 }

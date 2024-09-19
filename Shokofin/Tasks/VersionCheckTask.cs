@@ -16,8 +16,14 @@ namespace Shokofin.Tasks;
 /// Responsible for updating the known version of the remote Shoko Server
 /// instance at startup and set intervals.
 /// </summary>
-public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
+public class VersionCheckTask(ILogger<VersionCheckTask> logger, ILibraryManager libraryManager, ShokoAPIClient apiClient) : IScheduledTask, IConfigurableScheduledTask
 {
+    private readonly ILogger<VersionCheckTask> _logger = logger;
+
+    private readonly ILibraryManager _libraryManager = libraryManager;
+
+    private readonly ShokoAPIClient _apiClient = apiClient;
+
     /// <inheritdoc />
     public string Name => "Check Server Version";
 
@@ -31,43 +37,31 @@ public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
     public string Key => "ShokoVersionCheck";
 
     /// <inheritdoc />
-    public bool IsHidden => false;
+    public bool IsHidden => !Plugin.Instance.Configuration.ExpertMode;
 
     /// <inheritdoc />
     public bool IsEnabled => true;
 
     /// <inheritdoc />
-    public bool IsLogged => true;
-
-    private readonly ILogger<VersionCheckTask> Logger;
-
-    private readonly ILibraryManager LibraryManager;
-
-    private readonly ShokoAPIClient ApiClient;
-
-    public VersionCheckTask(ILogger<VersionCheckTask> logger, ILibraryManager libraryManager, ShokoAPIClient apiClient)
-    {
-        Logger = logger;
-        LibraryManager = libraryManager;
-        ApiClient = apiClient;
-    }
+    public bool IsLogged => Plugin.Instance.Configuration.ExpertMode;
 
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-        => new TaskTriggerInfo[1] {
+        => [
             new() {
                 Type = TaskTriggerInfo.TriggerStartup,
             },
-        };
+        ];
 
+    /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         var updated = false;
-        var version = await ApiClient.GetVersion();
+        var version = await _apiClient.GetVersion();
         if (version != null && (
             Plugin.Instance.Configuration.ServerVersion == null ||
             !string.Equals(version.ToString(), Plugin.Instance.Configuration.ServerVersion.ToString())
         )) {
-            Logger.LogInformation("Found new Shoko Server version; {version}", version);
+            _logger.LogInformation("Found new Shoko Server version; {version}", version);
             Plugin.Instance.Configuration.ServerVersion = version;
             updated = true;
         }
@@ -78,8 +72,8 @@ public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
                 mediaFolders
                     .Select(m => m.ImportFolderId)
                     .Distinct()
-                    .Except(new int[1] { 0 })
-                    .Select(id => ApiClient.GetImportFolder(id))
+                    .Except([0])
+                    .Select(id => _apiClient.GetImportFolder(id))
                     .ToList()
             )
             .ContinueWith(task => task.Result.OfType<ImportFolder>().ToDictionary(i => i.Id, i => i.Name))
@@ -88,16 +82,16 @@ public class VersionCheckTask : IScheduledTask, IConfigurableScheduledTask
             if (!importFolderNameMap.TryGetValue(mediaFolderConfig.ImportFolderId, out var importFolderName))
                 importFolderName = null;
 
-            if (mediaFolderConfig.LibraryId == Guid.Empty && LibraryManager.GetItemById(mediaFolderConfig.MediaFolderId) is Folder mediaFolder &&
-                LibraryManager.GetVirtualFolders().FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path)) is { } library &&
+            if (mediaFolderConfig.LibraryId == Guid.Empty && _libraryManager.GetItemById(mediaFolderConfig.MediaFolderId) is Folder mediaFolder &&
+                _libraryManager.GetVirtualFolders().FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path)) is { } library &&
                 Guid.TryParse(library.ItemId, out var libraryId)) {
-                Logger.LogInformation("Found new library for media folder; {LibraryName} (Library={LibraryId},MediaFolder={MediaFolderPath})", library.Name, libraryId, mediaFolder.Path);
+                _logger.LogInformation("Found new library for media folder; {LibraryName} (Library={LibraryId},MediaFolder={MediaFolderPath})", library.Name, libraryId, mediaFolder.Path);
                 mediaFolderConfig.LibraryId = libraryId;
                 updated = true;
             }
 
             if (!string.Equals(mediaFolderConfig.ImportFolderName, importFolderName)) {
-                Logger.LogInformation("Found new name for import folder; {name} (ImportFolder={ImportFolderId})", importFolderName, mediaFolderConfig.ImportFolderId);
+                _logger.LogInformation("Found new name for import folder; {name} (ImportFolder={ImportFolderId})", importFolderName, mediaFolderConfig.ImportFolderId);
                 mediaFolderConfig.ImportFolderName = importFolderName;
                 updated = true;
             }

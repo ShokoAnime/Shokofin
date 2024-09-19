@@ -12,15 +12,15 @@ using Shokofin.Utils;
 namespace Shokofin.Tasks;
 
 /// <summary>
-/// Cleanup any old VFS roots leftover from an outdated install or failed removal of the roots.
+/// Clean-up any old VFS roots leftover from an outdated install or failed removal of the roots.
 /// </summary>
-public class CleanupVirtualRootTask : IScheduledTask, IConfigurableScheduledTask
+public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, IFileSystem fileSystem, LibraryScanWatcher scanWatcher) : IScheduledTask, IConfigurableScheduledTask
 {
     /// <inheritdoc />
-    public string Name => "Cleanup Virtual File System Roots";
+    public string Name => "Clean-up Virtual File System Roots";
 
     /// <inheritdoc />
-    public string Description => "Cleanup any old VFS roots leftover from an outdated install or failed removal of the roots.";
+    public string Description => "Clean-up any old VFS roots leftover from an outdated install or failed removal of the roots.";
 
     /// <inheritdoc />
     public string Category => "Shokofin";
@@ -29,29 +29,26 @@ public class CleanupVirtualRootTask : IScheduledTask, IConfigurableScheduledTask
     public string Key => "ShokoCleanupVirtualRoot";
 
     /// <inheritdoc />
-    public bool IsHidden => false;
+    public bool IsHidden => !Plugin.Instance.Configuration.ExpertMode;
 
     /// <inheritdoc />
     public bool IsEnabled => true;
 
     /// <inheritdoc />
-    public bool IsLogged => true;
+    public bool IsLogged => Plugin.Instance.Configuration.ExpertMode;
 
-    private readonly ILogger<CleanupVirtualRootTask> Logger;
+    private readonly ILogger<CleanupVirtualRootTask> Logger = logger;
 
-    private readonly IFileSystem FileSystem;
+    private readonly IFileSystem FileSystem = fileSystem;
 
-    private readonly LibraryScanWatcher ScanWatcher;
-
-    public CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, IFileSystem fileSystem, LibraryScanWatcher scanWatcher)
-    {
-        Logger = logger;
-        FileSystem = fileSystem;
-        ScanWatcher = scanWatcher;
-    }
+    private readonly LibraryScanWatcher ScanWatcher = scanWatcher;
 
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-        => Array.Empty<TaskTriggerInfo>();
+        => [
+            new() {
+                Type = TaskTriggerInfo.TriggerStartup,
+            },
+        ];
 
     public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {

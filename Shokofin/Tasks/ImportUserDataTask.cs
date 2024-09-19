@@ -7,7 +7,7 @@ using Shokofin.Sync;
 
 namespace Shokofin.Tasks;
 
-public class ImportUserDataTask : IScheduledTask, IConfigurableScheduledTask
+public class ImportUserDataTask(UserDataSyncManager userSyncManager) : IScheduledTask, IConfigurableScheduledTask
 {
     /// <inheritdoc />
     public string Name => "Import User Data";
@@ -30,15 +30,10 @@ public class ImportUserDataTask : IScheduledTask, IConfigurableScheduledTask
     /// <inheritdoc />
     public bool IsLogged => true;
 
-    private readonly UserDataSyncManager _userSyncManager;
-
-    public ImportUserDataTask(UserDataSyncManager userSyncManager)
-    {
-        _userSyncManager = userSyncManager;
-    }
+    private readonly UserDataSyncManager _userSyncManager = userSyncManager;
 
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-        => Array.Empty<TaskTriggerInfo>();
+        => [];
 
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
