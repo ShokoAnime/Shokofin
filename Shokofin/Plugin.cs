@@ -130,13 +130,13 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// </summary>
     public new event EventHandler<PluginConfiguration>? ConfigurationChanged;
 
-    public Plugin(ILoggerFactory loggerFactory, IServerConfigurationManager configurationManager, IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
+    public Plugin(UsageTracker usageTracker, IServerConfigurationManager configurationManager, IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
     {
         _configurationManager = configurationManager;
         Instance = this;
         base.ConfigurationChanged += OnConfigChanged;
         VirtualRoot = Path.Join(applicationPaths.ProgramDataPath, "Shokofin", "VFS");
-        Tracker = new(loggerFactory.CreateLogger<UsageTracker>(), TimeSpan.FromSeconds(60));
+        Tracker = usageTracker;
         Logger = logger;
         CanCreateSymbolicLinks = true;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
