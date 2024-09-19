@@ -7,6 +7,8 @@ const Messages = {
     ExpertModeEnabled: "Expert mode enabled.",
     ExpertModeDisabled: "Expert mode disabled.",
     ConnectToShoko: "Please establish a connection to a running instance of Shoko Server before you continue.",
+    ConnectedToShoko: "Connection established.",
+    DisconnectedToShoko: "Connection reset.",
     InvalidCredentials: "An error occurred while trying to authenticating the user using the provided credentials.",
     UnableToRender: "There was an error loading the page, please refresh once to see if that will fix it.",
 };
@@ -453,6 +455,7 @@ async function defaultSubmit(form) {
             await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
 
             Dashboard.hideLoadingMsg();
+            Dashboard.alert(Messages.ConnectedToShoko);
         }
         catch (err) {
             Dashboard.hideLoadingMsg();
@@ -476,6 +479,7 @@ async function resetConnectionSettings(form) {
     await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
 
     Dashboard.hideLoadingMsg();
+    Dashboard.alert(Messages.DisconnectedToShoko);
 
     return config;
 }
