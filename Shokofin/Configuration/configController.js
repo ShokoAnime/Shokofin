@@ -439,8 +439,7 @@ async function defaultSubmit(form) {
             config.PublicUrl = publicUrl;
             form.querySelector("#Url").value = url;
             form.querySelector("#PublicUrl").value = publicUrl;
-            let result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
-            Dashboard.processPluginConfigurationUpdateResult(result);
+            await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
         }
 
         const username = form.querySelector("#Username").value;
@@ -451,11 +450,12 @@ async function defaultSubmit(form) {
             config.Username = username;
             config.ApiKey = response.apikey;
 
-            let result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
+            await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
 
-            Dashboard.processPluginConfigurationUpdateResult(result);
+            Dashboard.hideLoadingMsg();
         }
         catch (err) {
+            Dashboard.hideLoadingMsg();
             Dashboard.alert(Messages.InvalidCredentials);
             console.error(err, Messages.InvalidCredentials);
         }
@@ -473,9 +473,9 @@ async function resetConnectionSettings(form) {
     config.ApiKey = "";
     config.ServerVersion = null;
 
-    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
+    await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
 
-    Dashboard.processPluginConfigurationUpdateResult(result);
+    Dashboard.hideLoadingMsg();
 
     return config;
 }
@@ -549,7 +549,7 @@ async function unlinkUser(form) {
         config.UserList.splice(index, 1);
     }
 
-    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config)
+    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
     Dashboard.processPluginConfigurationUpdateResult(result);
 
     return config;
@@ -641,8 +641,9 @@ async function toggleExpertMode(value) {
 
     config.ExpertMode = value;
 
-    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
-    Dashboard.processPluginConfigurationUpdateResult(result);
+    await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
+
+    Dashboard.alert(value ? Messages.ExpertModeEnabled : Messages.ExpertModeDisabled);
 
     return config;
 }
@@ -797,7 +798,6 @@ export default function (page) {
         if (++expertPresses === MaxDebugPresses) {
             expertPresses = 0;
             expertMode = !expertMode;
-            Dashboard.alert(expertMode ? Messages.ExpertModeEnabled : Messages.ExpertModeDisabled);
             const config = await toggleExpertMode(expertMode);
             refreshSettings(config);
             return;
