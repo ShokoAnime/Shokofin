@@ -61,7 +61,7 @@ public class VersionCheckTask(ILogger<VersionCheckTask> logger, ILibraryManager 
             Plugin.Instance.Configuration.ServerVersion == null ||
             !string.Equals(version.ToString(), Plugin.Instance.Configuration.ServerVersion.ToString())
         )) {
-            _logger.LogInformation("Found new Shoko Server version; {version}", version);
+            _logger.LogDebug("Found new Shoko Server version; {version}", version);
             Plugin.Instance.Configuration.ServerVersion = version;
             updated = true;
         }
@@ -85,13 +85,13 @@ public class VersionCheckTask(ILogger<VersionCheckTask> logger, ILibraryManager 
             if (mediaFolderConfig.LibraryId == Guid.Empty && _libraryManager.GetItemById(mediaFolderConfig.MediaFolderId) is Folder mediaFolder &&
                 _libraryManager.GetVirtualFolders().FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path)) is { } library &&
                 Guid.TryParse(library.ItemId, out var libraryId)) {
-                _logger.LogInformation("Found new library for media folder; {LibraryName} (Library={LibraryId},MediaFolder={MediaFolderPath})", library.Name, libraryId, mediaFolder.Path);
+                _logger.LogDebug("Found new library for media folder; {LibraryName} (Library={LibraryId},MediaFolder={MediaFolderPath})", library.Name, libraryId, mediaFolder.Path);
                 mediaFolderConfig.LibraryId = libraryId;
                 updated = true;
             }
 
             if (!string.Equals(mediaFolderConfig.ImportFolderName, importFolderName)) {
-                _logger.LogInformation("Found new name for import folder; {name} (ImportFolder={ImportFolderId})", importFolderName, mediaFolderConfig.ImportFolderId);
+                _logger.LogDebug("Found new name for import folder; {name} (ImportFolder={ImportFolderId})", importFolderName, mediaFolderConfig.ImportFolderId);
                 mediaFolderConfig.ImportFolderName = importFolderName;
                 updated = true;
             }

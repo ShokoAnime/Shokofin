@@ -63,17 +63,17 @@ public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, IFil
         var vfsRoots = FileSystem.GetDirectories(Plugin.Instance.VirtualRoot, false)
             .ExceptBy(mediaFolders, directoryInfo => directoryInfo.Name)
             .ToList();
-        Logger.LogInformation("Found {RemoveCount} VFS roots to remove.", vfsRoots.Count);
+        Logger.LogDebug("Found {RemoveCount} VFS roots to remove.", vfsRoots.Count);
         foreach (var vfsRoot in vfsRoots) {
             var folderStart = DateTime.Now;
-            Logger.LogInformation("Removing VFS root for {Id}.", vfsRoot.Name);
+            Logger.LogTrace("Removing VFS root for {Id}.", vfsRoot.Name);
             Directory.Delete(vfsRoot.FullName, true);
             var perFolderDeltaTime = DateTime.Now - folderStart;
-            Logger.LogInformation("Removed VFS root for {Id} in {TimeSpan}.", vfsRoot.Name, perFolderDeltaTime);
+            Logger.LogTrace("Removed VFS root for {Id} in {TimeSpan}.", vfsRoot.Name, perFolderDeltaTime);
         }
 
         var deltaTime = DateTime.Now - start;
-        Logger.LogInformation("Removed {RemoveCount} VFS roots in {TimeSpan}.", vfsRoots.Count, deltaTime);
+        Logger.LogDebug("Removed {RemoveCount} VFS roots in {TimeSpan}.", vfsRoots.Count, deltaTime);
 
         return Task.CompletedTask;
     }
