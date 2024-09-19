@@ -328,6 +328,7 @@ async function defaultSubmit(form) {
         form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
         config.VFS_AddReleaseGroup = form.querySelector("#VFS_AddReleaseGroup").checked;
         config.VFS_AddResolution = form.querySelector("#VFS_AddResolution").checked;
+        config.VFS_LiveInCache = form.querySelector("#VFS_LiveInCache").checked;
         if (mediaFolderConfig) {
             const libraryId = mediaFolderConfig.LibraryId;
             for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
@@ -587,6 +588,7 @@ async function syncMediaFolderSettings(form) {
     form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
     config.VFS_AddReleaseGroup = form.querySelector("#VFS_AddReleaseGroup").checked;
     config.VFS_AddResolution = form.querySelector("#VFS_AddResolution").checked;
+    config.VFS_LiveInCache = form.querySelector("#VFS_LiveInCache").checked;
     if (mediaFolderConfig) {
         const libraryId = mediaFolderConfig.LibraryId;
         for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
@@ -1037,6 +1039,7 @@ export default function (page) {
             form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
             form.querySelector("#VFS_AddReleaseGroup").checked = config.VFS_AddReleaseGroup;
             form.querySelector("#VFS_AddResolution").checked = config.VFS_AddResolution;
+            form.querySelector("#VFS_LiveInCache").checked = config.VFS_LiveInCache;
             form.querySelector("#VFS_Enabled").checked = config.VFS_Enabled;
             form.querySelector("#LibraryFilteringMode").value = config.LibraryFilteringMode;
             mediaFolderSelector.innerHTML = `<option value="">Default settings for new media folders</option>` + config.MediaFolders

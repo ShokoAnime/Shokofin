@@ -1305,7 +1305,7 @@
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="VFS_Enabled" />
-                                    <span>Virtual File System&trade;</span>
+                                    <span>Virtual File System (<strong>VFS</strong>)</span>
                                 </label>
                                 <div class="fieldDescription checkboxFieldDescription">
                                     <div>Enables the use of the Virtual File System&trade; for any new media libraries managed by the plugin.</div>
@@ -1608,6 +1608,13 @@
                             <h3>Experimental Settings</h3>
                         </legend>
                         <div class="fieldDescription verticalSection-extrabottompadding">Any features/settings in this section is still considered to be in an experimental state. <strong>You can enable them, but at the risk if them messing up your library.</strong></div>
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_LiveInCache" />
+                                <span>Place VFS in cache</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will place the VFS in the cache directory instead of the config directory. You will need to manually move your VFS root if you plan to keep it when toggling this setting.</div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_MergeSeasons" />

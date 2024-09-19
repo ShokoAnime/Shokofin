@@ -412,6 +412,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool VFS_AddResolution { get; set; }
 
     /// <summary>
+    /// Places the VFS in the cache directory instead of the config directory.
+    /// </summary>
+    public bool VFS_LiveInCache { get; set; }
+
+    /// <summary>
     /// Enable/disable the filtering for new media-folders/libraries.
     /// </summary>
     [XmlElement("LibraryFiltering")]
@@ -572,10 +577,11 @@ public class PluginConfiguration : BasePluginConfiguration
             DescriptionProvider.TMDB,
         ];
         DescriptionSourceOrder = [.. DescriptionSourceList];
-        VFS_Enabled = CanCreateSymbolicLinks;
+        VFS_Enabled = true;
         VFS_Threads = 4;
         VFS_AddReleaseGroup = false;
         VFS_AddResolution = false;
+        VFS_LiveInCache = false;
         AutoMergeVersions = true;
         UseGroupsForShows = false;
         SeparateMovies = false;

@@ -123,7 +123,13 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <summary>
     /// "Virtual" File System Root Directory.
     /// </summary>
-    public readonly string VirtualRoot;
+    private string? _virtualRoot;
+
+    /// <summary>
+    /// "Virtual" File System Root Directory.
+    /// </summary>
+    public string VirtualRoot =>
+        _virtualRoot ??= Path.Join(Configuration.VFS_LiveInCache ? ApplicationPaths.CachePath :  ApplicationPaths.ProgramDataPath, Name);
 
     /// <summary>
     /// Gets or sets the event handler that is triggered when this configuration changes.
@@ -132,13 +138,15 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     public Plugin(UsageTracker usageTracker, IServerConfigurationManager configurationManager, IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
     {
+        var configExists = File.Exists(ConfigurationFilePath);
         _configurationManager = configurationManager;
-        Instance = this;
-        base.ConfigurationChanged += OnConfigChanged;
-        VirtualRoot = Path.Join(applicationPaths.ProgramDataPath, "Shokofin", "VFS");
         Tracker = usageTracker;
         Logger = logger;
         CanCreateSymbolicLinks = true;
+        Instance = this;
+
+        base.ConfigurationChanged += OnConfigChanged;
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
             var target = Path.Join(Path.GetDirectoryName(VirtualRoot)!, "TestTarget.txt");
             var link = Path.Join(Path.GetDirectoryName(VirtualRoot)!, "TestLink.txt");
@@ -158,10 +166,17 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
                     File.Delete(target);
             }
         }
+
         IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
         Tracker.UpdateTimeout(TimeSpan.FromSeconds(Configuration.UsageTracker_StalledTimeInSeconds));
-        Logger.LogDebug("Virtual File System Location; {Path}", VirtualRoot);
+
+        Logger.LogDebug("Virtual File System Root Directory; {Path}", VirtualRoot);
         Logger.LogDebug("Can create symbolic links; {Value}", CanCreateSymbolicLinks);
+
+        if (!configExists && !CanCreateSymbolicLinks) {
+            Configuration.VFS_Enabled = false;
+            SaveConfiguration();
+        }
     }
 
     public void UpdateConfiguration()
@@ -175,6 +190,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             return;
         IgnoredFolders = config.IgnoredFolders.ToHashSet();
         Tracker.UpdateTimeout(TimeSpan.FromSeconds(Configuration.UsageTracker_StalledTimeInSeconds));
+        _virtualRoot = null;
         ConfigurationChanged?.Invoke(sender, config);
     }
 
