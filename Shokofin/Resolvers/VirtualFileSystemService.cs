@@ -735,7 +735,7 @@ public class VirtualFileSystemService
         if (isMovieSeason && collectionType is not CollectionType.tvshows) {
             if (extrasFolders != null) {
                 foreach (var extrasFolder in extrasFolders)
-                    foreach (var episodeInfo in season.EpisodeList)
+                    foreach (var episodeInfo in season.EpisodeList.Where(a => a.Shoko.Size > 0))
                         folders.Add(Path.Join(vfsPath, $"{showName} [{ShokoSeriesId.Name}={show.Id}] [{ShokoEpisodeId.Name}={episodeInfo.Id}]", extrasFolder));
             }
             else {
