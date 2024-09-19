@@ -301,8 +301,7 @@ async function defaultSubmit(form) {
         ([config.ProductionLocationList, config.ProductionLocationOrder] = retrieveSortableList(form, "ProductionLocationList"));
 
         // Provider settings
-        config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
-        config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
+        config.ThirdPartyIdProviderList = retrieveSimpleList(form, "ThirdPartyIdProviderList");
 
         // Library settings
         config.AutoMergeVersions = form.querySelector("#AutoMergeVersions").checked;
@@ -510,8 +509,7 @@ async function syncSettings(form) {
     ([config.ProductionLocationList, config.ProductionLocationOrder] = retrieveSortableList(form, "ProductionLocationList"));
 
     // Provider settings
-    config.AddAniDBId = form.querySelector("#AddAniDBId").checked;
-    config.AddTMDBId = form.querySelector("#AddTMDBId").checked;
+    config.ThirdPartyIdProviderList = retrieveSimpleList(form, "ThirdPartyIdProviderList");
 
     // Library settings
     config.AutoMergeVersions = form.querySelector("#AutoMergeVersions").checked;
@@ -970,8 +968,7 @@ export default function (page) {
             initSortableList(form, "ProductionLocationList", config.ProductionLocationList, config.ProductionLocationOrder);
 
             // Provider settings
-            form.querySelector("#AddAniDBId").checked = config.AddAniDBId;
-            form.querySelector("#AddTMDBId").checked = config.AddTMDBId;
+            initSimpleList(form, "ThirdPartyIdProviderList", config.ThirdPartyIdProviderList.map(s => s.trim()).filter(s => s));
 
             // Library settings
             form.querySelector("#AutoMergeVersions").checked = config.AutoMergeVersions || false;

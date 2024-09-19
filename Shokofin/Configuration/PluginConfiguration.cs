@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 using MediaBrowser.Model.Plugins;
@@ -69,15 +70,53 @@ public class PluginConfiguration : BasePluginConfiguration
     #region Plugin Interoperability
 
     /// <summary>
-    /// Add AniDB ids to entries that support it. This is best to use when you
-    /// don't use shoko groups.
+    /// Add IDs from the enabled provider to entities that support it.
     /// </summary>
+    /// <remarks>
+    /// This is not stored in the xml config file to not break the existing
+    /// settings model until the next major version of the plugin.
+    /// </remarks>
+    /// TODO: Break this during the next major version of the plugin.
+    [JsonInclude]
+    [XmlIgnore]
+    public DescriptionProvider[] ThirdPartyIdProviderList
+    {
+        get
+        {
+            var list = new List<DescriptionProvider>();
+            if (AddAniDBId)
+                list.Add(DescriptionProvider.AniDB);
+            if (AddTvDBId)
+                list.Add(DescriptionProvider.TvDB);
+            if (AddTMDBId)
+                list.Add(DescriptionProvider.TMDB);
+            return [.. list];
+        }
+        set
+        {
+            AddAniDBId = value.Contains(DescriptionProvider.AniDB);
+            AddTvDBId = value.Contains(DescriptionProvider.TvDB);
+            AddTMDBId = value.Contains(DescriptionProvider.TMDB);
+        }
+    }
+
+    /// <summary>
+    /// Add AniDB ids to entries that support it.
+    /// </summary>
+    [JsonIgnore]
     public bool AddAniDBId { get; set; }
 
     /// <summary>
     /// Add TMDb ids to entries that support it.
     /// </summary>
+    [JsonIgnore]
     public bool AddTMDBId { get; set; }
+
+    /// <summary>
+    /// Add TvDB ids to entries that support it.
+    /// </summary>
+    [JsonIgnore]
+    public bool AddTvDBId { get; set; }
 
     #endregion
 
@@ -479,8 +518,8 @@ public class PluginConfiguration : BasePluginConfiguration
         HideUnverifiedTags = true;
         ContentRatingOverride = false;
         ContentRatingList = [
-            ProviderName.AniDB,
             ProviderName.TMDB,
+            ProviderName.AniDB,
         ];
         ContentRatingOrder = [.. ContentRatingList];
         ProductionLocationOverride = false;
@@ -495,6 +534,7 @@ public class PluginConfiguration : BasePluginConfiguration
         SynopsisCleanMultiEmptyLines = true;
         AddAniDBId = true;
         AddTMDBId = true;
+        AddTvDBId = true;
         TitleMainOverride = false;
         TitleMainList = [ 
             TitleProvider.Shoko_Default,

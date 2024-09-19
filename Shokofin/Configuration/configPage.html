@@ -133,7 +133,7 @@
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">AniDB | Use the language from the country of origin</h3>
+                                        <h3 class="listItemBodyText">AniDB | Use the language from the media's country of origin</h3>
                                     </div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
                                         <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
@@ -169,7 +169,7 @@
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB | Use the language from the country of origin</h3>
+                                        <h3 class="listItemBodyText">TMDB | Use the language from the media's country of origin</h3>
                                     </div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
                                         <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
@@ -232,7 +232,7 @@
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">AniDB | Use the language from the country of origin</h3>
+                                        <h3 class="listItemBodyText">AniDB | Use the language from the media's country of origin</h3>
                                     </div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
                                         <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
@@ -268,7 +268,7 @@
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB | Use the language from the country of origin</h3>
+                                        <h3 class="listItemBodyText">TMDB | Use the language from the media's country of origin</h3>
                                     </div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
                                         <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
@@ -997,25 +997,25 @@
                         <div id="ContentRatingList" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced content rating sources:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
-                                <div class="listItem sortableOption" data-option="AniDB">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">AniDB</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
-                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
-                                    </button>
-                                </div>
                                 <div class="listItem sortableOption" data-option="TMDB">
                                     <label class="listItemCheckboxContainer">
                                         <input is="emby-checkbox" type="checkbox" data-option="TMDB">
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB</h3>
+                                        <h3 class="listItemBodyText">TMDB | Follow country/region set in library</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
+                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption" data-option="AniDB">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB | Approximate content rating based on tags</h3>
                                     </div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
                                         <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
@@ -1063,19 +1063,38 @@
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of production locations, in priority order.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="AddAniDBId" />
-                                <span>Add AniDB IDs</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the AniDB ID for all supported item types where an ID is available.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="AddTMDBId" />
-                                <span>Add TMDB IDs</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the TMDB ID for all supported item types where an ID is available.</div>
+                        <div id="ThirdPartyIdProviderList" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Add Third Party IDs:</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TMDB</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TvDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TvDB</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">Enable which third party IDs to provide for other plugins to consume with supported media items.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -1403,7 +1422,7 @@
                             <div class="fieldDescription">A comma separated list of intervals in seconds to try re-establish the connection if the plugin gets disconnected from Shoko Server.</div>
                         </div>
                         <div id="SignalREventSources" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">SignalR Event Sources</h3>
+                            <h3 class="checkboxListLabel">Event Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
@@ -1455,7 +1474,7 @@
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="SignalRDefaultRefreshEvents" />
-                                    <span>Metadata Update Events</span>
+                                    <span>Metadata Events</span>
                                 </label>
                                 <div class="fieldDescription checkboxFieldDescription">
                                     <div>Enable the SignalR metadata update events for any new media folders.</div>
