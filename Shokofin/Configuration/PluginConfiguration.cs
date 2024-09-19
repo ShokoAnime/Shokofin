@@ -533,8 +533,8 @@ public class PluginConfiguration : BasePluginConfiguration
         SynopsisRemoveSummary = true;
         SynopsisCleanMultiEmptyLines = true;
         AddAniDBId = true;
-        AddTMDBId = true;
-        AddTvDBId = true;
+        AddTMDBId = false;
+        AddTvDBId = false;
         TitleMainOverride = false;
         TitleMainList = [ 
             TitleProvider.Shoko_Default,
@@ -556,15 +556,12 @@ public class PluginConfiguration : BasePluginConfiguration
         TitleAllowAny = false;
         DescriptionSourceOverride = false;
         DescriptionSourceList = [
+            DescriptionProvider.Shoko,
             DescriptionProvider.AniDB,
             DescriptionProvider.TvDB,
             DescriptionProvider.TMDB,
         ];
-        DescriptionSourceOrder = [
-            DescriptionProvider.AniDB,
-            DescriptionProvider.TvDB,
-            DescriptionProvider.TMDB,
-        ];
+        DescriptionSourceOrder = [.. DescriptionSourceList];
         VFS_Enabled = CanCreateSymbolicLinks;
         VFS_Threads = 4;
         VFS_AddReleaseGroup = false;
