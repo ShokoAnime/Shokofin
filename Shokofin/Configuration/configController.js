@@ -3,6 +3,9 @@ const PluginConfig = {
 };
 
 const Messages = {
+    ExpertModeCountdown: "Press <count> more times to <toggle> expert mode.",
+    ExpertModeEnabled: "Expert mode enabled.",
+    ExpertModeDisabled: "Expert mode disabled.",
     ConnectToShoko: "Please establish a connection to a running instance of Shoko Server before you continue.",
     InvalidCredentials: "An error occurred while trying to authenticating the user using the provided credentials.",
     UnableToRender: "There was an error loading the page, please refresh once to see if that will fix it.",
@@ -631,6 +634,17 @@ async function syncSignalrSettings(form) {
     return config;
 }
 
+async function toggleExpertMode(value) {
+    const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
+
+    config.ExpertMode = value;
+
+    const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
+    Dashboard.processPluginConfigurationUpdateResult(result);
+
+    return config;
+}
+
 async function syncUserSettings(form) {
     const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
     const userId = form.querySelector("#UserSelector").value;
@@ -676,14 +690,24 @@ async function syncUserSettings(form) {
 }
 
 export default function (page) {
+    const MaxDebugPresses = 7;
+    let expertPresses = 0;
+    let expertMode = false;
     /** @type {HTMLFormElement} */
     const form = page.querySelector("#ShokoConfigForm");
+    const serverVersion = form.querySelector("#ServerVersion");
     const userSelector = form.querySelector("#UserSelector");
     const mediaFolderSelector = form.querySelector("#MediaFolderSelector");
     const signalrMediaFolderSelector = form.querySelector("#SignalRMediaFolderSelector");
 
     // Refresh the view after we changed the settings, so the view reflect the new settings.
     const refreshSettings = (config) => {
+        if (config.ExpertMode) {
+            form.classList.add("expert-mode");
+        }
+        else {
+            form.classList.remove("expert-mode");
+        }
         if (config.ServerVersion) {
             let version = `Version ${config.ServerVersion.Version}`;
             const extraDetails = [
@@ -693,10 +717,10 @@ export default function (page) {
             ].filter(s => s).join(", ");
             if (extraDetails)
                 version += ` (${extraDetails})`;
-            form.querySelector("#ServerVersion").value = version;
+            serverVersion.value = version;
         }
         else {
-            form.querySelector("#ServerVersion").value = "Version N/A";
+            serverVersion.value = "Version N/A";
         }
         if (!config.CanCreateSymbolicLinks) {
             form.querySelector("#WindowsSymLinkWarning1").removeAttribute("hidden");
@@ -766,6 +790,19 @@ export default function (page) {
         Dashboard.alert(`An error occurred; ${err.message}`);
         Dashboard.hideLoadingMsg();
     };
+
+    serverVersion.addEventListener("click", async function () {
+        if (++expertPresses === MaxDebugPresses) {
+            expertPresses = 0;
+            expertMode = !expertMode;
+            Dashboard.alert(expertMode ? Messages.ExpertModeEnabled : Messages.ExpertModeDisabled);
+            const config = await toggleExpertMode(expertMode);
+            refreshSettings(config);
+            return;
+        }
+        if (expertPresses >= 3)
+            Dashboard.alert(Messages.ExpertModeCountdown.replace("<count>", MaxDebugPresses - expertPresses).replace("<toggle>", expertMode ? "disable" : "enable"));
+    });
 
     userSelector.addEventListener("change", function () {
         loadUserConfig(page, this.value);
@@ -873,6 +910,9 @@ export default function (page) {
             const config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
             const signalrStatus = await getSignalrStatus();
             const users = await ApiClient.getUsers();
+
+            expertPresses = 0;
+            expertMode = config.ExpertMode;
 
             // Connection settings
             form.querySelector("#Url").value = config.Url;

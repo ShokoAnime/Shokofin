@@ -494,6 +494,16 @@ public class PluginConfiguration : BasePluginConfiguration
 
     #endregion
 
+    #region Expert Mode
+
+    /// <summary>
+    /// Enable expert mode.
+    /// </summary>
+    [XmlElement("EXPERT_MODE")]
+    public bool ExpertMode { get; set; }
+
+    #endregion
+
     public PluginConfiguration()
     {
         Url = "http://127.0.0.1:8111";
@@ -594,5 +604,6 @@ public class PluginConfiguration : BasePluginConfiguration
         EXPERIMENTAL_MergeSeasons = false;
         EXPERIMENTAL_MergeSeasonsTypes = [SeriesType.OVA, SeriesType.TV, SeriesType.TVSpecial, SeriesType.Web, SeriesType.OVA];
         EXPERIMENTAL_MergeSeasonsMergeWindowInDays = 185;
+        ExpertMode = false;
     }
 }

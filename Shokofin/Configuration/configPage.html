@@ -1,6 +1,7 @@
 <div id="ShokoConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox" data-controller="__plugin/ShokoController.js">
     <div data-role="content">
         <div class="content-primary">
+            <style>form:not(.expert-mode) .expert-only { display: none !important; }</style>
             <form id="ShokoConfigForm">
                 <div class="verticalSection verticalSection-extrabottompadding">
                     <div class="sectionTitleContainer flex align-items-center">
@@ -35,7 +36,7 @@
                         </div>
                         <div id="ConnectionResetContainer" hidden>
                             <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="ServerVersion" label="Server Version:" disabled readonly value="Unknown Version" />
+                                <input is="emby-input" type="text" id="ServerVersion" label="Server Version:" readonly value="Unknown Version" />
                                 <div class="fieldDescription">The version of Shoko Server we're connected to.</div>
                             </div>
                             <button is="emby-button" type="submit" name="reset-connection" class="raised block emby-button">
@@ -58,28 +59,28 @@
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Add the type and number to the title of some episodes.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="TitleAllowAny" />
                                 <span>Allow any title in selected language</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Will add any title in the selected language if no official title is found.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="CleanupAniDBDescriptions" />
                                 <span>Cleanup AniDB overviews</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Remove links and collapse multiple empty lines into one empty line, and trim any lines starting with '* ', '-- ',  '~ ', 'Note', 'Source', and/or 'Summary'.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="HideUnverifiedTags" />
                                 <span>Ignore unverified tags.</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Will ignore all tags not yet verified on AniDB, so they won't show up as tags/genres for entries.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="TitleMainOverride" />
                                 <span>Override main title</span>
@@ -88,7 +89,7 @@
                                 Enables the advanced selector for the main title selection.
                             </div>
                         </div>
-                        <div id="TitleMainList" style="margin-bottom: 2em;">
+                        <div id="TitleMainList" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced main title source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption">
@@ -178,7 +179,7 @@
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of the main title, in priority order.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="TitleAlternateOverride" />
                                 <span>Override alternate title</span>
@@ -187,7 +188,7 @@
                                 Enables the advanced selector for the alternate title selection.
                             </div>
                         </div>
-                        <div id="TitleAlternateList" style="margin-bottom: 2em;">
+                        <div id="TitleAlternateList" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced alternate title source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption">
@@ -277,7 +278,7 @@
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of the alternate title, in priority order.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="DescriptionSourceOverride" />
                                 <span>Override description source</span>
@@ -286,7 +287,7 @@
                                 Enables the advanced selector for description source selection.
                             </div>
                         </div>
-                        <div id="DescriptionSourceList" style="margin-bottom: 2em;">
+                        <div id="DescriptionSourceList" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced description source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="Shoko">
@@ -342,7 +343,7 @@
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of descriptions, in priority order.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="TagOverride" />
                                 <span>Override tag sources</span>
@@ -351,7 +352,7 @@
                                 Enables the advanced selector for tag source selection.
                             </div>
                         </div>
-                        <div id="TagSources" style="margin-bottom: 2em;">
+                        <div id="TagSources" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced tag sources:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -582,7 +583,7 @@
                             </div>
                             <div class="fieldDescription">The tag sources to use as the source of tags.</div>
                         </div>
-                        <div id="TagIncludeFilters" style="margin-bottom: 2em;">
+                        <div id="TagIncludeFilters" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced tag include filters:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -651,7 +652,7 @@
                             </div>
                             <div class="fieldDescription">The type of tags to include for tags.</div>
                         </div>
-                        <div id="TagMinimumWeightContainer" class="selectContainer selectContainer-withDescription">
+                        <div id="TagMinimumWeightContainer" class="selectContainer selectContainer-withDescription expert-only">
                             <label class="selectLabel" for="TagMinimumWeight">Advanced minimum tag weight for tags:</label>
                             <select is="emby-select" id="TagMinimumWeight" name="TagMinimumWeight" class="emby-select-withcolor emby-select">
                                 <option value="Weightless" selected>Disabled (Default)</option>
@@ -666,11 +667,11 @@
                                 The minimum weight of tags to be included, except weightless tags, which has their own filtering through the filtering above.
                             </div>
                         </div>
-                        <div id="TagMaximumDepthContainer" class="inputContainer inputContainer-withDescription">
+                        <div id="TagMaximumDepthContainer" class="inputContainer inputContainer-withDescription expert-only">
                             <input is="emby-input" id="TagMaximumDepth" label="Maximum depth to add per tag source:" placeholder="0" type="number" pattern="[0-9]*" min="0" max="10" step="1">
                             <div class="fieldDescription">The maximum relative depth of the tag to be included from it's source, for tags.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="GenreOverride" />
                                 <span>Override genre sources</span>
@@ -679,7 +680,7 @@
                                 Enables the advanced selector for genre source selection.
                             </div>
                         </div>
-                        <div id="GenreSources" style="margin-bottom: 2em;">
+                        <div id="GenreSources" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced genre sources:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -910,7 +911,7 @@
                             </div>
                             <div class="fieldDescription">The tag sources to use as the source of genres.</div>
                         </div>
-                        <div id="GenreIncludeFilters" style="margin-bottom: 2em;">
+                        <div id="GenreIncludeFilters" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced genre include filters:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -979,7 +980,7 @@
                             </div>
                             <div class="fieldDescription">The type of tags to include for genres.</div>
                         </div>
-                        <div id="GenreMinimumWeightContainer" class="selectContainer selectContainer-withDescription">
+                        <div id="GenreMinimumWeightContainer" class="selectContainer selectContainer-withDescription expert-only">
                             <label class="selectLabel" for="GenreMinimumWeight">Advanced minimum tag weight for genres:</label>
                             <select is="emby-select" id="GenreMinimumWeight" name="GenreMinimumWeight" class="emby-select-withcolor emby-select">
                                 <option value="Weightless">Disabled</option>
@@ -994,11 +995,11 @@
                                 The minimum weight of tags to be included, except weightless tags, which has their own filtering through the filtering above.
                             </div>
                         </div>
-                        <div id="GenreMaximumDepthContainer" class="inputContainer inputContainer-withDescription">
+                        <div id="GenreMaximumDepthContainer" class="inputContainer inputContainer-withDescription expert-only">
                             <input is="emby-input" id="GenreMaximumDepth" label="Maximum depth to add per genre source:" placeholder="1" type="number" pattern="[0-9]*" min="0" max="10" step="1">
                             <div class="fieldDescription">The maximum relative depth of the tag to be included from it's source, for genres.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="ContentRatingOverride" />
                                 <span>Override content rating sources</span>
@@ -1007,7 +1008,7 @@
                                 Enables the advanced selector for content rating source selection.
                             </div>
                         </div>
-                        <div id="ContentRatingList" style="margin-bottom: 2em;">
+                        <div id="ContentRatingList" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced content rating sources:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="TMDB">
@@ -1037,7 +1038,7 @@
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of content ratings, in priority order.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="ProductionLocationOverride" />
                                 <span>Override production location sources</span>
@@ -1046,7 +1047,7 @@
                                 Enables the advanced selector for production location source selection.
                             </div>
                         </div>
-                        <div id="ProductionLocationList" style="margin-bottom: 2em;">
+                        <div id="ProductionLocationList" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced production location sources:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="AniDB">
@@ -1171,7 +1172,7 @@
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">This filters out movies from the shows in your library. Disable this if you want your movies to show up as episodes within seasons of your shows instead.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="FilterMovieLibraries" />
                                 <span>Filter movie libraries</span>
@@ -1222,14 +1223,14 @@
                                 </details>
                             </div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="CollectionMinSizeOfTwo" />
                                 <span>Require two entries for a collection</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Add a minimum requirement of two entries with the same collection id before creating a collection for them.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="MovieSpecialsAsExtraFeaturettes" />
                                 <span>Force movie special features</span>
@@ -1275,7 +1276,7 @@
                         <div class="fieldDescription verticalSection-extrabottompadding">
                             Placeholder description.
                         </div>
-                        <div class="inputContainer inputContainer-withDescription">
+                        <div class="inputContainer inputContainer-withDescription expert-only">
                             <input is="emby-input" type="text" id="IgnoredFolders" label="Ignored folder names:" />
                             <div class="fieldDescription">A comma separated list of folder names which will be ignored during library filtering.</div>
                         </div>
@@ -1430,11 +1431,11 @@
                                 Automatically establish a SignalR connection to Shoko Server when Jellyfin starts.
                             </div>
                         </div>
-                        <div class="inputContainer inputContainer-withDescription">
+                        <div class="inputContainer inputContainer-withDescription expert-only">
                             <input is="emby-input" type="text" id="SignalRAutoReconnectIntervals" label="Auto Reconnect Intervals:" />
                             <div class="fieldDescription">A comma separated list of intervals in seconds to try re-establish the connection if the plugin gets disconnected from Shoko Server.</div>
                         </div>
-                        <div id="SignalREventSources" style="margin-bottom: 2em;">
+                        <div id="SignalREventSources" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Event Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -1602,7 +1603,7 @@
                             </button>
                         </div>
                     </fieldset>
-                    <fieldset id="ExperimentalSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                    <fieldset id="ExperimentalSection" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
                         <legend>
                             <h3>Experimental Settings</h3>
                         </legend>
