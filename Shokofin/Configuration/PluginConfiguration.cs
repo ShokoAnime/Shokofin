@@ -417,6 +417,12 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool VFS_LiveInCache { get; set; }
 
     /// <summary>
+    /// Attach a physical VFS root as a media folder instead of attaching the
+    /// VFS children to one of the "normal" media folders.
+    /// </summary>
+    public bool VFS_AttachRoot { get; set; }
+
+    /// <summary>
     /// Enable/disable the filtering for new media-folders/libraries.
     /// </summary>
     [XmlElement("LibraryFiltering")]
@@ -582,6 +588,7 @@ public class PluginConfiguration : BasePluginConfiguration
         VFS_AddReleaseGroup = false;
         VFS_AddResolution = false;
         VFS_LiveInCache = false;
+        VFS_AttachRoot = false;
         AutoMergeVersions = true;
         UseGroupsForShows = false;
         SeparateMovies = false;

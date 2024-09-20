@@ -128,8 +128,17 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <summary>
     /// "Virtual" File System Root Directory.
     /// </summary>
-    public string VirtualRoot =>
-        _virtualRoot ??= Path.Join(Configuration.VFS_LiveInCache ? ApplicationPaths.CachePath :  ApplicationPaths.ProgramDataPath, Name);
+    public string VirtualRoot
+    {
+        get
+        {
+            var virtualRoot = _virtualRoot ??= Path.Join(Configuration.VFS_LiveInCache ? ApplicationPaths.CachePath :  ApplicationPaths.ProgramDataPath, Name);
+            if (!Directory.Exists(virtualRoot))
+                Directory.CreateDirectory(virtualRoot);
+
+            return virtualRoot;
+        }
+    }
 
     /// <summary>
     /// Gets or sets the event handler that is triggered when this configuration changes.

@@ -99,7 +99,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
             // because the VFS is pre-filtered, and we should **never** reach
             // this point except for the folders in the root of the media folder
             // that we're not even going to use.
-            if (mediaFolderConfig.IsVirtualFileSystemEnabled)
+            if (mediaFolderConfig.IsVirtualFileSystemEnabled || mediaFolderConfig.IsVirtualRoot)
                 return true;
 
             var shouldIgnore = mediaFolderConfig.LibraryFilteringMode switch {

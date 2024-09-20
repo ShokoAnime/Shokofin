@@ -130,20 +130,24 @@ public class VirtualFileSystemService
     /// <param name="mediaFolder">The media folder to generate a structure for.</param>
     /// <param name="path">The file or folder within the media folder to generate a structure for.</param>
     /// <returns>The VFS path, if it succeeded.</returns>
-    public async Task<(string?, bool)> GenerateStructureInVFS(Folder mediaFolder, string path)
+    public async Task<(string?, bool)> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path)
     {
-        var (vfsPath, mainMediaFolderPath, collectionType, mediaConfigs) = ConfigurationService.GetAvailableMediaFoldersForLibrary(mediaFolder, config => config.IsVirtualFileSystemEnabled);
+        var (vfsPath, mainMediaFolderPath, mediaConfigs) = ConfigurationService.GetAvailableMediaFoldersForLibrary(mediaFolder, collectionType, config => config.IsVirtualFileSystemEnabled);
         if (string.IsNullOrEmpty(vfsPath) || string.IsNullOrEmpty(mainMediaFolderPath) || mediaConfigs.Count is 0)
             return (null, false);
 
         if (!Plugin.Instance.CanCreateSymbolicLinks)
             throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
 
+        var shouldContinue = path.StartsWith(vfsPath + Path.DirectorySeparatorChar) || path == mainMediaFolderPath;
+        if (!shouldContinue)
+            return (vfsPath, false);
+
         // Skip link generation if we've already generated for the library.
         if (DataCache.TryGetValue<bool>($"should-skip-vfs-path:{vfsPath}", out var shouldReturnPath))
             return (
                 shouldReturnPath ? vfsPath : null,
-                path.StartsWith(vfsPath + Path.DirectorySeparatorChar) || path == mainMediaFolderPath
+                true
             );
 
         // Check full path and all parent directories if they have been indexed.
@@ -158,7 +162,7 @@ public class VirtualFileSystemService
         }
 
         // Only do this once.
-        var key = mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath))
+        var key = !path.StartsWith(vfsPath) && mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath))
             ? $"should-skip-vfs-path:{vfsPath}"
             : $"should-skip-vfs-path:{path}";
         shouldReturnPath = await DataCache.GetOrCreateAsync<bool>(key, async () => {
@@ -239,7 +243,7 @@ public class VirtualFileSystemService
                 }
             }
             // Iterate files in the "real" media folder.
-            else if (mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath))) {
+            else {
                 var allPaths = GetPathsForMediaFolder(mediaConfigs);
                 pathToClean = vfsPath;
                 allFiles = GetFilesForImportFolder(mediaConfigs, allPaths);
@@ -262,7 +266,7 @@ public class VirtualFileSystemService
 
         return (
             shouldReturnPath ? vfsPath : null,
-            path.StartsWith(vfsPath + Path.DirectorySeparatorChar) || path == mainMediaFolderPath
+            true
         );
     }
 

@@ -5,6 +5,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Configuration;
 using MediaBrowser.Model.Entities;
 using Shokofin.API;
 using Shokofin.ExternalIds;
@@ -30,6 +31,14 @@ public interface IIdLookup
     /// <param name="isSoleProvider">True if the plugin is the only metadata provider enabled for the item.</param>
     /// <returns>True if the plugin is enabled for the <see cref="MediaBrowser.Controller.Entities.BaseItem" /></returns>
     bool IsEnabledForItem(BaseItem item, out bool isSoleProvider);
+
+    /// <summary>
+    /// Check if the plugin is enabled for <see cref="LibraryOptions" >the library options</see>.
+    /// </summary>
+    /// <param name="libraryOptions">The <see cref="LibraryOptions" /> to check.</param>
+    /// <param name="isSoleProvider">True if the plugin is the only metadata provider enabled for the item.</param>
+    /// <returns>True if the plugin is enabled for the <see cref="LibraryOptions" /></returns>
+    bool IsEnabledForLibraryOptions(LibraryOptions libraryOptions, out bool isSoleProvider);
 
     #endregion
     #region Series Id
@@ -119,6 +128,11 @@ public class IdLookup : IIdLookup
             return false;
         }
 
+        return IsEnabledForLibraryOptions(libraryOptions, out isSoleProvider);
+    }
+
+    public bool IsEnabledForLibraryOptions(LibraryOptions libraryOptions, out bool isSoleProvider)
+    {
         var isEnabled = false;
         isSoleProvider = true;
         foreach (var options in libraryOptions.TypeOptions) {

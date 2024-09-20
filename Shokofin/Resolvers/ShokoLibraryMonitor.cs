@@ -108,7 +108,7 @@ public class ShokoLibraryMonitor : IHostedService
                 continue;
 
             var libraryOptions = LibraryManager.GetLibraryOptions(mediaFolder);
-            if (libraryOptions != null && libraryOptions.EnableRealtimeMonitor && mediaConfig.IsVirtualFileSystemEnabled)
+            if (libraryOptions != null && !mediaConfig.IsVirtualRoot && libraryOptions.EnableRealtimeMonitor && mediaConfig.IsVirtualFileSystemEnabled)
                 StartWatchingMediaFolder(mediaFolder, mediaConfig);
         }
     }
@@ -134,7 +134,7 @@ public class ShokoLibraryMonitor : IHostedService
             return;
 
         var libraryOptions = LibraryManager.GetLibraryOptions(eventArgs.MediaFolder);
-        if (libraryOptions != null && libraryOptions.EnableRealtimeMonitor && eventArgs.Configuration.IsVirtualFileSystemEnabled)
+        if (libraryOptions != null && !eventArgs.Configuration.IsVirtualRoot && libraryOptions.EnableRealtimeMonitor && eventArgs.Configuration.IsVirtualFileSystemEnabled)
             StartWatchingMediaFolder(eventArgs.MediaFolder, eventArgs.Configuration);
         else
             StopWatchingPath(eventArgs.MediaFolder.Path);

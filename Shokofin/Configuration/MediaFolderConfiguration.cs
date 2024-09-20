@@ -52,6 +52,13 @@ public class MediaFolderConfiguration
     public string ImportFolderRelativePath  { get; set; } = string.Empty;
 
     /// <summary>
+    /// Indicates the Jellyfin Media Folder is a virtual file system folder.
+    /// </summary>
+    [XmlIgnore]
+    [JsonInclude]
+    public bool IsVirtualRoot => ImportFolderId < 0;
+
+    /// <summary>
     /// Indicates the Jellyfin Media Folder is mapped to a Shoko Import Folder.
     /// </summary>
     [XmlIgnore]

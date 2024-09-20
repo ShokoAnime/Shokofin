@@ -463,7 +463,11 @@ public class EventDispatchService
 
     private async Task ReportMediaFolderChanged(Folder mediaFolder, string pathToReport)
     {
-        if (LibraryManager.GetLibraryOptions(mediaFolder) is not LibraryOptions libraryOptions || !libraryOptions.EnableRealtimeMonitor) {
+        // Don't block real-time file events on the media folder that uses a physical VFS root, or if real-time monitoring is disabled.
+        if (mediaFolder.Path.StartsWith(Plugin.Instance.VirtualRoot) ||
+            LibraryManager.GetLibraryOptions(mediaFolder) is not LibraryOptions libraryOptions ||
+            !libraryOptions.EnableRealtimeMonitor
+        ) {
             LibraryMonitor.ReportFileSystemChanged(pathToReport);
             return;
         }

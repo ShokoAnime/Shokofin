@@ -80,7 +80,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve path \"{fileInfo.FullName}\".");
-            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, fileInfo.FullName).ConfigureAwait(false);
+            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
@@ -123,7 +123,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve children of \"{parent.Path}\". (Children={fileInfoList.Count})");
-            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, parent.Path).ConfigureAwait(false);
+            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
