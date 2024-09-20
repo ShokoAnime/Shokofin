@@ -209,7 +209,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                             }
                         }
                         catch (Exception ex) {
-                            Logger.LogTrace(ex, "Failed to remove ");
+                            Logger.LogTrace(ex, "Failed to remove {Path}", pathToRemove);
                         }
                     }
                     var deltaTime = DateTime.Now - start;
