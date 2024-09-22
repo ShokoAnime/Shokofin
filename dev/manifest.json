@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.37",
+                "changelog": "`misc`: **Add path and/or other details when throwing**:\n\n- Added the path and/or other details when throwing in a provider, to more easily identify _which_ series/episode is throwing if the stack trace and/or error message is generic/useless.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.37/shoko_4.1.1.37.zip",
+                "checksum": "d3e3edb118e6d3bc60cb573290f99f46",
+                "timestamp": "2024-09-22T23:22:24Z"
+            },
+            {
                 "version": "4.1.1.36",
                 "changelog": "`fix`: **Use older image types until next shoko server stable release**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.33/shoko_4.1.1.33.zip",
                 "checksum": "3b465f0bd04bdbd67d9198597db4fe62",
                 "timestamp": "2024-09-11T00:41:09Z"
-            },
-            {
-                "version": "4.1.1.32",
-                "changelog": "`misc`: **Mark chronological season ordering as experimental (again)**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.32/shoko_4.1.1.32.zip",
-                "checksum": "9b9c05588d820da87b611ed4d1d89d88",
-                "timestamp": "2024-09-10T00:39:58Z"
             }
         ]
     }
