@@ -124,22 +124,22 @@ public enum ImageType
     /// <summary>
     ///
     /// </summary>
-    Thumbnail = 3,
+    Thumb = 3,
 
     /// <summary>
     ///
     /// </summary>
-    Thumb = Thumbnail,
+    Thumbnail = Thumb,
 
     /// <summary>
     ///
     /// </summary>
-    Backdrop = 4,
+    Fanart = 4,
 
     /// <summary>
     ///
     /// </summary>
-    Fanart = Backdrop,
+    Backdrop = Fanart,
 
     /// <summary>
     ///
