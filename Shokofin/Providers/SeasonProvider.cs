@@ -91,7 +91,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
             return result;
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            Logger.LogError(ex, "Threw unexpectedly while refreshing season {SeasonNumber}; {Message} (Path={Path},Series={SeriesId})", info.IndexNumber, ex.Message, info.Path, seriesId);
             return new MetadataResult<Season>();
         }
         finally {

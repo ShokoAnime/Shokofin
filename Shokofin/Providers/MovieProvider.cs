@@ -83,7 +83,7 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrde
             return result;
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            Logger.LogError(ex, "Threw unexpectedly while refreshing {Path}; {Message}", info.Path, ex.Message);
             return new MetadataResult<Movie>();
         }
         finally {

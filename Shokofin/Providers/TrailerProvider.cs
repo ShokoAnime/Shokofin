@@ -68,7 +68,7 @@ public class TrailerProvider: IRemoteMetadataProvider<Trailer, TrailerInfo>, IHa
             return result;
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            Logger.LogError(ex, "Threw unexpectedly while refreshing path {Path}; {Message}", info.Path, ex.Message);
             return new MetadataResult<Trailer>();
         }
         finally {

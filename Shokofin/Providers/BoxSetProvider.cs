@@ -50,7 +50,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
             return new();
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            Logger.LogError(ex, "Threw unexpectedly while refreshing {Path}; {Message}", info.Path, ex.Message);
             return new MetadataResult<BoxSet>();
         }
     }

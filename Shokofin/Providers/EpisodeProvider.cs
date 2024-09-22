@@ -86,7 +86,15 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
             return result;
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            if (info.IsMissingEpisode || string.IsNullOrEmpty(info.Path)) {
+                if (!info.TryGetProviderId(ShokoEpisodeId.Name, out var episodeId))
+                    episodeId = null;
+                Logger.LogError(ex, "Threw unexpectedly while refreshing a missing episode; {Message} (Episode={EpisodeId})", ex.Message, episodeId);
+            }
+            else {
+                Logger.LogError(ex, "Threw unexpectedly while refreshing {Path}: {Message}", info.Path, info.IsMissingEpisode);
+            }
+
             return new MetadataResult<Episode>();
         }
         finally {
