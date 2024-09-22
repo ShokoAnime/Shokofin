@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.35",
+                "changelog": "`cleanup`: **Remove unneeded setting**.\n\n`misc`: **Disable any title by default**.\n\n`fix`: **Enable schedule tasks**:\n\n- Enable the schedule tasks so they are allowed to be ran on a schedule.\n\n`chore`: **Modernize array/list syntax usage**.\n\n`chore`: **Update settings page**:\n\n- Updated some settings to better align with the new docs. Still need work though, but it's a start.\n\n`fix`: **Don't append list values to existing list**:\n\n- Don't append list values to the existing list, but instead replace the entire list with a new list, making sure the default option is also included.\n\n`chore`: **Update settings page (take 2)**:\n\n- Readjusted defaults for 3rd party provider IDs.\n\n- Added shoko as a description source you can toggle.\n\n`feat`: **Add expert mode toggle**.\n\n`refactor`: **Modernize scheduled tasks + more**:\n\n- Modernized the scheduled tasks by updating to more modern syntax.\n\n- Added expert mode toggles to some scheduled tasks, since not all tasks are equal, and some require extra care when running and/or shouldn't be ran on a whim. \ud83d\ude14\n\n`chore`: **Make usage tracker injectable**.\n\n`feat`: **Allow VFS to live in cache dir**:\n\n- Add a new **EXPERIMENTAL** option to place the VFS root directory in the cache directory instead of the config directory. Untested. Also haven't investigated if Jellyfin will auto-clear it yet or if it will leave it be.\n\n`misc`: **Tweak log level of some tasks**.\n\n`fix`: **Don't show 'settings saved' message**:\n\n- Don't show the 'Settings Saved' message when we sign-in and when we toggle expert mode.\n\n`fix`: **Add connected/reset messages**:\n\n- Added a alert/toast for establishing and resetting the connection to Shoko.\n\n`fix`: **Only add extras for movies if the movie will exist**.\n\n`feat`: **Add EXPERIMENTAL physical roots for VFS**:\n\n- Added a new EXPERIMENTAL feature to attach a physical VFS root as a media folder to each of your libraries, allowing us to mount the VFS to the new root and to re-use media folders across libraries without resorting to _other_ workarounds.\n\n`misc`: **Fix up error message**.\n\n`misc`: **Also mark season ordering as expert**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.35/shoko_4.1.1.35.zip",
+                "checksum": "5f5e737dcfd025c6bb29b1260fa497f2",
+                "timestamp": "2024-09-22T01:02:12Z"
+            },
+            {
                 "version": "4.1.1.34",
                 "changelog": "`misc`: **Log which key is throwing from the guarded memory cache**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.31/shoko_4.1.1.31.zip",
                 "checksum": "1bbae7468de5502f2e05d00d87940788",
                 "timestamp": "2024-09-10T00:32:53Z"
-            },
-            {
-                "version": "4.1.1.30",
-                "changelog": "`misc`: **Merge paths for special and other type episodes**:\n\n\u2026because they should had probably been merged into one earlier\u2026",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.30/shoko_4.1.1.30.zip",
-                "checksum": "6de2fdfd3eac26bff920247dda85c92d",
-                "timestamp": "2024-09-08T18:26:57Z"
             }
         ]
     }
