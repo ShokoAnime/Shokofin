@@ -72,13 +72,16 @@ public class VersionCheckTask(ILogger<VersionCheckTask> logger, ILibraryManager 
                 mediaFolders
                     .Select(m => m.ImportFolderId)
                     .Distinct()
-                    .Except([0])
+                    .Except([0, -1])
                     .Select(id => _apiClient.GetImportFolder(id))
                     .ToList()
             )
             .ContinueWith(task => task.Result.OfType<ImportFolder>().ToDictionary(i => i.Id, i => i.Name))
             .ConfigureAwait(false);
         foreach (var mediaFolderConfig in mediaFolders) {
+            if (mediaFolderConfig.IsVirtualRoot)
+                continue;
+
             if (!importFolderNameMap.TryGetValue(mediaFolderConfig.ImportFolderId, out var importFolderName))
                 importFolderName = null;
 
@@ -90,7 +93,7 @@ public class VersionCheckTask(ILogger<VersionCheckTask> logger, ILibraryManager 
                 updated = true;
             }
 
-            if (!string.Equals(mediaFolderConfig.ImportFolderName, importFolderName)) {
+            if (!string.IsNullOrEmpty(importFolderName) && !string.Equals(mediaFolderConfig.ImportFolderName, importFolderName)) {
                 _logger.LogDebug("Found new name for import folder; {name} (ImportFolder={ImportFolderId})", importFolderName, mediaFolderConfig.ImportFolderId);
                 mediaFolderConfig.ImportFolderName = importFolderName;
                 updated = true;
