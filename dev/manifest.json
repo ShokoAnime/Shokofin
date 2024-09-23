@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.38",
+                "changelog": "`fix`: **Update version check to support physical vfs roots**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.38/shoko_4.1.1.38.zip",
+                "checksum": "6370bcf6de69eb7985620639315367ca",
+                "timestamp": "2024-09-23T12:34:58Z"
+            },
+            {
                 "version": "4.1.1.37",
                 "changelog": "`misc`: **Add path and/or other details when throwing**:\n\n- Added the path and/or other details when throwing in a provider, to more easily identify _which_ series/episode is throwing if the stack trace and/or error message is generic/useless.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.34/shoko_4.1.1.34.zip",
                 "checksum": "55b587ef8f005c2fc2ec1a9deb244621",
                 "timestamp": "2024-09-14T14:43:21Z"
-            },
-            {
-                "version": "4.1.1.33",
-                "changelog": "`refactor`: **Promote auto merge version from the experimental section**:\n\n- Promote the auto-merge multiple versions setting from the experimental section to the library section. The name is kept in the xml settings for now so people won't have to manually re-enable it.\n\n- Remove the split & merge options from the settings UI, since I forgot when I removed them from the code earlier.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.33/shoko_4.1.1.33.zip",
-                "checksum": "3b465f0bd04bdbd67d9198597db4fe62",
-                "timestamp": "2024-09-11T00:41:09Z"
             }
         ]
     }
