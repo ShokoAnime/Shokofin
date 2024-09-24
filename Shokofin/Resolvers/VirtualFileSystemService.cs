@@ -132,7 +132,7 @@ public class VirtualFileSystemService
     /// <returns>The VFS path, if it succeeded.</returns>
     public async Task<(string?, bool)> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path)
     {
-        var (vfsPath, mainMediaFolderPath, mediaConfigs) = ConfigurationService.GetAvailableMediaFoldersForLibrary(mediaFolder, collectionType, config => config.IsVirtualFileSystemEnabled);
+        var (vfsPath, mainMediaFolderPath, mediaConfigs, skipGeneration) = ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType, config => config.IsVirtualFileSystemEnabled);
         if (string.IsNullOrEmpty(vfsPath) || string.IsNullOrEmpty(mainMediaFolderPath) || mediaConfigs.Count is 0)
             return (null, false);
 
@@ -251,6 +251,10 @@ public class VirtualFileSystemService
 
             if (allFiles is null)
                 return false;
+
+            // Skip generation if we're going to (re-)schedule a library scan.
+            if (skipGeneration)
+                return true;
 
             // Generate and cleanup the structure in the VFS.
             var result = await GenerateStructure(collectionType, vfsPath, allFiles);

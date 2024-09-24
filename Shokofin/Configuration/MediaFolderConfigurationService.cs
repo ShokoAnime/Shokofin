@@ -60,6 +60,8 @@ public class MediaFolderConfigurationService
 
     private readonly Dictionary<Guid, string> MediaFolderChangeKeys = [];
 
+    private readonly Dictionary<Guid, (string libraryName, HashSet<string> add, HashSet<string> remove)> LibraryEdits = [];
+
     private bool ShouldGenerateAllConfigurations = true;
 
     private readonly object LockObj = new();
@@ -69,8 +71,6 @@ public class MediaFolderConfigurationService
     public event EventHandler<MediaConfigurationChangedEventArgs>? ConfigurationUpdated;
 
     public event EventHandler<MediaConfigurationChangedEventArgs>? ConfigurationRemoved;
-    
-    public readonly Dictionary<Guid, (string libraryName, HashSet<string> add, HashSet<string> remove)> LibraryEdits = [];
 
     public MediaFolderConfigurationService(
         ILogger<MediaFolderConfigurationService> logger,
@@ -118,15 +118,15 @@ public class MediaFolderConfigurationService
         if (isRunning)
             return;
 
-        Task.Run(EditLibraries);
+        Task.Run(() => EditLibraries(true));
     }
 
     private void OnUsageTrackerStalled(object? sender, EventArgs eventArgs)
     {
-        Task.Run(EditLibraries);
+        Task.Run(() => EditLibraries(false));
     }
 
-    private void EditLibraries()
+    private void EditLibraries(bool shouldScheduleLibraryScan)
     {
         lock (LockObj) {
             if (LibraryEdits.Count is 0)
@@ -151,7 +151,8 @@ public class MediaFolderConfigurationService
                 foreach (var vfsPath in remove)
                     LibraryManager.RemoveMediaPath(libraryName, new(vfsPath));
             }
-            LibraryManager.ValidateMediaLibrary(new Progress<double>(), CancellationToken.None);
+            if (shouldScheduleLibraryScan)
+                LibraryManager.ValidateMediaLibrary(new Progress<double>(), CancellationToken.None);
         }
     }
 
@@ -224,30 +225,28 @@ public class MediaFolderConfigurationService
         }
     }
 
-    public (string vfsPath, string mainMediaFolderPath, IReadOnlyList<MediaFolderConfiguration> mediaList) GetAvailableMediaFoldersForLibrary(Folder mediaFolder, CollectionType? collectionType, Func<MediaFolderConfiguration, bool>? filter = null)
+    public (string vfsPath, string mainMediaFolderPath, IReadOnlyList<MediaFolderConfiguration> mediaList, bool skipGeneration) GetMediaFoldersForLibraryInVFS(Folder mediaFolder, CollectionType? collectionType, Func<MediaFolderConfiguration, bool>? filter = null)
     {
-        var attachRoot = Plugin.Instance.Configuration.VFS_AttachRoot;
         var mediaFolderConfig = GetOrCreateConfigurationForMediaFolder(mediaFolder, collectionType);
         lock (LockObj) {
+            var skipGeneration = LibraryEdits.Count is > 0 && LibraryManager.IsScanRunning;
             if (LibraryManager.GetItemById(mediaFolderConfig.LibraryId) is not Folder libraryFolder)
-                return (string.Empty, string.Empty, []);
+                return (string.Empty, string.Empty, [], skipGeneration);
+
             var virtualFolder = LibraryManager.GetVirtualFolders()
                 .FirstOrDefault(folder => Guid.TryParse(folder.ItemId, out var guid) && guid == mediaFolderConfig.LibraryId);
             if (virtualFolder is null || virtualFolder.Locations.Length is 0)
-                return (string.Empty, string.Empty, []);
+                return (string.Empty, string.Empty, [], skipGeneration);
 
             var vfsPath = libraryFolder.GetVirtualRoot();
             var mediaFolders = Plugin.Instance.Configuration.MediaFolders
                 .Where(config => config.IsMapped && !config.IsVirtualRoot && config.LibraryId == mediaFolderConfig.LibraryId && (filter is null || filter(config)) && LibraryManager.GetItemById(config.MediaFolderId) is Folder)
                 .ToList();
-            if (attachRoot && mediaFolderConfig.IsVirtualFileSystemEnabled)
-                return (vfsPath, vfsPath, mediaFolders);
+            if (Plugin.Instance.Configuration.VFS_AttachRoot && mediaFolderConfig.IsVirtualFileSystemEnabled)
+                return (vfsPath, vfsPath, mediaFolders, skipGeneration);
 
-            return (
-                libraryFolder.GetVirtualRoot(),
-                virtualFolder.Locations.FirstOrDefault(a => DirectoryService.IsAccessible(a)) ?? string.Empty,
-                mediaFolders
-            );
+            var mainMediaFolderPath = virtualFolder.Locations.FirstOrDefault(a => DirectoryService.IsAccessible(a)) ?? string.Empty;
+            return (vfsPath, mainMediaFolderPath, mediaFolders, skipGeneration);
         }
     }
 
