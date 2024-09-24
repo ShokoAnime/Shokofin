@@ -614,15 +614,9 @@ async function syncMediaFolderSettings(form) {
     config.VFS_LiveInCache = form.querySelector("#VFS_LiveInCache").checked;
     config.VFS_AttachRoot = form.querySelector("#VFS_AttachRoot").checked;
     if (mediaFolderConfig) {
-        // We need to update the config for all libraries that use this media folder, because
-        // otherwise we will experience edge cases where the media folder is used in multiple
-        // libraries potentially with and without the VFS enabled.
-        const libraryIDs = config.MediaFolders.filter(m => m.MediaFolderId === mediaFolderId).map(m => m.LibraryId);
-        for (const libraryId of libraryIDs) {
-            for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
-                c.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
-                c.LibraryFilteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
-            }
+        for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
+            c.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
+            c.LibraryFilteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
         }
     }
     else {
