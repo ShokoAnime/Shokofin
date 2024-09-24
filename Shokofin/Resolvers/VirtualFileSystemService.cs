@@ -243,7 +243,7 @@ public class VirtualFileSystemService
                 }
             }
             // Iterate files in the "real" media folder.
-            else {
+            else if (mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath)) || path == vfsPath) {
                 var allPaths = GetPathsForMediaFolder(mediaConfigs);
                 pathToClean = vfsPath;
                 allFiles = GetFilesForImportFolder(mediaConfigs, allPaths);
