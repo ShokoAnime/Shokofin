@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.39",
+                "changelog": "`fix`: **Fix up media folder and user selectors**:\n\n- Fixed the media selectors I broke.\n\n- Sync media folder settings between the same library _and_ any other libraries that contain the same media folder.\n\n- Fixed loading animation for initial load.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.39/shoko_4.1.1.39.zip",
+                "checksum": "8011dbd5a7ba8894c92dbc40d77ec0ff",
+                "timestamp": "2024-09-24T14:23:48Z"
+            },
+            {
                 "version": "4.1.1.38",
                 "changelog": "`fix`: **Update version check to support physical vfs roots**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.35/shoko_4.1.1.35.zip",
                 "checksum": "5f5e737dcfd025c6bb29b1260fa497f2",
                 "timestamp": "2024-09-22T01:02:12Z"
-            },
-            {
-                "version": "4.1.1.34",
-                "changelog": "`misc`: **Log which key is throwing from the guarded memory cache**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.34/shoko_4.1.1.34.zip",
-                "checksum": "55b587ef8f005c2fc2ec1a9deb244621",
-                "timestamp": "2024-09-14T14:43:21Z"
             }
         ]
     }
