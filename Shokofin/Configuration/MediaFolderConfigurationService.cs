@@ -199,7 +199,7 @@ public class MediaFolderConfigurationService
 
     #region Media Folder Mapping
 
-    public IReadOnlyList<(string vfsPath, string mainMediaFolderPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)> GetAvailableMediaFoldersForLibraries(Func<MediaFolderConfiguration, bool>? filter = null)
+    public IReadOnlyList<(string vfsPath, string mainMediaFolderPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)> GetAvailableMediaFoldersForLibrariesForEvents(Func<MediaFolderConfiguration, bool>? filter = null)
     {
         lock (LockObj) {
             var virtualFolders = LibraryManager.GetVirtualFolders();
@@ -258,7 +258,6 @@ public class MediaFolderConfigurationService
                 throw new Exception($"Unable to find library to use for media folder \"{mediaFolder.Path}\"");
 
             var config = Plugin.Instance.Configuration;
-            var attachRoot = config.VFS_AttachRoot;
             var libraryConfig = config.MediaFolders.FirstOrDefault(c => c.LibraryId == libraryId);
             var mediaFolderConfig = config.MediaFolders.FirstOrDefault(c => c.MediaFolderId == mediaFolder.Id && c.LibraryId == libraryId) ??
                 CreateConfigurationForPath(libraryId, mediaFolder, libraryConfig).ConfigureAwait(false).GetAwaiter().GetResult();
