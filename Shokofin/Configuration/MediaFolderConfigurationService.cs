@@ -283,7 +283,6 @@ public class MediaFolderConfigurationService
             )
             .ToList();
         var config = Plugin.Instance.Configuration;
-        var attachRoot = config.VFS_AttachRoot;
         foreach (var virtualFolder in filteredVirtualFolders) {
             if (!Guid.TryParse(virtualFolder.ItemId, out var libraryId) || LibraryManager.GetItemById(libraryId) is not Folder libraryFolder)
                 throw new Exception($"Unable to find virtual folder \"{virtualFolder.Name}\"");
@@ -306,11 +305,12 @@ public class MediaFolderConfigurationService
                 mediaFolderConfig = CreateConfigurationForPath(libraryId, secondFolder, libraryConfig).ConfigureAwait(false).GetAwaiter().GetResult();
             }
 
-            if (!attachRoot || !(mediaFolderConfig?.IsVirtualFileSystemEnabled ?? false))
+            if (mediaFolderConfig is null)
                 continue;
 
             var vfsPath = libraryFolder.GetVirtualRoot();
-            if (!virtualFolder.Locations.Contains(vfsPath, Path.DirectorySeparatorChar is '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)) {
+            var shouldAttach = config.VFS_AttachRoot && mediaFolderConfig.IsVirtualFileSystemEnabled;
+            if (shouldAttach && !virtualFolder.Locations.Contains(vfsPath, Path.DirectorySeparatorChar is '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)) {
                 if (!LibraryEdits.TryGetValue(libraryId, out var edits))
                     LibraryEdits[libraryId] = edits = (libraryFolder.Name, [], []);
                 edits.add.Add(vfsPath);
@@ -318,7 +318,7 @@ public class MediaFolderConfigurationService
 
             var virtualRoot = Plugin.Instance.VirtualRoot;
             var toRemove = virtualFolder.Locations
-                .Except([vfsPath])
+                .Except(shouldAttach ? [vfsPath] : [])
                 .Where(location => location.StartsWith(virtualRoot, Path.DirectorySeparatorChar is '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
                 .ToList();
             if (toRemove.Count > 0) {
