@@ -39,14 +39,13 @@ public class MergeVersionsManager
     /// </summary>
     /// <param name="libraryManager">Library manager.</param>
     /// <param name="lookup">Shoko ID Lookup.</param>
-    /// <param name="logger">Logger.</param>
     public MergeVersionsManager(ILibraryManager libraryManager, IIdLookup lookup)
     {
         LibraryManager = libraryManager;
         Lookup = lookup;
     }
 
-    #region Shared
+    #region Top Level
 
     /// <summary>
     /// Group and merge all videos with a Shoko Episode ID set.
@@ -55,7 +54,7 @@ public class MergeVersionsManager
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async task that will silently complete when the merging is
     /// complete.</returns>
-    public async Task MergeAll(IProgress<double> progress, CancellationToken cancellationToken)
+    public async Task SplitAndMergeAll(IProgress<double>? progress, CancellationToken? cancellationToken = null)
     {
         // Shared progress;
         double episodeProgressValue = 0d, movieProgressValue = 0d;
@@ -65,17 +64,19 @@ public class MergeVersionsManager
             movieProgressValue = value / 2d;
             progress?.Report(movieProgressValue + episodeProgressValue);
         });
-        var movieTask = MergeAllMovies(movieProgress, cancellationToken);
+        var movieTask = SplitAndMergeVideos(GetMoviesFromLibrary(), movieProgress, cancellationToken);
 
         // Setup the episode task.
         var episodeProgress = new Progress<double>(value => {
             episodeProgressValue = value / 2d;
             progress?.Report(movieProgressValue + episodeProgressValue);
         });
-        var episodeTask = MergeAllEpisodes(episodeProgress, cancellationToken);
+        var episodeTask = SplitAndMergeVideos(GetEpisodesFromLibrary(), episodeProgress, cancellationToken);
 
         // Run them in parallel.
         await Task.WhenAll(movieTask, episodeTask);
+
+        progress?.Report(100d);
     }
 
     /// <summary>
@@ -95,7 +96,7 @@ public class MergeVersionsManager
             movieProgressValue = value / 2d;
             progress?.Report(movieProgressValue + episodeProgressValue);
         });
-        var movieTask = SplitAllMovies(movieProgress, cancellationToken);
+        var movieTask = SplitVideos(GetMoviesFromLibrary(), movieProgress, cancellationToken);
 
         // Setup the episode task.
         var episodeProgress = new Progress<double>(value => {
@@ -103,209 +104,140 @@ public class MergeVersionsManager
             progress?.Report(movieProgressValue + episodeProgressValue);
             progress?.Report(50d + (value / 2d));
         });
-        var episodeTask = SplitAllEpisodes(episodeProgress, cancellationToken);
+        var episodeTask = SplitVideos(GetMoviesFromLibrary(), episodeProgress, cancellationToken);
 
         // Run them in parallel.
         await Task.WhenAll(movieTask, episodeTask);
     }
 
-    #endregion Shared
-    #region Movies
+    #endregion
+
+    #region Episode Level
+
+    public async Task SplitAndMergeAllEpisodes(IProgress<double>? progress, CancellationToken? cancellationToken)
+        => await SplitAndMergeVideos(GetEpisodesFromLibrary(), progress, cancellationToken);
+
+    public async Task SplitAllEpisodes(IProgress<double>? progress, CancellationToken? cancellationToken)
+        => await SplitVideos(GetEpisodesFromLibrary(), progress, cancellationToken);
+
+    #endregion
+
+    #region Movie Level
+
+    public async Task SplitAndMergeAllMovies(IProgress<double>? progress, CancellationToken? cancellationToken)
+        => await SplitAndMergeVideos(GetMoviesFromLibrary(), progress, cancellationToken);
+
+    public async Task SplitAllMovies(IProgress<double>? progress, CancellationToken? cancellationToken)
+        => await SplitVideos(GetMoviesFromLibrary(), progress, cancellationToken);
+
+    #endregion
+
+    #region Shared Methods
 
     /// <summary>
     /// Get all movies with a Shoko Episode ID set across all libraries.
     /// </summary>
-    /// <returns>A list of all movies with a Shoko Episode ID set.</returns>
-    private List<Movie> GetMoviesFromLibrary()
-    {
-        return LibraryManager.GetItemList(new() {
+    /// <param name="episodeId">Optional. The episode id if we want to filter to only movies with a given Shoko Episode ID.</param>
+    /// <returns>A list of all movies with the given <paramref name="episodeId"/> set.</returns>
+    public IReadOnlyList<Movie> GetMoviesFromLibrary(string episodeId = "")
+        => LibraryManager
+            .GetItemList(new() {
                 IncludeItemTypes = [BaseItemKind.Movie],
                 IsVirtualItem = false,
                 Recursive = true,
-                HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, string.Empty } },
+                HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, episodeId } },
             })
-            .Cast<Movie>()
+            .OfType<Movie>()
             .Where(Lookup.IsEnabledForItem)
             .ToList();
-    }
-
-    /// <summary>
-    /// Merge movie entries together.
-    /// </summary>
-    /// <param name="movies">Movies to merge.</param>
-    /// <returns>An async task that will silently complete when the merging is
-    /// complete.</returns>
-    public static async Task MergeMovies(IEnumerable<Movie> movies)
-        => await MergeVideos(movies.Cast<Video>().OrderBy(e => e.Id).ToList());
-
-    /// <summary>
-    /// Merge all movie entries with a Shoko Episode ID set.
-    /// </summary>
-    /// <param name="progress">Progress indicator.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An async task that will silently complete when the merging is
-    /// complete.</returns>
-    public async Task MergeAllMovies(IProgress<double> progress, CancellationToken cancellationToken)
-    {
-        // Split up any existing merged movies.
-        var movies = GetMoviesFromLibrary();
-        double currentCount = 0d;
-        double totalCount = movies.Count;
-        foreach (var movie in movies) {
-            // Handle cancellation and update progress.
-            cancellationToken.ThrowIfCancellationRequested();
-            var percent = (currentCount++ / totalCount) * 50d;
-            progress?.Report(percent);
-
-            // Remove all alternate sources linked to the movie.
-            await RemoveAlternateSources(movie);
-        }
-
-        // Merge all movies with more than one version (again).
-        var duplicationGroups = movies
-            .GroupBy(movie => (movie.GetTopParent()?.Path, movie.GetProviderId(ShokoEpisodeId.Name)))
-            .Where(movie => movie.Count() > 1)
-            .ToList();
-        currentCount = 0d;
-        totalCount = duplicationGroups.Count;
-        foreach (var movieGroup in duplicationGroups) {
-            // Handle cancellation and update progress.
-            cancellationToken.ThrowIfCancellationRequested();
-            var percent = 50d + ((currentCount++ / totalCount) * 50d);
-            progress?.Report(percent);
-
-            // Link the movies together as alternate sources.
-            await MergeMovies(movieGroup);
-        }
-
-        progress?.Report(100);
-    }
-
-    /// <summary>
-    /// Split up all existing merged movies with a Shoko Episode ID set.
-    /// </summary>
-    /// <param name="progress">Progress indicator.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An async task that will silently complete when the splitting is
-    /// complete.</returns>
-    public async Task SplitAllMovies(IProgress<double> progress, CancellationToken cancellationToken)
-    {
-        // Split up any existing merged movies.
-        var movies = GetMoviesFromLibrary();
-        double currentCount = 0d;
-        double totalMovies = movies.Count;
-        foreach (var movie in movies) {
-            // Handle cancellation and update progress.
-            cancellationToken.ThrowIfCancellationRequested();
-            var percent = (currentCount++ / totalMovies) * 100d;
-            progress?.Report(percent);
-
-            // Remove all alternate sources linked to the movie.
-            await RemoveAlternateSources(movie);
-        }
-
-        progress?.Report(100);
-    }
-
-    #endregion Movies
-    #region Episodes
 
     /// <summary>
     /// Get all episodes with a Shoko Episode ID set across all libraries.
     /// </summary>
+    /// <param name="episodeId">Optional. The episode id if we want to filter to only episodes with a given Shoko Episode ID.</param>
     /// <returns>A list of all episodes with a Shoko Episode ID set.</returns>
-    private List<Episode> GetEpisodesFromLibrary()
-    {
-        return LibraryManager.GetItemList(new() {
+    public IReadOnlyList<Episode> GetEpisodesFromLibrary(string episodeId = "")
+        => LibraryManager
+            .GetItemList(new() {
                 IncludeItemTypes = [BaseItemKind.Episode],
-                HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, string.Empty } },
+                HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, episodeId } },
                 IsVirtualItem = false,
                 Recursive = true,
             })
             .Cast<Episode>()
             .Where(Lookup.IsEnabledForItem)
             .ToList();
-    }
 
     /// <summary>
-    /// Merge episode entries together.
-    /// </summary>
-    /// <param name="episodes">Episodes to merge.</param>
-    /// <returns>An async task that will silently complete when the merging is
-    /// complete.</returns>
-    public static async Task MergeEpisodes(IEnumerable<Episode> episodes)
-        => await MergeVideos(episodes.Cast<Video>().OrderBy(e => e.Id).ToList());
-
-    /// <summary>
-    /// Split up all existing merged versions of each episode and merge them
-    /// again afterwards. Only applied to episodes with a Shoko Episode ID set.
+    /// Merge all videos with a Shoko Episode ID set.
     /// </summary>
     /// <param name="progress">Progress indicator.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An async task that will silently complete when the splitting
-    /// followed by merging is complete.</returns>
-    public async Task MergeAllEpisodes(IProgress<double> progress, CancellationToken cancellationToken)
+    /// <returns>An async task that will silently complete when the merging is
+    /// complete.</returns>
+    public async Task SplitAndMergeVideos<TVideo>(
+        IReadOnlyList<TVideo> videos,
+        IProgress<double>? progress = null,
+        CancellationToken? cancellationToken = null
+    ) where TVideo : Video
     {
-        // Split up any existing merged episodes.
-        var episodes = GetEpisodesFromLibrary();
+        // Split up any existing merged videos.
         double currentCount = 0d;
-        double totalCount = episodes.Count;
-        foreach (var e in episodes) {
+        double totalCount = videos.Count;
+        foreach (var video in videos) {
             // Handle cancellation and update progress.
-            cancellationToken.ThrowIfCancellationRequested();
-            var percent = (currentCount++ / totalCount) * 100d;
+            cancellationToken?.ThrowIfCancellationRequested();
+            var percent = currentCount++ / totalCount * 50d;
             progress?.Report(percent);
 
-            // Remove all alternate sources linked to the episode.
-            await RemoveAlternateSources(e);
+            // Remove all alternate sources linked to the video.
+            await RemoveAlternateSources(video);
         }
 
-        // Merge episodes with more than one version (again), and with the same
-        // number of additional episodes.
-        var duplicationGroups = episodes
-            .GroupBy(e => (e.GetTopParent()?.Path, $"{e.GetProviderId(ShokoEpisodeId.Name)}-{(e.IndexNumberEnd ?? e.IndexNumber ?? 1) - (e.IndexNumber ?? 1)}"))
-            .Where(e => e.Count() > 1)
+        // Merge all videos with more than one version (again).
+        var duplicationGroups = videos
+            .GroupBy(video => (video.GetTopParent()?.Path, video.GetProviderId(ShokoEpisodeId.Name)))
+            .Where(groupBy => groupBy.Count() > 1)
             .ToList();
         currentCount = 0d;
         totalCount = duplicationGroups.Count;
-        foreach (var episodeGroup in duplicationGroups) {
+        foreach (var videoGroup in duplicationGroups) {
             // Handle cancellation and update progress.
-            cancellationToken.ThrowIfCancellationRequested();
-            var percent = currentCount++ / totalCount * 100d;
+            cancellationToken?.ThrowIfCancellationRequested();
+            var percent = 50d + (currentCount++ / totalCount * 50d);
             progress?.Report(percent);
 
-            // Link the episodes together as alternate sources.
-            await MergeEpisodes(episodeGroup);
-        }
-    }
-
-    /// <summary>
-    /// Split up all existing merged episodes with a Shoko Episode ID set.
-    /// </summary>
-    /// <param name="progress">Progress indicator.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An async task that will silently complete when the splitting is
-    /// complete.</returns>
-    public async Task SplitAllEpisodes(IProgress<double> progress, CancellationToken cancellationToken)
-    {
-        // Split up any existing merged episodes.
-        var episodes = GetEpisodesFromLibrary();
-        double currentCount = 0d;
-        double totalEpisodes = episodes.Count;
-        foreach (var e in episodes) {
-            // Handle cancellation and update progress.
-            cancellationToken.ThrowIfCancellationRequested();
-            var percent = (currentCount++ / totalEpisodes) * 100d;
-            progress?.Report(percent);
-
-            // Remove all alternate sources linked to the episode.
-            await RemoveAlternateSources(e);
+            // Link the videos together as alternate sources.
+            await MergeVideos(videoGroup);
         }
 
         progress?.Report(100);
     }
 
-    #endregion Episodes
+    /// <summary>
+    /// Split up all existing merged videos with a Shoko Episode ID set.
+    /// </summary>
+    /// <param name="progress">Progress indicator.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>An async task that will silently complete when the splitting is
+    /// complete.</returns>
+    public async Task SplitVideos<TVideo>(IReadOnlyList<TVideo> videos, IProgress<double>? progress, CancellationToken? cancellationToken) where TVideo : Video
+    {
+        // Split up any existing merged videos.
+        double currentCount = 0d;
+        double totalMovies = videos.Count;
+        foreach (var video in videos) {
+            // Handle cancellation and update progress.
+            cancellationToken?.ThrowIfCancellationRequested();
+            var percent = currentCount++ / totalMovies * 100d;
+            progress?.Report(percent);
+
+            // Remove all alternate sources linked to the video.
+            await RemoveAlternateSources(video);
+        }
+
+        progress?.Report(100);
+    }
 
     /// <summary>
     /// Merges multiple videos into a single UI element.
@@ -313,8 +245,10 @@ public class MergeVersionsManager
     ///
     /// Modified from;
     /// https://github.com/jellyfin/jellyfin/blob/9c97c533eff94d25463fb649c9572234da4af1ea/Jellyfin.Api/Controllers/VideosController.cs#L192
-    private static async Task MergeVideos(List<Video> videos)
+    private static async Task MergeVideos<TVideo>(IEnumerable<TVideo> input) where TVideo : Video
     {
+        if (input is not IList<TVideo> videos)
+            videos = input.ToList();
         if (videos.Count < 2)
             return;
 
@@ -357,8 +291,7 @@ public class MergeVersionsManager
                 .ConfigureAwait(false);
         }
 
-        primaryVersion.LinkedAlternateVersions = alternateVersionsOfPrimary
-            .ToArray();
+        primaryVersion.LinkedAlternateVersions = [.. alternateVersionsOfPrimary];
         await primaryVersion.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
             .ConfigureAwait(false);
     }
@@ -371,7 +304,7 @@ public class MergeVersionsManager
     ///
     /// Modified from;
     /// https://github.com/jellyfin/jellyfin/blob/9c97c533eff94d25463fb649c9572234da4af1ea/Jellyfin.Api/Controllers/VideosController.cs#L152
-    private async Task RemoveAlternateSources(Video video)
+    private async Task RemoveAlternateSources<TVideo>(TVideo video) where TVideo : Video
     {
         // Find the primary video.
         if (video.LinkedAlternateVersions.Length == 0) {
@@ -380,7 +313,7 @@ public class MergeVersionsManager
                 return;
 
             // Make sure the primary video still exists before we proceed.
-            if (LibraryManager.GetItemById(video.PrimaryVersionId) is not Video primaryVideo)
+            if (LibraryManager.GetItemById(video.PrimaryVersionId) is not TVideo primaryVideo)
                 return;
             video = primaryVideo;
         }
@@ -400,4 +333,6 @@ public class MergeVersionsManager
         await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
             .ConfigureAwait(false);
     }
+
+    #endregion Shared Methods
 }

@@ -23,7 +23,7 @@ public class PostScanTask(MergeVersionsManager versionsManager, CollectionManage
             var simpleProgress = new Progress<double>(value => progress.Report(baseProgress + (value / 2d)));
 
             // Merge versions.
-            await _mergeVersionsManager.MergeAll(simpleProgress, token);
+            await _mergeVersionsManager.SplitAndMergeAll(simpleProgress, token);
 
             // Reconstruct collections.
             baseProgress = 50;

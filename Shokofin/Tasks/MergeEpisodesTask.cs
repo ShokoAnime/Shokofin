@@ -49,7 +49,7 @@ public class MergeEpisodesTask(MergeVersionsManager userSyncManager, LibraryScan
             return;
 
         using (Plugin.Instance.Tracker.Enter("Merge Episodes Task")) {
-            await _mergeVersionManager.MergeAllEpisodes(progress, cancellationToken);
+            await _mergeVersionManager.SplitAndMergeAllEpisodes(progress, cancellationToken);
         }
     }
 }

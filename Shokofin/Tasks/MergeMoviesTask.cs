@@ -49,7 +49,7 @@ public class MergeMoviesTask(MergeVersionsManager userSyncManager, LibraryScanWa
             return;
 
         using (Plugin.Instance.Tracker.Enter("Merge Movies Task")) {
-            await VersionsManager.MergeAllMovies(progress, cancellationToken);
+            await VersionsManager.SplitAndMergeAllMovies(progress, cancellationToken);
         }
     }
 }
