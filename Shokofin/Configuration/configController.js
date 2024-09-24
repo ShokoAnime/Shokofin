@@ -116,13 +116,16 @@ async function loadUserConfig(form, userId, config) {
         return;
     }
 
-    Dashboard.showLoadingMsg();
-
     // Get the configuration to use.
-    if (!config) config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId)
-    const userConfig = config.UserList.find((c) => userId === c.UserId) || { UserId: userId };
+    let shouldHide = false;
+    if (!config) {
+        Dashboard.showLoadingMsg();
+        config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
+        shouldHide = true;
+    }
 
     // Configure the elements within the user container
+    const userConfig = config.UserList.find((c) => userId === c.UserId) || { UserId: userId };
     form.querySelector("#UserEnableSynchronization").checked = userConfig.EnableSynchronization || false;
     form.querySelector("#SyncUserDataOnImport").checked = userConfig.SyncUserDataOnImport || false;
     form.querySelector("#SyncUserDataAfterPlayback").checked = userConfig.SyncUserDataAfterPlayback || false;
@@ -149,26 +152,35 @@ async function loadUserConfig(form, userId, config) {
     // Show the user settings now if it was previously hidden.
     form.querySelector("#UserSettingsContainer").removeAttribute("hidden");
 
-    Dashboard.hideLoadingMsg();
+    if (shouldHide) {
+        Dashboard.hideLoadingMsg();
+    }
 }
 
-async function loadMediaFolderConfig(form, mediaFolderId, config) {
-    if (!mediaFolderId) {
+async function loadMediaFolderConfig(form, selectedValue, config) {
+    const [mediaFolderId, libraryId] = selectedValue.split(",");
+    if (!mediaFolderId || !libraryId) {
         form.querySelector("#MediaFolderDefaultSettingsContainer").removeAttribute("hidden");
         form.querySelector("#MediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
         Dashboard.hideLoadingMsg();
         return;
     }
 
-    Dashboard.showLoadingMsg();
-
     // Get the configuration to use.
-    if (!config) config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId)
-    const mediaFolderConfig = config.MediaFolders.find((c) => mediaFolderId === c.MediaFolderId);
+    let shouldHide = false;
+    if (!config) {
+        Dashboard.showLoadingMsg();
+        config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
+        shouldHide = true;
+    }
+
+    const mediaFolderConfig = config.MediaFolders.find((c) => mediaFolderId === c.MediaFolderId && libraryId === c.LibraryId);
     if (!mediaFolderConfig) {
         form.querySelector("#MediaFolderDefaultSettingsContainer").removeAttribute("hidden");
         form.querySelector("#MediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
-        Dashboard.hideLoadingMsg();
+        if (shouldHide) {
+            Dashboard.hideLoadingMsg();
+        }
         return;
     }
 
@@ -182,7 +194,9 @@ async function loadMediaFolderConfig(form, mediaFolderId, config) {
     form.querySelector("#MediaFolderDefaultSettingsContainer").setAttribute("hidden", "");
     form.querySelector("#MediaFolderPerFolderSettingsContainer").removeAttribute("hidden");
 
-    Dashboard.hideLoadingMsg();
+    if (shouldHide) {
+        Dashboard.hideLoadingMsg();
+    }
 }
 
 async function loadSignalrMediaFolderConfig(form, mediaFolderId, config) {
@@ -600,9 +614,15 @@ async function syncMediaFolderSettings(form) {
     config.VFS_LiveInCache = form.querySelector("#VFS_LiveInCache").checked;
     config.VFS_AttachRoot = form.querySelector("#VFS_AttachRoot").checked;
     if (mediaFolderConfig) {
-        for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
-            c.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
-            c.LibraryFilteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
+        // We need to update the config for all libraries that use this media folder, because
+        // otherwise we will experience edge cases where the media folder is used in multiple
+        // libraries potentially with and without the VFS enabled.
+        const libraryIDs = config.MediaFolders.filter(m => m.MediaFolderId === mediaFolderId).map(m => m.LibraryId);
+        for (const libraryId of libraryIDs) {
+            for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
+                c.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
+                c.LibraryFilteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
+            }
         }
     }
     else {
