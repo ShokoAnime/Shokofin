@@ -620,7 +620,7 @@ public class PluginConfiguration : BasePluginConfiguration
         SignalR_AutoReconnectInSeconds = [0, 2, 10, 30, 60, 120, 300];
         SignalR_EventSources = [ProviderName.Shoko, ProviderName.AniDB, ProviderName.TMDB];
         SignalR_RefreshEnabled = false;
-        SignalR_FileEvents = false;
+        SignalR_FileEvents = true;
         UsageTracker_StalledTimeInSeconds = 10;
         EXPERIMENTAL_MergeSeasons = false;
         EXPERIMENTAL_MergeSeasonsTypes = [SeriesType.OVA, SeriesType.TV, SeriesType.TVSpecial, SeriesType.Web, SeriesType.OVA];
