@@ -257,13 +257,10 @@ public class MediaFolderConfigurationService
             if (allVirtualFolders.FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path) && (collectionType is CollectionType.unknown || p.CollectionType.ConvertToCollectionType() == collectionType)) is not { } library || !Guid.TryParse(library.ItemId, out var libraryId))
                 throw new Exception($"Unable to find library to use for media folder \"{mediaFolder.Path}\"");
 
-            var config = Plugin.Instance.Configuration;
-            var libraryConfig = config.MediaFolders.FirstOrDefault(c => c.LibraryId == libraryId);
-            var mediaFolderConfig = config.MediaFolders.FirstOrDefault(c => c.MediaFolderId == mediaFolder.Id && c.LibraryId == libraryId) ??
-                CreateConfigurationForPath(libraryId, mediaFolder, libraryConfig).ConfigureAwait(false).GetAwaiter().GetResult();
-
             GenerateAllConfigurations(allVirtualFolders);
 
+            var config = Plugin.Instance.Configuration;
+            var mediaFolderConfig = config.MediaFolders.First(c => c.MediaFolderId == mediaFolder.Id && c.LibraryId == libraryId);
             return mediaFolderConfig;
         }
     }
