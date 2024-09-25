@@ -740,7 +740,7 @@ public class VirtualFileSystemService
         var filePartSuffix = (episodeXref.Percentage?.Group ?? 1) is not 1
             ? $".pt{episode.Shoko.CrossReferences.Where(xref => xref.ReleaseGroup == episodeXref.ReleaseGroup && xref.Percentage!.Group == episodeXref.Percentage!.Group).ToList().FindIndex(xref => xref.Percentage!.Start == episodeXref.Percentage!.Start && xref.Percentage!.End == episodeXref.Percentage!.End) + 1}"
             : "";
-        if (isMovieSeason && collectionType is not CollectionType.tvshows) {
+        if (collectionType is CollectionType.movies && !config.FilterMovieLibraries || isMovieSeason && collectionType is null) {
             if (extrasFolders != null) {
                 foreach (var extrasFolder in extrasFolders)
                     foreach (var episodeInfo in season.EpisodeList.Where(a => a.Shoko.Size > 0))
