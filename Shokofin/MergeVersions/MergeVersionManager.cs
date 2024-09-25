@@ -10,7 +10,9 @@ using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
+using Microsoft.Extensions.Logging;
 using Shokofin.ExternalIds;
+using Shokofin.Utils;
 
 namespace Shokofin.MergeVersions;
 
@@ -25,24 +27,55 @@ namespace Shokofin.MergeVersions;
 public class MergeVersionsManager
 {
     /// <summary>
+    /// Logger.
+    /// </summary>
+    private readonly ILogger<MergeVersionsManager> _logger;
+
+    /// <summary>
     /// Library manager. Used to fetch items from the library.
     /// </summary>
-    private readonly ILibraryManager LibraryManager;
+    private readonly ILibraryManager _libraryManager;
 
     /// <summary>
     /// Shoko ID Lookup. Used to check if the plugin is enabled for the videos.
     /// </summary>
-    private readonly IIdLookup Lookup;
+    private readonly IIdLookup _lookup;
+
+    /// <summary>
+    /// Used to clear the <see cref="_runGuard"/> when the
+    /// <see cref="UsageTracker.Stalled"/> event is ran.
+    /// </summary>
+    private readonly UsageTracker _usageTracker;
+
+    /// <summary>
+    /// Used as a lock/guard to prevent multiple runs on the same video until
+    /// the <see cref="UsageTracker.Stalled"/> event is ran.
+    /// </summary>
+    private readonly GuardedMemoryCache _runGuard;
 
     /// <summary>
     /// Used by the DI IoC to inject the needed interfaces.
     /// </summary>
     /// <param name="libraryManager">Library manager.</param>
     /// <param name="lookup">Shoko ID Lookup.</param>
-    public MergeVersionsManager(ILibraryManager libraryManager, IIdLookup lookup)
+    public MergeVersionsManager(ILogger<MergeVersionsManager> logger, ILibraryManager libraryManager, IIdLookup lookup, UsageTracker usageTracker)
     {
-        LibraryManager = libraryManager;
-        Lookup = lookup;
+        _logger = logger;
+        _libraryManager = libraryManager;
+        _lookup = lookup;
+        _usageTracker = usageTracker;
+        _usageTracker.Stalled += OnUsageTrackerStalled;
+        _runGuard = new(logger, new() { }, new() { });
+    }
+
+    ~MergeVersionsManager()
+    {
+        _usageTracker.Stalled -= OnUsageTrackerStalled;
+    }
+
+    private void OnUsageTrackerStalled(object? sender, EventArgs e)
+    {
+        _runGuard.Clear();
     }
 
     #region Top Level
@@ -120,6 +153,9 @@ public class MergeVersionsManager
     public async Task SplitAllEpisodes(IProgress<double>? progress, CancellationToken? cancellationToken)
         => await SplitVideos(GetEpisodesFromLibrary(), progress, cancellationToken);
 
+    public Task<bool> SplitAndMergeEpisodesByEpisodeId(string episodeId)
+        => _runGuard.GetOrCreateAsync($"episode:{episodeId}", () => SplitAndMergeVideos(GetEpisodesFromLibrary(episodeId)));
+
     #endregion
 
     #region Movie Level
@@ -129,6 +165,9 @@ public class MergeVersionsManager
 
     public async Task SplitAllMovies(IProgress<double>? progress, CancellationToken? cancellationToken)
         => await SplitVideos(GetMoviesFromLibrary(), progress, cancellationToken);
+
+    public Task<bool> SplitAndMergeMoviesByEpisodeId(string movieId)
+        => _runGuard.GetOrCreateAsync($"movie:{movieId}", () => SplitAndMergeVideos(GetMoviesFromLibrary(movieId)));
 
     #endregion
 
@@ -140,7 +179,7 @@ public class MergeVersionsManager
     /// <param name="episodeId">Optional. The episode id if we want to filter to only movies with a given Shoko Episode ID.</param>
     /// <returns>A list of all movies with the given <paramref name="episodeId"/> set.</returns>
     public IReadOnlyList<Movie> GetMoviesFromLibrary(string episodeId = "")
-        => LibraryManager
+        => _libraryManager
             .GetItemList(new() {
                 IncludeItemTypes = [BaseItemKind.Movie],
                 IsVirtualItem = false,
@@ -148,7 +187,7 @@ public class MergeVersionsManager
                 HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, episodeId } },
             })
             .OfType<Movie>()
-            .Where(Lookup.IsEnabledForItem)
+            .Where(_lookup.IsEnabledForItem)
             .ToList();
 
     /// <summary>
@@ -157,7 +196,7 @@ public class MergeVersionsManager
     /// <param name="episodeId">Optional. The episode id if we want to filter to only episodes with a given Shoko Episode ID.</param>
     /// <returns>A list of all episodes with a Shoko Episode ID set.</returns>
     public IReadOnlyList<Episode> GetEpisodesFromLibrary(string episodeId = "")
-        => LibraryManager
+        => _libraryManager
             .GetItemList(new() {
                 IncludeItemTypes = [BaseItemKind.Episode],
                 HasAnyProviderId = new Dictionary<string, string> { {ShokoEpisodeId.Name, episodeId } },
@@ -165,7 +204,7 @@ public class MergeVersionsManager
                 Recursive = true,
             })
             .Cast<Episode>()
-            .Where(Lookup.IsEnabledForItem)
+            .Where(_lookup.IsEnabledForItem)
             .ToList();
 
     /// <summary>
@@ -175,7 +214,7 @@ public class MergeVersionsManager
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async task that will silently complete when the merging is
     /// complete.</returns>
-    public async Task SplitAndMergeVideos<TVideo>(
+    public async Task<bool> SplitAndMergeVideos<TVideo>(
         IReadOnlyList<TVideo> videos,
         IProgress<double>? progress = null,
         CancellationToken? cancellationToken = null
@@ -212,6 +251,8 @@ public class MergeVersionsManager
         }
 
         progress?.Report(100);
+
+        return true;
     }
 
     /// <summary>
@@ -245,7 +286,7 @@ public class MergeVersionsManager
     ///
     /// Modified from;
     /// https://github.com/jellyfin/jellyfin/blob/9c97c533eff94d25463fb649c9572234da4af1ea/Jellyfin.Api/Controllers/VideosController.cs#L192
-    private static async Task MergeVideos<TVideo>(IEnumerable<TVideo> input) where TVideo : Video
+    private async Task MergeVideos<TVideo>(IEnumerable<TVideo> input) where TVideo : Video
     {
         if (input is not IList<TVideo> videos)
             videos = input.ToList();
@@ -265,12 +306,12 @@ public class MergeVersionsManager
                 .First();
 
         // Add any videos not already linked to the primary version to the list.
-        var alternateVersionsOfPrimary = primaryVersion.LinkedAlternateVersions
-            .ToList();
+        var alternateVersionsOfPrimary = primaryVersion.LinkedAlternateVersions.ToList();
         foreach (var video in videos.Where(v => !v.Id.Equals(primaryVersion.Id)))
         {
             video.SetPrimaryVersionId(primaryVersion.Id.ToString("N", CultureInfo.InvariantCulture));
             if (!alternateVersionsOfPrimary.Any(i => string.Equals(i.Path, video.Path, StringComparison.OrdinalIgnoreCase))) {
+                _logger.LogTrace("Adding linked alternate version. (PrimaryVideo={PrimaryVideoId},Video={VideoId})", primaryVersion.Id, video.Id);
                 alternateVersionsOfPrimary.Add(new() {
                     Path = video.Path,
                     ItemId = video.Id,
@@ -278,20 +319,25 @@ public class MergeVersionsManager
             }
 
             foreach (var linkedItem in video.LinkedAlternateVersions) {
-                if (!alternateVersionsOfPrimary.Any(i => string.Equals(i.Path, linkedItem.Path, StringComparison.OrdinalIgnoreCase)))
+                if (!alternateVersionsOfPrimary.Any(i => string.Equals(i.Path, linkedItem.Path, StringComparison.OrdinalIgnoreCase))) {
+                    _logger.LogTrace("Adding linked alternate version. (PrimaryVideo={PrimaryVideoId},Video={VideoId},LinkedVideo={LinkedVideoId})", primaryVersion.Id, video.Id, linkedItem.ItemId);
                     alternateVersionsOfPrimary.Add(linkedItem);
+                }
             }
 
             // Reset the linked alternate versions for the linked videos.
-            if (video.LinkedAlternateVersions.Length > 0)
+            if (video.LinkedAlternateVersions.Length > 0) {
+                _logger.LogTrace("Resetting linked alternate versions for video. (Video={VideoId})", video.Id);
                 video.LinkedAlternateVersions = [];
+            }
 
             // Save the changes back to the repository.
             await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
                 .ConfigureAwait(false);
         }
 
-        primaryVersion.LinkedAlternateVersions = [.. alternateVersionsOfPrimary];
+        _logger.LogTrace("Saving {Count} linked alternate versions. (PrimaryVideo={PrimaryVideoId})", alternateVersionsOfPrimary.Count, primaryVersion.Id);
+        primaryVersion.LinkedAlternateVersions = [.. alternateVersionsOfPrimary.OrderBy(i => i.Path)];
         await primaryVersion.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
             .ConfigureAwait(false);
     }
@@ -313,14 +359,21 @@ public class MergeVersionsManager
                 return;
 
             // Make sure the primary video still exists before we proceed.
-            if (LibraryManager.GetItemById(video.PrimaryVersionId) is not TVideo primaryVideo)
+            if (_libraryManager.GetItemById(video.PrimaryVersionId) is not TVideo primaryVideo)
                 return;
+    
+            _logger.LogTrace("Primary video found for video. (PrimaryVideo={PrimaryVideoId},Video={VideoId})", primaryVideo.Id, video.Id);
             video = primaryVideo;
         }
 
         // Remove the link for every linked video.
-        foreach (var linkedVideo in video.GetLinkedAlternateVersions())
-        {
+        var linkedAlternateVersions = video.GetLinkedAlternateVersions().ToList();
+        _logger.LogTrace("Removing {Count} alternate sources for video. (Video={VideoId})", linkedAlternateVersions.Count, video.Id);
+        foreach (var linkedVideo in linkedAlternateVersions) {
+            if (string.IsNullOrEmpty(linkedVideo.PrimaryVersionId))
+                continue;
+
+            _logger.LogTrace("Removing alternate source. (PrimaryVideo={PrimaryVideoId},Video={VideoId})", linkedVideo.PrimaryVersionId, video.Id);
             linkedVideo.SetPrimaryVersionId(null);
             linkedVideo.LinkedAlternateVersions = [];
             await linkedVideo.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
@@ -328,10 +381,13 @@ public class MergeVersionsManager
         }
 
         // Remove the link for the primary video.
-        video.SetPrimaryVersionId(null);
-        video.LinkedAlternateVersions = [];
-        await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
-            .ConfigureAwait(false);
+        if (!string.IsNullOrEmpty(video.PrimaryVersionId)) {
+            _logger.LogTrace("Removing primary source. (PrimaryVideo={PrimaryVideoId},Video={VideoId})", video.PrimaryVersionId, video.Id);
+            video.SetPrimaryVersionId(null);
+            video.LinkedAlternateVersions = [];
+            await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
     }
 
     #endregion Shared Methods

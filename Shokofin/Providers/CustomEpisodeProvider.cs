@@ -7,13 +7,15 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.ExternalIds;
+using Shokofin.MergeVersions;
 
 using Info = Shokofin.API.Info;
 
 namespace Shokofin.Providers;
 
 /// <summary>
-/// The custom episode provider. Responsible for de-duplicating episodes.
+/// The custom episode provider. Responsible for de-duplicating episodes, both
+/// virtual and physical.
 /// </summary>
 /// <remarks>
 /// This needs to be it's own class because of internal Jellyfin shenanigans
@@ -24,32 +26,38 @@ public class CustomEpisodeProvider : ICustomMetadataProvider<Episode>
 {
     public string Name => Plugin.MetadataProviderName;
 
-    private readonly ILogger<CustomEpisodeProvider> Logger;
+    private readonly ILogger<CustomEpisodeProvider> _logger;
 
-    private readonly IIdLookup Lookup;
+    private readonly ILibraryManager _libraryManager;
 
-    private readonly ILibraryManager LibraryManager;
+    private readonly MergeVersionsManager _mergeVersionsManager;
 
-    public CustomEpisodeProvider(ILogger<CustomEpisodeProvider> logger, IIdLookup lookup, ILibraryManager libraryManager)
+    public CustomEpisodeProvider(ILogger<CustomEpisodeProvider> logger, ILibraryManager libraryManager, MergeVersionsManager mergeVersionsManager)
     {
-        Logger = logger;
-        Lookup = lookup;
-        LibraryManager = libraryManager;
+        _logger = logger;
+        _libraryManager = libraryManager;
+        _mergeVersionsManager = mergeVersionsManager;
     }
 
-    public Task<ItemUpdateType> FetchAsync(Episode episode, MetadataRefreshOptions options, CancellationToken cancellationToken)
+    public async Task<ItemUpdateType> FetchAsync(Episode episode, MetadataRefreshOptions options, CancellationToken cancellationToken)
     {
         var series = episode.Series;
         if (series is null)
-            return Task.FromResult(ItemUpdateType.None);
+            return ItemUpdateType.None;
 
-        // Abort if we're unable to get the shoko episode id
-        if (episode.TryGetProviderId(ShokoEpisodeId.Name, out var episodeId))
+        var itemUpdated = ItemUpdateType.None;
+        if (episode.TryGetProviderId(ShokoEpisodeId.Name, out var episodeId)) {
             using (Plugin.Instance.Tracker.Enter($"Providing custom info for Episode \"{episode.Name}\". (Path=\"{episode.Path}\",IsMissingEpisode={episode.IsMissingEpisode})"))
-                if (RemoveDuplicates(LibraryManager, Logger, episodeId, episode, series.GetPresentationUniqueKey()))
-                    return Task.FromResult(ItemUpdateType.MetadataEdit);
+                if (RemoveDuplicates(_libraryManager, _logger, episodeId, episode, series.GetPresentationUniqueKey()))
+                    itemUpdated |= ItemUpdateType.MetadataEdit;
 
-        return Task.FromResult(ItemUpdateType.None);
+            if (Plugin.Instance.Configuration.AutoMergeVersions && !_libraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
+                await _mergeVersionsManager.SplitAndMergeEpisodesByEpisodeId(episodeId);
+                itemUpdated |= ItemUpdateType.MetadataEdit;
+            }
+        }
+
+        return itemUpdated;
     }
 
     public static bool RemoveDuplicates(ILibraryManager libraryManager, ILogger logger, string episodeId, Episode episode, string seriesPresentationUniqueKey)

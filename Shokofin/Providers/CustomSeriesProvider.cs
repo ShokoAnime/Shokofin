@@ -10,12 +10,22 @@ using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.ExternalIds;
+using Shokofin.MergeVersions;
 using Shokofin.Utils;
 
 using Info = Shokofin.API.Info;
 
 namespace Shokofin.Providers;
 
+/// <summary>
+/// The custom series provider. Responsible for de-duplicating seasons,
+/// adding/removing "missing" episodes, and de-duplicating physical episodes.
+/// </summary>
+/// <remarks>
+/// This needs to be it's own class because of internal Jellyfin shenanigans
+/// about how a provider cannot also be a custom provider otherwise it won't
+/// save the metadata.
+/// </remarks>
 public class CustomSeriesProvider : ICustomMetadataProvider<Series>
 {
     public string Name => Plugin.MetadataProviderName;
@@ -28,14 +38,17 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
 
     private readonly ILibraryManager LibraryManager;
 
+    private readonly MergeVersionsManager MergeVersionsManager;
+
     private static bool ShouldAddMetadata => Plugin.Instance.Configuration.AddMissingMetadata;
 
-    public CustomSeriesProvider(ILogger<CustomSeriesProvider> logger, ShokoAPIManager apiManager, IIdLookup lookup, ILibraryManager libraryManager)
+    public CustomSeriesProvider(ILogger<CustomSeriesProvider> logger, ShokoAPIManager apiManager, IIdLookup lookup, ILibraryManager libraryManager, MergeVersionsManager mergeVersionsManager)
     {
         Logger = logger;
         ApiManager = apiManager;
         Lookup = lookup;
         LibraryManager = libraryManager;
+        MergeVersionsManager = mergeVersionsManager;
     }
 
     public async Task<ItemUpdateType> FetchAsync(Series series, MetadataRefreshOptions options, CancellationToken cancellationToken)
@@ -144,7 +157,7 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
                 }
 
                 // Add missing episodes.
-                if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly)
+                if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
                     foreach (var seasonInfo in showInfo.SeasonList) {
                         foreach (var episodeId in await ApiManager.GetLocalEpisodeIdsForSeason(seasonInfo))
                             existingEpisodes.Add(episodeId);
@@ -157,6 +170,14 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
                                 itemUpdated |= ItemUpdateType.MetadataImport;
                         }
                     }
+                }
+
+                // Merge versions.
+                if (Plugin.Instance.Configuration.AutoMergeVersions && !LibraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
+                    foreach (var episodeId in existingEpisodes) {
+                        await MergeVersionsManager.SplitAndMergeEpisodesByEpisodeId(episodeId);
+                    }
+                }
             }
 
             // All other seasons.
@@ -212,6 +233,13 @@ public class CustomSeriesProvider : ICustomMetadataProvider<Series>
 
                         if (CustomEpisodeProvider.AddVirtualEpisode(LibraryManager, Logger, showInfo, seasonInfo, episodeInfo, season, series))
                             itemUpdated |= ItemUpdateType.MetadataImport;
+                    }
+                }
+
+                // Merge versions.
+                if (Plugin.Instance.Configuration.AutoMergeVersions && !LibraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
+                    foreach (var episodeId in existingEpisodes) {
+                        await MergeVersionsManager.SplitAndMergeEpisodesByEpisodeId(episodeId);
                     }
                 }
             }
