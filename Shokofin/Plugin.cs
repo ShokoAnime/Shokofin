@@ -132,13 +132,23 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         get
         {
-            var virtualRoot = _virtualRoot ??= Path.Join(Configuration.VFS_LiveInCache ? ApplicationPaths.CachePath :  ApplicationPaths.ProgramDataPath, Name);
+            var virtualRoot = _virtualRoot ??= Configuration.VFS_Location switch {
+                VirtualRootLocation.Custom => VirtualRoot_Custom ?? VirtualRoot_Default,
+                VirtualRootLocation.Cache => VirtualRoot_Cache,
+                VirtualRootLocation.Default or _ => VirtualRoot_Default,
+            };
             if (!Directory.Exists(virtualRoot))
                 Directory.CreateDirectory(virtualRoot);
 
             return virtualRoot;
         }
     }
+
+    public string VirtualRoot_Default => Path.Join(ApplicationPaths.ProgramDataPath, Name);
+    
+    public string VirtualRoot_Cache => Path.Join(ApplicationPaths.CachePath, Name);
+
+    public string? VirtualRoot_Custom => string.IsNullOrWhiteSpace(Configuration.VFS_CustomLocation) ? null : Path.Combine(ApplicationPaths.ProgramDataPath, Configuration.VFS_CustomLocation);
 
     /// <summary>
     /// Gets or sets the event handler that is triggered when this configuration changes.
@@ -197,6 +207,10 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         if (e is not PluginConfiguration config)
             return;
+        if (string.IsNullOrWhiteSpace(config.VFS_CustomLocation) && config.VFS_CustomLocation is not null) {
+            config.VFS_CustomLocation = null;
+            SaveConfiguration(config);
+        }
         IgnoredFolders = config.IgnoredFolders.ToHashSet();
         Tracker.UpdateTimeout(TimeSpan.FromSeconds(Configuration.UsageTracker_StalledTimeInSeconds));
         _virtualRoot = null;

@@ -1610,17 +1610,23 @@
                         <div class="fieldDescription verticalSection-extrabottompadding">Any features/settings in this section is still considered to be in an experimental state. <strong>You can enable them, but at the risk if them messing up your library.</strong></div>
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="VFS_LiveInCache" />
-                                <span>Place VFS in cache</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will place the VFS in the cache directory instead of the config directory. You will need to manually move your VFS root if you plan to keep it when toggling this setting.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
-                            <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="VFS_AttachRoot" />
                                 <span>Attach physical root for VFS</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Enabling this will attach a physical VFS "root" to your libraries as a media folder, allowing us to mount the VFS children to the new "root" and to re-use media folders across libraries without resorting to <i>other</i> workarounds.</div>
+                        </div>
+                        <div id="VFS_LocationContainer" class="selectContainer selectContainer-withDescription expert-only">
+                            <label class="selectLabel" for="VFS_Location">VFS Location:</label>
+                            <select is="emby-select" id="VFS_Location" name="VFS_Location" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Jellyfin Data Directory (Default)</option>
+                                <option value="Cache">Jellyfin Cache Directory</option>
+                                <option value="Custom">Custom Directory</option>
+                            </select>
+                            <div class="fieldDescription">Determines where the VFS root will be placed. Changing this will cause your library to "remove" and "re-add" itself becaue of the path changes. You will need to manually move your VFS root if you plan to keep it when toggling this setting, or you can get rid of it by running the scheduled task to remove it. <strong>You have been warned.</strong></div>
+                        </div>
+                        <div id="VFS_CustomLocationContainer" class="inputContainer inputContainer-withDescription expert-only" hidden>
+                            <input is="emby-input" type="text" id="VFS_CustomLocation" label="Custom VFS Root Location:" disabled />
+                            <div class="fieldDescription">An absolute path to the custom root directory of where the VFS will be placed. You decide.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">

@@ -344,8 +344,9 @@ async function defaultSubmit(form) {
         form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
         config.VFS_AddReleaseGroup = form.querySelector("#VFS_AddReleaseGroup").checked;
         config.VFS_AddResolution = form.querySelector("#VFS_AddResolution").checked;
-        config.VFS_LiveInCache = form.querySelector("#VFS_LiveInCache").checked;
         config.VFS_AttachRoot = form.querySelector("#VFS_AttachRoot").checked;
+        config.VFS_Location = form.querySelector("#VFS_Location").value;
+        config.VFS_CustomLocation = form.querySelector("#VFS_CustomLocation").value.trim() || null;
         if (mediaFolderConfig) {
             const libraryId = mediaFolderConfig.LibraryId;
             for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
@@ -550,8 +551,9 @@ async function syncSettings(form) {
     config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
     // Experimental settings
-    config.VFS_LiveInCache = form.querySelector("#VFS_LiveInCache").checked;
     config.VFS_AttachRoot = form.querySelector("#VFS_AttachRoot").checked;
+    config.VFS_Location = form.querySelector("#VFS_Location").value;
+    config.VFS_CustomLocation = form.querySelector("#VFS_CustomLocation").value.trim() || null;
     config.EXPERIMENTAL_MergeSeasons = form.querySelector("#EXPERIMENTAL_MergeSeasons").checked;
 
     const result = await ApiClient.updatePluginConfiguration(PluginConfig.pluginId, config);
@@ -611,8 +613,9 @@ async function syncMediaFolderSettings(form) {
     form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
     config.VFS_AddReleaseGroup = form.querySelector("#VFS_AddReleaseGroup").checked;
     config.VFS_AddResolution = form.querySelector("#VFS_AddResolution").checked;
-    config.VFS_LiveInCache = form.querySelector("#VFS_LiveInCache").checked;
     config.VFS_AttachRoot = form.querySelector("#VFS_AttachRoot").checked;
+    config.VFS_Location = form.querySelector("#VFS_Location").value;
+    config.VFS_CustomLocation = form.querySelector("#VFS_CustomLocation").value.trim() || null;
     if (mediaFolderConfig) {
         for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
             c.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
@@ -849,6 +852,16 @@ export default function (page) {
         form.querySelector("#SyncUserDataInitialSkipEventCount").disabled = disabled;
     });
 
+    form.querySelector("#VFS_Location").addEventListener("change", function () {
+        form.querySelector("#VFS_CustomLocation").disabled = this.value !== "Custom";
+        if (this.value === "Custom") {
+            form.querySelector("#VFS_CustomLocation").removeAttribute("hidden");
+        }
+        else {
+            form.querySelector("#VFS_CustomLocation").setAttribute("hidden", "");
+        }
+    });
+
     form.querySelector("#UseGroupsForShows").addEventListener("change", function () {
         form.querySelector("#SeasonOrdering").disabled = !this.checked;
         if (this.checked) {
@@ -1061,8 +1074,16 @@ export default function (page) {
             form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
             form.querySelector("#VFS_AddReleaseGroup").checked = config.VFS_AddReleaseGroup;
             form.querySelector("#VFS_AddResolution").checked = config.VFS_AddResolution;
-            form.querySelector("#VFS_LiveInCache").checked = config.VFS_LiveInCache;
             form.querySelector("#VFS_AttachRoot").checked = config.VFS_AttachRoot;
+            form.querySelector("#VFS_Location").value = config.VFS_Location;
+            form.querySelector("#VFS_CustomLocation").value = config.VFS_CustomLocation || "";
+            form.querySelector("#VFS_CustomLocation").disabled = config.VFS_Location !== "Custom";
+            if (config.VFS_Location === "Custom") {
+                form.querySelector("#VFS_CustomLocation").removeAttribute("hidden");
+            }
+            else {
+                form.querySelector("#VFS_CustomLocation").setAttribute("hidden", "");
+            }
             form.querySelector("#VFS_Enabled").checked = config.VFS_Enabled;
             form.querySelector("#LibraryFilteringMode").value = config.LibraryFilteringMode;
             mediaFolderSelector.innerHTML = `<option value="">Default settings for new media folders</option>` + config.MediaFolders

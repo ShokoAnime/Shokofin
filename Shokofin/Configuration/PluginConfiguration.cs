@@ -412,15 +412,22 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool VFS_AddResolution { get; set; }
 
     /// <summary>
-    /// Places the VFS in the cache directory instead of the config directory.
-    /// </summary>
-    public bool VFS_LiveInCache { get; set; }
-
-    /// <summary>
     /// Attach a physical VFS root as a media folder instead of attaching the
     /// VFS children to one of the "normal" media folders.
     /// </summary>
     public bool VFS_AttachRoot { get; set; }
+
+    /// <summary>
+    /// Places the VFS in the cache directory instead of the config directory.
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public VirtualRootLocation VFS_Location { get; set; }
+
+    /// <summary>
+    /// The custom location for the VFS root, if specified. Should be an
+    /// absolute path or a path relative to the config directory.
+    /// </summary>
+    public string? VFS_CustomLocation { get; set; }
 
     /// <summary>
     /// Enable/disable the filtering for new media-folders/libraries.
@@ -587,8 +594,9 @@ public class PluginConfiguration : BasePluginConfiguration
         VFS_Threads = 4;
         VFS_AddReleaseGroup = false;
         VFS_AddResolution = false;
-        VFS_LiveInCache = false;
         VFS_AttachRoot = false;
+        VFS_Location = VirtualRootLocation.Default;
+        VFS_CustomLocation = null;
         AutoMergeVersions = true;
         UseGroupsForShows = false;
         SeparateMovies = false;

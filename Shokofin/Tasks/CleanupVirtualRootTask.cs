@@ -56,6 +56,23 @@ public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, IFil
             return Task.CompletedTask;
 
         var start = DateTime.Now;
+        var virtualRoots = new string[] {
+            Plugin.Instance.VirtualRoot_Default,
+            Plugin.Instance.VirtualRoot_Cache,
+            Plugin.Instance.VirtualRoot_Custom ?? string.Empty,
+        }
+            .Except([Plugin.Instance.VirtualRoot, string.Empty])
+            .Where(Directory.Exists)
+            .ToList();
+        Logger.LogDebug("Found {RemoveCount} VFS roots to remove.", virtualRoots.Count);
+        foreach (var virtualRoot in virtualRoots) {
+            var folderStart = DateTime.Now;
+            Logger.LogTrace("Removing VFS root {Path}.", virtualRoot);
+            Directory.Delete(virtualRoot, true);
+            var perFolderDeltaTime = DateTime.Now - folderStart;
+            Logger.LogTrace("Removed VFS root {Path} in {TimeSpan}.", virtualRoot, perFolderDeltaTime);
+        }
+
         var mediaFolders = Plugin.Instance.Configuration.MediaFolders.ToList()
             .Select(config => config.LibraryId.ToString())
             .Distinct()
@@ -63,13 +80,13 @@ public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, IFil
         var vfsRoots = FileSystem.GetDirectories(Plugin.Instance.VirtualRoot, false)
             .ExceptBy(mediaFolders, directoryInfo => directoryInfo.Name)
             .ToList();
-        Logger.LogDebug("Found {RemoveCount} VFS roots to remove.", vfsRoots.Count);
+        Logger.LogDebug("Found {RemoveCount} VFS library roots to remove.", vfsRoots.Count);
         foreach (var vfsRoot in vfsRoots) {
             var folderStart = DateTime.Now;
-            Logger.LogTrace("Removing VFS root for {Id}.", vfsRoot.Name);
+            Logger.LogTrace("Removing VFS library root for {Id}.", vfsRoot.Name);
             Directory.Delete(vfsRoot.FullName, true);
             var perFolderDeltaTime = DateTime.Now - folderStart;
-            Logger.LogTrace("Removed VFS root for {Id} in {TimeSpan}.", vfsRoot.Name, perFolderDeltaTime);
+            Logger.LogTrace("Removed VFS library root for {Id} in {TimeSpan}.", vfsRoot.Name, perFolderDeltaTime);
         }
 
         var deltaTime = DateTime.Now - start;
