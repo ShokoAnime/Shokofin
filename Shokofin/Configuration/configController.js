@@ -112,7 +112,6 @@ async function loadUserConfig(form, userId, config) {
     if (!userId) {
         form.querySelector("#UserSettingsContainer").setAttribute("hidden", "");
         form.querySelector("#UserUsername").removeAttribute("required");
-        Dashboard.hideLoadingMsg();
         return;
     }
 
@@ -162,7 +161,6 @@ async function loadMediaFolderConfig(form, selectedValue, config) {
     if (!mediaFolderId || !libraryId) {
         form.querySelector("#MediaFolderDefaultSettingsContainer").removeAttribute("hidden");
         form.querySelector("#MediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
-        Dashboard.hideLoadingMsg();
         return;
     }
 
@@ -199,23 +197,29 @@ async function loadMediaFolderConfig(form, selectedValue, config) {
     }
 }
 
-async function loadSignalrMediaFolderConfig(form, mediaFolderId, config) {
-    if (!mediaFolderId) {
+async function loadSignalrMediaFolderConfig(form, selectedValue, config) {
+    const [mediaFolderId, libraryId] = selectedValue.split(",");
+    if (!mediaFolderId || !libraryId) {
         form.querySelector("#SignalRMediaFolderDefaultSettingsContainer").removeAttribute("hidden");
         form.querySelector("#SignalRMediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
-        Dashboard.hideLoadingMsg();
         return;
     }
 
-    Dashboard.showLoadingMsg();
-
     // Get the configuration to use.
-    if (!config) config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId)
-    const mediaFolderConfig = config.MediaFolders.find((c) => mediaFolderId === c.MediaFolderId);
+    let shouldHide = false;
+    if (!config) {
+        Dashboard.showLoadingMsg();
+        config = await ApiClient.getPluginConfiguration(PluginConfig.pluginId);
+        shouldHide = true;
+    }
+
+    const mediaFolderConfig = config.MediaFolders.find((c) => mediaFolderId === c.MediaFolderId && libraryId === c.LibraryId);
     if (!mediaFolderConfig) {
         form.querySelector("#SignalRMediaFolderDefaultSettingsContainer").removeAttribute("hidden");
         form.querySelector("#SignalRMediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
-        Dashboard.hideLoadingMsg();
+        if (shouldHide) {
+            Dashboard.hideLoadingMsg();
+        }
         return;
     }
 
@@ -229,7 +233,9 @@ async function loadSignalrMediaFolderConfig(form, mediaFolderId, config) {
     form.querySelector("#SignalRMediaFolderDefaultSettingsContainer").setAttribute("hidden", "");
     form.querySelector("#SignalRMediaFolderPerFolderSettingsContainer").removeAttribute("hidden");
 
-    Dashboard.hideLoadingMsg();
+    if (shouldHide) {
+        Dashboard.hideLoadingMsg();
+    }
 }
 
 /**
@@ -338,8 +344,8 @@ async function defaultSubmit(form) {
         config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
         // Media Folder settings
-        let mediaFolderId = form.querySelector("#MediaFolderSelector").value;
-        let mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
+        let [mediaFolderId, libraryId] = form.querySelector("#MediaFolderSelector").value.split(",");
+        let mediaFolderConfig = mediaFolderId && libraryId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId && m.LibraryId === libraryId) : undefined;
         config.IgnoredFolders = ignoredFolders;
         form.querySelector("#IgnoredFolders").value = ignoredFolders.join();
         config.VFS_AddReleaseGroup = form.querySelector("#VFS_AddReleaseGroup").checked;
@@ -365,8 +371,8 @@ async function defaultSubmit(form) {
         config.SignalR_AutoReconnectInSeconds = reconnectIntervals;
         form.querySelector("#SignalRAutoReconnectIntervals").value = reconnectIntervals.join(", ");
         config.SignalR_EventSources = retrieveSimpleList(form, "SignalREventSources");
-        mediaFolderId = form.querySelector("#SignalRMediaFolderSelector").value;
-        mediaFolderConfig = mediaFolderId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId) : undefined;
+        ([mediaFolderId, libraryId] = form.querySelector("#SignalRMediaFolderSelector").value.split(","));
+        mediaFolderConfig = mediaFolderId && libraryId ? config.MediaFolders.find((m) => m.MediaFolderId === mediaFolderId && m.LibraryId === libraryId) : undefined;
         if (mediaFolderConfig) {
             const libraryId = mediaFolderConfig.LibraryId;
             for (const c of config.MediaFolders.filter(m => m.LibraryId === libraryId)) {
@@ -729,7 +735,7 @@ export default function (page) {
     const signalrMediaFolderSelector = form.querySelector("#SignalRMediaFolderSelector");
 
     // Refresh the view after we changed the settings, so the view reflect the new settings.
-    const refreshSettings = (config) => {
+    const refreshSettings = async (config) => {
         if (config.ExpertMode) {
             form.classList.add("expert-mode");
         }
@@ -786,9 +792,11 @@ export default function (page) {
             form.querySelector("#ExperimentalSection").setAttribute("hidden", "");
         }
 
-        loadUserConfig(form, form.querySelector("#UserSelector").value, config);
-        loadMediaFolderConfig(form, form.querySelector("#MediaFolderSelector").value, config);
-        loadSignalrMediaFolderConfig(form, form.querySelector("#SignalRMediaFolderSelector").value, config);
+        await loadUserConfig(form, form.querySelector("#UserSelector").value, config);
+        await loadMediaFolderConfig(form, form.querySelector("#MediaFolderSelector").value, config);
+        await loadSignalrMediaFolderConfig(form, form.querySelector("#SignalRMediaFolderSelector").value, config);
+
+        Dashboard.hideLoadingMsg();
     };
 
     /**
