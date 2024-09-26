@@ -492,6 +492,15 @@ public class PluginConfiguration : BasePluginConfiguration
 
     #endregion
 
+    #region Misc. features
+
+    /// <summary>
+    /// Show the plugin in the side-menu.
+    /// </summary>
+    public bool Misc_ShowInMenu { get; set; }
+
+    #endregion
+
     #region Experimental features
 
     /// <summary>
@@ -622,6 +631,7 @@ public class PluginConfiguration : BasePluginConfiguration
         SignalR_RefreshEnabled = false;
         SignalR_FileEvents = true;
         UsageTracker_StalledTimeInSeconds = 10;
+        Misc_ShowInMenu = false;
         EXPERIMENTAL_MergeSeasons = false;
         EXPERIMENTAL_MergeSeasonsTypes = [SeriesType.OVA, SeriesType.TV, SeriesType.TVSpecial, SeriesType.Web, SeriesType.OVA];
         EXPERIMENTAL_MergeSeasonsMergeWindowInDays = 185;

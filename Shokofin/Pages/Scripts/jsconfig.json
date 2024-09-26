@@ -1,0 +1,17 @@
+{
+    "include": ["**/*"],
+    "compilerOptions": {
+        "module": "ESNext",
+        "moduleResolution": "Node",
+        "target": "ES2020",
+        "lib": ["ES2020", "DOM"],
+        "allowSyntheticDefaultImports": true,
+        "noImplicitAny": false,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "jsx": "react",
+        "sourceMap": true,
+        "outDir": "dist",
+        "baseUrl": ".",
+    },
+}

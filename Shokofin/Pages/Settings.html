@@ -1,19 +1,19 @@
-<div id="ShokoConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox" data-controller="__plugin/ShokoController.js">
+<div data-role="page" class="page type-interior pluginConfigurationPage withTabs" data-require="emby-input,emby-button,emby-select,emby-checkbox" data-controller="__plugin/Shoko.Settings.js">
     <div data-role="content">
         <div class="content-primary">
             <style>form:not(.expert-mode) .expert-only { display: none !important; }</style>
-            <form id="ShokoConfigForm">
+            <form>
                 <div class="verticalSection verticalSection-extrabottompadding">
                     <div class="sectionTitleContainer flex align-items-center">
                         <h2 class="sectionTitle">Shoko</h2>
                         <a is="emby-linkbutton" rel="noopener noreferrer" class="raised button-alt headerHelpButton emby-button" target="_blank" href="https://docs.shokoanime.com/shokofin/configuration/">Help</a>
                     </div>
-                    <fieldset id="ConnectionSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                    <fieldset id="Connection_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
                             <h3>Connection Settings</h3>
                         </legend>
                         <div class="inputContainer inputContainer-withDescription">
-                            <input is="emby-input" type="text" id="Url" required label="Private Host Url:" />
+                            <input is="emby-input" type="text" id="Url" label="Private Host Url:" />
                             <div class="fieldDescription">This is the private URL leading to where Shoko is running. It will be used internally in Jellyfin and also for all images sent to clients and redirects back to the Shoko instance if you don't set a public host URL below. It <i>should</i> include both the protocol and the IP/DNS name.</div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription">
@@ -21,7 +21,7 @@
                             <div class="fieldDescription">Optional. This is the public URL leading to where Shoko is running. It can be used to redirect to Shoko if you click on a Shoko ID in the UI if Shoko and/or Jellyfin is running within a container and you cannot access Shoko from the host URL provided in the connection settings section above. It will also be used for images from the plugin when viewing the "Edit Images" modal in clients. It <i>should</i> include both the protocol and the IP/DNS name.</div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription">
-                            <input is="emby-input" type="text" id="Username" required label="Username:" />
+                            <input is="emby-input" type="text" id="Username" label="Username:" />
                             <div class="fieldDescription">The user should be an administrator in Shoko, preferably without any filtering applied.</div>
                         </div>
                         <div id="ConnectionSetContainer">
@@ -45,17 +45,14 @@
                             <div class="fieldDescription">Reset the connection. Be sure to stop any tasks using this plugin before you press the button.</div>
                         </div>
                     </fieldset>
-                    <fieldset id="MetadataSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                    <fieldset id="Metadata_Title_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
-                            <h3>Metadata Settings</h3>
+                            <h3>Title Settings</h3>
                         </legend>
-                        <div class="fieldDescription verticalSection-extrabottompadding">
-                            Customize how the plugin will source the metadata for entries.
-                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
-                                <span>Add prefix to episodes</span>
+                                <span>Add prefix to episode titles</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Add the type and number to the title of some episodes.</div>
                         </div>
@@ -68,20 +65,6 @@
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="CleanupAniDBDescriptions" />
-                                <span>Cleanup AniDB overviews</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Remove links and collapse multiple empty lines into one empty line, and trim any lines starting with '* ', '-- ',  '~ ', 'Note', 'Source', and/or 'Summary'.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="HideUnverifiedTags" />
-                                <span>Ignore unverified tags.</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Will ignore all tags not yet verified on AniDB, so they won't show up as tags/genres for entries.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
-                            <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="TitleMainOverride" />
                                 <span>Override main title</span>
                             </label>
@@ -89,7 +72,7 @@
                                 Enables the advanced selector for the main title selection.
                             </div>
                         </div>
-                        <div id="TitleMainList" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="TitleMainList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced main title source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption">
@@ -188,7 +171,7 @@
                                 Enables the advanced selector for the alternate title selection.
                             </div>
                         </div>
-                        <div id="TitleAlternateList" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="TitleAlternateList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced alternate title source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption">
@@ -278,6 +261,21 @@
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of the alternate title, in priority order.</div>
                         </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="Metadata_Description_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
+                        <legend>
+                            <h3>Description Settings</h3>
+                        </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="CleanupAniDBDescriptions" />
+                                <span>Cleanup AniDB overviews</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Remove links and collapse multiple empty lines into one empty line, and trim any lines starting with '* ', '-- ',  '~ ', 'Note', 'Source', and/or 'Summary'.</div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="DescriptionSourceOverride" />
@@ -287,7 +285,7 @@
                                 Enables the advanced selector for description source selection.
                             </div>
                         </div>
-                        <div id="DescriptionSourceList" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="DescriptionSourceList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced description source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="Shoko">
@@ -343,6 +341,21 @@
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of descriptions, in priority order.</div>
                         </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="Metadata_TagGenre_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
+                        <legend>
+                            <h3>Tag & Genre Settings</h3>
+                        </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="HideUnverifiedTags" />
+                                <span>Ignore unverified tags.</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Will ignore all tags not yet verified on AniDB, so they won't show up as tags/genres for entries.</div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="TagOverride" />
@@ -352,7 +365,7 @@
                                 Enables the advanced selector for tag source selection.
                             </div>
                         </div>
-                        <div id="TagSources" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="TagSources" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced tag sources:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -583,7 +596,7 @@
                             </div>
                             <div class="fieldDescription">The tag sources to use as the source of tags.</div>
                         </div>
-                        <div id="TagIncludeFilters" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="TagIncludeFilters" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced tag include filters:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -680,7 +693,7 @@
                                 Enables the advanced selector for genre source selection.
                             </div>
                         </div>
-                        <div id="GenreSources" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="GenreSources" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced genre sources:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -911,7 +924,7 @@
                             </div>
                             <div class="fieldDescription">The tag sources to use as the source of genres.</div>
                         </div>
-                        <div id="GenreIncludeFilters" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="GenreIncludeFilters" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced genre include filters:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -999,6 +1012,14 @@
                             <input is="emby-input" id="GenreMaximumDepth" label="Maximum depth to add per genre source:" placeholder="1" type="number" pattern="[0-9]*" min="0" max="10" step="1">
                             <div class="fieldDescription">The maximum relative depth of the tag to be included from it's source, for genres.</div>
                         </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="Metadata_Misc_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
+                        <legend>
+                            <h3>Miscellaneous Settings</h3>
+                        </legend>
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="ContentRatingOverride" />
@@ -1008,7 +1029,7 @@
                                 Enables the advanced selector for content rating source selection.
                             </div>
                         </div>
-                        <div id="ContentRatingList" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="ContentRatingList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced content rating sources:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="TMDB">
@@ -1047,7 +1068,7 @@
                                 Enables the advanced selector for production location source selection.
                             </div>
                         </div>
-                        <div id="ProductionLocationList" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="ProductionLocationList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Advanced production location sources:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="AniDB">
@@ -1077,7 +1098,15 @@
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of production locations, in priority order.</div>
                         </div>
-                        <div id="ThirdPartyIdProviderList" style="margin-bottom: 2em;">
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="Metadata_ThirdPartyIntegration_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Third Party Integration</h3>
+                        </legend>
+                        <div id="ThirdPartyIdProviderList" is="checkbox-list" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Add Third Party IDs:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -1114,13 +1143,10 @@
                             <span>Save</span>
                         </button>
                     </fieldset>
-                    <fieldset id="LibrarySection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                    <fieldset id="Library_Basic_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
-                            <h3>Library Settings</h3>
+                            <h3>Basic Settings</h3>
                         </legend>
-                        <div class="fieldDescription verticalSection-extrabottompadding">
-                            Placeholder description.
-                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="AutoMergeVersions" />
@@ -1155,16 +1181,6 @@
                                 </details>
                             </div>
                         </div>
-                        <div id="SeasonOrderingContainer" class="selectContainer selectContainer-withDescription expert-only" hidden>
-                            <label class="selectLabel" for="SeasonOrdering">Season ordering:</label>
-                            <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select" disabled>
-                                <option value="Default" selected>Let Shoko decide</option>
-                                <option value="ReleaseDate">Order seasons by release date</option>
-                                <option value="Chronological">Order seasons in chronological order (use indirect relations) (EXPERIMENTAL)</option>
-                                <option value="ChronologicalIgnoreIndirect">Order seasons in chronological order (ignore indirect relations) (EXPERIMENTAL)</option>
-                            </select>
-                            <div class="fieldDescription">Determines how to order seasons within each show using the Shoko groups.</div>
-                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="SeparateMovies" />
@@ -1179,6 +1195,16 @@
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">This filters out anything that is not a movie in any movie libraries. Disable this if you want your anything to show up as movies in your movie libraries instead.</div>
                         </div>
+                        <div id="SeasonOrderingContainer" class="selectContainer selectContainer-withDescription expert-only" hidden>
+                            <label class="selectLabel" for="SeasonOrdering">Season ordering:</label>
+                            <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select" disabled>
+                                <option value="Default" selected>Let Shoko decide</option>
+                                <option value="ReleaseDate">Order seasons by release date</option>
+                                <option value="Chronological" class="expert-only">Order seasons in chronological order (use indirect relations) (EXPERIMENTAL)</option>
+                                <option value="ChronologicalIgnoreIndirect">Order seasons in chronological order (ignore indirect relations) (EXPERIMENTAL)</option>
+                            </select>
+                            <div class="fieldDescription">Determines how to order seasons within each show using the Shoko groups.</div>
+                        </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="SpecialsPlacement">Specials placement within seasons:</label>
                             <select is="emby-select" id="SpecialsPlacement" name="SpecialsPlacement" class="emby-select-withcolor emby-select">
@@ -1190,6 +1216,28 @@
                             </select>
                             <div class="fieldDescription selectFieldDescription">Determines how specials are placed within seasons. <strong>Warning:</strong> Modifying this setting requires a recreation (read as; delete existing then create a new) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="MovieSpecialsAsExtraFeaturettes" />
+                                <span>Force movie special features</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Append all specials in AniDB movie series as special features for the movies. By default only some specials will be automatically recognized as special features, but by enabling this option you will force all specials to be used as special features. This setting applies to movie series across all library types, and may break some movie series in a show type library unless appropriate measures are taken.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddMissingMetadata" />
+                                <span>Add Missing Episodes/Seasons</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add the metadata for missing episodes/seasons not in the local collection.</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="Library_Collection_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Collection Settings</h3>
+                        </legend>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="CollectionGrouping">Collections:</label>
                             <select is="emby-select" id="CollectionGrouping" name="CollectionGrouping" class="emby-select-withcolor emby-select">
@@ -1230,127 +1278,79 @@
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Add a minimum requirement of two entries with the same collection id before creating a collection for them.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="MovieSpecialsAsExtraFeaturettes" />
-                                <span>Force movie special features</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Append all specials in AniDB movie series as special features for the movies. By default only some specials will be automatically recognized as special features, but by enabling this option you will force all specials to be used as special features. This setting applies to movie series across all library types, and may break some movie series in a show type library unless appropriate measures are taken.</div>
-                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="Library_New_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>New Library Settings</h3>
+                        </legend>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="AddTrailers" />
-                                <span>Add trailers</span>
+                                <input is="emby-checkbox" type="checkbox" id="VFS_Enabled" />
+                                <span>Use the Virtual File System (<strong>VFS</strong>)</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add trailers to entities within the VFS. Trailers within the trailers directory when not using the VFS are not affected by this option.</div>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                <div>Enables the use of the VFS for any new media libraries managed by the plugin.</div>
+                                <div id="WindowsSymLinkWarning1" hidden><strong>Warning</strong>: Windows users are required to <a href="https://learn.microsoft.com/en-us/windows/apps/get-started/developer-mode-features-and-debugging#use-regedit-to-enable-your-device" target="_blank" rel="noopener noreferrer">enable Developer Mode</a> then restart Jellyfin to be able to create symbolic links, a feature <strong>required</strong> to use the VFS.</div>
+                                <details style="margin-top: 0.5em">
+                                    <summary style="margin-bottom: 0.25em">What does this mean?</summary>
+                                    Enabling this setting should in theory make it so you won't have to think about file structure incompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links managed by the plugin instead of your actual file structure.
+                                    &nbsp;
+                                    <strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
+                                </details>
+                            </div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="AddCreditsAsThemeVideos" />
-                                <span>Add credits as theme videos</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add all credits as theme videos to entities with in the VFS. In a non-VFS library they will just be filtered out since we can't properly support them as Jellyfin native features.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="AddCreditsAsSpecialFeatures" />
-                                <span>Add credits as special features</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add all credits as special features to entities with in the VFS. In a non-VFS library they will just be filtered out since we can't properly support them as Jellyfin native features.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="AddMissingMetadata" />
-                                <span>Add Missing Episodes/Seasons</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add the metadata for missing episodes/seasons not in the local collection.</div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="LibraryFilteringMode">Legacy Library Filtering:</label>
+                            <select is="emby-select" id="LibraryFilteringMode" name="LibraryFilteringMode" class="emby-select-withcolor emby-select">
+                                <option value="Auto">Auto</option>
+                                <option value="Strict" selected>Strict</option>
+                                <option value="Lax" selected>Lax</option>
+                            </select>
+                            <div class="fieldDescription">
+                                <div>Choose how the plugin filters out videos in your new libraries. This option only applies if the VFS is not used.</div>
+                                <details style="margin-top: 0.5em">
+                                    <summary style="margin-bottom: 0.25em">What does auto filtering entail?</summary>
+                                    Auto filtering means the plugin will only filter out unrecognized videos if no other metadata provider is enabled, otherwise it will leave them in the library.
+                                </details>
+                                <details style="margin-top: 0.5em">
+                                    <summary style="margin-bottom: 0.25em">What does strict filtering entail?</summary>
+                                    Strict filtering means the plugin will filter out any and all unrecognized videos from the library.
+                                </details>
+                                <details style="margin-top: 0.5em">
+                                    <summary style="margin-bottom: 0.25em">What does lax filtering entail?</summary>
+                                    Lax filtering means the plugin will not filter out anything from the library. Use this only if you're having trouble.
+                                </details>
+                            </div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
                         </button>
                     </fieldset>
-                    <fieldset id="MediaFolderSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                    <fieldset id="Library_Existing_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
-                            <h3>Media Folder Settings</h3>
+                            <h3>Existing Library Settings</h3>
                         </legend>
-                        <div class="fieldDescription verticalSection-extrabottompadding">
-                            Placeholder description.
-                        </div>
-                        <div class="inputContainer inputContainer-withDescription expert-only">
-                            <input is="emby-input" type="text" id="IgnoredFolders" label="Ignored folder names:" />
-                            <div class="fieldDescription">A comma separated list of folder names which will be ignored during library filtering.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="VFS_AddReleaseGroup" />
-                                <span>Add Release Group to VFS entries</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the full or short release group name to all automatically linked files in the VFS, and "No Group" for all manually linked files in the VFS. <strong>Warning</strong>: The release group in the file name may change if the release group info is incomplete, unavailable, or otherwise updated in Shoko at a later date, and thus may cause episode/movie entries to be "removed" and "added" as new entries when that happens. <strong>Use at your own risk.</strong></div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="VFS_AddResolution" />
-                                <span>Add Resolution to VFS entries</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the standardized resolution (e.g. 480p, 1080p, 4K, etc.) to all files in the VFS, <strong>IF</strong> it's available. <strong>Warning</strong>: Though rare, we may have failed to read the media info in Shoko when the files were first added (e.g. because of a corrupt file, encountering an unsupported <i>new</i> codec, etc.), then reading it later. This may lead to episode/movie entries to be "removed" and "added" as new entries the next time they are refreshed after the metadata has been added. <strong>Use at your own risk.</strong></div>
-                        </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="MediaFolderSelector">Configure settings for:</label>
                             <select is="emby-select" id="MediaFolderSelector" name="MediaFolderSelector" value="" class="emby-select-withcolor emby-select">
-                                <option value="">Default settings for new media folders</option>
+                                <option value="">Click here to select a library</option>
                             </select>
                             <div class="fieldDescription selectFieldDescription">Select a media folder to add or modify the media folder settings for.</div>
                         </div>
-                        <div id="MediaFolderDefaultSettingsContainer">
-                            <div class="checkboxContainer checkboxContainer-withDescription">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="VFS_Enabled" />
-                                    <span>Virtual File System (<strong>VFS</strong>)</span>
-                                </label>
-                                <div class="fieldDescription checkboxFieldDescription">
-                                    <div>Enables the use of the VFS for any new media libraries managed by the plugin.</div>
-                                    <div id="WindowsSymLinkWarning1" hidden><strong>Warning</strong>: Windows users are required to <a href="https://learn.microsoft.com/en-us/windows/apps/get-started/developer-mode-features-and-debugging#use-regedit-to-enable-your-device" target="_blank" rel="noopener noreferrer">enable Developer Mode</a> then restart Jellyfin to be able to create symbolic links, a feature <strong>required</strong> to use the VFS.</div>
-                                    <details style="margin-top: 0.5em">
-                                        <summary style="margin-bottom: 0.25em">What does this mean?</summary>
-                                        Enabling this setting should in theory make it so you won't have to think about file structure incompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links managed by the plugin instead of your actual file structure.
-                                        &nbsp;
-                                        <strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
-                                    </details>
-                                </div>
-                            </div>
-                            <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="LibraryFilteringMode">Library Filtering:</label>
-                                <select is="emby-select" id="LibraryFilteringMode" name="LibraryFilteringMode" class="emby-select-withcolor emby-select">
-                                    <option value="Auto">Auto</option>
-                                    <option value="Strict" selected>Strict</option>
-                                    <option value="Lax" selected>Lax</option>
-                                </select>
-                                <div class="fieldDescription">
-                                    <div>Choose how the plugin filters out videos in your new libraries. This option only applies if the VFS is not used.</div>
-                                    <details style="margin-top: 0.5em">
-                                        <summary style="margin-bottom: 0.25em">What does auto filtering entail?</summary>
-                                        Auto filtering means the plugin will only filter out unrecognized videos if no other metadata provider is enabled, otherwise it will leave them in the library.
-                                    </details>
-                                    <details style="margin-top: 0.5em">
-                                        <summary style="margin-bottom: 0.25em">What does strict filtering entail?</summary>
-                                        Strict filtering means the plugin will filter out any and all unrecognized videos from the library.
-                                    </details>
-                                    <details style="margin-top: 0.5em">
-                                        <summary style="margin-bottom: 0.25em">What does lax filtering entail?</summary>
-                                        Lax filtering means the plugin will not filter out anything from the library. Use this only if you're having trouble.
-                                    </details>
-                                </div>
-                            </div>
-                        </div>
                         <div id="MediaFolderPerFolderSettingsContainer" hidden>
-                            <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="MediaFolderImportFolderName" label="Mapped Import Folder:" disabled readonly value="-" />
-                                <div class="fieldDescription">The Shoko Import Folder the Media Folder is mapped to.</div>
+                            <div id="MediaFolderImportFolderMapping" style="margin-bottom: 2em;">
+                                <h3 class="checkboxListLabel">Import Folder Mapping:</h3>
+                                <div class="checkboxList paperList checkboxList-paperList">
+                                </div>
+                                <div class="fieldDescription">The Shoko Import Folders the Media Folders are mapped to.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="MediaFolderVirtualFileSystem" />
-                                    <span>Virtual File System (<strong>VFS</strong>)</span>
+                                    <span>Use the Virtual File System (<strong>VFS</strong>)</span>
                                 </label>
                                 <div class="fieldDescription checkboxFieldDescription">
                                     <div>Enables the use of the VFS for the library.</div>
@@ -1364,7 +1364,7 @@
                                 </div>
                             </div>
                             <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="MediaFolderLibraryFilteringMode">Library Filtering:</label>
+                                <label class="selectLabel" for="MediaFolderLibraryFilteringMode">Legacy Library Filtering:</label>
                                 <select is="emby-select" id="MediaFolderLibraryFilteringMode" name="MediaFolderLibraryFilteringMode" class="emby-select-withcolor emby-select">
                                     <option value="Auto">Auto</option>
                                     <option value="Strict" selected>Strict</option>
@@ -1386,23 +1386,113 @@
                                     </details>
                                 </div>
                             </div>
-                        </div>
-                        <div class="inputContainer inputContainer-withDescription" hidden>
-                            <button is="emby-button" type="submit" name="remove-media-folder" class="raised button-delete block emby-button">
-                                <span>Delete</span>
+                            <div class="inputContainer inputContainer-withDescription">
+                                <button is="emby-button" type="submit" name="remove-library" class="raised button-delete block emby-button">
+                                    <span>Remove</span>
+                                </button>
+                                <div class="fieldDescription">This will delete the saved settings and reset the mapping for the library.</div>
+                            </div>
+                            <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                                <span>Save</span>
                             </button>
-                            <div class="fieldDescription">This will delete the saved settings and reset the mapping for the media folder.</div>
                         </div>
-                        <button is="emby-button" type="submit" name="media-folder-settings" class="raised button-submit block emby-button">
+                    </fieldset>
+                    <fieldset id="Library_Experimental_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
+                        <legend>
+                            <h3>Experimental Settings</h3>
+                        </legend>
+                        <div class="fieldDescription verticalSection-extrabottompadding">Any features/settings in this section is still considered to be in an experimental state. <strong>You can enable them, but at the risk if them messing up your library.</strong></div>
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_MergeSeasons" />
+                                <span>Automatically merge seasons</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription"><div>Blur the boundaries between AniDB anime further by merging entries which could had just been a single anime entry based on name matching and a configurable merge window.</div></div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
                         </button>
                     </fieldset>
-                    <fieldset id="SignalRSection1" class="verticalSection verticalSection-extrabottompadding" hidden>
+                    <fieldset id="VFS_Basic_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
-                            <h3>SignalR Connection</h3>
+                            <h3>Basic Settings</h3>
+                        </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddTrailers" />
+                                <span>Add Trailers</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add trailers to entities within the VFS. Trailers within the trailers directory when not using the VFS are not affected by this option.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddCreditsAsThemeVideos" />
+                                <span>Add Credits as Theme Videos</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add all credits as theme videos to entities with in the VFS. In a non-VFS library they will just be filtered out since we can't properly support them as Jellyfin native features.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddCreditsAsSpecialFeatures" />
+                                <span>Add Credits as Special Features</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add all credits as special features to entities with in the VFS. In a non-VFS library they will just be filtered out since we can't properly support them as Jellyfin native features.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_AddReleaseGroup" />
+                                <span>Add Release Group to Path</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the full or short release group name to all automatically linked files in the VFS, and "No Group" for all manually linked files in the VFS. <strong>Warning</strong>: The release group in the file name may change if the release group info is incomplete, unavailable, or otherwise updated in Shoko at a later date, and thus may cause episode/movie entries to be "removed" and "added" as new entries when that happens. <strong>Use at your own risk.</strong></div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_AddResolution" />
+                                <span>Add Resolution to Path</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the standardized resolution (e.g. 480p, 1080p, 4K, etc.) to all files in the VFS, <strong>IF</strong> it's available. <strong>Warning</strong>: Though rare, we may have failed to read the media info in Shoko when the files were first added (e.g. because of a corrupt file, encountering an unsupported <i>new</i> codec, etc.), then reading it later. This may lead to episode/movie entries to be "removed" and "added" as new entries the next time they are refreshed after the metadata has been added. <strong>Use at your own risk.</strong></div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="VFS_Location_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
+                        <legend>
+                            <h3>VFS Location Settings</h3>
+                        </legend>
+                        <div class="fieldDescription verticalSection-extrabottompadding">
+                            Configure where to place the VFS in the file system and how to attach it to your libraries. <strong>Tweak at your own risk.</strong>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_AttachRoot" />
+                                <span>Physically Attach VFS to Libraries</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will attach a physical VFS "root" to your libraries as a media folder, allowing us to mount the VFS children to the new "root" and to re-use media folders across libraries without resorting to <i>other</i> workarounds.</div>
+                        </div>
+                        <div id="VFS_LocationContainer" class="selectContainer selectContainer-withDescription expert-only">
+                            <label class="selectLabel" for="VFS_Location">VFS Location:</label>
+                            <select is="emby-select" id="VFS_Location" name="VFS_Location" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Jellyfin Data Directory (Default)</option>
+                                <option value="Cache">Jellyfin Cache Directory</option>
+                                <option value="Custom">Custom Directory</option>
+                            </select>
+                            <div class="fieldDescription">Determines where the VFS root will be placed. Changing this will cause your library to "remove" and "re-add" itself because of the path changes. You will need to manually move your VFS root if you plan to keep it when toggling this setting, or you can get rid of it by running the scheduled task to remove it. <strong>You have been warned.</strong></div>
+                        </div>
+                        <div id="VFS_CustomLocationContainer" class="inputContainer inputContainer-withDescription expert-only" hidden>
+                            <input is="emby-input" type="text" id="VFS_CustomLocation" label="Custom VFS Root Location:" disabled />
+                            <div class="fieldDescription">An absolute path to the custom root directory of where the VFS will be placed. You decide.</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="SignalR_Connection_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Connection Status</h3>
                         </legend>
                         <div class="inputContainer inputContainer-withDescription">
-                            <input is="emby-input" type="text" id="SignalRStatus" label="Status:" disabled readonly value="Inactive">
+                            <input is="emby-input" type="text" id="SignalRStatus" label="Connection Status:" disabled readonly value="Inactive">
                             <div class="fieldDescription">SignalR connection status.</div>
                         </div>
                         <div id="SignalRConnectContainer" hidden>
@@ -1418,9 +1508,9 @@
                             <div class="fieldDescription">Terminate the SignalR connection to Shoko Server.</div>
                         </div>
                     </fieldset>
-                    <fieldset id="SignalRSection2" class="verticalSection verticalSection-extrabottompadding" hidden>
+                    <fieldset id="SignalR_Basic_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
-                            <h3>SignalR Settings</h3>
+                            <h3>Basic Settings</h3>
                         </legend>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
@@ -1435,7 +1525,7 @@
                             <input is="emby-input" type="text" id="SignalRAutoReconnectIntervals" label="Auto Reconnect Intervals:" />
                             <div class="fieldDescription">A comma separated list of intervals in seconds to try re-establish the connection if the plugin gets disconnected from Shoko Server.</div>
                         </div>
-                        <div id="SignalREventSources" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="SignalREventSources" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Event Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -1468,38 +1558,48 @@
                             </div>
                             <div class="fieldDescription">Which event sources should be listened to via the SignalR connection.</div>
                         </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="SignalR_Library_New_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>New Library Settings</h3>
+                        </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="SignalRDefaultFileEvents" />
+                                <span>File Events</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                <div>Enables SignalR file events and real-time monitoring events for any new libraries.</div>
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="SignalRDefaultRefreshEvents" />
+                                <span>Metadata Events</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                <div>Enables SignalR metadata update events for any new libraries.</div>
+                            </div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="SignalR_Library_Existing_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Existing Library Settings</h3>
+                        </legend>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="SignalRMediaFolderSelector">Configure settings for:</label>
                             <select is="emby-select" id="SignalRMediaFolderSelector" name="SignalRMediaFolderSelector" value="" class="emby-select-withcolor emby-select">
-                                <option value="">Default settings for new media folders</option>
+                                <option value="">Click here to select a library</option>
                             </select>
                             <div class="fieldDescription selectFieldDescription">Select a media folder to add or modify the SignalR settings for.</div>
                         </div>
-                        <div id="SignalRMediaFolderDefaultSettingsContainer">
-                            <div class="checkboxContainer checkboxContainer-withDescription">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="SignalRDefaultFileEvents" />
-                                    <span>File Events</span>
-                                </label>
-                                <div class="fieldDescription checkboxFieldDescription">
-                                    <div>Enables SignalR file events and real-time monitoring events for any new media folders.</div>
-                                </div>
-                            </div>
-                            <div class="checkboxContainer checkboxContainer-withDescription">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="SignalRDefaultRefreshEvents" />
-                                    <span>Metadata Events</span>
-                                </label>
-                                <div class="fieldDescription checkboxFieldDescription">
-                                    <div>Enables SignalR metadata update events for any new media folders.</div>
-                                </div>
-                            </div>
-                        </div>
                         <div id="SignalRMediaFolderPerFolderSettingsContainer" hidden>
-                            <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="SignalRMediaFolderImportFolderName" label="Mapped Import Folder:" disabled readonly value="-" />
-                                <div class="fieldDescription">The Shoko Import Folder the Media Folder is mapped to.</div>
-                            </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="SignalRFileEvents" />
@@ -1518,12 +1618,12 @@
                                     <div>Enables SignalR metadata update events for the media folder.</div>
                                 </div>
                             </div>
+                            <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                                <span>Save</span>
+                            </button>
                         </div>
-                        <button is="emby-button" type="submit" name="signalr-settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
-                        </button>
                     </fieldset>
-                    <fieldset id="UserSection" class="verticalSection verticalSection-extrabottompadding" hidden>
+                    <fieldset id="User_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
                             <h3>User Settings</h3>
                         </legend>
@@ -1594,50 +1694,44 @@
                             </div>
                             <div id="UserDeleteContainer" class="inputContainer inputContainer-withDescription" hidden>
                                 <button is="emby-button" type="submit" name="unlink-user" class="raised button-delete block emby-button">
-                                    <span>Delete</span>
+                                    <span>Remove</span>
                                 </button>
                                 <div class="fieldDescription">This will delete any saved settings for the user.</div>
                             </div>
-                            <button is="emby-button" type="submit" name="user-settings" class="raised button-submit block emby-button">
+                            <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                                 <span>Save</span>
                             </button>
                         </div>
                     </fieldset>
-                    <fieldset id="ExperimentalSection" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
+                    <fieldset id="Misc_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
                         <legend>
-                            <h3>Experimental Settings</h3>
+                            <h3>Miscellaneous Settings</h3>
                         </legend>
-                        <div class="fieldDescription verticalSection-extrabottompadding">Any features/settings in this section is still considered to be in an experimental state. <strong>You can enable them, but at the risk if them messing up your library.</strong></div>
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="VFS_AttachRoot" />
-                                <span>Attach physical root for VFS</span>
+                                <input is="emby-checkbox" type="checkbox" id="Misc_ShowInMenu" />
+                                <span>Show in Menu</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will attach a physical VFS "root" to your libraries as a media folder, allowing us to mount the VFS children to the new "root" and to re-use media folders across libraries without resorting to <i>other</i> workarounds.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Shows a shortcut to the plugin in the sidebar navigation menu.</div>
                         </div>
-                        <div id="VFS_LocationContainer" class="selectContainer selectContainer-withDescription expert-only">
-                            <label class="selectLabel" for="VFS_Location">VFS Location:</label>
-                            <select is="emby-select" id="VFS_Location" name="VFS_Location" class="emby-select-withcolor emby-select">
-                                <option value="Default" selected>Jellyfin Data Directory (Default)</option>
-                                <option value="Cache">Jellyfin Cache Directory</option>
-                                <option value="Custom">Custom Directory</option>
-                            </select>
-                            <div class="fieldDescription">Determines where the VFS root will be placed. Changing this will cause your library to "remove" and "re-add" itself becaue of the path changes. You will need to manually move your VFS root if you plan to keep it when toggling this setting, or you can get rid of it by running the scheduled task to remove it. <strong>You have been warned.</strong></div>
-                        </div>
-                        <div id="VFS_CustomLocationContainer" class="inputContainer inputContainer-withDescription expert-only" hidden>
-                            <input is="emby-input" type="text" id="VFS_CustomLocation" label="Custom VFS Root Location:" disabled />
-                            <div class="fieldDescription">An absolute path to the custom root directory of where the VFS will be placed. You decide.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_MergeSeasons" />
-                                <span>Automatically merge seasons</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription"><div>Blur the boundaries between AniDB anime further by merging entries which could had just been a single anime entry based on name matching and a configurable merge window.</div></div>
+                        <div class="inputContainer inputContainer-withDescription expert-only">
+                            <input is="emby-input" type="text" id="IgnoredFolders" label="Ignored folder names:" />
+                            <div class="fieldDescription">A comma separated list of folder names which will be ignored during library filtering.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
                         </button>
+                    </fieldset>
+                    <fieldset id="Utilities_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
+                        <legend>
+                            <h3>Utilities</h3>
+                        </legend>
+                        <div id="UserDeleteContainer" class="inputContainer inputContainer-withDescription expert-only">
+                            <a is="emby-linkbutton" rel="noopener noreferrer" class="raised button-alt block emby-button link-redirection" target="_blank" href="Shoko.Utilities.Dummy">
+                                <span>Dummy Example</span>
+                            </a>
+                            <div class="fieldDescription">Don't click the button above! You dummy!</div>
+                        </div>
                     </fieldset>
                 </div>
             </form>

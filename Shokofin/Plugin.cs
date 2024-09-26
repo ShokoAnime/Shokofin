@@ -227,15 +227,38 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         return
         [
+            // HTML
             new PluginPageInfo
             {
-                Name = Name,
-                EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html",
+                Name = "Shoko.Settings",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Pages.Settings.html",
+                EnableInMainMenu = Configuration.Misc_ShowInMenu,
+                DisplayName = "Shoko - Settings",
+                MenuSection = "Shoko",
             },
             new PluginPageInfo
             {
-                Name = "ShokoController.js",
-                EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configController.js",
+                Name = "Shoko.Utilities.Dummy",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Pages.Dummy.html",
+                DisplayName = "Shoko - Dummy",
+                MenuSection = "Shoko",
+            },
+
+            // JS
+            new PluginPageInfo
+            {
+                Name = "Shoko.Common.js",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Pages.Scripts.Common.js",
+            },
+            new PluginPageInfo
+            {
+                Name = "Shoko.Settings.js",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Pages.Scripts.Settings.js",
+            },
+            new PluginPageInfo
+            {
+                Name = "Shoko.Utilities.Dummy.js",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Pages.Scripts.Dummy.js",
             },
         ];
     }
