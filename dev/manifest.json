@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.41",
+                "changelog": "`misc`: **Fix wording for VFS setting**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.41/shoko_4.1.1.41.zip",
+                "checksum": "80661dd5e9f330836977a00047a27cf5",
+                "timestamp": "2024-09-26T06:03:16Z"
+            },
+            {
                 "version": "4.1.1.40",
                 "changelog": "`fix`: **Fix guard for iterating import folder files**:\n\n- Fixed the guard for iterating import folder files to once again check if the current path is a media folder, but this time also check if it's the physical VFS root attached to the library. With this check in place then it will prevent other locations from triggering a full refresh of the VFS, e.g. old VFS roots and/or other media folders attached to the library that are not part of the VFS.\n\n`refactor`: **Overhaul the merge versions manager**:\n\n- Refactored the merge versions manager to re-use logic and implement generics in the merge/split process.\n\n`fix`: **Auto remove 'physical' VFS roots when needed**.\n\n`fix`: **Skip generation of vfs if we need to edit the libraries**.\n\n`revert`: **\"fix: fix up media folder and user selectors\"**:\n\nThis commit partially reverts commit 0d765de84e1af913da5e90297e6fa91a2383fc2e.\n\nThe updated sync media folder logic was flawed, and fixing it will produce spaghetti so instead I'll revert the changes and trust the users to not make mistakes. \ud83d\udcff\n\n`misc`: **Rename method to better clarify what it's for**.\n\n`fix`: **Stop skipping cache for import folder**:\n\n- Stop skipping the cache when getting the files for an import folder. Now that the usage tracker exists it's not needed, because the cache will be cleared when nothing is using it.\n\n`feat`: **Add custom VFS location**:\n\n- Add an ** EXPERIMENTAL** option to specify a custom VFS root location. So now you can select between placing it in a) the jellyfin data directory (_the default_), b) the jellyfin cache directory, or c) somewhere you want it to live. Just note that by changing the setting you will need to either refresh and see your library turn to dust and rebuild itself, or take matters into your own hands and recreate it yourself.\n\n`misc`: **Add missing expert mode class to merge seasons option**.\n\n`fix`: **Properly generate VFS for movie libraries**:\n\n- Properly generate the VFS for movie libraries, even when filtering is disabled.\n\n`refactor`: **Generate all configurations first**:\n\n- Generate all configurations first, then just extract the needed one, instead of first generating one configuration, then generating the rest, then returning the first.\n\n`fix`: **Attach import folder relative path**:\n\n- Attach the import folder's relative path to the file's relative path when comparing the locations in the shoko library monitor to determine if the file is known by shoko.\n\n`fix`: **Fix up signalr media folder selector + more**:\n\n- Fixed up the signalr media folder settings selector.\n\n- Fixed loading indicator.\n\n`misc`: **Enable file events by default**:\n\n- Enable file events by default. Because of the way we do the event handling then the setting also applies to real-time monitoring events for the library/libraries.\n\n`feat`: **Merge versions upon refresh**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.37/shoko_4.1.1.37.zip",
                 "checksum": "d3e3edb118e6d3bc60cb573290f99f46",
                 "timestamp": "2024-09-22T23:22:24Z"
-            },
-            {
-                "version": "4.1.1.36",
-                "changelog": "`fix`: **Use older image types until next shoko server stable release**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.36/shoko_4.1.1.36.zip",
-                "checksum": "49e5ad051616ff760168684f6793d747",
-                "timestamp": "2024-09-22T01:24:22Z"
             }
         ]
     }
