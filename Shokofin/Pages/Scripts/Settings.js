@@ -715,7 +715,7 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#VFS_Enabled").checked = config.VFS_Enabled;
             form.querySelector("#LibraryFilteringMode").value = config.LibraryFilteringMode;
             form.querySelector("#MediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + libraries
-                .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}</option>`)
+                .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}${config.ExpertMode ? ` (${library.LibraryId})` : ""}</option>`)
                 .join("");
             break;
         }
@@ -766,7 +766,7 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#SignalRDefaultRefreshEvents").checked = config.SignalR_RefreshEnabled;
 
             form.querySelector("#SignalRMediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + libraries
-                .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}</option>`)
+                .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}${config.ExpertMode ? ` (${library.LibraryId})` : ""}</option>`)
                 .join("");
             break;
         }
