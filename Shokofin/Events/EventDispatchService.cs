@@ -308,7 +308,7 @@ public class EventDispatchService
                                     foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
                                         topFolders.Add(path);
                                 }
-                                vfsSymbolicLinks = vfsLocations.Select(tuple => tuple.sourceLocation).ToHashSet();
+                                vfsSymbolicLinks = vfsLocations.SelectMany(tuple => tuple.symbolicLinks).ToHashSet();
                             }
 
                             // Remove old links for file.
