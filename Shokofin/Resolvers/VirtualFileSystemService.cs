@@ -525,6 +525,7 @@ public class VirtualFileSystemService
         var singleSeriesIds = new HashSet<int>();
         var multiSeriesFiles = new List<(API.Models.File, string)>();
         var totalSingleSeriesFiles = 0;
+        var libraryId = mediaConfigs[0].LibraryId;
         foreach (var (importFolderId, importFolderSubPath, mediaFolderPaths) in mediaConfigs.ToImportFolderList()) {
             var firstPage = ApiClient.GetFilesForImportFolder(importFolderId, importFolderSubPath);
             var pageData = firstPage
@@ -533,10 +534,11 @@ public class VirtualFileSystemService
                 .GetResult();
             var totalPages = pageData.List.Count == pageData.Total ? 1 : (int)Math.Ceiling((float)pageData.Total / pageData.List.Count);
             Logger.LogDebug(
-                "Iterating ≤{FileCount} files to potentially use within media folder at {Path} by checking {TotalCount} matches. (ImportFolder={FolderId},RelativePath={RelativePath},PageSize={PageSize},TotalPages={TotalPages})",
+                "Iterating ≤{FileCount} files to potentially use within media folder at {Path} by checking {TotalCount} matches. (LibraryId={LibraryId},ImportFolder={FolderId},RelativePath={RelativePath},PageSize={PageSize},TotalPages={TotalPages})",
                 fileSet.Count,
                 mediaFolderPaths,
                 pageData.Total,
+                libraryId,
                 importFolderId,
                 importFolderSubPath,
                 pageData.List.Count == pageData.Total ? null : pageData.List.Count,
@@ -556,9 +558,10 @@ public class VirtualFileSystemService
                 pageData = task.Result;
 
                 Logger.LogTrace(
-                    "Iterating page {PageNumber} with size {PageSize} (ImportFolder={FolderId},RelativePath={RelativePath})",
+                    "Iterating page {PageNumber} with size {PageSize} (LibraryId={LibraryId},ImportFolder={FolderId},RelativePath={RelativePath})",
                     totalPages - pages.Count,
                     pageData.List.Count,
+                    libraryId,
                     importFolderId,
                     importFolderSubPath
                 );
@@ -634,7 +637,7 @@ public class VirtualFileSystemService
             totalMultiSeriesFiles,
             mediaConfigs.Count,
             timeSpent,
-            mediaConfigs[0].LibraryId
+            libraryId
         );
     }
 
