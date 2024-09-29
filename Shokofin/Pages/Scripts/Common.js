@@ -737,9 +737,11 @@ const Messages = {
  * @param {HTMLDivElement} view - The view element.
  * @param {ViewLifecycleEvents} events - The events.
  * @param {TabType} [initialTab] - The initial tab.
+ * @param {boolean} [hide] - Whether to hide the view immediately.
+ * @param {boolean} [show] - Whether to show the view immediately.
  * @returns {void} Void.
  */
-export function setupEvents(view, events, initialTab = "connection") {
+export function setupEvents(view, events, initialTab = "connection", hide = false, show = false) {
     if (events.onBeforeShow) {
         view.addEventListener("viewbeforeshow", events.onBeforeShow.bind(view));
     }
@@ -835,6 +837,46 @@ export function setupEvents(view, events, initialTab = "connection") {
         const initEvent = new CustomEvent("viewinit", { detail: {}, bubbles: true, cancelable: false });
 
         events.onInit.call(view, initEvent);
+
+        // Do nothing if both show and hide are requested.
+        if (hide && show) return;
+
+        // Show the view if requested.
+        if (show) {
+            const eventDetails = {
+                /** @type {FullDetails} */
+                detail: {
+                    type: view.getAttribute("data-type") || null,
+                    params: Object.fromEntries(new URLSearchParams(window.location.hash.split("#").slice(1).join("#").split("?").slice(1).join("?"))),
+                    properties: (view.getAttribute("data-properties") || "").split(","),
+                    isRestored: undefined,
+                    state: null,
+                    options: {
+                        supportsThemeMedia: false,
+                        enableMediaControls: true,
+                    },
+                },
+                bubbles: true,
+                cancelable: false,
+            }
+            view.dispatchEvent(new CustomEvent("viewbeforeshow", eventDetails));
+            view.dispatchEvent(new CustomEvent("viewshow", eventDetails));
+        }
+
+        // Hide the view if requested.
+        if (hide) {
+            const eventDetails = {
+                /** @type {MinimalDetails} */
+                detail: {
+                    type: event.detail.type,
+                    properties: event.detail.properties,
+                },
+                bubbles: true,
+                cancelable: false,
+            };
+            view.dispatchEvent(new CustomEvent("viewbeforehide", { ...eventDetails, cancelable: true }));
+            view.dispatchEvent(new CustomEvent("viewhide", eventDetails));
+        }
     }
 }
 
@@ -857,6 +899,8 @@ export function setupEvents(view, events, initialTab = "connection") {
  * @typedef {Object} controllerFactoryOptions
  * @property {ViewLifecycleEvents} events  The lifecycle events for the view.
  * @property {TabType} [initialTab] - The initial tab.
+ * @property {boolean} [show] - Whether to show the view immediately.
+ * @property {boolean} [hide] - Whether to hide the view immediately.
  */
 
 /**
@@ -866,9 +910,9 @@ export function setupEvents(view, events, initialTab = "connection") {
  * @returns {controllerFactoryFn} The controller factory.
  */
 export function createControllerFactory(options) {
-    const { events, initialTab } = options;
+    const { events, initialTab, hide, show } = options;
     return function(view) {
-        setupEvents(view, events, initialTab);
+        setupEvents(view, events, initialTab, hide, show);
     }
 }
 

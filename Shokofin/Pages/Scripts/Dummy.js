@@ -1,3 +1,9 @@
+export default function (view) {
+let show = false;
+let hide = false;
+view.addEventListener("viewshow", () => show = true);
+view.addEventListener("viewhide", () => hide = true);
+
 /**
  * @type {import("./Common.js").ApiClientPrototype}
  */
@@ -9,11 +15,14 @@ const ApiClient = globalThis.ApiClient;
 const Dashboard = globalThis.Dashboard;
 
 /**
- * @type {import("./Common.js")}
+ * @type {Promise<import("./Common.js")>}
  */
-const { State, createControllerFactory } = await import(ApiClient.getUrl("/web/" + Dashboard.getPluginUrl("Shoko.Common.js")));
+const promise = import(ApiClient.getUrl("/web/" + Dashboard.getPluginUrl("Shoko.Common.js")));
+promise.then(({ State, createControllerFactory }) => {
 
-export default createControllerFactory({
+createControllerFactory({
+    show,
+    hide,
     initialTab: "utilities",
     events: {
         onShow(event) {
@@ -35,4 +44,6 @@ export default createControllerFactory({
             content.innerHTML = "Dummy.";
         },
     },
-});
+})(view);
+
+}); }

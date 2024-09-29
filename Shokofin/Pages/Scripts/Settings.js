@@ -1,3 +1,9 @@
+export default function (view) {
+let show = false;
+let hide = false;
+view.addEventListener("viewshow", () => show = true);
+view.addEventListener("viewhide", () => hide = true);
+
 /**
  * @type {import("./Common.js").ApiClientPrototype}
  */
@@ -9,9 +15,10 @@ const ApiClient = globalThis.ApiClient;
 const Dashboard = globalThis.Dashboard;
 
 /**
- * @type {import("./Common.js")}
+ * @type {Promise<import("./Common.js")>}
  */
-const {
+const promise = import(ApiClient.getUrl("/web/" + Dashboard.getPluginUrl("Shoko.Common.js")));
+promise.then(({
     ShokoApiClient,
     State,
     createControllerFactory,
@@ -22,7 +29,7 @@ const {
     retrieveCheckboxList,
     retrieveSortableCheckboxList,
     updateTabs,
-} = await import(ApiClient.getUrl("/web/" + Dashboard.getPluginUrl("Shoko.Common.js")));
+}) => {
 
 //#region Constants
 
@@ -72,7 +79,9 @@ const Messages = {
 
 //#region Controller Logic
 
-export default createControllerFactory({
+createControllerFactory({
+    show,
+    hide,
     events: {
         onInit() {
             const view = this;
@@ -263,7 +272,7 @@ export default createControllerFactory({
             applyFormToConfig(form, State.config);
         },
     }
-});
+})(view);
 
 /**
  * Update the view to reflect the current state.
@@ -1222,3 +1231,5 @@ function filterReconnectIntervals(value) {
 }
 
 //#endregion
+
+}); }
