@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.42",
+                "changelog": "`refactor`: **Rewrite settings page (again)**:\n\n- Rewrote the settings controller to support a tab-based view. And in the process tweaked where a few settings belonged. This is purely a client-side/cosmetic change, but helps navigating the settings.\n\n- Added a dummy utility to better understand how to implement future utilities.\n\n- Added a common JS file with shared logic to document the life-cycle events for plugin views used by the existing settings and dummy utility, in addition to any future utilities. This is also complete with JSDoc type definitions.\n\n- Added an option to show the Shoko settings and utilities directly on the side-navigation menu on the dashboard. Saving you 1 step to tweak the settings ~~or use any of the future utilities that may or may not be made at some point in time\u2026 no promises~~.\n\n- Moved the html/js files to a new directory better suited for storing them.\n\n`fix`: **Better error handling during VFS generation**:\n\n- Add configurable limits for when the link generation should be aborted.\n\n- Skip link generation for remaining files if we exceed the configured limit.\n\n- Throw an `AggregateException` if any series exceeded the maximum number of exceptions, or if the total number of exceptions exceeded the maximum allowed. Additionally, if no links were generated and there were any exceptions, but we haven't reached the maximum allowed exceptions yet, then also throw an `AggregateException`.\n\n`feat`: **Add optional resolve links before vfs option**:\n\n- Added a new advanced option to resolve any symbolic links to their real target before generating the symbolic links to place to the VFS, effectively skipping the additionally needed lookup steps later when Jellyfin accesses the symbolic link placed in the VFS.\n\n`chore`: **Singular to plural in method names**.\n\n`misc`: **Log library id in import folder iteration step during VFS generation**.\n\n`fix`: **Fix paths used in event dispatcher**.\n\n`fix`: **Workaround for broken `await`/`async` support in Jellyfin Web**:\n\nTo-be removed if the issue is fixed in the core, but for now we'll have this ugly workaround.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.42/shoko_4.1.1.42.zip",
+                "checksum": "2342d38111c96f175e4cf7dbb8ea9e58",
+                "timestamp": "2024-09-29T10:04:46Z"
+            },
+            {
                 "version": "4.1.1.41",
                 "changelog": "`misc`: **Fix wording for VFS setting**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.38/shoko_4.1.1.38.zip",
                 "checksum": "6370bcf6de69eb7985620639315367ca",
                 "timestamp": "2024-09-23T12:34:58Z"
-            },
-            {
-                "version": "4.1.1.37",
-                "changelog": "`misc`: **Add path and/or other details when throwing**:\n\n- Added the path and/or other details when throwing in a provider, to more easily identify _which_ series/episode is throwing if the stack trace and/or error message is generic/useless.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.37/shoko_4.1.1.37.zip",
-                "checksum": "d3e3edb118e6d3bc60cb573290f99f46",
-                "timestamp": "2024-09-22T23:22:24Z"
             }
         ]
     }
