@@ -170,7 +170,7 @@ public class VirtualFileSystemService
             string? pathToClean = null;
             IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
             if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
-                var allPaths = GetPathsForMediaFolder(mediaConfigs);
+                var allPaths = GetPathsForMediaFolders(mediaConfigs);
                 var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
                 switch (pathSegments.Length) {
                     // show/movie-folder level
@@ -244,9 +244,9 @@ public class VirtualFileSystemService
             }
             // Iterate files in the "real" media folder.
             else if (mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath)) || path == vfsPath) {
-                var allPaths = GetPathsForMediaFolder(mediaConfigs);
+                var allPaths = GetPathsForMediaFolders(mediaConfigs);
                 pathToClean = vfsPath;
-                allFiles = GetFilesForImportFolder(mediaConfigs, allPaths);
+                allFiles = GetFilesForImportFolders(mediaConfigs, allPaths);
             }
 
             if (allFiles is null)
@@ -274,7 +274,7 @@ public class VirtualFileSystemService
         );
     }
 
-    private HashSet<string> GetPathsForMediaFolder(IReadOnlyList<MediaFolderConfiguration> mediaConfigs)
+    private HashSet<string> GetPathsForMediaFolders(IReadOnlyList<MediaFolderConfiguration> mediaConfigs)
     {
         var libraryId = mediaConfigs[0].LibraryId;
         Logger.LogDebug("Looking for files in library across {Count} folders. (Library={LibraryId})", mediaConfigs.Count, libraryId);
@@ -519,7 +519,7 @@ public class VirtualFileSystemService
         );
     }
 
-    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForImportFolder(IReadOnlyList<MediaFolderConfiguration> mediaConfigs, HashSet<string> fileSet)
+    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForImportFolders(IReadOnlyList<MediaFolderConfiguration> mediaConfigs, HashSet<string> fileSet)
     {
         var start = DateTime.UtcNow;
         var singleSeriesIds = new HashSet<int>();
