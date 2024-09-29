@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.44",
+                "changelog": "`misc`: **Show library id in export mode**.\n\n`misc`: **Correct config definition in JSDoc**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.44/shoko_4.1.1.44.zip",
+                "checksum": "cf9378b56e1824c91c543bbdba5e64a0",
+                "timestamp": "2024-09-29T22:40:32Z"
+            },
+            {
                 "version": "4.1.1.43",
                 "changelog": "`fix`: **Hide/show container instead of input**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.40/shoko_4.1.1.40.zip",
                 "checksum": "aab8111eb6d562972f0c55ed69abc50b",
                 "timestamp": "2024-09-25T02:32:14Z"
-            },
-            {
-                "version": "4.1.1.39",
-                "changelog": "`fix`: **Fix up media folder and user selectors**:\n\n- Fixed the media selectors I broke.\n\n- Sync media folder settings between the same library _and_ any other libraries that contain the same media folder.\n\n- Fixed loading animation for initial load.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.39/shoko_4.1.1.39.zip",
-                "checksum": "8011dbd5a7ba8894c92dbc40d77ec0ff",
-                "timestamp": "2024-09-24T14:23:48Z"
             }
         ]
     }
