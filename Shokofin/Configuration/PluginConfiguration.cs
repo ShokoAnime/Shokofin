@@ -418,6 +418,19 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool VFS_AttachRoot { get; set; }
 
     /// <summary>
+    /// Maximum number of exceptions before aborting the VFS generation.
+    /// </summary>
+    [Range(-1, 1000)]
+    public int VFS_MaxTotalExceptionsBeforeAbort { get; set; }
+
+    /// <summary>
+    /// Maximum number of series with exceptions before aborting the VFS
+    /// generation.
+    /// </summary>
+    [Range(-1, 100)]
+    public int VFS_MaxSeriesExceptionsBeforeAbort { get; set; }
+
+    /// <summary>
     /// Places the VFS in the cache directory instead of the config directory.
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -606,6 +619,8 @@ public class PluginConfiguration : BasePluginConfiguration
         VFS_AttachRoot = false;
         VFS_Location = VirtualRootLocation.Default;
         VFS_CustomLocation = null;
+        VFS_MaxTotalExceptionsBeforeAbort = 10;
+        VFS_MaxSeriesExceptionsBeforeAbort = 3;
         AutoMergeVersions = true;
         UseGroupsForShows = false;
         SeparateMovies = false;

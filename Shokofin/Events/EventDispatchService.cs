@@ -231,10 +231,10 @@ public class EventDispatchService
                             var result = new LinkGenerationResult();
                             var topFolders = new HashSet<string>();
                             var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
-                                .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
+                                .Where(tuple => tuple.symbolicLinks.Length > 0 && tuple.importedAt.HasValue)
                                 .ToList();
-                            foreach (var (srcLoc, symLinks, importDate) in vfsLocations) {
-                                result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, importDate!.Value);
+                            foreach (var (symLinks, importDate) in vfsLocations) {
+                                result += ResolveManager.GenerateSymbolicLinks(sourceLocation, symLinks, importDate!.Value);
                                 foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
                                     topFolders.Add(path);
                             }
@@ -301,10 +301,10 @@ public class EventDispatchService
                             var newSourceLocation = await GetNewSourceLocation(importFolderId, importFolderSubPath, fileId, relativePath, mediaFolderPath);
                             if (!string.IsNullOrEmpty(newSourceLocation)) {
                                 var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(collectionType, vfsPath, newSourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
-                                    .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
+                                .Where(tuple => tuple.symbolicLinks.Length > 0 && tuple.importedAt.HasValue)
                                     .ToList();
-                                foreach (var (srcLoc, symLinks, importDate) in vfsLocations) {
-                                    result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, importDate!.Value);
+                                foreach (var (symLinks, importDate) in vfsLocations) {
+                                    result += ResolveManager.GenerateSymbolicLinks(newSourceLocation, symLinks, importDate!.Value);
                                     foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
                                         topFolders.Add(path);
                                 }

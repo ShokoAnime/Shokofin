@@ -647,17 +647,26 @@ public class VirtualFileSystemService
     private async Task<LinkGenerationResult> GenerateStructure(CollectionType? collectionType, string vfsPath, IEnumerable<(string sourceLocation, string fileId, string seriesId)> allFiles)
     {
         var result = new LinkGenerationResult();
+        var maxTotalExceptions = Plugin.Instance.Configuration.VFS_MaxTotalExceptionsBeforeAbort;
+        var maxSeriesExceptions = Plugin.Instance.Configuration.VFS_MaxSeriesExceptionsBeforeAbort;
+        var failedSeries = new HashSet<string>();
+        var failedExceptions = new List<Exception>();
+        var cancelTokenSource = new CancellationTokenSource();
         var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VFS_Threads);
         await Task.WhenAll(allFiles.Select(async (tuple) => {
             await semaphore.WaitAsync().ConfigureAwait(false);
+            var (sourceLocation, fileId, seriesId) = tuple;
 
             try {
-                Logger.LogTrace("Generating links for {Path} (File={FileId},Series={SeriesId})", tuple.sourceLocation, tuple.fileId, tuple.seriesId);
+                if (cancelTokenSource.IsCancellationRequested) {
+                    Logger.LogTrace("Cancelling generation of links for {Path}", sourceLocation);
+                    return;
+                }
 
-                var (sourceLocation, symbolicLinks, importedAt) = await GenerateLocationsForFile(collectionType, vfsPath, tuple.sourceLocation, tuple.fileId, tuple.seriesId).ConfigureAwait(false);
+                Logger.LogTrace("Generating links for {Path} (File={FileId},Series={SeriesId})", sourceLocation, fileId, seriesId);
 
-                // Skip any source files we weren't meant to have in the library.
-                if (string.IsNullOrEmpty(sourceLocation) || !importedAt.HasValue)
+                var (symbolicLinks, importedAt) = await GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId, seriesId).ConfigureAwait(false);
+                if (symbolicLinks.Length == 0 || !importedAt.HasValue)
                     return;
 
                 var subResult = GenerateSymbolicLinks(sourceLocation, symbolicLinks, importedAt.Value);
@@ -667,20 +676,38 @@ public class VirtualFileSystemService
                     result += subResult;
                 }
             }
+            catch (Exception ex) {
+                Logger.LogWarning(ex, "Failed to generate links for {Path} (File={FileId},Series={SeriesId})", sourceLocation, fileId, seriesId);
+                lock (semaphore) {
+                    failedSeries.Add(seriesId);
+                    failedExceptions.Add(ex);
+                    if ((maxSeriesExceptions > 0 && failedSeries.Count == maxSeriesExceptions) ||
+                        (maxTotalExceptions > 0 && failedExceptions.Count == maxTotalExceptions)) {
+                        cancelTokenSource.Cancel();
+                    }
+                }
+            }
             finally {
                 semaphore.Release();
             }
         }))
             .ConfigureAwait(false);
 
+        // Throw an `AggregateException` if any series exceeded the maximum number of exceptions, or if the total number of exceptions exceeded the maximum allowed. Additionally,
+        // if no links were generated and there were any exceptions, but we haven't reached the maximum allowed exceptions yet, then also throw an `AggregateException`.
+        if (cancelTokenSource.IsCancellationRequested || (failedExceptions.Count > 0 && (maxTotalExceptions > 0 || maxSeriesExceptions > 0) && result.TotalVideos == 0)) {
+            Logger.LogWarning("Failed to generate {FileCount} links across {SeriesCount} series for {Path}", failedExceptions.Count, failedSeries.Count, vfsPath);
+            throw new AggregateException(failedExceptions);
+        }
+
         return result;
     }
 
-    public async Task<(string sourceLocation, string[] symbolicLinks, DateTime? importedAt)> GenerateLocationsForFile(CollectionType? collectionType, string vfsPath, string sourceLocation, string fileId, string seriesId)
+    public async Task<(string[] symbolicLinks, DateTime? importedAt)> GenerateLocationsForFile(CollectionType? collectionType, string vfsPath, string sourceLocation, string fileId, string seriesId)
     {
         var season = await ApiManager.GetSeasonInfoForSeries(seriesId).ConfigureAwait(false);
         if (season is null)
-            return (string.Empty, [], null);
+            return ([], null);
 
         var isMovieSeason = season.Type is SeriesType.Movie;
         var config = Plugin.Instance.Configuration;
@@ -690,19 +717,19 @@ public class VirtualFileSystemService
             _ => false,
         };
         if (shouldAbort)
-            return (string.Empty, [], null);
+            return ([], null);
 
         var show = await ApiManager.GetShowInfoForSeries(season.Id).ConfigureAwait(false);
         if (show is null)
-            return (string.Empty, [], null);
+            return ([], null);
 
         var file = await ApiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false);
         var (episode, episodeXref, _) = (file?.EpisodeList ?? []).FirstOrDefault();
         if (file is null || episode is null)
-            return (string.Empty, [], null);
+            return ([], null);
 
         if (season is null || episode is null)
-            return (string.Empty, [], null);
+            return ([], null);
 
         var showName = show.DefaultSeason.AniDB.Title?.ReplaceInvalidPathCharacters() ?? $"Shoko Series {show.Id}";
         var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
@@ -791,7 +818,7 @@ public class VirtualFileSystemService
 
         foreach (var symbolicLink in symbolicLinks)
             ApiManager.AddFileLookupIds(symbolicLink, fileId, seriesId, file.EpisodeList.Select(episode => episode.Id));
-        return (sourceLocation, symbolicLinks, (file.Shoko.ImportedAt ?? file.Shoko.CreatedAt).ToLocalTime());
+        return (symbolicLinks, (file.Shoko.ImportedAt ?? file.Shoko.CreatedAt).ToLocalTime());
     }
 
     public LinkGenerationResult GenerateSymbolicLinks(string sourceLocation, string[] symbolicLinks, DateTime importedAt)
