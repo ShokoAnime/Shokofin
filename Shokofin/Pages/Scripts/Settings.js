@@ -123,10 +123,10 @@ createControllerFactory({
             form.querySelector("#VFS_Location").addEventListener("change", function () {
                 form.querySelector("#VFS_CustomLocation").disabled = this.value !== "Custom";
                 if (this.value === "Custom") {
-                    form.querySelector("#VFS_CustomLocation").removeAttribute("hidden");
+                    form.querySelector("#VFS_CustomLocationContainer").removeAttribute("hidden");
                 }
                 else {
-                    form.querySelector("#VFS_CustomLocation").setAttribute("hidden", "");
+                    form.querySelector("#VFS_CustomLocationContainer").setAttribute("hidden", "");
                 }
             });
 
@@ -733,10 +733,10 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#VFS_CustomLocation").value = config.VFS_CustomLocation || "";
             form.querySelector("#VFS_CustomLocation").disabled = config.VFS_Location !== "Custom";
             if (config.VFS_Location === "Custom") {
-                form.querySelector("#VFS_CustomLocation").removeAttribute("hidden");
+                form.querySelector("#VFS_CustomLocationContainer").removeAttribute("hidden");
             }
             else {
-                form.querySelector("#VFS_CustomLocation").setAttribute("hidden", "");
+                form.querySelector("#VFS_CustomLocationContainer").setAttribute("hidden", "");
             }
             break;
         }
