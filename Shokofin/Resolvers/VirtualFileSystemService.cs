@@ -825,6 +825,20 @@ public class VirtualFileSystemService
     {
         try {
             var result = new LinkGenerationResult();
+            if (Plugin.Instance.Configuration.VFS_ResolveLinks) {
+                Logger.LogTrace("Attempting to resolve link for {Path}", sourceLocation);
+                try {
+                    if (File.ResolveLinkTarget(sourceLocation, true) is { } linkTarget) {
+                        Logger.LogTrace("Resolved link for {Path} to {LinkTarget}", sourceLocation, linkTarget.FullName);
+                        sourceLocation = linkTarget.FullName;
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.LogWarning(ex, "Unable to resolve link target for {Path}", sourceLocation);
+                    return result;
+                }
+            }
+
             var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
             var subtitleLinks = FindSubtitlesForPath(sourceLocation);
             foreach (var symbolicLink in symbolicLinks) {

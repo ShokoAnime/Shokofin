@@ -1465,6 +1465,13 @@
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_ResolveLinks" />
+                                <span>Resolve Links before VFS</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">If the library contains symbolic links to media, it will follow them until a final "real" file is found and use the path of said file for the VFS.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                            <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="VFS_AttachRoot" />
                                 <span>Physically Attach VFS to Libraries</span>
                             </label>

@@ -418,6 +418,13 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool VFS_AttachRoot { get; set; }
 
     /// <summary>
+    /// If the library contains symbolic links to media, it will follow them
+    /// until a final "real" file is found and use the path of said file for the
+    /// VFS
+    /// </summary>
+    public bool VFS_ResolveLinks { get; set; }
+
+    /// <summary>
     /// Maximum number of exceptions before aborting the VFS generation.
     /// </summary>
     [Range(-1, 1000)]
@@ -619,6 +626,7 @@ public class PluginConfiguration : BasePluginConfiguration
         VFS_AttachRoot = false;
         VFS_Location = VirtualRootLocation.Default;
         VFS_CustomLocation = null;
+        VFS_ResolveLinks = false;
         VFS_MaxTotalExceptionsBeforeAbort = 10;
         VFS_MaxSeriesExceptionsBeforeAbort = 3;
         AutoMergeVersions = true;
