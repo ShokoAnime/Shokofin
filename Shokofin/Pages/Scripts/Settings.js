@@ -279,7 +279,7 @@ createControllerFactory({
  *
  * @param {HTMLDivElement} view - The view element.
  * @param {HTMLFormElement} form - The form element.
- * @param {PluginConfiguration} config - The plugin configuration.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
  * @returns {Promise<void>}
  */
 async function updateView(view, form, config) {
@@ -433,7 +433,7 @@ function updateSignalrStatus(form, status) {
  * Apply a form to a configuration object.
  *
  * @param {HTMLFormElement} form - The form element.
- * @param {PluginConfiguration} config - The plugin configuration.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
  */
 function applyFormToConfig(form, config) {
     switch (State.currentTab) {
@@ -578,7 +578,7 @@ function applyFormToConfig(form, config) {
  * Apply the given configuration to the form.
  *
  * @param {HTMLFormElement} form - The form element.
- * @param {PluginConfiguration} config - The plugin configuration.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
  */
 async function applyConfigToForm(form, config) {
     switch (State.currentTab) {
@@ -793,7 +793,7 @@ async function applyConfigToForm(form, config) {
  *
  * @param {HTMLFormElement} form - The form element.
  * @param {string} userId - The user ID.
- * @param {PluginConfiguration?} config - Optional. The plugin configuration.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
  * @returns
  */
 async function applyUserConfigToForm(form, userId, config = null) {
@@ -855,7 +855,7 @@ async function applyUserConfigToForm(form, userId, config = null) {
  *
  * @param {HTMLFormElement} form - The form element.
  * @param {string} libraryId - The library ID.
- * @param {PluginConfiguration?} config - Optional. The plugin configuration.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
  * @returns {Promise<void>}
  */
 async function applyLibraryConfigToForm(form, libraryId, config = null) {
@@ -912,7 +912,7 @@ async function applyLibraryConfigToForm(form, libraryId, config = null) {
  *
  * @param {HTMLFormElement} form - The form element.
  * @param {string} libraryId - The library ID.
- * @param {PluginConfiguration?} config - Optional. The plugin configuration.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
  * @returns {Promise<void>}
  */
 async function applySignalrLibraryConfigToForm(form, libraryId, config = null) {
@@ -1059,7 +1059,7 @@ async function resetConnection(form) {
  * Synchronize the settings with the server.
  *1
  * @param {HTMLFormElement} form - The form element.
- * @param {PluginConfiguration?} config - Optional. The plugin configuration.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
  * @returns {Promise<PluginConfiguration>} The updated plugin configuration.
  */
 async function syncSettings(form, config) {
