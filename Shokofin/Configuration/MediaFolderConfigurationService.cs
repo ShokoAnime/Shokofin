@@ -129,10 +129,11 @@ public class MediaFolderConfigurationService
     private void EditLibraries(bool shouldScheduleLibraryScan)
     {
         lock (LockObj) {
+            ShouldGenerateAllConfigurations = true;
+
             if (LibraryEdits.Count is 0)
                 return;
 
-            ShouldGenerateAllConfigurations = true;
             var libraryEdits = LibraryEdits.ToList();
             LibraryEdits.Clear();
             foreach (var (libraryId, (libraryName, add, remove)) in libraryEdits) {
