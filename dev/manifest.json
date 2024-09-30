@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.46",
+                "changelog": "`fix`: **Fix faulty log statement Again, i wrote it blind\u2026 and now that I have my filtered glasses (read as; syntax highlighting and an LSP server running) on\u2026 then I see I forgot to get the length the array in the log point**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.46/shoko_4.1.1.46.zip",
+                "checksum": "7643ef494c9dfcfe6030ea6a24c0490e",
+                "timestamp": "2024-09-30T21:01:59Z"
+            },
+            {
                 "version": "4.1.1.45",
                 "changelog": "`misc`: **Add more logging during library discovery**. (_Skip CI_)\n\n`fix`: **Always re-evaluate libraries after a library scan or stalled event**.\n\n`misc`: **Add missing comma**:\n\nBecause I wrote the last two commits blind on mobile (so no LSP to yell at me).",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.42/shoko_4.1.1.42.zip",
                 "checksum": "2342d38111c96f175e4cf7dbb8ea9e58",
                 "timestamp": "2024-09-29T10:04:46Z"
-            },
-            {
-                "version": "4.1.1.41",
-                "changelog": "`misc`: **Fix wording for VFS setting**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.41/shoko_4.1.1.41.zip",
-                "checksum": "80661dd5e9f330836977a00047a27cf5",
-                "timestamp": "2024-09-26T06:03:16Z"
             }
         ]
     }
