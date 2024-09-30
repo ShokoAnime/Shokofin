@@ -258,7 +258,12 @@ public class MediaFolderConfigurationService
             if (allVirtualFolders.FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path) && (collectionType is CollectionType.unknown || p.CollectionType.ConvertToCollectionType() == collectionType)) is not { } library || !Guid.TryParse(library.ItemId, out var libraryId))
                 throw new Exception($"Unable to find library to use for media folder \"{mediaFolder.Path}\"");
 
-            GenerateAllConfigurations(allVirtualFolders);
+
+            if (ShouldGenerateAllConfigurations)
+            {
+                ShouldGenerateAllConfigurations = false;
+                GenerateAllConfigurations(allVirtualFolders).GetAwaiter().GetResult();
+            }
 
             var config = Plugin.Instance.Configuration;
             var mediaFolderConfig = config.MediaFolders.First(c => c.MediaFolderId == mediaFolder.Id && c.LibraryId == libraryId);
@@ -266,12 +271,8 @@ public class MediaFolderConfigurationService
         }
     }
 
-    private void GenerateAllConfigurations(List<VirtualFolderInfo> allVirtualFolders)
+    private async Task GenerateAllConfigurations(List<VirtualFolderInfo> allVirtualFolders)
     {
-        if (!ShouldGenerateAllConfigurations)
-            return;
-        ShouldGenerateAllConfigurations = false;
-
         var filteredVirtualFolders = allVirtualFolders
             .Where(virtualFolder => 
                 virtualFolder.CollectionType.ConvertToCollectionType() is null or CollectionType.movies or CollectionType.tvshows &&
@@ -301,7 +302,7 @@ public class MediaFolderConfigurationService
                     continue;
                 }
 
-                mediaFolderConfig = CreateConfigurationForPath(libraryId, secondFolder, libraryConfig).ConfigureAwait(false).GetAwaiter().GetResult();
+                mediaFolderConfig = await CreateConfigurationForPath(libraryId, secondFolder, libraryConfig).ConfigureAwait(false);
             }
 
             if (mediaFolderConfig is null)
