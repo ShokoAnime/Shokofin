@@ -277,11 +277,13 @@ public class MediaFolderConfigurationService
                 Lookup.IsEnabledForLibraryOptions(virtualFolder.LibraryOptions, out _)
             )
             .ToList();
+        Logger.LogDebug("Found {Count} out of {TotalCount} libraries to check media folder configurations for." filteredVirtualFolders.Count, allVirtualFolders.Count);
         var config = Plugin.Instance.Configuration;
         foreach (var virtualFolder in filteredVirtualFolders) {
             if (!Guid.TryParse(virtualFolder.ItemId, out var libraryId) || LibraryManager.GetItemById(libraryId) is not Folder libraryFolder)
                 throw new Exception($"Unable to find virtual folder \"{virtualFolder.Name}\"");
 
+            Logger.LogDebug("Checking {MediaFolderCount} media folders for library {LibraryName}. (Library={LibraryId)", virtualFolder.Locations, virtualFolder.Name, libraryId);
             MediaFolderConfiguration? mediaFolderConfig = null;
             var libraryConfig = config.MediaFolders.FirstOrDefault(c => c.LibraryId == libraryId);
             foreach (var mediaFolderPath in virtualFolder.Locations) {
@@ -293,6 +295,7 @@ public class MediaFolderConfigurationService
 
                 if (config.MediaFolders.Find(c => string.Equals(mediaFolderPath, c.MediaFolderPath) && c.LibraryId == libraryId) is { } mfc)
                 {
+                    Logger.LogTrace("Found existing entry for media folder at {Path} (Library={LibraryId})", mediaFolderPath, libraryId);
                     mediaFolderConfig = mfc;
                     continue;
                 }
@@ -346,7 +349,7 @@ public class MediaFolderConfigurationService
         var start = DateTime.UtcNow;
         var attempts = 0;
         if (mediaFolder.Path.StartsWith(Plugin.Instance.VirtualRoot)) {
-            Logger.LogDebug("Not asking remote server because {Path} is a VFS root.", mediaFolder.Path);
+            Logger.LogDebug("Not asking remote server because {Path} is a VFS root. (Library={LibraryId})", mediaFolder.Path, libraryId);
             mediaFolderConfig.ImportFolderId = -1;
             mediaFolderConfig.ImportFolderName = "VFS Root";
             mediaFolderConfig.ImportFolderRelativePath = string.Empty;
@@ -357,7 +360,7 @@ public class MediaFolderConfigurationService
                 .Take(100)
                 .ToList();
 
-            Logger.LogDebug("Asking remote server if it knows any of the {Count} sampled files in {Path}.", samplePaths.Count > 100 ? 100 : samplePaths.Count, mediaFolder.Path);
+            Logger.LogDebug("Asking remote server if it knows any of the {Count} sampled files in {Path}. (Library={LibraryId})", samplePaths.Count > 100 ? 100 : samplePaths.Count, mediaFolder.Path, libraryId);
             foreach (var path in samplePaths) {
                 attempts++;
                 var partialPath = path[mediaFolder.Path.Length..];
@@ -393,21 +396,23 @@ public class MediaFolderConfigurationService
         Plugin.Instance.UpdateConfiguration(config);
         if (mediaFolderConfig.IsMapped) {
             Logger.LogInformation(
-                "Found a match for media folder at {Path} in {TimeSpan} (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path},Attempts={Attempts})",
+                "Found a match for media folder at {Path} in {TimeSpan}. (ImportFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path},Attempts={Attempts},Library={LibraryId})",
                 mediaFolder.Path,
                 DateTime.UtcNow - start,
                 mediaFolderConfig.ImportFolderId,
                 mediaFolderConfig.ImportFolderRelativePath,
                 mediaFolder.Path,
-                attempts
+                attempts,
+                libraryId
             );
         }
         else {
             Logger.LogWarning(
-                "Failed to find a match for media folder at {Path} after {Amount} attempts in {TimeSpan}.",
+                "Failed to find a match for media folder at {Path} after {Amount} attempts in {TimeSpan}. (Library={LibraryId})",
                 mediaFolder.Path,
                 attempts,
-                DateTime.UtcNow - start
+                DateTime.UtcNow - start,
+                libraryId
             );
         }
 
