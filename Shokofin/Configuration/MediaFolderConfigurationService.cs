@@ -278,7 +278,7 @@ public class MediaFolderConfigurationService
                 Lookup.IsEnabledForLibraryOptions(virtualFolder.LibraryOptions, out _)
             )
             .ToList();
-        Logger.LogDebug("Found {Count} out of {TotalCount} libraries to check media folder configurations for." filteredVirtualFolders.Count, allVirtualFolders.Count);
+        Logger.LogDebug("Found {Count} out of {TotalCount} libraries to check media folder configurations for.", filteredVirtualFolders.Count, allVirtualFolders.Count);
         var config = Plugin.Instance.Configuration;
         foreach (var virtualFolder in filteredVirtualFolders) {
             if (!Guid.TryParse(virtualFolder.ItemId, out var libraryId) || LibraryManager.GetItemById(libraryId) is not Folder libraryFolder)
