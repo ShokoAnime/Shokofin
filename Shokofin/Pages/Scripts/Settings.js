@@ -358,12 +358,12 @@ async function updateView(view, form, config) {
 
         case "library":
             activeSections.push("Library_Basic", "Library_Collection", "Library_New", "Library_Existing", "Library_Experimental");
+
+            await applyLibraryConfigToForm(form, form.querySelector("#MediaFolderSelector").value, config);
             break;
 
         case "vfs":
             activeSections.push("VFS_Basic", "VFS_Location");
-
-            await applyLibraryConfigToForm(form, form.querySelector("#MediaFolderSelector").value, config);
             break;
 
         case "users":
@@ -1122,6 +1122,8 @@ async function removeUserConfig(form) {
 
     await ShokoApiClient.updateConfiguration(config);
     Dashboard.processPluginConfigurationUpdateResult();
+
+    form.querySelector("#UserSelector").value = "";
 
     return config;
 }
