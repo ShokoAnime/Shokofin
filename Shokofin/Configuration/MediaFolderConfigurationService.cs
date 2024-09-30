@@ -284,7 +284,7 @@ public class MediaFolderConfigurationService
             if (!Guid.TryParse(virtualFolder.ItemId, out var libraryId) || LibraryManager.GetItemById(libraryId) is not Folder libraryFolder)
                 throw new Exception($"Unable to find virtual folder \"{virtualFolder.Name}\"");
 
-            Logger.LogDebug("Checking {MediaFolderCount} media folders for library {LibraryName}. (Library={LibraryId)", virtualFolder.Locations, virtualFolder.Name, libraryId);
+            Logger.LogDebug("Checking {MediaFolderCount} media folders for library {LibraryName}. (Library={LibraryId})", virtualFolder.Locations.Length, virtualFolder.Name, libraryId);
             MediaFolderConfiguration? mediaFolderConfig = null;
             var libraryConfig = config.MediaFolders.FirstOrDefault(c => c.LibraryId == libraryId);
             foreach (var mediaFolderPath in virtualFolder.Locations) {
