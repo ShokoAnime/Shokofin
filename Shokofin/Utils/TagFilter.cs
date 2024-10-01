@@ -319,9 +319,7 @@ public static class TagFilter
     }
 
     private static ProviderName[] GetOrderedProductionLocationProviders()
-        => Plugin.Instance.Configuration.ProductionLocationOverride
-            ? Plugin.Instance.Configuration.ProductionLocationOrder.Where((t) => Plugin.Instance.Configuration.ProductionLocationList.Contains(t)).ToArray()
-            : [ProviderName.AniDB, ProviderName.TMDB];
+        => Plugin.Instance.Configuration.ProductionLocationOrder.Where((t) => Plugin.Instance.Configuration.ProductionLocationList.Contains(t)).ToArray();
 
 #pragma warning disable IDE0060
     public static string[] GetMovieProductionLocations(SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
@@ -371,33 +369,12 @@ public static class TagFilter
     public static string[] FilterTags(IReadOnlyDictionary<string, ResolvedTag> tags)
     {
         var config = Plugin.Instance.Configuration;
-        if (!config.TagOverride)
-            return FilterInternal(
-                tags,
-                TagSource.ContentIndicators | TagSource.Dynamic | TagSource.DynamicCast | TagSource.DynamicEnding | TagSource.Elements |
-                TagSource.ElementsPornographyAndSexualAbuse | TagSource.ElementsTropesAndMotifs | TagSource.Fetishes |
-                TagSource.OriginProduction | TagSource.OriginDevelopment | TagSource.SourceMaterial | TagSource.SettingPlace |
-                TagSource.SettingTimePeriod | TagSource.SettingTimeSeason | TagSource.TargetAudience | TagSource.TechnicalAspects |
-                TagSource.TechnicalAspectsAdaptions | TagSource.TechnicalAspectsAwards | TagSource.TechnicalAspectsMultiAnimeProjects |
-                TagSource.Themes | TagSource.ThemesDeath | TagSource.ThemesTales | TagSource.CustomTags,
-                TagIncludeFilter.Parent | TagIncludeFilter.Child | TagIncludeFilter.Abstract | TagIncludeFilter.Weightless | TagIncludeFilter.Weighted,
-                TagWeight.Weightless,
-                0
-            );
         return FilterInternal(tags, config.TagSources, config.TagIncludeFilters, config.TagMinimumWeight, config.TagMaximumDepth);
     }
 
     public static string[] FilterGenres(IReadOnlyDictionary<string, ResolvedTag> tags)
     {
         var config = Plugin.Instance.Configuration;
-        if (!config.GenreOverride)
-            return FilterInternal(
-                tags,
-                TagSource.SourceMaterial | TagSource.TargetAudience | TagSource.Elements,
-                TagIncludeFilter.Parent | TagIncludeFilter.Child | TagIncludeFilter.Abstract | TagIncludeFilter.Weightless | TagIncludeFilter.Weighted,
-                TagWeight.Four,
-                1
-            );
         return FilterInternal(tags, config.GenreSources, config.GenreIncludeFilters, config.GenreMinimumWeight, config.GenreMaximumDepth);
     }
 

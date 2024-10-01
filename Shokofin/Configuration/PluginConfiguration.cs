@@ -123,11 +123,6 @@ public class PluginConfiguration : BasePluginConfiguration
     #region Metadata
 
     /// <summary>
-    /// Determines if we use the overridden settings for how the main title is fetched for entries.
-    /// </summary>
-    public bool TitleMainOverride { get; set; }
-
-    /// <summary>
     /// Determines how we'll be selecting our main title for entries.
     /// </summary>
     public TitleProvider[] TitleMainList { get; set; }
@@ -136,11 +131,6 @@ public class PluginConfiguration : BasePluginConfiguration
     /// The order of which we will be selecting our main title for entries.
     /// </summary>
     public TitleProvider[] TitleMainOrder { get; set; }
-
-    /// <summary>
-    /// Determines if we use the overridden settings for how the alternate title is fetched for entries.
-    /// </summary>
-    public bool TitleAlternateOverride { get; set; }
 
     /// <summary>
     /// Determines how we'll be selecting our alternate title for entries.
@@ -163,11 +153,6 @@ public class PluginConfiguration : BasePluginConfiguration
     /// prefix and number.
     /// </summary>
     public bool MarkSpecialsWhenGrouped { get; set; }
-
-   /// <summary>
-   /// Determines if we use the overridden settings for how descriptions are fetched for entries.
-   /// </summary>
-    public bool DescriptionSourceOverride { get; set; }
 
     /// <summary>
     /// The collection of providers for descriptions. Replaces the former `DescriptionSource`.
@@ -205,11 +190,6 @@ public class PluginConfiguration : BasePluginConfiguration
     #region Tags
 
     /// <summary>
-    /// Determines if we use the overridden settings for how the tags are set for entries.
-    /// </summary>
-    public bool TagOverride { get; set; }
-
-    /// <summary>
     /// All tag sources to use for tags.
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -231,11 +211,6 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     [Range(0, 10)]
     public int TagMaximumDepth { get; set; }
-
-    /// <summary>
-    /// Determines if we use the overridden settings for how the genres are set for entries.
-    /// </summary>
-    public bool GenreOverride { get; set; }
 
     /// <summary>
     /// All tag sources to use for genres.
@@ -266,11 +241,6 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool HideUnverifiedTags { get; set; }
 
     /// <summary>
-    /// Determines if we use the overridden settings for how the content/official ratings are set for entries.
-    /// </summary>
-    public bool ContentRatingOverride { get; set; }
-
-    /// <summary>
     /// Enabled content rating providers.
     /// </summary>
     public ProviderName[] ContentRatingList { get; set; }
@@ -279,11 +249,6 @@ public class PluginConfiguration : BasePluginConfiguration
     /// The order to go through the content rating providers to retrieve a content rating.
     /// </summary>
     public ProviderName[] ContentRatingOrder { get; set; }
-
-    /// <summary>
-    /// Determines if we use the overridden settings for how the production locations are set for entries.
-    /// </summary>
-    public bool ProductionLocationOverride { get; set; }
 
     /// <summary>
     /// Enabled production location providers.
@@ -558,7 +523,37 @@ public class PluginConfiguration : BasePluginConfiguration
         PublicUrl = string.Empty;
         Username = "Default";
         ApiKey = string.Empty;
-        TagOverride = false;
+
+        TitleMainList = [
+            TitleProvider.Shoko_Default,
+        ];
+        TitleMainOrder = [
+            TitleProvider.Shoko_Default,
+            TitleProvider.AniDB_Default,
+            TitleProvider.AniDB_LibraryLanguage,
+            TitleProvider.AniDB_CountryOfOrigin,
+            TitleProvider.TMDB_Default,
+            TitleProvider.TMDB_LibraryLanguage,
+            TitleProvider.TMDB_CountryOfOrigin,
+        ];
+        TitleAlternateList = [];
+        TitleAlternateOrder = [.. TitleMainOrder];
+        TitleAllowAny = false;
+        MarkSpecialsWhenGrouped = true;
+        SynopsisCleanLinks = true;
+        SynopsisCleanMiscLines = true;
+        SynopsisRemoveSummary = true;
+        SynopsisCleanMultiEmptyLines = true;
+        DescriptionSourceList = [
+            DescriptionProvider.Shoko,
+        ];
+        DescriptionSourceOrder = [
+            DescriptionProvider.Shoko,
+            DescriptionProvider.AniDB,
+            DescriptionProvider.TMDB,
+            DescriptionProvider.TvDB,
+        ];
+        HideUnverifiedTags = true;
         TagSources = TagSource.ContentIndicators | TagSource.Dynamic | TagSource.DynamicCast | TagSource.DynamicEnding | TagSource.Elements |
             TagSource.ElementsPornographyAndSexualAbuse | TagSource.ElementsTropesAndMotifs | TagSource.Fetishes |
             TagSource.OriginProduction | TagSource.OriginDevelopment | TagSource.SourceMaterial | TagSource.SettingPlace |
@@ -572,55 +567,20 @@ public class PluginConfiguration : BasePluginConfiguration
         GenreIncludeFilters = TagIncludeFilter.Parent | TagIncludeFilter.Child | TagIncludeFilter.Abstract | TagIncludeFilter.Weightless | TagIncludeFilter.Weighted;
         GenreMinimumWeight = TagWeight.Four;
         GenreMaximumDepth = 1;
-        HideUnverifiedTags = true;
-        ContentRatingOverride = false;
         ContentRatingList = [
             ProviderName.TMDB,
             ProviderName.AniDB,
         ];
         ContentRatingOrder = [.. ContentRatingList];
-        ProductionLocationOverride = false;
         ProductionLocationList = [
             ProviderName.AniDB,
             ProviderName.TMDB,
         ];
         ProductionLocationOrder = [.. ProductionLocationList];
-        SynopsisCleanLinks = true;
-        SynopsisCleanMiscLines = true;
-        SynopsisRemoveSummary = true;
-        SynopsisCleanMultiEmptyLines = true;
         AddAniDBId = true;
         AddTMDBId = false;
         AddTvDBId = false;
-        TitleMainOverride = false;
-        TitleMainList = [ 
-            TitleProvider.Shoko_Default,
-        ];
-        TitleMainOrder = [ 
-            TitleProvider.Shoko_Default,
-            TitleProvider.AniDB_Default,
-            TitleProvider.AniDB_LibraryLanguage,
-            TitleProvider.AniDB_CountryOfOrigin,
-            TitleProvider.TMDB_Default,
-            TitleProvider.TMDB_LibraryLanguage,
-            TitleProvider.TMDB_CountryOfOrigin,
-        ];
-        TitleAlternateOverride = false;
-        TitleAlternateList = [
-            TitleProvider.AniDB_CountryOfOrigin
-        ];
-        TitleAlternateOrder = [.. TitleMainOrder];
-        TitleAllowAny = false;
-        DescriptionSourceOverride = false;
-        DescriptionSourceList = [
-            DescriptionProvider.Shoko,
-        ];
-        DescriptionSourceOrder = [
-            DescriptionProvider.Shoko,
-            DescriptionProvider.AniDB,
-            DescriptionProvider.TMDB,
-            DescriptionProvider.TvDB,
-        ];
+
         VFS_Enabled = true;
         VFS_Threads = 4;
         VFS_AddReleaseGroup = false;
@@ -642,7 +602,6 @@ public class PluginConfiguration : BasePluginConfiguration
         SeasonOrdering = OrderType.Default;
         SpecialsPlacement = SpecialOrderType.AfterSeason;
         AddMissingMetadata = true;
-        MarkSpecialsWhenGrouped = true;
         CollectionGrouping = CollectionCreationType.None;
         CollectionMinSizeOfTwo = true;
         UserList = [];

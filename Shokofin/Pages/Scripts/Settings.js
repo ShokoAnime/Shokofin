@@ -140,69 +140,6 @@ createControllerFactory({
                 }
             });
 
-            form.querySelector("#TitleMainOverride").addEventListener("change", function () {
-                const list = form.querySelector(`#TitleMainList`);
-                this.checked ? list.removeAttribute("hidden") : list.setAttribute("hidden", "");
-            });
-
-            form.querySelector("#TitleAlternateOverride").addEventListener("change", function () {
-                const list = form.querySelector(`#TitleAlternateList`);
-                this.checked ? list.removeAttribute("hidden") : list.setAttribute("hidden", "");
-            });
-
-            form.querySelector("#DescriptionSourceOverride").addEventListener("change", function () {
-                const list = form.querySelector("#DescriptionSourceList");
-                this.checked ? list.removeAttribute("hidden") : list.setAttribute("hidden", "");
-            });
-
-            form.querySelector("#TagOverride").addEventListener("change", function () {
-                if (this.checked) {
-                    form.querySelector("#TagSources").removeAttribute("hidden");
-                    form.querySelector("#TagIncludeFilters").removeAttribute("hidden");
-                    form.querySelector("#TagMinimumWeightContainer").removeAttribute("hidden");
-                    form.querySelector("#TagMinimumWeightContainer").disabled = false;
-                    form.querySelector("#TagMaximumDepthContainer").removeAttribute("hidden");
-                    form.querySelector("#TagMaximumDepthContainer").disabled = false;
-                }
-                else {
-                    form.querySelector("#TagSources").setAttribute("hidden", "");
-                    form.querySelector("#TagIncludeFilters").setAttribute("hidden", "");
-                    form.querySelector("#TagMinimumWeightContainer").setAttribute("hidden", "");
-                    form.querySelector("#TagMinimumWeightContainer").disabled = true;
-                    form.querySelector("#TagMaximumDepthContainer").setAttribute("hidden", "");
-                    form.querySelector("#TagMaximumDepthContainer").disabled = true;
-                }
-            });
-
-            form.querySelector("#GenreOverride").addEventListener("change", function () {
-                if (this.checked) {
-                    form.querySelector("#GenreSources").removeAttribute("hidden");
-                    form.querySelector("#GenreIncludeFilters").removeAttribute("hidden");
-                    form.querySelector("#GenreMinimumWeightContainer").removeAttribute("hidden");
-                    form.querySelector("#GenreMinimumWeightContainer").disabled = false;
-                    form.querySelector("#GenreMaximumDepthContainer").removeAttribute("hidden");
-                    form.querySelector("#GenreMaximumDepthContainer").disabled = false;
-                }
-                else {
-                    form.querySelector("#GenreSources").setAttribute("hidden", "");
-                    form.querySelector("#GenreIncludeFilters").setAttribute("hidden", "");
-                    form.querySelector("#GenreMinimumWeightContainer").setAttribute("hidden", "");
-                    form.querySelector("#GenreMinimumWeightContainer").disabled = true;
-                    form.querySelector("#GenreMaximumDepthContainer").setAttribute("hidden", "");
-                    form.querySelector("#GenreMaximumDepthContainer").disabled = true;
-                }
-            });
-
-            form.querySelector("#ContentRatingOverride").addEventListener("change", function () {
-                const list = form.querySelector("#ContentRatingList");
-                this.checked ? list.removeAttribute("hidden") : list.setAttribute("hidden", "");
-            });
-
-            form.querySelector("#ProductionLocationOverride").addEventListener("change", function () {
-                const list = form.querySelector("#ProductionLocationList");
-                this.checked ? list.removeAttribute("hidden") : list.setAttribute("hidden", "");
-            });
-
             form.addEventListener("submit", function (event) {
                 event.preventDefault();
                 if (!event.submitter) return;
@@ -438,32 +375,25 @@ function updateSignalrStatus(form, status) {
 function applyFormToConfig(form, config) {
     switch (State.currentTab) {
         case "metadata": {
-            config.TitleMainOverride = form.querySelector("#TitleMainOverride").checked;
             ([config.TitleMainList, config.TitleMainOrder] = retrieveSortableCheckboxList(form, "TitleMainList"));
-            config.TitleAlternateOverride = form.querySelector("#TitleAlternateOverride").checked;
             ([config.TitleAlternateList, config.TitleAlternateOrder] = retrieveSortableCheckboxList(form, "TitleAlternateList"));
             config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
             config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
-            config.DescriptionSourceOverride = form.querySelector("#DescriptionSourceOverride").checked;
             ([config.DescriptionSourceList, config.DescriptionSourceOrder] = retrieveSortableCheckboxList(form, "DescriptionSourceList"));
             config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
             config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
             config.SynopsisCleanMiscLines = form.querySelector("#CleanupAniDBDescriptions").checked;
             config.SynopsisRemoveSummary = form.querySelector("#CleanupAniDBDescriptions").checked;
             config.HideUnverifiedTags = form.querySelector("#HideUnverifiedTags").checked;
-            config.TagOverride = form.querySelector("#TagOverride").checked;
             config.TagSources = retrieveCheckboxList(form, "TagSources").join(", ");
             config.TagIncludeFilters = retrieveCheckboxList(form, "TagIncludeFilters").join(", ");
             config.TagMinimumWeight = form.querySelector("#TagMinimumWeight").value;
             config.TagMaximumDepth = parseInt(form.querySelector("#TagMaximumDepth").value, 10);
-            config.GenreOverride = form.querySelector("#GenreOverride").checked;
             config.GenreSources = retrieveCheckboxList(form, "GenreSources").join(", ");
             config.GenreIncludeFilters = retrieveCheckboxList(form, "GenreIncludeFilters").join(", ");
             config.GenreMinimumWeight = form.querySelector("#GenreMinimumWeight").value;
             config.GenreMaximumDepth = parseInt(form.querySelector("#GenreMaximumDepth").value, 10);
-            config.ContentRatingOverride = form.querySelector("#ContentRatingOverride").checked;
             ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableCheckboxList(form, "ContentRatingList"));
-            config.ProductionLocationOverride = form.querySelector("#ProductionLocationOverride").checked;
             ([config.ProductionLocationList, config.ProductionLocationOrder] = retrieveSortableCheckboxList(form, "ProductionLocationList"));
             config.ThirdPartyIdProviderList = retrieveCheckboxList(form, "ThirdPartyIdProviderList");
             break;
@@ -591,28 +521,10 @@ async function applyConfigToForm(form, config) {
         }
 
         case "metadata": {
-            if (form.querySelector("#TitleMainOverride").checked = config.TitleMainOverride) {
-                form.querySelector("#TitleMainList").removeAttribute("hidden");
-            }
-            else {
-                form.querySelector("#TitleMainList").setAttribute("hidden", "");
-            }
             renderSortableCheckboxList(form, "TitleMainList", config.TitleMainList, config.TitleMainOrder);
-            if (form.querySelector("#TitleAlternateOverride").checked = config.TitleAlternateOverride) {
-                form.querySelector("#TitleAlternateList").removeAttribute("hidden");
-            }
-            else {
-                form.querySelector("#TitleAlternateList").setAttribute("hidden", "");
-            }
             renderSortableCheckboxList(form, "TitleAlternateList", config.TitleAlternateList, config.TitleAlternateOrder);
             form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
-            if (form.querySelector("#DescriptionSourceOverride").checked = config.DescriptionSourceOverride) {
-                form.querySelector("#DescriptionSourceList").removeAttribute("hidden");
-            }
-            else {
-                form.querySelector("#DescriptionSourceList").setAttribute("hidden", "");
-            }
             renderSortableCheckboxList(form, "DescriptionSourceList", config.DescriptionSourceList, config.DescriptionSourceOrder);
             form.querySelector("#CleanupAniDBDescriptions").checked = (
                 config.SynopsisCleanMultiEmptyLines ||
@@ -621,60 +533,15 @@ async function applyConfigToForm(form, config) {
                 config.SynopsisCleanMiscLines
             );
             form.querySelector("#HideUnverifiedTags").checked = config.HideUnverifiedTags;
-            if (form.querySelector("#TagOverride").checked = config.TagOverride) {
-                form.querySelector("#TagSources").removeAttribute("hidden");
-                form.querySelector("#TagIncludeFilters").removeAttribute("hidden");
-                form.querySelector("#TagMinimumWeightContainer").removeAttribute("hidden");
-                form.querySelector("#TagMinimumWeightContainer").disabled = false;
-                form.querySelector("#TagMaximumDepthContainer").removeAttribute("hidden");
-                form.querySelector("#TagMaximumDepthContainer").disabled = false;
-            }
-            else {
-                form.querySelector("#TagSources").setAttribute("hidden", "");
-                form.querySelector("#TagIncludeFilters").setAttribute("hidden", "");
-                form.querySelector("#TagMinimumWeightContainer").setAttribute("hidden", "");
-                form.querySelector("#TagMinimumWeightContainer").disabled = true;
-                form.querySelector("#TagMaximumDepthContainer").setAttribute("hidden", "");
-                form.querySelector("#TagMaximumDepthContainer").disabled = true;
-            }
             renderCheckboxList(form, "TagSources", config.TagSources.split(",").map(s => s.trim()).filter(s => s));
             renderCheckboxList(form, "TagIncludeFilters", config.TagIncludeFilters.split(",").map(s => s.trim()).filter(s => s));
             form.querySelector("#TagMinimumWeight").value = config.TagMinimumWeight;
             form.querySelector("#TagMaximumDepth").value = config.TagMaximumDepth.toString();
-            if (form.querySelector("#GenreOverride").checked = config.GenreOverride) {
-                form.querySelector("#GenreSources").removeAttribute("hidden");
-                form.querySelector("#GenreIncludeFilters").removeAttribute("hidden");
-                form.querySelector("#GenreMinimumWeightContainer").removeAttribute("hidden");
-                form.querySelector("#GenreMinimumWeightContainer").disabled = false;
-                form.querySelector("#GenreMaximumDepthContainer").removeAttribute("hidden");
-                form.querySelector("#GenreMaximumDepthContainer").disabled = false;
-            }
-            else {
-                form.querySelector("#GenreSources").setAttribute("hidden", "");
-                form.querySelector("#GenreIncludeFilters").setAttribute("hidden", "");
-                form.querySelector("#GenreMinimumWeightContainer").setAttribute("hidden", "");
-                form.querySelector("#GenreMinimumWeightContainer").disabled = true;
-                form.querySelector("#GenreMaximumDepthContainer").setAttribute("hidden", "");
-                form.querySelector("#GenreMaximumDepthContainer").disabled = true;
-            }
             renderCheckboxList(form, "GenreSources", config.GenreSources.split(",").map(s => s.trim()).filter(s => s));
             renderCheckboxList(form, "GenreIncludeFilters", config.GenreIncludeFilters.split(",").map(s => s.trim()).filter(s => s));
             form.querySelector("#GenreMinimumWeight").value = config.GenreMinimumWeight;
             form.querySelector("#GenreMaximumDepth").value = config.GenreMaximumDepth.toString();
-
-            if (form.querySelector("#ContentRatingOverride").checked = config.ContentRatingOverride) {
-                form.querySelector("#ContentRatingList").removeAttribute("hidden");
-            }
-            else {
-                form.querySelector("#ContentRatingList").setAttribute("hidden", "");
-            }
             renderSortableCheckboxList(form, "ContentRatingList", config.ContentRatingList, config.ContentRatingOrder);
-            if (form.querySelector("#ProductionLocationOverride").checked = config.ProductionLocationOverride) {
-                form.querySelector("#ProductionLocationList").removeAttribute("hidden");
-            }
-            else {
-                form.querySelector("#ProductionLocationList").setAttribute("hidden", "");
-            }
             renderSortableCheckboxList(form, "ProductionLocationList", config.ProductionLocationList, config.ProductionLocationOrder);
             renderCheckboxList(form, "ThirdPartyIdProviderList", config.ThirdPartyIdProviderList.map(s => s.trim()).filter(s => s));
             break;

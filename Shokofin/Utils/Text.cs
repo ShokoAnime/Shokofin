@@ -189,9 +189,7 @@ public static class Text
     /// Returns a list of the description providers to check, and in what order
     /// </summary>
     private static DescriptionProvider[] GetOrderedDescriptionProviders()
-        => Plugin.Instance.Configuration.DescriptionSourceOverride
-            ? Plugin.Instance.Configuration.DescriptionSourceOrder.Where((t) => Plugin.Instance.Configuration.DescriptionSourceList.Contains(t)).ToArray()
-            : [DescriptionProvider.Shoko, DescriptionProvider.AniDB, DescriptionProvider.TvDB, DescriptionProvider.TMDB];
+        => Plugin.Instance.Configuration.DescriptionSourceOrder.Where((t) => Plugin.Instance.Configuration.DescriptionSourceList.Contains(t)).ToArray();
 
     private static string GetDescriptionByDict(Dictionary<DescriptionProvider, string?> descriptions)
     {
@@ -332,13 +330,9 @@ public static class Text
     private static TitleProvider[] GetOrderedTitleProvidersByType(TitleProviderType titleType)
         => titleType switch {
             TitleProviderType.Main =>
-                Plugin.Instance.Configuration.TitleMainOverride
-                    ? Plugin.Instance.Configuration.TitleMainOrder.Where((t) => Plugin.Instance.Configuration.TitleMainList.Contains(t)).ToArray()
-                    : [TitleProvider.Shoko_Default],
+                Plugin.Instance.Configuration.TitleMainOrder.Where((t) => Plugin.Instance.Configuration.TitleMainList.Contains(t)).ToArray(),
             TitleProviderType.Alternate =>
-                Plugin.Instance.Configuration.TitleAlternateOverride
-                    ? Plugin.Instance.Configuration.TitleAlternateOrder.Where((t) => Plugin.Instance.Configuration.TitleAlternateList.Contains(t)).ToArray()
-                    : [TitleProvider.AniDB_CountryOfOrigin, TitleProvider.TMDB_CountryOfOrigin],
+                Plugin.Instance.Configuration.TitleAlternateOrder.Where((t) => Plugin.Instance.Configuration.TitleAlternateList.Contains(t)).ToArray(),
             _ => [],
         };
 

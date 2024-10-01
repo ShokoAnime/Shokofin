@@ -154,9 +154,7 @@ public static class ContentRating
     }
 
     private static ProviderName[] GetOrderedProviders()
-        => Plugin.Instance.Configuration.ContentRatingOverride
-            ? Plugin.Instance.Configuration.ContentRatingOrder.Where((t) => Plugin.Instance.Configuration.ContentRatingList.Contains(t)).ToArray()
-            : [ProviderName.AniDB, ProviderName.TMDB];
+        => Plugin.Instance.Configuration.ContentRatingOrder.Where((t) => Plugin.Instance.Configuration.ContentRatingList.Contains(t)).ToArray();
 
 #pragma warning disable IDE0060
     public static string? GetMovieContentRating(SeasonInfo seasonInfo, EpisodeInfo episodeInfo, string? metadataCountryCode)
