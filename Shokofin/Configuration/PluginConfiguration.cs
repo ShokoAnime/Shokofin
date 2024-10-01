@@ -39,13 +39,6 @@ public class PluginConfiguration : BasePluginConfiguration
     [XmlElement("Host")]
     public string Url { get; set; }
 
-    /// <summary>
-    /// The last known server version. This is used for keeping compatibility
-    /// with multiple versions of the server.
-    /// </summary>
-    [XmlElement("HostVersion")]
-    public ComponentVersion? ServerVersion { get; set; }
-
     [XmlElement("PublicHost")]
     public string PublicUrl { get; set; }
 
@@ -64,6 +57,13 @@ public class PluginConfiguration : BasePluginConfiguration
     /// This will be an empty string if we're not authenticated yet.
     /// </summary>
     public string ApiKey { get; set; }
+
+    /// <summary>
+    /// The last known server version. This is used for keeping compatibility
+    /// with multiple versions of the server.
+    /// </summary>
+    [XmlElement("HostVersion")]
+    public ComponentVersion? ServerVersion { get; set; }
 
     #endregion
 
@@ -519,10 +519,10 @@ public class PluginConfiguration : BasePluginConfiguration
     public PluginConfiguration()
     {
         Url = "http://127.0.0.1:8111";
-        ServerVersion = null;
         PublicUrl = string.Empty;
         Username = "Default";
         ApiKey = string.Empty;
+        ServerVersion = null;
 
         TitleMainList = [
             TitleProvider.Shoko_Default,
