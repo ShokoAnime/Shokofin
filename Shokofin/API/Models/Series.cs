@@ -6,7 +6,17 @@ namespace Shokofin.API.Models;
 
 public class Series
 {
+    /// <summary>
+    /// The preferred name of the series based on the selected series language
+    /// settings on the server.
+    /// </summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The preferred description of the series based on the selected series
+    /// language settings on the server.
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
 
     public int Size { get; set; }
 

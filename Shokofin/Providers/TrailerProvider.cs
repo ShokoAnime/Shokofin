@@ -51,7 +51,7 @@ public class TrailerProvider: IRemoteMetadataProvider<Trailer, TrailerInfo>, IHa
             }
 
             var (displayTitle, alternateTitle) = Text.GetEpisodeTitles(episodeInfo, seasonInfo, info.MetadataLanguage);
-            var description = Text.GetDescription(episodeInfo);
+            var description = Text.GetDescription(episodeInfo, info.MetadataLanguage);
             result.Item = new()
             {
                 Name = displayTitle,

@@ -72,7 +72,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
         result.Item = new BoxSet {
             Name = displayTitle,
             OriginalTitle = alternateTitle,
-            Overview = Text.GetDescription(season),
+            Overview = Text.GetDescription(season, info.MetadataLanguage),
             PremiereDate = season.AniDB.AirDate,
             EndDate = season.AniDB.EndDate,
             ProductionYear = season.AniDB.AirDate?.Year,

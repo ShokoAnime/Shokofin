@@ -52,15 +52,13 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrde
             Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},ExtraSeries={ExtraIds})", displayTitle, file.Id, episode.Id, season.Id, season.ExtraIds);
 
             bool isMultiEntry = season.Shoko.Sizes.Total.Episodes > 1;
-            bool isMainEntry = episode.AniDB.Type == API.Models.EpisodeType.Normal && episode.Shoko.Name.Trim() == "Complete Movie";
             var rating = isMultiEntry ? episode.AniDB.Rating.ToFloat(10) : season.AniDB.Rating.ToFloat(10);
 
             result.Item = new Movie {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
                 PremiereDate = episode.AniDB.AirDate,
-                // Use the file description if collection contains more than one movie and the file is not the main entry, otherwise use the collection description.
-                Overview = isMultiEntry && !isMainEntry ? Text.GetDescription(episode) : Text.GetDescription(season),
+                Overview = Text.GetMovieDescription(episode, season, info.MetadataLanguage),
                 ProductionYear = episode.AniDB.AirDate?.Year,
                 Tags = season.Tags.ToArray(),
                 Genres = season.Genres.ToArray(),

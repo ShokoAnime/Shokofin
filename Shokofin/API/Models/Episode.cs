@@ -12,7 +12,17 @@ public class Episode
     /// </summary>
     public EpisodeIDs IDs { get; set; } = new();
 
+    /// <summary>
+    /// The preferred name of the episode based on the selected episode language
+    /// settings on the server.
+    /// </summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The preferred description of the episode based on the selected episode
+    /// language settings on the server.
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
 
     /// <summary>
     /// The duration of the episode.

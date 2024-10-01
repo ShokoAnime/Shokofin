@@ -136,7 +136,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
             }
             displayTitle = Text.JoinText(displayTitles);
             alternateTitle = Text.JoinText(alternateTitles);
-            description = Text.GetDescription(file.EpisodeList.Select(tuple => tuple.Episode));
+            description = Text.GetDescription(file.EpisodeList.Select(tuple => tuple.Episode), metadataLanguage);
         }
         else {
             string defaultEpisodeTitle = episode.Shoko.Name;
@@ -152,7 +152,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
             else {
                 (displayTitle, alternateTitle) = Text.GetEpisodeTitles(episode, series, metadataLanguage);
             }
-            description = Text.GetDescription(episode);
+            description = Text.GetDescription(episode, metadataLanguage);
         }
 
         if (config.MarkSpecialsWhenGrouped) switch (episode.AniDB.Type) {

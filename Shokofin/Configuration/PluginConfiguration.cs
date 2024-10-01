@@ -614,11 +614,13 @@ public class PluginConfiguration : BasePluginConfiguration
         DescriptionSourceOverride = false;
         DescriptionSourceList = [
             DescriptionProvider.Shoko,
-            DescriptionProvider.AniDB,
-            DescriptionProvider.TvDB,
-            DescriptionProvider.TMDB,
         ];
-        DescriptionSourceOrder = [.. DescriptionSourceList];
+        DescriptionSourceOrder = [
+            DescriptionProvider.Shoko,
+            DescriptionProvider.AniDB,
+            DescriptionProvider.TMDB,
+            DescriptionProvider.TvDB,
+        ];
         VFS_Enabled = true;
         VFS_Threads = 4;
         VFS_AddReleaseGroup = false;

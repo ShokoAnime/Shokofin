@@ -70,7 +70,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasO
             result.Item = new Series {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
-                Overview = Text.GetDescription(show),
+                Overview = Text.GetDescription(show, info.MetadataLanguage),
                 PremiereDate = premiereDate,
                 ProductionYear = premiereDate?.Year,
                 EndDate = endDate,

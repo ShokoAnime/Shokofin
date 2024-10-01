@@ -153,27 +153,37 @@ public static class Text
         Alternate = 1,
     }
 
-    public static string GetDescription(ShowInfo show)
+    public static string GetDescription(ShowInfo show, string? metadataLanguage)
         => GetDescriptionByDict(new() {
-            {DescriptionProvider.Shoko, show.Shoko?.Description},
-            {DescriptionProvider.AniDB, show.DefaultSeason.AniDB.Description},
+            {DescriptionProvider.Shoko, show.Shoko?.Description ?? show.DefaultSeason.Shoko.Description},
+            {DescriptionProvider.AniDB, metadataLanguage is "en" ? show.DefaultSeason.AniDB.Description : null},
             {DescriptionProvider.TvDB, show.DefaultSeason.TvDB?.Description},
         });
 
-    public static string GetDescription(SeasonInfo season)
+    public static string GetDescription(SeasonInfo season, string? metadataLanguage)
         => GetDescriptionByDict(new() {
-            {DescriptionProvider.AniDB, season.AniDB.Description},
+            {DescriptionProvider.Shoko, season.Shoko.Description},
+            {DescriptionProvider.AniDB, metadataLanguage is "en" ? season.AniDB.Description : null},
             {DescriptionProvider.TvDB, season.TvDB?.Description},
         });
 
-    public static string GetDescription(EpisodeInfo episode)
+    public static string GetDescription(EpisodeInfo episode, string? metadataLanguage)
         => GetDescriptionByDict(new() {
-            {DescriptionProvider.AniDB, episode.AniDB.Description},
+            {DescriptionProvider.Shoko, episode.Shoko.Description},
+            {DescriptionProvider.AniDB, metadataLanguage is "en" ? episode.AniDB.Description : null},
             {DescriptionProvider.TvDB, episode.TvDB?.Description},
         });
 
-    public static string GetDescription(IEnumerable<EpisodeInfo> episodeList)
-        => JoinText(episodeList.Select(episode => GetDescription(episode))) ?? string.Empty;
+    public static string GetDescription(IEnumerable<EpisodeInfo> episodeList, string? metadataLanguage)
+        => JoinText(episodeList.Select(episode => GetDescription(episode, metadataLanguage))) ?? string.Empty;
+
+    public static string GetMovieDescription(EpisodeInfo episode, SeasonInfo season, string? metadataLanguage)
+    {
+        // TODO: Actually implement actual movie descriptions from TMDB once it's made available in the plugin.
+        bool isMultiEntry = season.Shoko.Sizes.Total.Episodes > 1;
+        bool isMainEntry = episode.AniDB.Type == API.Models.EpisodeType.Normal && episode.Shoko.Name.Trim() == "Complete Movie";
+        return isMultiEntry && !isMainEntry ? GetDescription(episode, metadataLanguage) : GetDescription(season, metadataLanguage);
+    }
 
     /// <summary>
     /// Returns a list of the description providers to check, and in what order
