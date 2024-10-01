@@ -66,9 +66,9 @@ const Sections = [
 ];
 
 const Messages = {
-    ExpertModeCountdown: "Press <count> more times to <toggle> expert mode.",
-    ExpertModeEnabled: "Expert mode enabled.",
-    ExpertModeDisabled: "Expert mode disabled.",
+    ExpertModeCountdown: "Press <count> more times to <toggle> advanced mode.",
+    ExpertModeEnabled: "Advanced mode enabled.",
+    ExpertModeDisabled: "Advanced mode disabled.",
     ConnectToShoko: "Please establish a connection to a running instance of Shoko Server before you continue.",
     ConnectedToShoko: "Connection established.",
     DisconnectedToShoko: "Connection has been reset.",
