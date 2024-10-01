@@ -82,7 +82,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
 
             var offset = Math.Abs(seasonNumber - baseSeasonNumber);
 
-            result.Item = CreateMetadata(seasonInfo, seasonNumber, offset, info.MetadataLanguage);
+            result.Item = CreateMetadata(seasonInfo, seasonNumber, offset, info.MetadataLanguage, info.MetadataCountryCode);
             result.HasMetadata = true;
             result.ResetPeople();
             foreach (var person in seasonInfo.Staff)
@@ -99,13 +99,13 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
         }
     }
 
-    public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, string metadataLanguage)
-        => CreateMetadata(seasonInfo, seasonNumber, offset, metadataLanguage, null, Guid.Empty);
+    public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, string metadataLanguage, string metadataCountryCode)
+        => CreateMetadata(seasonInfo, seasonNumber, offset, metadataLanguage, metadataCountryCode, null, Guid.Empty);
 
     public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, Series series, Guid seasonId)
-        => CreateMetadata(seasonInfo, seasonNumber, offset, series.GetPreferredMetadataLanguage(), series, seasonId);
+        => CreateMetadata(seasonInfo, seasonNumber, offset, series.GetPreferredMetadataLanguage(), series.GetPreferredMetadataCountryCode(), series, seasonId);
 
-    public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, string metadataLanguage, Series? series, Guid seasonId)
+    private static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, string metadataLanguage, string metadataCountryCode, Series? series, Guid seasonId)
     {
         var (displayTitle, alternateTitle) = Text.GetSeasonTitles(seasonInfo, offset, metadataLanguage);
         var sortTitle = $"S{seasonNumber} - {seasonInfo.Shoko.Name}";
@@ -126,8 +126,8 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
                 Tags = seasonInfo.Tags.ToArray(),
                 Genres = seasonInfo.Genres.ToArray(),
                 Studios = seasonInfo.Studios.ToArray(),
-                ProductionLocations = TagFilter.GetSeasonContentRating(seasonInfo).ToArray(),
-                OfficialRating = ContentRating.GetSeasonContentRating(seasonInfo),
+                ProductionLocations = TagFilter.GetSeasonProductionLocations(seasonInfo),
+                OfficialRating = ContentRating.GetSeasonContentRating(seasonInfo, metadataCountryCode),
                 CommunityRating = seasonInfo.AniDB.Rating?.ToFloat(10),
                 SeriesId = series.Id,
                 SeriesName = series.Name,
@@ -150,8 +150,8 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
                 Tags = seasonInfo.Tags.ToArray(),
                 Genres = seasonInfo.Genres.ToArray(),
                 Studios = seasonInfo.Studios.ToArray(),
-                ProductionLocations = TagFilter.GetSeasonContentRating(seasonInfo).ToArray(),
-                OfficialRating = ContentRating.GetSeasonContentRating(seasonInfo),
+                ProductionLocations = TagFilter.GetSeasonProductionLocations(seasonInfo),
+                OfficialRating = ContentRating.GetSeasonContentRating(seasonInfo, metadataCountryCode),
                 CommunityRating = seasonInfo.AniDB.Rating?.ToFloat(10),
             };
         }

@@ -324,45 +324,45 @@ public static class TagFilter
             : [ProviderName.AniDB, ProviderName.TMDB];
 
 #pragma warning disable IDE0060
-    public static IReadOnlyList<string> GetMovieContentRating(SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
+    public static string[] GetMovieProductionLocations(SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
 #pragma warning restore IDE0060
     {
         // TODO: Add TMDB movie linked to episode content rating here.
         foreach (var provider in GetOrderedProductionLocationProviders()) {
-            var title = provider switch {
-                ProviderName.AniDB => seasonInfo.ProductionLocations,
+            var locations = provider switch {
+                ProviderName.AniDB => seasonInfo.ProductionLocations.ToArray(),
                 // TODO: Add TMDB series content rating here.
                 _ => [],
             };
-            if (title.Count > 0)
-                return title;
+            if (locations.Length > 0)
+                return locations;
         }
         return [];
     }
 
-    public static IReadOnlyList<string> GetSeasonContentRating(SeasonInfo seasonInfo)
+    public static string[] GetSeasonProductionLocations(SeasonInfo seasonInfo)
     {
         foreach (var provider in GetOrderedProductionLocationProviders()) {
-            var title = provider switch {
-                ProviderName.AniDB => seasonInfo.ProductionLocations,
+            var locations = provider switch {
+                ProviderName.AniDB => seasonInfo.ProductionLocations.ToArray(),
                 // TODO: Add TMDB series content rating here.
                 _ => [],
             };
-            if (title.Count > 0)
-                return title;
+            if (locations.Length > 0)
+                return locations;
         }
         return [];
     }
 
-    public static IReadOnlyList<string> GetShowContentRating(ShowInfo showInfo)
+    public static string[] GetShowProductionLocations(ShowInfo showInfo)
     {
         foreach (var provider in GetOrderedProductionLocationProviders()) {
             var title = provider switch {
-                ProviderName.AniDB => showInfo.ProductionLocations,
+                ProviderName.AniDB => showInfo.ProductionLocations.ToArray(),
                 // TODO: Add TMDB series content rating here.
                 _ => [],
             };
-            if (title.Count > 0)
+            if (title.Length > 0)
                 return title;
         }
         return [];

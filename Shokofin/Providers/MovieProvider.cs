@@ -63,10 +63,9 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrde
                 Tags = season.Tags.ToArray(),
                 Genres = season.Genres.ToArray(),
                 Studios = season.Studios.ToArray(),
-                ProductionLocations = TagFilter.GetMovieContentRating(season, episode).ToArray(),
-                OfficialRating = ContentRating.GetMovieContentRating(season, episode),
+                ProductionLocations = TagFilter.GetMovieProductionLocations(season, episode),
+                OfficialRating = ContentRating.GetMovieContentRating(season, episode, info.MetadataCountryCode),
                 CommunityRating = rating,
-                DateCreated = file.Shoko.ImportedAt ?? file.Shoko.CreatedAt,
             };
             result.Item.SetProviderId(ShokoFileId.Name, file.Id);
             result.Item.SetProviderId(ShokoEpisodeId.Name, episode.Id);

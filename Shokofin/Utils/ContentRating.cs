@@ -159,7 +159,7 @@ public static class ContentRating
             : [ProviderName.AniDB, ProviderName.TMDB];
 
 #pragma warning disable IDE0060
-    public static string? GetMovieContentRating(SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
+    public static string? GetMovieContentRating(SeasonInfo seasonInfo, EpisodeInfo episodeInfo, string? metadataCountryCode)
 #pragma warning restore IDE0060
     {
         // TODO: Add TMDB movie linked to episode content rating here.
@@ -175,7 +175,9 @@ public static class ContentRating
         return null;
     }
 
-    public static string? GetSeasonContentRating(SeasonInfo seasonInfo)
+#pragma warning disable IDE0060
+    public static string? GetSeasonContentRating(SeasonInfo seasonInfo, string? metadataCountryCode)
+#pragma warning restore IDE0060
     {
         foreach (var provider in GetOrderedProviders()) {
             var title = provider switch {
@@ -189,10 +191,10 @@ public static class ContentRating
         return null;
     }
 
-    public static string? GetShowContentRating(ShowInfo showInfo)
+    public static string? GetShowContentRating(ShowInfo showInfo, string? metadataCountryCode)
     {
         var (contentRating, contentIndicators) = showInfo.SeasonOrderDictionary.Values
-            .Select(seasonInfo => GetSeasonContentRating(seasonInfo))
+            .Select(seasonInfo => GetSeasonContentRating(seasonInfo, metadataCountryCode))
             .Where(contentRating => !string.IsNullOrEmpty(contentRating))
             .Distinct()
             .Select(text => TryConvertRatingFromText(text, out var cR, out var cI) ? (contentRating: cR, contentIndicators: cI ?? []) : (contentRating: TvRating.None, contentIndicators: []))

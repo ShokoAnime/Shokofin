@@ -78,7 +78,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
                 return result;
             }
 
-            result.Item = CreateMetadata(showInfo, seasonInfo, episodeInfo, fileInfo, info.MetadataLanguage);
+            result.Item = CreateMetadata(showInfo, seasonInfo, episodeInfo, fileInfo, info.MetadataLanguage, info.MetadataCountryCode);
             Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},ExtraSeries={ExtraIds},Group={GroupId})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds, showInfo?.GroupId);
 
             result.HasMetadata = true;
@@ -103,12 +103,12 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
     }
 
     public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Season season, Guid episodeId)
-        => CreateMetadata(group, series, episode, null, season.GetPreferredMetadataLanguage(), season, episodeId);
+        => CreateMetadata(group, series, episode, null, season.GetPreferredMetadataLanguage(), season.GetPreferredMetadataCountryCode(), season, episodeId);
 
-    public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage)
-        => CreateMetadata(group, series, episode, file, metadataLanguage, null, Guid.Empty);
+    public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage, string metadataCountryCode)
+        => CreateMetadata(group, series, episode, file, metadataLanguage, metadataCountryCode, null, Guid.Empty);
 
-    private static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage, Season? season, Guid episodeId)
+    private static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage, string metadataCountryCode, Season? season, Guid episodeId)
     {
         var config = Plugin.Instance.Configuration;
         string? displayTitle, alternateTitle, description;
@@ -210,8 +210,8 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
                 SeriesName = season.Series.Name,
                 SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
                 SeasonName = season.Name,
-                ProductionLocations = TagFilter.GetSeasonContentRating(series).ToArray(),
-                OfficialRating = ContentRating.GetSeasonContentRating(series),
+                ProductionLocations = TagFilter.GetSeasonProductionLocations(series),
+                OfficialRating = ContentRating.GetSeasonContentRating(series, metadataCountryCode),
                 DateLastSaved = DateTime.UtcNow,
                 RunTimeTicks = episode.AniDB.Duration.Ticks,
             };
@@ -228,7 +228,8 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
                 AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
                 PremiereDate = episode.AniDB.AirDate,
                 Overview = description,
-                OfficialRating = ContentRating.GetSeasonContentRating(series),
+                ProductionLocations = TagFilter.GetSeasonProductionLocations(series),
+                OfficialRating = ContentRating.GetSeasonContentRating(series, metadataCountryCode),
                 CustomRating = group.CustomRating,
                 CommunityRating = episode.AniDB.Rating.Value > 0 ? episode.AniDB.Rating.ToFloat(10) : 0,
             };
