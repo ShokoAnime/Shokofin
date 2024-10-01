@@ -1,11 +1,9 @@
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
-using Microsoft.Extensions.Logging;
 using Shokofin.ExternalIds;
 using Shokofin.MergeVersions;
 
@@ -23,15 +21,12 @@ public class CustomMovieProvider : ICustomMetadataProvider<Movie>
 {
     public string Name => Plugin.MetadataProviderName;
 
-    private readonly ILogger<CustomEpisodeProvider> _logger;
-
     private readonly ILibraryManager _libraryManager;
 
     private readonly MergeVersionsManager _mergeVersionsManager;
 
-    public CustomMovieProvider(ILogger<CustomEpisodeProvider> logger, ILibraryManager libraryManager, MergeVersionsManager mergeVersionsManager)
+    public CustomMovieProvider(ILibraryManager libraryManager, MergeVersionsManager mergeVersionsManager)
     {
-        _logger = logger;
         _libraryManager = libraryManager;
         _mergeVersionsManager = mergeVersionsManager;
     }
