@@ -655,7 +655,8 @@ public class VirtualFileSystemService
         var failedSeries = new HashSet<string>();
         var failedExceptions = new List<Exception>();
         var cancelTokenSource = new CancellationTokenSource();
-        var semaphore = new SemaphoreSlim(Plugin.Instance.Configuration.VFS_Threads);
+        var threadCount = Plugin.Instance.Configuration.VFS_Threads is > 0 ? Plugin.Instance.Configuration.VFS_Threads :  Environment.ProcessorCount;
+        var semaphore = new SemaphoreSlim(threadCount);
         await Task.WhenAll(allFiles.Select(async (tuple) => {
             await semaphore.WaitAsync().ConfigureAwait(false);
             var (sourceLocation, fileId, seriesId) = tuple;
