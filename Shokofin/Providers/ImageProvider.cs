@@ -106,11 +106,13 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                     break;
                 }
                 case Movie movie: {
-                    if (Lookup.TryGetSeriesIdFor(movie, out var seriesId)) {
-                        var seriesImages = await ApiClient.GetSeriesImages(seriesId);
-                        if (seriesImages is not null)
-                            AddImagesForSeries(ref list, seriesImages);
-                        Logger.LogInformation("Getting {Count} images for movie {MovieName} (Series={SeriesId})", list.Count, movie.Name, seriesId);
+                    if (Lookup.TryGetEpisodeIdFor(movie, out var episodeId)) {
+                        var episodeImages = await ApiClient.GetEpisodeImages(episodeId);
+                        if (episodeImages is not null) {
+                            AddImagesForSeries(ref list, episodeImages);
+                            AddImagesForEpisode(ref list, episodeImages);
+                        }
+                        Logger.LogInformation("Getting {Count} images for movie {MovieName} (Episode={EpisodeId})", list.Count, movie.Name, episodeId);
                     }
                     break;
                 }

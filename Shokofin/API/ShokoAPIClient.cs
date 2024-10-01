@@ -343,11 +343,29 @@ public class ShokoAPIClient : IDisposable
     public async Task<EpisodeImages?> GetEpisodeImages(string id)
     {
         try {
-            if (AllowEpisodeImages)
-                return await Get<EpisodeImages>($"/api/v3/Episode/{id}/Images");
-            var episode = await GetEpisode(id);
+            if (AllowEpisodeImages) {
+                var episodeImages = await Get<EpisodeImages>($"/api/v3/Episode/{id}/Images");
+                // If the episode has no 'movie' images, get the series images to compensate.
+                if (episodeImages.Posters.Count is 0) {
+                    var episode1 = await GetEpisode(id);
+                    var seriesImages1 = await GetSeriesImages(episode1.IDs.ParentSeries.ToString()) ?? new();
+
+                    episodeImages.Posters = seriesImages1.Posters;
+                    episodeImages.Logos = seriesImages1.Logos;
+                    episodeImages.Banners = seriesImages1.Banners;
+                    episodeImages.Backdrops = seriesImages1.Backdrops;
+                }
+                return episodeImages;
+            }
+
+            var episode0 = await GetEpisode(id);
+            var seriesImages0 = await GetSeriesImages(episode0.IDs.ParentSeries.ToString()) ?? new();
             return new() {
-                Thumbnails = episode.TvDBEntityList.FirstOrDefault()?.Thumbnail is { } thumbnail ? [thumbnail] : [],
+                Banners = seriesImages0.Banners,
+                Backdrops = seriesImages0.Backdrops,
+                Posters = seriesImages0.Posters,
+                Logos = seriesImages0.Logos,
+                Thumbnails = episode0.TvDBEntityList.FirstOrDefault()?.Thumbnail is { } thumbnail ? [thumbnail] : [],
             };
         }
         catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound) {
