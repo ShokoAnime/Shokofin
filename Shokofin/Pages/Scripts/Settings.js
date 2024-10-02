@@ -34,7 +34,7 @@ promise.then(({
 //#region Constants
 
 /**
- * @typedef {"Connection" | "Metadata_Title" | "Metadata_Description" | "Metadata_TagGenre" | "Metadata_Misc" | "Metadata_ThirdPartyIntegration" | "Library_Basic" | "Library_Collection" | "Library_New" | "Library_Existing" | "Library_Experimental" | "VFS_Basic" | "VFS_Location" | "User" | "SignalR_Connection" | "SignalR_Basic" | "SignalR_Library_New" | "SignalR_Library_Existing" | "Misc" | "Utilities"} SectionType
+ * @typedef {"Connection" | "Metadata_Title" | "Metadata_Description" | "Metadata_TagGenre" | "Metadata_Image" | "Metadata_Misc" | "Metadata_ThirdPartyIntegration" | "Library_Basic" | "Library_Collection" | "Library_New" | "Library_Existing" | "Library_Experimental" | "VFS_Basic" | "VFS_Location" | "User" | "SignalR_Connection" | "SignalR_Basic" | "SignalR_Library_New" | "SignalR_Library_Existing" | "Misc" | "Utilities"} SectionType
  */
 
 const MaxDebugPresses = 7;
@@ -47,6 +47,7 @@ const Sections = [
     "Metadata_Title",
     "Metadata_Description",
     "Metadata_TagGenre",
+    "Metadata_Image",
     "Metadata_Misc",
     "Metadata_ThirdPartyIntegration",
     "Library_Basic",
@@ -290,7 +291,7 @@ async function updateView(view, form, config) {
             break;
 
         case "metadata":
-            activeSections.push("Metadata_Title", "Metadata_Description", "Metadata_TagGenre", "Metadata_Misc", "Metadata_ThirdPartyIntegration");
+            activeSections.push("Metadata_Title", "Metadata_Description", "Metadata_TagGenre", "Metadata_Image", "Metadata_Misc", "Metadata_ThirdPartyIntegration");
             break;
 
         case "library":
@@ -384,6 +385,8 @@ function applyFormToConfig(form, config) {
             config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
             config.SynopsisCleanMiscLines = form.querySelector("#CleanupAniDBDescriptions").checked;
             config.SynopsisRemoveSummary = form.querySelector("#CleanupAniDBDescriptions").checked;
+            config.AddImageLanguageCode = form.querySelector("#AddImageLanguageCode").checked;
+            config.RespectPreferredImage = form.querySelector("#RespectPreferredImage").checked;
             config.HideUnverifiedTags = form.querySelector("#HideUnverifiedTags").checked;
             config.TagSources = retrieveCheckboxList(form, "TagSources").join(", ");
             config.TagIncludeFilters = retrieveCheckboxList(form, "TagIncludeFilters").join(", ");
@@ -532,6 +535,8 @@ async function applyConfigToForm(form, config) {
                 config.SynopsisRemoveSummary ||
                 config.SynopsisCleanMiscLines
             );
+            form.querySelector("#AddImageLanguageCode").checked = config.AddImageLanguageCode;
+            form.querySelector("#RespectPreferredImage").checked = config.RespectPreferredImage;
             form.querySelector("#HideUnverifiedTags").checked = config.HideUnverifiedTags;
             renderCheckboxList(form, "TagSources", config.TagSources.split(",").map(s => s.trim()).filter(s => s));
             renderCheckboxList(form, "TagIncludeFilters", config.TagIncludeFilters.split(",").map(s => s.trim()).filter(s => s));

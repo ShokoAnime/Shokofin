@@ -19,6 +19,7 @@ using TitleProvider = Shokofin.Utils.Text.TitleProvider;
 
 namespace Shokofin.Configuration;
 
+// TODO: Split this up in the transition to 5.0 into multiple sub-classes.
 public class PluginConfiguration : BasePluginConfiguration
 {
     #region Connection
@@ -184,6 +185,21 @@ public class PluginConfiguration : BasePluginConfiguration
     /// description for entries.
     /// </summary>
     public bool SynopsisCleanMultiEmptyLines { get; set; }
+
+    /// <summary>
+    /// Add language code to image metadata provided to Jellyfin for it to
+    /// select the correct image to use for the library.
+    /// </summary>
+    public bool AddImageLanguageCode { get; set; }
+
+    /// <summary>
+    /// Respect the preferred image flag sent from server when selecting the
+    /// correct image to use for the library. Setting this will also set the
+    /// language code to the preferred language code for the library if
+    /// <see cref="AddImageLanguageCode"/> is enabled, thus ensuring it is
+    /// always selected for the library.
+    /// </summary>
+    public bool RespectPreferredImage { get; set; }
 
     #endregion
 
@@ -544,6 +560,8 @@ public class PluginConfiguration : BasePluginConfiguration
         SynopsisCleanMiscLines = true;
         SynopsisRemoveSummary = true;
         SynopsisCleanMultiEmptyLines = true;
+        AddImageLanguageCode = false;
+        RespectPreferredImage = true;
         DescriptionSourceList = [
             DescriptionProvider.Shoko,
         ];

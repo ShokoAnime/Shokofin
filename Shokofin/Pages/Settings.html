@@ -971,6 +971,28 @@
                             <span>Save</span>
                         </button>
                     </fieldset>
+                    <fieldset id="Metadata_Image_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Image Settings</h3>
+                        </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddImageLanguageCode" />
+                                <span>Add language code</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add language code to image metadata provided to Jellyfin for it to select the correct image to use for the library.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="RespectPreferredImage" />
+                                <span>Respect preferred image</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Respect the preferred image flag sent from server when selecting the correct image to use for the library. Setting this will also set the language code to the preferred language code for the library if "Add language code" is enabled, thus ensuring it is always selected for the library.</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </fieldset>
                     <fieldset id="Metadata_Misc_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
                         <legend>
                             <h3>Miscellaneous Settings</h3>
