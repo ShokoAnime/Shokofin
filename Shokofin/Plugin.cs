@@ -186,12 +186,15 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             }
         }
 
+        FixupConfiguration(Configuration);
+
         IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
         Tracker.UpdateTimeout(TimeSpan.FromSeconds(Configuration.UsageTracker_StalledTimeInSeconds));
 
         Logger.LogDebug("Virtual File System Root Directory; {Path}", VirtualRoot);
         Logger.LogDebug("Can create symbolic links; {Value}", CanCreateSymbolicLinks);
 
+        // Disable VFS if we can't create symbolic links on Windows and no configuration exists.
         if (!configExists && !CanCreateSymbolicLinks) {
             Configuration.VFS_Enabled = false;
             SaveConfiguration();
@@ -207,14 +210,35 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         if (e is not PluginConfiguration config)
             return;
+
+        FixupConfiguration(config);
+
+        IgnoredFolders = config.IgnoredFolders.ToHashSet();
+        Tracker.UpdateTimeout(TimeSpan.FromSeconds(config.UsageTracker_StalledTimeInSeconds));
+
+        // Reset the cached VFS root directory in case it has changed.
+        _virtualRoot = null;
+
+        ConfigurationChanged?.Invoke(sender, config);
+    }
+
+    public void FixupConfiguration(PluginConfiguration config)
+    {
+        // Fix-up faulty configuration.
+        var changed = false;
         if (string.IsNullOrWhiteSpace(config.VFS_CustomLocation) && config.VFS_CustomLocation is not null) {
             config.VFS_CustomLocation = null;
-            SaveConfiguration(config);
+            changed = true;
         }
-        IgnoredFolders = config.IgnoredFolders.ToHashSet();
-        Tracker.UpdateTimeout(TimeSpan.FromSeconds(Configuration.UsageTracker_StalledTimeInSeconds));
-        _virtualRoot = null;
-        ConfigurationChanged?.Invoke(sender, config);
+        if (config.DescriptionSourceOrder.Length != Enum.GetValues<Text.DescriptionProvider>().Length) {
+            var current = config.DescriptionSourceOrder;
+            config.DescriptionSourceOrder = Enum.GetValues<Text.DescriptionProvider>()
+                .OrderBy(x => Array.IndexOf(current, x) == -1 ? int.MaxValue : Array.IndexOf(current, x))
+                .ToArray();
+            changed = true;
+        }
+        if (changed)
+            SaveConfiguration(config);
     }
 
     public HashSet<string> IgnoredFolders;
