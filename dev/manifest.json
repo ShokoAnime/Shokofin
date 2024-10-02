@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.50",
+                "changelog": "`misc`: **Demote desc selector**:\n\n- Demote the description selector from expert/advanced mode to not needing it.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.50/shoko_4.1.1.50.zip",
+                "checksum": "5c06741a0d5294dbd3afcf50971952fc",
+                "timestamp": "2024-10-02T00:43:12Z"
+            },
+            {
                 "version": "4.1.1.49",
                 "changelog": "`fix`: **Fix-up faulty config on start-up and save**:\n\n- Fix up any faulty configuration on start-up and when the plugin settings are saved.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.46/shoko_4.1.1.46.zip",
                 "checksum": "7643ef494c9dfcfe6030ea6a24c0490e",
                 "timestamp": "2024-09-30T21:01:59Z"
-            },
-            {
-                "version": "4.1.1.45",
-                "changelog": "`misc`: **Add more logging during library discovery**. (_Skip CI_)\n\n`fix`: **Always re-evaluate libraries after a library scan or stalled event**.\n\n`misc`: **Add missing comma**:\n\nBecause I wrote the last two commits blind on mobile (so no LSP to yell at me).",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.45/shoko_4.1.1.45.zip",
-                "checksum": "9758f9c2eeeff412a4b73c92b4f85936",
-                "timestamp": "2024-09-30T12:59:18Z"
             }
         ]
     }
