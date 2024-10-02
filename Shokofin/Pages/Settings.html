@@ -49,21 +49,7 @@
                         <legend>
                             <h3>Title Settings</h3>
                         </legend>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
-                                <span>Add prefix to episode titles</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add the type and number to the title of some episodes.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="TitleAllowAny" />
-                                <span>Allow any title in selected language</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Will add any title in the selected language if no official title is found.</div>
-                        </div>
-                        <div id="TitleMainList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="TitleMainList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Main title source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption">
@@ -153,7 +139,7 @@
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of the main title, in priority order.</div>
                         </div>
-                        <div id="TitleAlternateList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="TitleAlternateList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Alternate/original title source:</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption">
@@ -242,6 +228,20 @@
                                 </div>
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of the alternate/original title, in priority order.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
+                                <span>Add prefix to episode titles</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add the type and number to the title of some episodes.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="TitleAllowAny" />
+                                <span>Allow any title in selected language</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Will add any title in the selected language if no official title is found.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
