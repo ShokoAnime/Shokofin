@@ -65,7 +65,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
             return false;
 
         // Assume anything within the VFS is already okay.
-        if (fileInfo.FullName.StartsWith(Plugin.Instance.VirtualRoot))
+        if (Plugin.Instance.AllVirtualRoots.Any(fileInfo.FullName.StartsWith))
             return false;
 
         Guid? trackerId = null;
