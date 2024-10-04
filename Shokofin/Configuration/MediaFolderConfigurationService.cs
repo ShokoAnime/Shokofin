@@ -337,14 +337,9 @@ public class MediaFolderConfigurationService
                 edits.add.Add(vfsPath);
             }
 
-            var virtualRoots = new string[] {
-                Plugin.Instance.VirtualRoot_Default,
-                Plugin.Instance.VirtualRoot_Cache,
-                Plugin.Instance.VirtualRoot_Custom ?? string.Empty,
-            }.Where(s => !string.IsNullOrEmpty(s)).ToArray();
             var toRemove = virtualFolder.Locations
                 .Except(shouldAttach ? [vfsPath] : [])
-                .Where(location => virtualRoots.Any(virtualRoot => location.StartsWith(virtualRoot, Path.DirectorySeparatorChar is '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)))
+                .Where(location => Plugin.Instance.AllVirtualRoots.Any(virtualRoot => location.StartsWith(virtualRoot, Path.DirectorySeparatorChar is '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)))
                 .ToList();
             if (toRemove.Count > 0) {
                 if (!LibraryEdits.TryGetValue(libraryId, out var edits))

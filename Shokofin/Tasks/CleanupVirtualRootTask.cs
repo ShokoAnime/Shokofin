@@ -56,12 +56,7 @@ public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, IFil
             return Task.CompletedTask;
 
         var start = DateTime.Now;
-        var virtualRoots = new string[] {
-            Plugin.Instance.VirtualRoot_Default,
-            Plugin.Instance.VirtualRoot_Cache,
-            Plugin.Instance.VirtualRoot_Custom ?? string.Empty,
-        }
-            .Except([Plugin.Instance.VirtualRoot, string.Empty])
+        var virtualRoots = Plugin.Instance.AllVirtualRoots
             .Where(Directory.Exists)
             .ToList();
         Logger.LogDebug("Found {RemoveCount} VFS roots to remove.", virtualRoots.Count);

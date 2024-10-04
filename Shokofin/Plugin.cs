@@ -144,11 +144,25 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         }
     }
 
-    public string VirtualRoot_Default => Path.Join(ApplicationPaths.ProgramDataPath, Name);
-    
-    public string VirtualRoot_Cache => Path.Join(ApplicationPaths.CachePath, Name);
+    private string[]? _allVirtualRoots;
 
-    public string? VirtualRoot_Custom => string.IsNullOrWhiteSpace(Configuration.VFS_CustomLocation) ? null : Path.Combine(ApplicationPaths.ProgramDataPath, Configuration.VFS_CustomLocation);
+    /// <summary>
+    /// All "Virtual" File System Root Directories.
+    /// </summary>
+    public string[] AllVirtualRoots => _allVirtualRoots ??= (new string[] {
+        VirtualRoot_Default,
+        VirtualRoot_Cache,
+        VirtualRoot_Custom ?? string.Empty
+    })
+        .Except([string.Empty])
+        .Distinct()
+        .ToArray();
+
+    private string VirtualRoot_Default => Path.Join(ApplicationPaths.ProgramDataPath, Name);
+
+    private string VirtualRoot_Cache => Path.Join(ApplicationPaths.CachePath, Name);
+
+    private string? VirtualRoot_Custom => string.IsNullOrWhiteSpace(Configuration.VFS_CustomLocation) ? null : Path.Combine(ApplicationPaths.ProgramDataPath, Configuration.VFS_CustomLocation);
 
     /// <summary>
     /// Gets or sets the event handler that is triggered when this configuration changes.
@@ -218,6 +232,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
         // Reset the cached VFS root directory in case it has changed.
         _virtualRoot = null;
+        _allVirtualRoots = null;
 
         ConfigurationChanged?.Invoke(sender, config);
     }
