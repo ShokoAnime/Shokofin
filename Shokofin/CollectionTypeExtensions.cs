@@ -16,7 +16,7 @@ public static class CollectionTypeExtensions
             CollectionTypeOptions.homevideos => CollectionType.homevideos,
             CollectionTypeOptions.boxsets => CollectionType.boxsets,
             CollectionTypeOptions.books => CollectionType.books,
-            CollectionTypeOptions.mixed => null,
-            null or _ => CollectionType.unknown,
+            null => null,
+            _ => CollectionType.unknown,
         };
 }
