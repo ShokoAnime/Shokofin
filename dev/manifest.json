@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.52",
+                "changelog": "`chore`: **More DRY code**:\n\n- Consolidate code paths to only generate the list of all possible VFS roots in one place, then re-use the generated list elsewhere.\n\n`fix`: **Don't scan _any_ of the VFS roots in the ignore rule**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.52/shoko_4.1.1.52.zip",
+                "checksum": "ed238fb05f0c72538fa9be6fbefd3313",
+                "timestamp": "2024-10-04T23:04:43Z"
+            },
+            {
                 "version": "4.1.1.51",
                 "changelog": "`fix`: **Fix `CollectionTypeOptions` to `CollectionType` conversion**.\n\n`fix`: **Fix faulty movie path generation check**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.48/shoko_4.1.1.48.zip",
                 "checksum": "7f1a363d5ea5275284196735cff96a82",
                 "timestamp": "2024-10-02T00:27:08Z"
-            },
-            {
-                "version": "4.1.1.47",
-                "changelog": "`fix`: **No configure await false on get awaiter inside lock**.\n\n`fix`: **Properly update view after removing library config**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.47/shoko_4.1.1.47.zip",
-                "checksum": "40c2e3e7aa95dc4af69d734c79becd4e",
-                "timestamp": "2024-09-30T23:29:57Z"
             }
         ]
     }
