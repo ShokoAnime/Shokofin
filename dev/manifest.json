@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.51",
+                "changelog": "`fix`: **Fix `CollectionTypeOptions` to `CollectionType` conversion**.\n\n`fix`: **Fix faulty movie path generation check**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.51/shoko_4.1.1.51.zip",
+                "checksum": "0b9f32481a77acfd2557ac35d7b95a58",
+                "timestamp": "2024-10-04T22:26:26Z"
+            },
+            {
                 "version": "4.1.1.50",
                 "changelog": "`misc`: **Demote desc selector**:\n\n- Demote the description selector from expert/advanced mode to not needing it.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.47/shoko_4.1.1.47.zip",
                 "checksum": "40c2e3e7aa95dc4af69d734c79becd4e",
                 "timestamp": "2024-09-30T23:29:57Z"
-            },
-            {
-                "version": "4.1.1.46",
-                "changelog": "`fix`: **Fix faulty log statement Again, i wrote it blind\u2026 and now that I have my filtered glasses (read as; syntax highlighting and an LSP server running) on\u2026 then I see I forgot to get the length the array in the log point**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.46/shoko_4.1.1.46.zip",
-                "checksum": "7643ef494c9dfcfe6030ea6a24c0490e",
-                "timestamp": "2024-09-30T21:01:59Z"
             }
         ]
     }
