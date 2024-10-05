@@ -94,24 +94,33 @@ public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, ILib
         if (Plugin.Instance.Configuration.VFS_AttachRoot) {
             start = DateTime.Now;
             var addedCount = 0;
+            var fixedCount = 0;
             var vfsPaths = Plugin.Instance.Configuration.MediaFolders
+                .DistinctBy(config => config.LibraryId)
                 .Select(config => LibraryManager.GetItemById(config.LibraryId) as Folder)
                 .Where(folder => folder is not null)
                 .Select(folder => folder!.GetVirtualRoot())
                 .ToList();
             Logger.LogDebug("Ensuring {TotalCount} VFS roots exist.", vfsPaths.Count);
             foreach (var vfsPath in vfsPaths) {
-                var folderStart = DateTime.Now;
-                if (Directory.Exists(vfsPath))
-                    continue;
-
-                addedCount++;
-                Directory.CreateDirectory(vfsPath);
-                Logger.LogTrace("Added VFS root: {Path}", vfsPath);
+                // For Jellyfin to successfully scan the library we need to
+                //   a) make sure it exists so we can add it without Jellyfin throwing a fit, and
+                //   b) make sure it's not empty to make sure Jellyfin doesn't skip resolving it.
+                if (!Directory.Exists(vfsPath)) {
+                    addedCount++;
+                    Directory.CreateDirectory(vfsPath);
+                    File.WriteAllText(Path.Join(vfsPath, ".keep"), string.Empty);
+                    Logger.LogTrace("Added VFS root: {Path}", vfsPath);
+                }
+                else if (!FileSystem.GetFileSystemEntryPaths(vfsPath).Any()) {
+                    fixedCount++;
+                    File.WriteAllText(Path.Join(vfsPath, ".keep"), string.Empty);
+                    Logger.LogTrace("Fixed VFS root: {Path}", vfsPath);
+                }
             }
 
             deltaTime = DateTime.Now - start;
-            Logger.LogDebug("Added {AddedCount} missing VFS roots in {TimeSpan}.", addedCount, deltaTime);
+            Logger.LogDebug("Added {AddedCount} missing and fixed {FixedCount} broken VFS roots in {TimeSpan}.", addedCount, fixedCount, deltaTime);
         }
 
         return Task.CompletedTask;
