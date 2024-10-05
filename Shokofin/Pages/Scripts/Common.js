@@ -570,10 +570,12 @@ export function updateTabs(view, tabName) {
     if (tabName) {
         State.currentTab = tabName;
     }
+
     const tabs = Tabs.filter(tab => tab.id === State.currentTab || (tab.connected === undefined || tab.connected === State.connected) && (tab.expertMode === undefined || tab.expertMode === State.expertMode));
     let index = tabs.findIndex((tab => tab.id === State.currentTab));
-    if (index === -1)
+    if (index === -1) {
         index = 0;
+    }
 
     LibraryMenu.setTabs("shoko", index, () => tabs);
 
