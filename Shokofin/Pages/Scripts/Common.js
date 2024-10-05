@@ -577,7 +577,7 @@ export function updateTabs(view, tabName) {
 
     LibraryMenu.setTabs("shoko", index, () => tabs);
 
-    const helpLink = view.querySelector(".sectionTitleContainer > a.helpLink");
+    const helpLink = view.querySelector(".sectionTitleContainer > a.headerHelpButton");
     if (helpLink) {
         const currentTab = Tabs.find(tab => tab.id === State.currentTab);
         if (currentTab) {
@@ -868,8 +868,8 @@ export function setupEvents(view, events, initialTab = "connection", hide = fals
             const eventDetails = {
                 /** @type {MinimalDetails} */
                 detail: {
-                    type: event.detail.type,
-                    properties: event.detail.properties,
+                    type: view.getAttribute("data-type") || null,
+                    properties: (view.getAttribute("data-properties") || "").split(","),
                 },
                 bubbles: true,
                 cancelable: false,
