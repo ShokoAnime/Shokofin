@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.53",
+                "changelog": "`fix`: **Fix help link per tab**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.53/shoko_4.1.1.53.zip",
+                "checksum": "2487bd7a340460ac2ec0cfdf06e8fdaf",
+                "timestamp": "2024-10-05T21:19:53Z"
+            },
+            {
                 "version": "4.1.1.52",
                 "changelog": "`chore`: **More DRY code**:\n\n- Consolidate code paths to only generate the list of all possible VFS roots in one place, then re-use the generated list elsewhere.\n\n`fix`: **Don't scan _any_ of the VFS roots in the ignore rule**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.49/shoko_4.1.1.49.zip",
                 "checksum": "b0a147e7afe62cfd950c9655b96e1e5b",
                 "timestamp": "2024-10-02T00:41:29Z"
-            },
-            {
-                "version": "4.1.1.48",
-                "changelog": "`feat`: **Add shoko preferred descriptions**.\n\n`misc`: **Pass country code to content rating util + more**:\n\n- Pass the metadata country code from the library along to the content rating utility to-be used to figure out the TMDB content rating to use for the library, but since the TMDB data won't be available until _after_ the next stable release then the rest will wait. Expect a follow up commit hooking up the rest soon-ish.\n\n- Fixed up the misleading names of the production location methods and simplify their return value type so we can just pass it along instead of doing another conversion on it before using it.\n\n`misc`: **Remove unused logger**:\n\n- Remove the unused logger from the custom movie provider.\n\n`misc`: **Visually correct 'expert mode' to 'advanced mode' in the UI**:\n\n- Visually correct what I personally refer to as 'expert mode' to 'advanced mode' to be consistent with the upcoming documentation. ~~It will still be referred to as 'expert mode' in the code.~~\n\n`refactor`: **Remove `*Override` settings**:\n\n- Remove all `*Override` settings now that the expert/advanced mode exists.\n\n`refactor`: **Get movie images using episode id**.\n\n`misc`: **Allow VFS to auto-select thread count based on cpu if setting is set to 0**.\n\n`misc`: **Move server version in config**.\n\n`feat`: **Add image metadata settings**.\n\n`misc`: **Demote title selectors**:\n\n- Demote title selectors from expert/advanced mode to not needing it.\n\n- Move checkboxes below the title selectors.\n\n`fix`: **Replace sync locking with async locking**:\n\n- Replaced the sync locking using `lock (obj)` in the media folder configuration service with async locking using a semaphore slim.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.48/shoko_4.1.1.48.zip",
-                "checksum": "7f1a363d5ea5275284196735cff96a82",
-                "timestamp": "2024-10-02T00:27:08Z"
             }
         ]
     }
