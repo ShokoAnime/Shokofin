@@ -1161,6 +1161,16 @@ form:not(.expert-mode) .expert-only {
                                 </details>
                             </div>
                         </div>
+                        <div id="SeasonOrderingContainer" class="selectContainer selectContainer-withDescription expert-only" hidden>
+                            <label class="selectLabel" for="SeasonOrdering">Season ordering</label>
+                            <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select" disabled>
+                                <option value="Default" selected>Let Shoko decide</option>
+                                <option value="ReleaseDate">Order seasons by release date</option>
+                                <option value="Chronological" class="expert-only">Order seasons in chronological order (use indirect relations) (EXPERIMENTAL)</option>
+                                <option value="ChronologicalIgnoreIndirect">Order seasons in chronological order (ignore indirect relations) (EXPERIMENTAL)</option>
+                            </select>
+                            <div class="fieldDescription">Determines how to order seasons within each show using the Shoko groups.</div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="SeparateMovies" />
@@ -1174,16 +1184,6 @@ form:not(.expert-mode) .expert-only {
                                 <span>Filter movie libraries</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">This filters out anything that is not a movie in any movie libraries. Disable this if you want your anything to show up as movies in your movie libraries instead.</div>
-                        </div>
-                        <div id="SeasonOrderingContainer" class="selectContainer selectContainer-withDescription expert-only" hidden>
-                            <label class="selectLabel" for="SeasonOrdering">Season ordering</label>
-                            <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select" disabled>
-                                <option value="Default" selected>Let Shoko decide</option>
-                                <option value="ReleaseDate">Order seasons by release date</option>
-                                <option value="Chronological" class="expert-only">Order seasons in chronological order (use indirect relations) (EXPERIMENTAL)</option>
-                                <option value="ChronologicalIgnoreIndirect">Order seasons in chronological order (ignore indirect relations) (EXPERIMENTAL)</option>
-                            </select>
-                            <div class="fieldDescription">Determines how to order seasons within each show using the Shoko groups.</div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="SpecialsPlacement">Specials placement within seasons</label>
