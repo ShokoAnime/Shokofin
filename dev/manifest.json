@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.59",
+                "changelog": "`misc`: **Update `Disabled` to `All Allowed` for min. tag weights**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.59/shoko_4.1.1.59.zip",
+                "checksum": "1dcae476b2978917e8d5b61ecd2f8470",
+                "timestamp": "2024-10-06T04:53:13Z"
+            },
+            {
                 "version": "4.1.1.58",
                 "changelog": "`misc`: **Update documentation links ahead of the new docs being launched**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.55/shoko_4.1.1.55.zip",
                 "checksum": "c53396798482f6a8797a79334651c8ad",
                 "timestamp": "2024-10-06T00:17:19Z"
-            },
-            {
-                "version": "4.1.1.54",
-                "changelog": "`fix`: **Ensure VFS roots exist at startup**:\n\n- Ensure the physical VFS roots exist at startup in case the user for some reason decided to delete them\u2026 causing library scans to no longer work until they're re-added.\n\n`chore`: **Js style fixes**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.54/shoko_4.1.1.54.zip",
-                "checksum": "ae1e4fc2529bd3eb40496e95c45102e8",
-                "timestamp": "2024-10-05T23:11:03Z"
             }
         ]
     }
