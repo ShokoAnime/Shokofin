@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.62",
+                "changelog": "`fix`: **Don't remove the currently in use VFS root \ud83e\udd26**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.62/shoko_4.1.1.62.zip",
+                "checksum": "a00d5d6dcf6c0d477d7b94813c6d3f17",
+                "timestamp": "2024-10-06T22:32:47Z"
+            },
+            {
                 "version": "4.1.1.61",
                 "changelog": "`fix`: **Correct episode ordering before creating specials anchors**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.58/shoko_4.1.1.58.zip",
                 "checksum": "9e2f6345cacc9c03e329caa6e8e76c01",
                 "timestamp": "2024-10-06T04:26:26Z"
-            },
-            {
-                "version": "4.1.1.57",
-                "changelog": "`misc`: **Move season ordering back**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.57/shoko_4.1.1.57.zip",
-                "checksum": "a41458003ebb5af2f14ff824d2cabb9d",
-                "timestamp": "2024-10-06T04:03:23Z"
             }
         ]
     }
