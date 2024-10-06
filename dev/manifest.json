@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.58",
+                "changelog": "`misc`: **Update documentation links ahead of the new docs being launched**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.58/shoko_4.1.1.58.zip",
+                "checksum": "9e2f6345cacc9c03e329caa6e8e76c01",
+                "timestamp": "2024-10-06T04:26:26Z"
+            },
+            {
                 "version": "4.1.1.57",
                 "changelog": "`misc`: **Move season ordering back**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.54/shoko_4.1.1.54.zip",
                 "checksum": "ae1e4fc2529bd3eb40496e95c45102e8",
                 "timestamp": "2024-10-05T23:11:03Z"
-            },
-            {
-                "version": "4.1.1.53",
-                "changelog": "`fix`: **Fix help link per tab**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.53/shoko_4.1.1.53.zip",
-                "checksum": "2487bd7a340460ac2ec0cfdf06e8fdaf",
-                "timestamp": "2024-10-05T21:19:53Z"
             }
         ]
     }
