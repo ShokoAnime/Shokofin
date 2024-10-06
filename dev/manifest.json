@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.55",
+                "changelog": "`fix`: **EnsureVFS roots are not empty at startup**:\n\n- Ensure the physical VFS roots are not empty at startup to prevent Jellyfin from skipping them during a library scan.\n\n- Only check the same VFS root once.\n\n`misc`: **Remove `.keep` file when it's not needed anymore**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.55/shoko_4.1.1.55.zip",
+                "checksum": "c53396798482f6a8797a79334651c8ad",
+                "timestamp": "2024-10-06T00:17:19Z"
+            },
+            {
                 "version": "4.1.1.54",
                 "changelog": "`fix`: **Ensure VFS roots exist at startup**:\n\n- Ensure the physical VFS roots exist at startup in case the user for some reason decided to delete them\u2026 causing library scans to no longer work until they're re-added.\n\n`chore`: **Js style fixes**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.51/shoko_4.1.1.51.zip",
                 "checksum": "0b9f32481a77acfd2557ac35d7b95a58",
                 "timestamp": "2024-10-04T22:26:26Z"
-            },
-            {
-                "version": "4.1.1.50",
-                "changelog": "`misc`: **Demote desc selector**:\n\n- Demote the description selector from expert/advanced mode to not needing it.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.50/shoko_4.1.1.50.zip",
-                "checksum": "5c06741a0d5294dbd3afcf50971952fc",
-                "timestamp": "2024-10-02T00:43:12Z"
             }
         ]
     }
