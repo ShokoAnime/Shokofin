@@ -212,8 +212,15 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                             Logger.LogTrace(ex, "Failed to remove {Path}", pathToRemove);
                         }
                     }
+
                     var deltaTime = DateTime.Now - start;
                     Logger.LogDebug("Cleaned up {Count} removed entries in {Time}", pathsToRemove.Count, deltaTime);
+                }
+
+                var keepFile = Path.Join(vfsPath, ".keep");
+                if (File.Exists(keepFile)) {
+                    Logger.LogTrace("Removing now unneeded keep file: {Path}", keepFile);
+                    File.Delete(keepFile);
                 }
 
                 // TODO: uncomment the code snippet once we reach JF 10.10.
