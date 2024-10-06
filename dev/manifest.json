@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.57",
+                "changelog": "`misc`: **Move season ordering back**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.57/shoko_4.1.1.57.zip",
+                "checksum": "a41458003ebb5af2f14ff824d2cabb9d",
+                "timestamp": "2024-10-06T04:03:23Z"
+            },
+            {
                 "version": "4.1.1.56",
                 "changelog": "`misc`: **Add expert/advanced mode visual indicator**.\n\n`chore`: **Remove colons from option names**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.53/shoko_4.1.1.53.zip",
                 "checksum": "2487bd7a340460ac2ec0cfdf06e8fdaf",
                 "timestamp": "2024-10-05T21:19:53Z"
-            },
-            {
-                "version": "4.1.1.52",
-                "changelog": "`chore`: **More DRY code**:\n\n- Consolidate code paths to only generate the list of all possible VFS roots in one place, then re-use the generated list elsewhere.\n\n`fix`: **Don't scan _any_ of the VFS roots in the ignore rule**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.52/shoko_4.1.1.52.zip",
-                "checksum": "ed238fb05f0c72538fa9be6fbefd3313",
-                "timestamp": "2024-10-04T23:04:43Z"
             }
         ]
     }
