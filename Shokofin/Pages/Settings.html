@@ -34,20 +34,20 @@ form:not(.expert-mode) .expert-only {
                             <h3>Connection Settings</h3>
                         </legend>
                         <div class="inputContainer inputContainer-withDescription">
-                            <input is="emby-input" type="text" id="Url" label="Private Host Url:" />
+                            <input is="emby-input" type="text" id="Url" label="Private Host Url" />
                             <div class="fieldDescription">This is the private URL leading to where Shoko is running. It will be used internally in Jellyfin and also for all images sent to clients and redirects back to the Shoko instance if you don't set a public host URL below. It <i>should</i> include both the protocol and the IP/DNS name.</div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription">
-                            <input is="emby-input" type="text" id="PublicUrl" label="Public Host Url:" />
+                            <input is="emby-input" type="text" id="PublicUrl" label="Public Host Url" />
                             <div class="fieldDescription">Optional. This is the public URL leading to where Shoko is running. It can be used to redirect to Shoko if you click on a Shoko ID in the UI if Shoko and/or Jellyfin is running within a container and you cannot access Shoko from the host URL provided in the connection settings section above. It will also be used for images from the plugin when viewing the "Edit Images" modal in clients. It <i>should</i> include both the protocol and the IP/DNS name.</div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription">
-                            <input is="emby-input" type="text" id="Username" label="Username:" />
+                            <input is="emby-input" type="text" id="Username" label="Username" />
                             <div class="fieldDescription">The user should be an administrator in Shoko, preferably without any filtering applied.</div>
                         </div>
                         <div id="ConnectionSetContainer">
                             <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="password" id="Password" label="Password:" />
+                                <input is="emby-input" type="password" id="Password" label="Password" />
                                 <div class="fieldDescription">The password for account. It can be empty.</div>
                             </div>
                             <button is="emby-button" type="submit" name="establish-connection" class="raised button-submit block emby-button">
@@ -57,7 +57,7 @@ form:not(.expert-mode) .expert-only {
                         </div>
                         <div id="ConnectionResetContainer" hidden>
                             <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="ServerVersion" label="Server Version:" readonly value="Unknown Version" />
+                                <input is="emby-input" type="text" id="ServerVersion" label="Server Version" readonly value="Unknown Version" />
                                 <div class="fieldDescription">The version of Shoko Server we're connected to.</div>
                             </div>
                             <button is="emby-button" type="submit" name="reset-connection" class="raised block emby-button">
@@ -71,7 +71,7 @@ form:not(.expert-mode) .expert-only {
                             <h3>Title Settings</h3>
                         </legend>
                         <div id="TitleMainList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Main title source:</h3>
+                            <h3 class="checkboxListLabel">Main title source</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption">
                                     <label class="listItemCheckboxContainer">
@@ -161,7 +161,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription">The metadata providers to use as the source of the main title, in priority order.</div>
                         </div>
                         <div id="TitleAlternateList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Alternate/original title source:</h3>
+                            <h3 class="checkboxListLabel">Alternate/original title source</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption">
                                     <label class="listItemCheckboxContainer">
@@ -280,7 +280,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription checkboxFieldDescription">Remove links and collapse multiple empty lines into one empty line, and trim any lines starting with '* ', '-- ',  '~ ', 'Note', 'Source', and/or 'Summary'.</div>
                         </div>
                         <div id="DescriptionSourceList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Description source:</h3>
+                            <h3 class="checkboxListLabel">Description source</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="Shoko">
                                     <label class="listItemCheckboxContainer">
@@ -351,7 +351,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription checkboxFieldDescription">Will ignore all tags not yet verified on AniDB, so they won't show up as tags/genres for entries.</div>
                         </div>
                         <div id="TagSources" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Tag sources:</h3>
+                            <h3 class="checkboxListLabel">Tag sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
@@ -582,7 +582,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription">The tag sources to use as the source of tags.</div>
                         </div>
                         <div id="TagIncludeFilters" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Tag include filters:</h3>
+                            <h3 class="checkboxListLabel">Tag include filters</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
@@ -651,7 +651,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription">The type of tags to include for tags.</div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription expert-only">
-                            <label class="selectLabel" for="TagMinimumWeight">Minimum tag weight for tags:</label>
+                            <label class="selectLabel" for="TagMinimumWeight">Minimum tag weight for tags</label>
                             <select is="emby-select" id="TagMinimumWeight" name="TagMinimumWeight" class="emby-select-withcolor emby-select">
                                 <option value="Weightless" selected>Disabled (Default)</option>
                                 <option value="One">⯪☆☆</option>
@@ -666,11 +666,11 @@ form:not(.expert-mode) .expert-only {
                             </div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription expert-only">
-                            <input is="emby-input" id="TagMaximumDepth" label="Maximum depth to add per tag source:" placeholder="0" type="number" pattern="[0-9]*" min="0" max="10" step="1">
+                            <input is="emby-input" id="TagMaximumDepth" label="Maximum depth to add per tag source" placeholder="0" type="number" pattern="[0-9]*" min="0" max="10" step="1">
                             <div class="fieldDescription">The maximum relative depth of the tag to be included from it's source, for tags.</div>
                         </div>
                         <div id="GenreSources" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Genre sources:</h3>
+                            <h3 class="checkboxListLabel">Genre sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
@@ -901,7 +901,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription">The tag sources to use as the source of genres.</div>
                         </div>
                         <div id="GenreIncludeFilters" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Genre include filters:</h3>
+                            <h3 class="checkboxListLabel">Genre include filters</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
@@ -970,7 +970,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription">The type of tags to include for genres.</div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription expert-only">
-                            <label class="selectLabel" for="GenreMinimumWeight">Minimum tag weight for genres:</label>
+                            <label class="selectLabel" for="GenreMinimumWeight">Minimum tag weight for genres</label>
                             <select is="emby-select" id="GenreMinimumWeight" name="GenreMinimumWeight" class="emby-select-withcolor emby-select">
                                 <option value="Weightless">Disabled</option>
                                 <option value="One">⯪☆☆</option>
@@ -985,7 +985,7 @@ form:not(.expert-mode) .expert-only {
                             </div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription expert-only">
-                            <input is="emby-input" id="GenreMaximumDepth" label="Maximum depth to add per genre source:" placeholder="1" type="number" pattern="[0-9]*" min="0" max="10" step="1">
+                            <input is="emby-input" id="GenreMaximumDepth" label="Maximum depth to add per genre source" placeholder="1" type="number" pattern="[0-9]*" min="0" max="10" step="1">
                             <div class="fieldDescription">The maximum relative depth of the tag to be included from it's source, for genres.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
@@ -1019,7 +1019,7 @@ form:not(.expert-mode) .expert-only {
                             <h3>Miscellaneous Settings</h3>
                         </legend>
                         <div id="ContentRatingList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Content rating sources:</h3>
+                            <h3 class="checkboxListLabel">Content rating sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="AniDB">
                                     <label class="listItemCheckboxContainer">
@@ -1049,7 +1049,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription">The metadata providers to use as the source of content ratings, in priority order.</div>
                         </div>
                         <div id="ProductionLocationList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Production location sources:</h3>
+                            <h3 class="checkboxListLabel">Production location sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="AniDB">
                                     <label class="listItemCheckboxContainer">
@@ -1087,7 +1087,7 @@ form:not(.expert-mode) .expert-only {
                             <h3>Third Party Integration</h3>
                         </legend>
                         <div id="ThirdPartyIdProviderList" is="checkbox-list" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Add Third Party IDs:</h3>
+                            <h3 class="checkboxListLabel">Add Third Party IDs</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
@@ -1176,7 +1176,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription checkboxFieldDescription">This filters out anything that is not a movie in any movie libraries. Disable this if you want your anything to show up as movies in your movie libraries instead.</div>
                         </div>
                         <div id="SeasonOrderingContainer" class="selectContainer selectContainer-withDescription expert-only" hidden>
-                            <label class="selectLabel" for="SeasonOrdering">Season ordering:</label>
+                            <label class="selectLabel" for="SeasonOrdering">Season ordering</label>
                             <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select" disabled>
                                 <option value="Default" selected>Let Shoko decide</option>
                                 <option value="ReleaseDate">Order seasons by release date</option>
@@ -1186,7 +1186,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription">Determines how to order seasons within each show using the Shoko groups.</div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="SpecialsPlacement">Specials placement within seasons:</label>
+                            <label class="selectLabel" for="SpecialsPlacement">Specials placement within seasons</label>
                             <select is="emby-select" id="SpecialsPlacement" name="SpecialsPlacement" class="emby-select-withcolor emby-select">
                                 <option value="AfterSeason">Always place specials after the normal episodes (Default)</option>
                                 <option value="InBetweenSeasonByAirDate">Use release dates to place specials</option>
@@ -1219,7 +1219,7 @@ form:not(.expert-mode) .expert-only {
                             <h3>Collection Settings</h3>
                         </legend>
                         <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="CollectionGrouping">Collections:</label>
+                            <label class="selectLabel" for="CollectionGrouping">Collections</label>
                             <select is="emby-select" id="CollectionGrouping" name="CollectionGrouping" class="emby-select-withcolor emby-select">
                                 <option value="None" selected>Do not create collections</option>
                                 <option value="Movies">Create collections for movies based upon Shoko's series</option>
@@ -1283,7 +1283,7 @@ form:not(.expert-mode) .expert-only {
                             </div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="LibraryFilteringMode">Legacy Library Filtering:</label>
+                            <label class="selectLabel" for="LibraryFilteringMode">Legacy Library Filtering</label>
                             <select is="emby-select" id="LibraryFilteringMode" name="LibraryFilteringMode" class="emby-select-withcolor emby-select">
                                 <option value="Auto">Auto</option>
                                 <option value="Strict" selected>Strict</option>
@@ -1314,7 +1314,7 @@ form:not(.expert-mode) .expert-only {
                             <h3>Existing Library Settings</h3>
                         </legend>
                         <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="MediaFolderSelector">Configure settings for:</label>
+                            <label class="selectLabel" for="MediaFolderSelector">Configure settings for</label>
                             <select is="emby-select" id="MediaFolderSelector" name="MediaFolderSelector" value="" class="emby-select-withcolor emby-select">
                                 <option value="">Click here to select a library</option>
                             </select>
@@ -1322,7 +1322,7 @@ form:not(.expert-mode) .expert-only {
                         </div>
                         <div id="MediaFolderPerFolderSettingsContainer" hidden>
                             <div id="MediaFolderImportFolderMapping" style="margin-bottom: 2em;">
-                                <h3 class="checkboxListLabel">Import Folder Mapping:</h3>
+                                <h3 class="checkboxListLabel">Import Folder Mapping</h3>
                                 <div class="checkboxList paperList checkboxList-paperList">
                                 </div>
                                 <div class="fieldDescription">The Shoko Import Folders the Media Folders are mapped to.</div>
@@ -1344,7 +1344,7 @@ form:not(.expert-mode) .expert-only {
                                 </div>
                             </div>
                             <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="MediaFolderLibraryFilteringMode">Legacy Library Filtering:</label>
+                                <label class="selectLabel" for="MediaFolderLibraryFilteringMode">Legacy Library Filtering</label>
                                 <select is="emby-select" id="MediaFolderLibraryFilteringMode" name="MediaFolderLibraryFilteringMode" class="emby-select-withcolor emby-select">
                                     <option value="Auto">Auto</option>
                                     <option value="Strict" selected>Strict</option>
@@ -1458,7 +1458,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription checkboxFieldDescription">Enabling this will attach a physical VFS "root" to your libraries as a media folder, allowing us to mount the VFS children to the new "root" and to re-use media folders across libraries without resorting to <i>other</i> workarounds.</div>
                         </div>
                         <div id="VFS_LocationContainer" class="selectContainer selectContainer-withDescription expert-only">
-                            <label class="selectLabel" for="VFS_Location">VFS Location:</label>
+                            <label class="selectLabel" for="VFS_Location">VFS Location</label>
                             <select is="emby-select" id="VFS_Location" name="VFS_Location" class="emby-select-withcolor emby-select">
                                 <option value="Default" selected>Jellyfin Data Directory (Default)</option>
                                 <option value="Cache">Jellyfin Cache Directory</option>
@@ -1467,7 +1467,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription">Determines where the VFS root will be placed. Changing this will cause your library to "remove" and "re-add" itself because of the path changes. You will need to manually move your VFS root if you plan to keep it when toggling this setting, or you can get rid of it by running the scheduled task to remove it. <strong>You have been warned.</strong></div>
                         </div>
                         <div id="VFS_CustomLocationContainer" class="inputContainer inputContainer-withDescription expert-only" hidden>
-                            <input is="emby-input" type="text" id="VFS_CustomLocation" label="Custom VFS Root Location:" disabled />
+                            <input is="emby-input" type="text" id="VFS_CustomLocation" label="Custom VFS Root Location" disabled />
                             <div class="fieldDescription">An absolute path to the custom root directory of where the VFS will be placed. You decide.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
@@ -1479,7 +1479,7 @@ form:not(.expert-mode) .expert-only {
                             <h3>Connection Status</h3>
                         </legend>
                         <div class="inputContainer inputContainer-withDescription">
-                            <input is="emby-input" type="text" id="SignalRStatus" label="Connection Status:" disabled readonly value="Inactive">
+                            <input is="emby-input" type="text" id="SignalRStatus" label="Connection Status" disabled readonly value="Inactive">
                             <div class="fieldDescription">SignalR connection status.</div>
                         </div>
                         <div id="SignalRConnectContainer" hidden>
@@ -1509,7 +1509,7 @@ form:not(.expert-mode) .expert-only {
                             </div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription expert-only">
-                            <input is="emby-input" type="text" id="SignalRAutoReconnectIntervals" label="Auto Reconnect Intervals:" />
+                            <input is="emby-input" type="text" id="SignalRAutoReconnectIntervals" label="Auto Reconnect Intervals" />
                             <div class="fieldDescription">A comma separated list of intervals in seconds to try re-establish the connection if the plugin gets disconnected from Shoko Server.</div>
                         </div>
                         <div id="SignalREventSources" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
@@ -1580,7 +1580,7 @@ form:not(.expert-mode) .expert-only {
                             <h3>Existing Library Settings</h3>
                         </legend>
                         <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="SignalRMediaFolderSelector">Configure settings for:</label>
+                            <label class="selectLabel" for="SignalRMediaFolderSelector">Configure settings for</label>
                             <select is="emby-select" id="SignalRMediaFolderSelector" name="SignalRMediaFolderSelector" value="" class="emby-select-withcolor emby-select">
                                 <option value="">Click here to select a library</option>
                             </select>
@@ -1615,7 +1615,7 @@ form:not(.expert-mode) .expert-only {
                             <h3>User Settings</h3>
                         </legend>
                         <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="UserSelector">Configure settings for:</label>
+                            <label class="selectLabel" for="UserSelector">Configure settings for</label>
                             <select is="emby-select" id="UserSelector" name="UserSelector" value="" class="emby-select-withcolor emby-select">
                                 <option value="">Click here to select a user</option>
                             </select>
@@ -1672,11 +1672,11 @@ form:not(.expert-mode) .expert-only {
                                 <div class="fieldDescription checkboxFieldDescription">Enabling this setting will sync-back the watch-state to Shoko for restricted videos (H).</div>
                             </div>
                             <div class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="text" id="UserUsername" label="Username:" />
+                                <input is="emby-input" type="text" id="UserUsername" label="Username" />
                                 <div class="fieldDescription">The username of the account to synchronize with the currently selected user.</div>
                             </div>
                             <div id="UserPasswordContainer" class="inputContainer inputContainer-withDescription">
-                                <input is="emby-input" type="password" id="UserPassword" label="Password:" />
+                                <input is="emby-input" type="password" id="UserPassword" label="Password" />
                                 <div class="fieldDescription">The password for account. It can be empty.</div>
                             </div>
                             <div id="UserDeleteContainer" class="inputContainer inputContainer-withDescription" hidden>
@@ -1702,7 +1702,7 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription checkboxFieldDescription">Shows a shortcut to the plugin in the sidebar navigation menu.</div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription expert-only">
-                            <input is="emby-input" type="text" id="IgnoredFolders" label="Ignored folder names:" />
+                            <input is="emby-input" type="text" id="IgnoredFolders" label="Ignored folder names" />
                             <div class="fieldDescription">A comma separated list of folder names which will be ignored during library filtering.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
