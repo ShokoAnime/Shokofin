@@ -497,7 +497,7 @@ export const State = window["SHOKO_STATE_OBJECT"] || (window["SHOKO_STATE_OBJECT
  * @property {boolean?} expertMode Optional. Whether the tab is only rendered when in or not in expert mode.
  */
 
-const DefaultHelpLink = "https://docs.shokoanime.com/shokofin/configuration/";
+const DefaultHelpLink = "https://docs.shokoanime.com/jellyfin-integration/configuring-shokofin/";
 
 /**
  * @type {readonly ShokoTab[]}
@@ -506,48 +506,48 @@ const Tabs = [
     {
         id: "connection",
         href: getConfigurationPageUrl("Shoko.Settings", "connection"),
-        helpHref: "https://docs.shokoanime.com/shokofin/configuration/#connection",
+        helpHref: "https://docs.shokoanime.com/jellyfin-integration/configuring-shokofin/#connecting-to-shoko-server",
         name: "Connection",
     },
     {
         id: "metadata",
         href: getConfigurationPageUrl("Shoko.Settings", "metadata"),
-        helpHref: "https://docs.shokoanime.com/shokofin/configuration/#metadata",
+        helpHref: "https://docs.shokoanime.com/jellyfin-integration/configuring-shokofin/#metadata",
         name: "Metadata",
         connected: true,
     },
     {
         id: "library",
         href: getConfigurationPageUrl("Shoko.Settings", "library"),
-        helpHref: "https://docs.shokoanime.com/shokofin/configuration/#library",
+        helpHref: "https://docs.shokoanime.com/jellyfin-integration/configuring-shokofin/#library",
         name: "Library",
         connected: true,
     },
     {
         id: "vfs",
         href: getConfigurationPageUrl("Shoko.Settings", "vfs"),
-        helpHref: "https://docs.shokoanime.com/shokofin/configuration/#vfs",
+        helpHref: "https://docs.shokoanime.com/jellyfin-integration/configuring-shokofin/#vfs",
         name: "VFS",
         connected: true,
     },
     {
         id: "users",
         href: getConfigurationPageUrl("Shoko.Settings", "users"),
-        helpHref: "https://docs.shokoanime.com/shokofin/configuration/#users",
+        helpHref: "https://docs.shokoanime.com/jellyfin-integration/configuring-shokofin/#users",
         name: "Users",
         connected: true,
     },
     {
         id: "signalr",
         href: getConfigurationPageUrl("Shoko.Settings", "signalr"),
-        helpHref: "https://docs.shokoanime.com/shokofin/configuration/#signalr",
+        helpHref: "https://docs.shokoanime.com/jellyfin-integration/configuring-shokofin/#signalr",
         name: "SignalR",
         connected: true,
     },
     {
         id: "misc",
         href: getConfigurationPageUrl("Shoko.Settings", "misc"),
-        helpHref: "https://docs.shokoanime.com/shokofin/configuration/#misc",
+        helpHref: "https://docs.shokoanime.com/jellyfin-integration/configuring-shokofin/#misc",
         name: "Misc",
         connected: true,
         expertMode: true,
@@ -555,7 +555,7 @@ const Tabs = [
     {
         id: "utilities",
         href: getConfigurationPageUrl("Shoko.Settings", "utilities"),
-        helpHref: "https://docs.shokoanime.com/shokofin/configuration/#utilities",
+        helpHref: "https://docs.shokoanime.com/jellyfin-integration/utilities",
         name: "Utilities",
     },
 ];
