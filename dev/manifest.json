@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.60",
+                "changelog": "`fix`: **Revert default vfs location back to the old location for now**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.60/shoko_4.1.1.60.zip",
+                "checksum": "85ced641e5e2976941a750773fd87def",
+                "timestamp": "2024-10-06T05:16:35Z"
+            },
+            {
                 "version": "4.1.1.59",
                 "changelog": "`misc`: **Update `Disabled` to `All Allowed` for min. tag weights**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.56/shoko_4.1.1.56.zip",
                 "checksum": "9c77da9d660538f5176a2c7f206b304a",
                 "timestamp": "2024-10-06T02:22:11Z"
-            },
-            {
-                "version": "4.1.1.55",
-                "changelog": "`fix`: **EnsureVFS roots are not empty at startup**:\n\n- Ensure the physical VFS roots are not empty at startup to prevent Jellyfin from skipping them during a library scan.\n\n- Only check the same VFS root once.\n\n`misc`: **Remove `.keep` file when it's not needed anymore**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.55/shoko_4.1.1.55.zip",
-                "checksum": "c53396798482f6a8797a79334651c8ad",
-                "timestamp": "2024-10-06T00:17:19Z"
             }
         ]
     }
