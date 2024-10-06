@@ -158,7 +158,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         .Distinct()
         .ToArray();
 
-    private string VirtualRoot_Default => Path.Join(ApplicationPaths.ProgramDataPath, Name);
+    private string VirtualRoot_Default => Path.Join(ApplicationPaths.ProgramDataPath, "Shokofin", "VFS");
 
     private string VirtualRoot_Cache => Path.Join(ApplicationPaths.CachePath, Name);
 
