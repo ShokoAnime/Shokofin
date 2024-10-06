@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.61",
+                "changelog": "`fix`: **Correct episode ordering before creating specials anchors**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.61/shoko_4.1.1.61.zip",
+                "checksum": "de476e3901004cef9c381f3064bbd68b",
+                "timestamp": "2024-10-06T22:21:55Z"
+            },
+            {
                 "version": "4.1.1.60",
                 "changelog": "`fix`: **Revert default vfs location back to the old location for now**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.57/shoko_4.1.1.57.zip",
                 "checksum": "a41458003ebb5af2f14ff824d2cabb9d",
                 "timestamp": "2024-10-06T04:03:23Z"
-            },
-            {
-                "version": "4.1.1.56",
-                "changelog": "`misc`: **Add expert/advanced mode visual indicator**.\n\n`chore`: **Remove colons from option names**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.56/shoko_4.1.1.56.zip",
-                "checksum": "9c77da9d660538f5176a2c7f206b304a",
-                "timestamp": "2024-10-06T02:22:11Z"
             }
         ]
     }
