@@ -746,7 +746,6 @@ public class ShokoAPIManager : IDisposable
                         .Select(id => APIClient.GetEpisodesFromSeries(id).ContinueWith(task => task.Result.List.Select(e => CreateEpisodeInfo(e, e.IDs.Shoko.ToString()))))
                 ).ConfigureAwait(false))
                     .SelectMany(list => list)
-                    .OrderBy(episode => episode.AniDB.AirDate)
                     .ToList();
 
                 SeasonInfo seasonInfo;

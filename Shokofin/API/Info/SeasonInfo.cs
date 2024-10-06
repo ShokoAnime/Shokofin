@@ -129,6 +129,16 @@ public class SeasonInfo
         var episodesList = new List<EpisodeInfo>();
         var extrasList = new List<EpisodeInfo>();
         var altEpisodesList = new List<EpisodeInfo>();
+        var seriesIdOrder = new string[] { seriesId }.Concat(extraIds).ToList();
+
+        // Order the episodes by date.
+        episodes = episodes
+            .OrderBy(episode => !episode.AniDB.AirDate.HasValue)
+            .ThenBy(episode => episode.AniDB.AirDate)
+            .ThenBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.ParentSeries.ToString()))
+            .ThenBy(episode => episode.AniDB.Type)
+            .ThenBy(episode => episode.AniDB.EpisodeNumber)
+            .ToList();
 
         // Iterate over the episodes once and store some values for later use.
         int index = 0;
@@ -172,7 +182,6 @@ public class SeasonInfo
         // We order the lists after sorting them into buckets because the bucket
         // sort we're doing above have the episodes ordered by air date to get
         // the previous episode anchors right.
-        var seriesIdOrder = new string[] { seriesId }.Concat(extraIds).ToList();
         episodesList = episodesList
             .OrderBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.ParentSeries.ToString()))
             .ThenBy(e => e.AniDB.Type)
