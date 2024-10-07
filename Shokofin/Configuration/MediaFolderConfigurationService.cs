@@ -275,8 +275,7 @@ public class MediaFolderConfigurationService
         try {
             var allVirtualFolders = LibraryManager.GetVirtualFolders();
             if (allVirtualFolders.FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path) && (collectionType is CollectionType.unknown || p.CollectionType.ConvertToCollectionType() == collectionType)) is not { } library || !Guid.TryParse(library.ItemId, out var libraryId))
-                throw new Exception($"Unable to find library to use for media folder \"{mediaFolder.Path}\"");
-
+                throw new Exception($"Unable to find any library to use for media folder \"{mediaFolder.Path}\"");
 
             if (ShouldGenerateAllConfigurations)
             {
