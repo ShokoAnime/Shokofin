@@ -353,13 +353,7 @@ public class ShokoAPIClient : IDisposable
                 // If the episode has no 'movie' images, get the series images to compensate.
                 if (episodeImages.Posters.Count is 0) {
                     var episode1 = await GetEpisode(id);
-                    var seriesId = episode1.IDs.ParentSeries.ToString();
-                    if (UseEpisodeGetSeriesEndpoint) {
-                        var series = await GetSeriesFromEpisode(id);
-                        if (series != null)
-                            seriesId = series.IDs.Shoko.ToString();
-                    }
-                    var seriesImages1 = seriesId is not "0" ? await GetSeriesImages(seriesId) ?? new() : new();
+                    var seriesImages1 = await GetSeriesImages(episode1.IDs.ParentSeries.ToString()) ?? new();
 
                     episodeImages.Posters = seriesImages1.Posters;
                     episodeImages.Logos = seriesImages1.Logos;
@@ -370,7 +364,13 @@ public class ShokoAPIClient : IDisposable
             }
 
             var episode0 = await GetEpisode(id);
-            var seriesImages0 = await GetSeriesImages(episode0.IDs.ParentSeries.ToString()) ?? new();
+            var seriesId0 = episode0.IDs.ParentSeries.ToString();
+            if (UseEpisodeGetSeriesEndpoint) {
+                var series = await GetSeriesFromEpisode(id);
+                if (series != null)
+                    seriesId0 = series.IDs.Shoko.ToString();
+            }
+            var seriesImages0 = seriesId0 is not "0" ? await GetSeriesImages(seriesId0) ?? new() : new();
             return new() {
                 Banners = seriesImages0.Banners,
                 Backdrops = seriesImages0.Backdrops,
