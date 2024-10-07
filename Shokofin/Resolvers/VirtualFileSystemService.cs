@@ -83,13 +83,11 @@ public class VirtualFileSystemService
         DataCache = new(logger, new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1), SlidingExpiration = TimeSpan.FromMinutes(15) });
         NamingOptions = namingOptions;
         ExternalPathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Subtitle);
-        LibraryManager.ItemRemoved += OnLibraryManagerItemRemoved;
         Plugin.Instance.Tracker.Stalled += OnTrackerStalled;
     }
 
     ~VirtualFileSystemService()
     {
-        LibraryManager.ItemRemoved -= OnLibraryManagerItemRemoved;
         Plugin.Instance.Tracker.Stalled -= OnTrackerStalled;
         DataCache.Dispose();
     }
@@ -102,25 +100,6 @@ public class VirtualFileSystemService
         Logger.LogDebug("Clearing data…");
         DataCache.Clear();
     }
-
-    #region Changes Tracking
-
-    private void OnLibraryManagerItemRemoved(object? sender, ItemChangeEventArgs e)
-    {
-        // Remove the VFS directory for any media library folders when they're removed.
-        var root = LibraryManager.RootFolder;
-        if (e.Item != null && root != null && e.Item != root && e.Item is CollectionFolder folder) {
-            var vfsPath = folder.GetVirtualRoot();
-            DataCache.Remove($"should-skip-vfs-path:{vfsPath}");
-            if (Directory.Exists(vfsPath)) {
-                Logger.LogInformation("Removing VFS directory for folder at {Path}", folder.Path);
-                Directory.Delete(vfsPath, true);
-                Logger.LogInformation("Removed VFS directory for folder at {Path}", folder.Path);
-            }
-        }
-    }
-
-    #endregion
 
     #region Generate Structure
 
