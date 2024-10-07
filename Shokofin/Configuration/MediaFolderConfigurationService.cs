@@ -214,21 +214,22 @@ public class MediaFolderConfigurationService
         LockObj.Wait();
         try {
             var virtualFolders = LibraryManager.GetVirtualFolders();
+            var attachRoot = Plugin.Instance.Configuration.VFS_AttachRoot;
             return Plugin.Instance.Configuration.MediaFolders
                 .Where(config => config.IsMapped && !config.IsVirtualRoot && (filter is null || filter(config)) && LibraryManager.GetItemById(config.MediaFolderId) is Folder)
                 .GroupBy(config => config.LibraryId)
                 .Select(groupBy => (
                     libraryFolder: LibraryManager.GetItemById(groupBy.Key) as Folder,
                     virtualFolder: virtualFolders.FirstOrDefault(folder => Guid.TryParse(folder.ItemId, out var guid) && guid == groupBy.Key),
-                    mediaList: groupBy
-                        .Where(config => LibraryManager.GetItemById(config.MediaFolderId) is Folder)
-                        .ToList() as IReadOnlyList<MediaFolderConfiguration>
+                    mediaList: groupBy.ToList() as IReadOnlyList<MediaFolderConfiguration>
                 ))
                 .Where(tuple => tuple.libraryFolder is not null && tuple.virtualFolder is not null && tuple.virtualFolder.Locations.Length is > 0 && tuple.mediaList.Count is > 0)
                 .Select(tuple => (
                     vfsPath: tuple.libraryFolder!.GetVirtualRoot(),
-                    mainMediaFolderPath: tuple.virtualFolder!.Locations.FirstOrDefault(a => DirectoryService.IsAccessible(a)) ?? string.Empty,
-                    collectionType: LibraryManager.GetConfiguredContentType(tuple.libraryFolder!),
+                    mainMediaFolderPath: attachRoot
+                        ? tuple.libraryFolder!.GetVirtualRoot()
+                        : tuple.virtualFolder!.Locations.FirstOrDefault(a => DirectoryService.IsAccessible(a)) ?? string.Empty,
+                    collectionType: tuple.virtualFolder!.CollectionType.ConvertToCollectionType(),
                     tuple.mediaList
                 ))
                 .Where(tuple => !string.IsNullOrEmpty(tuple.vfsPath) && !string.IsNullOrEmpty(tuple.mainMediaFolderPath))
