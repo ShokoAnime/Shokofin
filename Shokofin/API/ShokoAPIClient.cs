@@ -25,6 +25,11 @@ public class ShokoAPIClient : IDisposable
     private static ComponentVersion? ServerVersion =>
         Plugin.Instance.Configuration.ServerVersion;
 
+    private static readonly DateTime EpisodeSeriesParentAddedDate = DateTime.Parse("2023-04-17T00:00:00.000Z");
+
+    private static bool UseEpisodeGetSeriesEndpoint => 
+        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == new Version("4.2.2.0")) || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < EpisodeSeriesParentAddedDate));
+
     private static readonly DateTime StableCutOffDate = DateTime.Parse("2023-12-16T00:00:00.000Z");
 
     private static bool UseOlderSeriesAndFileEndpoints =>
@@ -348,7 +353,13 @@ public class ShokoAPIClient : IDisposable
                 // If the episode has no 'movie' images, get the series images to compensate.
                 if (episodeImages.Posters.Count is 0) {
                     var episode1 = await GetEpisode(id);
-                    var seriesImages1 = await GetSeriesImages(episode1.IDs.ParentSeries.ToString()) ?? new();
+                    var seriesId = episode1.IDs.ParentSeries.ToString();
+                    if (UseEpisodeGetSeriesEndpoint) {
+                        var series = await GetSeriesFromEpisode(id);
+                        if (series != null)
+                            seriesId = series.IDs.Shoko.ToString();
+                    }
+                    var seriesImages1 = seriesId is not "0" ? await GetSeriesImages(seriesId) ?? new() : new();
 
                     episodeImages.Posters = seriesImages1.Posters;
                     episodeImages.Logos = seriesImages1.Logos;
