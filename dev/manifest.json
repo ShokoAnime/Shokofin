@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.63",
+                "changelog": "`fix`: **Fix episode parent series field usage**:\n\n- Added a temporary workaround for the stable server not supporting sending the parent series id with the episodes. It was added _15 days_ after the last stable. So I thought it was in, but apparently it wasn't.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.63/shoko_4.1.1.63.zip",
+                "checksum": "78f6965b28be40a4e3f4ad1045b67e8f",
+                "timestamp": "2024-10-07T02:00:41Z"
+            },
+            {
                 "version": "4.1.1.62",
                 "changelog": "`fix`: **Don't remove the currently in use VFS root \ud83e\udd26**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.59/shoko_4.1.1.59.zip",
                 "checksum": "1dcae476b2978917e8d5b61ecd2f8470",
                 "timestamp": "2024-10-06T04:53:13Z"
-            },
-            {
-                "version": "4.1.1.58",
-                "changelog": "`misc`: **Update documentation links ahead of the new docs being launched**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.58/shoko_4.1.1.58.zip",
-                "checksum": "9e2f6345cacc9c03e329caa6e8e76c01",
-                "timestamp": "2024-10-06T04:26:26Z"
             }
         ]
     }
