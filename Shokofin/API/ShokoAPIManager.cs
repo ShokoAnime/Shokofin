@@ -20,7 +20,8 @@ namespace Shokofin.API;
 
 public class ShokoAPIManager : IDisposable
 {
-    private static readonly Regex YearRegex = new(@"\s+\((?<year>\d{4})\)\s*$", RegexOptions.Compiled);
+    // Note: This regex will only get uglier with time.
+    private static readonly Regex YearRegex = new(@"\s+\((?<year>\d{4})(?:dai [2-9] bu)?\)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private readonly ILogger<ShokoAPIManager> Logger;
 
