@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.64",
+                "changelog": "`fix`: **Fix episode parent series field usage (take 2)**:\n\n- Moved the check from code path A to code path B, because the check was a no-operation on code path A and should had been placed on code path B in the first place. \ud83e\udd26",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.64/shoko_4.1.1.64.zip",
+                "checksum": "c114b64c6c15d851f68e21240e9ce58d",
+                "timestamp": "2024-10-07T02:27:55Z"
+            },
+            {
                 "version": "4.1.1.63",
                 "changelog": "`fix`: **Fix episode parent series field usage**:\n\n- Added a temporary workaround for the stable server not supporting sending the parent series id with the episodes. It was added _15 days_ after the last stable. So I thought it was in, but apparently it wasn't.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.60/shoko_4.1.1.60.zip",
                 "checksum": "85ced641e5e2976941a750773fd87def",
                 "timestamp": "2024-10-06T05:16:35Z"
-            },
-            {
-                "version": "4.1.1.59",
-                "changelog": "`misc`: **Update `Disabled` to `All Allowed` for min. tag weights**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.59/shoko_4.1.1.59.zip",
-                "checksum": "1dcae476b2978917e8d5b61ecd2f8470",
-                "timestamp": "2024-10-06T04:53:13Z"
             }
         ]
     }
