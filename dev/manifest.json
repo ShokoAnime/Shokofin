@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.70",
+                "changelog": "`fix`: **Check if enabled during user data scan before looking up ids**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.70/shoko_4.1.1.70.zip",
+                "checksum": "9636685f8550e2d0bda8675c3688d1f3",
+                "timestamp": "2024-10-09T04:25:53Z"
+            },
+            {
                 "version": "4.1.1.69",
                 "changelog": "`fix`: **Properly implement the respect preferred image _option_**:\n\n- Hook up the code to actually use the option to respect the preferred image, instead of just always doing it.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.66/shoko_4.1.1.66.zip",
                 "checksum": "da3e064f9b57da1d4d5af5fce3443add",
                 "timestamp": "2024-10-07T17:47:51Z"
-            },
-            {
-                "version": "4.1.1.65",
-                "changelog": "`fix`: **Use vfs path as main folder path in events when attaching roots**.\n\n`misc`: **Tweak exception thrown when unable to find library for media folder for the given collection type**.\n\n`misc`: **Rename variable**.\n\n`chore`: **Switch to primary constructor for api controllers**.\n\n`fix`: **Don't try to remove VFS root for media folders**:\n\n- Don't try to remove VFS roots for the media folders anymore, since the roots are now attached to the library and not media folders within the libraries.\n\n`feat`: **Add vfs preview endpoint**:\n\n- Added a new VFS preview endpoint for debugging purposes. ~~A debug utility may or may not appear in the plugin soon-_ish_.~~",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.65/shoko_4.1.1.65.zip",
-                "checksum": "8d7a03187079cc8df96ca3bd39da3c16",
-                "timestamp": "2024-10-07T04:16:40Z"
             }
         ]
     }
