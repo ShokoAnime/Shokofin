@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.1.1.67",
+                "changelog": "`fix`: **Remove VFS library roots with the same id but wrong parent folder**:\n\n- Remove any and all VFS library roots from the library with the correct library ID but the wrong parent folder(s).",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.67/shoko_4.1.1.67.zip",
+                "checksum": "0278f21deb40f3cae1564d4d86225cbc",
+                "timestamp": "2024-10-09T01:28:41Z"
+            },
+            {
                 "version": "4.1.1.66",
                 "changelog": "`fix`: **Start uglifying the year regex for season merging**:\n\n- If you know which show this is for, then good for you. Otherwise you don't need to pay it any mind.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.63/shoko_4.1.1.63.zip",
                 "checksum": "78f6965b28be40a4e3f4ad1045b67e8f",
                 "timestamp": "2024-10-07T02:00:41Z"
-            },
-            {
-                "version": "4.1.1.62",
-                "changelog": "`fix`: **Don't remove the currently in use VFS root \ud83e\udd26**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.62/shoko_4.1.1.62.zip",
-                "checksum": "a00d5d6dcf6c0d477d7b94813c6d3f17",
-                "timestamp": "2024-10-06T22:32:47Z"
             }
         ]
     }
