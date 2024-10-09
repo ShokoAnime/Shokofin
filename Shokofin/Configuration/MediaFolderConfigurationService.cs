@@ -330,6 +330,7 @@ public class MediaFolderConfigurationService
                 continue;
 
             var vfsPath = libraryFolder.GetVirtualRoot();
+            var vfsFolderName = Path.GetFileName(vfsPath);
             var shouldAttach = config.VFS_AttachRoot && mediaFolderConfig.IsVirtualFileSystemEnabled;
             if (shouldAttach && !virtualFolder.Locations.Contains(vfsPath, Path.DirectorySeparatorChar is '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)) {
                 if (!LibraryEdits.TryGetValue(libraryId, out var edits))
@@ -339,7 +340,11 @@ public class MediaFolderConfigurationService
 
             var toRemove = virtualFolder.Locations
                 .Except(shouldAttach ? [vfsPath] : [])
-                .Where(location => Plugin.Instance.AllVirtualRoots.Any(virtualRoot => location.StartsWith(virtualRoot, Path.DirectorySeparatorChar is '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)))
+                .Where(location =>
+                    // In case the VFS root changes.
+                    (string.Equals(Path.GetFileName(location), vfsFolderName) && !string.Equals(location, vfsPath)) ||
+                    // In case the libraryId changes but the root remains the same.
+                    Plugin.Instance.AllVirtualRoots.Any(virtualRoot => location.StartsWith(virtualRoot, Path.DirectorySeparatorChar is '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)))
                 .ToList();
             if (toRemove.Count > 0) {
                 if (!LibraryEdits.TryGetValue(libraryId, out var edits))
