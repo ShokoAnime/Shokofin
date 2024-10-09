@@ -46,6 +46,7 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
         var list = new List<RemoteImageInfo>();
         var metadataLanguage = item.GetPreferredMetadataLanguage();
         var baseKind = item.GetBaseItemKind();
+        var sortPreferred = Plugin.Instance.Configuration.RespectPreferredImage;
         var trackerId = Plugin.Instance.Tracker.Add($"Providing images for {baseKind} \"{item.Name}\". (Path=\"{item.Path}\")");
         try {
             switch (item) {
@@ -53,14 +54,13 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                     if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId)) {
                         var episodeImages = await ApiClient.GetEpisodeImages(episodeId);
                         if (episodeImages is not null)
-                            AddImagesForEpisode(ref list, episodeImages, metadataLanguage);
+                            AddImagesForEpisode(ref list, episodeImages, metadataLanguage, sortPreferred);
                         Logger.LogInformation("Getting {Count} images for episode {EpisodeName} (Episode={EpisodeId},Language={MetadataLanguage})", list.Count, episode.Name, episodeId, metadataLanguage);
                     }                    break;
                 }
                 case Series series: {
                     if (Lookup.TryGetSeriesIdFor(series, out var seriesId)) {
                         var seriesImages = await ApiClient.GetSeriesImages(seriesId);
-                        var sortPreferred = true;
                         if (seriesImages is not null) {
                             AddImagesForSeries(ref list, seriesImages, metadataLanguage, sortPreferred);
                             sortPreferred = false;
@@ -96,7 +96,6 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                     if (Lookup.TryGetSeriesIdFor(season, out var seriesId)) {
                         var seasonInfo = await ApiManager.GetSeasonInfoForSeries(seriesId);
                         var seriesImages = await ApiClient.GetSeriesImages(seriesId);
-                        var sortPreferred = true;
                         if (seriesImages is not null) {
                             AddImagesForSeries(ref list, seriesImages, metadataLanguage, sortPreferred);
                             sortPreferred = false;
@@ -121,7 +120,7 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                     if (Lookup.TryGetEpisodeIdFor(movie, out var episodeId)) {
                         var episodeImages = await ApiClient.GetEpisodeImages(episodeId);
                         if (episodeImages is not null)
-                            AddImagesForSeries(ref list, episodeImages, metadataLanguage);
+                            AddImagesForSeries(ref list, episodeImages, metadataLanguage, sortPreferred);
                         Logger.LogInformation("Getting {Count} images for movie {MovieName} (Episode={EpisodeId},Language={MetadataLanguage})", list.Count, movie.Name, episodeId, metadataLanguage);
                     }
                     break;
@@ -134,7 +133,7 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
                     if (!string.IsNullOrEmpty(seriesId)) {
                         var seriesImages = await ApiClient.GetSeriesImages(seriesId);
                         if (seriesImages is not null)
-                            AddImagesForSeries(ref list, seriesImages, metadataLanguage);
+                            AddImagesForSeries(ref list, seriesImages, metadataLanguage, sortPreferred);
                         Logger.LogInformation("Getting {Count} images for collection {CollectionName} (Group={GroupId},Series={SeriesId},Language={MetadataLanguage})", list.Count, collection.Name, groupId, groupId == null ? seriesId : null, metadataLanguage);
                     }
                     break;
@@ -151,13 +150,16 @@ public class ImageProvider : IRemoteImageProvider, IHasOrder
         }
     }
 
-    public static void AddImagesForEpisode(ref List<RemoteImageInfo> list, API.Models.EpisodeImages images, string metadataLanguage)
+    public static void AddImagesForEpisode(ref List<RemoteImageInfo> list, API.Models.EpisodeImages images, string metadataLanguage, bool sortList)
     {
-        foreach (var image in images.Thumbnails.OrderByDescending(image => image.IsPreferred))
+        IEnumerable<API.Models.Image> imagesList = sortList
+            ? images.Thumbnails.OrderByDescending(image => image.IsPreferred)
+            : images.Thumbnails;
+        foreach (var image in imagesList)
             AddImage(ref list, ImageType.Primary, image, metadataLanguage);
     }
 
-    private static void AddImagesForSeries(ref List<RemoteImageInfo> list, API.Models.Images images, string metadataLanguage, bool sortList = true)
+    private static void AddImagesForSeries(ref List<RemoteImageInfo> list, API.Models.Images images, string metadataLanguage, bool sortList)
     {
         IEnumerable<API.Models.Image> imagesList = sortList
             ? images.Posters.OrderByDescending(image => image.IsPreferred)
