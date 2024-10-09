@@ -392,7 +392,7 @@ public class UserDataSyncManager
         foreach (var video in videos) {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!(Lookup.TryGetFileIdFor(video, out var fileId) && Lookup.TryGetEpisodeIdFor(video, out var episodeId)))
+            if (!(Lookup.IsEnabledForItem(video) && Lookup.TryGetFileIdFor(video, out var fileId) && Lookup.TryGetEpisodeIdFor(video, out var episodeId)))
                 continue;
 
             foreach (var userConfig in enabledUsers) {
