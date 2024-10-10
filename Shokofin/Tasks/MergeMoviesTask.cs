@@ -8,13 +8,20 @@ using Shokofin.Utils;
 
 namespace Shokofin.Tasks;
 
-public class MergeMoviesTask : IScheduledTask, IConfigurableScheduledTask
+/// <summary>
+/// Merge all movie entries with the same Shoko Episode ID set. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING. <summary>
+/// </summary>
+public class MergeMoviesTask(MergeVersionsManager userSyncManager, LibraryScanWatcher libraryScanWatcher) : IScheduledTask, IConfigurableScheduledTask
 {
+    private readonly MergeVersionsManager VersionsManager = userSyncManager;
+
+    private readonly LibraryScanWatcher LibraryScanWatcher = libraryScanWatcher;
+
     /// <inheritdoc />
     public string Name => "Merge Movies";
 
     /// <inheritdoc />
-    public string Description => "Merge all movie entries with the same Shoko Episode ID set.";
+    public string Description => "Merge all movie entries with the same Shoko Episode ID set. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.";
 
     /// <inheritdoc />
     public string Category => "Shokofin";
@@ -23,34 +30,26 @@ public class MergeMoviesTask : IScheduledTask, IConfigurableScheduledTask
     public string Key => "ShokoMergeMovies";
 
     /// <inheritdoc />
-    public bool IsHidden => false;
+    public bool IsHidden => !Plugin.Instance.Configuration.ExpertMode;
 
     /// <inheritdoc />
-    public bool IsEnabled => false;
+    public bool IsEnabled => Plugin.Instance.Configuration.ExpertMode;
 
     /// <inheritdoc />
     public bool IsLogged => true;
 
-    private readonly MergeVersionsManager VersionsManager;
-
-    private readonly LibraryScanWatcher LibraryScanWatcher;
-
-    public MergeMoviesTask(MergeVersionsManager userSyncManager, LibraryScanWatcher libraryScanWatcher)
-    {
-        VersionsManager = userSyncManager;
-        LibraryScanWatcher = libraryScanWatcher;
-    }
-
+    /// <inheritdoc />
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-        => Array.Empty<TaskTriggerInfo>();
+        => [];
 
+    /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         if (LibraryScanWatcher.IsScanRunning)
             return;
 
         using (Plugin.Instance.Tracker.Enter("Merge Movies Task")) {
-            await VersionsManager.MergeAllMovies(progress, cancellationToken);
+            await VersionsManager.SplitAndMergeAllMovies(progress, cancellationToken);
         }
     }
 }

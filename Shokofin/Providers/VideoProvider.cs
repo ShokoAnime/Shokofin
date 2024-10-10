@@ -51,7 +51,7 @@ public class VideoProvider: IRemoteMetadataProvider<Video, ItemLookupInfo>, IHas
             }
 
             var (displayTitle, alternateTitle) = Text.GetEpisodeTitles(episodeInfo, seasonInfo, info.MetadataLanguage);
-            var description = Text.GetDescription(episodeInfo);
+            var description = Text.GetDescription(episodeInfo, info.MetadataLanguage);
             result.Item = new()
             {
                 Name = displayTitle,
@@ -68,7 +68,7 @@ public class VideoProvider: IRemoteMetadataProvider<Video, ItemLookupInfo>, IHas
             return result;
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            Logger.LogError(ex, "Threw unexpectedly while refreshing {Path}; {Message}", info.Path, ex.Message);
             return new MetadataResult<Video>();
         }
         finally {
@@ -77,7 +77,7 @@ public class VideoProvider: IRemoteMetadataProvider<Video, ItemLookupInfo>, IHas
     }
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(ItemLookupInfo searchInfo, CancellationToken cancellationToken)
-        => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
+        => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);

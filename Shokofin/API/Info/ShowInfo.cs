@@ -182,7 +182,7 @@ public class ShowInfo
         ProductionLocations = seasonInfo.ProductionLocations;
         Studios = seasonInfo.Studios;
         Staff = seasonInfo.Staff;
-        SeasonList = new List<SeasonInfo>() { seasonInfo };
+        SeasonList = [seasonInfo];
         SeasonNumberBaseDictionary = seasonNumberBaseDictionary;
         SeasonOrderDictionary = seasonOrderDictionary;
         SpecialsDict = seasonInfo.SpecialsList.ToDictionary(episodeInfo => episodeInfo.Id, episodeInfo => episodeInfo.Shoko.Size > 0);

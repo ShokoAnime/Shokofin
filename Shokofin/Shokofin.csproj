@@ -25,9 +25,7 @@
     </Target>
 
     <ItemGroup>
-        <None Remove="Configuration\configController.js" />
-        <None Remove="Configuration\configPage.html" />
-        <EmbeddedResource Include="Configuration\configController.js" />
-        <EmbeddedResource Include="Configuration\configPage.html" />
+        <None Remove="Pages\**\*" />
+        <EmbeddedResource Include="Pages\**\*" />
     </ItemGroup>
 </Project>

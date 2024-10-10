@@ -10,14 +10,15 @@ using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.ExternalIds;
+using Shokofin.MergeVersions;
 
 using Info = Shokofin.API.Info;
 
 namespace Shokofin.Providers;
 
 /// <summary>
-/// The custom season provider. Responsible for de-duplicating seasons and
-/// adding/removing "missing" episodes.
+/// The custom season provider. Responsible for de-duplicating seasons,
+/// adding/removing "missing" episodes, and de-duplicating physical episodes.
 /// </summary>
 /// <remarks>
 /// This needs to be it's own class because of internal Jellyfin shenanigans
@@ -36,14 +37,17 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
 
     private readonly ILibraryManager LibraryManager;
 
+    private readonly MergeVersionsManager MergeVersionsManager;
+
     private static bool ShouldAddMetadata => Plugin.Instance.Configuration.AddMissingMetadata;
 
-    public CustomSeasonProvider(ILogger<CustomSeasonProvider> logger, ShokoAPIManager apiManager, IIdLookup lookup, ILibraryManager libraryManager)
+    public CustomSeasonProvider(ILogger<CustomSeasonProvider> logger, ShokoAPIManager apiManager, IIdLookup lookup, ILibraryManager libraryManager, MergeVersionsManager mergeVersionsManager)
     {
         Logger = logger;
         ApiManager = apiManager;
         Lookup = lookup;
         LibraryManager = libraryManager;
+        MergeVersionsManager = mergeVersionsManager;
     }
 
     public async Task<ItemUpdateType> FetchAsync(Season season, MetadataRefreshOptions options, CancellationToken cancellationToken)
@@ -84,12 +88,15 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
                 var existingEpisodes = new HashSet<string>();
                 var toRemoveEpisodes = new List<Episode>();
                 foreach (var episode in season.Children.OfType<Episode>()) {
-                    if (Lookup.TryGetEpisodeIdsFor(episode, out var episodeIds))
-                        if ((string.IsNullOrEmpty(episode.Path) || episode.IsVirtualItem) && !knownEpisodeIds.Overlaps(episodeIds))
+                    if (Lookup.TryGetEpisodeIdsFor(episode, out var episodeIds)) {
+                        if ((string.IsNullOrEmpty(episode.Path) || episode.IsVirtualItem) && !knownEpisodeIds.Overlaps(episodeIds)) {
                             toRemoveEpisodes.Add(episode);
-                        else
+                        }
+                        else {
                             foreach (var episodeId in episodeIds)
                                 existingEpisodes.Add(episodeId);
+                        }
+                    }
                     else if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId)) {
                         if ((string.IsNullOrEmpty(episode.Path) || episode.IsVirtualItem) && !knownEpisodeIds.Contains(episodeId))
                             toRemoveEpisodes.Add(episode);
@@ -119,6 +126,13 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
                         }
                     }
                 }
+
+                // Merge versions.
+                if (Plugin.Instance.Configuration.AutoMergeVersions && !LibraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
+                    foreach (var episodeId in existingEpisodes) {
+                        await MergeVersionsManager.SplitAndMergeEpisodesByEpisodeId(episodeId);
+                    }
+                }
             }
             // Every other "season."
             else {
@@ -133,16 +147,20 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
                 var episodeList = Math.Abs(seasonNumber - baseSeasonNumber) == 0 ? seasonInfo.EpisodeList : seasonInfo.AlternateEpisodesList;
                 var knownEpisodeIds = ShouldAddMetadata
                     ? episodeList.Select(episodeInfo => episodeInfo.Id).ToHashSet()
-                    : new HashSet<string>();
+                    : [];
                 var existingEpisodes = new HashSet<string>();
                 var toRemoveEpisodes = new List<Episode>();
                 foreach (var episode in season.Children.OfType<Episode>()) {
-                    if (Lookup.TryGetEpisodeIdsFor(episode, out var episodeIds))
-                        if ((string.IsNullOrEmpty(episode.Path) || episode.IsVirtualItem) && !knownEpisodeIds.Overlaps(episodeIds))
+                    if (Lookup.TryGetEpisodeIdsFor(episode, out var episodeIds)) {
+                        if ((string.IsNullOrEmpty(episode.Path) || episode.IsVirtualItem) && !knownEpisodeIds.Overlaps(episodeIds)) {
                             toRemoveEpisodes.Add(episode);
-                        else
+                        }
+                        else {
                             foreach (var episodeId in episodeIds)
                                 existingEpisodes.Add(episodeId);
+                        }
+                        
+                    }
                     else if (Lookup.TryGetEpisodeIdFor(episode, out var episodeId)) {
                         if ((string.IsNullOrEmpty(episode.Path) || episode.IsVirtualItem) && !knownEpisodeIds.Contains(episodeId))
                             toRemoveEpisodes.Add(episode);
@@ -170,6 +188,13 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
                             itemUpdated |= ItemUpdateType.MetadataImport;
                     }
                 }
+
+                // Merge versions.
+                if (Plugin.Instance.Configuration.AutoMergeVersions && !LibraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
+                    foreach (var episodeId in existingEpisodes) {
+                        await MergeVersionsManager.SplitAndMergeEpisodesByEpisodeId(episodeId);
+                    }
+                }
             }
 
             return itemUpdated;
@@ -186,8 +211,8 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
             .GetItemList(
                 new() {
                     ParentId = season.ParentId,
-                    IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Season },
-                    ExcludeItemIds = new [] { season.Id },
+                    IncludeItemTypes = [Jellyfin.Data.Enums.BaseItemKind.Season],
+                    ExcludeItemIds = [season.Id],
                     IndexNumber = seasonNumber,
                     DtoOptions = new(true),
                 },
@@ -212,7 +237,7 @@ public class CustomSeasonProvider : ICustomMetadataProvider<Season>
     {
         var searchList = libraryManager.GetItemList(
             new() {
-                IncludeItemTypes = new [] { Jellyfin.Data.Enums.BaseItemKind.Season },
+                IncludeItemTypes = [Jellyfin.Data.Enums.BaseItemKind.Season],
                 IndexNumber = seasonNumber,
                 GroupByPresentationUniqueKey = false,
                 GroupBySeriesPresentationUniqueKey = true,

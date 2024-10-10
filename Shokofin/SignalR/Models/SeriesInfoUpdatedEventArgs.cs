@@ -29,13 +29,13 @@ public class SeriesInfoUpdatedEventArgs : IMetadataUpdatedEventArgs
     /// Shoko series ids affected by this update.
     /// </summary>
     [JsonInclude, JsonPropertyName("ShokoSeriesIDs")]
-    public List<int> SeriesIds { get; set; } = new();
+    public List<int> SeriesIds { get; set; } = [];
 
     /// <summary>
     /// Shoko group ids affected by this update.
     /// </summary>
     [JsonInclude, JsonPropertyName("ShokoGroupIDs")]
-    public List<int> GroupIds { get; set; } = new();
+    public List<int> GroupIds { get; set; } = [];
 
     #region IMetadataUpdatedEventArgs Impl.
 
@@ -43,7 +43,7 @@ public class SeriesInfoUpdatedEventArgs : IMetadataUpdatedEventArgs
 
     int? IMetadataUpdatedEventArgs.ProviderParentId => null;
 
-    IReadOnlyList<int> IMetadataUpdatedEventArgs.EpisodeIds => new List<int>();
+    IReadOnlyList<int> IMetadataUpdatedEventArgs.EpisodeIds => [];
 
     IReadOnlyList<int> IMetadataUpdatedEventArgs.SeriesIds => SeriesIds;
 

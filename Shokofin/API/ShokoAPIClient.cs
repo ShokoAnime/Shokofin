@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -24,15 +25,23 @@ public class ShokoAPIClient : IDisposable
     private static ComponentVersion? ServerVersion =>
         Plugin.Instance.Configuration.ServerVersion;
 
+    private static readonly DateTime EpisodeSeriesParentAddedDate = DateTime.Parse("2023-04-17T00:00:00.000Z");
+
+    private static bool UseEpisodeGetSeriesEndpoint => 
+        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == new Version("4.2.2.0")) || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < EpisodeSeriesParentAddedDate));
+
     private static readonly DateTime StableCutOffDate = DateTime.Parse("2023-12-16T00:00:00.000Z");
 
     private static bool UseOlderSeriesAndFileEndpoints =>
-        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == "4.2.2.0") || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < StableCutOffDate));
+        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == new Version("4.2.2.0")) || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < StableCutOffDate));
 
     private static readonly DateTime ImportFolderCutOffDate = DateTime.Parse("2024-03-28T00:00:00.000Z");
 
     private static bool UseOlderImportFolderFileEndpoints =>
-        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == "4.2.2.0") || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < ImportFolderCutOffDate));
+        ServerVersion != null && ((ServerVersion.ReleaseChannel == ReleaseChannel.Stable && ServerVersion.Version == new Version("4.2.2.0")) || (ServerVersion.ReleaseDate.HasValue && ServerVersion.ReleaseDate.Value < ImportFolderCutOffDate));
+
+    public static bool AllowEpisodeImages =>
+        ServerVersion is { } serverVersion && serverVersion.Version > new Version("4.2.2.0");
 
     private readonly GuardedMemoryCache _cache;
 
@@ -275,7 +284,7 @@ public class ShokoAPIClient : IDisposable
     public async Task<IReadOnlyList<File>> GetFilesForSeries(string seriesId)
     {
         if (UseOlderSeriesAndFileEndpoints)
-            return await Get<List<File>>($"/api/v3/Series/{seriesId}/File?&includeXRefs=true&includeDataFrom=AniDB").ConfigureAwait(false);
+            return await Get<List<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&includeXRefs=true&includeDataFrom=AniDB").ConfigureAwait(false);
 
         var listResult = await Get<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false);
         return listResult.List;
@@ -284,10 +293,10 @@ public class ShokoAPIClient : IDisposable
     public async Task<ListResult<File>> GetFilesForImportFolder(int importFolderId, string subPath, int page = 1)
     {
         if (UseOlderImportFolderFileEndpoints) {
-            return await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?page={page}&pageSize=100&includeXRefs=true", skipCache: true).ConfigureAwait(false);
+            return await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?page={page}&pageSize=100&includeXRefs=true").ConfigureAwait(false);
         }
 
-        return await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?page={page}&folderPath={Uri.EscapeDataString(subPath)}&pageSize=1000&include=XRefs", skipCache: true).ConfigureAwait(false);
+        return await Get<ListResult<File>>($"/api/v3/ImportFolder/{importFolderId}/File?page={page}&folderPath={Uri.EscapeDataString(subPath)}&pageSize=1000&include=XRefs").ConfigureAwait(false);
     }
 
     public async Task<File.UserStats?> GetFileUserStats(string fileId, string? apiKey = null)
@@ -336,6 +345,45 @@ public class ShokoAPIClient : IDisposable
         return Get<Episode>($"/api/v3/Episode/{id}?includeDataFrom=AniDB,TvDB&includeXRefs=true");
     }
 
+    public async Task<EpisodeImages?> GetEpisodeImages(string id)
+    {
+        try {
+            if (AllowEpisodeImages) {
+                var episodeImages = await Get<EpisodeImages>($"/api/v3/Episode/{id}/Images");
+                // If the episode has no 'movie' images, get the series images to compensate.
+                if (episodeImages.Posters.Count is 0) {
+                    var episode1 = await GetEpisode(id);
+                    var seriesImages1 = await GetSeriesImages(episode1.IDs.ParentSeries.ToString()) ?? new();
+
+                    episodeImages.Posters = seriesImages1.Posters;
+                    episodeImages.Logos = seriesImages1.Logos;
+                    episodeImages.Banners = seriesImages1.Banners;
+                    episodeImages.Backdrops = seriesImages1.Backdrops;
+                }
+                return episodeImages;
+            }
+
+            var episode0 = await GetEpisode(id);
+            var seriesId0 = episode0.IDs.ParentSeries.ToString();
+            if (UseEpisodeGetSeriesEndpoint) {
+                var series = await GetSeriesFromEpisode(id);
+                if (series != null)
+                    seriesId0 = series.IDs.Shoko.ToString();
+            }
+            var seriesImages0 = seriesId0 is not "0" ? await GetSeriesImages(seriesId0) ?? new() : new();
+            return new() {
+                Banners = seriesImages0.Banners,
+                Backdrops = seriesImages0.Backdrops,
+                Posters = seriesImages0.Posters,
+                Logos = seriesImages0.Logos,
+                Thumbnails = episode0.TvDBEntityList.FirstOrDefault()?.Thumbnail is { } thumbnail ? [thumbnail] : [],
+            };
+        }
+        catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound) {
+            return null;
+        }
+    }
+
     public Task<ListResult<Episode>> GetEpisodesFromSeries(string seriesId)
     {
         return Get<ListResult<Episode>>($"/api/v3/Series/{seriesId}/Episode?pageSize=0&includeHidden=true&includeMissing=true&includeDataFrom=AniDB,TvDB&includeXRefs=true");
@@ -366,9 +414,14 @@ public class ShokoAPIClient : IDisposable
         return Get<List<Relation>>($"/api/v3/Series/{id}/Relations");
     }
 
-    public Task<Images> GetSeriesImages(string id)
+    public async Task<Images?> GetSeriesImages(string id)
     {
-        return Get<Images>($"/api/v3/Series/{id}/Images");
+        try {
+            return await Get<Images>($"/api/v3/Series/{id}/Images");
+        }
+        catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound) {
+            return null;
+        }
     }
 
     public Task<List<Series>> GetSeriesPathEndsWith(string dirname)

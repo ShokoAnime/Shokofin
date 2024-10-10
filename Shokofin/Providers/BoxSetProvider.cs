@@ -50,7 +50,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
             return new();
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            Logger.LogError(ex, "Threw unexpectedly while refreshing {Path}; {Message}", info.Path, ex.Message);
             return new MetadataResult<BoxSet>();
         }
     }
@@ -72,7 +72,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
         result.Item = new BoxSet {
             Name = displayTitle,
             OriginalTitle = alternateTitle,
-            Overview = Text.GetDescription(season),
+            Overview = Text.GetDescription(season, info.MetadataLanguage),
             PremiereDate = season.AniDB.AirDate,
             EndDate = season.AniDB.EndDate,
             ProductionYear = season.AniDB.AirDate?.Year,
@@ -99,7 +99,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
 
         result.Item = new BoxSet {
             Name = collection.Name,
-            Overview = collection.Shoko.Description,
+            Overview = Text.SanitizeAnidbDescription(collection.Shoko.Description),
         };
         result.Item.SetProviderId(ShokoCollectionGroupId.Name, collection.Id);
         result.HasMetadata = true;
@@ -108,7 +108,7 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
     }
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(BoxSetInfo searchInfo, CancellationToken cancellationToken)
-        => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
+        => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)

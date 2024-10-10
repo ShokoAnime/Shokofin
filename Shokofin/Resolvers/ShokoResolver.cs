@@ -80,7 +80,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve path \"{fileInfo.FullName}\".");
-            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, fileInfo.FullName).ConfigureAwait(false);
+            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
@@ -123,7 +123,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve children of \"{parent.Path}\". (Children={fileInfoList.Count})");
-            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, parent.Path).ConfigureAwait(false);
+            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
@@ -135,7 +135,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                     .AsParallel()
                     .SelectMany(dirInfo => {
                         if (!dirInfo.Name.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
-                            return Array.Empty<BaseItem>();
+                            return [];
 
                         var season = ApiManager.GetSeasonInfoForSeries(seriesId)
                             .ConfigureAwait(false)
@@ -143,7 +143,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                             .GetResult();
                         if (season is null) {
                             pathsToRemoveBag.Add((dirInfo.FullName, true));
-                            return Array.Empty<BaseItem>();
+                            return [];
                         }
 
                         if (createMovies && (season.Type is SeriesType.Movie || collectionType is CollectionType.movies && !Plugin.Instance.Configuration.FilterMovieLibraries)) {
@@ -181,11 +181,11 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                                 .ToArray();
                         }
 
-                        return new BaseItem[1] {
+                        return [
                             new TvSeries() {
                                 Path = dirInfo.FullName,
                             },
-                        };
+                        ];
                     })
                     .OfType<BaseItem>()
                     .ToList();
@@ -209,11 +209,18 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                             }
                         }
                         catch (Exception ex) {
-                            Logger.LogTrace(ex, "Failed to remove ");
+                            Logger.LogTrace(ex, "Failed to remove {Path}", pathToRemove);
                         }
                     }
+
                     var deltaTime = DateTime.Now - start;
                     Logger.LogDebug("Cleaned up {Count} removed entries in {Time}", pathsToRemove.Count, deltaTime);
+                }
+
+                var keepFile = Path.Join(vfsPath, ".keep");
+                if (File.Exists(keepFile)) {
+                    Logger.LogTrace("Removing now unneeded keep file: {Path}", keepFile);
+                    File.Delete(keepFile);
                 }
 
                 // TODO: uncomment the code snippet once we reach JF 10.10.

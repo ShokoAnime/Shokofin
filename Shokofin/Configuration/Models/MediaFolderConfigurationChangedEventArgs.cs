@@ -1,6 +1,5 @@
 using System;
 using MediaBrowser.Controller.Entities;
-using Shokofin.Configuration;
 
 namespace Shokofin.Configuration.Models;
 

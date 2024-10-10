@@ -81,6 +81,11 @@ public class SeasonInfo
     public readonly List<EpisodeInfo> ExtrasList;
 
     /// <summary>
+    /// A list of special episodes that come before normal episodes.
+    /// </summary>
+    public readonly IReadOnlySet<string> SpecialsBeforeEpisodes;
+
+    /// <summary>
     /// A dictionary holding mappings for the previous normal episode for every special episode in a series.
     /// </summary>
     public readonly IReadOnlyDictionary<EpisodeInfo, EpisodeInfo> SpecialsAnchors;
@@ -118,15 +123,26 @@ public class SeasonInfo
             .Where(r => r.RelatedIDs.Shoko.HasValue)
             .DistinctBy(r => r.RelatedIDs.Shoko!.Value)
             .ToDictionary(r => r.RelatedIDs.Shoko!.Value.ToString(), r => r.Type);
+        var specialsBeforeEpisodes = new HashSet<string>();
         var specialsAnchorDictionary = new Dictionary<EpisodeInfo, EpisodeInfo>();
         var specialsList = new List<EpisodeInfo>();
         var episodesList = new List<EpisodeInfo>();
         var extrasList = new List<EpisodeInfo>();
         var altEpisodesList = new List<EpisodeInfo>();
+        var seriesIdOrder = new string[] { seriesId }.Concat(extraIds).ToList();
+
+        // Order the episodes by date.
+        episodes = episodes
+            .OrderBy(episode => !episode.AniDB.AirDate.HasValue)
+            .ThenBy(episode => episode.AniDB.AirDate)
+            .ThenBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.ParentSeries.ToString()))
+            .ThenBy(episode => episode.AniDB.Type)
+            .ThenBy(episode => episode.AniDB.EpisodeNumber)
+            .ToList();
 
         // Iterate over the episodes once and store some values for later use.
         int index = 0;
-        int lastNormalEpisode = 0;
+        int lastNormalEpisode = -1;
         foreach (var episode in episodes) {
             if (episode.Shoko.IsHidden)
                 continue;
@@ -147,11 +163,16 @@ public class SeasonInfo
                     }
                     else if (episode.AniDB.Type == EpisodeType.Special) {
                         specialsList.Add(episode);
-                        var previousEpisode = episodes
-                            .GetRange(lastNormalEpisode, index - lastNormalEpisode)
-                            .FirstOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
-                        if (previousEpisode != null)
-                            specialsAnchorDictionary[episode] = previousEpisode;
+                        if (lastNormalEpisode == -1) {
+                            specialsBeforeEpisodes.Add(episode.Id);
+                        }
+                        else {
+                            var previousEpisode = episodes
+                                .GetRange(lastNormalEpisode, index - lastNormalEpisode)
+                                .FirstOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
+                            if (previousEpisode != null)
+                                specialsAnchorDictionary[episode] = previousEpisode;
+                        }
                     }
                     break;
             }
@@ -161,7 +182,6 @@ public class SeasonInfo
         // We order the lists after sorting them into buckets because the bucket
         // sort we're doing above have the episodes ordered by air date to get
         // the previous episode anchors right.
-        var seriesIdOrder = new string[] { seriesId }.Concat(extraIds).ToList();
         episodesList = episodesList
             .OrderBy(e => seriesIdOrder.IndexOf(e.Shoko.IDs.ParentSeries.ToString()))
             .ThenBy(e => e.AniDB.Type)
@@ -187,22 +207,28 @@ public class SeasonInfo
                 type = SeriesType.Web;
 
             episodesList = altEpisodesList;
-            altEpisodesList = new();
+            altEpisodesList = [];
 
             // Re-create the special anchors because the episode list changed.
             index = 0;
-            lastNormalEpisode = 0;
+            lastNormalEpisode = -1;
+            specialsBeforeEpisodes.Clear();
             specialsAnchorDictionary.Clear();
             foreach (var episode in episodes) {
                 if (episodesList.Contains(episode)) {
                     lastNormalEpisode = index;
                 }
                 else if (specialsList.Contains(episode)) {
-                    var previousEpisode = episodes
-                        .GetRange(lastNormalEpisode, index - lastNormalEpisode)
-                        .FirstOrDefault(e => e.AniDB.Type == EpisodeType.Normal);
-                    if (previousEpisode != null)
-                        specialsAnchorDictionary[episode] = previousEpisode;
+                    if (lastNormalEpisode == -1) {
+                        specialsBeforeEpisodes.Add(episode.Id);
+                    }
+                    else {
+                        var previousEpisode = episodes
+                            .GetRange(lastNormalEpisode, index - lastNormalEpisode)
+                            .FirstOrDefault(e => specialsList.Contains(e));
+                        if (previousEpisode != null)
+                            specialsAnchorDictionary[episode] = previousEpisode;
+                    }
                 }
                 index++;
             }
@@ -216,11 +242,11 @@ public class SeasonInfo
             if (specialsList.Count > 0) {
                 extrasList.AddRange(specialsList);
                 specialsAnchorDictionary.Clear();
-                specialsList = new();
+                specialsList = [];
             }
             if (altEpisodesList.Count > 0) {
                 extrasList.AddRange(altEpisodesList);
-                altEpisodesList = new();
+                altEpisodesList = [];
             }
         }
 
@@ -242,6 +268,7 @@ public class SeasonInfo
         EpisodeList = episodesList;
         AlternateEpisodesList = altEpisodesList;
         ExtrasList = extrasList;
+        SpecialsBeforeEpisodes = specialsBeforeEpisodes;
         SpecialsAnchors = specialsAnchorDictionary;
         SpecialsList = specialsList;
         Relations = relations;
@@ -266,7 +293,7 @@ public class SeasonInfo
     }
 
     private static string? GetImagePath(Image image)
-        => image != null && image.IsAvailable ? image.ToURLString() : null;
+        => image != null && image.IsAvailable ? image.ToURLString(internalUrl: true) : null;
 
     private static PersonInfo? RoleToPersonInfo(Role role)
         => role.Type switch

@@ -9,7 +9,7 @@ namespace Shokofin.Utils;
 
 public static class Text
 {
-    private static readonly HashSet<char> PunctuationMarks = new() {
+    private static readonly HashSet<char> PunctuationMarks = [
         // Common punctuation marks
         '.',   // period
         ',',   // comma
@@ -57,7 +57,7 @@ public static class Text
         '⦊',   // right angle bracket
         '⦌',   // right angle bracket
         '⦎',   // right angle bracket
-    };
+    ];
 
     private static readonly HashSet<string> IgnoredSubTitles = new(StringComparer.InvariantCultureIgnoreCase) {
         "Complete Movie",
@@ -153,35 +153,43 @@ public static class Text
         Alternate = 1,
     }
 
-    public static string GetDescription(ShowInfo show)
+    public static string GetDescription(ShowInfo show, string? metadataLanguage)
         => GetDescriptionByDict(new() {
-            {DescriptionProvider.Shoko, show.Shoko?.Description},
-            {DescriptionProvider.AniDB, show.DefaultSeason.AniDB.Description},
+            {DescriptionProvider.Shoko, show.Shoko?.Description ?? show.DefaultSeason.Shoko.Description},
+            {DescriptionProvider.AniDB, metadataLanguage is "en" ? show.DefaultSeason.AniDB.Description : null},
             {DescriptionProvider.TvDB, show.DefaultSeason.TvDB?.Description},
         });
 
-    public static string GetDescription(SeasonInfo season)
+    public static string GetDescription(SeasonInfo season, string? metadataLanguage)
         => GetDescriptionByDict(new() {
-            {DescriptionProvider.AniDB, season.AniDB.Description},
+            {DescriptionProvider.Shoko, season.Shoko.Description},
+            {DescriptionProvider.AniDB, metadataLanguage is "en" ? season.AniDB.Description : null},
             {DescriptionProvider.TvDB, season.TvDB?.Description},
         });
 
-    public static string GetDescription(EpisodeInfo episode)
+    public static string GetDescription(EpisodeInfo episode, string? metadataLanguage)
         => GetDescriptionByDict(new() {
-            {DescriptionProvider.AniDB, episode.AniDB.Description},
+            {DescriptionProvider.Shoko, episode.Shoko.Description},
+            {DescriptionProvider.AniDB, metadataLanguage is "en" ? episode.AniDB.Description : null},
             {DescriptionProvider.TvDB, episode.TvDB?.Description},
         });
 
-    public static string GetDescription(IEnumerable<EpisodeInfo> episodeList)
-        => JoinText(episodeList.Select(episode => GetDescription(episode))) ?? string.Empty;
+    public static string GetDescription(IEnumerable<EpisodeInfo> episodeList, string? metadataLanguage)
+        => JoinText(episodeList.Select(episode => GetDescription(episode, metadataLanguage))) ?? string.Empty;
+
+    public static string GetMovieDescription(EpisodeInfo episode, SeasonInfo season, string? metadataLanguage)
+    {
+        // TODO: Actually implement actual movie descriptions from TMDB once it's made available in the plugin.
+        bool isMultiEntry = season.Shoko.Sizes.Total.Episodes > 1;
+        bool isMainEntry = episode.AniDB.Type == API.Models.EpisodeType.Normal && episode.Shoko.Name.Trim() == "Complete Movie";
+        return isMultiEntry && !isMainEntry ? GetDescription(episode, metadataLanguage) : GetDescription(season, metadataLanguage);
+    }
 
     /// <summary>
     /// Returns a list of the description providers to check, and in what order
     /// </summary>
     private static DescriptionProvider[] GetOrderedDescriptionProviders()
-        => Plugin.Instance.Configuration.DescriptionSourceOverride
-            ? Plugin.Instance.Configuration.DescriptionSourceOrder.Where((t) => Plugin.Instance.Configuration.DescriptionSourceList.Contains(t)).ToArray()
-            : new[] { DescriptionProvider.Shoko, DescriptionProvider.AniDB, DescriptionProvider.TvDB, DescriptionProvider.TMDB };
+        => Plugin.Instance.Configuration.DescriptionSourceOrder.Where((t) => Plugin.Instance.Configuration.DescriptionSourceList.Contains(t)).ToArray();
 
     private static string GetDescriptionByDict(Dictionary<DescriptionProvider, string?> descriptions)
     {
@@ -322,14 +330,10 @@ public static class Text
     private static TitleProvider[] GetOrderedTitleProvidersByType(TitleProviderType titleType)
         => titleType switch {
             TitleProviderType.Main =>
-                Plugin.Instance.Configuration.TitleMainOverride
-                    ? Plugin.Instance.Configuration.TitleMainOrder.Where((t) => Plugin.Instance.Configuration.TitleMainList.Contains(t)).ToArray()
-                    : new[] { TitleProvider.Shoko_Default },
+                Plugin.Instance.Configuration.TitleMainOrder.Where((t) => Plugin.Instance.Configuration.TitleMainList.Contains(t)).ToArray(),
             TitleProviderType.Alternate =>
-                Plugin.Instance.Configuration.TitleAlternateOverride
-                    ? Plugin.Instance.Configuration.TitleAlternateOrder.Where((t) => Plugin.Instance.Configuration.TitleAlternateList.Contains(t)).ToArray()
-                    : new[] { TitleProvider.AniDB_CountryOfOrigin, TitleProvider.TMDB_CountryOfOrigin },
-            _ => Array.Empty<TitleProvider>(),
+                Plugin.Instance.Configuration.TitleAlternateOrder.Where((t) => Plugin.Instance.Configuration.TitleAlternateList.Contains(t)).ToArray(),
+            _ => [],
         };
 
     private static string? GetMovieTitleByType(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, TitleProviderType type, string? metadataLanguage)
@@ -431,9 +435,9 @@ public static class Text
     /// <returns>The list of origin language codes to try and use.</returns>
     private static string[] GuessOriginLanguage(string langCode)
         => langCode switch {
-            "x-other" => new string[] { "ja" },
-            "x-jat" => new string[] { "ja" },
-            "x-zht" => new string[] { "zn-hans", "zn-hant", "zn-c-mcm", "zn" },
-            _ => new string[] { langCode },
+            "x-other" => ["ja"],
+            "x-jat" => ["ja"],
+            "x-zht" => ["zn-hans", "zn-hant", "zn-c-mcm", "zn"],
+            _ => [langCode],
         };
 }

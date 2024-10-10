@@ -7,8 +7,10 @@ using Shokofin.Sync;
 
 namespace Shokofin.Tasks;
 
-public class SyncUserDataTask : IScheduledTask, IConfigurableScheduledTask
+public class SyncUserDataTask(UserDataSyncManager userSyncManager) : IScheduledTask, IConfigurableScheduledTask
 {
+    private readonly UserDataSyncManager _userSyncManager = userSyncManager;
+
     /// <inheritdoc />
     public string Name => "Sync User Data";
 
@@ -25,21 +27,16 @@ public class SyncUserDataTask : IScheduledTask, IConfigurableScheduledTask
     public bool IsHidden => false;
 
     /// <inheritdoc />
-    public bool IsEnabled => false;
+    public bool IsEnabled => true;
 
     /// <inheritdoc />
     public bool IsLogged => true;
 
-    private readonly UserDataSyncManager _userSyncManager;
-
-    public SyncUserDataTask(UserDataSyncManager userSyncManager)
-    {
-        _userSyncManager = userSyncManager;
-    }
-
+    /// <inheritdoc />
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-        => Array.Empty<TaskTriggerInfo>();
+        => [];
 
+    /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         await _userSyncManager.ScanAndSync(SyncDirection.Sync, progress, cancellationToken);

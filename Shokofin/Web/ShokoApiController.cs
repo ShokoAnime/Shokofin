@@ -15,24 +15,18 @@ namespace Shokofin.Web;
 /// <summary>
 /// Shoko API Host Web Controller.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="ShokoApiController"/> class.
+/// </remarks>
+/// <param name="httpClientFactory">Instance of the <see cref="IHttpClientFactory"/> interface.</param>
 [ApiController]
 [Route("Plugin/Shokofin/Host")]
 [Produces(MediaTypeNames.Application.Json)]
-public class ShokoApiController : ControllerBase
+public class ShokoApiController(ILogger<ShokoApiController> logger, ShokoAPIClient apiClient) : ControllerBase
 {
-    private readonly ILogger<ShokoApiController> Logger;
+    private readonly ILogger<ShokoApiController> Logger = logger;
 
-    private readonly ShokoAPIClient APIClient;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ShokoApiController"/> class.
-    /// </summary>
-    /// <param name="httpClientFactory">Instance of the <see cref="IHttpClientFactory"/> interface.</param>
-    public ShokoApiController(ILogger<ShokoApiController> logger, ShokoAPIClient apiClient)
-    {
-        Logger = logger;
-        APIClient = apiClient;
-    }
+    private readonly ShokoAPIClient APIClient = apiClient;
 
     /// <summary>
     /// Try to get the version of the server.

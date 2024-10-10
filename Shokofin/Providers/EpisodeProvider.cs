@@ -78,7 +78,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
                 return result;
             }
 
-            result.Item = CreateMetadata(showInfo, seasonInfo, episodeInfo, fileInfo, info.MetadataLanguage);
+            result.Item = CreateMetadata(showInfo, seasonInfo, episodeInfo, fileInfo, info.MetadataLanguage, info.MetadataCountryCode);
             Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},ExtraSeries={ExtraIds},Group={GroupId})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds, showInfo?.GroupId);
 
             result.HasMetadata = true;
@@ -86,7 +86,15 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
             return result;
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            if (info.IsMissingEpisode || string.IsNullOrEmpty(info.Path)) {
+                if (!info.TryGetProviderId(ShokoEpisodeId.Name, out var episodeId))
+                    episodeId = null;
+                Logger.LogError(ex, "Threw unexpectedly while refreshing a missing episode; {Message} (Episode={EpisodeId})", ex.Message, episodeId);
+            }
+            else {
+                Logger.LogError(ex, "Threw unexpectedly while refreshing {Path}: {Message}", info.Path, info.IsMissingEpisode);
+            }
+
             return new MetadataResult<Episode>();
         }
         finally {
@@ -95,16 +103,16 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
     }
 
     public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Season season, Guid episodeId)
-        => CreateMetadata(group, series, episode, null, season.GetPreferredMetadataLanguage(), season, episodeId);
+        => CreateMetadata(group, series, episode, null, season.GetPreferredMetadataLanguage(), season.GetPreferredMetadataCountryCode(), season, episodeId);
 
-    public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage)
-        => CreateMetadata(group, series, episode, file, metadataLanguage, null, Guid.Empty);
+    public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage, string metadataCountryCode)
+        => CreateMetadata(group, series, episode, file, metadataLanguage, metadataCountryCode, null, Guid.Empty);
 
-    private static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage, Season? season, Guid episodeId)
+    private static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage, string metadataCountryCode, Season? season, Guid episodeId)
     {
         var config = Plugin.Instance.Configuration;
         string? displayTitle, alternateTitle, description;
-        if (config.TitleAddForMultipleEpisodes && file != null && file.EpisodeList.Count > 1) {
+        if (file != null && file.EpisodeList.Count > 1) {
             var displayTitles = new List<string?>();
             var alternateTitles = new List<string?>();
             foreach (var (episodeInfo, _, _) in file.EpisodeList) {
@@ -128,7 +136,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
             }
             displayTitle = Text.JoinText(displayTitles);
             alternateTitle = Text.JoinText(alternateTitles);
-            description = Text.GetDescription(file.EpisodeList.Select(tuple => tuple.Episode));
+            description = Text.GetDescription(file.EpisodeList.Select(tuple => tuple.Episode), metadataLanguage);
         }
         else {
             string defaultEpisodeTitle = episode.Shoko.Name;
@@ -144,7 +152,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
             else {
                 (displayTitle, alternateTitle) = Text.GetEpisodeTitles(episode, series, metadataLanguage);
             }
-            description = Text.GetDescription(episode);
+            description = Text.GetDescription(episode, metadataLanguage);
         }
 
         if (config.MarkSpecialsWhenGrouped) switch (episode.AniDB.Type) {
@@ -202,8 +210,8 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
                 SeriesName = season.Series.Name,
                 SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
                 SeasonName = season.Name,
-                ProductionLocations = TagFilter.GetSeasonContentRating(series).ToArray(),
-                OfficialRating = ContentRating.GetSeasonContentRating(series),
+                ProductionLocations = TagFilter.GetSeasonProductionLocations(series),
+                OfficialRating = ContentRating.GetSeasonContentRating(series, metadataCountryCode),
                 DateLastSaved = DateTime.UtcNow,
                 RunTimeTicks = episode.AniDB.Duration.Ticks,
             };
@@ -220,7 +228,8 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
                 AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
                 PremiereDate = episode.AniDB.AirDate,
                 Overview = description,
-                OfficialRating = ContentRating.GetSeasonContentRating(series),
+                ProductionLocations = TagFilter.GetSeasonProductionLocations(series),
+                OfficialRating = ContentRating.GetSeasonContentRating(series, metadataCountryCode),
                 CustomRating = group.CustomRating,
                 CommunityRating = episode.AniDB.Rating.Value > 0 ? episode.AniDB.Rating.ToFloat(10) : 0,
             };
@@ -252,7 +261,7 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
     }
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo searchInfo, CancellationToken cancellationToken)
-        => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
+        => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);

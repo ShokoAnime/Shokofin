@@ -10,6 +10,13 @@ const RangeOrHash = process.argv[2] || "";
 // Form the git log command
 const GitLogCommandBase = `git log ${RangeOrHash}`;
 
+const EndingMarkers = new Set([
+    ".",
+    ",",
+    "!",
+    "?",
+]);
+
 const Placeholders = {
     "H": "commit",
     "P": "parents",
@@ -62,6 +69,41 @@ for (const [placeholder, name] of Object.entries(Placeholders)) {
     }
 }
 
+// Add file-level changes to each commit
+for (const commitId of commitOrder) {
+    const fileStatusOutput = execSync(`git diff --name-status ${commitId}^ ${commitId}`).toString();
+    const lineChangesOutput = execSync(`git diff --numstat ${commitId}^ ${commitId}`).toString();
+
+    const files = [];
+    const fileStatusLines = fileStatusOutput.split(/\r\n|\r|\n/g).filter(a => a);
+    const lineChangesLines = lineChangesOutput.split(/\r\n|\r|\n/g).filter(a => a);
+
+    for (const [index, line] of fileStatusLines.entries()) {
+        const [rawStatus, path] = line.split(/\t/);
+        const status = rawStatus === "M" ?
+            "modified"
+        : rawStatus === "A" ?
+            "added"
+        : rawStatus === "D" ?
+            "deleted"
+        : rawStatus === "R" ?
+            "renamed"
+        : "untracked";
+        const lineChangeParts = lineChangesLines[index].split(/\t/);
+        const addedLines = parseInt(lineChangeParts[0] || "0", 10);
+        const removedLines = parseInt(lineChangeParts[1] || "0", 10);
+
+        files.push({
+            path,
+            status,
+            addedLines,
+            removedLines,
+        });
+    }
+
+    commits[commitId].files = files;
+}
+
 // Trim trailing newlines from all values in the commits object
 for (const commit of Object.values(commits)) {
     for (const key in commit) {
@@ -72,9 +114,9 @@ for (const commit of Object.values(commits)) {
 }
 
 // Convert commits object to a list of values
-const commitsList = commitOrder.slice().reverse()
+const commitsList = commitOrder.reverse()
     .map((commitId) => commits[commitId])
-    .map(({ commit, parents, tree, subject, body, author_name, author_email, author_date, committer_name, committer_email, committer_date }) => ({
+    .map(({ commit, parents, tree, subject, body, author_name, author_email, author_date, committer_name, committer_email, committer_date, files }) => ({
         commit,
         parents,
         tree,
@@ -101,17 +143,23 @@ const commitsList = commitOrder.slice().reverse()
             date: new Date(committer_date).toISOString(),
             timeZone: committer_date.substring(19) === "Z" ? "+00:00" : committer_date.substring(19),
         },
-    }))
-    .map((commit) => ({
-        ...commit,
-        subject: /[a-z]/.test(commit.subject[0]) ? commit.subject[0].toUpperCase() + commit.subject.slice(1) : commit.subject,
-        type: commit.type == "feature" ? "feat" : commit.type === "refacor" ? "refactor" : commit.type == "mics" ? "misc" : commit.type,
+        files,
     }))
     .map((commit) => ({
         ...commit,
         subject: commit.subject.replace(/\[(?:skip|no) *ci\]/ig, "").trim().replace(/[\.:]+^/, ""),
         body: commit.body ? commit.body.replace(/\[(?:skip|no) *ci\]/ig, "").trimEnd() : commit.body,
         isSkipCI: /\[(?:skip|no) *ci\]/i.test(commit.subject) || Boolean(commit.body && /\[(?:skip|no) *ci\]/i.test(commit.body)),
+        type: commit.type == "feature" ? "feat" : commit.type === "refacor" ? "refactor" : commit.type == "mics" ? "misc" : commit.type,
+    }))
+    .map((commit) => ({
+        ...commit,
+        subject: ((subject) => {
+            subject = (/[a-z]/.test(subject[0]) ? subject[0].toUpperCase() + subject.slice(1) : subject).trim();
+            if (subject.length > 0 && EndingMarkers.has(subject[subject.length - 1]))
+                subject = subject.slice(0, subject.length - 1);
+            return subject;
+        })(commit.subject),
     }))
     .filter((commit) => !(commit.type === "misc" && (commit.subject === "update unstable manifest" || commit.subject === "Update repo manifest" || commit.subject === "Update unstable repo manifest")));
 

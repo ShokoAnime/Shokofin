@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.Json.Serialization;
 
@@ -17,7 +18,8 @@ public class ComponentVersion
     /// <summary>
     /// Version number.
     /// </summary>
-    public string Version { get; set; } = string.Empty;
+    [DefaultValue("1.0.0.0")]
+    public Version Version { get; set; } = new("1.0.0.0");
 
     /// <summary>
     /// Commit SHA.

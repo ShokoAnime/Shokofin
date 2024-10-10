@@ -55,11 +55,11 @@ public class EventDispatchService
 
     private readonly Timer ChangesDetectionTimer;
 
-    private readonly Dictionary<string, (DateTime LastUpdated, List<IMetadataUpdatedEventArgs> List, Guid trackerId)> ChangesPerSeries = new();
+    private readonly Dictionary<string, (DateTime LastUpdated, List<IMetadataUpdatedEventArgs> List, Guid trackerId)> ChangesPerSeries = [];
 
-    private readonly Dictionary<int, (DateTime LastUpdated, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> List, Guid trackerId)> ChangesPerFile = new();
+    private readonly Dictionary<int, (DateTime LastUpdated, List<(UpdateReason Reason, int ImportFolderId, string Path, IFileEventArgs Event)> List, Guid trackerId)> ChangesPerFile = [];
 
-    private readonly Dictionary<string, (int refCount, DateTime delayEnd)> MediaFolderChangeMonitor = new();
+    private readonly Dictionary<string, (int refCount, DateTime delayEnd)> MediaFolderChangeMonitor = [];
 
     // It's so magical that it matches the magical value in the library monitor in JF core. 🪄
     private const int MagicalDelayValue = 45000;
@@ -192,7 +192,7 @@ public class EventDispatchService
             if (ChangesPerFile.TryGetValue(fileId, out var tuple))
                 tuple.LastUpdated = DateTime.Now;
             else
-                ChangesPerFile.Add(fileId, tuple = (DateTime.Now, new(), Plugin.Instance.Tracker.Add($"File event. (Reason=\"{reason}\",ImportFolder={eventArgs.ImportFolderId},RelativePath=\"{eventArgs.RelativePath}\")")));
+                ChangesPerFile.Add(fileId, tuple = (DateTime.Now, [], Plugin.Instance.Tracker.Add($"File event. (Reason=\"{reason}\",ImportFolder={eventArgs.ImportFolderId},RelativePath=\"{eventArgs.RelativePath}\")")));
             tuple.List.Add((reason, importFolderId, filePath, eventArgs));
         }
     }
@@ -211,7 +211,7 @@ public class EventDispatchService
             var locationsToNotify = new List<string>();
             var mediaFoldersToNotify = new Dictionary<string, (string pathToReport, Folder mediaFolder)>();
             var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
-            var libraries = ConfigurationService.GetAvailableMediaFoldersForLibraries(c => c.IsFileEventsEnabled);
+            var libraries = ConfigurationService.GetAvailableMediaFoldersForLibrariesForEvents(c => c.IsFileEventsEnabled);
             var (reason, importFolderId, relativePath, lastEvent) = changes.Last();
             if (reason is not UpdateReason.Removed) {
                 Logger.LogTrace("Processing file changed. (File={FileId})", fileId);
@@ -231,10 +231,10 @@ public class EventDispatchService
                             var result = new LinkGenerationResult();
                             var topFolders = new HashSet<string>();
                             var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
-                                .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
+                                .Where(tuple => tuple.symbolicLinks.Length > 0 && tuple.importedAt.HasValue)
                                 .ToList();
-                            foreach (var (srcLoc, symLinks, importDate) in vfsLocations) {
-                                result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, importDate!.Value);
+                            foreach (var (symLinks, importDate) in vfsLocations) {
+                                result += ResolveManager.GenerateSymbolicLinks(sourceLocation, symLinks, importDate!.Value);
                                 foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
                                     topFolders.Add(path);
                             }
@@ -301,14 +301,14 @@ public class EventDispatchService
                             var newSourceLocation = await GetNewSourceLocation(importFolderId, importFolderSubPath, fileId, relativePath, mediaFolderPath);
                             if (!string.IsNullOrEmpty(newSourceLocation)) {
                                 var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(collectionType, vfsPath, newSourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
-                                    .Where(tuple => !string.IsNullOrEmpty(tuple.sourceLocation) && tuple.importedAt.HasValue)
+                                .Where(tuple => tuple.symbolicLinks.Length > 0 && tuple.importedAt.HasValue)
                                     .ToList();
-                                foreach (var (srcLoc, symLinks, importDate) in vfsLocations) {
-                                    result += ResolveManager.GenerateSymbolicLinks(srcLoc, symLinks, importDate!.Value);
+                                foreach (var (symLinks, importDate) in vfsLocations) {
+                                    result += ResolveManager.GenerateSymbolicLinks(newSourceLocation, symLinks, importDate!.Value);
                                     foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
                                         topFolders.Add(path);
                                 }
-                                vfsSymbolicLinks = vfsLocations.Select(tuple => tuple.sourceLocation).ToHashSet();
+                                vfsSymbolicLinks = vfsLocations.SelectMany(tuple => tuple.symbolicLinks).ToHashSet();
                             }
 
                             // Remove old links for file.
@@ -463,7 +463,11 @@ public class EventDispatchService
 
     private async Task ReportMediaFolderChanged(Folder mediaFolder, string pathToReport)
     {
-        if (LibraryManager.GetLibraryOptions(mediaFolder) is not LibraryOptions libraryOptions || !libraryOptions.EnableRealtimeMonitor) {
+        // Don't block real-time file events on the media folder that uses a physical VFS root, or if real-time monitoring is disabled.
+        if (mediaFolder.Path.StartsWith(Plugin.Instance.VirtualRoot) ||
+            LibraryManager.GetLibraryOptions(mediaFolder) is not LibraryOptions libraryOptions ||
+            !libraryOptions.EnableRealtimeMonitor
+        ) {
             LibraryMonitor.ReportFileSystemChanged(pathToReport);
             return;
         }
@@ -518,7 +522,7 @@ public class EventDispatchService
             if (ChangesPerSeries.TryGetValue(metadataId, out var tuple))
                 tuple.LastUpdated = DateTime.Now;
             else
-                ChangesPerSeries.Add(metadataId, tuple = (DateTime.Now, new(), Plugin.Instance.Tracker.Add($"Metadata event. (Reason=\"{eventArgs.Reason}\",Kind=\"{eventArgs.Kind}\",ProviderUId=\"{eventArgs.ProviderUId}\")")));
+                ChangesPerSeries.Add(metadataId, tuple = (DateTime.Now, [], Plugin.Instance.Tracker.Add($"Metadata event. (Reason=\"{eventArgs.Reason}\",Kind=\"{eventArgs.Kind}\",ProviderUId=\"{eventArgs.ProviderUId}\")")));
             tuple.List.Add(eventArgs);
         }
     }
@@ -573,7 +577,7 @@ public class EventDispatchService
             var shows = LibraryManager
                 .GetItemList(
                     new() {
-                        IncludeItemTypes = new BaseItemKind[] { BaseItemKind.Series },
+                        IncludeItemTypes = [BaseItemKind.Series],
                         HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, showInfo.Id } },
                         DtoOptions = new(true),
                     },
@@ -612,7 +616,7 @@ public class EventDispatchService
                 var seasons = LibraryManager
                     .GetItemList(
                         new() {
-                            IncludeItemTypes = new BaseItemKind[] { BaseItemKind.Season },
+                            IncludeItemTypes = [BaseItemKind.Season],
                             HasAnyProviderId = new Dictionary<string, string> { { ShokoSeriesId.Name, seasonInfo.Id } },
                             DtoOptions = new(true),
                         },
@@ -643,7 +647,7 @@ public class EventDispatchService
                 var episodes = LibraryManager
                     .GetItemList(
                         new() {
-                            IncludeItemTypes = new BaseItemKind[] { BaseItemKind.Episode },
+                            IncludeItemTypes = [BaseItemKind.Episode],
                             HasAnyProviderId = new Dictionary<string, string> { { ShokoEpisodeId.Name, episodeInfo.Id } },
                             DtoOptions = new(true),
                         },
@@ -686,7 +690,7 @@ public class EventDispatchService
             var movies = LibraryManager
                 .GetItemList(
                     new() {
-                        IncludeItemTypes = new BaseItemKind[] { BaseItemKind.Movie },
+                        IncludeItemTypes = [BaseItemKind.Movie],
                         HasAnyProviderId = new Dictionary<string, string> { { ShokoEpisodeId.Name, episodeInfo.Id } },
                         DtoOptions = new(true),
                     },

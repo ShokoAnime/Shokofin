@@ -15,7 +15,7 @@ public class CrossReference
     /// The Episode IDs
     /// </summary>
     [JsonPropertyName("EpisodeIDs")]
-    public List<EpisodeCrossReferenceIDs> Episodes { get; set; } = new();
+    public List<EpisodeCrossReferenceIDs> Episodes { get; set; } = [];
 
     /// <summary>
     /// File episode cross-reference for a series.

@@ -6,8 +6,18 @@ namespace Shokofin.API.Models;
 
 public class Series
 {
+    /// <summary>
+    /// The preferred name of the series based on the selected series language
+    /// settings on the server.
+    /// </summary>
     public string Name { get; set; } = string.Empty;
-    
+
+    /// <summary>
+    /// The preferred description of the series based on the selected series
+    /// language settings on the server.
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+
     public int Size { get; set; }
 
     /// <summary>
@@ -39,8 +49,8 @@ public class Series
     /// The TvDB entries, if any.
     /// </summary>
     [JsonPropertyName("TvDB")]
-    public List<TvDB> TvDBEntityList { get; set; }= new();
-    
+    public List<TvDB> TvDBEntityList { get; set; }= [];
+
     public SeriesSizes Sizes { get; set; } = new();
 
     /// <summary>
@@ -106,7 +116,7 @@ public class Series
         public int? EpisodeCount { get; set; }
 
         /// <summary>
-        /// The average rating for the anime. Only available on 
+        /// The average rating for the anime. Only available on
         /// </summary>
         public Rating? Rating { get; set; }
 
@@ -132,10 +142,10 @@ public class Series
         /// <summary>
         /// There should always be at least one of these, the <see cref="Title"/>. May be omitted if needed.
         /// </summary>
-        public new List<Title> Titles { get; set; } = new();
+        public new List<Title> Titles { get; set; } = [];
 
         /// <summary>
-        /// The average rating for the anime. Only available on 
+        /// The average rating for the anime. Only available on
         /// </summary>
         public new Rating Rating { get; set; } = new();
 
@@ -183,21 +193,7 @@ public class Series
 
     public class TvDB
     {
-        /// <summary>
-        /// TvDB Id.
-        /// </summary>
-        [JsonPropertyName("ID")]
-        public int Id { get; set; }
-
-        public DateTime? AirDate { get; set; }
-
-        public DateTime? EndDate { get; set; }
-
-        public string Title { get; set; } = string.Empty;
-
         public string Description { get; set; } = string.Empty;
-
-        public Rating Rating { get; set; } = new();
     }
 
     public class SeriesIDs : IDs
@@ -207,16 +203,6 @@ public class Series
         public int TopLevelGroup { get; set; } = 0;
 
         public int AniDB { get; set; } = 0;
-
-        public List<int> TvDB { get; set; } = new List<int>();
-
-        public List<int> TMDB { get; set; } = new List<int>();
-
-        public List<int> MAL { get; set; } = new List<int>();
-
-        public List<string> TraktTv { get; set; } = new List<string>();
-
-        public List<int> AniList { get; set; } = new List<int>();
     }
 
     /// <summary>

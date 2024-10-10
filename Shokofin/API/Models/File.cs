@@ -18,7 +18,7 @@ public class File
     /// shown. In many cases, this will have arrays of 1 item
     /// </summary>
     [JsonPropertyName("SeriesIDs")]
-    public List<CrossReference> CrossReferences { get; set; } = new();
+    public List<CrossReference> CrossReferences { get; set; } = [];
 
     /// <summary>
     /// The calculated hashes from the <see cref="File"/>.
@@ -30,7 +30,7 @@ public class File
     /// <summary>
     /// All the <see cref="Location"/>s this <see cref="File"/> is present at.
     /// </summary>
-    public List<Location> Locations { get; set; } = new();
+    public List<Location> Locations { get; set; } = [];
 
     /// <summary>
     /// Try to fit this file's resolution to something like 1080p, 480p, etc.

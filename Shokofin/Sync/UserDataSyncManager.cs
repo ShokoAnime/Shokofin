@@ -191,6 +191,7 @@ public class UserDataSyncManager
             if (!(
                     (e.Item is Movie || e.Item is Episode) &&
                     TryGetUserConfiguration(e.UserId, out var userConfig) &&
+                    Lookup.IsEnabledForItem(e.Item) &&
                     Lookup.TryGetFileIdFor(e.Item, out var fileId) &&
                     Lookup.TryGetEpisodeIdFor(e.Item, out var episodeId) &&
                     (userConfig!.SyncRestrictedVideos || e.Item.CustomRating != "XXX")
@@ -374,13 +375,13 @@ public class UserDataSyncManager
         }
 
         var videos = LibraryManager.GetItemList(new InternalItemsQuery {
-            MediaTypes = new[] { MediaType.Video },
+            MediaTypes = [MediaType.Video],
             IsFolder = false,
             Recursive = true,
             DtoOptions = new DtoOptions(false) {
                 EnableImages = false
             },
-            SourceTypes = new SourceType[] { SourceType.Library },
+            SourceTypes = [SourceType.Library],
             IsVirtualItem = false,
         })
             .OfType<Video>()
@@ -391,7 +392,7 @@ public class UserDataSyncManager
         foreach (var video in videos) {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!(Lookup.TryGetFileIdFor(video, out var fileId) && Lookup.TryGetEpisodeIdFor(video, out var episodeId)))
+            if (!(Lookup.IsEnabledForItem(video) && Lookup.TryGetFileIdFor(video, out var fileId) && Lookup.TryGetEpisodeIdFor(video, out var episodeId)))
                 continue;
 
             foreach (var userConfig in enabledUsers) {

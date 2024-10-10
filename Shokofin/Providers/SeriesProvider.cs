@@ -70,7 +70,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasO
             result.Item = new Series {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
-                Overview = Text.GetDescription(show),
+                Overview = Text.GetDescription(show, info.MetadataLanguage),
                 PremiereDate = premiereDate,
                 ProductionYear = premiereDate?.Year,
                 EndDate = endDate,
@@ -78,8 +78,8 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasO
                 Tags = show.Tags.ToArray(),
                 Genres = show.Genres.ToArray(),
                 Studios = show.Studios.ToArray(),
-                ProductionLocations = TagFilter.GetShowContentRating(show).ToArray(),
-                OfficialRating = ContentRating.GetShowContentRating(show),
+                ProductionLocations = TagFilter.GetShowProductionLocations(show),
+                OfficialRating = ContentRating.GetShowContentRating(show, info.MetadataCountryCode),
                 CustomRating = show.CustomRating,
                 CommunityRating = show.CommunityRating,
             };
@@ -95,7 +95,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasO
             return result;
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            Logger.LogError(ex, "Threw unexpectedly while refreshing {Path}; {Message}", info.Path, ex.Message);
             return new MetadataResult<Series>();
         }
         finally {
@@ -118,7 +118,7 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasO
     }
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo info, CancellationToken cancellationToken)
-        => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
+        => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);

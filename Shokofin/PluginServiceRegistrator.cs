@@ -10,6 +10,7 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     /// <inheritdoc />
     public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
     {
+        serviceCollection.AddSingleton<Utils.UsageTracker>();
         serviceCollection.AddSingleton<Utils.LibraryScanWatcher>();
         serviceCollection.AddSingleton<API.ShokoAPIClient>();
         serviceCollection.AddSingleton<API.ShokoAPIManager>();

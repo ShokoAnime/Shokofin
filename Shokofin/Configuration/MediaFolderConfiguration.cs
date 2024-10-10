@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Library;
+
 using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
 
 namespace Shokofin.Configuration;
@@ -50,6 +50,13 @@ public class MediaFolderConfiguration
     /// The relative path from the root of the import folder the media folder is located at.
     /// </summary>
     public string ImportFolderRelativePath  { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Indicates the Jellyfin Media Folder is a virtual file system folder.
+    /// </summary>
+    [XmlIgnore]
+    [JsonInclude]
+    public bool IsVirtualRoot => ImportFolderId < 0;
 
     /// <summary>
     /// Indicates the Jellyfin Media Folder is mapped to a Shoko Import Folder.

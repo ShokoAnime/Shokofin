@@ -20,7 +20,8 @@ namespace Shokofin.API;
 
 public class ShokoAPIManager : IDisposable
 {
-    private static readonly Regex YearRegex = new(@"\s+\((?<year>\d{4})\)\s*$", RegexOptions.Compiled);
+    // Note: This regex will only get uglier with time.
+    private static readonly Regex YearRegex = new(@"\s+\((?<year>\d{4})(?:dai [2-9] bu)?\)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private readonly ILogger<ShokoAPIManager> Logger;
 
@@ -30,7 +31,7 @@ public class ShokoAPIManager : IDisposable
 
     private readonly object MediaFolderListLock = new();
 
-    private readonly List<Folder> MediaFolderList = new();
+    private readonly List<Folder> MediaFolderList = [];
 
     private readonly ConcurrentDictionary<string, string> PathToSeriesIdDictionary = new();
 
@@ -168,7 +169,7 @@ public class ShokoAPIManager : IDisposable
                                 continue;
                             }
                             if (!tagMap.TryGetValue(parentKey, out var list))
-                                tagMap[parentKey] = list = new();
+                                tagMap[parentKey] = list = [];
                             // Remove comment on tag name itself.
                             if (tag.Name.Contains(" - "))
                                 tag.Name = tag.Name.Split(" - ").First().Trim();
@@ -204,7 +205,7 @@ public class ShokoAPIManager : IDisposable
                                 // Make sure the parent's children exists in our map.
                                 var parentKey = $"Shokofin:{lastParentTag.Id}";
                                 if (!tagMap!.TryGetValue(parentKey, out var children))
-                                    tagMap[parentKey] = children = new();
+                                    tagMap[parentKey] = children = [];
 
                                 // Add the child tag to the parent's children if needed.
                                 var childTag = children.Find(t => string.Equals(name, t.Name, StringComparison.InvariantCultureIgnoreCase));
@@ -228,7 +229,7 @@ public class ShokoAPIManager : IDisposable
                             // Same as above, but for the last parent, be it the root or any other layer.
                             var lastParentKey = $"Shokofin:{lastParentTag.Id}";
                             if (!tagMap!.TryGetValue(lastParentKey, out var lastChildren))
-                                tagMap[lastParentKey] = lastChildren = new();
+                                tagMap[lastParentKey] = lastChildren = [];
 
                             if (!lastChildren.Any(childTag => string.Equals(childTag.Name, tag.Name, StringComparison.InvariantCultureIgnoreCase)))
                                 lastChildren.Add(new() {
@@ -360,11 +361,11 @@ public class ShokoAPIManager : IDisposable
                 var pathSet = new HashSet<string>();
                 var episodeIds = new HashSet<string>();
                 foreach (var file in await APIClient.GetFilesForSeries(seriesId).ConfigureAwait(false)) {
-                    if (file.CrossReferences.Count == 1)
+                    if (file.CrossReferences.Count == 1 && file.CrossReferences[0] is { } xref && xref.Series.Shoko.HasValue && xref.Series.Shoko.ToString() == seriesId)
                         foreach (var fileLocation in file.Locations)
                             pathSet.Add((Path.GetDirectoryName(fileLocation.RelativePath) ?? string.Empty) + Path.DirectorySeparatorChar);
-                    var xref = file.CrossReferences.First(xref => xref.Series.Shoko.HasValue && xref.Series.Shoko.ToString() == seriesId);
-                    foreach (var episodeXRef in xref.Episodes.Where(e => e.Shoko.HasValue))
+                    xref = file.CrossReferences.FirstOrDefault(xref => xref.Series.Shoko.HasValue && xref.Series.Shoko.ToString() == seriesId);
+                    foreach (var episodeXRef in xref?.Episodes.Where(e => e.Shoko.HasValue) ?? [])
                         episodeIds.Add(episodeXRef.Shoko!.Value.ToString());
                 }
 
@@ -506,7 +507,7 @@ public class ShokoAPIManager : IDisposable
         return await CreateFileInfo(file, fileId, seriesId).ConfigureAwait(false);
     }
 
-    private static readonly EpisodeType[] EpisodePickOrder = { EpisodeType.Special, EpisodeType.Normal, EpisodeType.Other };
+    private static readonly EpisodeType[] EpisodePickOrder = [EpisodeType.Special, EpisodeType.Normal, EpisodeType.Other];
 
     private Task<FileInfo> CreateFileInfo(File file, string fileId, string seriesId)
         => DataCache.GetOrCreateAsync(
@@ -746,7 +747,6 @@ public class ShokoAPIManager : IDisposable
                         .Select(id => APIClient.GetEpisodesFromSeries(id).ContinueWith(task => task.Result.List.Select(e => CreateEpisodeInfo(e, e.IDs.Shoko.ToString()))))
                 ).ConfigureAwait(false))
                     .SelectMany(list => list)
-                    .OrderBy(episode => episode.AniDB.AirDate)
                     .ToList();
 
                 SeasonInfo seasonInfo;

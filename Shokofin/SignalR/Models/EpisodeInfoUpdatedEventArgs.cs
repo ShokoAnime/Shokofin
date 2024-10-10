@@ -35,19 +35,19 @@ public class EpisodeInfoUpdatedEventArgs : IMetadataUpdatedEventArgs
     /// Shoko episode ids affected by this update.
     /// </summary>
     [JsonInclude, JsonPropertyName("ShokoEpisodeIDs")]
-    public List<int> EpisodeIds { get; set; } = new();
+    public List<int> EpisodeIds { get; set; } = [];
 
     /// <summary>
     /// Shoko series ids affected by this update.
     /// </summary>
     [JsonInclude, JsonPropertyName("ShokoSeriesIDs")]
-    public List<int> SeriesIds { get; set; } = new();
+    public List<int> SeriesIds { get; set; } = [];
 
     /// <summary>
     /// Shoko group ids affected by this update.
     /// </summary>
     [JsonInclude, JsonPropertyName("ShokoGroupIDs")]
-    public List<int> GroupIds { get; set; } = new();
+    public List<int> GroupIds { get; set; } = [];
 
     #region IMetadataUpdatedEventArgs Impl.
 

@@ -7,6 +7,8 @@ namespace Shokofin.Utils;
 
 public class UsageTracker
 {
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
+    
     private readonly ILogger<UsageTracker> Logger;
 
     private readonly object LockObj = new();
@@ -19,11 +21,11 @@ public class UsageTracker
 
     public event EventHandler? Stalled;
 
-    public UsageTracker(ILogger<UsageTracker> logger, TimeSpan timeout)
+    public UsageTracker(ILogger<UsageTracker> logger)
     {
         Logger = logger;
-        Timeout = timeout;
-        StalledTimer = new(timeout.TotalMilliseconds) {
+        Timeout = DefaultTimeout;
+        StalledTimer = new(DefaultTimeout.TotalMilliseconds) {
             AutoReset = false,
             Enabled = false,
         };

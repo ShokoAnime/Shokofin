@@ -9,7 +9,9 @@ public class LinkGenerationResult
 {
     private DateTime CreatedAt { get; init; } = DateTime.Now;
 
-    public ConcurrentBag<string> Paths { get; init; } = new();
+    public ConcurrentBag<string> Paths { get; init; } = [];
+
+    public ConcurrentBag<string> RemovedPaths { get; init; } = [];
 
     public int Total =>
         TotalVideos + TotalSubtitles;
@@ -81,10 +83,15 @@ public class LinkGenerationResult
         foreach (var path in b.Paths)
             a.Paths.Add(path);
 
+        var removedPaths = a.RemovedPaths;
+        foreach (var path in b.RemovedPaths)
+            removedPaths.Add(path);
+
         return new()
         {
             CreatedAt = a.CreatedAt,
             Paths = paths,
+            RemovedPaths = removedPaths,
             CreatedVideos = a.CreatedVideos + b.CreatedVideos,
             FixedVideos = a.FixedVideos + b.FixedVideos,
             SkippedVideos = a.SkippedVideos + b.SkippedVideos,

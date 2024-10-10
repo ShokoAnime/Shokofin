@@ -319,91 +319,68 @@ public static class TagFilter
     }
 
     private static ProviderName[] GetOrderedProductionLocationProviders()
-        => Plugin.Instance.Configuration.ProductionLocationOverride
-            ? Plugin.Instance.Configuration.ProductionLocationOrder.Where((t) => Plugin.Instance.Configuration.ProductionLocationList.Contains(t)).ToArray()
-            : new[] { ProviderName.AniDB, ProviderName.TMDB };
+        => Plugin.Instance.Configuration.ProductionLocationOrder.Where((t) => Plugin.Instance.Configuration.ProductionLocationList.Contains(t)).ToArray();
 
 #pragma warning disable IDE0060
-    public static IReadOnlyList<string> GetMovieContentRating(SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
+    public static string[] GetMovieProductionLocations(SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
 #pragma warning restore IDE0060
     {
         // TODO: Add TMDB movie linked to episode content rating here.
         foreach (var provider in GetOrderedProductionLocationProviders()) {
-            var title = provider switch {
-                ProviderName.AniDB => seasonInfo.ProductionLocations,
+            var locations = provider switch {
+                ProviderName.AniDB => seasonInfo.ProductionLocations.ToArray(),
                 // TODO: Add TMDB series content rating here.
-                _ => Array.Empty<string>(),
+                _ => [],
             };
-            if (title.Count > 0)
-                return title;
+            if (locations.Length > 0)
+                return locations;
         }
-        return Array.Empty<string>();
+        return [];
     }
 
-    public static IReadOnlyList<string> GetSeasonContentRating(SeasonInfo seasonInfo)
+    public static string[] GetSeasonProductionLocations(SeasonInfo seasonInfo)
+    {
+        foreach (var provider in GetOrderedProductionLocationProviders()) {
+            var locations = provider switch {
+                ProviderName.AniDB => seasonInfo.ProductionLocations.ToArray(),
+                // TODO: Add TMDB series content rating here.
+                _ => [],
+            };
+            if (locations.Length > 0)
+                return locations;
+        }
+        return [];
+    }
+
+    public static string[] GetShowProductionLocations(ShowInfo showInfo)
     {
         foreach (var provider in GetOrderedProductionLocationProviders()) {
             var title = provider switch {
-                ProviderName.AniDB => seasonInfo.ProductionLocations,
+                ProviderName.AniDB => showInfo.ProductionLocations.ToArray(),
                 // TODO: Add TMDB series content rating here.
-                _ => Array.Empty<string>(),
+                _ => [],
             };
-            if (title.Count > 0)
+            if (title.Length > 0)
                 return title;
         }
-        return Array.Empty<string>();
-    }
-
-    public static IReadOnlyList<string> GetShowContentRating(ShowInfo showInfo)
-    {
-        foreach (var provider in GetOrderedProductionLocationProviders()) {
-            var title = provider switch {
-                ProviderName.AniDB => showInfo.ProductionLocations,
-                // TODO: Add TMDB series content rating here.
-                _ => Array.Empty<string>(),
-            };
-            if (title.Count > 0)
-                return title;
-        }
-        return Array.Empty<string>();
+        return [];
     }
 
     public static string[] FilterTags(IReadOnlyDictionary<string, ResolvedTag> tags)
     {
         var config = Plugin.Instance.Configuration;
-        if (!config.TagOverride)
-            return FilterInternal(
-                tags,
-                TagSource.ContentIndicators | TagSource.Dynamic | TagSource.DynamicCast | TagSource.DynamicEnding | TagSource.Elements |
-                TagSource.ElementsPornographyAndSexualAbuse | TagSource.ElementsTropesAndMotifs | TagSource.Fetishes |
-                TagSource.OriginProduction | TagSource.OriginDevelopment | TagSource.SourceMaterial | TagSource.SettingPlace |
-                TagSource.SettingTimePeriod | TagSource.SettingTimeSeason | TagSource.TargetAudience | TagSource.TechnicalAspects |
-                TagSource.TechnicalAspectsAdaptions | TagSource.TechnicalAspectsAwards | TagSource.TechnicalAspectsMultiAnimeProjects |
-                TagSource.Themes | TagSource.ThemesDeath | TagSource.ThemesTales | TagSource.CustomTags,
-                TagIncludeFilter.Parent | TagIncludeFilter.Child | TagIncludeFilter.Abstract | TagIncludeFilter.Weightless | TagIncludeFilter.Weighted,
-                TagWeight.Weightless,
-                0
-            );
         return FilterInternal(tags, config.TagSources, config.TagIncludeFilters, config.TagMinimumWeight, config.TagMaximumDepth);
     }
 
     public static string[] FilterGenres(IReadOnlyDictionary<string, ResolvedTag> tags)
     {
         var config = Plugin.Instance.Configuration;
-        if (!config.GenreOverride)
-            return FilterInternal(
-                tags,
-                TagSource.SourceMaterial | TagSource.TargetAudience | TagSource.Elements,
-                TagIncludeFilter.Parent | TagIncludeFilter.Child | TagIncludeFilter.Abstract | TagIncludeFilter.Weightless | TagIncludeFilter.Weighted,
-                TagWeight.Four,
-                1
-            );
         return FilterInternal(tags, config.GenreSources, config.GenreIncludeFilters, config.GenreMinimumWeight, config.GenreMaximumDepth);
     }
 
-    private static readonly HashSet<TagSource> AllFlagsToUse = Enum.GetValues<TagSource>().Except(new[] { TagSource.CustomTags }).ToHashSet();
+    private static readonly HashSet<TagSource> AllFlagsToUse = Enum.GetValues<TagSource>().Except([TagSource.CustomTags]).ToHashSet();
 
-    private static readonly HashSet<TagSource> AllFlagsToUseForCustomTags = AllFlagsToUse.Except(new[] { TagSource.SourceMaterial, TagSource.TargetAudience }).ToHashSet();
+    private static readonly HashSet<TagSource> AllFlagsToUseForCustomTags = AllFlagsToUse.Except([TagSource.SourceMaterial, TagSource.TargetAudience]).ToHashSet();
 
     private static string[] FilterInternal(IReadOnlyDictionary<string, ResolvedTag> tags, TagSource source, TagIncludeFilter includeFilter, TagWeight minWeight = TagWeight.Weightless, int maxDepth = 0)
     {
@@ -431,7 +408,7 @@ public static class TagFilter
     private static HashSet<string> GetTagsFromSource(IReadOnlyDictionary<string, ResolvedTag> tags, TagSource source, TagIncludeFilter includeFilter, TagWeight minWeight, int maxDepth)
     {
         if (source is TagSource.SourceMaterial)
-            return new() { GetSourceMaterial(tags) };
+            return [GetSourceMaterial(tags)];
 
         var tagSet = new HashSet<string>();
         var exceptTags = new List<ResolvedTag>();
@@ -519,29 +496,29 @@ public static class TagFilter
     public static string[] GetProductionCountriesFromTags(IReadOnlyDictionary<string, ResolvedTag> tags)
     {
         if (!tags.TryGetValue("/origin", out var origin))
-            return Array.Empty<string>();
+            return [];
 
         var productionCountries = new List<string>();
         foreach (var childTag in origin.Children.Keys) {
             productionCountries.AddRange(childTag.ToLowerInvariant() switch {
-                "american-japanese co-production" => new string[] {"Japan", "United States of America" },
-                "chinese production" => new string[] {"China" },
-                "french-chinese co-production" => new string[] {"France", "China" },
-                "french-japanese co-production" => new string[] {"Japan", "France" },
-                "indo-japanese co-production" => new string[] {"Japan", "India" },
-                "japanese production" => new string[] {"Japan" },
-                "korean-japanese co-production" => new string[] {"Japan", "Republic of Korea" },
-                "north korean production" => new string[] {"Democratic People's Republic of Korea" },
-                "polish-japanese co-production" => new string[] {"Japan", "Poland" },
-                "russian-japanese co-production" => new string[] {"Japan", "Russia" },
-                "saudi arabian-japanese co-production" => new string[] {"Japan", "Saudi Arabia" },
-                "italian-japanese co-production" => new string[] {"Japan", "Italy" },
-                "singaporean production" => new string[] {"Singapore" },
-                "sino-japanese co-production" => new string[] {"Japan", "China" },
-                "south korea production" => new string[] {"Republic of Korea" },
-                "taiwanese production" => new string[] {"Taiwan" },
-                "thai production" => new string[] {"Thailand" },
-                _ => Array.Empty<string>(),
+                "american-japanese co-production" => new string[] { "Japan", "United States of America" },
+                "chinese production" => ["China"],
+                "french-chinese co-production" => ["France", "China"],
+                "french-japanese co-production" => ["Japan", "France"],
+                "indo-japanese co-production" => ["Japan", "India"],
+                "japanese production" => ["Japan"],
+                "korean-japanese co-production" => ["Japan", "Republic of Korea"],
+                "north korean production" => ["Democratic People's Republic of Korea"],
+                "polish-japanese co-production" => ["Japan", "Poland"],
+                "russian-japanese co-production" => ["Japan", "Russia"],
+                "saudi arabian-japanese co-production" => ["Japan", "Saudi Arabia"],
+                "italian-japanese co-production" => ["Japan", "Italy"],
+                "singaporean production" => ["Singapore"],
+                "sino-japanese co-production" => ["Japan", "China"],
+                "south korea production" => ["Republic of Korea"],
+                "taiwanese production" => ["Taiwan"],
+                "thai production" => ["Thailand"],
+                _ => [],
             });
         }
         return productionCountries

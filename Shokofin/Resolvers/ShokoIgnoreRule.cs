@@ -65,7 +65,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
             return false;
 
         // Assume anything within the VFS is already okay.
-        if (fileInfo.FullName.StartsWith(Plugin.Instance.VirtualRoot))
+        if (Plugin.Instance.AllVirtualRoots.Any(fileInfo.FullName.StartsWith))
             return false;
 
         Guid? trackerId = null;
@@ -89,7 +89,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
             var (mediaFolder, partialPath) = ApiManager.FindMediaFolder(fullPath, parent);
 
             // Ignore any media folders that aren't mapped to shoko.
-            var mediaFolderConfig = ConfigurationService.GetOrCreateConfigurationForMediaFolder(mediaFolder);
+            var mediaFolderConfig = await ConfigurationService.GetOrCreateConfigurationForMediaFolder(mediaFolder);
             if (!mediaFolderConfig.IsMapped) {
                 Logger.LogDebug("Skipped media folder for path {Path} (MediaFolder={MediaFolderId})", fileInfo.FullName, mediaFolderConfig.MediaFolderId);
                 return false;
@@ -99,7 +99,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule
             // because the VFS is pre-filtered, and we should **never** reach
             // this point except for the folders in the root of the media folder
             // that we're not even going to use.
-            if (mediaFolderConfig.IsVirtualFileSystemEnabled)
+            if (mediaFolderConfig.IsVirtualFileSystemEnabled || mediaFolderConfig.IsVirtualRoot)
                 return true;
 
             var shouldIgnore = mediaFolderConfig.LibraryFilteringMode switch {

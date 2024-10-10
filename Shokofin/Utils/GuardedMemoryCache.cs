@@ -80,6 +80,10 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
             throw;
         }
+        catch (Exception ex) {
+            Logger.LogWarning(ex, "Got an unexpected exception for key: {Key}", key);
+            throw;
+        }
     }
 
     public async Task<TItem> GetOrCreateAsync<TItem>(object key, Action<TItem> foundAction, Func<Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
@@ -122,6 +126,10 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
             throw;
         }
+        catch (Exception ex) {
+            Logger.LogWarning(ex, "Got an unexpected exception for key: {Key}", key);
+            throw;
+        }
     }
 
     public TItem GetOrCreate<TItem>(object key, Func<TItem> createFactory, MemoryCacheEntryOptions? createOptions = null)
@@ -159,6 +167,10 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
 
             throw;
         }
+        catch (Exception ex) {
+            Logger.LogWarning(ex, "Got an unexpected exception for key: {Key}", key);
+            throw;
+        }
     }
 
     public async Task<TItem> GetOrCreateAsync<TItem>(object key, Func<Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null)
@@ -194,6 +206,10 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache
                 return value;
             }
 
+            throw;
+        }
+        catch (Exception ex) {
+            Logger.LogWarning(ex, "Got an unexpected exception for key: {Key}", key);
             throw;
         }
     }

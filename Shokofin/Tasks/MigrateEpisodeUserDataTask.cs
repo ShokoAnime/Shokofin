@@ -17,8 +17,24 @@ using Shokofin.Sync;
 
 namespace Shokofin.Tasks;
 
-public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduledTask
+/// <summary>
+/// Migrate user watch data for episodes store in Jellyfin to the newest id namespace.
+/// </summary>
+public class MigrateEpisodeUserDataTask(
+    ILogger<MigrateEpisodeUserDataTask> logger,
+    IUserDataManager userDataManager,
+    IUserManager userManager,
+    ILibraryManager libraryManager
+) : IScheduledTask, IConfigurableScheduledTask
 {
+    private readonly ILogger<MigrateEpisodeUserDataTask> _logger = logger;
+
+    private readonly IUserDataManager _userDataManager = userDataManager;
+
+    private readonly IUserManager _userManager = userManager;
+
+    private readonly ILibraryManager _libraryManager = libraryManager;
+
     /// <inheritdoc />
     public string Name => "Migrate Episode User Watch Data";
 
@@ -35,41 +51,22 @@ public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduled
     public bool IsHidden => false;
 
     /// <inheritdoc />
-    public bool IsEnabled => false;
+    public bool IsEnabled => true;
 
     /// <inheritdoc />
     public bool IsLogged => true;
 
-    private readonly ILogger<MigrateEpisodeUserDataTask> Logger;
-
-    private readonly IUserDataManager UserDataManager;
-
-    private readonly IUserManager UserManager;
-
-    private readonly ILibraryManager LibraryManager;
-
-    public MigrateEpisodeUserDataTask(
-        ILogger<MigrateEpisodeUserDataTask> logger,
-        IUserDataManager userDataManager,
-        IUserManager userManager,
-        ILibraryManager libraryManager
-    )
-    {
-        Logger = logger;
-        UserDataManager = userDataManager;
-        UserManager = userManager;
-        LibraryManager = libraryManager;
-    }
-
+    /// <inheritdoc />
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-        => Array.Empty<TaskTriggerInfo>();
+        => [];
 
+    /// <inheritdoc />
     public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         var foundEpisodeCount = 0;
         var seriesDict = new Dictionary<string, (Series series, List<Episode> episodes)>();
-        var users = UserManager.Users.ToList();
-        var allEpisodes = LibraryManager.GetItemList(new InternalItemsQuery {
+        var users = _userManager.Users.ToList();
+        var allEpisodes = _libraryManager.GetItemList(new InternalItemsQuery {
             IncludeItemTypes = [BaseItemKind.Episode],
             HasAnyProviderId = new Dictionary<string, string> { { ShokoFileId.Name, string.Empty } },
             IsFolder = false,
@@ -82,7 +79,7 @@ public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduled
         })
             .OfType<Episode>()
             .ToList();
-        Logger.LogDebug("Attempting to migrate user watch data across {EpisodeCount} episodes and {UserCount} users.", allEpisodes.Count, users.Count);
+        _logger.LogDebug("Attempting to migrate user watch data across {EpisodeCount} episodes and {UserCount} users.", allEpisodes.Count, users.Count);
         foreach (var episode in allEpisodes) {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -98,11 +95,11 @@ public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduled
             foundEpisodeCount++;
         }
 
-        Logger.LogInformation("Found {SeriesCount} series and {EpisodeCount} episodes across {AllEpisodeCount} total episodes to search for user watch data to migrate.", seriesDict.Count, foundEpisodeCount, allEpisodes.Count);
+        _logger.LogInformation("Found {SeriesCount} series and {EpisodeCount} episodes across {AllEpisodeCount} total episodes to search for user watch data to migrate.", seriesDict.Count, foundEpisodeCount, allEpisodes.Count);
         var savedCount = 0;
         var numComplete = 0;
         var numTotal = foundEpisodeCount * users.Count;
-        var userDataDict = users.ToDictionary(user => user, user => (UserDataManager.GetAllUserData(user.Id).DistinctBy(data => data.Key).ToDictionary(data => data.Key), new List<UserItemData>()));
+        var userDataDict = users.ToDictionary(user => user, user => (_userDataManager.GetAllUserData(user.Id).DistinctBy(data => data.Key).ToDictionary(data => data.Key), new List<UserItemData>()));
         var userDataToRemove = new List<UserItemData>();
         foreach (var (seriesId, (series, episodes)) in seriesDict) {
             cancellationToken.ThrowIfCancellationRequested();
@@ -117,7 +114,7 @@ public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduled
                 // 10.8 id format
                 .Prepend($"INVALID-BUT-DO-NOT-TOUCH:{seriesId}")
                 .ToList();
-            Logger.LogTrace("Migrating user watch data for series {SeriesName}. (Series={SeriesId},Primary={PrimaryKey},Search={SearchKeys})", series.Name, seriesId, primaryKey, keysToSearch);
+            _logger.LogTrace("Migrating user watch data for series {SeriesName}. (Series={SeriesId},Primary={PrimaryKey},Search={SearchKeys})", series.Name, seriesId, primaryKey, keysToSearch);
             foreach (var episode in episodes) {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -127,15 +124,15 @@ public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduled
                 var suffix = episode.ParentIndexNumber!.Value.ToString("000", CultureInfo.InvariantCulture) + episode.IndexNumber!.Value.ToString("000", CultureInfo.InvariantCulture);
                 var videoUserDataKeys = (episode as Video).GetUserDataKeys();
                 var episodeKeysToSearch = keysToSearch.Select(key => key + suffix).Prepend(primaryKey + suffix).Concat(videoUserDataKeys).ToList();
-                Logger.LogTrace("Migrating user watch data for season {SeasonNumber}, episode {EpisodeNumber} - {EpisodeName}. (Series={SeriesId},File={FileId},Search={SearchKeys})", episode.ParentIndexNumber, episode.IndexNumber, episode.Name, seriesId, fileId, episodeKeysToSearch);
+                _logger.LogTrace("Migrating user watch data for season {SeasonNumber}, episode {EpisodeNumber} - {EpisodeName}. (Series={SeriesId},File={FileId},Search={SearchKeys})", episode.ParentIndexNumber, episode.IndexNumber, episode.Name, seriesId, fileId, episodeKeysToSearch);
                 foreach (var (user, (dataDict, dataList)) in userDataDict) {
-                    var userData = UserDataManager.GetUserData(user, episode);
+                    var userData = _userDataManager.GetUserData(user, episode);
                     foreach (var searchKey in episodeKeysToSearch) {
                         if (!dataDict.TryGetValue(searchKey, out var searchUserData))
                             continue;
 
                         if (userData.CopyFrom(searchUserData)) {
-                            Logger.LogInformation("Found user data to migrate. (Series={SeriesId},File={FileId},Search={SearchKeys},Key={SearchKey},User={UserId})", seriesId, fileId, episodeKeysToSearch, searchKey, user.Id);
+                            _logger.LogInformation("Found user data to migrate. (Series={SeriesId},File={FileId},Search={SearchKeys},Key={SearchKey},User={UserId})", seriesId, fileId, episodeKeysToSearch, searchKey, user.Id);
                             dataList.Add(userData);
                             savedCount++;
                         }
@@ -154,14 +151,14 @@ public class MigrateEpisodeUserDataTask : IScheduledTask, IConfigurableScheduled
         // Last attempt to cancel before we save all the changes.
         cancellationToken.ThrowIfCancellationRequested();
 
-        Logger.LogDebug("Saving {UserDataCount} user watch data entries across {UserCount} users", savedCount, users.Count);
+        _logger.LogDebug("Saving {UserDataCount} user watch data entries across {UserCount} users", savedCount, users.Count);
         foreach (var (user, (dataDict, dataList)) in userDataDict) {
             if (dataList.Count is 0)
                 continue;
 
-            UserDataManager.SaveAllUserData(user.Id, dataList.ToArray(), CancellationToken.None);
+            _userDataManager.SaveAllUserData(user.Id, dataList.ToArray(), CancellationToken.None);
         }
-        Logger.LogInformation("Saved {UserDataCount} user watch data entries across {UserCount} users", savedCount, users.Count);
+        _logger.LogInformation("Saved {UserDataCount} user watch data entries across {UserCount} users", savedCount, users.Count);
 
         progress.Report(100);
         return Task.CompletedTask;

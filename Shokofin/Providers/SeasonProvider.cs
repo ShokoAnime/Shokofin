@@ -82,7 +82,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
 
             var offset = Math.Abs(seasonNumber - baseSeasonNumber);
 
-            result.Item = CreateMetadata(seasonInfo, seasonNumber, offset, info.MetadataLanguage);
+            result.Item = CreateMetadata(seasonInfo, seasonNumber, offset, info.MetadataLanguage, info.MetadataCountryCode);
             result.HasMetadata = true;
             result.ResetPeople();
             foreach (var person in seasonInfo.Staff)
@@ -91,7 +91,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
             return result;
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            Logger.LogError(ex, "Threw unexpectedly while refreshing season {SeasonNumber}; {Message} (Path={Path},Series={SeriesId})", info.IndexNumber, ex.Message, info.Path, seriesId);
             return new MetadataResult<Season>();
         }
         finally {
@@ -99,13 +99,13 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
         }
     }
 
-    public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, string metadataLanguage)
-        => CreateMetadata(seasonInfo, seasonNumber, offset, metadataLanguage, null, Guid.Empty);
+    public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, string metadataLanguage, string metadataCountryCode)
+        => CreateMetadata(seasonInfo, seasonNumber, offset, metadataLanguage, metadataCountryCode, null, Guid.Empty);
 
     public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, Series series, Guid seasonId)
-        => CreateMetadata(seasonInfo, seasonNumber, offset, series.GetPreferredMetadataLanguage(), series, seasonId);
+        => CreateMetadata(seasonInfo, seasonNumber, offset, series.GetPreferredMetadataLanguage(), series.GetPreferredMetadataCountryCode(), series, seasonId);
 
-    public static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, string metadataLanguage, Series? series, Guid seasonId)
+    private static Season CreateMetadata(Info.SeasonInfo seasonInfo, int seasonNumber, int offset, string metadataLanguage, string metadataCountryCode, Series? series, Guid seasonId)
     {
         var (displayTitle, alternateTitle) = Text.GetSeasonTitles(seasonInfo, offset, metadataLanguage);
         var sortTitle = $"S{seasonNumber} - {seasonInfo.Shoko.Name}";
@@ -119,15 +119,15 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
                 ForcedSortName = sortTitle,
                 Id = seasonId,
                 IsVirtualItem = true,
-                Overview = Text.GetDescription(seasonInfo),
+                Overview = Text.GetDescription(seasonInfo, metadataLanguage),
                 PremiereDate = seasonInfo.AniDB.AirDate,
                 EndDate = seasonInfo.AniDB.EndDate,
                 ProductionYear = seasonInfo.AniDB.AirDate?.Year,
                 Tags = seasonInfo.Tags.ToArray(),
                 Genres = seasonInfo.Genres.ToArray(),
                 Studios = seasonInfo.Studios.ToArray(),
-                ProductionLocations = TagFilter.GetSeasonContentRating(seasonInfo).ToArray(),
-                OfficialRating = ContentRating.GetSeasonContentRating(seasonInfo),
+                ProductionLocations = TagFilter.GetSeasonProductionLocations(seasonInfo),
+                OfficialRating = ContentRating.GetSeasonContentRating(seasonInfo, metadataCountryCode),
                 CommunityRating = seasonInfo.AniDB.Rating?.ToFloat(10),
                 SeriesId = series.Id,
                 SeriesName = series.Name,
@@ -143,15 +143,15 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
                 IndexNumber = seasonNumber,
                 SortName = sortTitle,
                 ForcedSortName = sortTitle,
-                Overview = Text.GetDescription(seasonInfo),
+                Overview = Text.GetDescription(seasonInfo, metadataLanguage),
                 PremiereDate = seasonInfo.AniDB.AirDate,
                 EndDate = seasonInfo.AniDB.EndDate,
                 ProductionYear = seasonInfo.AniDB.AirDate?.Year,
                 Tags = seasonInfo.Tags.ToArray(),
                 Genres = seasonInfo.Genres.ToArray(),
                 Studios = seasonInfo.Studios.ToArray(),
-                ProductionLocations = TagFilter.GetSeasonContentRating(seasonInfo).ToArray(),
-                OfficialRating = ContentRating.GetSeasonContentRating(seasonInfo),
+                ProductionLocations = TagFilter.GetSeasonProductionLocations(seasonInfo),
+                OfficialRating = ContentRating.GetSeasonContentRating(seasonInfo, metadataCountryCode),
                 CommunityRating = seasonInfo.AniDB.Rating?.ToFloat(10),
             };
         }
@@ -164,7 +164,7 @@ public class SeasonProvider : IRemoteMetadataProvider<Season, SeasonInfo>, IHasO
     }
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeasonInfo searchInfo, CancellationToken cancellationToken)
-        => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
+        => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);

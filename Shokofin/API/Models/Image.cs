@@ -16,24 +16,30 @@ public class Image
     public ImageType Type { get; set; } = ImageType.Poster;
 
     /// <summary>
-    /// The image's id. Usually an int, but in the case of <see cref="ImageType.Static"/> resources
-    /// then it is the resource name.
+    /// The image's id.
     /// </summary>
-    public string ID { get; set; } = string.Empty;
-
+    [JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
+    public int ID { get; set; } = 0;
 
     /// <summary>
-    /// True if the image is marked as the default for the given <see cref="ImageType"/>.
-    /// Only one default is possible for a given <see cref="ImageType"/>.
+    /// True if the image is marked as the preferred for the given
+    /// <see cref="ImageType"/>. Only one preferred is possible for a given
+    /// <see cref="ImageType"/>.
     /// </summary>
     [JsonPropertyName("Preferred")]
-    public bool IsDefault { get; set; } = false;
+    public bool IsPreferred { get; set; } = false;
 
     /// <summary>
-    /// True if the image has been disabled. You must explicitly ask for these, for obvious reasons.
+    /// True if the image has been disabled. You must explicitly ask for these,
+    /// for hopefully obvious reasons.
     /// </summary>
     [JsonPropertyName("Disabled")]
     public bool IsDisabled { get; set; } = false;
+
+    /// <summary>
+    /// The language code for the image, if available.
+    /// </summary>
+    public string? LanguageCode { get; set; } = null;
 
     /// <summary>
     /// Width of the image, if available.
@@ -68,8 +74,8 @@ public class Image
     /// set up, but better than nothing.
     /// </remarks>
     /// <returns>The image URL</returns>
-    public string ToURLString()
-        => new Uri(new Uri(Web.ImageHostUrl.Value), $"/Plugin/Shokofin/Host/Image/{Source}/{Type}/{ID}").ToString();
+    public string ToURLString(bool internalUrl = false)
+        => new Uri(new Uri(internalUrl ? Plugin.Instance.BaseUrl : Web.ImageHostUrl.BaseUrl), $"{(internalUrl ? Plugin.Instance.BasePath : Web.ImageHostUrl.BasePath)}/Plugin/Shokofin/Host/Image/{Source}/{Type}/{ID}").ToString();
 }
 
 /// <summary>
@@ -123,7 +129,17 @@ public enum ImageType
     /// <summary>
     ///
     /// </summary>
+    Thumbnail = Thumb,
+
+    /// <summary>
+    ///
+    /// </summary>
     Fanart = 4,
+
+    /// <summary>
+    ///
+    /// </summary>
+    Backdrop = Fanart,
 
     /// <summary>
     ///
@@ -136,7 +152,7 @@ public enum ImageType
     Staff = 6,
 
     /// <summary>
-    /// Static resources are only valid if the <see cref="Image.Source"/> is set to <see cref="ImageSource.Shoko"/>.
+    /// Clear-text logo.
     /// </summary>
-    Static = 100
+    Logo = 7,
 }

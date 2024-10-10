@@ -52,23 +52,20 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrde
             Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},ExtraSeries={ExtraIds})", displayTitle, file.Id, episode.Id, season.Id, season.ExtraIds);
 
             bool isMultiEntry = season.Shoko.Sizes.Total.Episodes > 1;
-            bool isMainEntry = episode.AniDB.Type == API.Models.EpisodeType.Normal && episode.Shoko.Name.Trim() == "Complete Movie";
             var rating = isMultiEntry ? episode.AniDB.Rating.ToFloat(10) : season.AniDB.Rating.ToFloat(10);
 
             result.Item = new Movie {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
                 PremiereDate = episode.AniDB.AirDate,
-                // Use the file description if collection contains more than one movie and the file is not the main entry, otherwise use the collection description.
-                Overview = isMultiEntry && !isMainEntry ? Text.GetDescription(episode) : Text.GetDescription(season),
+                Overview = Text.GetMovieDescription(episode, season, info.MetadataLanguage),
                 ProductionYear = episode.AniDB.AirDate?.Year,
                 Tags = season.Tags.ToArray(),
                 Genres = season.Genres.ToArray(),
                 Studios = season.Studios.ToArray(),
-                ProductionLocations = TagFilter.GetMovieContentRating(season, episode).ToArray(),
-                OfficialRating = ContentRating.GetMovieContentRating(season, episode),
+                ProductionLocations = TagFilter.GetMovieProductionLocations(season, episode),
+                OfficialRating = ContentRating.GetMovieContentRating(season, episode, info.MetadataCountryCode),
                 CommunityRating = rating,
-                DateCreated = file.Shoko.ImportedAt ?? file.Shoko.CreatedAt,
             };
             result.Item.SetProviderId(ShokoFileId.Name, file.Id);
             result.Item.SetProviderId(ShokoEpisodeId.Name, episode.Id);
@@ -83,7 +80,7 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrde
             return result;
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
+            Logger.LogError(ex, "Threw unexpectedly while refreshing {Path}; {Message}", info.Path, ex.Message);
             return new MetadataResult<Movie>();
         }
         finally {
@@ -92,7 +89,7 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrde
     }
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(MovieInfo searchInfo, CancellationToken cancellationToken)
-        => Task.FromResult<IEnumerable<RemoteSearchResult>>(new List<RemoteSearchResult>());
+        => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
         => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);

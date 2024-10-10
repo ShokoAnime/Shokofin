@@ -12,7 +12,17 @@ public class Episode
     /// </summary>
     public EpisodeIDs IDs { get; set; } = new();
 
+    /// <summary>
+    /// The preferred name of the episode based on the selected episode language
+    /// settings on the server.
+    /// </summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The preferred description of the episode based on the selected episode
+    /// language settings on the server.
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
 
     /// <summary>
     /// The duration of the episode.
@@ -42,12 +52,12 @@ public class Episode
     /// is included in the data to add.
     /// </summary>
     [JsonPropertyName("TvDB")]
-    public List<TvDB> TvDBEntityList { get; set; } = new();
+    public List<TvDB> TvDBEntityList { get; set; } = [];
 
     /// <summary>
     /// File cross-references for the episode.
     /// </summary>
-    public List<CrossReference.EpisodeCrossReferenceIDs> CrossReferences { get; set; } = new();
+    public List<CrossReference.EpisodeCrossReferenceIDs> CrossReferences { get; set; } = [];
 
     public class AniDB
     {
@@ -66,7 +76,7 @@ public class Episode
 
         public DateTime? AirDate { get; set; }
 
-        public List<Title> Titles { get; set; } = new();
+        public List<Title> Titles { get; set; } = [];
 
         public string Description { get; set; } = string.Empty;
 
@@ -75,31 +85,19 @@ public class Episode
 
     public class TvDB
     {
-        [JsonPropertyName("ID")]
-        public int Id { get; set; }
-
         [JsonPropertyName("Season")]
         public int SeasonNumber { get; set; }
 
         [JsonPropertyName("Number")]
         public int EpisodeNumber { get; set; }
 
-        [JsonPropertyName("AbsoluteNumber")]
-        public int AbsoluteEpisodeNumber { get; set; }
-
-        public string Title { get; set; } = string.Empty;
-
         public string Description { get; set; } = string.Empty;
-
-        public DateTime? AirDate { get; set; }
 
         public int? AirsAfterSeason { get; set; }
 
         public int? AirsBeforeSeason { get; set; }
 
         public int? AirsBeforeEpisode { get; set; }
-
-        public Rating? Rating { get; set; }
 
         public Image Thumbnail { get; set; } = new();
     }
@@ -110,7 +108,7 @@ public class Episode
 
         public int AniDB { get; set; }
 
-        public List<int> TvDB { get; set; } = new();
+        public List<int> TvDB { get; set; } = [];
     }
 }
 

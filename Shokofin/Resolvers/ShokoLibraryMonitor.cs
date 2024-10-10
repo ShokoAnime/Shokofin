@@ -108,7 +108,7 @@ public class ShokoLibraryMonitor : IHostedService
                 continue;
 
             var libraryOptions = LibraryManager.GetLibraryOptions(mediaFolder);
-            if (libraryOptions != null && libraryOptions.EnableRealtimeMonitor && mediaConfig.IsVirtualFileSystemEnabled)
+            if (libraryOptions != null && !mediaConfig.IsVirtualRoot && libraryOptions.EnableRealtimeMonitor && mediaConfig.IsVirtualFileSystemEnabled)
                 StartWatchingMediaFolder(mediaFolder, mediaConfig);
         }
     }
@@ -134,7 +134,7 @@ public class ShokoLibraryMonitor : IHostedService
             return;
 
         var libraryOptions = LibraryManager.GetLibraryOptions(eventArgs.MediaFolder);
-        if (libraryOptions != null && libraryOptions.EnableRealtimeMonitor && eventArgs.Configuration.IsVirtualFileSystemEnabled)
+        if (libraryOptions != null && !eventArgs.Configuration.IsVirtualRoot && libraryOptions.EnableRealtimeMonitor && eventArgs.Configuration.IsVirtualFileSystemEnabled)
             StartWatchingMediaFolder(eventArgs.MediaFolder, eventArgs.Configuration);
         else
             StopWatchingPath(eventArgs.MediaFolder.Path);
@@ -280,7 +280,7 @@ public class ShokoLibraryMonitor : IHostedService
                 var trackerId = Plugin.Instance.Tracker.Add($"Library Monitor: Path=\"{path}\"");
                 try {
                     var files = await ApiClient.GetFileByPath(relativePath);
-                    var file = files.FirstOrDefault(file => file.Locations.Any(location => location.ImportFolderId == mediaConfig.ImportFolderId && location.RelativePath == relativePath));
+                    var file = files.FirstOrDefault(file => file.Locations.Any(location => location.ImportFolderId == mediaConfig.ImportFolderId && location.RelativePath == mediaConfig.ImportFolderRelativePath + relativePath));
                     if (file is null) {
                         if (reason is not UpdateReason.Removed) {
                             Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
@@ -298,7 +298,7 @@ public class ShokoLibraryMonitor : IHostedService
                         file = await ApiClient.GetFile(fileId);
                     }
 
-                    var fileLocation = file.Locations.First(location => location.ImportFolderId == mediaConfig.ImportFolderId && location.RelativePath == relativePath);
+                    var fileLocation = file.Locations.First(location => location.ImportFolderId == mediaConfig.ImportFolderId && location.RelativePath == mediaConfig.ImportFolderRelativePath + relativePath);
                     eventArgs = new FileEventArgsStub(fileLocation, file);
                 }
                 // which we catch here.
@@ -309,7 +309,7 @@ public class ShokoLibraryMonitor : IHostedService
                     }
 
                     Logger.LogTrace("Failed to get file info from Shoko during a file deleted event. (File={FileId})", fileId);
-                    eventArgs = new FileEventArgsStub(int.Parse(fileId), null, mediaConfig.ImportFolderId, relativePath, Array.Empty<IFileEventArgs.FileCrossReference>());
+                    eventArgs = new FileEventArgsStub(int.Parse(fileId), null, mediaConfig.ImportFolderId, relativePath, []);
                 }
                 finally {
                     Plugin.Instance.Tracker.Remove(trackerId);
