@@ -973,9 +973,8 @@ function onLinkRedirectClick(event) {
  * @returns {void} Void.
  */
 function overrideLink(target) {
-    const href = target.getAttribute("href");
-    target.dataset.href = href;
-    target.href = location.href.split("#")[0] + "#" + getConfigurationPageUrl(href);
+    const page = target.dataset.page;
+    target.href = location.href.split("#")[0] + "#" + getConfigurationPageUrl(page);
     target.addEventListener("click", onLinkRedirectClick);
 }
 

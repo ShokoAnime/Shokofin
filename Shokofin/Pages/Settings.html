@@ -34,31 +34,31 @@ form:not(.expert-mode) .expert-only {
                             <h3>Connection Settings</h3>
                         </legend>
                         <div class="inputContainer inputContainer-withDescription">
-                            <input is="emby-input" type="text" id="Url" label="Private Host Url" />
-                            <div class="fieldDescription">This is the private URL leading to where Shoko is running. It will be used internally in Jellyfin and also for all images sent to clients and redirects back to the Shoko instance if you don't set a public host URL below. It <i>should</i> include both the protocol and the IP/DNS name.</div>
+                            <input is="emby-input" type="text" id="Url" label="Private Host URL" />
+                            <div class="fieldDescription">This is the private URL leading to where Shoko is running. It will be used internally in Jellyfin in addition to all images sent to clients and redirects back to Shoko if you don't set a public host URL below. It <i>should</i> include both the protocol and the IP/DNS name.</div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription">
-                            <input is="emby-input" type="text" id="PublicUrl" label="Public Host Url" />
+                            <input is="emby-input" type="text" id="PublicUrl" label="Public Host URL" />
                             <div class="fieldDescription">Optional. This is the public URL leading to where Shoko is running. It can be used to redirect to Shoko if you click on a Shoko ID in the UI if Shoko and/or Jellyfin is running within a container and you cannot access Shoko from the host URL provided in the connection settings section above. It will also be used for images from the plugin when viewing the "Edit Images" modal in clients. It <i>should</i> include both the protocol and the IP/DNS name.</div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription">
                             <input is="emby-input" type="text" id="Username" label="Username" />
-                            <div class="fieldDescription">The user should be an administrator in Shoko, preferably without any filtering applied.</div>
+                            <div class="fieldDescription">The username of your administrator account in Shoko.</div>
                         </div>
                         <div id="ConnectionSetContainer">
                             <div class="inputContainer inputContainer-withDescription">
                                 <input is="emby-input" type="password" id="Password" label="Password" />
-                                <div class="fieldDescription">The password for account. It can be empty.</div>
+                                <div class="fieldDescription">The password of your administrator account in Shoko.</div>
                             </div>
                             <button is="emby-button" type="submit" name="establish-connection" class="raised button-submit block emby-button">
                                 <span>Connect</span>
                             </button>
-                            <div class="fieldDescription">Establish a connection to Shoko Server using the provided credentials.</div>
+                            <div class="fieldDescription">Establish a connection to Shoko using the provided credentials.</div>
                         </div>
                         <div id="ConnectionResetContainer" hidden>
                             <div class="inputContainer inputContainer-withDescription">
                                 <input is="emby-input" type="text" id="ServerVersion" label="Server Version" readonly value="Unknown Version" />
-                                <div class="fieldDescription">The version of Shoko Server we're connected to.</div>
+                                <div class="fieldDescription">The version of Shoko we're connected to.</div>
                             </div>
                             <button is="emby-button" type="submit" name="reset-connection" class="raised block emby-button">
                                 <span>Reset Connection</span>
@@ -71,7 +71,7 @@ form:not(.expert-mode) .expert-only {
                             <h3>Title Settings</h3>
                         </legend>
                         <div id="TitleMainList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Main title source</h3>
+                            <h3 class="checkboxListLabel">Main Title Source</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption">
                                     <label class="listItemCheckboxContainer">
@@ -158,10 +158,10 @@ form:not(.expert-mode) .expert-only {
                                     </button>
                                 </div>
                             </div>
-                            <div class="fieldDescription">The metadata providers to use as the source of the main title, in priority order.</div>
+                            <div class="fieldDescription">The metadata providers to use as the source of the main title for entities, in priority order.</div>
                         </div>
                         <div id="TitleAlternateList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Alternate/original title source</h3>
+                            <h3 class="checkboxListLabel">Alternate/Original Title Source</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption">
                                     <label class="listItemCheckboxContainer">
@@ -248,21 +248,21 @@ form:not(.expert-mode) .expert-only {
                                     </button>
                                 </div>
                             </div>
-                            <div class="fieldDescription">The metadata providers to use as the source of the alternate/original title, in priority order.</div>
+                            <div class="fieldDescription">The metadata providers to use as the source of the alternate/original title for entities, in priority order.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
-                                <span>Add prefix to episode titles</span>
+                                <span>Add Prefix to Episodes</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add the type and number to the title of some episodes.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Adds the type and number to the title of non-standard episodes such as specials. (e.g. S1)</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="TitleAllowAny" />
-                                <span>Allow any title in selected language</span>
+                                <span>Allow Any Title in Selected Language</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Will add any title in the selected language if no official title is found.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Allows for any titles to be utilized if an official title is not present in the given language. Only applies to the AniDB title selectors above.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -275,12 +275,12 @@ form:not(.expert-mode) .expert-only {
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="CleanupAniDBDescriptions" />
-                                <span>Cleanup AniDB overviews</span>
+                                <span>Cleanup AniDB Descriptions</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Remove links and collapse multiple empty lines into one empty line, and trim any lines starting with '* ', '-- ',  '~ ', 'Note', 'Source', and/or 'Summary'.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Prettifies AniDB descriptions and convert them to markdown.</div>
                         </div>
                         <div id="DescriptionSourceList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Description source</h3>
+                            <h3 class="checkboxListLabel">Description Source</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="Shoko">
                                     <label class="listItemCheckboxContainer">
@@ -333,7 +333,7 @@ form:not(.expert-mode) .expert-only {
                                     </button>
                                 </div>
                             </div>
-                            <div class="fieldDescription">The metadata providers to use as the source of descriptions, in priority order.</div>
+                            <div class="fieldDescription">The metadata providers to use as the source of descriptions for entities, in priority order.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -346,12 +346,12 @@ form:not(.expert-mode) .expert-only {
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="HideUnverifiedTags" />
-                                <span>Ignore unverified tags.</span>
+                                <span>Ignore Unverified Tags</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Will ignore all tags not yet verified on AniDB, so they won't show up as tags/genres for entries.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Don't use any user-submitted tags that have not been verified by AniDB.</div>
                         </div>
                         <div id="TagSources" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Tag sources</h3>
+                            <h3 class="checkboxListLabel">Tag Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
@@ -359,7 +359,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Content Indicators</h3>
+                                        <h3 class="listItemBodyText">Content indicators</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -404,7 +404,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Elements | Pornography & Sexual Abuse</h3>
+                                        <h3 class="listItemBodyText">Elements | Pornography & sexual abuse</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -413,7 +413,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Elements | Tropes & Motifs</h3>
+                                        <h3 class="listItemBodyText">Elements | Tropes & motifs</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -458,7 +458,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Setting | Time Period</h3>
+                                        <h3 class="listItemBodyText">Setting | Time period</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -467,7 +467,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Setting | Yearly Seasons</h3>
+                                        <h3 class="listItemBodyText">Setting | Yearly seasons</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -476,7 +476,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Source Material</h3>
+                                        <h3 class="listItemBodyText">Source material</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -485,7 +485,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Target Audience</h3>
+                                        <h3 class="listItemBodyText">Target audience</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -494,7 +494,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Technical Aspects | General</h3>
+                                        <h3 class="listItemBodyText">Technical aspects | General</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -503,7 +503,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Technical Aspects | Adaptions</h3>
+                                        <h3 class="listItemBodyText">Technical aspects | Adaptions</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -512,7 +512,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Technical Aspects | Awards</h3>
+                                        <h3 class="listItemBodyText">Technical aspects | Awards</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -521,7 +521,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Technical Aspects | Multi-Anime Projects</h3>
+                                        <h3 class="listItemBodyText">Technical aspects | Multi-anime projects</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -575,14 +575,14 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Custom User Tags</h3>
+                                        <h3 class="listItemBodyText">Custom user tags</h3>
                                     </div>
                                 </div>
                             </div>
-                            <div class="fieldDescription">The tag sources to use as the source of tags.</div>
+                            <div class="fieldDescription">The tag categories to use as the sources of the displayed tags for entities.</div>
                         </div>
                         <div id="TagIncludeFilters" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Tag include filters</h3>
+                            <h3 class="checkboxListLabel">Tag Inclusion Filters</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
@@ -590,7 +590,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Type | Parent Tags</h3>
+                                        <h3 class="listItemBodyText">Type | Parent tags</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -599,7 +599,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Type | Child Tags</h3>
+                                        <h3 class="listItemBodyText">Type | Child tags</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -608,7 +608,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Type | Abstract Tags</h3>
+                                        <h3 class="listItemBodyText">Type | Abstract tags</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -617,7 +617,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Type | Weightless Tags</h3>
+                                        <h3 class="listItemBodyText">Type | Weightless tags</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -626,7 +626,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Type | Weighted Tags</h3>
+                                        <h3 class="listItemBodyText">Type | Weighted tags</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -635,7 +635,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Spoiler | Global Spoiler</h3>
+                                        <h3 class="listItemBodyText">Spoiler | Global spoiler</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -644,33 +644,33 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Spoiler | Local Spoiler</h3>
+                                        <h3 class="listItemBodyText">Spoiler | Local spoiler</h3>
                                     </div>
                                 </div>
                             </div>
-                            <div class="fieldDescription">The type of tags to include for tags.</div>
+                            <div class="fieldDescription">The inclusion filters to use for the displayed tags for entities.</div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription expert-only">
-                            <label class="selectLabel" for="TagMinimumWeight">Minimum tag weight for tags</label>
+                            <label class="selectLabel" for="TagMinimumWeight">Minimum Weight for Tags</label>
                             <select is="emby-select" id="TagMinimumWeight" name="TagMinimumWeight" class="emby-select-withcolor emby-select">
                                 <option value="Weightless" selected>All Allowed (Default)</option>
-                                <option value="One">⯪☆☆</option>
-                                <option value="Two">★☆☆</option>
-                                <option value="Three">★⯪☆</option>
-                                <option value="Four">★★☆</option>
-                                <option value="Five">★★⯪</option>
-                                <option value="Six">★★★</option>
+                                <option value="One">0.5</option>
+                                <option value="Two">1.0</option>
+                                <option value="Three">1.5</option>
+                                <option value="Four">2.0</option>
+                                <option value="Five">2.5</option>
+                                <option value="Six">3.0</option>
                             </select>
                             <div class="fieldDescription">
-                                The minimum weight of tags to be included, except weightless tags, which has their own filtering through the filtering above.
+                                Choose the minimum weight a tag must have to be included with the displayed tags, not including weightless tags.
                             </div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription expert-only">
-                            <input is="emby-input" id="TagMaximumDepth" label="Maximum depth to add per tag source" placeholder="0" type="number" pattern="[0-9]*" min="0" max="10" step="1">
-                            <div class="fieldDescription">The maximum relative depth of the tag to be included from it's source, for tags.</div>
+                            <input is="emby-input" id="TagMaximumDepth" label="Maximum Depth for Tags" placeholder="0" type="number" pattern="[0-9]*" min="0" max="10" step="1">
+                            <div class="fieldDescription">The maximum relative depth of a tag to be included with the displayed tags based on it's source category.</div>
                         </div>
                         <div id="GenreSources" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Genre sources</h3>
+                            <h3 class="checkboxListLabel">Genre Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
@@ -678,7 +678,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Content Indicators</h3>
+                                        <h3 class="listItemBodyText">Content indicators</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -723,7 +723,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Elements | Pornography & Sexual Abuse</h3>
+                                        <h3 class="listItemBodyText">Elements | Pornography & sexual abuse</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -732,7 +732,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Elements | Tropes & Motifs</h3>
+                                        <h3 class="listItemBodyText">Elements | Tropes & motifs</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -777,7 +777,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Setting | Time Period</h3>
+                                        <h3 class="listItemBodyText">Setting | Time period</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -786,7 +786,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Setting | Yearly Seasons</h3>
+                                        <h3 class="listItemBodyText">Setting | Yearly seasons</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -795,7 +795,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Source Material</h3>
+                                        <h3 class="listItemBodyText">Source material</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -804,7 +804,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Target Audience</h3>
+                                        <h3 class="listItemBodyText">Target audience</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -813,7 +813,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Technical Aspects | General</h3>
+                                        <h3 class="listItemBodyText">Technical aspects | General</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -822,7 +822,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Technical Aspects | Adaptions</h3>
+                                        <h3 class="listItemBodyText">Technical aspects | Adaptions</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -831,7 +831,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Technical Aspects | Awards</h3>
+                                        <h3 class="listItemBodyText">Technical aspects | Awards</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -840,7 +840,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Technical Aspects | Multi-Anime Projects</h3>
+                                        <h3 class="listItemBodyText">Technical aspects | Multi-anime projects</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -894,14 +894,14 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Custom User Tags</h3>
+                                        <h3 class="listItemBodyText">Custom user tags</h3>
                                     </div>
                                 </div>
                             </div>
-                            <div class="fieldDescription">The tag sources to use as the source of genres.</div>
+                            <div class="fieldDescription">The tag categories to use as the sources of the displayed genres for entities.</div>
                         </div>
                         <div id="GenreIncludeFilters" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Genre include filters</h3>
+                            <h3 class="checkboxListLabel">Genre Inclusion Filters</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
                                     <label class="listItemCheckboxContainer">
@@ -909,7 +909,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Type | Parent Tags</h3>
+                                        <h3 class="listItemBodyText">Type | Parent tags</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -918,7 +918,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Type | Child Tags</h3>
+                                        <h3 class="listItemBodyText">Type | Child tags</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -927,7 +927,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Type | Abstract Tags</h3>
+                                        <h3 class="listItemBodyText">Type | Abstract tags</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -936,7 +936,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Type | Weightless Tags</h3>
+                                        <h3 class="listItemBodyText">Type | Weightless tags</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -945,7 +945,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Type | Weighted Tags</h3>
+                                        <h3 class="listItemBodyText">Type | Weighted tags</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -954,7 +954,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Spoiler | Global Spoiler</h3>
+                                        <h3 class="listItemBodyText">Spoiler | Global spoiler</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -963,30 +963,30 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Spoiler | Local Spoiler</h3>
+                                        <h3 class="listItemBodyText">Spoiler | Local spoiler</h3>
                                     </div>
                                 </div>
                             </div>
-                            <div class="fieldDescription">The type of tags to include for genres.</div>
+                            <div class="fieldDescription">The inclusion filters to use for the displayed genres for entities.</div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription expert-only">
-                            <label class="selectLabel" for="GenreMinimumWeight">Minimum tag weight for genres</label>
+                            <label class="selectLabel" for="GenreMinimumWeight">Minimum Weight for Genres</label>
                             <select is="emby-select" id="GenreMinimumWeight" name="GenreMinimumWeight" class="emby-select-withcolor emby-select">
                                 <option value="Weightless">All Allowed</option>
-                                <option value="One">⯪☆☆</option>
-                                <option value="Two">★☆☆</option>
-                                <option value="Three" selected>★⯪☆</option>
-                                <option value="Four">★★☆ (Default)</option>
-                                <option value="Five">★★⯪</option>
-                                <option value="Six">★★★</option>
+                                <option value="One">0.5</option>
+                                <option value="Two">1.0</option>
+                                <option value="Three">1.5</option>
+                                <option value="Four" selected>2.0 (Default)</option>
+                                <option value="Five">2.5</option>
+                                <option value="Six">3.0</option>
                             </select>
                             <div class="fieldDescription">
-                                The minimum weight of tags to be included, except weightless tags, which has their own filtering through the filtering above.
+                                Choose the minimum weight a tag must have to be included with the displayed genres, not including weightless tags.
                             </div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription expert-only">
-                            <input is="emby-input" id="GenreMaximumDepth" label="Maximum depth to add per genre source" placeholder="1" type="number" pattern="[0-9]*" min="0" max="10" step="1">
-                            <div class="fieldDescription">The maximum relative depth of the tag to be included from it's source, for genres.</div>
+                            <input is="emby-input" id="GenreMaximumDepth" label="Maximum Depth for Genres" placeholder="1" type="number" pattern="[0-9]*" min="0" max="10" step="1">
+                            <div class="fieldDescription">The maximum relative depth of a tag to be included with the displayed genres based on it's source category.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -999,16 +999,16 @@ form:not(.expert-mode) .expert-only {
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="AddImageLanguageCode" />
-                                <span>Add language code</span>
+                                <span>Add Language Code</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add language code to image metadata provided to Jellyfin for it to select the correct image to use for the library.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Add the language code to image metadata provided to Jellyfin, which it can use to prioritize images based on a library's configured metadata language. If a library has no language set, Jellyfin will prioritize English labeled images if this option is set, and will otherwise use the first available image.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="RespectPreferredImage" />
-                                <span>Respect preferred image</span>
+                                <span>Respect Preferred Image</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Respect the preferred image flag sent from server when selecting the correct image to use for the library. Setting this will also set the language code to the preferred language code for the library if "Add language code" is enabled, thus ensuring it is always selected for the library.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Respect the preferred image flag sent from server when selecting the correct image to use for the library. Setting this will also set the language code to the preferred language code for the library if "Add Language Code" is enabled, thus ensuring it is always selected for the library.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -1019,20 +1019,8 @@ form:not(.expert-mode) .expert-only {
                             <h3>Miscellaneous Settings</h3>
                         </legend>
                         <div id="ContentRatingList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Content rating sources</h3>
+                            <h3 class="checkboxListLabel">Content Rating Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
-                                <div class="listItem sortableOption" data-option="AniDB">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">AniDB | Approximate content rating based on tags</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
                                 <div class="listItem sortableOption" data-option="TMDB">
                                     <label class="listItemCheckboxContainer">
                                         <input is="emby-checkbox" type="checkbox" data-option="TMDB">
@@ -1045,11 +1033,23 @@ form:not(.expert-mode) .expert-only {
                                         <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
                                     </button>
                                 </div>
+                                <div class="listItem sortableOption" data-option="AniDB">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB | Approximate content rating based on tags</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="fieldDescription">The metadata providers to use as the source of content ratings, in priority order.</div>
+                            <div class="fieldDescription">The metadata providers to use as the source of content ratings for entities, in priority order.</div>
                         </div>
                         <div id="ProductionLocationList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Production location sources</h3>
+                            <h3 class="checkboxListLabel">Production Location Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="AniDB">
                                     <label class="listItemCheckboxContainer">
@@ -1076,7 +1076,7 @@ form:not(.expert-mode) .expert-only {
                                     </button>
                                 </div>
                             </div>
-                            <div class="fieldDescription">The metadata providers to use as the source of production locations, in priority order.</div>
+                            <div class="fieldDescription">The metadata providers to use as the source of production locations for entities, in priority order.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -1095,7 +1095,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">AniDB | Shows, Seasons, Episodes</h3>
+                                        <h3 class="listItemBodyText">AniDB | Series, Seasons, Episodes</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -1113,7 +1113,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TvDB | Show, Episode</h3>
+                                        <h3 class="listItemBodyText">TvDB | Shows, Episodes</h3>
                                     </div>
                                 </div>
                             </div>
@@ -1127,66 +1127,44 @@ form:not(.expert-mode) .expert-only {
                         <legend>
                             <h3>Basic Settings</h3>
                         </legend>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="AutoMergeVersions" />
-                                <span>Automatically merge multiple versions of videos</span>
+                                <span>Automatically Merge Multiple Versions</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription"><div>Automatically merge multiple versions of the same video together after a library scan or refresh. Only applies to videos with Shoko IDs set.</div></div>
+                            <div class="fieldDescription checkboxFieldDescription">Enable to automatically merge multiple versions of the same media info a single displayed entry after a library scan or refresh. Only applies to videos with Shoko IDs set.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="UseGroupsForShows" />
-                                <span>Use shoko groups for shows</span>
+                                <span>Use Groups for Shows</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">
-                                <div>This will use Shoko's group feature to group together AniDB anime entries into show entries.</div>
+                                <div>
+                                    This will use Shoko's group structure to construct the shows in the libraries instead of the flat AniDB-esque structure you would otherwise see.
+                                </div>
                                 <details style="margin-top: 0.5em">
                                     <summary style="margin-bottom: 0.25em">Pre-requirements for use.</summary>
-                                    To make the most out of this feature you first need to configure your grouping in Shoko Server. You can
-                                    either enable auto-grouping in the settings, or manually craft your own grouping structure, or a
-                                    combination of the two where new series gets automatically assigned to a fitting group and you can
-                                    override the placement if you feel it should belong elsewhere instead. For more information look up the
-                                    <a href="https://docs.shokoanime.com/server/management">Shoko docs</a> on how to manage your groups.
+                                    To make the most out of this feature you first need to configure your groups in Shoko. You can either enable auto-grouping in the settings, manually craft your own group structure, or a mix of the two where you have auto-grouping enabled but override the placement if you feel it should belong elsewhere instead. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/group-management">Shoko docs</a> on how to manage your groups.
                                 </details>
                                 <details style="margin-top: 0.5em">
                                     <summary style="margin-bottom: 0.25em">Can I use this with collections?</summary>
-                                    Yes! You can use this with collections enabled, but that entails that you've configured a multi-layered
-                                    structure for your groups. Because the first group layer will be used for the shows, except if 1) the group
-                                    contains both movies and shows, and 2) you've separated the movies from the shows. In that case the
-                                    then the first layer of groups will also be used to generate a collection for your movie(s) and show
-                                    within the first layer. Also, the auto-grouping only acts on a single layer, and you need to use Shoko
-                                    Desktop (or in the future, the Web UI) to create your nested structure. For more information look up the
-                                    <a href="https://docs.shokoanime.com/server/management">Shoko docs</a> on how to manage your groups.
+                                    Yes! You can use this with collections enabled, but that entails most of the time that you've configured a multi-layered structure for your groups because the deepest layer will be used for the shows while all the layers above will be used for collections. The exception to this is if you have a group which contains both movies and shows and you've enabled the option to separate movies from shows. In which case the deepest layer of groups will also be used to generate a collection for your movie(s) and show within the layer. Also note that enabling auto-grouping only gives you a single layer, and you need to use Shoko Desktop (or in the future, the Web UI) to create your nested structure. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/group-management">Shoko docs</a> on how to manage your groups.
                                 </details>
                             </div>
                         </div>
                         <div id="SeasonOrderingContainer" class="selectContainer selectContainer-withDescription expert-only" hidden>
-                            <label class="selectLabel" for="SeasonOrdering">Season ordering</label>
+                            <label class="selectLabel" for="SeasonOrdering">Season Ordering</label>
                             <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select" disabled>
-                                <option value="Default" selected>Let Shoko decide</option>
+                                <option value="Default" selected>Let Shoko decide (Default)</option>
                                 <option value="ReleaseDate">Order seasons by release date</option>
                                 <option value="Chronological" class="expert-only">Order seasons in chronological order (use indirect relations) (EXPERIMENTAL)</option>
                                 <option value="ChronologicalIgnoreIndirect">Order seasons in chronological order (ignore indirect relations) (EXPERIMENTAL)</option>
                             </select>
-                            <div class="fieldDescription">Determines how to order seasons within each show using the Shoko groups.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="SeparateMovies" />
-                                <span>Separate movies from shows</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">This filters out movies from the shows in your library. Disable this if you want your movies to show up as episodes within seasons of your shows instead.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="FilterMovieLibraries" />
-                                <span>Filter movie libraries</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">This filters out anything that is not a movie in any movie libraries. Disable this if you want your anything to show up as movies in your movie libraries instead.</div>
+                            <div class="fieldDescription">Determines how to order seasons within shows when using groups for shows.</div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="SpecialsPlacement">Specials placement within seasons</label>
+                            <label class="selectLabel" for="SpecialsPlacement">Specials Placement Within Seasons</label>
                             <select is="emby-select" id="SpecialsPlacement" name="SpecialsPlacement" class="emby-select-withcolor emby-select">
                                 <option value="AfterSeason">Always place specials after the normal episodes (Default)</option>
                                 <option value="InBetweenSeasonByAirDate">Use release dates to place specials</option>
@@ -1196,19 +1174,33 @@ form:not(.expert-mode) .expert-only {
                             </select>
                             <div class="fieldDescription selectFieldDescription">Determines how specials are placed within seasons. <strong>Warning:</strong> Modifying this setting requires a recreation (read as; delete existing then create a new) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                        <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="MovieSpecialsAsExtraFeaturettes" />
-                                <span>Force movie special features</span>
+                                <input is="emby-checkbox" type="checkbox" id="SeparateMovies" />
+                                <span>Separate Movies from Shows</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Append all specials in AniDB movie series as special features for the movies. By default only some specials will be automatically recognized as special features, but by enabling this option you will force all specials to be used as special features. This setting applies to movie series across all library types, and may break some movie series in a show type library unless appropriate measures are taken.</div>
+                            <div class="fieldDescription checkboxFieldDescription">By default we allow movies to show up as episodes within seasons of your shows in show libraries. Enable this if you want your movies to be filtered out of your show libraries. Also note that enabling this option allows you to create collections for your shows and movies when using 'Use Groups for Shows' and have a flat group structure. <strong>This setting also applies to mixed type libraries.</strong></div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="AddMissingMetadata" />
                                 <span>Add Missing Episodes/Seasons</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add the metadata for missing episodes/seasons not in the local collection.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Add the metadata for missing episodes/seasons not currently present in your local collection. Display settings for each Jellyfin user will have to be adjusted to show missing episode information to make use of this feature.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="DisableFilterMovieLibraries" />
+                                <span>Disable Movie Library Filtering</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">By default we filter out anything that is not a movie in movie libraries. Enable this if you want everything to show up as movies in your movie libraries instead.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="MovieSpecialsAsExtraFeaturettes" />
+                                <span>Force Movie Special Features</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Append all specials in an AniDB movie series as special features for the movie(s). By default only some specials will be automatically recognized as special features, but by enabling this option you will force all specials to be used as special features. This setting applies to movie series across all library types, and will break some movie series in a show type library.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -1226,7 +1218,7 @@ form:not(.expert-mode) .expert-only {
                                 <option value="Shared">Create collections for movies and shows based upon Shoko's groups and series</option>
                             </select>
                             <div class="fieldDescription">
-                                <div>Determines what entities to group into collections.</div>
+                                <div>Determines what entities to group into native Jellyfin collections.</div>
                                 <details style="margin-top: 0.5em">
                                     <summary style="margin-bottom: 0.25em">Custom CSS for the collections</summary>
                                     Here's some optional custom CSS you can add to "rename" the sections in the collections to
@@ -1254,9 +1246,9 @@ form:not(.expert-mode) .expert-only {
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="CollectionMinSizeOfTwo" />
-                                <span>Require two entries for a collection</span>
+                                <span>Require Two Entries for a Collection</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add a minimum requirement of two entries with the same collection id before creating a collection for them.</div>
+                            <div class="fieldDescription checkboxFieldDescription">If collections are enabled, only create a collection when the collection will contain at least two items.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -1272,12 +1264,12 @@ form:not(.expert-mode) .expert-only {
                                 <span>Use the Virtual File System (<strong>VFS</strong>)</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">
-                                <div>Enables the use of the VFS for any new media libraries managed by the plugin.</div>
+                                <div>Enables the use of the VFS for any new libraries managed by the plugin.</div>
                                 <div id="WindowsSymLinkWarning1" hidden><strong>Warning</strong>: Windows users are required to <a href="https://learn.microsoft.com/en-us/windows/apps/get-started/developer-mode-features-and-debugging#use-regedit-to-enable-your-device" target="_blank" rel="noopener noreferrer">enable Developer Mode</a> then restart Jellyfin to be able to create symbolic links, a feature <strong>required</strong> to use the VFS.</div>
                                 <details style="margin-top: 0.5em">
                                     <summary style="margin-bottom: 0.25em">What does this mean?</summary>
-                                    Enabling this setting should in theory make it so you won't have to think about file structure incompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links managed by the plugin instead of your actual file structure.
-                                    &nbsp;
+                                    Enabling this feature allows you to disregard the underlying disk file structure while automagically meeting Jellyfin's requirements for file organization. It also ensures that no unrecognized files appear in your library and allows us to fully leverage Jellyfin's native features better than we otherwise could without it. This enables us to effortlessly support trailers, special features, and theme videos for series, seasons and movies, as well as merge partial episodes into a single episode. All this is possible because we disregard the underlying disk file structure to create our own using symbolic links.
+                                    <br/>
                                     <strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
                                 </details>
                             </div>
@@ -1290,14 +1282,14 @@ form:not(.expert-mode) .expert-only {
                                 <option value="Lax" selected>Lax</option>
                             </select>
                             <div class="fieldDescription">
-                                <div>Choose how the plugin filters out videos in your new libraries. This option only applies if the VFS is not used.</div>
+                                <div>Adjust how the plugin filters out unrecognized media in your new libraries. This option only applies if the VFS is not used.</div>
                                 <details style="margin-top: 0.5em">
                                     <summary style="margin-bottom: 0.25em">What does auto filtering entail?</summary>
-                                    Auto filtering means the plugin will only filter out unrecognized videos if no other metadata provider is enabled, otherwise it will leave them in the library.
+                                    Auto filtering means the plugin will only filter out unrecognized media if no other metadata provider is enabled, otherwise it will leave them in the library.
                                 </details>
                                 <details style="margin-top: 0.5em">
                                     <summary style="margin-bottom: 0.25em">What does strict filtering entail?</summary>
-                                    Strict filtering means the plugin will filter out any and all unrecognized videos from the library.
+                                    Strict filtering means the plugin will filter out any and all unrecognized media from the library.
                                 </details>
                                 <details style="margin-top: 0.5em">
                                     <summary style="margin-bottom: 0.25em">What does lax filtering entail?</summary>
@@ -1351,14 +1343,14 @@ form:not(.expert-mode) .expert-only {
                                     <option value="Lax" selected>Lax</option>
                                 </select>
                                 <div class="fieldDescription">
-                                    <div>Choose how the plugin filters out videos in your new libraries. This option only applies if the VFS is not used.</div>
+                                    <div>Adjust how the plugin filters out unrecognized media in the library. This option only applies if the VFS is not used.</div>
                                     <details style="margin-top: 0.5em">
                                         <summary style="margin-bottom: 0.25em">What does auto filtering entail?</summary>
-                                        Auto filtering means the plugin will only filter out unrecognized videos if no other metadata provider is enabled, otherwise it will leave them in the library.
+                                        Auto filtering means the plugin will only filter out unrecognized media if no other metadata provider is enabled, otherwise it will leave them in the library.
                                     </details>
                                     <details style="margin-top: 0.5em">
                                         <summary style="margin-bottom: 0.25em">What does strict filtering entail?</summary>
-                                        Strict filtering means the plugin will filter out any and all unrecognized videos from the library.
+                                        Strict filtering means the plugin will filter out any and all unrecognized media from the library.
                                     </details>
                                     <details style="margin-top: 0.5em">
                                         <summary style="margin-bottom: 0.25em">What does lax filtering entail?</summary>
@@ -1385,9 +1377,9 @@ form:not(.expert-mode) .expert-only {
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_MergeSeasons" />
-                                <span>Automatically merge seasons</span>
+                                <span>Automatically Merge Seasons</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription"><div>Blur the boundaries between AniDB anime further by merging entries which could had just been a single anime entry based on name matching and a configurable merge window.</div></div>
+                            <div class="fieldDescription checkboxFieldDescription">Blur the boundaries between AniDB anime further by merging entries which could have just been a single anime entry based on name matching and a configurable merge window.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -1402,35 +1394,35 @@ form:not(.expert-mode) .expert-only {
                                 <input is="emby-checkbox" type="checkbox" id="AddTrailers" />
                                 <span>Add Trailers</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add trailers to entities within the VFS. Trailers within the trailers directory when not using the VFS are not affected by this option.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Add trailers to entities within the VFS.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="AddCreditsAsThemeVideos" />
                                 <span>Add Credits as Theme Videos</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add all credits as theme videos to entities with in the VFS. In a non-VFS library they will just be filtered out since we can't properly support them as Jellyfin native features.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Add all credits as theme videos to entities with in the VFS.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="AddCreditsAsSpecialFeatures" />
                                 <span>Add Credits as Special Features</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add all credits as special features to entities with in the VFS. In a non-VFS library they will just be filtered out since we can't properly support them as Jellyfin native features.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Add all credits as special features to entities with in the VFS.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="VFS_AddReleaseGroup" />
                                 <span>Add Release Group to Path</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the full or short release group name to all automatically linked files in the VFS, and "No Group" for all manually linked files in the VFS. <strong>Warning</strong>: The release group in the file name may change if the release group info is incomplete, unavailable, or otherwise updated in Shoko at a later date, and thus may cause episode/movie entries to be "removed" and "added" as new entries when that happens. <strong>Use at your own risk.</strong></div>
+                            <div class="fieldDescription checkboxFieldDescription">Add the full or short release group name to all automatically linked files in the VFS. "No Group" will be used for all manually linked files. <strong>Warning</strong>: The release group in the file name may change if the release group info is incomplete, unavailable, or otherwise updated in Shoko at a later date, and thus may cause episode/movie entries to be "removed" and "added" as new entries when that happens. <strong>Use at your own risk.</strong></div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="VFS_AddResolution" />
                                 <span>Add Resolution to Path</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the standardized resolution (e.g. 480p, 1080p, 4K, etc.) to all files in the VFS, <strong>IF</strong> it's available. <strong>Warning</strong>: Though rare, we may have failed to read the media info in Shoko when the files were first added (e.g. because of a corrupt file, encountering an unsupported <i>new</i> codec, etc.), then reading it later. This may lead to episode/movie entries to be "removed" and "added" as new entries the next time they are refreshed after the metadata has been added. <strong>Use at your own risk.</strong></div>
+                            <div class="fieldDescription checkboxFieldDescription">Enabling this will add the standardized resolution (e.g. 480p, 1080p, 4K, etc.) to all files in the VFS if available. <strong>Warning</strong>: Though rare, we may fail to read the media info in Shoko when the files were first added (e.g. because of a corrupt file, encountering an unsupported <i>new</i> codec, etc.), then reading it later. This may lead to episode/movie entries to be "removed" and "added" as new entries the next time they are refreshed after the metadata has been added. <strong>Use at your own risk.</strong></div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -1446,29 +1438,29 @@ form:not(.expert-mode) .expert-only {
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="VFS_ResolveLinks" />
-                                <span>Resolve Links before VFS</span>
+                                <span>Resolve Links Before VFS</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">If the library contains symbolic links to media, it will follow them until a final "real" file is found and use the path of said file for the VFS.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription expert-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="VFS_AttachRoot" />
-                                <span>Physically Attach VFS to Libraries</span>
+                                <span>Attach VFS to Libraries</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enabling this will attach a physical VFS "root" to your libraries as a media folder, allowing us to mount the VFS children to the new "root" and to re-use media folders across libraries without resorting to <i>other</i> workarounds.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Makes the VFS structure that the plugin automatically creates show up as a folder for your libraries. This allows reusing the same media folder(s) across multiple libraries without needing any other workarounds. Useful for separating movies and series into separate libraries while still using the same media folder(s) for both.</div>
                         </div>
-                        <div id="VFS_LocationContainer" class="selectContainer selectContainer-withDescription expert-only">
+                        <div class="selectContainer selectContainer-withDescription expert-only">
                             <label class="selectLabel" for="VFS_Location">VFS Location</label>
                             <select is="emby-select" id="VFS_Location" name="VFS_Location" class="emby-select-withcolor emby-select">
                                 <option value="Default" selected>Jellyfin Data Directory (Default)</option>
                                 <option value="Cache">Jellyfin Cache Directory</option>
                                 <option value="Custom">Custom Directory</option>
                             </select>
-                            <div class="fieldDescription">Determines where the VFS root will be placed. Changing this will cause your library to "remove" and "re-add" itself because of the path changes. You will need to manually move your VFS root if you plan to keep it when toggling this setting, or you can get rid of it by running the scheduled task to remove it. <strong>You have been warned.</strong></div>
+                            <div class="fieldDescription">Change where the VFS structure will be placed. Changing this will cause your library to "remove" and "re-add" itself because of the path changes. You will need to manually move your VFS root if you plan to keep it when toggling this setting. Trick-play files will need to be backed-up beforehand and moved back the next library scan if you want to avoid regenerating them after you change this setting. <strong>You have been warned.</strong></div>
                         </div>
                         <div id="VFS_CustomLocationContainer" class="inputContainer inputContainer-withDescription expert-only" hidden>
                             <input is="emby-input" type="text" id="VFS_CustomLocation" label="Custom VFS Root Location" disabled />
-                            <div class="fieldDescription">An absolute path to the custom root directory of where the VFS will be placed. You decide.</div>
+                            <div class="fieldDescription">An absolute path, or a relative path from the Jellyfin Data Directory, to the custom root directory of where the VFS will be placed. You decide.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -1486,13 +1478,13 @@ form:not(.expert-mode) .expert-only {
                             <button id="SignalRConnectButton" is="emby-button" type="submit" name="signalr-connect" class="raised button-submit block emby-button" disabled>
                                 <span>Connect</span>
                             </button>
-                            <div class="fieldDescription">Establish a SignalR connection to Shoko Server.</div>
+                            <div class="fieldDescription">Establish a SignalR connection to Shoko.</div>
                         </div>
                         <div id="SignalRDisconnectContainer">
                             <button is="emby-button" type="submit" name="signalr-disconnect" class="raised block emby-button">
                                 <span>Disconnect</span>
                             </button>
-                            <div class="fieldDescription">Terminate the SignalR connection to Shoko Server.</div>
+                            <div class="fieldDescription">Terminate the SignalR connection to Shoko.</div>
                         </div>
                     </fieldset>
                     <fieldset id="SignalR_Basic_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
@@ -1502,15 +1494,15 @@ form:not(.expert-mode) .expert-only {
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="SignalRAutoConnect" />
-                                <span>Auto Connect On Start</span>
+                                <span>Auto Connect on Start</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">
-                                Automatically establish a SignalR connection to Shoko Server when Jellyfin starts.
+                                Attempt to establish a SignalR connection to your running Shoko instance when Jellyfin starts up.
                             </div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription expert-only">
                             <input is="emby-input" type="text" id="SignalRAutoReconnectIntervals" label="Auto Reconnect Intervals" />
-                            <div class="fieldDescription">A comma separated list of intervals in seconds to try re-establish the connection if the plugin gets disconnected from Shoko Server.</div>
+                            <div class="fieldDescription">A comma separated list of intervals given in seconds to try to reconnect to your running Shoko instance if we ever gets disconnected. The provided list will have duplicates removed and will be performed in sorted order starting from the shortest time span when reconnecting. Once the longest interval has been reached and fails to reconnect, we will stop attempting to reconnect and leave the SignalR connection in a disconnected state until it is manually or otherwise reconnected.</div>
                         </div>
                         <div id="SignalREventSources" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Event Sources</h3>
@@ -1543,7 +1535,7 @@ form:not(.expert-mode) .expert-only {
                                     </div>
                                 </div>
                             </div>
-                            <div class="fieldDescription">Which event sources should be listened to via the SignalR connection.</div>
+                            <div class="fieldDescription">Which event sources should be listened to for metadata events.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -1559,7 +1551,7 @@ form:not(.expert-mode) .expert-only {
                                 <span>File Events</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">
-                                <div>Enables SignalR file events and real-time monitoring events for any new libraries.</div>
+                                <div>Listen for file events, such as when new media gets added or moved around in the file system, and trigger library updates accordingly. Especially useful if your Jellyfin library is using a network share for it's media folder(s) where native file events may not be available for Jellyfin's real time monitoring to function properly. Can be used as a complete replacement for Jellyfin's built-in real time monitoring or used alongside it.</div>
                             </div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
@@ -1568,7 +1560,7 @@ form:not(.expert-mode) .expert-only {
                                 <span>Metadata Events</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">
-                                <div>Enables SignalR metadata update events for any new libraries.</div>
+                                <div>Listen for metadata update events, such as when metadata gets added, updated, or removed, and trigger library updates accordingly. Can be useful when metadata is partially titles or other info initially, but which were added or updated at a later time.</div>
                             </div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
@@ -1593,7 +1585,7 @@ form:not(.expert-mode) .expert-only {
                                     <span>File Events</span>
                                 </label>
                                 <div class="fieldDescription checkboxFieldDescription">
-                                    <div>Enables SignalR file events and real-time monitoring events for the media folder.</div>
+                                    <div>Listen for file events, such as when new media gets added or moved around in the file system, and trigger library updates accordingly. Especially useful if your Jellyfin library is using a network share for it's media folder(s) where native file events may not be available for Jellyfin's real time monitoring to function properly. Can be used as a complete replacement for Jellyfin's built-in real time monitoring or used alongside it.</div>
                                 </div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
@@ -1602,7 +1594,7 @@ form:not(.expert-mode) .expert-only {
                                     <span>Metadata Events</span>
                                 </label>
                                 <div class="fieldDescription checkboxFieldDescription">
-                                    <div>Enables SignalR metadata update events for the media folder.</div>
+                                    <div>Listen for metadata update events, such as when metadata gets added, updated, or removed, and trigger library updates accordingly. Can be useful when metadata is partially titles or other info initially, but which were added or updated at a later time.</div>
                                 </div>
                             </div>
                             <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
@@ -1625,59 +1617,59 @@ form:not(.expert-mode) .expert-only {
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="UserEnableSynchronization" />
-                                    <span>Enable synchronization features</span>
+                                    <span>Enable Synchronization Features</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">Enabling this setting is mandatory to enable the sync features below. Select the sync feature you would like to use by enabling the checkbox.</div>
+                                <div class="fieldDescription checkboxFieldDescription">Enable syncing certain data between Jellyfin and Shoko for the user. The specific behavior on what gets synced and when can be configured using the remaining options in this section. Leaving this setting unchecked will disable synchronization entirely, regardless of other synchronization settings.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="SyncUserDataOnImport" />
-                                    <span>Sync watch-state on import or refresh</span>
+                                    <span>Sync Watch-State on Import or Refresh</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">Enabling this setting will import the watch-state for items from Shoko on import or refresh.</div>
+                                <div class="fieldDescription checkboxFieldDescription">When media gets scanned into your library or when a library's metadata gets refreshed, sync watch-state between Jellyfin and Shoko.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="SyncUserDataAfterPlayback" />
-                                    <span>Sync watch-state after playback</span>
+                                    <span>Sync Watch-State After Playback</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">Enabling this setting will sync-back the watch-state to Shoko after playback has ended.</div>
+                                <div class="fieldDescription checkboxFieldDescription">Sync watch-state with Shoko when you finish watching a movie, episode, or other video.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="SyncUserDataUnderPlayback" />
-                                    <span>Sync watch-state events during playback</span>
+                                    <span>Sync Watch-State Events During Playback</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">Enabling this setting will sync-back the watch-state to Shoko on every play/pause/resume/stop event during playback.</div>
+                                <div class="fieldDescription checkboxFieldDescription">Sync watch-state to Shoko on play/pause/stop/resume events during media playback.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="SyncUserDataUnderPlaybackLive" />
-                                    <span>Sync watch-state live during playback</span>
+                                    <span>Sync Watch-State Live During Playback</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">Enabling this setting will sync-back the watch-state to Shoko live during playback.</div>
+                                <div class="fieldDescription checkboxFieldDescription">Sync watch-state to Shoko at a regular interval during media playback.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="SyncUserDataInitialSkipEventCount" />
-                                    <span>Lazy sync watch-state events with shoko</span>
+                                    <span>Lazy Sync Watch-State Events With Shoko</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">Enabling this setting will add a safe buffer of 10 seconds of playback before the plugin will start the sync-back to shoko. This will prevent accidental clicks and/or previews from marking the file as watched in shoko, and will also keep them more in sync with jellyfin, since it's closer to how Jellyfin handles the watch-state internally.</div>
+                                <div class="fieldDescription checkboxFieldDescription">Wait about 10 seconds before syncing any watch-state events to Shoko. This will prevent accidental clicks and/or previews from marking a file as watched in Shoko, and will also keep them more in sync with Jellyfin since it's closer to how Jellyfin handles the watch-state internally.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="SyncRestrictedVideos" />
-                                    <span>Sync watch-state for restricted videos</span>
+                                    <span>Sync Watch-State for Restricted Media</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">Enabling this setting will sync-back the watch-state to Shoko for restricted videos (H).</div>
+                                <div class="fieldDescription checkboxFieldDescription">Allow syncing watch-state for restricted media (H) to Shoko.</div>
                             </div>
                             <div class="inputContainer inputContainer-withDescription">
                                 <input is="emby-input" type="text" id="UserUsername" label="Username" />
-                                <div class="fieldDescription">The username of the account to synchronize with the currently selected user.</div>
+                                <div class="fieldDescription">The username of the account in Shoko to synchronize with the currently selected user.</div>
                             </div>
                             <div id="UserPasswordContainer" class="inputContainer inputContainer-withDescription">
                                 <input is="emby-input" type="password" id="UserPassword" label="Password" />
-                                <div class="fieldDescription">The password for account. It can be empty.</div>
+                                <div class="fieldDescription">The password of the account in Shoko to synchronize with the currently selected user.</div>
                             </div>
                             <div id="UserDeleteContainer" class="inputContainer inputContainer-withDescription" hidden>
                                 <button is="emby-button" type="submit" name="unlink-user" class="raised button-delete block emby-button">
@@ -1699,11 +1691,11 @@ form:not(.expert-mode) .expert-only {
                                 <input is="emby-checkbox" type="checkbox" id="Misc_ShowInMenu" />
                                 <span>Show in Menu</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Shows a shortcut to the plugin in the sidebar navigation menu.</div>
+                            <div class="fieldDescription checkboxFieldDescription">Shows a shortcut to the plugin settings in the sidebar navigation menu.</div>
                         </div>
                         <div class="inputContainer inputContainer-withDescription expert-only">
-                            <input is="emby-input" type="text" id="IgnoredFolders" label="Ignored folder names" />
-                            <div class="fieldDescription">A comma separated list of folder names which will be ignored during library filtering.</div>
+                            <input is="emby-input" type="text" id="IgnoredFolders" label="Ignored Folder Names" />
+                            <div class="fieldDescription">A comma separated list of folder names to ignore during a library scan. Useful for skipping folders generated by a NAS or other pieces of software that access the file system where media resides. Only applicable to libraries not managed by the VFS as files not recognized by Shoko Server are already ignored.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -1714,7 +1706,7 @@ form:not(.expert-mode) .expert-only {
                             <h3>Utilities</h3>
                         </legend>
                         <div id="UserDeleteContainer" class="inputContainer inputContainer-withDescription expert-only">
-                            <a is="emby-linkbutton" rel="noopener noreferrer" class="raised button-alt block emby-button link-redirection" target="_blank" href="Shoko.Utilities.Dummy">
+                            <a is="emby-linkbutton" rel="noopener noreferrer" class="raised button-alt block emby-button link-redirection" target="_blank" href="#" data-page="Shoko.Utilities.Dummy">
                                 <span>Dummy Example</span>
                             </a>
                             <div class="fieldDescription">Don't click the button above! You dummy!</div>

@@ -410,7 +410,7 @@ function applyFormToConfig(form, config) {
             config.UseGroupsForShows = form.querySelector("#UseGroupsForShows").checked;
             config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
             config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
-            config.FilterMovieLibraries = form.querySelector("#FilterMovieLibraries").checked;
+            config.FilterMovieLibraries = !form.querySelector("#DisableFilterMovieLibraries").checked;
             config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
             config.MovieSpecialsAsExtraFeaturettes = form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked;
             config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
@@ -576,7 +576,7 @@ async function applyConfigToForm(form, config) {
             }
             form.querySelector("#SeasonOrdering").value = config.SeasonOrdering;
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies;
-            form.querySelector("#FilterMovieLibraries").checked = config.FilterMovieLibraries;
+            form.querySelector("#DisableFilterMovieLibraries").checked = !config.FilterMovieLibraries;
             form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
             form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked = config.MovieSpecialsAsExtraFeaturettes;
             form.querySelector("#AddMissingMetadata").checked = config.AddMissingMetadata;
