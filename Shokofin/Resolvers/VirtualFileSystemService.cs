@@ -1001,6 +1001,12 @@ public class VirtualFileSystemService
 
     private LinkGenerationResult CleanupStructure(string vfsPath, string directoryToClean, IReadOnlyList<string> allKnownPaths, bool preview = false)
     {
+        if (!FileSystem.DirectoryExists(directoryToClean)) {
+            if (!preview)
+                Logger.LogDebug("Skipped cleaning up folder because it does not exist: {Path}", directoryToClean);
+            return new();
+        }
+
         if (!preview)
             Logger.LogDebug("Looking for files to remove in folder at {Path}", directoryToClean);
         var start = DateTime.Now;
