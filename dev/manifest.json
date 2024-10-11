@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.2.0.1",
+                "changelog": "`fix`: **Don't clean up VFS if it doesn't exist**.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.2.0-dev.1/shoko_4.2.0.1.zip",
+                "checksum": "1e13024cef8d6c388f857fb154fecf6f",
+                "timestamp": "2024-10-11T22:26:58Z"
+            },
+            {
                 "version": "4.1.1.70",
                 "changelog": "`fix`: **Check if enabled during user data scan before looking up ids**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.67/shoko_4.1.1.67.zip",
                 "checksum": "0278f21deb40f3cae1564d4d86225cbc",
                 "timestamp": "2024-10-09T01:28:41Z"
-            },
-            {
-                "version": "4.1.1.66",
-                "changelog": "`fix`: **Start uglifying the year regex for season merging**:\n\n- If you know which show this is for, then good for you. Otherwise you don't need to pay it any mind.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.66/shoko_4.1.1.66.zip",
-                "checksum": "da3e064f9b57da1d4d5af5fce3443add",
-                "timestamp": "2024-10-07T17:47:51Z"
             }
         ]
     }
