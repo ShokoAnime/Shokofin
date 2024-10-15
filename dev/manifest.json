@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.2.0.2",
+                "changelog": "`repo`: **Update read-me**. (_Skip CI_)\n\n`fix`: **Auto remove old media folder mappings**:\n\n- Automagically remove old media folder mappings.\n\n`fix`: **Fix part episodes**:\n\n- Move the .ptX in partial episodes so Jellyfin properly recognises the parts.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.2.0-dev.2/shoko_4.2.0.2.zip",
+                "checksum": "b562487a01b2fb2eebc9bd0049d52b16",
+                "timestamp": "2024-10-15T02:24:00Z"
+            },
+            {
                 "version": "4.2.0.1",
                 "changelog": "`fix`: **Don't clean up VFS if it doesn't exist**.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.68/shoko_4.1.1.68.zip",
                 "checksum": "5bd4558a52982a5b8c99d3d2ff66dfc3",
                 "timestamp": "2024-10-09T02:13:43Z"
-            },
-            {
-                "version": "4.1.1.67",
-                "changelog": "`fix`: **Remove VFS library roots with the same id but wrong parent folder**:\n\n- Remove any and all VFS library roots from the library with the correct library ID but the wrong parent folder(s).",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.67/shoko_4.1.1.67.zip",
-                "checksum": "0278f21deb40f3cae1564d4d86225cbc",
-                "timestamp": "2024-10-09T01:28:41Z"
             }
         ]
     }
