@@ -209,11 +209,17 @@ public class MediaFolderConfigurationService
 
     #region Media Folder Mapping
 
-    public IReadOnlyList<(string vfsPath, string mainMediaFolderPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)> GetAvailableMediaFoldersForLibrariesForEvents(Func<MediaFolderConfiguration, bool>? filter = null)
+    public async Task<IReadOnlyList<(string vfsPath, string mainMediaFolderPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)>> GetAvailableMediaFoldersForLibraries(Func<MediaFolderConfiguration, bool>? filter = null)
     {
-        LockObj.Wait();
+        await LockObj.WaitAsync();
         try {
             var virtualFolders = LibraryManager.GetVirtualFolders();
+            if (ShouldGenerateAllConfigurations)
+            {
+                ShouldGenerateAllConfigurations = false;
+                await GenerateAllConfigurations(virtualFolders).ConfigureAwait(false);
+            }
+
             var attachRoot = Plugin.Instance.Configuration.VFS_AttachRoot;
             return Plugin.Instance.Configuration.MediaFolders
                 .Where(config => config.IsMapped && !config.IsVirtualRoot && (filter is null || filter(config)) && LibraryManager.GetItemById(config.MediaFolderId) is Folder)

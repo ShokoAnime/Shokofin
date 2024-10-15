@@ -211,7 +211,7 @@ public class EventDispatchService
             var locationsToNotify = new List<string>();
             var mediaFoldersToNotify = new Dictionary<string, (string pathToReport, Folder mediaFolder)>();
             var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
-            var libraries = ConfigurationService.GetAvailableMediaFoldersForLibrariesForEvents(c => c.IsFileEventsEnabled);
+            var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => c.IsFileEventsEnabled).ConfigureAwait(false);
             var (reason, importFolderId, relativePath, lastEvent) = changes.Last();
             if (reason is not UpdateReason.Removed) {
                 Logger.LogTrace("Processing file changed. (File={FileId})", fileId);
