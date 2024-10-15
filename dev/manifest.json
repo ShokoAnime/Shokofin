@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.2.0.3",
+                "changelog": "`fix`: **Fix part episodes (take 2)**:\n\n- Fixed it so the paths match _exactly_ for the episode parts except for the part number, since Jellyfin's internal logic didn't like that the file ids were different between the parts. The fix was to add all file ids to the file name and select the correct id for the given part.\n\n`fix`: **Ensure all media folder configurations are available**:\n\n\u2026before cleaning up the VFS roots, since we rely on the metadata being available to fix them properly.",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.2.0-dev.3/shoko_4.2.0.3.zip",
+                "checksum": "9c106ee25b7b777c524c4f37e9172c13",
+                "timestamp": "2024-10-15T04:06:49Z"
+            },
+            {
                 "version": "4.2.0.2",
                 "changelog": "`repo`: **Update read-me**. (_Skip CI_)\n\n`fix`: **Auto remove old media folder mappings**:\n\n- Automagically remove old media folder mappings.\n\n`fix`: **Fix part episodes**:\n\n- Move the .ptX in partial episodes so Jellyfin properly recognises the parts.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.69/shoko_4.1.1.69.zip",
                 "checksum": "1e719b52b7e22d6e167a5fa8e99428cc",
                 "timestamp": "2024-10-09T03:47:40Z"
-            },
-            {
-                "version": "4.1.1.68",
-                "changelog": "`misc`: **Fix doc links**.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.68/shoko_4.1.1.68.zip",
-                "checksum": "5bd4558a52982a5b8c99d3d2ff66dfc3",
-                "timestamp": "2024-10-09T02:13:43Z"
             }
         ]
     }
