@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "4.2.0.4",
+                "changelog": "`fix`: **Scan all known libraries if series is gone**:\n\n- Scan all known libraries managed by the plugin if we receive one or more file removed events and the series is gone by the time we ask the server for the series related to the file. Since we won't be able to later ask the server for any series related metadata to generate the VFS path to check, so our next best bet is to just ask the core to scan the whole library to let the VFS generation logic take care of the removal of the file(s).",
+                "targetAbi": "10.9.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.2.0-dev.4/shoko_4.2.0.4.zip",
+                "checksum": "ade3c05d51fc36de6c1ce0ade31f8585",
+                "timestamp": "2024-10-17T20:03:56Z"
+            },
+            {
                 "version": "4.2.0.3",
                 "changelog": "`fix`: **Fix part episodes (take 2)**:\n\n- Fixed it so the paths match _exactly_ for the episode parts except for the part number, since Jellyfin's internal logic didn't like that the file ids were different between the parts. The fix was to add all file ids to the file name and select the correct id for the given part.\n\n`fix`: **Ensure all media folder configurations are available**:\n\n\u2026before cleaning up the VFS roots, since we rely on the metadata being available to fix them properly.",
                 "targetAbi": "10.9.7.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.70/shoko_4.1.1.70.zip",
                 "checksum": "9636685f8550e2d0bda8675c3688d1f3",
                 "timestamp": "2024-10-09T04:25:53Z"
-            },
-            {
-                "version": "4.1.1.69",
-                "changelog": "`fix`: **Properly implement the respect preferred image _option_**:\n\n- Hook up the code to actually use the option to respect the preferred image, instead of just always doing it.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1-dev.69/shoko_4.1.1.69.zip",
-                "checksum": "1e719b52b7e22d6e167a5fa8e99428cc",
-                "timestamp": "2024-10-09T03:47:40Z"
             }
         ]
     }
