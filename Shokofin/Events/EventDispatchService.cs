@@ -281,6 +281,19 @@ public class EventDispatchService
             }
             // Something was removed, so assume the location is gone.
             else if (changes.FirstOrDefault(t => t.Reason is UpdateReason.Removed).Event is IFileEventArgs firstRemovedEvent) {
+                // If we don't know which series to remove, then add all of them to be scanned.
+                if (seriesIds.Count is 0) {
+                    Logger.LogTrace("No series found for file. Adding all libraries. (File={FileId})", fileId);
+                    foreach (var (vfsPath, mainMediaFolderPath, collectionType, mediaConfigs) in libraries) {
+                        // Give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
+                        var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mainMediaFolderPath, false).FirstOrDefault();
+                        if (!string.IsNullOrEmpty(fileOrFolder))
+                            mediaFoldersToNotify.TryAdd(mainMediaFolderPath, (fileOrFolder, mainMediaFolderPath.GetFolderForPath()));
+                    }
+
+                    goto aLabelToReduceNesting;
+                }
+
                 Logger.LogTrace("Processing file removed. (File={FileId})", fileId);
                 relativePath = firstRemovedEvent.RelativePath;
                 importFolderId = firstRemovedEvent.ImportFolderId;
@@ -351,6 +364,7 @@ public class EventDispatchService
                 }
             }
 
+            aLabelToReduceNesting:;
             if (LibraryScanWatcher.IsScanRunning) {
                 Logger.LogDebug("Skipped notifying Jellyfin about {LocationCount} changes because a library scan is running. (File={FileId})", locationsToNotify.Count, fileId.ToString());
                 return;
@@ -362,6 +376,7 @@ public class EventDispatchService
                 LibraryMonitor.ReportFileSystemChanged(location);
             if (mediaFoldersToNotify.Count > 0)
                 await Task.WhenAll(mediaFoldersToNotify.Values.Select(tuple => ReportMediaFolderChanged(tuple.mediaFolder, tuple.pathToReport))).ConfigureAwait(false);
+            Logger.LogDebug("Notified Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count + mediaFoldersToNotify.Count, fileId.ToString());
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Error processing {EventCount} file change events. (File={FileId})", changes.Count, fileId);
@@ -397,15 +412,21 @@ public class EventDispatchService
 
         var filteredSeriesIds = new HashSet<string>();
         foreach (var seriesId in seriesIds) {
-            var (primaryId, extraIds) = await ApiManager.GetSeriesIdsForSeason(seriesId);
-            var seriesPathSet = await ApiManager.GetPathSetForSeries(primaryId, extraIds);
-            if (seriesPathSet.Count > 0) {
-                filteredSeriesIds.Add(seriesId);
+            try {
+                var (primaryId, extraIds) = await ApiManager.GetSeriesIdsForSeason(seriesId);
+                var seriesPathSet = await ApiManager.GetPathSetForSeries(primaryId, extraIds);
+                if (seriesPathSet.Count > 0) {
+                    filteredSeriesIds.Add(seriesId);
+                }
+            }
+            // If we fail to find the series data (most likely because it's already gone) then just abort early. We'll handle it elsewhere.
+            catch (ApiException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound) {
+                return new HashSet<string>();
             }
         }
 
         // Return all series if we only have this file for all of them,
-        // otherwise return only the series were we have other files that are
+        // otherwise return only the series where we have other files that are
         // not linked to other series.
         return filteredSeriesIds.Count is 0 ? seriesIds : filteredSeriesIds;
     }
@@ -434,7 +455,7 @@ public class EventDispatchService
 
     private void RemoveSymbolicLink(string filePath)
     {
-        // TODO: If this works better, the move it to an utility and also use it in the VFS if needed, or remove this comment if it's not needed.
+        // TODO: If this works better, then move it to an utility and also use it in the VFS if needed, or remove this comment if that's not needed.
         try {
             var fileExists = File.Exists(filePath);
             var fileInfo = new System.IO.FileInfo(filePath);
