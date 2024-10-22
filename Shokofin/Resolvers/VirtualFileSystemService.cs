@@ -793,9 +793,8 @@ public class VirtualFileSystemService
             ExtraType.Sample => ["samples"],
             _ => ["extras"],
         };
-        var filePartSuffix = (episodeXref.Percentage?.Group ?? 1) is not 1
-            ? $".pt{episode.Shoko.CrossReferences.Where(xref => xref.ReleaseGroup == episodeXref.ReleaseGroup && xref.Percentage!.Group == episodeXref.Percentage!.Group).ToList().FindIndex(xref => xref.Percentage!.Start == episodeXref.Percentage!.Start && xref.Percentage!.End == episodeXref.Percentage!.End) + 1}"
-            : "";
+        var fileIdList = fileId;
+        var filePartSuffix = "";
         if (collectionType is CollectionType.movies || (collectionType is null && isMovieSeason)) {
             if (extrasFolders != null) {
                 foreach (var extrasFolder in extrasFolders)
@@ -823,7 +822,14 @@ public class VirtualFileSystemService
             }
             else {
                 folders.Add(Path.Join(vfsPath, showFolder, seasonFolder));
-                episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber.ToString().PadLeft(show.EpisodePadding, '0')}{filePartSuffix}";
+                episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber.ToString().PadLeft(show.EpisodePadding, '0')}";
+                if ((episodeXref.Percentage?.Group ?? 1) is not 1) {
+                    var list = episode.Shoko.CrossReferences.Where(xref => xref.ReleaseGroup == episodeXref.ReleaseGroup && xref.Percentage!.Group == episodeXref.Percentage!.Group).ToList();
+                    var files = await Task.WhenAll(list.Select(xref => ApiClient.GetFileByEd2kAndFileSize(xref.ED2K, xref.FileSize)));
+                    var index = list.FindIndex(xref => xref.Percentage!.Start == episodeXref.Percentage!.Start && xref.Percentage!.End == episodeXref.Percentage!.End);
+                    filePartSuffix = $".pt{index + 1}";
+                    fileIdList = files.Select(f => f.Id.ToString()).Join(",");
+                }
             }
         }
 
@@ -840,7 +846,7 @@ public class VirtualFileSystemService
             );
         if (config.VFS_AddResolution && !string.IsNullOrEmpty(file.Shoko.Resolution))
             extraDetails.Add(file.Shoko.Resolution);
-        var fileName = $"{episodeName} {(extraDetails.Count is > 0 ? $"[{extraDetails.Select(a => a.ReplaceInvalidPathCharacters()).Join("] [")}] " : "")}[{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileId}]{Path.GetExtension(sourceLocation)}";
+        var fileName = $"{episodeName} {(extraDetails.Count is > 0 ? $"[{extraDetails.Select(a => a.ReplaceInvalidPathCharacters()).Join("] [")}] " : "")}[{ShokoSeriesId.Name}={seriesId}] [{ShokoFileId.Name}={fileIdList}]{filePartSuffix}{Path.GetExtension(sourceLocation)}";
         var symbolicLinks = folders
             .Select(folderPath => Path.Join(folderPath, fileName))
             .ToArray();
@@ -1001,6 +1007,12 @@ public class VirtualFileSystemService
 
     private LinkGenerationResult CleanupStructure(string vfsPath, string directoryToClean, IReadOnlyList<string> allKnownPaths, bool preview = false)
     {
+        if (!FileSystem.DirectoryExists(directoryToClean)) {
+            if (!preview)
+                Logger.LogDebug("Skipped cleaning up folder because it does not exist: {Path}", directoryToClean);
+            return new();
+        }
+
         if (!preview)
             Logger.LogDebug("Looking for files to remove in folder at {Path}", directoryToClean);
         var start = DateTime.Now;

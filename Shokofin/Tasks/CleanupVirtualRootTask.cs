@@ -9,6 +9,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
+using Shokofin.Configuration;
 using Shokofin.Utils;
 
 namespace Shokofin.Tasks;
@@ -16,7 +17,7 @@ namespace Shokofin.Tasks;
 /// <summary>
 /// Clean-up any old VFS roots leftover from an outdated install or failed removal of the roots.
 /// </summary>
-public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, ILibraryManager libraryManager, IFileSystem fileSystem, LibraryScanWatcher scanWatcher) : IScheduledTask, IConfigurableScheduledTask
+public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, ILibraryManager libraryManager, IFileSystem fileSystem, MediaFolderConfigurationService configurationService, LibraryScanWatcher scanWatcher) : IScheduledTask, IConfigurableScheduledTask
 {
     /// <inheritdoc />
     public string Name => "Clean-up Virtual File System Roots";
@@ -45,6 +46,8 @@ public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, ILib
 
     private readonly IFileSystem FileSystem = fileSystem;
 
+    private readonly MediaFolderConfigurationService ConfigurationService = configurationService;
+
     private readonly LibraryScanWatcher ScanWatcher = scanWatcher;
 
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
@@ -54,11 +57,14 @@ public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, ILib
             },
         ];
 
-    public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
+    public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         if (ScanWatcher.IsScanRunning)
-            return Task.CompletedTask;
+            return;
 
+        var mediaFolders = (await ConfigurationService.GetAvailableMediaFoldersForLibraries().ConfigureAwait(false))
+            .SelectMany(x => x.mediaList)
+            .ToList();
         var start = DateTime.Now;
         var virtualRoots = Plugin.Instance.AllVirtualRoots
             .Except([Plugin.Instance.VirtualRoot])
@@ -73,7 +79,7 @@ public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, ILib
             Logger.LogTrace("Removed VFS root {Path} in {TimeSpan}.", virtualRoot, perFolderDeltaTime);
         }
 
-        var libraryIds = Plugin.Instance.Configuration.MediaFolders.ToList()
+        var libraryIds = mediaFolders.ToList()
             .Select(config => config.LibraryId.ToString())
             .Distinct()
             .ToList();
@@ -96,7 +102,7 @@ public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, ILib
             start = DateTime.Now;
             var addedCount = 0;
             var fixedCount = 0;
-            var vfsPaths = Plugin.Instance.Configuration.MediaFolders
+            var vfsPaths = mediaFolders
                 .DistinctBy(config => config.LibraryId)
                 .Select(config => LibraryManager.GetItemById(config.LibraryId) as Folder)
                 .Where(folder => folder is not null)
@@ -123,7 +129,5 @@ public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, ILib
             deltaTime = DateTime.Now - start;
             Logger.LogDebug("Added {AddedCount} missing and fixed {FixedCount} broken VFS roots in {TimeSpan}.", addedCount, fixedCount, deltaTime);
         }
-
-        return Task.CompletedTask;
     }
 }

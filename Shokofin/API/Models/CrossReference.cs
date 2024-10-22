@@ -36,6 +36,16 @@ public class CrossReference
         public int? ReleaseGroup { get; set; }
 
         /// <summary>
+        /// ED2K hash.
+        /// </summary>
+        public string ED2K { get; set; } = string.Empty;
+
+        /// <summary>
+        /// File size.
+        /// </summary>
+        public long FileSize { get; set; }
+
+        /// <summary>
         /// Percentage file is matched to the episode.
         /// </summary>
         public CrossReferencePercentage? Percentage { get; set; }

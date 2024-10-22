@@ -4,10 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using MediaBrowser.Common.Providers;
+using Shokofin.ExternalIds;
 
 namespace Shokofin;
 
-public static class StringExtensions
+public static partial class StringExtensions
 {
     public static string Replace(this string input, Regex regex, string replacement, int count, int startAt)
         =>  regex.Replace(input, replacement, count, startAt);
@@ -152,6 +153,21 @@ public static class StringExtensions
         return null;
     }
 
+    [GeneratedRegex(@"\.pt(?<partNumber>\d+)(?:\.[a-z0-9]+)?$", RegexOptions.IgnoreCase)]
+    private static partial Regex GetPartRegex();
+
     public static bool TryGetAttributeValue(this string text, string attribute, [NotNullWhen(true)] out string? value)
-        => !string.IsNullOrEmpty(value = GetAttributeValue(text, attribute));
+    {
+        value = GetAttributeValue(text, attribute);
+
+        // Select the correct id for the part number in the stringified list of file ids.
+        if (!string.IsNullOrEmpty(value) && attribute == ShokoFileId.Name && GetPartRegex().Match(text) is { Success: true } regexResult) {
+            var partNumber = int.Parse(regexResult.Groups["partNumber"].Value);
+            var index = partNumber - 1;
+            value = value.Split(',')[index];
+        }
+
+        return !string.IsNullOrEmpty(value);
+    }
+
 }

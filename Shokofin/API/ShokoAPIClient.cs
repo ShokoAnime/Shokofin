@@ -276,6 +276,11 @@ public class ShokoAPIClient : IDisposable
         return Get<File>($"/api/v3/File/{id}?include=XRefs&includeDataFrom=AniDB");
     }
 
+    public Task<File> GetFileByEd2kAndFileSize(string ed2k, long fileSize)
+    {
+        return Get<File>($"/api/v3/File/Hash/ED2K?hash={Uri.EscapeDataString(ed2k)}&size={fileSize}&includeDataFrom=AniDB");
+    }
+
     public Task<List<File>> GetFileByPath(string path)
     {
         return Get<List<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(path)}&includeDataFrom=AniDB&limit=1");

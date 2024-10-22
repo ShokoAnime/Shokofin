@@ -209,11 +209,17 @@ public class MediaFolderConfigurationService
 
     #region Media Folder Mapping
 
-    public IReadOnlyList<(string vfsPath, string mainMediaFolderPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)> GetAvailableMediaFoldersForLibrariesForEvents(Func<MediaFolderConfiguration, bool>? filter = null)
+    public async Task<IReadOnlyList<(string vfsPath, string mainMediaFolderPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)>> GetAvailableMediaFoldersForLibraries(Func<MediaFolderConfiguration, bool>? filter = null)
     {
-        LockObj.Wait();
+        await LockObj.WaitAsync();
         try {
             var virtualFolders = LibraryManager.GetVirtualFolders();
+            if (ShouldGenerateAllConfigurations)
+            {
+                ShouldGenerateAllConfigurations = false;
+                await GenerateAllConfigurations(virtualFolders).ConfigureAwait(false);
+            }
+
             var attachRoot = Plugin.Instance.Configuration.VFS_AttachRoot;
             return Plugin.Instance.Configuration.MediaFolders
                 .Where(config => config.IsMapped && !config.IsVirtualRoot && (filter is null || filter(config)) && LibraryManager.GetItemById(config.MediaFolderId) is Folder)
@@ -312,7 +318,7 @@ public class MediaFolderConfigurationService
             foreach (var mediaFolderPath in virtualFolder.Locations) {
                 if (LibraryManager.FindByPath(mediaFolderPath, true) is not Folder secondFolder)
                 {
-                    Logger.LogTrace("Unable to find database entry for {Path}", mediaFolderPath);
+                    Logger.LogTrace("Unable to find database entry for {Path} (Library={LibraryId})", mediaFolderPath, libraryId);
                     continue;
                 }
 
@@ -352,6 +358,15 @@ public class MediaFolderConfigurationService
                 foreach (var location in toRemove)
                     edits.remove.Add(location);
             }
+        }
+
+        var mediaFoldersToRemove = config.MediaFolders
+            .Where(c => !filteredVirtualFolders.Any(v => Guid.Parse(v.ItemId) == c.LibraryId))
+            .ToList();
+        Logger.LogDebug("Found {Count} out of {TotalCount} media folders to remove.", mediaFoldersToRemove.Count, config.MediaFolders.Count);
+        foreach (var mediaFolder in mediaFoldersToRemove) {
+            Logger.LogTrace("Removing config for media folder at path {Path} (Library={LibraryId})", mediaFolder.MediaFolderPath, mediaFolder.LibraryId);
+            config.MediaFolders.Remove(mediaFolder);
         }
     }
 
