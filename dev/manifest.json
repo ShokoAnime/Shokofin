@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.2",
+                "changelog": "`fix`: **Better media folder mapping logic**:\n\nCheck all \u2265101 (up from \u2265100) locations for a match before deciding on a mapping between the media folder and import folder, instead of picking the first found match. This will help in cases where some files have multiple locations with the same file name but different relative paths.\n\nFixes #68",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.2/shoko_5.0.0.2.zip",
+                "checksum": "f735dcfd8481823c5b95e09207c6c816",
+                "timestamp": "2024-10-27T22:15:59Z"
+            },
+            {
                 "version": "5.0.0.1",
                 "changelog": "`fix`: **Don't assume item id and library options are available**:\n\nDon't assume the `ItemId` and `LibraryOptions` are always available on `VirtualFolderInfo`. They can both be null if the library failed to be parsed.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.2.0-dev.4/shoko_4.2.0.4.zip",
                 "checksum": "ade3c05d51fc36de6c1ce0ade31f8585",
                 "timestamp": "2024-10-17T20:03:56Z"
-            },
-            {
-                "version": "4.2.0.3",
-                "changelog": "`fix`: **Fix part episodes (take 2)**:\n\n- Fixed it so the paths match _exactly_ for the episode parts except for the part number, since Jellyfin's internal logic didn't like that the file ids were different between the parts. The fix was to add all file ids to the file name and select the correct id for the given part.\n\n`fix`: **Ensure all media folder configurations are available**:\n\n\u2026before cleaning up the VFS roots, since we rely on the metadata being available to fix them properly.",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.2.0-dev.3/shoko_4.2.0.3.zip",
-                "checksum": "9c106ee25b7b777c524c4f37e9172c13",
-                "timestamp": "2024-10-15T04:06:49Z"
             }
         ]
     }
