@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.6",
+                "changelog": "`feat`: **Automagically move trickplay files**:\n\nAutomagically move trickplay files between the VFS and the underlying library/libraries.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.6/shoko_5.0.0.6.zip",
+                "checksum": "719ce0443b7173da48aac149f2300d20",
+                "timestamp": "2024-10-29T20:05:38Z"
+            },
+            {
                 "version": "5.0.0.5",
                 "changelog": "`fix`: **Check if subtitle file is a symbolic link**:\n\nWhen attempting to move a subtitle file, check if it's a symbolic link and abort if the link target doesn't exist, or create a copy to use if it exists but is pointing to the wrong place.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.2/shoko_5.0.0.2.zip",
                 "checksum": "f735dcfd8481823c5b95e09207c6c816",
                 "timestamp": "2024-10-27T22:15:59Z"
-            },
-            {
-                "version": "5.0.0.1",
-                "changelog": "`fix`: **Don't assume item id and library options are available**:\n\nDon't assume the `ItemId` and `LibraryOptions` are always available on `VirtualFolderInfo`. They can both be null if the library failed to be parsed.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.1/shoko_5.0.0.1.zip",
-                "checksum": "b7a8752e495382efce9407e8246c6035",
-                "timestamp": "2024-10-27T16:37:15Z"
             }
         ]
     }
