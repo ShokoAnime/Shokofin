@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.7",
+                "changelog": "`misc`: **Add logging when moving**:\n\nAdded debug logging when moving subtitle files and trickplay files from the VFS to the underlying library.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.7/shoko_5.0.0.7.zip",
+                "checksum": "0cfe8158526aabe54f2f94cba892b15a",
+                "timestamp": "2024-10-29T21:31:45Z"
+            },
+            {
                 "version": "5.0.0.6",
                 "changelog": "`feat`: **Automagically move trickplay files**:\n\nAutomagically move trickplay files between the VFS and the underlying library/libraries.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.3/shoko_5.0.0.3.zip",
                 "checksum": "423bb074eebca691312368c58217b0ac",
                 "timestamp": "2024-10-27T22:23:10Z"
-            },
-            {
-                "version": "5.0.0.2",
-                "changelog": "`fix`: **Better media folder mapping logic**:\n\nCheck all \u2265101 (up from \u2265100) locations for a match before deciding on a mapping between the media folder and import folder, instead of picking the first found match. This will help in cases where some files have multiple locations with the same file name but different relative paths.\n\nFixes #68",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.2/shoko_5.0.0.2.zip",
-                "checksum": "f735dcfd8481823c5b95e09207c6c816",
-                "timestamp": "2024-10-27T22:15:59Z"
             }
         ]
     }
