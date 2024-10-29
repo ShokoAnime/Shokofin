@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.5",
+                "changelog": "`fix`: **Check if subtitle file is a symbolic link**:\n\nWhen attempting to move a subtitle file, check if it's a symbolic link and abort if the link target doesn't exist, or create a copy to use if it exists but is pointing to the wrong place.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.5/shoko_5.0.0.5.zip",
+                "checksum": "b7e3247f63624c3ae982d2c9188f349f",
+                "timestamp": "2024-10-29T16:23:25Z"
+            },
+            {
                 "version": "5.0.0.4",
                 "changelog": "`fix`: **Split library check in two**:\n\nSplit the library exists check and library id is valid check into two, because the library id may be null if the virtual folder is in a bad state in core Jellyfin, but the library may still exist in the UI.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.1/shoko_5.0.0.1.zip",
                 "checksum": "b7a8752e495382efce9407e8246c6035",
                 "timestamp": "2024-10-27T16:37:15Z"
-            },
-            {
-                "version": "4.2.1.2",
-                "changelog": "`fix`: **Don't attempt to iterate directories in the VFS if it doesn't exist**:\n\nFixes #76",
-                "targetAbi": "10.9.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.2.1-dev.2/shoko_4.2.1.2.zip",
-                "checksum": "00957f8b6ae057d1e611d2791fb0a77d",
-                "timestamp": "2024-10-25T20:30:47Z"
             }
         ]
     }
