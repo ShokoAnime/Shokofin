@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.8",
+                "changelog": "`cleanup`: **Remove unused dictionary in api manager**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.8/shoko_5.0.0.8.zip",
+                "checksum": "e694a109c02123244df930d4a941cf4b",
+                "timestamp": "2024-10-31T11:36:12Z"
+            },
+            {
                 "version": "5.0.0.7",
                 "changelog": "`misc`: **Add logging when moving**:\n\nAdded debug logging when moving subtitle files and trickplay files from the VFS to the underlying library.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.4/shoko_5.0.0.4.zip",
                 "checksum": "5ae7f586cff173f4555c131796bda469",
                 "timestamp": "2024-10-28T09:50:37Z"
-            },
-            {
-                "version": "5.0.0.3",
-                "changelog": "`repo`: **Update README.md for JF 10.10 UI changes (#77)**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.3/shoko_5.0.0.3.zip",
-                "checksum": "423bb074eebca691312368c58217b0ac",
-                "timestamp": "2024-10-27T22:23:10Z"
             }
         ]
     }
