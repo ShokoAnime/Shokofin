@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.10",
+                "changelog": "`fix`: **Also ignore volumes**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.10/shoko_5.0.0.10.zip",
+                "checksum": "a2f8921e7c7828949eea4ff9b6711718",
+                "timestamp": "2024-11-01T03:40:42Z"
+            },
+            {
                 "version": "5.0.0.9",
                 "changelog": "`fix`: **Ignore non-titles for episodes**:\n\nIgnore non-titles for episodes, e.g. \"Episode X\",Special X\", \"OVA\", \"Complete Movie\", and fallback to the next title source or null if it's the last source in the list.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.6/shoko_5.0.0.6.zip",
                 "checksum": "719ce0443b7173da48aac149f2300d20",
                 "timestamp": "2024-10-29T20:05:38Z"
-            },
-            {
-                "version": "5.0.0.5",
-                "changelog": "`fix`: **Check if subtitle file is a symbolic link**:\n\nWhen attempting to move a subtitle file, check if it's a symbolic link and abort if the link target doesn't exist, or create a copy to use if it exists but is pointing to the wrong place.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.5/shoko_5.0.0.5.zip",
-                "checksum": "b7e3247f63624c3ae982d2c9188f349f",
-                "timestamp": "2024-10-29T16:23:25Z"
             }
         ]
     }
