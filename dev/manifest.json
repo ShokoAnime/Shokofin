@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.12",
+                "changelog": "`repo`: **Make discord hook optional for building dev releases**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.12/shoko_5.0.0.12.zip",
+                "checksum": "34343e7357cbc83cc33aa10999bc0749",
+                "timestamp": "2024-11-03T21:02:35Z"
+            },
+            {
                 "version": "5.0.0.11",
                 "changelog": "`fix`: **Move control for merge seasons setting to the correct tab**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.8/shoko_5.0.0.8.zip",
                 "checksum": "e694a109c02123244df930d4a941cf4b",
                 "timestamp": "2024-10-31T11:36:12Z"
-            },
-            {
-                "version": "5.0.0.7",
-                "changelog": "`misc`: **Add logging when moving**:\n\nAdded debug logging when moving subtitle files and trickplay files from the VFS to the underlying library.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.7/shoko_5.0.0.7.zip",
-                "checksum": "0cfe8158526aabe54f2f94cba892b15a",
-                "timestamp": "2024-10-29T21:31:45Z"
             }
         ]
     }
