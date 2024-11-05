@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.13",
+                "changelog": "`fix`: **Use ignore patterns during media folder search and in the ignore rule**:\n\nUse a copy of the ignore patterns taken from the Jellyfin core (since they're not exposed through the abstraction used by plugins) to ignore paths we shouldn't check in the media folder mapping check and in the ignore rule check. The latter check is redundant since the core also has such a check, but in the off-case that the shoko ignore rule is ran before the core ignore rule then we won't attempt to check the paths that would otherwise had been checked because of the run order.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.13/shoko_5.0.0.13.zip",
+                "checksum": "7aeb9d17101f42c1fcb03108c1a6a64a",
+                "timestamp": "2024-11-05T16:53:03Z"
+            },
+            {
                 "version": "5.0.0.12",
                 "changelog": "`repo`: **Make discord hook optional for building dev releases**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.9/shoko_5.0.0.9.zip",
                 "checksum": "64c6e23a451b6cc75076d10b7da9622f",
                 "timestamp": "2024-11-01T01:07:08Z"
-            },
-            {
-                "version": "5.0.0.8",
-                "changelog": "`cleanup`: **Remove unused dictionary in api manager**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.8/shoko_5.0.0.8.zip",
-                "checksum": "e694a109c02123244df930d4a941cf4b",
-                "timestamp": "2024-10-31T11:36:12Z"
             }
         ]
     }
