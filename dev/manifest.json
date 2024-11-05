@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.16",
+                "changelog": "`fix`: **Add extra type for 'talk show'**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.16/shoko_5.0.0.16.zip",
+                "checksum": "15dae3ea509a33bcc09c100d74a4d043",
+                "timestamp": "2024-11-05T20:48:23Z"
+            },
+            {
                 "version": "5.0.0.15",
                 "changelog": "`fix`: **Also check if the provider is enabled for seasons/series and not just videos**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.12/shoko_5.0.0.12.zip",
                 "checksum": "34343e7357cbc83cc33aa10999bc0749",
                 "timestamp": "2024-11-03T21:02:35Z"
-            },
-            {
-                "version": "5.0.0.11",
-                "changelog": "`fix`: **Move control for merge seasons setting to the correct tab**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.11/shoko_5.0.0.11.zip",
-                "checksum": "58568e0b5c1c82bacd928be4bbc5efe6",
-                "timestamp": "2024-11-02T21:42:05Z"
             }
         ]
     }
