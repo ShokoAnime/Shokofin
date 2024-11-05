@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.15",
+                "changelog": "`fix`: **Also check if the provider is enabled for seasons/series and not just videos**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.15/shoko_5.0.0.15.zip",
+                "checksum": "5292f07b2ad43eeed49157aaa51dd168",
+                "timestamp": "2024-11-05T20:36:51Z"
+            },
+            {
                 "version": "5.0.0.14",
                 "changelog": "`fix`: **Check if provider is enabled for item in added/updated events before looking up ids**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.11/shoko_5.0.0.11.zip",
                 "checksum": "58568e0b5c1c82bacd928be4bbc5efe6",
                 "timestamp": "2024-11-02T21:42:05Z"
-            },
-            {
-                "version": "5.0.0.10",
-                "changelog": "`fix`: **Also ignore volumes**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.10/shoko_5.0.0.10.zip",
-                "checksum": "a2f8921e7c7828949eea4ff9b6711718",
-                "timestamp": "2024-11-01T03:40:42Z"
             }
         ]
     }
