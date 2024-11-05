@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.14",
+                "changelog": "`fix`: **Check if provider is enabled for item in added/updated events before looking up ids**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.14/shoko_5.0.0.14.zip",
+                "checksum": "e7f5c8140a049cbe95ba0068e83e9a6c",
+                "timestamp": "2024-11-05T20:28:47Z"
+            },
+            {
                 "version": "5.0.0.13",
                 "changelog": "`fix`: **Use ignore patterns during media folder search and in the ignore rule**:\n\nUse a copy of the ignore patterns taken from the Jellyfin core (since they're not exposed through the abstraction used by plugins) to ignore paths we shouldn't check in the media folder mapping check and in the ignore rule check. The latter check is redundant since the core also has such a check, but in the off-case that the shoko ignore rule is ran before the core ignore rule then we won't attempt to check the paths that would otherwise had been checked because of the run order.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.10/shoko_5.0.0.10.zip",
                 "checksum": "a2f8921e7c7828949eea4ff9b6711718",
                 "timestamp": "2024-11-01T03:40:42Z"
-            },
-            {
-                "version": "5.0.0.9",
-                "changelog": "`fix`: **Ignore non-titles for episodes**:\n\nIgnore non-titles for episodes, e.g. \"Episode X\",Special X\", \"OVA\", \"Complete Movie\", and fallback to the next title source or null if it's the last source in the list.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.9/shoko_5.0.0.9.zip",
-                "checksum": "64c6e23a451b6cc75076d10b7da9622f",
-                "timestamp": "2024-11-01T01:07:08Z"
             }
         ]
     }
