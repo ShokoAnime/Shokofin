@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.17",
+                "changelog": "`cleanup`: **Remove unnecessary namespacing**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.17/shoko_5.0.0.17.zip",
+                "checksum": "3e9403f940382ac2b31d507d41d8c8d5",
+                "timestamp": "2024-11-05T21:33:36Z"
+            },
+            {
                 "version": "5.0.0.16",
                 "changelog": "`fix`: **Add extra type for 'talk show'**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.13/shoko_5.0.0.13.zip",
                 "checksum": "7aeb9d17101f42c1fcb03108c1a6a64a",
                 "timestamp": "2024-11-05T16:53:03Z"
-            },
-            {
-                "version": "5.0.0.12",
-                "changelog": "`repo`: **Make discord hook optional for building dev releases**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.12/shoko_5.0.0.12.zip",
-                "checksum": "34343e7357cbc83cc33aa10999bc0749",
-                "timestamp": "2024-11-03T21:02:35Z"
             }
         ]
     }
