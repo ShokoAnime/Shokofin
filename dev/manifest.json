@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.20",
+                "changelog": "`fix`: **Better forward season merging logic**:\n\nAdded better forward merging logic for the season merging to allow the \"primary\" series to match the year regex. Also uglified the year regex some more.\n\n**Note**: Casual reminder not to use the season merging _advanced setting_ if you don't like pain.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.20/shoko_5.0.0.20.zip",
+                "checksum": "53593c26559c2c58bc774cd74cdeb9ff",
+                "timestamp": "2024-11-10T00:04:47Z"
+            },
+            {
                 "version": "5.0.0.19",
                 "changelog": "`fix`: **More robust trickplay move logic in VFS**:\n\nSome more fixes for moving the trickplay directories in the VFS because the rephrase point is treated like a file while real directories are not, so both need their own handling.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.16/shoko_5.0.0.16.zip",
                 "checksum": "15dae3ea509a33bcc09c100d74a4d043",
                 "timestamp": "2024-11-05T20:48:23Z"
-            },
-            {
-                "version": "5.0.0.15",
-                "changelog": "`fix`: **Also check if the provider is enabled for seasons/series and not just videos**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.15/shoko_5.0.0.15.zip",
-                "checksum": "5292f07b2ad43eeed49157aaa51dd168",
-                "timestamp": "2024-11-05T20:36:51Z"
             }
         ]
     }
