@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.22",
+                "changelog": "`fix`: **Always run custom providers**.\n\n`fix`: **Respect map as specials tag**:\n\nThe custom tag `\"shokofin/map as specials\"` should generally be applied to OVAs where you want the episodes to show up as specials and not normal episodes, but the system will allow you to set the tag on _any_ series and it should Just Work\u2122. It can also be combined with the season merging, or used outside it in shoko groups.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.22/shoko_5.0.0.22.zip",
+                "checksum": "8d33a82cba8edca01c2d56adae7e06ff",
+                "timestamp": "2024-11-10T03:14:59Z"
+            },
+            {
                 "version": "5.0.0.21",
                 "changelog": "`fix`: **Respect no merge tag**:\n\nIf you want a series to never be merged, then (potentially create and) add the `\"shokofin/no merge\"` custom tag on the series in shoko server, and it will never be merged with another series in the plugin.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.18/shoko_5.0.0.18.zip",
                 "checksum": "e97a98a904763ad694ebd8ccacd9cb82",
                 "timestamp": "2024-11-05T22:40:00Z"
-            },
-            {
-                "version": "5.0.0.17",
-                "changelog": "`cleanup`: **Remove unnecessary namespacing**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.17/shoko_5.0.0.17.zip",
-                "checksum": "3e9403f940382ac2b31d507d41d8c8d5",
-                "timestamp": "2024-11-05T21:33:36Z"
             }
         ]
     }
