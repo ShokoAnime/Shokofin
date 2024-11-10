@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.21",
+                "changelog": "`fix`: **Respect no merge tag**:\n\nIf you want a series to never be merged, then (potentially create and) add the `\"shokofin/no merge\"` custom tag on the series in shoko server, and it will never be merged with another series in the plugin.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.21/shoko_5.0.0.21.zip",
+                "checksum": "fecb5b3ac448e80c0663c7debb93a664",
+                "timestamp": "2024-11-10T01:35:35Z"
+            },
+            {
                 "version": "5.0.0.20",
                 "changelog": "`fix`: **Better forward season merging logic**:\n\nAdded better forward merging logic for the season merging to allow the \"primary\" series to match the year regex. Also uglified the year regex some more.\n\n**Note**: Casual reminder not to use the season merging _advanced setting_ if you don't like pain.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.17/shoko_5.0.0.17.zip",
                 "checksum": "3e9403f940382ac2b31d507d41d8c8d5",
                 "timestamp": "2024-11-05T21:33:36Z"
-            },
-            {
-                "version": "5.0.0.16",
-                "changelog": "`fix`: **Add extra type for 'talk show'**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.16/shoko_5.0.0.16.zip",
-                "checksum": "15dae3ea509a33bcc09c100d74a4d043",
-                "timestamp": "2024-11-05T20:48:23Z"
             }
         ]
     }
