@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.25",
+                "changelog": "`fix`: **Skip visited videos regardless of depth**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.25/shoko_5.0.0.25.zip",
+                "checksum": "6b60c3945b330d24bc5fb4cda1e59d86",
+                "timestamp": "2024-11-13T21:10:04Z"
+            },
+            {
                 "version": "5.0.0.24",
                 "changelog": "`fix`: **Better removal of alternate versions**:\n\nImproved the logic where we split the alternate versions in the merge versions manager to also account for local alternate versions. Since we're only operating on Shoko managed libraries then I'm fine with the plugin completely managing the alternate versions so we'll just take control of it all, instead of the partway control we before this commit where we were intentionally ignoring the local versions and somewhat half-baked removing the linked local versions.\n\nAlso hello \ud83d\udc4b to the one reading this.\n\n`fix`: **Attempt to upgrade trickplay files**:\n\nAttempt to \"upgrade\" the trickplay files in the underlying library if we have a newer version in the VFS compared to what is in the underlying library.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.21/shoko_5.0.0.21.zip",
                 "checksum": "fecb5b3ac448e80c0663c7debb93a664",
                 "timestamp": "2024-11-10T01:35:35Z"
-            },
-            {
-                "version": "5.0.0.20",
-                "changelog": "`fix`: **Better forward season merging logic**:\n\nAdded better forward merging logic for the season merging to allow the \"primary\" series to match the year regex. Also uglified the year regex some more.\n\n**Note**: Casual reminder not to use the season merging _advanced setting_ if you don't like pain.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.20/shoko_5.0.0.20.zip",
-                "checksum": "53593c26559c2c58bc774cd74cdeb9ff",
-                "timestamp": "2024-11-10T00:04:47Z"
             }
         ]
     }
