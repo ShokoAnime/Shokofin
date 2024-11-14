@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.26",
+                "changelog": "`feat`: **Make multiple version order configurable (#78)**:\n\nThe order in the multiple versions drop-down on the episode/movie pages for libraries managed by the plugin is now configurable through the plugin settings, and by default will use the imported at date, but you can change the ordering as an _advanced setting_ if you feel like it.\n\nThanks to @GlawenC (Discord: <@707281950355881994>) for doing the research needed to implement this feature and for providing the basic implementation that was built upon in this commit.\n\nCloses #46\n\nCo-authored-by: Mikal Stordal <mikalstordal@gmail.com>",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.26/shoko_5.0.0.26.zip",
+                "checksum": "f065dc71a63aa422910c5b913621d3fd",
+                "timestamp": "2024-11-14T01:12:20Z"
+            },
+            {
                 "version": "5.0.0.25",
                 "changelog": "`fix`: **Skip visited videos regardless of depth**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.22/shoko_5.0.0.22.zip",
                 "checksum": "8d33a82cba8edca01c2d56adae7e06ff",
                 "timestamp": "2024-11-10T03:14:59Z"
-            },
-            {
-                "version": "5.0.0.21",
-                "changelog": "`fix`: **Respect no merge tag**:\n\nIf you want a series to never be merged, then (potentially create and) add the `\"shokofin/no merge\"` custom tag on the series in shoko server, and it will never be merged with another series in the plugin.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.21/shoko_5.0.0.21.zip",
-                "checksum": "fecb5b3ac448e80c0663c7debb93a664",
-                "timestamp": "2024-11-10T01:35:35Z"
             }
         ]
     }
