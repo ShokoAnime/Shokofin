@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.27",
+                "changelog": "`fix`: **Use backdrops as thumbnails for \"movie\" episodes**:\n\nUse backdrops tied to the episode as thumbnails for \"movie\" episodes inside a shows type (or mixed type) library when a movie type series is showing up as a show.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.27/shoko_5.0.0.27.zip",
+                "checksum": "80916418a7b83485e196b926b6328d03",
+                "timestamp": "2024-11-14T18:13:25Z"
+            },
+            {
                 "version": "5.0.0.26",
                 "changelog": "`feat`: **Make multiple version order configurable (#78)**:\n\nThe order in the multiple versions drop-down on the episode/movie pages for libraries managed by the plugin is now configurable through the plugin settings, and by default will use the imported at date, but you can change the ordering as an _advanced setting_ if you feel like it.\n\nThanks to @GlawenC (Discord: <@707281950355881994>) for doing the research needed to implement this feature and for providing the basic implementation that was built upon in this commit.\n\nCloses #46\n\nCo-authored-by: Mikal Stordal <mikalstordal@gmail.com>",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.23/shoko_5.0.0.23.zip",
                 "checksum": "16b030466cead05480cde1f109ff5513",
                 "timestamp": "2024-11-10T03:18:16Z"
-            },
-            {
-                "version": "5.0.0.22",
-                "changelog": "`fix`: **Always run custom providers**.\n\n`fix`: **Respect map as specials tag**:\n\nThe custom tag `\"shokofin/map as specials\"` should generally be applied to OVAs where you want the episodes to show up as specials and not normal episodes, but the system will allow you to set the tag on _any_ series and it should Just Work\u2122. It can also be combined with the season merging, or used outside it in shoko groups.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.22/shoko_5.0.0.22.zip",
-                "checksum": "8d33a82cba8edca01c2d56adae7e06ff",
-                "timestamp": "2024-11-10T03:14:59Z"
             }
         ]
     }
