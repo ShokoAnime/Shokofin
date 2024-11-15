@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.30",
+                "changelog": "`refactor`: **Reconstruct the episode info**:\n\nRemove the directly exposed anidb and shoko objects on the episode info, and instead place the needed properties directly on the episode info object to make it easier to add episode info for tmdb episodes in the future.\n\n`fix`: **Only mark specials and not normal episodes**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.30/shoko_5.0.0.30.zip",
+                "checksum": "37a2f23fa769fdf30d6b583d044f599b",
+                "timestamp": "2024-11-15T02:52:36Z"
+            },
+            {
                 "version": "5.0.0.29",
                 "changelog": "`fix`: **Fix episode type masking**:\n\nFix the episode type masking i just broke in the last commit.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.26/shoko_5.0.0.26.zip",
                 "checksum": "f065dc71a63aa422910c5b913621d3fd",
                 "timestamp": "2024-11-14T01:12:20Z"
-            },
-            {
-                "version": "5.0.0.25",
-                "changelog": "`fix`: **Skip visited videos regardless of depth**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.25/shoko_5.0.0.25.zip",
-                "checksum": "6b60c3945b330d24bc5fb4cda1e59d86",
-                "timestamp": "2024-11-13T21:10:04Z"
             }
         ]
     }
