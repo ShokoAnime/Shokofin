@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.28",
+                "changelog": "`feat`: **Add series configuration + more**:\n\n- Added new per-series configuration, stored on the server as custom tags.\n\n- Added a new selector to chose between anidb structure, shoko structure, and tmdb structure to use by default for all libraries, and together with the new per-series configuration we allow it to be overridden on a per-series  basis, though no UI to do it yet.\n\n- Added a new per-series setting to display specials as normal episodes after the normal episodes.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.28/shoko_5.0.0.28.zip",
+                "checksum": "3835b9f94712139439449c6eb39e3179",
+                "timestamp": "2024-11-15T01:04:33Z"
+            },
+            {
                 "version": "5.0.0.27",
                 "changelog": "`fix`: **Use backdrops as thumbnails for \"movie\" episodes**:\n\nUse backdrops tied to the episode as thumbnails for \"movie\" episodes inside a shows type (or mixed type) library when a movie type series is showing up as a show.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.24/shoko_5.0.0.24.zip",
                 "checksum": "81ef836fa612a12ceb94b0f70742bdba",
                 "timestamp": "2024-11-10T17:25:13Z"
-            },
-            {
-                "version": "5.0.0.23",
-                "changelog": "`fix`: **Await production locations instead of genres**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.23/shoko_5.0.0.23.zip",
-                "checksum": "16b030466cead05480cde1f109ff5513",
-                "timestamp": "2024-11-10T03:18:16Z"
             }
         ]
     }
