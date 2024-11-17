@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.34",
+                "changelog": "`fix`: **Removed erroneous \"$\" in TMDB API Request (#79)**:\n\nThe pains of working in C# and JS. \ud83d\ude14",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.34/shoko_5.0.0.34.zip",
+                "checksum": "2245e1a41bd05f9b802540984d505c18",
+                "timestamp": "2024-11-17T21:55:03Z"
+            },
+            {
                 "version": "5.0.0.33",
                 "changelog": "`refactor`: **Add season id to episode info**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.30/shoko_5.0.0.30.zip",
                 "checksum": "37a2f23fa769fdf30d6b583d044f599b",
                 "timestamp": "2024-11-15T02:52:36Z"
-            },
-            {
-                "version": "5.0.0.29",
-                "changelog": "`fix`: **Fix episode type masking**:\n\nFix the episode type masking i just broke in the last commit.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.29/shoko_5.0.0.29.zip",
-                "checksum": "2345b25f78adb410594c4c090d046ad0",
-                "timestamp": "2024-11-15T01:18:12Z"
             }
         ]
     }
