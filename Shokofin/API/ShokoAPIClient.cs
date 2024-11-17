@@ -321,7 +321,7 @@ public class ShokoAPIClient : IDisposable
 
     public Task<TmdbEpisode> GetTmdbEpisode(string tmdbId)
     {
-        return Get<TmdbEpisode>($"/api/v3/TMDB/Episode/${tmdbId}?include=Titles,Overviews,Images,CrossReferences,Cast,Crew,FileCrossReferences");
+        return Get<TmdbEpisode>($"/api/v3/TMDB/Episode/{tmdbId}?include=Titles,Overviews,Images,CrossReferences,Cast,Crew,FileCrossReferences");
     }
 
     public async Task<EpisodeImages?> GetEpisodeImages(string id)
