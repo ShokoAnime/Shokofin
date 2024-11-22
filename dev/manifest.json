@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.35",
+                "changelog": "`feat`: **Add series config. option to order by airdate**:\n\nThis option will only make sense if you enable the other series config. to include specials as episodes.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.35/shoko_5.0.0.35.zip",
+                "checksum": "b8e3594c2d0fa55eb1eb2647466d6651",
+                "timestamp": "2024-11-22T22:30:09Z"
+            },
+            {
                 "version": "5.0.0.34",
                 "changelog": "`fix`: **Removed erroneous \"$\" in TMDB API Request (#79)**:\n\nThe pains of working in C# and JS. \ud83d\ude14",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.31/shoko_5.0.0.31.zip",
                 "checksum": "e48da2d0bf0500cb8060cfc0462a5d3d",
                 "timestamp": "2024-11-17T17:12:09Z"
-            },
-            {
-                "version": "5.0.0.30",
-                "changelog": "`refactor`: **Reconstruct the episode info**:\n\nRemove the directly exposed anidb and shoko objects on the episode info, and instead place the needed properties directly on the episode info object to make it easier to add episode info for tmdb episodes in the future.\n\n`fix`: **Only mark specials and not normal episodes**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.30/shoko_5.0.0.30.zip",
-                "checksum": "37a2f23fa769fdf30d6b583d044f599b",
-                "timestamp": "2024-11-15T02:52:36Z"
             }
         ]
     }
