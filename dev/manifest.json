@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.37",
+                "changelog": "`refactor`: **Implement multi-structure support + more**:\n\n ### Implemented Multi-Structure Support\n\n- _Finally_ implemented support for multiple library structures. Users can now set a base structure and override it on a per-Shoko-Series basis. With the addition of the **new** _TMDB shows and movies structure_, the library now supports three possible structures, which can be used as a whole and overridden as needed.\n\n- Leveraging the updated data abstraction, the plugin can now map TMDB _shows as movies_\u00b9 or TMDB _movies as shows_.\n\n- For movies, if TMDB movie collections are enabled in Shoko, the plugin uses these collections to create either show entries or collection entries based on how your libraries and plugin settings are configured. In show-type libraries, movies are mapped as seasons/episodes, while in movie-type libraries\u00b2 collections are mapped as _actual_ collections.\n\n- For shows, we support using \"alternate orderings\" (or \"episode groups\" in TMDB terminology) if enabled in Shoko, allowing alternate season/episode arrangements\u00b3 if the default arrangement is not to your liking. You will have to configure the alternate ordering to use in Shoko for now, until the utility is done (||_totally not foreshadowing_||).\n\n- Added support for TMDB metadata across all structures, including studios, content ratings, production locations, tags, and genres. The settings apply globally across all structures, and metadata is excluded if any of these options are disabled, even if available.\n\n ### General Changes\n\n- Replaced the global language code setting for images with per-entity-type, per-image-type settings. Existing settings are automatically migrated, but feel free to tweak them after the update.\n\n- Fixed an issue with \"missing\" episodes. The plugin now disables the server's unaired filter, ensuring unaired episodes populate correctly. Sorry about that.\n\n- Introduced an option to replace images during automatic metadata updates triggered by SignalR events (disabled by default).\n\n- Updated references to TMDB in the Jellyfin UI to \"TheMovieDb,\" aligning with TMDB\u2019s native branding and the rest of the Jellyfin UI.\n\n- Exposed AniDB IDs for series, seasons, episodes, and movies, enabling users to view and link to AniDB pages. No idea how compatible this is with the default AniDB plugin, but even if it's incompatible I don't think you should be using that plugin if you have this plugin installed.\n\n ### Code Style & Modernization\n\n- Updated to use primary constructors where applicable.\n\n- Changed bracket placement from C# style (new line) to JS style (same line) for improved readability and reduced vertical space.\n\n- Standardized variable naming across the codebase. As part of the refactor, made sure the `[Ss]eriesId`s that were previously referring to the season info's id and not the Shoko Series' id were renamed to `[Ss]easonId`, among other similar changes.\n\n- Added missing `.ConfigureAwait(false)` calls on `await`-ed `Task`s.\n\n\u00b9 _Please don't do that, for your own mental health._\n\u00b2 _If collections are enabled **ONLY** for movies and the option to separate movies from series/shows is enabled in the plugin settings._\n\u00b3 _Note: Alternate season images are not currently available in Shoko or TMDB._\n\n`fix`: **Track usage in virtual root task**.\n\n`misc`: **Include our upstream source in images**:\n\nInclude our upstream source in images provided by the plugin.\n\n`fix`: **Add back proper per-library media folder config removal**.\n\n`misc`: **Add log point at the beginning of VFS generation**.\n\n`fix`: **Use invariant culture ignore case for resolved tag children**.\n\n`fix`: **Unmark library structure mode as expert**.\n\n`misc`: **Add debug & experimental setting badges**.\n\n`feat`: **Add per library structure type respect preferred image setting**.\n\n`fix`: **Upgrade tag/genres sources to include the new TMDB sources by default**.\n\n`chore`: **Move all extensions to their own namespace**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.37/shoko_5.0.0.37.zip",
+                "checksum": "fabd1075421d68e4baa805bcc1abd552",
+                "timestamp": "2024-12-06T23:04:22Z"
+            },
+            {
                 "version": "5.0.0.36",
                 "changelog": "`chore`: **A _dashing_ commit (#81)**:\n\nThe biggest commit ever seen by man (||maybe||).",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.33/shoko_5.0.0.33.zip",
                 "checksum": "b5e52430501979dfa67cb732c326765d",
                 "timestamp": "2024-11-17T18:48:42Z"
-            },
-            {
-                "version": "5.0.0.32",
-                "changelog": "`refactor`: **Drop ordering information for now**:\n\nDon't request the ordering information for now. We'll request it later if we need it for any future features.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.32/shoko_5.0.0.32.zip",
-                "checksum": "9ce12c415b5b0c74c100486fe35b1b19",
-                "timestamp": "2024-11-17T17:58:27Z"
             }
         ]
     }
