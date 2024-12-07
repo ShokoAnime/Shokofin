@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.40",
+                "changelog": "`fix`: **Don't assume the tmdb episode exists**:\n\nDon't assume the TMDB episode exists, even if we have a cross-reference for it.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.40/shoko_5.0.0.40.zip",
+                "checksum": "65ac69a9708aca3b0131eebc5182d96c",
+                "timestamp": "2024-12-07T20:56:19Z"
+            },
+            {
                 "version": "5.0.0.39",
                 "changelog": "`misc`: **Mark \"Require Two Entries for a Collection\" option as a debug option**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.36/shoko_5.0.0.36.zip",
                 "checksum": "a253ee8633fc11eaa84492a8dd9bb56f",
                 "timestamp": "2024-11-29T01:45:44Z"
-            },
-            {
-                "version": "5.0.0.35",
-                "changelog": "`feat`: **Add series config. option to order by airdate**:\n\nThis option will only make sense if you enable the other series config. to include specials as episodes.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.35/shoko_5.0.0.35.zip",
-                "checksum": "b8e3594c2d0fa55eb1eb2647466d6651",
-                "timestamp": "2024-11-22T22:30:09Z"
             }
         ]
     }
