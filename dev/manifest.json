@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.43",
+                "changelog": "`fix`: **Return early in startup tasks if the plugin is not connected to a server**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.43/shoko_5.0.0.43.zip",
+                "checksum": "a37d491606875d08e88b46b987753fad",
+                "timestamp": "2024-12-08T19:44:22Z"
+            },
+            {
                 "version": "5.0.0.42",
                 "changelog": "`fix`: **Fix double namespacing on series**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.39/shoko_5.0.0.39.zip",
                 "checksum": "1ad35d4e96b7929aee47023dd017d254",
                 "timestamp": "2024-12-07T02:56:38Z"
-            },
-            {
-                "version": "5.0.0.38",
-                "changelog": "`misc`: **Change log level for guarded memory cache exception logging**.\n\n`fix`: **Movie collections can be known but not downloaded in the server**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.38/shoko_5.0.0.38.zip",
-                "checksum": "14271d7e12997d9c4b76eb444a9b342f",
-                "timestamp": "2024-12-07T02:05:13Z"
             }
         ]
     }
