@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.44",
+                "changelog": "`fix`: **Fix serialization of component version**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.44/shoko_5.0.0.44.zip",
+                "checksum": "f116103b3ca494e93b5c27c3d0ff5092",
+                "timestamp": "2024-12-08T20:56:49Z"
+            },
+            {
                 "version": "5.0.0.43",
                 "changelog": "`fix`: **Return early in startup tasks if the plugin is not connected to a server**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.40/shoko_5.0.0.40.zip",
                 "checksum": "65ac69a9708aca3b0131eebc5182d96c",
                 "timestamp": "2024-12-07T20:56:19Z"
-            },
-            {
-                "version": "5.0.0.39",
-                "changelog": "`misc`: **Mark \"Require Two Entries for a Collection\" option as a debug option**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.39/shoko_5.0.0.39.zip",
-                "checksum": "1ad35d4e96b7929aee47023dd017d254",
-                "timestamp": "2024-12-07T02:56:38Z"
             }
         ]
     }
