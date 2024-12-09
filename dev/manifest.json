@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.46",
+                "changelog": "`fix`: **Complain loudly if we find a mismatch between files found and cross-references found**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.46/shoko_5.0.0.46.zip",
+                "checksum": "a727c6a8635f33d673386001d65f5e8a",
+                "timestamp": "2024-12-09T12:54:35Z"
+            },
+            {
                 "version": "5.0.0.45",
                 "changelog": "`fix`: **Properly set anidb anime id for series info and season info**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.42/shoko_5.0.0.42.zip",
                 "checksum": "fb472c348e5bc68b54a9a93e5893e8ed",
                 "timestamp": "2024-12-08T18:37:44Z"
-            },
-            {
-                "version": "5.0.0.41",
-                "changelog": "`chore`: **Rename `Default*` to `*` on `IBaseItemInfo`**:\n\nRename `DefaultTitle` and `DefaultOverview` to just `Title` and `Overview` on the `IBaseItemInfo` interface, and also add summaries for the properties of the interface and the interface itself.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.41/shoko_5.0.0.41.zip",
-                "checksum": "9dc6e216c96fcfa420756c81927a1ff5",
-                "timestamp": "2024-12-08T17:26:18Z"
             }
         ]
     }
