@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.45",
+                "changelog": "`fix`: **Properly set anidb anime id for series info and season info**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.45/shoko_5.0.0.45.zip",
+                "checksum": "75b828151f7fb598e682598f8fef81df",
+                "timestamp": "2024-12-09T12:50:54Z"
+            },
+            {
                 "version": "5.0.0.44",
                 "changelog": "`fix`: **Fix serialization of component version**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.41/shoko_5.0.0.41.zip",
                 "checksum": "9dc6e216c96fcfa420756c81927a1ff5",
                 "timestamp": "2024-12-08T17:26:18Z"
-            },
-            {
-                "version": "5.0.0.40",
-                "changelog": "`fix`: **Don't assume the tmdb episode exists**:\n\nDon't assume the TMDB episode exists, even if we have a cross-reference for it.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.40/shoko_5.0.0.40.zip",
-                "checksum": "65ac69a9708aca3b0131eebc5182d96c",
-                "timestamp": "2024-12-07T20:56:19Z"
             }
         ]
     }
