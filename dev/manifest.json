@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.47",
+                "changelog": "`feat`: **Add anidb creator id for people**.\n\n`fix`: **Fallback to anidb cast/crew if tmdb cast/crew is unavailable**.\n\n`fix`: **Add provider ids to cast/crew**.\n\n`fix`: **Hopefully fix character names breaking everything**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.47/shoko_5.0.0.47.zip",
+                "checksum": "22a702546bed732109255807e100110c",
+                "timestamp": "2024-12-10T16:27:18Z"
+            },
+            {
                 "version": "5.0.0.46",
                 "changelog": "`fix`: **Complain loudly if we find a mismatch between files found and cross-references found**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.43/shoko_5.0.0.43.zip",
                 "checksum": "a37d491606875d08e88b46b987753fad",
                 "timestamp": "2024-12-08T19:44:22Z"
-            },
-            {
-                "version": "5.0.0.42",
-                "changelog": "`fix`: **Fix double namespacing on series**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.42/shoko_5.0.0.42.zip",
-                "checksum": "fb472c348e5bc68b54a9a93e5893e8ed",
-                "timestamp": "2024-12-08T18:37:44Z"
             }
         ]
     }
