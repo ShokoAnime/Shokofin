@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.52",
+                "changelog": "`feat`: **I18n buttons in plugin settings**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.52/shoko_5.0.0.52.zip",
+                "checksum": "9fa5a462393a6d4df78e9bdebfd25e85",
+                "timestamp": "2024-12-25T18:38:23Z"
+            },
+            {
                 "version": "5.0.0.51",
                 "changelog": "`misc`: **Update comment**. (_Skip CI_)\n\n`fix`: **Always use default tmdb title for tmdb entities and set a better fallback name**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.48/shoko_5.0.0.48.zip",
                 "checksum": "a2fe4ee44e940da6ee42d70dec8f961a",
                 "timestamp": "2024-12-13T04:53:16Z"
-            },
-            {
-                "version": "5.0.0.47",
-                "changelog": "`feat`: **Add anidb creator id for people**.\n\n`fix`: **Fallback to anidb cast/crew if tmdb cast/crew is unavailable**.\n\n`fix`: **Add provider ids to cast/crew**.\n\n`fix`: **Hopefully fix character names breaking everything**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.47/shoko_5.0.0.47.zip",
-                "checksum": "22a702546bed732109255807e100110c",
-                "timestamp": "2024-12-10T16:27:18Z"
             }
         ]
     }
