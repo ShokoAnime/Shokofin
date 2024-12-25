@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.51",
+                "changelog": "`misc`: **Update comment**. (_Skip CI_)\n\n`fix`: **Always use default tmdb title for tmdb entities and set a better fallback name**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.51/shoko_5.0.0.51.zip",
+                "checksum": "9c2c2e3ab74256fbe96c16dad65e3464",
+                "timestamp": "2024-12-25T18:20:18Z"
+            },
+            {
                 "version": "5.0.0.50",
                 "changelog": "`fix`: **Inverse reversed boolean logic**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.47/shoko_5.0.0.47.zip",
                 "checksum": "22a702546bed732109255807e100110c",
                 "timestamp": "2024-12-10T16:27:18Z"
-            },
-            {
-                "version": "5.0.0.46",
-                "changelog": "`fix`: **Complain loudly if we find a mismatch between files found and cross-references found**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.46/shoko_5.0.0.46.zip",
-                "checksum": "a727c6a8635f33d673386001d65f5e8a",
-                "timestamp": "2024-12-09T12:54:35Z"
             }
         ]
     }
