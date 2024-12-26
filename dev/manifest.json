@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.53",
+                "changelog": "`misc`: **Move back accidentally moved file**.\n\n`fix`: **Enable more code analyzers & fix locking on `this` issue**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.53/shoko_5.0.0.53.zip",
+                "checksum": "e3994c391843f41e4f6ad40bcb89c563",
+                "timestamp": "2024-12-26T03:02:24Z"
+            },
+            {
                 "version": "5.0.0.52",
                 "changelog": "`feat`: **I18n buttons in plugin settings**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.49/shoko_5.0.0.49.zip",
                 "checksum": "3ff3dd58f54f542dd3f113140ab15b73",
                 "timestamp": "2024-12-15T02:12:11Z"
-            },
-            {
-                "version": "5.0.0.48",
-                "changelog": "`misc`: **Better response logging in api client**.\n\n`fix`: **Remove unnecessary usage of `EpisodeInfo.SeasonNumber`**.\n\n`fix`: **Improve show info community rating**:\n\nImproved the show info community rating by pre-caching it instead of calculating it on demand, allowing us to do different methods of calculation per show info type/impl., which allows us to use a direct value for show infos for tmdb shows and movies and anidb anime, while aggregating the value for shoko groups and tmdb movie collections.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.48/shoko_5.0.0.48.zip",
-                "checksum": "a2fe4ee44e940da6ee42d70dec8f961a",
-                "timestamp": "2024-12-13T04:53:16Z"
             }
         ]
     }
