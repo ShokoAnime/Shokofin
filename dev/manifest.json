@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.54",
+                "changelog": "`misc`: **Remove unnecessary `virtual` field on external ids**.\n\n`fix`: **Remove legacy support for 4.2 in cross-reference by marking the percentage object on the episode reference as non-nullable, since they're always available from 5.0 and onwards**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.54/shoko_5.0.0.54.zip",
+                "checksum": "7cefc66270d448a4f6ce84f0b80818fa",
+                "timestamp": "2024-12-29T20:26:40Z"
+            },
+            {
                 "version": "5.0.0.53",
                 "changelog": "`misc`: **Move back accidentally moved file**.\n\n`fix`: **Enable more code analyzers & fix locking on `this` issue**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.50/shoko_5.0.0.50.zip",
                 "checksum": "331704c0a80dbec43b8dadd16cec1e00",
                 "timestamp": "2024-12-16T23:38:47Z"
-            },
-            {
-                "version": "5.0.0.49",
-                "changelog": "`feat`: **Expose community rating for images if available**.\n\n`repo`: **Update version matrix in read-me file**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.49/shoko_5.0.0.49.zip",
-                "checksum": "3ff3dd58f54f542dd3f113140ab15b73",
-                "timestamp": "2024-12-15T02:12:11Z"
             }
         ]
     }
