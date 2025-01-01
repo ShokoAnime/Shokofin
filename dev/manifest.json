@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.56",
+                "changelog": "`misc`: **Add created at and updated at to base info interface**.\n\n`fix`: **Missed a spot**:\n\nfollow up commit for 3ef0aec79b497fd2557760682739fcdf081c306e.\n\n`chore`: **DI usage tracker in api client and manager**.\n\n`chore`: **Add concurrency lock to API client**:\n\nAdded a concurrency lock to the API client, to allow a maximum of 10 concurrent requests at all times, as to not overload the server with a DoS attack when iterating a long-running series like e.g. One Piece.\n\nAlso tweaked the log statements and made POST requests able to be cached if needed, but they skip the cache by default.\n\n`chore`: **Further restrict library item searches to only physical libraries in managers/services**.\n\n`chore`: **Pass and use cancellation token in the guarded cache**.\n\n`fix`: **Fix default selected options in settings html**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.56/shoko_5.0.0.56.zip",
+                "checksum": "76bb689ed2b45086b97606575f612e51",
+                "timestamp": "2025-01-01T02:02:30Z"
+            },
+            {
                 "version": "5.0.0.55",
                 "changelog": "`fix`: **Fix up creator role for latest daily server**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.52/shoko_5.0.0.52.zip",
                 "checksum": "9fa5a462393a6d4df78e9bdebfd25e85",
                 "timestamp": "2024-12-25T18:38:23Z"
-            },
-            {
-                "version": "5.0.0.51",
-                "changelog": "`misc`: **Update comment**. (_Skip CI_)\n\n`fix`: **Always use default tmdb title for tmdb entities and set a better fallback name**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.51/shoko_5.0.0.51.zip",
-                "checksum": "9c2c2e3ab74256fbe96c16dad65e3464",
-                "timestamp": "2024-12-25T18:20:18Z"
             }
         ]
     }
