@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.58",
+                "changelog": "`fix`: **Distinct character names before joining**.\n\n`fix`: **Skip cast/crew if staff member don't have a name**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.58/shoko_5.0.0.58.zip",
+                "checksum": "5876c8c32f36e405f2ac1ce13131f059",
+                "timestamp": "2025-01-05T01:40:09Z"
+            },
+            {
                 "version": "5.0.0.57",
                 "changelog": "`fix`: **Filter out empty series from VFS and library**:\n\nFilter out series which we have no normal episodes or specials for from all libraries, be it those managed through the VFS or traditional filtering.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.54/shoko_5.0.0.54.zip",
                 "checksum": "7cefc66270d448a4f6ce84f0b80818fa",
                 "timestamp": "2024-12-29T20:26:40Z"
-            },
-            {
-                "version": "5.0.0.53",
-                "changelog": "`misc`: **Move back accidentally moved file**.\n\n`fix`: **Enable more code analyzers & fix locking on `this` issue**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.53/shoko_5.0.0.53.zip",
-                "checksum": "e3994c391843f41e4f6ad40bcb89c563",
-                "timestamp": "2024-12-26T03:02:24Z"
             }
         ]
     }
