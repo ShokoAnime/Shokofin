@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.59",
+                "changelog": "`fix`: **Hard code haruhi '06 for VFS**:\n\n # <a:thisIsFine:1058294258727145473>",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.59/shoko_5.0.0.59.zip",
+                "checksum": "905c20fb3675aeb37538ee3c2e351056",
+                "timestamp": "2025-01-10T02:17:07Z"
+            },
+            {
                 "version": "5.0.0.58",
                 "changelog": "`fix`: **Distinct character names before joining**.\n\n`fix`: **Skip cast/crew if staff member don't have a name**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.55/shoko_5.0.0.55.zip",
                 "checksum": "4c519931938e0752fc26cd1a44e6bd28",
                 "timestamp": "2024-12-31T02:10:52Z"
-            },
-            {
-                "version": "5.0.0.54",
-                "changelog": "`misc`: **Remove unnecessary `virtual` field on external ids**.\n\n`fix`: **Remove legacy support for 4.2 in cross-reference by marking the percentage object on the episode reference as non-nullable, since they're always available from 5.0 and onwards**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.54/shoko_5.0.0.54.zip",
-                "checksum": "7cefc66270d448a4f6ce84f0b80818fa",
-                "timestamp": "2024-12-29T20:26:40Z"
             }
         ]
     }
