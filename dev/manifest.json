@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.61",
+                "changelog": "`fix`: **Missed a spot in the last commit**:\n\nAdded the changes to a missing spot in commit def7e763c001749712bff690c22d0dcea2bd83b9.\n\n`fix`: **Log which locations will be emitted**:\n\nLog which locations will be emitted to the core in the event dispatch service when verbose/trace logging is enabled for the service.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.61/shoko_5.0.0.61.zip",
+                "checksum": "0110bd0688e4628e57d6a554e6d9a4a2",
+                "timestamp": "2025-01-12T00:21:26Z"
+            },
+            {
                 "version": "5.0.0.60",
                 "changelog": "`repo`: **Update shoko link**: (_Skip CI_)\n\nCloses #85 Fixes #85\n\n`fix`: **Improve file system change reports for physical VFS libraries**:\n\nLeave it 100% to Jellyfin for how to handle it when new series have been added to the VFS, instead of giving it a random folder in the root of the physical VFS and say it has changed.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.57/shoko_5.0.0.57.zip",
                 "checksum": "998ac58bfab5350ee3c370f8300a37bd",
                 "timestamp": "2025-01-04T21:32:50Z"
-            },
-            {
-                "version": "5.0.0.56",
-                "changelog": "`misc`: **Add created at and updated at to base info interface**.\n\n`fix`: **Missed a spot**:\n\nfollow up commit for 3ef0aec79b497fd2557760682739fcdf081c306e.\n\n`chore`: **DI usage tracker in api client and manager**.\n\n`chore`: **Add concurrency lock to API client**:\n\nAdded a concurrency lock to the API client, to allow a maximum of 10 concurrent requests at all times, as to not overload the server with a DoS attack when iterating a long-running series like e.g. One Piece.\n\nAlso tweaked the log statements and made POST requests able to be cached if needed, but they skip the cache by default.\n\n`chore`: **Further restrict library item searches to only physical libraries in managers/services**.\n\n`chore`: **Pass and use cancellation token in the guarded cache**.\n\n`fix`: **Fix default selected options in settings html**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.56/shoko_5.0.0.56.zip",
-                "checksum": "76bb689ed2b45086b97606575f612e51",
-                "timestamp": "2025-01-01T02:02:30Z"
             }
         ]
     }
