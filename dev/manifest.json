@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.62",
+                "changelog": "`fix`: **Check staff name, not role name, during transform to person info**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.62/shoko_5.0.0.62.zip",
+                "checksum": "53e3c0e1f2fbddf944d4564ae2252aca",
+                "timestamp": "2025-01-16T06:04:34Z"
+            },
+            {
                 "version": "5.0.0.61",
                 "changelog": "`fix`: **Missed a spot in the last commit**:\n\nAdded the changes to a missing spot in commit def7e763c001749712bff690c22d0dcea2bd83b9.\n\n`fix`: **Log which locations will be emitted**:\n\nLog which locations will be emitted to the core in the event dispatch service when verbose/trace logging is enabled for the service.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.58/shoko_5.0.0.58.zip",
                 "checksum": "5876c8c32f36e405f2ac1ce13131f059",
                 "timestamp": "2025-01-05T01:40:09Z"
-            },
-            {
-                "version": "5.0.0.57",
-                "changelog": "`fix`: **Filter out empty series from VFS and library**:\n\nFilter out series which we have no normal episodes or specials for from all libraries, be it those managed through the VFS or traditional filtering.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.57/shoko_5.0.0.57.zip",
-                "checksum": "998ac58bfab5350ee3c370f8300a37bd",
-                "timestamp": "2025-01-04T21:32:50Z"
             }
         ]
     }
