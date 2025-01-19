@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.63",
+                "changelog": "`refactor`: **Remove VFS cache placement option**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.63/shoko_5.0.0.63.zip",
+                "checksum": "116d92af6f83fd2c0c3b8f0f8aec0f19",
+                "timestamp": "2025-01-19T14:20:14Z"
+            },
+            {
                 "version": "5.0.0.62",
                 "changelog": "`fix`: **Check staff name, not role name, during transform to person info**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.59/shoko_5.0.0.59.zip",
                 "checksum": "905c20fb3675aeb37538ee3c2e351056",
                 "timestamp": "2025-01-10T02:17:07Z"
-            },
-            {
-                "version": "5.0.0.58",
-                "changelog": "`fix`: **Distinct character names before joining**.\n\n`fix`: **Skip cast/crew if staff member don't have a name**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.58/shoko_5.0.0.58.zip",
-                "checksum": "5876c8c32f36e405f2ac1ce13131f059",
-                "timestamp": "2025-01-05T01:40:09Z"
             }
         ]
     }
