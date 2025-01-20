@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.0.65",
+                "changelog": "`refactor`: **Remove `TryGetEpisodeIdFor` in favor of `TryGetEpisodeIdsFor`**.\n\n`fix`: **Better \"missing\" episode removal logic**:\n\nThis should hopefully fix the faulty removal logic for good\u2026 hopefully.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.65/shoko_5.0.0.65.zip",
+                "checksum": "18c604087b5aaf7733259fbc64f3bd61",
+                "timestamp": "2025-01-20T11:40:41Z"
+            },
+            {
                 "version": "5.0.0.64",
                 "changelog": "`fix`: **Readjust season id read from path before use**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.61/shoko_5.0.0.61.zip",
                 "checksum": "0110bd0688e4628e57d6a554e6d9a4a2",
                 "timestamp": "2025-01-12T00:21:26Z"
-            },
-            {
-                "version": "5.0.0.60",
-                "changelog": "`repo`: **Update shoko link**: (_Skip CI_)\n\nCloses #85 Fixes #85\n\n`fix`: **Improve file system change reports for physical VFS libraries**:\n\nLeave it 100% to Jellyfin for how to handle it when new series have been added to the VFS, instead of giving it a random folder in the root of the physical VFS and say it has changed.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0-dev.60/shoko_5.0.0.60.zip",
-                "checksum": "f98b7ccd9125a8ab3853d7db26f9e366",
-                "timestamp": "2025-01-11T20:52:43Z"
             }
         ]
     }
