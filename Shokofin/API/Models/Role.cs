@@ -118,6 +118,7 @@ public enum CreatorRoleType
     /// Voice actor or voice actress.
     /// </summary>
     Seiyuu,
+    Actor = Seiyuu,
 
     /// <summary>
     /// This can be anything involved in writing the show.
