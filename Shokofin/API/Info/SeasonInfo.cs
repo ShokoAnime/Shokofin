@@ -293,7 +293,7 @@ public class SeasonInfo
         => image != null && image.IsAvailable ? image.ToURLString(internalUrl: true) : null;
 
     private static PersonInfo? RoleToPersonInfo(Role role)
-        => role.Type switch
+        => string.IsNullOrWhiteSpace(role.Staff.Name) ? null : role.Type switch
         {
             CreatorRoleType.Director => new PersonInfo
             {
