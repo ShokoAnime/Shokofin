@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.1.0",
+                "changelog": "",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.1/shoko_5.0.1.0.zip",
+                "checksum": "85774b7b451cd4f8e2aaf1aa9f9def5b",
+                "timestamp": "2025-01-21T02:42:21Z"
+            },
+            {
                 "version": "5.0.0.0",
                 "changelog": "",
                 "targetAbi": "10.10.0.0",
