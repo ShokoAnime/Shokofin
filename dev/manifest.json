@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.7",
+                "changelog": "`fix`: **More systematic ordering of relations during merging**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.7/shoko_5.0.2.7.zip",
+                "checksum": "1ce875bf5b0a3f32105ba97335da37d4",
+                "timestamp": "2025-02-04T20:03:20Z"
+            },
+            {
                 "version": "5.0.2.6",
                 "changelog": "`misc`: **Allow syncing vfs thread count to refresh thread count**:\n\nAllow synchronizing the number of threads to use during a VFS (re-)generation to the number of threads to use during a recursive refresh of a folder (any folder, by it the library itself, a series within, etc.) defined in the jellyfin core system settings by setting the VFS threads setting to `-1`. Setting it to `0` or anything below `-1` will still set it to use the number of available CPU cores, but `-1` is now reserved for following the system setting.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.3/shoko_5.0.2.3.zip",
                 "checksum": "58382253b144c013be1c938f3e461a7e",
                 "timestamp": "2025-02-03T21:27:25Z"
-            },
-            {
-                "version": "5.0.2.2",
-                "changelog": "`feat`: **Add iterative file checks mode in VFS**:\n\nAdded a new iterative file check mode for VFS generation, to be used when iterating the file system is expensive (e.g. if the libraries are on a network mapped mount/drive, etc.), if you just prefer it to be done incrementally instead of up front. The setting is marked as debug.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.2/shoko_5.0.2.2.zip",
-                "checksum": "cd43a530900c8ef1d766add08ab5e4a6",
-                "timestamp": "2025-02-01T19:46:20Z"
             }
         ]
     }
