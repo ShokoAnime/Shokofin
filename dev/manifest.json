@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.9",
+                "changelog": "`fix`: **Suppress ignored episode titles**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.9/shoko_5.0.2.9.zip",
+                "checksum": "24df6861c07121f385243f8d162cf3d6",
+                "timestamp": "2025-02-04T22:36:32Z"
+            },
+            {
                 "version": "5.0.2.8",
                 "changelog": "`fix`: **Add guard for shared side stories**:\n\nAdded a guard to prevent accidentally duplicating a series across multiple merge groups because the series is a side story to multiple main stories (e.g. linked to two series which have a sequel/prequel relationship, etc.).",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.5/shoko_5.0.2.5.zip",
                 "checksum": "4b23f3c93b5e1d0ec684b9ba3da02399",
                 "timestamp": "2025-02-04T18:34:36Z"
-            },
-            {
-                "version": "5.0.2.4",
-                "changelog": "`misc`: **Mark all vfs location settings as debug instead of experimental**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.4/shoko_5.0.2.4.zip",
-                "checksum": "e53b65a829f2c7559e45163e300dc2d0",
-                "timestamp": "2025-02-03T21:29:22Z"
             }
         ]
     }
