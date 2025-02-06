@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.11",
+                "changelog": "`fix`: **Ignore more episode names**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.11/shoko_5.0.2.11.zip",
+                "checksum": "1659c1461efb8bc39b4813b7cdcca079",
+                "timestamp": "2025-02-06T00:43:22Z"
+            },
+            {
                 "version": "5.0.2.10",
                 "changelog": "`fix`: **Provide fallback title in providers**.\n\n`chore`: **Simplify special prefix logic**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.7/shoko_5.0.2.7.zip",
                 "checksum": "1ce875bf5b0a3f32105ba97335da37d4",
                 "timestamp": "2025-02-04T20:03:20Z"
-            },
-            {
-                "version": "5.0.2.6",
-                "changelog": "`misc`: **Allow syncing vfs thread count to refresh thread count**:\n\nAllow synchronizing the number of threads to use during a VFS (re-)generation to the number of threads to use during a recursive refresh of a folder (any folder, by it the library itself, a series within, etc.) defined in the jellyfin core system settings by setting the VFS threads setting to `-1`. Setting it to `0` or anything below `-1` will still set it to use the number of available CPU cores, but `-1` is now reserved for following the system setting.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.6/shoko_5.0.2.6.zip",
-                "checksum": "ff7bdb0a70c7b61f0324f9bc7ddedabc",
-                "timestamp": "2025-02-04T19:20:45Z"
             }
         ]
     }
