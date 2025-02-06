@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.12",
+                "changelog": "`fix`: **Check all titles if they're invalid, not just some**.\n\n`misc`: **Add roman letter fallback for movie series if no subtitle is available**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.12/shoko_5.0.2.12.zip",
+                "checksum": "d629316f12549a92db29b4103ad185fc",
+                "timestamp": "2025-02-06T01:01:55Z"
+            },
+            {
                 "version": "5.0.2.11",
                 "changelog": "`fix`: **Ignore more episode names**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.8/shoko_5.0.2.8.zip",
                 "checksum": "c33e7b039e306dcecc803202d8c3e60c",
                 "timestamp": "2025-02-04T21:43:39Z"
-            },
-            {
-                "version": "5.0.2.7",
-                "changelog": "`fix`: **More systematic ordering of relations during merging**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.7/shoko_5.0.2.7.zip",
-                "checksum": "1ce875bf5b0a3f32105ba97335da37d4",
-                "timestamp": "2025-02-04T20:03:20Z"
             }
         ]
     }
