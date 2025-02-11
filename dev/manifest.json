@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.14",
+                "changelog": "`misc`: **Add more invalid episode titles**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.14/shoko_5.0.2.14.zip",
+                "checksum": "6531cdfc9bf795f6a7e77c2f8722b3c9",
+                "timestamp": "2025-02-11T22:49:16Z"
+            },
+            {
                 "version": "5.0.2.13",
                 "changelog": "`fix`: **Suppress people and committees from studio list**.\n\n`feat`: **Add setting to only show animation studios**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.10/shoko_5.0.2.10.zip",
                 "checksum": "46851da23aa7cc4be391697dbd6c0359",
                 "timestamp": "2025-02-05T18:24:04Z"
-            },
-            {
-                "version": "5.0.2.9",
-                "changelog": "`fix`: **Suppress ignored episode titles**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.9/shoko_5.0.2.9.zip",
-                "checksum": "24df6861c07121f385243f8d162cf3d6",
-                "timestamp": "2025-02-04T22:36:32Z"
             }
         ]
     }
