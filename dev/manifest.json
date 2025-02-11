@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.15",
+                "changelog": "`repo`: **Update version matrix in read-me file**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.15/shoko_5.0.2.15.zip",
+                "checksum": "7c954ee7107fac15d746b66d6ff11358",
+                "timestamp": "2025-02-11T23:54:49Z"
+            },
+            {
                 "version": "5.0.2.14",
                 "changelog": "`misc`: **Add more invalid episode titles**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.11/shoko_5.0.2.11.zip",
                 "checksum": "1659c1461efb8bc39b4813b7cdcca079",
                 "timestamp": "2025-02-06T00:43:22Z"
-            },
-            {
-                "version": "5.0.2.10",
-                "changelog": "`fix`: **Provide fallback title in providers**.\n\n`chore`: **Simplify special prefix logic**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.10/shoko_5.0.2.10.zip",
-                "checksum": "46851da23aa7cc4be391697dbd6c0359",
-                "timestamp": "2025-02-05T18:24:04Z"
             }
         ]
     }
