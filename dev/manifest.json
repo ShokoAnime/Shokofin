@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.16",
+                "changelog": "`fix`: **Add missing series types for daily server**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.16/shoko_5.0.2.16.zip",
+                "checksum": "f3e012041bc7b3270f4e4fa428a69649",
+                "timestamp": "2025-03-27T14:59:37Z"
+            },
+            {
                 "version": "5.0.2.15",
                 "changelog": "`repo`: **Update version matrix in read-me file**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.12/shoko_5.0.2.12.zip",
                 "checksum": "d629316f12549a92db29b4103ad185fc",
                 "timestamp": "2025-02-06T01:01:55Z"
-            },
-            {
-                "version": "5.0.2.11",
-                "changelog": "`fix`: **Ignore more episode names**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.11/shoko_5.0.2.11.zip",
-                "checksum": "1659c1461efb8bc39b4813b7cdcca079",
-                "timestamp": "2025-02-06T00:43:22Z"
             }
         ]
     }
