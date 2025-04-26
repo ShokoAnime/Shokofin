@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.17",
+                "changelog": "`feat`: **Add support for multiple alt/orig. titles per entry**.\n\n`chore`: **Remove extra whitespace**.\n\n`refactor`: **Tweak SignalR auto-reconnect behavior**:\n\n- Tweaked the SignalR auto-reconnect behavior to not sort and filter the list, and to use the last interval in the list indefinitely until a successful connection is made, instead of the old behavior of not trying again once we've tried all the intervals in the list.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.17/shoko_5.0.2.17.zip",
+                "checksum": "cb098d96dd612ddba9f1457b76769664",
+                "timestamp": "2025-04-26T23:35:46Z"
+            },
+            {
                 "version": "5.0.2.16",
                 "changelog": "`fix`: **Add missing series types for daily server**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.13/shoko_5.0.2.13.zip",
                 "checksum": "d2152ed149e443855f70d5025df2575e",
                 "timestamp": "2025-02-06T16:46:24Z"
-            },
-            {
-                "version": "5.0.2.12",
-                "changelog": "`fix`: **Check all titles if they're invalid, not just some**.\n\n`misc`: **Add roman letter fallback for movie series if no subtitle is available**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.12/shoko_5.0.2.12.zip",
-                "checksum": "d629316f12549a92db29b4103ad185fc",
-                "timestamp": "2025-02-06T01:01:55Z"
             }
         ]
     }
