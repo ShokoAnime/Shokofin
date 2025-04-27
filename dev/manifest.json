@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.19",
+                "changelog": "`feat`: **Add advanced title settings**:\n\n- Added per-structure-type per-base-item title settings, all disabled by default. Can't get more advanced than this I think. but because it's so advanced, it's hard to make an intuitive UI for it, so no UI for now.\n\n-----\n\nHey! You! Yes, the one reading this. Are you tired of the plugin only supporting a single set of settings for titles across all types (i.e. shows/seasons/episodes/movies/collections)? Rejoice! You now have per-structure-type, per-base-item advanced title settings \u2014 because only _you_ know best what _you_ want. \ud83c\udf89 The only catch? There\u2019s no fancy UI for it, so roll up your sleeves and tweak the XML directly to your heart\u2019s content.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.19/shoko_5.0.2.19.zip",
+                "checksum": "d47c6bcf00ef5619245fd8fd8e35329c",
+                "timestamp": "2025-04-27T11:37:33Z"
+            },
+            {
                 "version": "5.0.2.18",
                 "changelog": "`misc`: **Remove numbering if it's only one**:\n\n- Removed the numbering of the alternate/original titles in the UI if it's only one.\n\n`misc`: **Move add button, show remaining instead of total**:\n\n- Moved the button responsible for adding new alternate/original titles into the `<fieldset>` of the first title, making it so it won't move when you press it and also feel more in-line (literally) with the rest of the alternate/original title UI.\n\n- Show remaining titles you can add instead of showing the maximum allowed titles.\n\n- Switch the add button from primary to secondary when we disable it, since it seems like Jellyfin doesn't have CSS for disabled primary buttons, so this will make it more obvious (hopefully) that it's in a disabled state.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.15/shoko_5.0.2.15.zip",
                 "checksum": "7c954ee7107fac15d746b66d6ff11358",
                 "timestamp": "2025-02-11T23:54:49Z"
-            },
-            {
-                "version": "5.0.2.14",
-                "changelog": "`misc`: **Add more invalid episode titles**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.14/shoko_5.0.2.14.zip",
-                "checksum": "6531cdfc9bf795f6a7e77c2f8722b3c9",
-                "timestamp": "2025-02-11T22:49:16Z"
             }
         ]
     }
