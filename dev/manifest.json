@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.20",
+                "changelog": "`refactor`: **Impl. series config. service [1/2]**:\n\nPart 1 of 2 of the series configuration implementation. This is the backend code and the api client methods to-be-used by the series configuration utility in the future, giving the minimum required to test it in devtools before figuring out the rest.\n\n`refactor`: **Make compatible with provider refactor + more**:\n\n- Made the plugin with the provider info refactor branch on the server without breaking compatibility with the current dailies. This required tweaking the REST API endpoints & models and SignalR channels and models to support both versions at the same time.\n\n- Updated URL handling for `IExternalId`s to `IExternalUrlProvider` and reorganized the external id namespace. Also removed the Shoko fields so you can't edit them. They were only previously exposed because that was the only way to get the redirects back to shoko working.\n\n- Renamed 'import folder' to 'managed folder' throughout the code base, including in the user/admin facing UIs.\n\n- Added support for redirecting to the correct location when the Web UI prefix has been tweaked in Shoko Server. So users(/me) mounting the Web UI at `/` or other locations will still result in the links redirecting to the correct pages.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.20/shoko_5.0.2.20.zip",
+                "checksum": "a167488aacc219f2a7c67ddea24076e4",
+                "timestamp": "2025-04-29T23:32:38Z"
+            },
+            {
                 "version": "5.0.2.19",
                 "changelog": "`feat`: **Add advanced title settings**:\n\n- Added per-structure-type per-base-item title settings, all disabled by default. Can't get more advanced than this I think. but because it's so advanced, it's hard to make an intuitive UI for it, so no UI for now.\n\n-----\n\nHey! You! Yes, the one reading this. Are you tired of the plugin only supporting a single set of settings for titles across all types (i.e. shows/seasons/episodes/movies/collections)? Rejoice! You now have per-structure-type, per-base-item advanced title settings \u2014 because only _you_ know best what _you_ want. \ud83c\udf89 The only catch? There\u2019s no fancy UI for it, so roll up your sleeves and tweak the XML directly to your heart\u2019s content.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.16/shoko_5.0.2.16.zip",
                 "checksum": "f3e012041bc7b3270f4e4fa428a69649",
                 "timestamp": "2025-03-27T14:59:37Z"
-            },
-            {
-                "version": "5.0.2.15",
-                "changelog": "`repo`: **Update version matrix in read-me file**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.15/shoko_5.0.2.15.zip",
-                "checksum": "7c954ee7107fac15d746b66d6ff11358",
-                "timestamp": "2025-02-11T23:54:49Z"
             }
         ]
     }
