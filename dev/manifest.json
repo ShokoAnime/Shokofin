@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.22",
+                "changelog": "`fix`: **Allow release group id to be a number or string**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.22/shoko_5.0.2.22.zip",
+                "checksum": "eff8cb2f3510b7cd9c8d89719d78254c",
+                "timestamp": "2025-04-30T17:40:31Z"
+            },
+            {
                 "version": "5.0.2.21",
                 "changelog": "`fix`: **Fix enum usage for dailies**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.18/shoko_5.0.2.18.zip",
                 "checksum": "093735b861129a163a5f81ef41e15e64",
                 "timestamp": "2025-04-27T09:51:28Z"
-            },
-            {
-                "version": "5.0.2.17",
-                "changelog": "`feat`: **Add support for multiple alt/orig. titles per entry**.\n\n`chore`: **Remove extra whitespace**.\n\n`refactor`: **Tweak SignalR auto-reconnect behavior**:\n\n- Tweaked the SignalR auto-reconnect behavior to not sort and filter the list, and to use the last interval in the list indefinitely until a successful connection is made, instead of the old behavior of not trying again once we've tried all the intervals in the list.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.17/shoko_5.0.2.17.zip",
-                "checksum": "cb098d96dd612ddba9f1457b76769664",
-                "timestamp": "2025-04-26T23:35:46Z"
             }
         ]
     }
