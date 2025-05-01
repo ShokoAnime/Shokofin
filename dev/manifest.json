@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.24",
+                "changelog": "`feat`: **Add tag/genre exclusion lists**:\n\n- Added the ability to exclude certain tags from being displayed as tags/genres.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.24/shoko_5.0.2.24.zip",
+                "checksum": "623a58074d119a32f04bde2f75ce67a1",
+                "timestamp": "2025-05-01T23:36:47Z"
+            },
+            {
                 "version": "5.0.2.23",
                 "changelog": "`chore`: **Clean up style**. (_Skip CI_)\n\n`feat`: **Add yearly seasons & air days**:\n\n- Added yearly seasons as tags. E.g. `Winter 2013/14`, `Spring 2001`, etc.\n\n- Added air days for series. This is a native Jellyfin feature, so they're not added as tags.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.20/shoko_5.0.2.20.zip",
                 "checksum": "a167488aacc219f2a7c67ddea24076e4",
                 "timestamp": "2025-04-29T23:32:38Z"
-            },
-            {
-                "version": "5.0.2.19",
-                "changelog": "`feat`: **Add advanced title settings**:\n\n- Added per-structure-type per-base-item title settings, all disabled by default. Can't get more advanced than this I think. but because it's so advanced, it's hard to make an intuitive UI for it, so no UI for now.\n\n-----\n\nHey! You! Yes, the one reading this. Are you tired of the plugin only supporting a single set of settings for titles across all types (i.e. shows/seasons/episodes/movies/collections)? Rejoice! You now have per-structure-type, per-base-item advanced title settings \u2014 because only _you_ know best what _you_ want. \ud83c\udf89 The only catch? There\u2019s no fancy UI for it, so roll up your sleeves and tweak the XML directly to your heart\u2019s content.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.19/shoko_5.0.2.19.zip",
-                "checksum": "d47c6bcf00ef5619245fd8fd8e35329c",
-                "timestamp": "2025-04-27T11:37:33Z"
             }
         ]
     }
