@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.23",
+                "changelog": "`chore`: **Clean up style**. (_Skip CI_)\n\n`feat`: **Add yearly seasons & air days**:\n\n- Added yearly seasons as tags. E.g. `Winter 2013/14`, `Spring 2001`, etc.\n\n- Added air days for series. This is a native Jellyfin feature, so they're not added as tags.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.23/shoko_5.0.2.23.zip",
+                "checksum": "6e067596fd4f435c9c62d0dbd9de30e7",
+                "timestamp": "2025-05-01T23:11:50Z"
+            },
+            {
                 "version": "5.0.2.22",
                 "changelog": "`fix`: **Allow release group id to be a number or string**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.19/shoko_5.0.2.19.zip",
                 "checksum": "d47c6bcf00ef5619245fd8fd8e35329c",
                 "timestamp": "2025-04-27T11:37:33Z"
-            },
-            {
-                "version": "5.0.2.18",
-                "changelog": "`misc`: **Remove numbering if it's only one**:\n\n- Removed the numbering of the alternate/original titles in the UI if it's only one.\n\n`misc`: **Move add button, show remaining instead of total**:\n\n- Moved the button responsible for adding new alternate/original titles into the `<fieldset>` of the first title, making it so it won't move when you press it and also feel more in-line (literally) with the rest of the alternate/original title UI.\n\n- Show remaining titles you can add instead of showing the maximum allowed titles.\n\n- Switch the add button from primary to secondary when we disable it, since it seems like Jellyfin doesn't have CSS for disabled primary buttons, so this will make it more obvious (hopefully) that it's in a disabled state.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.18/shoko_5.0.2.18.zip",
-                "checksum": "093735b861129a163a5f81ef41e15e64",
-                "timestamp": "2025-04-27T09:51:28Z"
             }
         ]
     }
