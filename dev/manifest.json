@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.2.25",
+                "changelog": "`refactor`: **Add plain text / markdown conversion modes**:\n\n- Added a plain text or markdown conversion mode for descriptions. Markdown is used by default.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.25/shoko_5.0.2.25.zip",
+                "checksum": "7468566cd23fd970fe4b7adb70c7ac0c",
+                "timestamp": "2025-05-02T00:28:10Z"
+            },
+            {
                 "version": "5.0.2.24",
                 "changelog": "`feat`: **Add tag/genre exclusion lists**:\n\n- Added the ability to exclude certain tags from being displayed as tags/genres.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.21/shoko_5.0.2.21.zip",
                 "checksum": "2b2bcd379cfcbcf0563141b392ff91ca",
                 "timestamp": "2025-04-30T16:25:38Z"
-            },
-            {
-                "version": "5.0.2.20",
-                "changelog": "`refactor`: **Impl. series config. service [1/2]**:\n\nPart 1 of 2 of the series configuration implementation. This is the backend code and the api client methods to-be-used by the series configuration utility in the future, giving the minimum required to test it in devtools before figuring out the rest.\n\n`refactor`: **Make compatible with provider refactor + more**:\n\n- Made the plugin with the provider info refactor branch on the server without breaking compatibility with the current dailies. This required tweaking the REST API endpoints & models and SignalR channels and models to support both versions at the same time.\n\n- Updated URL handling for `IExternalId`s to `IExternalUrlProvider` and reorganized the external id namespace. Also removed the Shoko fields so you can't edit them. They were only previously exposed because that was the only way to get the redirects back to shoko working.\n\n- Renamed 'import folder' to 'managed folder' throughout the code base, including in the user/admin facing UIs.\n\n- Added support for redirecting to the correct location when the Web UI prefix has been tweaked in Shoko Server. So users(/me) mounting the Web UI at `/` or other locations will still result in the links redirecting to the correct pages.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.20/shoko_5.0.2.20.zip",
-                "checksum": "a167488aacc219f2a7c67ddea24076e4",
-                "timestamp": "2025-04-29T23:32:38Z"
             }
         ]
     }
