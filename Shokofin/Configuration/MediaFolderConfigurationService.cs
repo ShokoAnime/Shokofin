@@ -184,8 +184,16 @@ public class MediaFolderConfigurationService
         if (e.Item != null && root != null && e.Item != root && e.Item is Folder folder && folder.ParentId == Guid.Empty  && !string.IsNullOrEmpty(folder.Path) && !folder.Path.StartsWith(root.Path)) {
             await LockObj.WaitAsync();
             try {
-                var mediaFolderConfig = Plugin.Instance.Configuration.MediaFolders.FirstOrDefault(c => c.MediaFolderId == folder.Id);
-                if (mediaFolderConfig != null) {
+                var virtualFolders = LibraryManager.GetVirtualFolders();
+                var virtualFolderIds = virtualFolders
+                    .Select(virtualFolder => string.IsNullOrEmpty(virtualFolder.ItemId) ? Guid.Empty : Guid.Parse(virtualFolder.ItemId))
+                    .Except([Guid.Empty])
+                    .ToList();
+                var mediaFolderConfigs = Plugin.Instance.Configuration.MediaFolders
+                    .Where(c => c.MediaFolderId == folder.Id && !virtualFolderIds.Contains(c.LibraryId))
+                    .ToList();
+                foreach (var mediaFolderConfig in mediaFolderConfigs)
+                {
                     Logger.LogDebug(
                         "Removing stored configuration for folder at {Path} (ImportFolder={ImportFolderId},RelativePath={RelativePath})",
                         folder.Path,
@@ -280,11 +288,13 @@ public class MediaFolderConfigurationService
         await LockObj.WaitAsync();
         try {
             var allVirtualFolders = LibraryManager.GetVirtualFolders();
-            if (allVirtualFolders.FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path) && (collectionType is CollectionType.unknown || p.CollectionType.ConvertToCollectionType() == collectionType)) is not { } library || !Guid.TryParse(library.ItemId, out var libraryId))
+            if (allVirtualFolders.FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path) && (collectionType is CollectionType.unknown || p.CollectionType.ConvertToCollectionType() == collectionType)) is not { } library)
                 throw new Exception($"Unable to find any library to use for media folder \"{mediaFolder.Path}\"");
 
-            if (ShouldGenerateAllConfigurations)
-            {
+            if (string.IsNullOrEmpty(library.ItemId) || !Guid.TryParse(library.ItemId, out var libraryId))
+                throw new Exception($"Unable to parse library id for library \"{library.Name}\" to use for media folder \"{mediaFolder.Path}\". This is not a plugin bug, but the media folder is missing from the default view in Jellyfin.");
+
+            if (ShouldGenerateAllConfigurations) {
                 ShouldGenerateAllConfigurations = false;
                 await GenerateAllConfigurations(allVirtualFolders).ConfigureAwait(false);
             }
@@ -301,10 +311,15 @@ public class MediaFolderConfigurationService
     private async Task GenerateAllConfigurations(List<VirtualFolderInfo> allVirtualFolders)
     {
         var filteredVirtualFolders = allVirtualFolders
-            .Where(virtualFolder => 
-                virtualFolder.CollectionType.ConvertToCollectionType() is null or CollectionType.movies or CollectionType.tvshows &&
-                Lookup.IsEnabledForLibraryOptions(virtualFolder.LibraryOptions, out _)
-            )
+            .Where(virtualFolder => {
+                if (virtualFolder is not { ItemId: not null, LibraryOptions: { } }) {
+                    Logger.LogWarning("Skipping virtual folder {Name} because it has no ItemId or LibraryOptions.", virtualFolder.Name);
+                    return false;
+                }
+
+                return virtualFolder.CollectionType.ConvertToCollectionType() is null or CollectionType.movies or CollectionType.tvshows &&
+                    Lookup.IsEnabledForLibraryOptions(virtualFolder.LibraryOptions, out _);
+            })
             .ToList();
         Logger.LogDebug("Found {Count} out of {TotalCount} libraries to check media folder configurations for.", filteredVirtualFolders.Count, allVirtualFolders.Count);
         var config = Plugin.Instance.Configuration;
@@ -393,9 +408,10 @@ public class MediaFolderConfigurationService
             mediaFolderConfig.ImportFolderRelativePath = string.Empty;
         }
         else {
+            var foundLocations = new List<(int, string)>();
             var samplePaths = FileSystem.GetFilePaths(mediaFolder.Path, true)
                 .Where(path => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
-                .Take(100)
+                .Take(101) // 101 as a tie breaker
                 .ToList();
 
             Logger.LogDebug("Asking remote server if it knows any of the {Count} sampled files in {Path}. (Library={LibraryId})", samplePaths.Count > 100 ? 100 : samplePaths.Count, mediaFolder.Path, libraryId);
@@ -415,9 +431,19 @@ public class MediaFolderConfigurationService
                     continue;
 
                 var fileLocation = fileLocations[0];
-                mediaFolderConfig.ImportFolderId = fileLocation.ImportFolderId;
-                mediaFolderConfig.ImportFolderRelativePath = fileLocation.RelativePath[..^partialPath.Length];
-                break;
+                foundLocations.Add((fileLocation.ImportFolderId, fileLocation.RelativePath[..^partialPath.Length]));
+            }
+
+            if (foundLocations.Count > 0) {
+                var groupedLocations = foundLocations
+                    .GroupBy(x => x)
+                    .ToDictionary(x => x.Key, x => x.Count());
+                foreach (var ((importFolderId, relativePath), count) in groupedLocations) {
+                    Logger.LogDebug("Found {Count} hits for managed folder {Id} at relative path {RelativePath}. (Library={LibraryId})", count, importFolderId, relativePath, libraryId);
+                }
+                (mediaFolderConfig.ImportFolderId, mediaFolderConfig.ImportFolderRelativePath) = groupedLocations
+                    .MaxBy(x => x.Value)!
+                    .Key;
             }
 
             try {
