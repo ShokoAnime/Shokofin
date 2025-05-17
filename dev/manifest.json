@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.3.3",
+                "changelog": "`fix`: **Fix description settings**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.3/shoko_5.0.3.3.zip",
+                "checksum": "c553a0543ac3d910402c622d9f8b43ed",
+                "timestamp": "2025-05-17T01:38:51Z"
+            },
+            {
                 "version": "5.0.3.2",
                 "changelog": "`repo`: **Update version matrix**. (_Skip CI_)\n\n`fix`: **Wrap version check in try\u2026catch**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.24/shoko_5.0.2.24.zip",
                 "checksum": "623a58074d119a32f04bde2f75ce67a1",
                 "timestamp": "2025-05-01T23:36:47Z"
-            },
-            {
-                "version": "5.0.2.23",
-                "changelog": "`chore`: **Clean up style**. (_Skip CI_)\n\n`feat`: **Add yearly seasons & air days**:\n\n- Added yearly seasons as tags. E.g. `Winter 2013/14`, `Spring 2001`, etc.\n\n- Added air days for series. This is a native Jellyfin feature, so they're not added as tags.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.23/shoko_5.0.2.23.zip",
-                "checksum": "6e067596fd4f435c9c62d0dbd9de30e7",
-                "timestamp": "2025-05-01T23:11:50Z"
             }
         ]
     }
