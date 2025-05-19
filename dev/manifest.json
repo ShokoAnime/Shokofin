@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.3.4",
+                "changelog": "`fix`: **Fix web prefix getter in api client**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.4/shoko_5.0.3.4.zip",
+                "checksum": "52768ebee8be6ede5f9f86211eed9279",
+                "timestamp": "2025-05-19T21:37:35Z"
+            },
+            {
                 "version": "5.0.3.3",
                 "changelog": "`fix`: **Fix description settings**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.25/shoko_5.0.2.25.zip",
                 "checksum": "7468566cd23fd970fe4b7adb70c7ac0c",
                 "timestamp": "2025-05-02T00:28:10Z"
-            },
-            {
-                "version": "5.0.2.24",
-                "changelog": "`feat`: **Add tag/genre exclusion lists**:\n\n- Added the ability to exclude certain tags from being displayed as tags/genres.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2-dev.24/shoko_5.0.2.24.zip",
-                "checksum": "623a58074d119a32f04bde2f75ce67a1",
-                "timestamp": "2025-05-01T23:36:47Z"
             }
         ]
     }
