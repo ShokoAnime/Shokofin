@@ -14,8 +14,6 @@ public class AnidbAnimeId : IExternalId {
 
     ExternalIdMediaType? IExternalId.Type => ExternalIdMediaType.Series;
 
-    string? IExternalId.UrlFormatString => null;
-
     public bool Supports(IHasProviderIds item) => item is Series or Season;
 
     #endregion

@@ -14,8 +14,6 @@ public class AnidbCreatorId : IExternalId {
 
     ExternalIdMediaType? IExternalId.Type => ExternalIdMediaType.Person;
 
-    string? IExternalId.UrlFormatString => null;
-
     public bool Supports(IHasProviderIds item) => item is Person;
 
     #endregion

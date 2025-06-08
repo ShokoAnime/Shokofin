@@ -24,8 +24,6 @@ public class ShokoInternalId : IExternalId {
 
     ExternalIdMediaType? IExternalId.Type => null;
 
-    string? IExternalId.UrlFormatString => null;
-
     bool IExternalId.Supports(IHasProviderIds item) => item is BoxSet or Series or Season or Video;
 
     #endregion

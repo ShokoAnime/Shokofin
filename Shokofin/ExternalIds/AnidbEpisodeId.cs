@@ -14,8 +14,6 @@ public class AnidbEpisodeId : IExternalId {
 
     ExternalIdMediaType? IExternalId.Type => ExternalIdMediaType.Episode;
 
-    string? IExternalId.UrlFormatString => null;
-
     public bool Supports(IHasProviderIds item) => item is Episode;
 
     #endregion
