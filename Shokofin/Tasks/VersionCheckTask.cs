@@ -41,7 +41,7 @@ public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         => [
             new() {
-                Type = TaskTriggerInfo.TriggerStartup,
+                Type = TaskTriggerInfoType.StartupTrigger,
             },
         ];
 
