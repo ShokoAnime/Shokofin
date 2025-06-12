@@ -13,19 +13,19 @@ public class LinkGenerationResult {
     public ConcurrentBag<string> RemovedPaths { get; init; } = [];
 
     public int Total =>
-        TotalVideos + TotalSubtitles + TotalTrickplayDirectories;
+        TotalVideos + TotalSubtitles + TotalAudioFiles + TotalTrickplayDirectories;
 
     public int Created =>
-        CreatedVideos + CreatedSubtitles + CreatedTrickplayDirectories;
+        CreatedVideos + CreatedSubtitles + CreatedAudioFiles + CreatedTrickplayDirectories;
 
     public int Fixed =>
-        FixedVideos + FixedSubtitles + FixedTrickplayDirectories;
+        FixedVideos + FixedSubtitles + FixedAudioFiles + FixedTrickplayDirectories;
 
     public int Skipped =>
-        SkippedVideos + SkippedSubtitles + SkippedTrickplayDirectories;
+        SkippedVideos + SkippedSubtitles + SkippedAudioFiles + SkippedTrickplayDirectories;
 
     public int Removed =>
-        RemovedVideos + RemovedSubtitles + RemovedNfos + RemovedTrickplayDirectories;
+        RemovedVideos + RemovedSubtitles + RemovedAudioFiles + RemovedNfos + RemovedTrickplayDirectories;
 
     public int TotalVideos =>
         CreatedVideos + FixedVideos + SkippedVideos;
@@ -49,6 +49,17 @@ public class LinkGenerationResult {
 
     public int RemovedSubtitles { get; set; }
 
+    public int TotalAudioFiles =>
+        CreatedAudioFiles + FixedAudioFiles + SkippedAudioFiles;
+
+    public int CreatedAudioFiles { get; set; }
+
+    public int FixedAudioFiles { get; set; }
+
+    public int SkippedAudioFiles { get; set; }
+
+    public int RemovedAudioFiles { get; set; }
+
     public int TotalTrickplayDirectories =>
         CreatedTrickplayDirectories + FixedTrickplayDirectories + SkippedTrickplayDirectories;
 
@@ -65,22 +76,26 @@ public class LinkGenerationResult {
     public void Print(ILogger logger, string path) {
         var timeSpent = DateTime.Now - CreatedAt;
         logger.LogInformation(
-            "Created {CreatedTotal} ({CreatedMedia},{CreatedSubtitles},{CreatedTrickplay}), fixed {FixedTotal} ({FixedMedia},{FixedSubtitles},{FixedTrickplay}), skipped {SkippedTotal} ({SkippedMedia},{SkippedSubtitles},{SkippedTrickplay}), and removed {RemovedTotal} ({RemovedMedia},{RemovedSubtitles},{RemovedTrickplay},{RemovedNFO}) entries in folder at {Path} in {TimeSpan} (Total={Total})",
+            "Created {CreatedTotal} ({CreatedMedia},{CreatedSubtitles},{CreatedAudio},{CreatedTrickplay}), fixed {FixedTotal} ({FixedMedia},{FixedSubtitles},{FixedAudio},{FixedTrickplay}), skipped {SkippedTotal} ({SkippedMedia},{SkippedSubtitles},{SkippedAudio},{SkippedTrickplay}), and removed {RemovedTotal} ({RemovedMedia},{RemovedSubtitles},{RemovedAudio},{RemovedTrickplay},{RemovedNFO}) entries in folder at {Path} in {TimeSpan} (Total={Total})",
             Created,
             CreatedVideos,
             CreatedSubtitles,
+            CreatedAudioFiles,
             CreatedTrickplayDirectories,
             Fixed,
             FixedVideos,
             FixedSubtitles,
+            FixedAudioFiles,
             FixedTrickplayDirectories,
             Skipped,
             SkippedVideos,
             SkippedSubtitles,
+            SkippedAudioFiles,
             SkippedTrickplayDirectories,
             Removed,
             RemovedVideos,
             RemovedSubtitles,
+            RemovedAudioFiles,
             RemovedTrickplayDirectories,
             RemovedNfos,
             path,
@@ -111,6 +126,10 @@ public class LinkGenerationResult {
             FixedSubtitles = a.FixedSubtitles + b.FixedSubtitles,
             SkippedSubtitles = a.SkippedSubtitles + b.SkippedSubtitles,
             RemovedSubtitles = a.RemovedSubtitles + b.RemovedSubtitles,
+            CreatedAudioFiles = a.CreatedAudioFiles + b.CreatedAudioFiles,
+            FixedAudioFiles = a.FixedAudioFiles + b.FixedAudioFiles,
+            SkippedAudioFiles = a.SkippedAudioFiles + b.SkippedAudioFiles,
+            RemovedAudioFiles = a.RemovedAudioFiles + b.RemovedAudioFiles,
             CreatedTrickplayDirectories = a.CreatedTrickplayDirectories + b.CreatedTrickplayDirectories,
             FixedTrickplayDirectories = a.FixedTrickplayDirectories + b.FixedTrickplayDirectories,
             SkippedTrickplayDirectories = a.SkippedTrickplayDirectories + b.SkippedTrickplayDirectories,

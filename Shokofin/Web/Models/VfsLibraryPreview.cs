@@ -61,6 +61,16 @@ public class VfsLibraryPreview(HashSet<string> filesBefore, HashSet<string> file
 
         public int RemovedSubtitles { get; } = result?.RemovedSubtitles ?? 0;
 
+        public int TotalAudioFiles { get; } = result?.TotalAudioFiles ?? 0;
+
+        public int CreatedAudioFiles { get; } = result?.CreatedAudioFiles ?? 0;
+
+        public int FixedAudioFiles { get; } = result?.FixedAudioFiles ?? 0;
+
+        public int SkippedAudioFiles { get; } = result?.SkippedAudioFiles ?? 0;
+
+        public int RemovedAudioFiles { get; } = result?.RemovedAudioFiles ?? 0;
+
         public int RemovedNfos { get; } = result?.RemovedNfos ?? 0;
     }
 }
