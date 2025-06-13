@@ -902,8 +902,8 @@ public class VirtualFileSystemService {
             }
 
             var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
-            var subtitleLinks = FindSubtitlesForPath(sourceLocation);
-            var audioLinks = FindAudioFilesForPath(sourceLocation);
+            var subtitleLinks =  FindExternalFilesForPath(sourceLocation, ExternalSubtitlePathParser);
+            var audioLinks = FindExternalFilesForPath(sourceLocation, ExternalAudioPathParser);
             foreach (var symbolicLink in symbolicLinks) {
                 var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
                 if (!Directory.Exists(symbolicDirectory))
@@ -1106,7 +1106,7 @@ public class VirtualFileSystemService {
         }
     }
 
-    private List<string> FindSubtitlesForPath(string sourcePath) {
+    private List<string> FindExternalFilesForPath(string sourcePath, ExternalPathParser parser) {
         var externalPaths = new List<string>();
         var folderPath = Path.GetDirectoryName(sourcePath);
         if (string.IsNullOrEmpty(folderPath) || !FileSystem.DirectoryExists(folderPath))
@@ -1123,51 +1123,9 @@ public class VirtualFileSystemService {
                 sourcePrefix.Equals(fileNameWithoutExtension[..sourcePrefix.Length], StringComparison.OrdinalIgnoreCase) &&
                 (fileNameWithoutExtension.Length == sourcePrefix.Length || NamingOptions.MediaFlagDelimiters.Contains(fileNameWithoutExtension[sourcePrefix.Length]))
             ) {
-                var externalPathInfo = ExternalSubtitlePathParser.ParseFile(file, fileNameWithoutExtension[sourcePrefix.Length..].ToString());
+                var externalPathInfo = parser.ParseFile(file, fileNameWithoutExtension[sourcePrefix.Length..].ToString());
                 if (externalPathInfo is not null && !string.IsNullOrEmpty(externalPathInfo.Path))
                     externalPaths.Add(externalPathInfo.Path);
-            }
-        }
-
-        return externalPaths;
-    }
-
-    private List<string> FindAudioFilesForPath(string sourcePath) {
-        var externalPaths = new List<string>();
-        var folderPath = Path.GetDirectoryName(sourcePath);
-        if (string.IsNullOrEmpty(folderPath) || !FileSystem.DirectoryExists(folderPath))
-            return externalPaths;
-
-        var files = FileSystem.GetFilePaths(folderPath)
-            .Except([sourcePath])
-            .ToList();
-        var sourcePrefix = Path.GetFileNameWithoutExtension(sourcePath);
-        foreach (var file in files) {
-            var fileExtension = Path.GetExtension(file);
-            if (!NamingOptions.AudioFileExtensions.Contains(fileExtension))
-                continue;
-
-            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
-            
-            // Check if the audio file name starts with the video file name
-            if (fileNameWithoutExtension.Length >= sourcePrefix.Length &&
-                sourcePrefix.Equals(fileNameWithoutExtension[..sourcePrefix.Length], StringComparison.OrdinalIgnoreCase)) {
-                
-                // If the names are exactly the same, it's a match (e.g., "movie.mp3" for "movie.mkv")
-                if (fileNameWithoutExtension.Length == sourcePrefix.Length) {
-                    var externalPathInfo = ExternalAudioPathParser.ParseFile(file, string.Empty);
-                    if (externalPathInfo is not null && !string.IsNullOrEmpty(externalPathInfo.Path))
-                        externalPaths.Add(externalPathInfo.Path);
-                    continue;
-                }
-                
-                // Check if there's a delimiter after the source prefix
-                var nextChar = fileNameWithoutExtension[sourcePrefix.Length];
-                if (nextChar == '.' || NamingOptions.MediaFlagDelimiters.Contains(nextChar)) {
-                    var externalPathInfo = ExternalAudioPathParser.ParseFile(file, fileNameWithoutExtension[sourcePrefix.Length..].ToString());
-                    if (externalPathInfo is not null && !string.IsNullOrEmpty(externalPathInfo.Path))
-                        externalPaths.Add(externalPathInfo.Path);
-                }
             }
         }
 
