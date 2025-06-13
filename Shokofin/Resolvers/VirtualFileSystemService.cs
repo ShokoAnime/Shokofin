@@ -44,16 +44,14 @@ public class VirtualFileSystemService {
 
     private readonly NamingOptions NamingOptions;
 
-    private readonly ExternalPathParser ExternalPathParser;
+    private readonly ExternalPathParser ExternalSubtitlePathParser;
+
+    private readonly ExternalPathParser ExternalAudioPathParser;
 
     private readonly GuardedMemoryCache DataCache;
 
     // Note: Out of the 14k entries in my test shoko database, then only **348** entries have a title longer than 64 characters.
     private const int NameCutOff = 64;
-
-    private static readonly HashSet<string> AudioFileExtensions = [
-        ".mp3", ".flac", ".m4a", ".aac", ".ogg", ".wav", ".wma", ".aiff", ".ape", ".mka", ".ac3", ".eac3", ".dts", ".dtshd", ".truehd", ".opus", ".alac", ".wv", ".tta"
-    ];
 
     private static readonly HashSet<string> IgnoreFolderNames = [
         "backdrops",
@@ -90,7 +88,8 @@ public class VirtualFileSystemService {
         Logger = logger;
         DataCache = new(logger, new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1), SlidingExpiration = TimeSpan.FromMinutes(15) });
         NamingOptions = namingOptions;
-        ExternalPathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Subtitle);
+        ExternalSubtitlePathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Subtitle);
+        ExternalAudioPathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Audio);
         Plugin.Instance.Tracker.Stalled += OnTrackerStalled;
     }
 
@@ -1124,7 +1123,7 @@ public class VirtualFileSystemService {
                 sourcePrefix.Equals(fileNameWithoutExtension[..sourcePrefix.Length], StringComparison.OrdinalIgnoreCase) &&
                 (fileNameWithoutExtension.Length == sourcePrefix.Length || NamingOptions.MediaFlagDelimiters.Contains(fileNameWithoutExtension[sourcePrefix.Length]))
             ) {
-                var externalPathInfo = ExternalPathParser.ParseFile(file, fileNameWithoutExtension[sourcePrefix.Length..].ToString());
+                var externalPathInfo = ExternalSubtitlePathParser.ParseFile(file, fileNameWithoutExtension[sourcePrefix.Length..].ToString());
                 if (externalPathInfo is not null && !string.IsNullOrEmpty(externalPathInfo.Path))
                     externalPaths.Add(externalPathInfo.Path);
             }
@@ -1134,10 +1133,10 @@ public class VirtualFileSystemService {
     }
 
     private List<string> FindAudioFilesForPath(string sourcePath) {
-        var audioFiles = new List<string>();
+        var externalPaths = new List<string>();
         var folderPath = Path.GetDirectoryName(sourcePath);
         if (string.IsNullOrEmpty(folderPath) || !FileSystem.DirectoryExists(folderPath))
-            return audioFiles;
+            return externalPaths;
 
         var files = FileSystem.GetFilePaths(folderPath)
             .Except([sourcePath])
@@ -1145,7 +1144,7 @@ public class VirtualFileSystemService {
         var sourcePrefix = Path.GetFileNameWithoutExtension(sourcePath);
         foreach (var file in files) {
             var fileExtension = Path.GetExtension(file);
-            if (!AudioFileExtensions.Contains(fileExtension))
+            if (!NamingOptions.AudioFileExtensions.Contains(fileExtension))
                 continue;
 
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
@@ -1156,19 +1155,23 @@ public class VirtualFileSystemService {
                 
                 // If the names are exactly the same, it's a match (e.g., "movie.mp3" for "movie.mkv")
                 if (fileNameWithoutExtension.Length == sourcePrefix.Length) {
-                    audioFiles.Add(file);
+                    var externalPathInfo = ExternalAudioPathParser.ParseFile(file, string.Empty);
+                    if (externalPathInfo is not null && !string.IsNullOrEmpty(externalPathInfo.Path))
+                        externalPaths.Add(externalPathInfo.Path);
                     continue;
                 }
                 
                 // Check if there's a delimiter after the source prefix
                 var nextChar = fileNameWithoutExtension[sourcePrefix.Length];
                 if (nextChar == '.' || NamingOptions.MediaFlagDelimiters.Contains(nextChar)) {
-                    audioFiles.Add(file);
+                    var externalPathInfo = ExternalAudioPathParser.ParseFile(file, fileNameWithoutExtension[sourcePrefix.Length..].ToString());
+                    if (externalPathInfo is not null && !string.IsNullOrEmpty(externalPathInfo.Path))
+                        externalPaths.Add(externalPathInfo.Path);
                 }
             }
         }
 
-        return audioFiles;
+        return externalPaths;
     }
 
     private LinkGenerationResult CleanupStructure(string vfsPath, string directoryToClean, IReadOnlyList<string> allKnownPaths, bool preview = false) {
@@ -1183,7 +1186,7 @@ public class VirtualFileSystemService {
         var start = DateTime.Now;
         var previousStep = start;
         var result = new LinkGenerationResult();
-        var searchExtensions = NamingOptions.VideoFileExtensions.Concat(NamingOptions.SubtitleFileExtensions).Concat(AudioFileExtensions).Concat([".nfo", ".trickplay"]).ToHashSet();
+        var searchExtensions = NamingOptions.VideoFileExtensions.Concat(NamingOptions.SubtitleFileExtensions).Concat(NamingOptions.AudioFileExtensions).Concat([".nfo", ".trickplay"]).ToHashSet();
         var entriesToBeRemoved = FileSystem.GetFileSystemEntryPaths(directoryToClean, true)
             .Select(path => (path, extName: Path.GetExtension(path)))
             .Where(tuple => !string.IsNullOrEmpty(tuple.extName) && searchExtensions.Contains(tuple.extName))
@@ -1241,7 +1244,7 @@ public class VirtualFileSystemService {
                 result.RemovedTrickplayDirectories++;
             }
             else if (NamingOptions.SubtitleFileExtensions.Contains(extName)) {
-                if (TryMoveSubtitleFile(allKnownPaths, location, preview, out var skip)) {
+                if (TryMoveExternalFile(allKnownPaths, location, preview, out var skip)) {
                     result.Paths.Add(location);
                     if (skip) {
                         result.SkippedSubtitles++;
@@ -1265,8 +1268,8 @@ public class VirtualFileSystemService {
                 result.RemovedPaths.Add(location);
                 result.RemovedSubtitles++;
             }
-            else if (AudioFileExtensions.Contains(extName)) {
-                if (TryMoveAudioFile(allKnownPaths, location, preview, out var skip)) {
+            else if (NamingOptions.AudioFileExtensions.Contains(extName)) {
+                if (TryMoveExternalFile(allKnownPaths, location, preview, out var skip)) {
                     result.Paths.Add(location);
                     if (skip) {
                         result.SkippedAudioFiles++;
@@ -1362,8 +1365,8 @@ public class VirtualFileSystemService {
         return result;
     }
 
-    private bool TryMoveSubtitleFile(IReadOnlyList<string> allKnownPaths, string subtitlePath, bool preview, out bool skip) {
-        if (!TryGetIdsForPath(subtitlePath, out var fileId, out var seriesId)){
+    private bool TryMoveExternalFile(IReadOnlyList<string> allKnownPaths, string externalFilePath, bool preview, out bool skip) {
+        if (!TryGetIdsForPath(externalFilePath, out var fileId, out var seriesId)){
             skip = false;
             return false;
         }
@@ -1375,12 +1378,12 @@ public class VirtualFileSystemService {
         }
 
         var sourcePathWithoutExt = symbolicLink[..^Path.GetExtension(symbolicLink).Length];
-        if (!subtitlePath.StartsWith(sourcePathWithoutExt)){
+        if (!externalFilePath.StartsWith(sourcePathWithoutExt)){
             skip = false;
             return false;
         }
 
-        var extName = subtitlePath[sourcePathWithoutExt.Length..];
+        var extName = externalFilePath[sourcePathWithoutExt.Length..];
         string? realTarget = null;
         try {
             realTarget = File.ResolveLinkTarget(symbolicLink, false)?.FullName;
@@ -1397,7 +1400,7 @@ public class VirtualFileSystemService {
         }
 
         try {
-            var currentTarget = File.ResolveLinkTarget(subtitlePath, false)?.FullName;
+            var currentTarget = File.ResolveLinkTarget(externalFilePath, false)?.FullName;
             if (!string.IsNullOrEmpty(currentTarget)) {
                 // Just remove the link if the target doesn't exist.
                 if (!File.Exists(currentTarget)){
@@ -1410,109 +1413,33 @@ public class VirtualFileSystemService {
                 //     return true;
 
                 // Copy the link so we can move it to where it should be.
-                File.Delete(subtitlePath);
-                File.Copy(currentTarget, subtitlePath);
+                File.Delete(externalFilePath);
+                File.Copy(currentTarget, externalFilePath);
             }
         }
         catch (Exception ex) {
-            Logger.LogWarning(ex, "Unable to check if {Path} is a symbolic link", subtitlePath);
+            Logger.LogWarning(ex, "Unable to check if {Path} is a symbolic link", externalFilePath);
             skip = false;
             return false;
         }
 
-        var realSubtitlePath = realTarget[..^Path.GetExtension(realTarget).Length] + extName;
-        if (!File.Exists(realSubtitlePath)) {
+        var realExternalFilePath = realTarget[..^Path.GetExtension(realTarget).Length] + extName;
+        if (!File.Exists(realExternalFilePath)) {
             try {
-                File.Move(subtitlePath, realSubtitlePath);
+                File.Move(externalFilePath, realExternalFilePath);
             }
             catch (Exception) {
-                Logger.LogWarning("Skipped moving {Path} to {RealPath} because we don't have permissions.", subtitlePath, realSubtitlePath);
+                Logger.LogWarning("Skipped moving {Path} to {RealPath} because we don't have permissions.", externalFilePath, realExternalFilePath);
                 skip = true;
                 return true;
             }
         }
         else {
-            File.Delete(subtitlePath);
+            File.Delete(externalFilePath);
         }
 
-        File.CreateSymbolicLink(subtitlePath, realSubtitlePath);
-        Logger.LogDebug("Moved {Path} to {RealPath}", subtitlePath, realSubtitlePath);
-
-        skip = false;
-        return true;
-    }
-
-    private bool TryMoveAudioFile(IReadOnlyList<string> allKnownPaths, string audioPath, bool preview, out bool skip) {
-        if (!TryGetIdsForPath(audioPath, out var fileId, out var seriesId)) {
-            skip = false;
-            return false;
-        }
-
-        var symbolicLink = allKnownPaths.FirstOrDefault(knownPath => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(knownPath)) && TryGetIdsForPath(knownPath, out var knownFileId, out var knownSeriesId) && seriesId == knownSeriesId && fileId == knownFileId);
-        if (string.IsNullOrEmpty(symbolicLink)) {
-            skip = false;
-            return false;
-        }
-
-        var sourcePathWithoutExt = symbolicLink[..^Path.GetExtension(symbolicLink).Length];
-        if (!audioPath.StartsWith(sourcePathWithoutExt)) {
-            skip = false;
-            return false;
-        }
-
-        var extName = audioPath[sourcePathWithoutExt.Length..];
-        string? realTarget = null;
-        try {
-            realTarget = File.ResolveLinkTarget(symbolicLink, false)?.FullName;
-        }
-        catch { }
-        if (string.IsNullOrEmpty(realTarget)) {
-            skip = false;
-            return false;
-        }
-
-        if (preview) {
-            skip = true;
-            return true;
-        }
-
-        try {
-            var currentTarget = File.ResolveLinkTarget(audioPath, false)?.FullName;
-            if (!string.IsNullOrEmpty(currentTarget)) {
-                // Just remove the link if the target doesn't exist.
-                if (!File.Exists(currentTarget)) {
-                    skip = false;
-                    return false;
-                }
-
-                // Copy the link so we can move it to where it should be.
-                File.Delete(audioPath);
-                File.Copy(currentTarget, audioPath);
-            }
-        }
-        catch (Exception ex) {
-            Logger.LogWarning(ex, "Unable to check if {Path} is a symbolic link", audioPath);
-            skip = false;
-            return false;
-        }
-
-        var realAudioPath = realTarget[..^Path.GetExtension(realTarget).Length] + extName;
-        if (!File.Exists(realAudioPath)) {
-            try {
-                File.Move(audioPath, realAudioPath);
-            }
-            catch (Exception) {
-                Logger.LogWarning("Skipped moving {Path} to {RealPath} because we don't have permissions.", audioPath, realAudioPath);
-                skip = true;
-                return true;
-            }
-        }
-        else {
-            File.Delete(audioPath);
-        }
-
-        File.CreateSymbolicLink(audioPath, realAudioPath);
-        Logger.LogDebug("Moved {Path} to {RealPath}", audioPath, realAudioPath);
+        File.CreateSymbolicLink(externalFilePath, realExternalFilePath);
+        Logger.LogDebug("Moved {Path} to {RealPath}", externalFilePath, realExternalFilePath);
 
         skip = false;
         return true;
