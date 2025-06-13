@@ -902,7 +902,7 @@ public class VirtualFileSystemService {
             }
 
             var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
-            var subtitleLinks =  FindExternalFilesForPath(sourceLocation, ExternalSubtitlePathParser);
+            var subtitleLinks = FindExternalFilesForPath(sourceLocation, ExternalSubtitlePathParser);
             var audioLinks = FindExternalFilesForPath(sourceLocation, ExternalAudioPathParser);
             foreach (var symbolicLink in symbolicLinks) {
                 var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
