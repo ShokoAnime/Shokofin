@@ -902,8 +902,9 @@ public class VirtualFileSystemService {
             }
 
             var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
-            var subtitleLinks = FindExternalFilesForPath(sourceLocation, ExternalSubtitlePathParser);
-            var audioLinks = FindExternalFilesForPath(sourceLocation, ExternalAudioPathParser);
+            var externalFiles = FindExternalFilesForPath(sourceLocation, ExternalSubtitlePathParser)
+                .Concat(FindExternalFilesForPath(sourceLocation, ExternalAudioPathParser))
+                .ToList();
             foreach (var symbolicLink in symbolicLinks) {
                 var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
                 if (!Directory.Exists(symbolicDirectory))
@@ -1011,91 +1012,7 @@ public class VirtualFileSystemService {
                     }
                 }
 
-                if (subtitleLinks.Count > 0) {
-                    var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
-                    foreach (var subtitleSource in subtitleLinks) {
-                        var extName = subtitleSource[sourcePrefixLength..];
-                        var subtitleLink = Path.Join(symbolicDirectory, symbolicName + extName);
-
-                        result.Paths.Add(subtitleLink);
-                        if (!File.Exists(subtitleLink)) {
-                            result.CreatedSubtitles++;
-                            if (!preview) {
-                                Logger.LogDebug("Linking {Link} → {LinkTarget}", subtitleLink, subtitleSource);
-                                File.CreateSymbolicLink(subtitleLink, subtitleSource);
-                            }
-                        }
-                        else {
-                            var shouldFix = false;
-                            try {
-                                var nextTarget = File.ResolveLinkTarget(subtitleLink, false);
-                                if (!string.Equals(subtitleSource, nextTarget?.FullName)) {
-                                    shouldFix = true;
-                                    if (!preview)
-                                        Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", subtitleLink, subtitleSource, nextTarget?.FullName);
-                                }
-                            }
-                            catch (Exception ex) {
-                                shouldFix = true;
-                                if (!preview)
-                                    Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link} for {LinkTarget}", subtitleLink, subtitleSource);
-                            }
-                            if (shouldFix) {
-                                result.FixedSubtitles++;
-                                if (!preview) {
-                                    File.Delete(subtitleLink);
-                                    File.CreateSymbolicLink(subtitleLink, subtitleSource);
-                                }
-                            }
-                            else {
-                                result.SkippedSubtitles++;
-                            }
-                        }
-                    }
-                }
-
-                if (audioLinks.Count > 0) {
-                    var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
-                    foreach (var audioSource in audioLinks) {
-                        var extName = audioSource[sourcePrefixLength..];
-                        var audioLink = Path.Join(symbolicDirectory, symbolicName + extName);
-
-                        result.Paths.Add(audioLink);
-                        if (!File.Exists(audioLink)) {
-                            result.CreatedAudioFiles++;
-                            if (!preview) {
-                                Logger.LogDebug("Linking {Link} → {LinkTarget}", audioLink, audioSource);
-                                File.CreateSymbolicLink(audioLink, audioSource);
-                            }
-                        }
-                        else {
-                            var shouldFix = false;
-                            try {
-                                var nextTarget = File.ResolveLinkTarget(audioLink, false);
-                                if (!string.Equals(audioSource, nextTarget?.FullName)) {
-                                    shouldFix = true;
-                                    if (!preview)
-                                        Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", audioLink, audioSource, nextTarget?.FullName);
-                                }
-                            }
-                            catch (Exception ex) {
-                                shouldFix = true;
-                                if (!preview)
-                                    Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link} for {LinkTarget}", audioLink, audioSource);
-                            }
-                            if (shouldFix) {
-                                result.FixedAudioFiles++;
-                                if (!preview) {
-                                    File.Delete(audioLink);
-                                    File.CreateSymbolicLink(audioLink, audioSource);
-                                }
-                            }
-                            else {
-                                result.SkippedAudioFiles++;
-                            }
-                        }
-                    }
-                }
+                LinkExternalFiles(externalFiles, symbolicLink, symbolicDirectory, sourcePrefixLength, result, preview);
             }
 
             return result;
@@ -1130,6 +1047,52 @@ public class VirtualFileSystemService {
         }
 
         return externalPaths;
+    }
+
+    private void LinkExternalFiles(List<string> externalFiles, string symbolicLink, string symbolicDirectory, int sourcePrefixLength, LinkGenerationResult result, bool preview) {
+        if (externalFiles.Count == 0)
+            return;
+
+        var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
+        foreach (var externalSource in externalFiles) {
+            var extName = externalSource[sourcePrefixLength..];
+            var externalLink = Path.Join(symbolicDirectory, symbolicName + extName);
+
+            result.Paths.Add(externalLink);
+            if (!File.Exists(externalLink)) {
+                result.CreatedExternalFiles++;
+                if (!preview) {
+                    Logger.LogDebug("Linking {Link} → {LinkTarget}", externalLink, externalSource);
+                    File.CreateSymbolicLink(externalLink, externalSource);
+                }
+            }
+            else {
+                var shouldFix = false;
+                try {
+                    var nextTarget = File.ResolveLinkTarget(externalLink, false);
+                    if (!string.Equals(externalSource, nextTarget?.FullName)) {
+                        shouldFix = true;
+                        if (!preview)
+                            Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", externalLink, externalSource, nextTarget?.FullName);
+                    }
+                }
+                catch (Exception ex) {
+                    shouldFix = true;
+                    if (!preview)
+                        Logger.LogError(ex, "Encountered an error trying to resolve symbolic link {Link} for {LinkTarget}", externalLink, externalSource);
+                }
+                if (shouldFix) {
+                    result.FixedExternalFiles++;
+                    if (!preview) {
+                        File.Delete(externalLink);
+                        File.CreateSymbolicLink(externalLink, externalSource);
+                    }
+                }
+                else {
+                    result.SkippedExternalFiles++;
+                }
+            }
+        }
     }
 
     private LinkGenerationResult CleanupStructure(string vfsPath, string directoryToClean, IReadOnlyList<string> allKnownPaths, bool preview = false) {
@@ -1201,21 +1164,21 @@ public class VirtualFileSystemService {
                 result.RemovedPaths.Add(location);
                 result.RemovedTrickplayDirectories++;
             }
-            else if (NamingOptions.SubtitleFileExtensions.Contains(extName)) {
+            else if (NamingOptions.SubtitleFileExtensions.Contains(extName) || NamingOptions.AudioFileExtensions.Contains(extName)) {
                 if (TryMoveExternalFile(allKnownPaths, location, preview, out var skip)) {
                     result.Paths.Add(location);
                     if (skip) {
-                        result.SkippedSubtitles++;
+                        result.SkippedExternalFiles++;
                     }
                     else {
-                        result.FixedSubtitles++;
+                        result.FixedExternalFiles++;
                     }
                     continue;
                 }
 
                 if (!preview) {
                     try {
-                        Logger.LogTrace("Removing subtitle file at {Path}", location);
+                        Logger.LogTrace("Removing external file at {Path}", location);
                         File.Delete(location);
                     }
                     catch (Exception ex) {
@@ -1224,32 +1187,7 @@ public class VirtualFileSystemService {
                     }
                 }
                 result.RemovedPaths.Add(location);
-                result.RemovedSubtitles++;
-            }
-            else if (NamingOptions.AudioFileExtensions.Contains(extName)) {
-                if (TryMoveExternalFile(allKnownPaths, location, preview, out var skip)) {
-                    result.Paths.Add(location);
-                    if (skip) {
-                        result.SkippedAudioFiles++;
-                    }
-                    else {
-                        result.FixedAudioFiles++;
-                    }
-                    continue;
-                }
-
-                if (!preview) {
-                    try {
-                        Logger.LogTrace("Removing audio file at {Path}", location);
-                        File.Delete(location);
-                    }
-                    catch (Exception ex) {
-                        Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
-                        continue;
-                    }
-                }
-                result.RemovedPaths.Add(location);
-                result.RemovedAudioFiles++;
+                result.RemovedExternalFiles++;
             }
             else {
                 if (ShouldIgnoreVideo(vfsPath, location)) {
