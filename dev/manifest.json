@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.3.7",
+                "changelog": "`fix`: **Handle episode not being part of the preferred alternate ordering**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.7/shoko_5.0.3.7.zip",
+                "checksum": "2e141a907840b2bdddc56df2a26d43d9",
+                "timestamp": "2025-06-17T06:05:19Z"
+            },
+            {
                 "version": "5.0.3.6",
                 "changelog": "`misc`: **Mark file system metadata as nullable**. (_Skip CI_)\n\n`misc`: **Add todo in code**. (_Skip CI_)\n\n`chore`: **Set init value for correct field in plugin config**. (_Skip CI_)\n\n`fix`: **Only react to saved events if the global sync option is enabled**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.3/shoko_5.0.3.3.zip",
                 "checksum": "c553a0543ac3d910402c622d9f8b43ed",
                 "timestamp": "2025-05-17T01:38:51Z"
-            },
-            {
-                "version": "5.0.3.2",
-                "changelog": "`repo`: **Update version matrix**. (_Skip CI_)\n\n`fix`: **Wrap version check in try\u2026catch**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.2/shoko_5.0.3.2.zip",
-                "checksum": "a17331c4d90f25188627d48ff7106a93",
-                "timestamp": "2025-05-06T14:55:35Z"
             }
         ]
     }
