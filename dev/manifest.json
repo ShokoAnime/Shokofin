@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.3.10",
+                "changelog": "`feat`: **Move external audio to VFS (#88)**:\n\nAdd support for moving external audio files between the VFS and the underlying library by refactoring the existing subtitle support to more broadly cover external files.\n\nCloses #86",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.10/shoko_5.0.3.10.zip",
+                "checksum": "701a8b1055db6362cf2fabc15b86dccf",
+                "timestamp": "2025-06-18T16:48:56Z"
+            },
+            {
                 "version": "5.0.3.9",
                 "changelog": "`fix`: **Remove unnecessary $ in template escape**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.6/shoko_5.0.3.6.zip",
                 "checksum": "4af330500cdfde60ebce23a47d264119",
                 "timestamp": "2025-06-12T21:43:15Z"
-            },
-            {
-                "version": "5.0.3.5",
-                "changelog": "`fix`: **Fix shoko series url for videos**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.5/shoko_5.0.3.5.zip",
-                "checksum": "dfe8c5d45c1653290fb3ab4e0e72186b",
-                "timestamp": "2025-05-27T16:49:35Z"
             }
         ]
     }
