@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.3.8",
+                "changelog": "`fix`: **Always use default ordering when fetching metadata from tmdb episode**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.8/shoko_5.0.3.8.zip",
+                "checksum": "f23d2888880b4ed1b06e4266e78efbaf",
+                "timestamp": "2025-06-18T04:14:54Z"
+            },
+            {
                 "version": "5.0.3.7",
                 "changelog": "`fix`: **Handle episode not being part of the preferred alternate ordering**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.4/shoko_5.0.3.4.zip",
                 "checksum": "52768ebee8be6ede5f9f86211eed9279",
                 "timestamp": "2025-05-19T21:37:35Z"
-            },
-            {
-                "version": "5.0.3.3",
-                "changelog": "`fix`: **Fix description settings**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.3/shoko_5.0.3.3.zip",
-                "checksum": "c553a0543ac3d910402c622d9f8b43ed",
-                "timestamp": "2025-05-17T01:38:51Z"
             }
         ]
     }
