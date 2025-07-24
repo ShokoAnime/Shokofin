@@ -125,15 +125,16 @@ public class VirtualFileSystemService
 
         // Only allow the preview to run once per caching cycle.
         return await DataCache.GetOrCreateAsync($"preview-changes:{vfsPath}", async () => {
-            var allPaths = GetPathsForMediaFolders(mediaConfigs);
-            var allFiles = GetFilesForImportFolders(mediaConfigs, allPaths);
-            var result = await GenerateStructure(collectionType, vfsPath, allFiles, preview: true);
-            result += CleanupStructure(vfsPath, vfsPath, result.Paths.ToArray(), preview: true);
-
             // This call will be slow depending on the size of your collection.
             var existingPaths = FileSystem.DirectoryExists(vfsPath)
                 ? FileSystem.GetFilePaths(vfsPath, true).ToHashSet()
                 : [];
+            if (!TryGetFileCheckerForMediaFolders(mediaConfigs, out var allPaths))
+                return (existingPaths, [], selectedFolder, new(), vfsPath);
+
+            var allFiles = GetFilesForImportFolders(mediaConfigs, allPaths);
+            var result = await GenerateStructure(collectionType, vfsPath, allFiles, preview: true).ConfigureAwait(false);
+            result += CleanupStructure(vfsPath, vfsPath, result.Paths.ToArray(), preview: true);
 
             // Alter the paths to match the new structure.
             var alteredPaths = existingPaths
@@ -195,7 +196,9 @@ public class VirtualFileSystemService
             string? pathToClean = null;
             IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
             if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
-                var allPaths = GetPathsForMediaFolders(mediaConfigs);
+                if (!TryGetFileCheckerForMediaFolders(mediaConfigs, out var allPaths))
+                    return true;
+
                 var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
                 switch (pathSegments.Length) {
                     // show/movie-folder level
@@ -269,7 +272,9 @@ public class VirtualFileSystemService
             }
             // Iterate files in the "real" media folder.
             else if (mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath)) || path == vfsPath) {
-                var allPaths = GetPathsForMediaFolders(mediaConfigs);
+                if (!TryGetFileCheckerForMediaFolders(mediaConfigs, out var allPaths))
+                    return true;
+
                 pathToClean = vfsPath;
                 allFiles = GetFilesForImportFolders(mediaConfigs, allPaths);
             }
@@ -299,8 +304,38 @@ public class VirtualFileSystemService
         );
     }
 
-    private HashSet<string> GetPathsForMediaFolders(IReadOnlyList<MediaFolderConfiguration> mediaConfigs)
+    private bool TryGetFileCheckerForMediaFolders(IReadOnlyList<MediaFolderConfiguration> mediaConfigs, [NotNullWhen(true)] out HashSet<string>? allPaths)
     {
+        if (mediaConfigs.Count is 0)
+        {
+            Logger.LogDebug("No media folders to create a file checker for.");
+            allPaths = null;
+            return false;
+        }
+
+        // Do a preliminary check to see if the folders exist and contain files,
+        // in case a mount point failed to mount.
+        var shouldReturn = false;
+        foreach (var mediaConfig in mediaConfigs)
+        {
+            if (!FileSystem.DirectoryExists(mediaConfig.MediaFolderPath))
+            {
+                Logger.LogDebug("Unable to create a file checker because a folder does not exist; {Path} (Library={LibraryId})", mediaConfig.MediaFolderPath, mediaConfig.LibraryId);
+                shouldReturn = true;
+            }
+            else if (!FileSystem.GetFilePaths(mediaConfig.MediaFolderPath, true).Any())
+            {
+                Logger.LogDebug("Unable to create a file checker because the folder is empty; {Path} (Library={LibraryId})", mediaConfig.MediaFolderPath, mediaConfig.LibraryId);
+                shouldReturn = true;
+            }
+        }
+
+        if (shouldReturn)
+        {
+            allPaths = null;
+            return false;
+        }
+
         var libraryId = mediaConfigs[0].LibraryId;
         Logger.LogDebug("Looking for files in library across {Count} folders. (Library={LibraryId})", mediaConfigs.Count, libraryId);
         var start = DateTime.UtcNow;
@@ -317,7 +352,8 @@ public class VirtualFileSystemService
         }
 
         Logger.LogDebug("Found {FileCount} files in library across {Count} in {TimeSpan}. (Library={LibraryId})", paths.Count, mediaConfigs.Count, DateTime.UtcNow - start, libraryId);
-        return paths;
+        allPaths = paths;
+        return true;
     }
 
     private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForEpisode(string fileId, string seriesId, IReadOnlyList<MediaFolderConfiguration> mediaConfigs, HashSet<string> fileSet)
@@ -1136,7 +1172,7 @@ public class VirtualFileSystemService
         return result;
     }
 
-    private static bool TryMoveSubtitleFile(IReadOnlyList<string> allKnownPaths, string subtitlePath, bool preview)
+    private bool TryMoveSubtitleFile(IReadOnlyList<string> allKnownPaths, string subtitlePath, bool preview)
     {
         if (!TryGetIdsForPath(subtitlePath, out var seriesId, out var fileId))
             return false;
@@ -1160,6 +1196,30 @@ public class VirtualFileSystemService
 
         if (preview)
             return true;
+
+        try
+        {
+            var currentTarget = File.ResolveLinkTarget(subtitlePath, false)?.FullName;
+            if (!string.IsNullOrEmpty(currentTarget))
+            {
+                // Just remove the link if the target doesn't exist.
+                if (!File.Exists(currentTarget))
+                    return false;
+
+                // // This statement will never be true. Because it would never had hit this path if it were true.
+                // if (currentTarget == realTarget)
+                //     return true;
+
+                // Copy the link so we can move it to where it should be.
+                File.Delete(subtitlePath);
+                File.Copy(currentTarget, subtitlePath);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Unable to check if {Path} is a symbolic link", subtitlePath);
+            return false;
+        }
 
         var realSubtitlePath = realTarget[..^Path.GetExtension(realTarget).Length] + extName;
         if (!File.Exists(realSubtitlePath))
