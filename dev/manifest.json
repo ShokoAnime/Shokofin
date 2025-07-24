@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.3.13",
+                "changelog": "`fix`: **`XmlElement` \u2192 `XmlArray` for array field**.\n\n`fix`: **Skip VFS generation if media folders are unavailable**:\n\nIn some cases, the media folders can be empty or otherwise unavailable (e.g. a local drive on windows is not mounted yet, a network share on windows is temporarily unavailable, a (network?) mount on linux was not mounted correctly, etc.), so skip the generation of the VFS if we detect any of the media folders attached to the library is in a faulted state, to prevent the generation removing all the symbolic links \u2014 effectively deleting the whole (or parts of) the VFS.\n\nFixes #89",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.13/shoko_5.0.3.13.zip",
+                "checksum": "1edfbc6f35aeadd86ec43da89b9e6e06",
+                "timestamp": "2025-07-24T14:35:38Z"
+            },
+            {
                 "version": "5.0.3.12",
                 "changelog": "`misc`: **Update read-me file**. (_Skip CI_)\n\n`fix`: **Log error message, not a boolean value**.\n\n`refactor`: **Always send language code and actual rating to API clients**:\n\nAlways send the proper language code and actual rating to the API clients. We determine if it's likely to be an API client by tracking the currently in-flight requests to the remote images endpoint (like we've always done so far), but now e're also taking note of the item's id to check if we get a call to the image provider with said id. It's not fool proof, but it should work in 99.9% of use-cases unless you happen to be fetching the images for an item that's also currently getting an automated image refresh, in which case, good luck timing that.\n\n`feat`: **Allow setting season ordering per shoko series**.\n\n`refactor`: **Graduate season merging from experimental and refine the logic a little**.\n\n`feat`: **Add MVC auto-refresh task and metadata refresh service**:\n\nThe image logic can still be improved, and no settings UI as of this commit, but the task should be working fine with the current image logic and no settings UI. The rest can be refined/added in a later commit.\n\n`feat`: **Add search to series configuration / utility**.\n\n`feat`: **Expose usage tracker stall time & reset default value**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.9/shoko_5.0.3.9.zip",
                 "checksum": "3fe3a9afd157861acd3043a0c9dd8171",
                 "timestamp": "2025-06-18T05:00:54Z"
-            },
-            {
-                "version": "5.0.3.8",
-                "changelog": "`fix`: **Always use default ordering when fetching metadata from tmdb episode**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.8/shoko_5.0.3.8.zip",
-                "checksum": "f23d2888880b4ed1b06e4266e78efbaf",
-                "timestamp": "2025-06-18T04:14:54Z"
             }
         ]
     }
