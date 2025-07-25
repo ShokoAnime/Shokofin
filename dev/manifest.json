@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.4",
+                "changelog": "`chore`: **Move around settings**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.4/shoko_5.0.4.4.zip",
+                "checksum": "f5309f8c6a8bb64594ba2961fc3ba366",
+                "timestamp": "2025-07-25T01:49:53Z"
+            },
+            {
                 "version": "5.0.4.3",
                 "changelog": "`feat`: **Allow setting specials placement per shoko series**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.13/shoko_5.0.3.13.zip",
                 "checksum": "1edfbc6f35aeadd86ec43da89b9e6e06",
                 "timestamp": "2025-07-24T14:35:38Z"
-            },
-            {
-                "version": "5.0.3.12",
-                "changelog": "`misc`: **Update read-me file**. (_Skip CI_)\n\n`fix`: **Log error message, not a boolean value**.\n\n`refactor`: **Always send language code and actual rating to API clients**:\n\nAlways send the proper language code and actual rating to the API clients. We determine if it's likely to be an API client by tracking the currently in-flight requests to the remote images endpoint (like we've always done so far), but now e're also taking note of the item's id to check if we get a call to the image provider with said id. It's not fool proof, but it should work in 99.9% of use-cases unless you happen to be fetching the images for an item that's also currently getting an automated image refresh, in which case, good luck timing that.\n\n`feat`: **Allow setting season ordering per shoko series**.\n\n`refactor`: **Graduate season merging from experimental and refine the logic a little**.\n\n`feat`: **Add MVC auto-refresh task and metadata refresh service**:\n\nThe image logic can still be improved, and no settings UI as of this commit, but the task should be working fine with the current image logic and no settings UI. The rest can be refined/added in a later commit.\n\n`feat`: **Add search to series configuration / utility**.\n\n`feat`: **Expose usage tracker stall time & reset default value**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.12/shoko_5.0.3.12.zip",
-                "checksum": "0de98086d8ace260494dbcc156996e99",
-                "timestamp": "2025-07-23T22:28:41Z"
             }
         ]
     }
