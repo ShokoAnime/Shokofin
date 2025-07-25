@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.5",
+                "changelog": "`refactor`: **Merge vfs enabled & library filtering options since both were mutually exclusive and could had just been a single option, so now they are**.\n\n`fix`: **Remove `Obsolete` attributes on enums since the xml deserializer ignores the values if it's set**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.5/shoko_5.0.4.5.zip",
+                "checksum": "0baa86bab1d6ba34deafbbb40b4bd0b8",
+                "timestamp": "2025-07-25T18:46:57Z"
+            },
+            {
                 "version": "5.0.4.4",
                 "changelog": "`chore`: **Move around settings**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.1/shoko_5.0.4.1.zip",
                 "checksum": "829bc55bc5bf03ccd89a646571b4fac5",
                 "timestamp": "2025-07-24T18:52:15Z"
-            },
-            {
-                "version": "5.0.3.13",
-                "changelog": "`fix`: **`XmlElement` \u2192 `XmlArray` for array field**.\n\n`fix`: **Skip VFS generation if media folders are unavailable**:\n\nIn some cases, the media folders can be empty or otherwise unavailable (e.g. a local drive on windows is not mounted yet, a network share on windows is temporarily unavailable, a (network?) mount on linux was not mounted correctly, etc.), so skip the generation of the VFS if we detect any of the media folders attached to the library is in a faulted state, to prevent the generation removing all the symbolic links \u2014 effectively deleting the whole (or parts of) the VFS.\n\nFixes #89",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.13/shoko_5.0.3.13.zip",
-                "checksum": "1edfbc6f35aeadd86ec43da89b9e6e06",
-                "timestamp": "2025-07-24T14:35:38Z"
             }
         ]
     }
