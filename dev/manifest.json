@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.3",
+                "changelog": "`feat`: **Allow setting specials placement per shoko series**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.3/shoko_5.0.4.3.zip",
+                "checksum": "6f9a19d50f725db8e3c77cfd000320f6",
+                "timestamp": "2025-07-25T01:19:15Z"
+            },
+            {
                 "version": "5.0.4.2",
                 "changelog": "`fix`: **Remove currently unnecessary `.split()` on `.value`**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.12/shoko_5.0.3.12.zip",
                 "checksum": "0de98086d8ace260494dbcc156996e99",
                 "timestamp": "2025-07-23T22:28:41Z"
-            },
-            {
-                "version": "5.0.3.11",
-                "changelog": "`repo`: **Update read-me**. (_Skip CI_)\n\n`refactor`: **Impl. series config. service [2/2]**:\n\nPart 2 of 2 of the series configuration implementation. This is the frontend code and HTML for the series configuration utility. For now it's very basic, as i don't want to go down the custom (pure) JS (hell) route.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3-dev.11/shoko_5.0.3.11.zip",
-                "checksum": "5dbd1dfdaa9e0df553aa4a270725b3e4",
-                "timestamp": "2025-07-10T22:28:06Z"
             }
         ]
     }
