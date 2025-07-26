@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.10",
+                "changelog": "`fix`: **Notify changes if using physical vfs**:\n\nWhen reacting to a remove event, if the series has been removed then only send a normal notify even if the main media folder is the VFS folder to prevent it blocking all future events within the VFS send to jellyfin.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.10/shoko_5.0.4.10.zip",
+                "checksum": "8c1414918241256b412a56c91e2362fe",
+                "timestamp": "2025-07-26T07:33:20Z"
+            },
+            {
                 "version": "5.0.4.9",
                 "changelog": "`fix`: **Anidb content ratings should not be tied to country code**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.6/shoko_5.0.4.6.zip",
                 "checksum": "2fb6f425517bda90b14b498753306011",
                 "timestamp": "2025-07-25T20:11:44Z"
-            },
-            {
-                "version": "5.0.4.5",
-                "changelog": "`refactor`: **Merge vfs enabled & library filtering options since both were mutually exclusive and could had just been a single option, so now they are**.\n\n`fix`: **Remove `Obsolete` attributes on enums since the xml deserializer ignores the values if it's set**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.5/shoko_5.0.4.5.zip",
-                "checksum": "0baa86bab1d6ba34deafbbb40b4bd0b8",
-                "timestamp": "2025-07-25T18:46:57Z"
             }
         ]
     }
