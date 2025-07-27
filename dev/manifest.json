@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.11",
+                "changelog": "`chore`: **Update settings text**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.11/shoko_5.0.4.11.zip",
+                "checksum": "9ae7b7c5ce03b31259ad61a7c6e13059",
+                "timestamp": "2025-07-27T05:43:23Z"
+            },
+            {
                 "version": "5.0.4.10",
                 "changelog": "`fix`: **Notify changes if using physical vfs**:\n\nWhen reacting to a remove event, if the series has been removed then only send a normal notify even if the main media folder is the VFS folder to prevent it blocking all future events within the VFS send to jellyfin.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.7/shoko_5.0.4.7.zip",
                 "checksum": "6c2a458023bef6232ef85d9d7bb43ee9",
                 "timestamp": "2025-07-26T02:48:54Z"
-            },
-            {
-                "version": "5.0.4.6",
-                "changelog": "`chore`: **Forgot to rename the enum**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.6/shoko_5.0.4.6.zip",
-                "checksum": "2fb6f425517bda90b14b498753306011",
-                "timestamp": "2025-07-25T20:11:44Z"
             }
         ]
     }
