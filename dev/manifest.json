@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.13",
+                "changelog": "`refactor`: **Overhaul image search logic + more**:\n\nOverhauled the automatic image search logic and restructured all settings related to images. The new logic gives more control of which language to use across the different types during an automatic search performed by Jellyfin.\n\nYou may need to manually tweak your image settings to follow these news settings if you're a dev plugin user, as I'm not going to tailor the configuration migrations for you, but for the stable plugin users instead.\n\n`misc`: **Don't set tmdb keywords/genres by default**:\n\nUsers can still enable them, but they're unfiltered compared to the rest of the tags in the tag filter, so they should probably not be enabled by default since they may as well overlap with some of the other (intentionally?) disabled tag sources.\n\n`chore`: **Rename method**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.13/shoko_5.0.4.13.zip",
+                "checksum": "11c1b49a8954a33955194a848aad9dda",
+                "timestamp": "2025-07-29T22:59:18Z"
+            },
+            {
                 "version": "5.0.4.12",
                 "changelog": "`fix`: **Check if group has custom description before sanitizing**.\n\n`chore`: **Make title a sub-class of text**.\n\n`refactor`: **Add season merge groups**.\n\n`fix`: **Fix:fixes for series search / select logic in UI**.\n\n`fix`: **Apply scale to community ratings for images**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.9/shoko_5.0.4.9.zip",
                 "checksum": "00ee3af0387f987caf059104d81dcefe",
                 "timestamp": "2025-07-26T06:22:09Z"
-            },
-            {
-                "version": "5.0.4.8",
-                "changelog": "`chore`: **Update settings text**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.8/shoko_5.0.4.8.zip",
-                "checksum": "d43a2b0c80a6054ce162ae7d0e62af82",
-                "timestamp": "2025-07-26T06:16:50Z"
             }
         ]
     }
