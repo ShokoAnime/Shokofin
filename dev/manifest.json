@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.15",
+                "changelog": "`fix`: **Rename missed image URLs after controller rename (#90)**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.15/shoko_5.0.4.15.zip",
+                "checksum": "cc0059a69f450e854cb7e6b73ed8b7c7",
+                "timestamp": "2025-08-01T11:54:02Z"
+            },
+            {
                 "version": "5.0.4.14",
                 "changelog": "`fix`: **Rename image type to not conflict with jellyfin's type in swagger**.\n\n`refactor`: **Cleanup title config**:\n\nCleaned up the structure of the title config, to be more easy to use in the future UI.\n\n`misc`: **Update TODOs in code**.\n\n`fix`: **Ignore missing space in git commit messages**.\n\n`misc`: **Rename controllers for better naming in swagger**.\n\n`fix`: **Add back parsing of legacy text value**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.11/shoko_5.0.4.11.zip",
                 "checksum": "9ae7b7c5ce03b31259ad61a7c6e13059",
                 "timestamp": "2025-07-27T05:43:23Z"
-            },
-            {
-                "version": "5.0.4.10",
-                "changelog": "`fix`: **Notify changes if using physical vfs**:\n\nWhen reacting to a remove event, if the series has been removed then only send a normal notify even if the main media folder is the VFS folder to prevent it blocking all future events within the VFS send to jellyfin.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.10/shoko_5.0.4.10.zip",
-                "checksum": "8c1414918241256b412a56c91e2362fe",
-                "timestamp": "2025-07-26T07:33:20Z"
             }
         ]
     }
