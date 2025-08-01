@@ -118,7 +118,7 @@ public class ImageProvider(IHttpClientFactory _httpClientFactory, ILogger<ImageP
         => item is Series or Season or Episode or Movie or BoxSet;
 
     public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken) {
-        var index = url.IndexOf("Plugin/Shokofin/Host");
+        var index = url.IndexOf("Shokofin/Host");
         if (index is -1)
             return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
         url = $"{Plugin.Instance.Configuration.Url}/api/v3{url[(index + 20)..]}";
