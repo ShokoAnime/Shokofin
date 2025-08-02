@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.16",
+                "changelog": "`fix`: **Make de-duplication of titles optional**.\n\n`chore`: **Remove unnecessary markup**.\n\n`fix`: **Change magic number from 20 to 13**:\n\nWe missed a spot in #90.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.16/shoko_5.0.4.16.zip",
+                "checksum": "45f8359da0b9bb55ccb02abd912505f5",
+                "timestamp": "2025-08-02T22:21:08Z"
+            },
+            {
                 "version": "5.0.4.15",
                 "changelog": "`fix`: **Rename missed image URLs after controller rename (#90)**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.12/shoko_5.0.4.12.zip",
                 "checksum": "ca9eaf36efbcc9fb1484e4580a4f348e",
                 "timestamp": "2025-07-28T01:38:43Z"
-            },
-            {
-                "version": "5.0.4.11",
-                "changelog": "`chore`: **Update settings text**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.11/shoko_5.0.4.11.zip",
-                "checksum": "9ae7b7c5ce03b31259ad61a7c6e13059",
-                "timestamp": "2025-07-27T05:43:23Z"
             }
         ]
     }
