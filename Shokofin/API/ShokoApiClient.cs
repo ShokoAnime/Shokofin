@@ -14,6 +14,7 @@ using Shokofin.API.Models;
 using Shokofin.API.Models.AniDB;
 using Shokofin.API.Models.Shoko;
 using Shokofin.API.Models.TMDB;
+using Shokofin.Configuration;
 using Shokofin.Extensions;
 using Shokofin.Utils;
 
@@ -23,35 +24,58 @@ namespace Shokofin.API;
 /// All API calls to Shoko needs to go through this gateway.
 /// </summary>
 public class ShokoApiClient : IDisposable {
-    private readonly HttpClient _httpClient;
-
-    private readonly UsageTracker _tracker;
+    private static readonly TimeSpan _requestWaitLogThreshold = TimeSpan.FromMilliseconds(50);
 
     private readonly ILogger<ShokoApiClient> _logger;
 
-    private readonly SemaphoreSlim _requestLimiter;
+    private int _maxInFlightRequests;
 
-    private static readonly TimeSpan _requestWaitLogThreshold = TimeSpan.FromMilliseconds(50);
+    private readonly UsageTracker _tracker;
+
+    private readonly HttpClient _httpClient;
+
+    private SemaphoreSlim _requestLimiter;
 
     private readonly GuardedMemoryCache _cache;
 
     public ShokoApiClient(ILogger<ShokoApiClient> logger, UsageTracker tracker) {
+        var config = Plugin.Instance.Configuration;
+
+        _logger = logger;
+        _tracker = tracker;
         _httpClient = new HttpClient {
             Timeout = TimeSpan.FromMinutes(10),
         };
-        _logger = logger;
-        _tracker = tracker;
-        _cache = new(logger, new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { SlidingExpiration = new(2, 30, 0) });
-        _requestLimiter = new(10, 10);
+        _maxInFlightRequests = config.Debug.MaxInFlightRequests;
+        _requestLimiter = new(_maxInFlightRequests, _maxInFlightRequests);
+        _cache = new(
+            logger,
+            new() { ExpirationScanFrequency = config.Debug.ExpirationScanFrequency },
+            new() { AbsoluteExpirationRelativeToNow = config.Debug.AbsoluteExpirationRelativeToNow }
+        );
+
+        Plugin.Instance.ConfigurationChanged += OnConfigurationChanged;
         _tracker.Stalled += OnTrackerStalled;
     }
 
     ~ShokoApiClient() {
         _tracker.Stalled -= OnTrackerStalled;
+        Plugin.Instance.ConfigurationChanged -= OnConfigurationChanged;
     }
 
-    private void OnTrackerStalled(object? sender, EventArgs eventArgs)
-        => Clear();
+    private void OnConfigurationChanged(object? sender, PluginConfiguration config) {
+        var maxRequests = config.Debug.MaxInFlightRequests;
+        if (maxRequests != _maxInFlightRequests) {
+            _logger.LogInformation("Updating request limit to {MaxRequests}", maxRequests);
+            _requestLimiter = new(maxRequests, maxRequests);
+            _maxInFlightRequests = maxRequests;
+        }
+    }
+
+    private void OnTrackerStalled(object? sender, EventArgs eventArgs) {
+        if (Plugin.Instance.Configuration.Debug.AutoClearClientCache)
+            Clear();
+    }
 
     public void Clear() {
         _logger.LogDebug("Clearing data…");
@@ -392,7 +416,7 @@ public class ShokoApiClient : IDisposable {
     public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, long? progress, bool watched, string apiKey)
         => !progress.HasValue
             ? await ScrobbleFile(fileId, episodeId, eventName, watched, apiKey).ConfigureAwait(false)
-            : await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress.Value).TotalMilliseconds)}&watched={watched}", HttpMethod.Patch, apiKey).ConfigureAwait(false) is { } response && 
+            : await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={Math.Round(new TimeSpan(progress.Value).TotalMilliseconds)}&watched={watched}", HttpMethod.Patch, apiKey).ConfigureAwait(false) is { } response &&
                 response.StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
 
     #endregion

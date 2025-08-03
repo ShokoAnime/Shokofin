@@ -59,7 +59,11 @@ public partial class ShokoApiManager : IDisposable {
         ApiClient = apiClient;
         LibraryManager = libraryManager;
         UsageTracker = usageTracker;
-        DataCache = new(logger, new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { AbsoluteExpirationRelativeToNow = new(2, 30, 0) });
+        DataCache = new(
+            logger,
+            new() { ExpirationScanFrequency = Plugin.Instance.Configuration.Debug.ExpirationScanFrequency },
+            new() { AbsoluteExpirationRelativeToNow = Plugin.Instance.Configuration.Debug.AbsoluteExpirationRelativeToNow }
+        );
         UsageTracker.Stalled += OnTrackerStalled;
     }
 
@@ -67,8 +71,10 @@ public partial class ShokoApiManager : IDisposable {
         UsageTracker.Stalled -= OnTrackerStalled;
     }
 
-    private void OnTrackerStalled(object? sender, EventArgs eventArgs)
-        => Clear();
+    private void OnTrackerStalled(object? sender, EventArgs eventArgs) {
+        if (Plugin.Instance.Configuration.Debug.AutoClearManagerCache)
+            Clear();
+    }
 
     #region Ignore rule
 

@@ -35,7 +35,7 @@ promise.then(({
 //#region Constants
 
 /**
- * @typedef {"Connection" | "Metadata_Title" | "Metadata_Description" | "Metadata_TagGenre" | "Metadata_Image" | "Metadata_Misc" | "Metadata_ThirdPartyIntegration" | "Library_Basic" | "Library_Collection" | "Library_MultipleVersions" | "Library_MediaFolder" | "Library_SeasonMerging" | "VFS_Basic" | "VFS_Location" | "User" | "Series" | "SignalR_Connection" | "SignalR_Basic" | "SignalR_Library_New" | "SignalR_Library_Existing" | "Misc" | "Utilities"} SectionType
+ * @typedef {"Connection" | "Metadata_Title" | "Metadata_Description" | "Metadata_TagGenre" | "Metadata_Image" | "Metadata_Misc" | "Metadata_ThirdPartyIntegration" | "Library_Basic" | "Library_Collection" | "Library_MultipleVersions" | "Library_MediaFolder" | "Library_SeasonMerging" | "VFS_Basic" | "VFS_Location" | "User" | "Series" | "SignalR_Connection" | "SignalR_Basic" | "SignalR_Library_New" | "SignalR_Library_Existing" | "Misc" | "Debug" | "Utilities"} SectionType
  */
 
 const MaxDebugPresses = 7;
@@ -65,6 +65,7 @@ const Sections = [
     "SignalR_Library_New",
     "SignalR_Library_Existing",
     "Misc",
+    "Debug",
     "Utilities",
 ];
 
@@ -332,7 +333,7 @@ async function updateView(view, form, config) {
     State.config = config;
     State.clickCounter = 0;
     State.advancedMode = config.AdvancedMode;
-    State.debugMode = config.DebugMode;
+    State.debugMode = config.Debug.ShowInUI;
     State.connected = Boolean(config.ApiKey);
 
     if (State.advancedMode) {
@@ -444,7 +445,7 @@ async function updateView(view, form, config) {
             break;
 
         case "misc":
-            activeSections.push("Misc");
+            activeSections.push("Misc", "Debug");
             break;
 
         case "utilities":
@@ -652,13 +653,29 @@ function applyFormToConfig(form, config) {
 
         case "misc": {
             const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
-            const stallTime = sanitizeNumber(form.querySelector("#UsageTracker_StalledTimeInSeconds").value);
+            const stallTime = sanitizeNumber(form.querySelector("#Debug_UsageTrackerStalledTimeInSeconds").value, 1, 10800);
+            const maxRequests = sanitizeNumber(form.querySelector("#Debug_MaxInFlightRequests").value, 1, 100);
+            const expirationScanFrequency = sanitizeNumber(form.querySelector("#Debug_ExpirationScanFrequencyInMinutes").value, 1, 180);
+            const slidingExpiration = sanitizeNumber(form.querySelector("#Debug_SlidingExpirationInMinutes").value, 1, 180);
+            const absoluteExpiration = sanitizeNumber(form.querySelector("#Debug_AbsoluteExpirationRelativeToNowInMinutes").value, 1, 1440);
 
             config.Misc_ShowInMenu = form.querySelector("#Misc_ShowInMenu").checked;
-            config.UsageTracker_StalledTimeInSeconds = stallTime;
-            form.querySelector("#UsageTracker_StalledTimeInSeconds").value = stallTime;
             config.IgnoredFolders = ignoredFolders;
             form.querySelector("#IgnoredFolders").value = ignoredFolders.join(", ");
+
+            config.Debug.UsageTrackerStalledTimeInSeconds = stallTime;
+            form.querySelector("#Debug_UsageTrackerStalledTimeInSeconds").value = config.Debug.UsageTrackerStalledTimeInSeconds;
+            config.Debug.MaxInFlightRequests = maxRequests;
+            form.querySelector("#Debug_MaxInFlightRequests").value = config.Debug.MaxInFlightRequests;
+            config.Debug.AutoClearClientCache = form.querySelector("#Debug_AutoClearClientCache").checked;
+            config.Debug.AutoClearManagerCache = form.querySelector("#Debug_AutoClearManagerCache").checked;
+            config.Debug.AutoClearVfsCache = form.querySelector("#Debug_AutoClearVfsCache").checked;
+            config.Debug.ExpirationScanFrequencyInMinutes = expirationScanFrequency;
+            form.querySelector("#Debug_ExpirationScanFrequencyInMinutes").value = config.Debug.ExpirationScanFrequencyInMinutes;
+            config.Debug.SlidingExpirationInMinutes = slidingExpiration;
+            form.querySelector("#Debug_SlidingExpirationInMinutes").value = config.Debug.SlidingExpirationInMinutes;
+            config.Debug.AbsoluteExpirationRelativeToNowInMinutes = absoluteExpiration;
+            form.querySelector("#Debug_AbsoluteExpirationRelativeToNowInMinutes").value = config.Debug.AbsoluteExpirationRelativeToNowInMinutes;
             break;
         }
     }
@@ -849,8 +866,16 @@ async function applyConfigToForm(form, config) {
 
         case "misc": {
             form.querySelector("#Misc_ShowInMenu").checked = config.Misc_ShowInMenu;
-            form.querySelector("#UsageTracker_StalledTimeInSeconds").value = config.UsageTracker_StalledTimeInSeconds;
             form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
+
+            form.querySelector("#Debug_UsageTrackerStalledTimeInSeconds").value = config.Debug.UsageTrackerStalledTimeInSeconds;
+            form.querySelector("#Debug_MaxInFlightRequests").value = config.Debug.MaxInFlightRequests;
+            form.querySelector("#Debug_AutoClearClientCache").checked = config.Debug.AutoClearClientCache;
+            form.querySelector("#Debug_AutoClearManagerCache").checked = config.Debug.AutoClearManagerCache;
+            form.querySelector("#Debug_AutoClearVfsCache").checked = config.Debug.AutoClearVfsCache;
+            form.querySelector("#Debug_ExpirationScanFrequencyInMinutes").value = config.Debug.ExpirationScanFrequencyInMinutes;
+            form.querySelector("#Debug_SlidingExpirationInMinutes").value = config.Debug.SlidingExpirationInMinutes;
+            form.querySelector("#Debug_AbsoluteExpirationRelativeToNowInMinutes").value = config.Debug.AbsoluteExpirationRelativeToNowInMinutes;
             break;
         }
     }
@@ -1402,12 +1427,12 @@ function renderAlternateTitles(form, configAlternateTitles) {
  */
 async function toggleExpertMode(expertMode = false, debugMode = false) {
     const config = State.config || await ShokoApiClient.getConfiguration();
-    const debugChanged = config.DebugMode !== debugMode;
+    const debugChanged = config.Debug.ShowInUI !== debugMode;
     const expertChanged = config.AdvancedMode !== expertMode;
     if (!expertChanged && !debugChanged) return config;
 
     config.AdvancedMode = expertMode;
-    config.DebugMode = debugMode;
+    config.Debug.ShowInUI = debugMode;
 
     await ShokoApiClient.updateConfiguration(config);
 

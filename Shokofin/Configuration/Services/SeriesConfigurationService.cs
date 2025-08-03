@@ -13,7 +13,11 @@ namespace Shokofin.Configuration;
 
 public class SeriesConfigurationService(ILogger<SeriesConfigurationService> logger, ShokoApiClient apiClient, ShokoApiManager apiManager) {
 
-    private readonly GuardedMemoryCache _cache = new(logger, new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { SlidingExpiration = new(2, 30, 0) });
+    private readonly GuardedMemoryCache _cache = new(
+        logger,
+        new() { ExpirationScanFrequency = Plugin.Instance.Configuration.Debug.ExpirationScanFrequency },
+        new() { AbsoluteExpirationRelativeToNow = Plugin.Instance.Configuration.Debug.AbsoluteExpirationRelativeToNow }
+    );
 
     private const string ManagedBy = "This tag is managed by Shokofin and should not be edited manually.";
 

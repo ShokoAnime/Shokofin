@@ -196,7 +196,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages {
         FixupConfiguration(Configuration);
 
         IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
-        Tracker.UpdateTimeout(TimeSpan.FromSeconds(Configuration.UsageTracker_StalledTimeInSeconds));
+        Tracker.UpdateTimeout(Configuration.Debug.UsageTrackerStalledTime);
 
         Logger.LogDebug("Virtual File System Root Directory; {Path}", VirtualRoot);
         Logger.LogDebug("Can create symbolic links; {Value}", CanCreateSymbolicLinks);
@@ -233,7 +233,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages {
         FixupConfiguration(config);
 
         IgnoredFolders = config.IgnoredFolders.ToHashSet();
-        Tracker.UpdateTimeout(TimeSpan.FromSeconds(config.UsageTracker_StalledTimeInSeconds));
+        Tracker.UpdateTimeout(Configuration.Debug.UsageTrackerStalledTime);
 
         // Reset the cached VFS root directory in case it has changed.
         _virtualRoot = null;
@@ -309,7 +309,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages {
                 config.MetadataRefresh.Episode |= MetadataRefreshField.Images;
             }
             config.SignalR_ReplaceImagesDuringRefresh = null;
-            config.UsageTracker_StalledTimeInSeconds = 60; // reset to the new default for older installs
             changed = true;
         }
         if (config.VFS_Legacy_Enabled.HasValue) {

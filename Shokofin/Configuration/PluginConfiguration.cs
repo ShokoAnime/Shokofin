@@ -10,7 +10,6 @@ using Shokofin.API.Models;
 using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
 using DescriptionProvider = Shokofin.Utils.TextUtility.DescriptionProvider;
 using DescriptionConversionMode = Shokofin.Utils.TextUtility.DescriptionConversionMode;
-using ImageType = MediaBrowser.Model.Entities.ImageType;
 using LibraryOperationMode = Shokofin.Utils.Ordering.LibraryOperationMode;
 using MergeVersionSortSelector = Shokofin.MergeVersions.MergeVersionSortSelector;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
@@ -712,16 +711,12 @@ public class PluginConfiguration : BasePluginConfiguration {
 
     #endregion
 
-    #region Usage Tracker
+    #region Debug
 
     /// <summary>
-    /// Amount of seconds that needs to pass before the usage tracker considers the usage as stalled and resets it's tracking and dispatches it's <seealso cref="Utils.UsageTracker.Stalled"/> event.
+    /// All debug related configuration.
     /// </summary>
-    /// <remarks>
-    /// It can be configured between 1 second and 3 hours.
-    /// </remarks>
-    [Range(1, 10800)]
-    public int UsageTracker_StalledTimeInSeconds { get; set; }
+    public DebugConfiguration Debug { get; set; } = new();
 
     #endregion
 
@@ -732,21 +727,11 @@ public class PluginConfiguration : BasePluginConfiguration {
     /// </summary>
     public bool Misc_ShowInMenu { get; set; }
 
-    #endregion
-
-    #region Expert Mode
-
     /// <summary>
     /// Enable expert mode.
     /// </summary>
     [XmlElement("EXPERT_MODE")]
     public bool AdvancedMode { get; set; }
-
-    /// <summary>
-    /// Enable debug mode.
-    /// </summary>
-    [XmlElement("DEBUG_MODE")]
-    public bool DebugMode { get; set; }
 
     #endregion
 
@@ -856,9 +841,7 @@ public class PluginConfiguration : BasePluginConfiguration {
         SeasonMerging_SeriesTypes = [SeriesType.OVA, SeriesType.TV, SeriesType.TVSpecial, SeriesType.Web, SeriesType.OVA];
         SeasonMerging_MergeWindowInDays = 185;
         MetadataRefresh = new();
-        UsageTracker_StalledTimeInSeconds = 60;
         Misc_ShowInMenu = false;
         AdvancedMode = false;
-        DebugMode = false;
     }
 }

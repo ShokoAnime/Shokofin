@@ -86,7 +86,14 @@ public class VirtualFileSystemService {
         ConfigurationManager = configurationManager;
         FileSystem = fileSystem;
         Logger = logger;
-        DataCache = new(logger, new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1), SlidingExpiration = TimeSpan.FromMinutes(15) });
+        DataCache = new(
+            logger,
+            new() { ExpirationScanFrequency = Plugin.Instance.Configuration.Debug.ExpirationScanFrequency },
+            new() {
+                AbsoluteExpirationRelativeToNow = Plugin.Instance.Configuration.Debug.AbsoluteExpirationRelativeToNow,
+                SlidingExpiration = Plugin.Instance.Configuration.Debug.SlidingExpiration,
+            }
+        );
         NamingOptions = namingOptions;
         ExternalSubtitlePathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Subtitle);
         ExternalAudioPathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Audio);
@@ -98,8 +105,10 @@ public class VirtualFileSystemService {
         DataCache.Dispose();
     }
 
-    private void OnTrackerStalled(object? sender, EventArgs eventArgs)
-        => Clear();
+    private void OnTrackerStalled(object? sender, EventArgs eventArgs) {
+        if (Plugin.Instance.Configuration.Debug.AutoClearVfsCache)
+            Clear();
+    }
 
     public void Clear() {
         Logger.LogDebug("Clearing data…");

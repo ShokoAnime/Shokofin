@@ -375,6 +375,20 @@ export const LibraryMenu = globalThis.LibraryMenu;
 
 /**
  * @typedef {{
+ *   ShowInUI: boolean;
+ *   UsageTrackerStalledTimeInSeconds: number;
+ *   MaxInFlightRequests: number;
+ *   AutoClearClientCache: boolean;
+ *   AutoClearManagerCache: boolean;
+ *   AutoClearVfsCache: boolean;
+ *   ExpirationScanFrequencyInMinutes: number;
+ *   SlidingExpirationInMinutes: number;
+ *   AbsoluteExpirationRelativeToNowInMinutes: number;
+ * }} DebugConfiguration
+ */
+
+/**
+ * @typedef {{
  *   CanCreateSymbolicLinks: boolean;
  *   Url: string;
  *   PublicUrl: string;
@@ -440,9 +454,8 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   SeasonMerging_SeriesTypes: SeriesType[];
  *   SeasonMerging_MergeWindowInDays: number;
  *   Misc_ShowInMenu: boolean;
- *   UsageTracker_StalledTimeInSeconds: number;
  *   AdvancedMode: boolean;
- *   DebugMode: boolean;
+ *   Debug: DebugConfiguration;
  * }} PluginConfiguration
  */
 
@@ -944,7 +957,7 @@ export function setupEvents(view, events, initialTab = "connection", hide = fals
                     State.config = await ShokoApiClient.getConfiguration();
                     State.clickCounter = 0;
                     State.advancedMode = State.config.AdvancedMode;
-                    State.debugMode = State.config.DebugMode;
+                    State.debugMode = State.config.Debug.ShowInUI;
                     State.connected = Boolean(State.config.ApiKey);
                 }
 
