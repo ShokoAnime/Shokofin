@@ -45,6 +45,9 @@ public class ShokoInternalId(ShokoIdLookup lookup, UsageTracker tracker) : IExte
     /// <inheritdoc/>
     IEnumerable<string> IExternalUrlProvider.GetExternalUrls(BaseItem item)
     {
+        if (!lookup.IsEnabledForItem(item))
+            yield break;
+
         lock (_lock) {
             _nextNames.Clear();
             var url = Plugin.Instance.Configuration.WebUrl;
