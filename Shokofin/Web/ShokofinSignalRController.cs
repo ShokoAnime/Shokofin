@@ -2,6 +2,7 @@ using System;
 using System.Net.Mime;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -16,6 +17,7 @@ namespace Shokofin.Web;
 /// <remarks>
 /// Initializes a new instance of the <see cref="ShokofinSignalRController"/> class.
 /// </remarks>
+[Authorize]
 [ApiController]
 [Route("Shokofin/SignalR")]
 [Produces(MediaTypeNames.Application.Json)]

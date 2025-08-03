@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Mime;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -19,6 +20,7 @@ namespace Shokofin.Web;
 /// Initializes a new instance of the <see cref="ShokofinHostController"/> class.
 /// </remarks>
 /// <param name="httpClientFactory">Instance of the <see cref="IHttpClientFactory"/> interface.</param>
+[Authorize]
 [ApiController]
 [Route("Shokofin/Host")]
 [Produces(MediaTypeNames.Application.Json)]

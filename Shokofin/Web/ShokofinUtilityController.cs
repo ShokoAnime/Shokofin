@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Mime;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,7 @@ namespace Shokofin.Web;
 /// <remarks>
 /// Initializes a new instance of the <see cref="ShokofinUtilityController"/> class.
 /// </remarks>
+[Authorize]
 [ApiController]
 [Route("Shokofin/Utility")]
 [Produces(MediaTypeNames.Application.Json)]
