@@ -39,11 +39,11 @@ public class CustomBoxSetProvider(ILogger<CustomBoxSetProvider> _logger, ShokoAp
             return false;
 
         // Try to read the shoko group id.
-        if (collection.TryGetProviderId(ProviderNames.ShokoCollectionForGroup, out var collectionId) || collection.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForGroup, out collectionId))
+        if (collection.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForGroup, out var collectionId))
             return true;
 
         // Try to read the shoko series id.
-        if (collection.TryGetProviderId(ProviderNames.ShokoCollectionForSeries, out var seasonId) || collection.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForSeries, out seasonId))
+        if (collection.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForSeries, out var seasonId))
             return true;
 
         return false;

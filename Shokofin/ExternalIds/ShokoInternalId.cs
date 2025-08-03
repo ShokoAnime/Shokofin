@@ -53,11 +53,11 @@ public class ShokoInternalId(ShokoIdLookup lookup, UsageTracker tracker) : IExte
             var url = Plugin.Instance.Configuration.WebUrl;
             switch (item) {
                 case BoxSet boxSet:
-                    if (item.TryGetProviderId(ProviderNames.ShokoCollectionForGroup, out var collectionId) || item.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForGroup, out collectionId)) {
+                    if (item.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForGroup, out var collectionId)) {
                         _nextNames.Enqueue(ProviderNames.ShokoGroup);
                         yield return $"{url}/collection/group/{collectionId}";
                     }
-                    if (item.TryGetProviderId(ProviderNames.ShokoCollectionForSeries, out var seasonId) || item.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForSeries, out seasonId)) {
+                    if (item.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForSeries, out var seasonId)) {
                         switch (seasonId[0]) {
                             case IdPrefix.TmdbMovie:
                             case IdPrefix.TmdbMovieCollection:

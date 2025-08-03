@@ -25,12 +25,12 @@ public class BoxSetProvider(IHttpClientFactory _httpClientFactory, ILogger<BoxSe
     public async Task<MetadataResult<BoxSet>> GetMetadata(BoxSetInfo info, CancellationToken cancellationToken) {
         try {
             // Try to read the shoko group id
-            if (info.TryGetProviderId(ProviderNames.ShokoCollectionForGroup, out var collectionId) || info.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForGroup, out collectionId))
+            if (info.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForGroup, out var collectionId))
                 using (Plugin.Instance.Tracker.Enter($"Providing info for Collection \"{info.Name}\". (Path=\"{info.Path}\",Collection=\"{collectionId}\")"))
                     return await GetShokoGroupMetadata(info, collectionId).ConfigureAwait(false);
 
             // Try to read the shoko series id
-            if (info.TryGetProviderId(ProviderNames.ShokoCollectionForSeries, out var seasonId) || info.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForSeries, out seasonId))
+            if (info.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForSeries, out var seasonId))
                 using (Plugin.Instance.Tracker.Enter($"Providing info for Collection \"{info.Name}\". (Path=\"{info.Path}\",Season=\"{seasonId}\")"))
                     return await GetShokoSeriesMetadata(info, seasonId).ConfigureAwait(false);
 

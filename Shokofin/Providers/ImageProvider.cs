@@ -12,6 +12,7 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using Shokofin.Extensions;
 using Shokofin.ExternalIds;
 using Shokofin.Utils;
 using Shokofin.Web;
@@ -77,14 +78,14 @@ public class ImageProvider(IHttpClientFactory _httpClientFactory, ILogger<ImageP
                 }
                 case BoxSet collection: {
                     string? collectionId = null;
-                    if (collection.TryGetProviderId(ProviderNames.ShokoCollectionForSeries, out var seasonId)) {
+                    if (collection.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForSeries, out var seasonId)) {
                         if (await _apiManager.GetSeasonInfo(seasonId).ConfigureAwait(false) is not { } seasonInfo)
                             break;
 
                         var images = await ImageUtility.GetCollectionImages(seasonInfo, metadataLanguage, displayMode, cancellationToken).ConfigureAwait(false);
                         list.AddRange(images);
                     }
-                    else if (collection.TryGetProviderId(ProviderNames.ShokoCollectionForGroup, out collectionId)) {
+                    else if (collection.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForGroup, out collectionId)) {
                         if (
                             await _apiManager.GetCollectionInfo(collectionId).ConfigureAwait(false) is not { } collectionInfo ||
                             string.IsNullOrEmpty(collectionInfo.MainSeasonId) ||

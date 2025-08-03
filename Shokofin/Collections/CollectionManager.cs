@@ -624,28 +624,26 @@ public class CollectionManager(
         => _libraryManager.GetItemList(new() {
             IncludeItemTypes = [BaseItemKind.BoxSet],
             SourceTypes = [SourceType.Library],
-            HasAnyProviderId = new() { { ProviderNames.ShokoCollectionForSeries, string.Empty } },
             IsVirtualItem = false,
             Recursive = true,
         })
             .Cast<BoxSet>()
-            .Select(x => x.TryGetProviderId(ProviderNames.ShokoCollectionForSeries, out var seasonId) ? new { SeasonId = seasonId, BoxSet = x } : null)
-            .Where(x => x is not null)
-            .GroupBy(x => x!.SeasonId, x => x!.BoxSet)
+            .Select(x => x.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForSeries, out var seasonId) ? new { SeasonId = seasonId, BoxSet = x } : null)
+            .WhereNotNull()
+            .GroupBy(x => x.SeasonId, x => x.BoxSet)
             .ToDictionary(x => x.Key, x => x.ToList() as IReadOnlyList<BoxSet>);
 
     private Dictionary<string, IReadOnlyList<BoxSet>> GetGroupCollections()
         => _libraryManager.GetItemList(new() {
             IncludeItemTypes = [BaseItemKind.BoxSet],
             SourceTypes = [SourceType.Library],
-            HasAnyProviderId = new() { { ProviderNames.ShokoCollectionForGroup, string.Empty } },
             IsVirtualItem = false,
             Recursive = true,
         })
             .Cast<BoxSet>()
-            .Select(x => x.TryGetProviderId(ProviderNames.ShokoCollectionForGroup, out var groupId) ? new { GroupId = groupId, BoxSet = x } : null)
-            .Where(x => x != null)
-            .GroupBy(x => x!.GroupId, x => x!.BoxSet)
+            .Select(x => x.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForGroup, out var groupId) ? new { GroupId = groupId, BoxSet = x } : null)
+            .WhereNotNull()
+            .GroupBy(x => x.GroupId, x => x.BoxSet)
             .ToDictionary(x => x.Key, x => x.ToList() as IReadOnlyList<BoxSet>);
 
     #endregion
