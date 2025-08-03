@@ -105,8 +105,8 @@ public static partial class TextUtility {
 
         /// <summary>
         /// Deprecated, but kept until the next major release for backwards compatibility.
-        /// TODO: Break this during the next major version of the plugin.
         /// </summary>
+        /// TODO: Break this during the next major version of the plugin.
         TvDB = 3,
 
         /// <summary>
