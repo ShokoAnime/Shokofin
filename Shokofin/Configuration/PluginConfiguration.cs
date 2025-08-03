@@ -214,16 +214,13 @@ public class PluginConfiguration : BasePluginConfiguration {
     /// </summary>
     /// TODO: Break this during the next major version of the plugin.
     [XmlIgnore, JsonInclude]
-    public DescriptionConversionMode DescriptionConversionMode
-    {
-        get
-        {
+    public DescriptionConversionMode DescriptionConversionMode {
+        get {
             if (SynopsisCleanLinks && SynopsisCleanMiscLines && SynopsisRemoveSummary && SynopsisCleanMultiEmptyLines)
                 return SynopsisEnableMarkdown ? DescriptionConversionMode.Markdown : DescriptionConversionMode.PlainText;
             return DescriptionConversionMode.PlainText;
         }
-        set
-        {
+        set {
             switch (value) {
                 case DescriptionConversionMode.PlainText:
                     SynopsisEnableMarkdown = false;
