@@ -173,7 +173,7 @@ public class UserDataSyncManager {
     public async void OnUserDataSaved(object? sender, UserDataSaveEventArgs e) {
         try {
 
-            if (e == null || e.Item == null || Guid.Empty == e.UserId || e.UserData == null)
+            if (e == null || e.Item == null || Guid.Empty == e.UserId || e.UserData == null || !Lookup.IsEnabledForItem(e.Item))
                 return;
 
             if (e.SaveReason == UserDataSaveReason.UpdateUserRating) {
@@ -186,7 +186,6 @@ public class UserDataSyncManager {
                     TryGetUserConfiguration(e.UserId, out var userConfig) &&
                     userConfig.EnableSynchronization &&
                     (userConfig.SyncRestrictedVideos || e.Item.CustomRating != "XXX") &&
-                    Lookup.IsEnabledForItem(e.Item) &&
                     Lookup.TryGetFileAndSeriesIdFor(e.Item, out var fileId, out var seriesId) &&
                     await ApiClient.GetFile(fileId).ConfigureAwait(false) is { } file &&
                     file.CrossReferences.FirstOrDefault(xref0 => xref0.Series.Shoko.HasValue && xref0.Series.Shoko.Value.ToString() == seriesId && xref0.Episodes.Any(xref1 => xref1.Shoko.HasValue)) is { } xref
