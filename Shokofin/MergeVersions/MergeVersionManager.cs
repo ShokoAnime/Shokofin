@@ -30,44 +30,60 @@ namespace Shokofin.MergeVersions;
 ///
 /// Based upon;
 /// https://github.com/danieladov/jellyfin-plugin-mergeversions
-public class MergeVersionsManager(ILogger<MergeVersionsManager> logger, ILibraryManager libraryManager, ShokoIdLookup lookup, ShokoApiManager apiManager, UsageTracker usageTracker) {
+public class MergeVersionsManager {
     /// <summary>
     /// Logger.
     /// </summary>
-    private readonly ILogger<MergeVersionsManager> _logger = logger;
+    private readonly ILogger<MergeVersionsManager> _logger;
 
     /// <summary>
     /// Library manager. Used to fetch items from the library.
     /// </summary>
-    private readonly ILibraryManager _libraryManager = libraryManager;
+    private readonly ILibraryManager _libraryManager;
 
     /// <summary>
     /// Shoko ID Lookup. Used to check if the plugin is enabled for the videos.
     /// </summary>
-    private readonly ShokoIdLookup _lookup = lookup;
+    private readonly ShokoIdLookup _lookup;
 
     /// <summary>
     /// Used to lookup the file info for each video.
     /// </summary>
-    private readonly ShokoApiManager _apiManager = apiManager;
+    private readonly ShokoApiManager _apiManager;
 
     /// <summary>
     /// Used to clear the <see cref="_runGuard"/> when the
     /// <see cref="UsageTracker.Stalled"/> event is ran.
     /// </summary>
-    private readonly UsageTracker _usageTracker = usageTracker;
+    private readonly UsageTracker _usageTracker;
 
     /// <summary>
     /// Used as a lock/guard to prevent multiple runs on the same video until
     /// the <see cref="UsageTracker.Stalled"/> event is ran.
     /// </summary>
-    private readonly GuardedMemoryCache _runGuard = new(logger, new() { }, new() { });
+    private readonly GuardedMemoryCache _runGuard;
+
+    public MergeVersionsManager(ILogger<MergeVersionsManager> logger, ILibraryManager libraryManager, ShokoIdLookup lookup, ShokoApiManager apiManager, UsageTracker usageTracker) {
+        _logger = logger;
+        _libraryManager = libraryManager;
+        _lookup = lookup;
+        _apiManager = apiManager;
+        _usageTracker = usageTracker;
+        _runGuard = new(logger, new() { }, new() { });
+
+        _usageTracker.Stalled += OnUsageTrackerStalled;
+    }
 
     ~MergeVersionsManager() {
         _usageTracker.Stalled -= OnUsageTrackerStalled;
     }
 
     private void OnUsageTrackerStalled(object? sender, EventArgs e) {
+        Clear();
+    }
+
+    public void Clear() {
+        _logger.LogDebug("Clearing data…");
         _runGuard.Clear();
     }
 
@@ -101,6 +117,7 @@ public class MergeVersionsManager(ILogger<MergeVersionsManager> logger, ILibrary
         // Run them in parallel.
         await Task.WhenAll(movieTask, episodeTask).ConfigureAwait(false);
 
+        Clear();
         progress?.Report(100d);
     }
 
@@ -132,17 +149,30 @@ public class MergeVersionsManager(ILogger<MergeVersionsManager> logger, ILibrary
 
         // Run them in parallel.
         await Task.WhenAll(movieTask, episodeTask).ConfigureAwait(false);
+
+        Clear();
+        progress.Report(100d);
     }
 
     #endregion
 
     #region Episode Level
 
-    public Task SplitAndMergeAllEpisodes(IProgress<double>? progress, CancellationToken? cancellationToken)
-        => SplitAndMergeVideos(GetEpisodesFromLibrary(), progress, cancellationToken);
+    public async Task SplitAndMergeAllEpisodes(IProgress<double>? progress, CancellationToken? cancellationToken) {
+        await SplitAndMergeVideos(GetEpisodesFromLibrary(), progress, cancellationToken);
 
-    public Task SplitAllEpisodes(IProgress<double>? progress, CancellationToken? cancellationToken)
-        => SplitVideos(GetEpisodesFromLibrary(), progress, cancellationToken);
+        if (!_libraryManager.IsScanRunning)
+            Clear();
+        progress?.Report(100d);
+    }
+
+    public async Task SplitAllEpisodes(IProgress<double>? progress, CancellationToken? cancellationToken) {
+        await SplitVideos(GetEpisodesFromLibrary(), progress, cancellationToken);
+
+        if (!_libraryManager.IsScanRunning)
+            Clear();
+        progress?.Report(100d);
+    }
 
     public Task<bool> SplitAndMergeEpisodesByEpisodeId(string episodeId)
         => _runGuard.GetOrCreateAsync($"episode:{episodeId}", () => SplitAndMergeVideos(GetEpisodesFromLibrary(episodeId)));
@@ -151,11 +181,21 @@ public class MergeVersionsManager(ILogger<MergeVersionsManager> logger, ILibrary
 
     #region Movie Level
 
-    public Task SplitAndMergeAllMovies(IProgress<double>? progress, CancellationToken? cancellationToken)
-        => SplitAndMergeVideos(GetMoviesFromLibrary(), progress, cancellationToken);
+    public async Task SplitAndMergeAllMovies(IProgress<double>? progress, CancellationToken? cancellationToken) {
+        await SplitAndMergeVideos(GetMoviesFromLibrary(), progress, cancellationToken);
 
-    public Task SplitAllMovies(IProgress<double>? progress, CancellationToken? cancellationToken)
-        => SplitVideos(GetMoviesFromLibrary(), progress, cancellationToken);
+        if (!_libraryManager.IsScanRunning)
+            Clear();
+        progress?.Report(100d);
+    }
+
+    public async Task SplitAllMovies(IProgress<double>? progress, CancellationToken? cancellationToken) {
+        await SplitVideos(GetMoviesFromLibrary(), progress, cancellationToken);
+
+        if (!_libraryManager.IsScanRunning)
+            Clear();
+        progress?.Report(100d);
+    }
 
     public Task<bool> SplitAndMergeMoviesByEpisodeId(string movieId)
         => _runGuard.GetOrCreateAsync($"movie:{movieId}", () => SplitAndMergeVideos(GetMoviesFromLibrary(movieId)));
