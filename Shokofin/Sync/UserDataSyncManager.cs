@@ -173,7 +173,7 @@ public class UserDataSyncManager {
     public async void OnUserDataSaved(object? sender, UserDataSaveEventArgs e) {
         try {
 
-            if (e == null || e.Item == null || Guid.Equals(e.UserId, Guid.Empty) || e.UserData == null)
+            if (e == null || e.Item == null || Guid.Empty == e.UserId || e.UserData == null)
                 return;
 
             if (e.SaveReason == UserDataSaveReason.UpdateUserRating) {

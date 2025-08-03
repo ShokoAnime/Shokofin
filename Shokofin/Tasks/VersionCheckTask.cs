@@ -94,7 +94,7 @@ public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager
                 if (!managedFolderNameMap.TryGetValue(mediaFolderConfig.ManagedFolderId, out var managedFolderName))
                     managedFolderName = null;
 
-                if (mediaFolderConfig.LibraryId == Guid.Empty && _libraryManager.GetItemById(mediaFolderConfig.MediaFolderId) is Folder mediaFolder &&
+                if (Guid.Empty == mediaFolderConfig.LibraryId && _libraryManager.GetItemById(mediaFolderConfig.MediaFolderId) is Folder mediaFolder &&
                     _libraryManager.GetVirtualFolders().FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path)) is { } library &&
                     Guid.TryParse(library.ItemId, out var libraryId)) {
                     _logger.LogDebug("Found new library for media folder; {LibraryName} (Library={LibraryId},MediaFolder={MediaFolderPath})", library.Name, libraryId, mediaFolder.Path);

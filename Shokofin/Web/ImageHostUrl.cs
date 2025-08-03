@@ -70,9 +70,9 @@ public class ImageHostUrl : IAsyncActionFilter {
             await next().ConfigureAwait(false);
         }
         finally {
-            if (itemId != Guid.Empty && _currentItemId == itemId) {
+            if (Guid.Empty != itemId && _currentItemId == itemId) {
                 lock (LockObj) {
-                    if (itemId != Guid.Empty && _currentItemId == itemId) {
+                    if (Guid.Empty != itemId && _currentItemId == itemId) {
                         _currentItemId = null;
                     }
                 }
