@@ -1753,7 +1753,7 @@ form:not(.advanced-mode) .advanced-only {
                                     </button>
                                 </div>
                             </div>
-                            <div class="fieldDescription">The selectors to use to sort the multiple versions of the same video, in priority order.</div>
+                            <div class="fieldDescription">The selectors to use to sort the multiple versions of the same video in priority order when all videos are the same width. 3D videos will be prioritized over 2D videos regardless of this setting, as it is hard coded in Jellyfin to prefer 3D over 2D. And Jellyfin also sorts by video width before using the order we specify.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>${Save}</span>
