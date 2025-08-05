@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.20",
+                "changelog": "`fix`: **Unhide misc. section by default**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.20/shoko_5.0.4.20.zip",
+                "checksum": "ec2a5d0f41d7fa8f420f7d0ee69660b0",
+                "timestamp": "2025-08-05T23:56:58Z"
+            },
+            {
                 "version": "5.0.4.19",
                 "changelog": "`fix`: **Check if enabled for item before getting external URLs**.\n\n`chore`: **Change compare for Guid.Empty**.\n\n`chore`: **Move TODO below summary**.\n\n`fix`: **Check if enabled for item first**.\n\n`fix`: **Properly clear cache in merge version manager**.\n\n`fix`: **Don't use provider ids for collections**.\n\n`fix`: **Make endpoints use auth**.\n\n`chore`: **Fix bracket styling**.\n\n`refactor`: **Add more debug settings**.\n\n`fix`: **Only set width/height for images in display mode**.\n\n`misc`: **Update option description**.\n\n`refactor`: **Rework how IDs are linked to the info objects + more**:\n\nReworked how the metadata IDs are linked to the info objects, allowing us to display _all_ external links for the entities if the new setting to display _more_ external URLs is enabled. Also streamlined the usage of the IDs internally.\n\n**Note**: _This change may slow down the metadata construction for info objects which will have multiple metadata IDs linked, since we're now fetching more info from the server compared to before._",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.16/shoko_5.0.4.16.zip",
                 "checksum": "45f8359da0b9bb55ccb02abd912505f5",
                 "timestamp": "2025-08-02T22:21:08Z"
-            },
-            {
-                "version": "5.0.4.15",
-                "changelog": "`fix`: **Rename missed image URLs after controller rename (#90)**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.15/shoko_5.0.4.15.zip",
-                "checksum": "cc0059a69f450e854cb7e6b73ed8b7c7",
-                "timestamp": "2025-08-01T11:54:02Z"
             }
         ]
     }
