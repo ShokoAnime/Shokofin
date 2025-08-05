@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -7,7 +5,7 @@ using MediaBrowser.Model.Providers;
 
 namespace Shokofin.ExternalIds;
 
-public class AnidbEpisodeId : IExternalId, IExternalUrlProvider {
+public class AnidbEpisodeId : IExternalId {
     #region IExternalId Implementation
 
     string IExternalId.ProviderName => ProviderNames.Anidb;
@@ -19,18 +17,6 @@ public class AnidbEpisodeId : IExternalId, IExternalUrlProvider {
     string? IExternalId.UrlFormatString => null;
 
     public bool Supports(IHasProviderIds item) => item is Episode;
-
-    #endregion
-
-    #region IExternalUrlProvider Implementation
-
-    string IExternalUrlProvider.Name => ProviderNames.Anidb;
-
-    IEnumerable<string> IExternalUrlProvider.GetExternalUrls(BaseItem item)
-    {
-        if (Supports(item) && item.TryGetProviderId(ProviderNames.Anidb, out var episodeId))
-            yield return $"https://anidb.net/episode/{episodeId}";
-    }
 
     #endregion
 }

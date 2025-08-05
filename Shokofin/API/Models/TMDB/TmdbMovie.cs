@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Jellyfin.Data.Enums;
+using Shokofin.API.Info.TMDB;
 
 namespace Shokofin.API.Models.TMDB;
 
@@ -147,4 +148,9 @@ public class TmdbMovie : ITmdbParentEntity {
     string ITmdbEntity.Id => Id.ToString();
 
     BaseItemKind ITmdbEntity.Kind => BaseItemKind.Movie;
+
+    public TmdbMovieInfo ToInfo() => new() {
+        TmdbMovieId = Id.ToString(),
+        TmdbMovieCollectionId = CollectionId?.ToString(),
+    };
 }

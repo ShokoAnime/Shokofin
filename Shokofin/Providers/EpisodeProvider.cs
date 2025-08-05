@@ -65,7 +65,7 @@ public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<Epis
             }
 
             result.Item = CreateMetadata(showInfo, seasonInfo, episodeInfo, fileInfo, info.MetadataLanguage, info.MetadataCountryCode);
-            _logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Season={SeasonId},ExtraSeasons={ExtraIds},Group={GroupId})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds, showInfo?.ShokoGroupId);
+            _logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Season={SeasonId},ExtraSeasons={ExtraIds})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds);
 
             result.HasMetadata = true;
 
@@ -227,7 +227,7 @@ public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<Epis
                 result.IndexNumberEnd = episodeNumberEnd;
         }
 
-        AddProviderIds(result, episodeId: episodeInfo.Id, fileId: file?.Id, seriesId: file?.SeriesId, anidbId: episodeInfo.AnidbId, tmdbId: episodeInfo.TmdbEpisodeId, tvdbId: episodeInfo.TvdbEpisodeId);
+        AddProviderIds(result, episodeId: episodeInfo.Id, fileId: file?.Id, seriesId: file?.SeriesId, anidbId: episodeInfo.AnidbEpisodeId, tmdbId: episodeInfo.TmdbEpisodeId, tvdbId: episodeInfo.TvdbEpisodeId);
 
         return result;
     }

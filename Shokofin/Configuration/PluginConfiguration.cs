@@ -86,6 +86,14 @@ public class PluginConfiguration : BasePluginConfiguration {
     #region Plugin Interoperability
 
     /// <summary>
+    /// Show more external urls in the UI.
+    /// </summary>
+    /// <remarks>
+    /// Will load the metadata to display the UIs, which may be slow.
+    /// </remarks>
+    public bool DisplayMoreExternalUrls { get; set; } = false;
+
+    /// <summary>
     /// Add IDs from the enabled provider to entities that support it.
     /// </summary>
     /// <remarks>

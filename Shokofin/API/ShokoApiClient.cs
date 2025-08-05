@@ -431,6 +431,12 @@ public class ShokoApiClient : IDisposable {
     public async Task<IReadOnlyList<ShokoEpisode>> GetShokoEpisodesInShokoSeries(string seriesId)
         => (await GetOrNull<ListResult<ShokoEpisode>>($"/api/v3/Series/{seriesId}/Episode?pageSize=0&includeHidden=true&includeMissing=true&includeUnaired=true&includeDataFrom=AniDB&includeXRefs=true").ConfigureAwait(false))?.List ?? [];
 
+    public async Task<IReadOnlyList<ShokoEpisode>> GetShokoEpisodesForTmdbEpisode(string tmdbEpisodeId)
+        => (await GetOrNull<ListResult<ShokoEpisode>>($"/api/v3/TMDB/Episode/{tmdbEpisodeId}/Shoko/Episode?includeDataFrom=AniDB&includeXRefs=true").ConfigureAwait(false))?.List ?? [];
+
+    public async Task<IReadOnlyList<ShokoEpisode>> GetShokoEpisodesForTmdbMovie(string tmdbMovieId)
+        => (await GetOrNull<ListResult<ShokoEpisode>>($"/api/v3/TMDB/Movie/{tmdbMovieId}/Shoko/Episode?includeDataFrom=AniDB&includeXRefs=true").ConfigureAwait(false))?.List ?? [];
+
     public async Task<EpisodeImages?> GetImagesForShokoEpisode(string episodeId, CancellationToken cancellationToken = default) {
         var episodeImages = await GetOrNull<EpisodeImages>($"/api/v3/Episode/{episodeId}/Images", cancellationToken: cancellationToken).ConfigureAwait(false);
         if (episodeImages is null)
@@ -526,13 +532,13 @@ public class ShokoApiClient : IDisposable {
     #region TMDB Episode
 
     public Task<TmdbEpisode?> GetTmdbEpisode(string episodeId, bool useDefaultOrdering = false)
-        => GetOrNull<TmdbEpisode>($"/api/v3/TMDB/Episode/{episodeId}?include=Titles,Overviews,Cast,Crew,FileCrossReferences{(useDefaultOrdering ? "&alternateOrderingID=default" : "")}");
+        => GetOrNull<TmdbEpisode>($"/api/v3/TMDB/Episode/{episodeId}?include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences{(useDefaultOrdering ? "&alternateOrderingID=default" : "")}");
 
     public async Task<IReadOnlyList<TmdbEpisode>> GetTmdbEpisodesInTmdbSeason(string seasonId)
-        => (await GetOrNull<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Season/{seasonId}/Episode?pageSize=0&include=Titles,Overviews,Cast,Crew,FileCrossReferences").ConfigureAwait(false))?.List ?? [];
+        => (await GetOrNull<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Season/{seasonId}/Episode?pageSize=0&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences").ConfigureAwait(false))?.List ?? [];
 
     public async Task<IReadOnlyList<TmdbEpisode>> GetTmdbEpisodesInTmdbShow(string showId)
-        => (await GetOrNull<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Show/{showId}/Episode?pageSize=0&include=Titles,Overviews,Cast,Crew,FileCrossReferences").ConfigureAwait(false))?.List ?? [];
+        => (await GetOrNull<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Show/{showId}/Episode?pageSize=0&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences").ConfigureAwait(false))?.List ?? [];
 
     public Task<EpisodeImages?> GetImagesForTmdbEpisode(string episodeId, CancellationToken cancellationToken = default)
         => GetOrNull<EpisodeImages>($"/api/v3/TMDB/Episode/{episodeId}/Images", cancellationToken: cancellationToken);

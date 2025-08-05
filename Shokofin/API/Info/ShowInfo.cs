@@ -6,6 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities;
 using Microsoft.Extensions.Logging;
+using Shokofin.API.Info.AniDB;
+using Shokofin.API.Info.Shoko;
+using Shokofin.API.Info.TMDB;
 using Shokofin.API.Models;
 using Shokofin.API.Models.Shoko;
 using Shokofin.API.Models.TMDB;
@@ -24,22 +27,6 @@ public class ShowInfo : IExtendedItemInfo {
     public string Id { get; init; }
 
     public string InternalId => ShokoInternalId.SeriesNamespace + Id;
-
-    public string? AnidbId { get; init; }
-
-    public string? TmdbId { get; init; }
-
-    public string? TvdbId { get; init; }
-
-    /// <summary>
-    /// Main Shoko Series Id.
-    /// </summary>
-    public string? ShokoSeriesId { get; init; }
-
-    /// <summary>
-    /// Main Shoko Group Id.
-    /// </summary>
-    public string? ShokoGroupId { get; init; }
 
     /// <summary>
     /// Shoko Group Id used for Collection Support.
@@ -176,6 +163,72 @@ public class ShowInfo : IExtendedItemInfo {
     /// </summary>
     public readonly int EpisodePadding;
 
+    #region Shoko Series Metadata
+
+    /// <summary>
+    /// Main Shoko Series Id.
+    /// </summary>
+    public string? ShokoSeriesId => ShokoSeries?.FirstOrDefault()?.ShokoSeriesId;
+
+    /// <summary>
+    /// Main Shoko Group Id.
+    /// </summary>
+    public string? ShokoGroupId => ShokoSeries?.FirstOrDefault()?.ShokoGroupId;
+
+    /// <summary>
+    /// All Shoko series linked to the show info.
+    /// </summary>
+    public ShokoSeriesInfo[] ShokoSeries { get; init; }
+
+    #endregion
+
+    #region AniDB Anime Metadata
+
+    /// <summary>
+    /// Main AniDB Anime Id.
+    /// </summary>
+    public string? AnidbAnimeId => DefaultSeason.StructureType is not Configuration.SeriesStructureType.TMDB_SeriesAndMovies ? AnidbAnime.FirstOrDefault()?.AnidbAnimeId : null;
+
+    /// <summary>
+    /// All AniDB anime linked to the show info.
+    /// </summary>
+    public AnidbAnimeInfo[] AnidbAnime { get; init; }
+
+    #endregion
+
+    #region TMDB Show Metadata
+
+    /// <summary>
+    /// Main TMDB Show Id.
+    /// </summary>
+    public string? TmdbShowId => TmdbShows.FirstOrDefault()?.TmdbShowId;
+
+    /// <summary>
+    /// Main TvDB Show Id.
+    /// </summary>
+    public string? TvdbShowId => TmdbShows.FirstOrDefault()?.TvdbShowId;
+
+    /// <summary>
+    /// All TMDB shows linked to the show info.
+    /// </summary>
+    public TmdbShowInfo[] TmdbShows { get; init; }
+
+    #endregion
+
+    #region TMDB Movie Metadata
+
+    /// <summary>
+    /// Main TMDB Movie Collection Id.
+    /// </summary>
+    public string? TmdbMovieCollectionId => TmdbMovies.FirstOrDefault()?.TmdbMovieCollectionId;
+
+    /// <summary>
+    /// All TMDB movies linked to the show info.
+    /// </summary>
+    public TmdbMovieInfo[] TmdbMovies { get; init; }
+
+    #endregion
+
     public ShowInfo(ShokoApiClient client, SeasonInfo seasonInfo, string? collectionId = null) {
         var seasonNumberBaseDictionary = new Dictionary<string, int>();
         var seasonOrderDictionary = new Dictionary<int, SeasonInfo>();
@@ -189,10 +242,7 @@ public class ShowInfo : IExtendedItemInfo {
 
         _client = client;
         Id = seasonInfo.Id;
-        AnidbId = seasonInfo.AnidbId;
-        ShokoSeriesId = seasonInfo.ShokoSeriesId;
-        ShokoGroupId = seasonInfo.ShokoGroupId;
-        CollectionId = collectionId ?? seasonInfo.ShokoGroupId;
+        CollectionId = collectionId ?? seasonInfo.ShokoGroupId!;
         IsMovieCollection = seasonInfo.Type is SeriesType.Movie;
         IsStandalone = true;
         Title = seasonInfo.Title;
@@ -219,6 +269,10 @@ public class ShowInfo : IExtendedItemInfo {
         SpecialsDict = seasonInfo.SpecialsList.ToDictionary(episodeInfo => episodeInfo.Id, episodeInfo => episodeInfo.IsAvailable);
         DefaultSeason = seasonInfo;
         EpisodePadding = Math.Max(2, (new int[] { seasonInfo.EpisodeList.Count, seasonInfo.AlternateEpisodesList.Count, seasonInfo.SpecialsList.Count }).Max().ToString().Length);
+        AnidbAnime = seasonInfo.AnidbAnime;
+        ShokoSeries = seasonInfo.ShokoSeries;
+        TmdbShows = [..seasonInfo.TmdbSeasons.Select(tmdbSeason => tmdbSeason.ToShowInfo()).Distinct()];
+        TmdbMovies = seasonInfo.TmdbMovies;
     }
 
     public ShowInfo(
@@ -292,13 +346,6 @@ public class ShowInfo : IExtendedItemInfo {
 
         _client = client;
         Id = defaultSeason.Id;
-        AnidbId = defaultSeason.AnidbId;
-        ShokoSeriesId = defaultSeason.ShokoSeriesId;
-        ShokoGroupId = groupId;
-        if (tmdbEntity is TmdbShow tmdbShow) {
-            TmdbId = tmdbShow.Id.ToString();
-            TvdbId = tmdbShow.TvdbId?.ToString();
-        }
         Title = group.Name;
         Titles = [
             ..defaultSeason.Titles.Where(t => t.Source is "AniDB"),
@@ -339,6 +386,18 @@ public class ShowInfo : IExtendedItemInfo {
         SpecialsDict = specialsSet;
         DefaultSeason = defaultSeason;
         EpisodePadding = Math.Max(2, seasonList.SelectMany(s => new int[] { s.EpisodeList.Count, s.AlternateEpisodesList.Count }).Append(specialsSet.Count).Max().ToString().Length);
+        AnidbAnime = [..defaultSeason.AnidbAnime.Concat(seasonList.Except([defaultSeason]).SelectMany(s => s.AnidbAnime)).Distinct()];
+        ShokoSeries = [..defaultSeason.ShokoSeries.Concat(seasonList.Except([defaultSeason]).SelectMany(s => s.ShokoSeries)).Distinct()];
+        TmdbShows = [
+            ..(tmdbEntity is TmdbShow tmdbShow ? (
+                new TmdbShowInfo[] { tmdbShow.ToInfo() }
+                    .Concat(seasonList.SelectMany(s => s.TmdbSeasons.Select(tmdbSeason => tmdbSeason.ToShowInfo())))
+                    .Distinct()
+            ) : (
+              seasonList.SelectMany(s => s.TmdbSeasons.Select(tmdbSeason => tmdbSeason.ToShowInfo())).Distinct()
+            )),
+        ];
+        TmdbMovies = [..seasonList.SelectMany(s => s.TmdbMovies).Distinct()];
     }
 
     public ShowInfo(ShokoApiClient client, TmdbShow tmdbShow, IReadOnlyList<SeasonInfo> seasonList) {
@@ -358,32 +417,17 @@ public class ShowInfo : IExtendedItemInfo {
                 specialsSet.Add(episodeInfo.Id, episodeInfo.IsAvailable);
         }
 
-        if (seasonList.All(seasonInfo => !string.IsNullOrEmpty(seasonInfo.AnidbId))) {
-            var anidbIdList = seasonList
-                .GroupBy(s => s.AnidbId)
-                .OrderByDescending(g => g.Count())
-                .Select(g => g.Key)
-                .ToList();
-            if (anidbIdList.Count is 1)
-                AnidbId = anidbIdList[0];
-        }
-        if (seasonList.All(seasonInfo => !string.IsNullOrEmpty(seasonInfo.ShokoSeriesId))) {
-            var shokoSeriesIdList = seasonList
-                .GroupBy(s => s.ShokoSeriesId)
-                .OrderByDescending(g => g.Count())
-                .Select(g => g.Key)
-                .ToList();
-            if (shokoSeriesIdList.Count is 1)
-                ShokoSeriesId = shokoSeriesIdList[0];
-        }
-        if (seasonList.All(seasonInfo => !string.IsNullOrEmpty(seasonInfo.ShokoGroupId))) {
+        _client = client;
+        Id = defaultSeason.Id;
+        if (seasonList.All(seasonInfo => seasonInfo.ShokoSeries.Length is > 0)) {
             var shokoGroupIdList = seasonList
+                .SelectMany(s => s.ShokoSeries)
                 .GroupBy(s => s.ShokoGroupId)
                 .OrderByDescending(g => g.Count())
                 .Select(g => g.Key)
                 .ToList();
             if (shokoGroupIdList.Count is 1)
-                ShokoGroupId = shokoGroupIdList[0];
+                CollectionId = shokoGroupIdList[0];
         }
         else if (seasonList.All(seasonInfo => !string.IsNullOrEmpty(seasonInfo.TopLevelShokoGroupId))) {
             var shokoGroupIdList = seasonList
@@ -392,14 +436,8 @@ public class ShowInfo : IExtendedItemInfo {
                 .Select(g => g.Key)
                 .ToList();
             if (shokoGroupIdList.Count is 1)
-                ShokoGroupId = shokoGroupIdList[0];
+                CollectionId = shokoGroupIdList[0];
         }
-
-        _client = client;
-        Id = defaultSeason.Id;
-        CollectionId = ShokoGroupId;
-        TmdbId = tmdbShow.Id.ToString();
-        TvdbId = tmdbShow.TvdbId?.ToString();
         IsMovieCollection = false;
         IsStandalone = true;
         Title = tmdbShow.Title;
@@ -432,6 +470,10 @@ public class ShowInfo : IExtendedItemInfo {
         SpecialsDict = specialsSet;
         DefaultSeason = defaultSeason;
         EpisodePadding = Math.Max(2, seasonList.SelectMany(s => new int[] { s.EpisodeList.Count, s.AlternateEpisodesList.Count }).Append(specialsSet.Count).Max().ToString().Length);
+        AnidbAnime = [..seasonList.SelectMany(s => s.AnidbAnime).Distinct()];
+        ShokoSeries = [..seasonList.SelectMany(s => s.ShokoSeries).Distinct()];
+        TmdbShows = [tmdbShow.ToInfo()];
+        TmdbMovies = [];
     }
 
     public ShowInfo(ShokoApiClient client, TmdbMovie tmdbMovie, SeasonInfo seasonInfo) {
@@ -439,10 +481,7 @@ public class ShowInfo : IExtendedItemInfo {
 
         _client = client;
         Id = IdPrefix.TmdbMovie + tmdbMovie.Id.ToString();
-        AnidbId = seasonInfo.AnidbId;
-        ShokoSeriesId = seasonInfo.ShokoSeriesId;
-        ShokoGroupId = seasonInfo.ShokoGroupId ?? seasonInfo.TopLevelShokoGroupId;
-        CollectionId = ShokoGroupId;
+        CollectionId = seasonInfo.ShokoGroupId ?? seasonInfo.TopLevelShokoGroupId;
         IsMovieCollection = true;
         IsStandalone = true;
         Title = tmdbMovie.Title;
@@ -469,6 +508,10 @@ public class ShowInfo : IExtendedItemInfo {
         SpecialsDict = new Dictionary<string, bool>();
         DefaultSeason = seasonInfo;
         EpisodePadding = Math.Max(2, (new int[] { seasonInfo.EpisodeList.Count, seasonInfo.AlternateEpisodesList.Count, seasonInfo.SpecialsList.Count }).Max().ToString().Length);
+        AnidbAnime = seasonInfo.AnidbAnime;
+        ShokoSeries = seasonInfo.ShokoSeries;
+        TmdbShows = [..seasonInfo.TmdbSeasons.Select(tmdbSeason => tmdbSeason.ToShowInfo()).Distinct()];
+        TmdbMovies = seasonInfo.TmdbMovies;
     }
 
     public ShowInfo(ShokoApiClient client, TmdbMovieCollection tmdbMovieCollection, IReadOnlyList<SeasonInfo> seasonList) {
@@ -492,32 +535,17 @@ public class ShowInfo : IExtendedItemInfo {
             .Select(pair => pair.Value)
             .ToList();
 
-        if (seasonList.All(seasonInfo => !string.IsNullOrEmpty(seasonInfo.AnidbId))) {
-            var anidbIdList = seasonList
-                .GroupBy(s => s.AnidbId)
-                .OrderByDescending(g => g.Count())
-                .Select(g => g.Key)
-                .ToList();
-            if (anidbIdList.Count is 1)
-                AnidbId = anidbIdList[0];
-        }
-        if (seasonList.All(seasonInfo => !string.IsNullOrEmpty(seasonInfo.ShokoSeriesId))) {
-            var shokoSeriesIdList = seasonList
-                .GroupBy(s => s.ShokoSeriesId)
-                .OrderByDescending(g => g.Count())
-                .Select(g => g.Key)
-                .ToList();
-            if (shokoSeriesIdList.Count is 1)
-                ShokoSeriesId = shokoSeriesIdList[0];
-        }
-        if (seasonList.All(seasonInfo => !string.IsNullOrEmpty(seasonInfo.ShokoGroupId))) {
+        _client = client;
+        Id = defaultSeason.Id;
+        if (seasonList.All(seasonInfo => seasonInfo.ShokoSeries.Length is > 0)) {
             var shokoGroupIdList = seasonList
+                .SelectMany(s => s.ShokoSeries)
                 .GroupBy(s => s.ShokoGroupId)
                 .OrderByDescending(g => g.Count())
                 .Select(g => g.Key)
                 .ToList();
             if (shokoGroupIdList.Count is 1)
-                ShokoGroupId = shokoGroupIdList[0];
+                CollectionId = shokoGroupIdList[0];
         }
         else if (seasonList.All(seasonInfo => !string.IsNullOrEmpty(seasonInfo.TopLevelShokoGroupId))) {
             var shokoGroupIdList = seasonList
@@ -526,12 +554,8 @@ public class ShowInfo : IExtendedItemInfo {
                 .Select(g => g.Key)
                 .ToList();
             if (shokoGroupIdList.Count is 1)
-                ShokoGroupId = shokoGroupIdList[0];
+                CollectionId = shokoGroupIdList[0];
         }
-
-        _client = client;
-        Id = defaultSeason.Id;
-        CollectionId = ShokoGroupId;
         IsMovieCollection = seasonList.Count is 1;
         IsStandalone = false;
         Title = tmdbMovieCollection.Title;
@@ -566,13 +590,17 @@ public class ShowInfo : IExtendedItemInfo {
         SpecialsDict = specialsSet;
         DefaultSeason = defaultSeason;
         EpisodePadding = Math.Max(2, seasonList.SelectMany(s => new int[] { s.EpisodeList.Count, s.AlternateEpisodesList.Count }).Append(specialsSet.Count).Max().ToString().Length);
+        AnidbAnime = [..seasonList.SelectMany(s => s.AnidbAnime).Distinct()];
+        ShokoSeries = [..seasonList.SelectMany(s => s.ShokoSeries).Distinct()];
+        TmdbShows = [];
+        TmdbMovies = [..seasonList.SelectMany(s => s.TmdbMovies).Distinct()];
     }
 
     public async Task<Images> GetImages(CancellationToken cancellationToken)
         => Id[0] switch {
-                IdPrefix.TmdbShow => await _client.GetImagesForTmdbShow(TmdbId!, cancellationToken).ConfigureAwait(false),
-                IdPrefix.TmdbMovie => !string.IsNullOrEmpty(DefaultSeason.TmdbMovieCollectionId)
-                    ? await _client.GetImagesForTmdbMovieCollection(DefaultSeason.TmdbMovieCollectionId, cancellationToken).ConfigureAwait(false)
+                IdPrefix.TmdbShow => await _client.GetImagesForTmdbShow(TmdbShowId!, cancellationToken).ConfigureAwait(false),
+                IdPrefix.TmdbMovie => !string.IsNullOrEmpty(TmdbMovieCollectionId)
+                    ? await _client.GetImagesForTmdbMovieCollection(TmdbMovieCollectionId, cancellationToken).ConfigureAwait(false)
                     : await _client.GetImagesForTmdbMovie(Id[1..], cancellationToken).ConfigureAwait(false),
                 IdPrefix.TmdbMovieCollection => await _client.GetImagesForTmdbMovieCollection(Id[1..], cancellationToken).ConfigureAwait(false),
                 _ => await _client.GetImagesForShokoSeries(Id, cancellationToken).ConfigureAwait(false),

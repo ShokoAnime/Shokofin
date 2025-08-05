@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Jellyfin.Data.Enums;
+using Shokofin.API.Info.TMDB;
 
 namespace Shokofin.API.Models.TMDB;
 
@@ -23,7 +24,7 @@ public class TmdbSeason : ITmdbEntity {
     /// for main series seasons.
     /// </summary>
     [JsonPropertyName("AlternateOrderingID")]
-    public string? AlternateOrderingId { get; set; }
+    public string AlternateOrderingId { get; set; } = string.Empty;
 
     /// <summary>
     /// Preferred title based upon episode title preference.
@@ -81,5 +82,11 @@ public class TmdbSeason : ITmdbEntity {
 
     BaseItemKind ITmdbEntity.Kind => BaseItemKind.Season;
 
+    public TmdbSeasonInfo ToInfo() => new() {
+        TmdbShowId = ShowId.ToString(),
+        TmdbAlternateOrderingId = AlternateOrderingId,
+        TmdbSeasonId = Id,
+        SeasonNumber = SeasonNumber,
+    };
 }
 

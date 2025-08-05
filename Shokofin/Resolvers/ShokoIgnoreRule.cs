@@ -184,10 +184,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule {
             return shouldIgnore;
         }
 
-        if (!string.IsNullOrEmpty(show?.ShokoGroupId))
-            Logger.LogInformation("Found shoko group {GroupName} (Season={SeasonId},ExtraSeries={ExtraIds},Group={GroupId})", show.Title, season.Id, season.ExtraIds, show.ShokoGroupId);
-        else
-            Logger.LogInformation("Found series {SeriesName} (Season={SeasonId},ExtraSeries={ExtraIds})", season.Title, season.Id, season.ExtraIds);
+        Logger.LogInformation("Found show {SeriesName} (MainSeason={MainSeasonId},Season={SeasonId},ExtraSeries={ExtraIds})", show.Title, show.Id, season.Id, season.ExtraIds);
 
         return false;
     }

@@ -35,7 +35,7 @@ promise.then(({
 //#region Constants
 
 /**
- * @typedef {"Connection" | "Metadata_Title" | "Metadata_Description" | "Metadata_TagGenre" | "Metadata_Image" | "Metadata_Misc" | "Metadata_ThirdPartyIntegration" | "Library_Basic" | "Library_Collection" | "Library_MultipleVersions" | "Library_MediaFolder" | "Library_SeasonMerging" | "VFS_Basic" | "VFS_Location" | "User" | "Series" | "SignalR_Connection" | "SignalR_Basic" | "SignalR_Library_New" | "SignalR_Library_Existing" | "Misc" | "Debug" | "Utilities"} SectionType
+ * @typedef {"Connection" | "Metadata_Title" | "Metadata_Description" | "Metadata_TagGenre" | "Metadata_Image" | "Metadata_Misc" | "Library_Basic" | "Library_Collection" | "Library_MultipleVersions" | "Library_MediaFolder" | "Library_SeasonMerging" | "VFS_Basic" | "VFS_Location" | "User" | "Series" | "SignalR_Connection" | "SignalR_Basic" | "SignalR_Library_New" | "SignalR_Library_Existing" | "Misc" | "Debug" | "Utilities"} SectionType
  */
 
 const MaxDebugPresses = 7;
@@ -50,7 +50,6 @@ const Sections = [
     "Metadata_TagGenre",
     "Metadata_Image",
     "Metadata_Misc",
-    "Metadata_ThirdPartyIntegration",
     "Library_Basic",
     "Library_Collection",
     "Library_MultipleVersions",
@@ -407,7 +406,7 @@ async function updateView(view, form, config) {
             break;
 
         case "metadata":
-            activeSections.push("Metadata_Title", "Metadata_Description", "Metadata_TagGenre", "Metadata_Image", "Metadata_Misc", "Metadata_ThirdPartyIntegration");
+            activeSections.push("Metadata_Title", "Metadata_Description", "Metadata_TagGenre", "Metadata_Image", "Metadata_Misc");
             if (form.querySelectorAll("#TitleAlternateListContainer > fieldset").length >= 5) {
                 form.querySelector("button[name=\"add-alternate-title\"]").setAttribute("disabled", "");
             }
@@ -548,10 +547,10 @@ function applyFormToConfig(form, config) {
             config.Image.DebugMode = form.querySelector("#Image_DebugMode").checked;
 
             config.Metadata_StudioOnlyAnimationWorks = form.querySelector("#Metadata_StudioOnlyAnimationWorks").checked;
-            ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableCheckboxList(form, "ContentRatingList"));
-            ([config.ProductionLocationList, config.ProductionLocationOrder] = retrieveSortableCheckboxList(form, "ProductionLocationList"));
-
-            config.ThirdPartyIdProviderList = retrieveCheckboxList(form, "ThirdPartyIdProviderList");
+            ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableCheckboxList(form, "Metadata_ContentRatingList"));
+            ([config.ProductionLocationList, config.ProductionLocationOrder] = retrieveSortableCheckboxList(form, "Metadata_ProductionLocationList"));
+            config.DisplayMoreExternalUrls = form.querySelector("#Metadata_DisplayMoreExternalUrls").checked;
+            config.ThirdPartyIdProviderList = retrieveCheckboxList(form, "Metadata_ThirdPartyIdProviderList");
             break;
         }
 
@@ -738,10 +737,10 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#Image_DebugMode").checked = config.Image.DebugMode;
 
             form.querySelector("#Metadata_StudioOnlyAnimationWorks").checked = config.Metadata_StudioOnlyAnimationWorks;
-            renderSortableCheckboxList(form, "ContentRatingList", config.ContentRatingList, config.ContentRatingOrder);
-            renderSortableCheckboxList(form, "ProductionLocationList", config.ProductionLocationList, config.ProductionLocationOrder);
-
-            renderCheckboxList(form, "ThirdPartyIdProviderList", config.ThirdPartyIdProviderList.map(s => s.trim()).filter(s => s));
+            renderSortableCheckboxList(form, "Metadata_ContentRatingList", config.ContentRatingList, config.ContentRatingOrder);
+            renderSortableCheckboxList(form, "Metadata_ProductionLocationList", config.ProductionLocationList, config.ProductionLocationOrder);
+            form.querySelector("#Metadata_DisplayMoreExternalUrls").checked = config.DisplayMoreExternalUrls;
+            renderCheckboxList(form, "Metadata_ThirdPartyIdProviderList", config.ThirdPartyIdProviderList.map(s => s.trim()).filter(s => s));
             break;
         }
 

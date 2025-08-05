@@ -1330,7 +1330,7 @@ form:not(.advanced-mode) .advanced-only {
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Only select studios responsible for the animation for entities. Only applies to AniDB.</div>
                         </div>
-                        <div id="ContentRatingList" is="sortable-checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
+                        <div id="Metadata_ContentRatingList" is="sortable-checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Content Rating Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="TMDB">
@@ -1360,7 +1360,7 @@ form:not(.advanced-mode) .advanced-only {
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of content ratings for entities, in priority order.</div>
                         </div>
-                        <div id="ProductionLocationList" is="sortable-checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
+                        <div id="Metadata_ProductionLocationList" is="sortable-checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Production Location Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="AniDB">
@@ -1390,15 +1390,14 @@ form:not(.advanced-mode) .advanced-only {
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of production locations for entities, in priority order.</div>
                         </div>
-                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>${Save}</span>
-                        </button>
-                    </fieldset>
-                    <fieldset id="Metadata_ThirdPartyIntegration_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
-                        <legend>
-                            <h3>Third Party Integration</h3>
-                        </legend>
-                        <div id="ThirdPartyIdProviderList" is="checkbox-list" style="margin-bottom: 2em;">
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Metadata_DisplayMoreExternalUrls" />
+                                <span>Display More External URLs</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Display even more external URLs for entities. <strong>Warning</strong>: This may cause entity pages to sometimes load longer since it requires loading the metadata to generate the URLs. <strong>Use at your own risk.</strong></div>
+                        </div>
+                        <div id="Metadata_ThirdPartyIdProviderList" is="checkbox-list" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Add Third Party IDs</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">

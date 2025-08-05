@@ -178,7 +178,7 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, ShokoAp
 
                 // Loudly skip if the season metadata doesn't exist.
                 if (seasonInfo == null || !showInfo.TryGetBaseSeasonNumberForSeasonInfo(seasonInfo, out var baseSeasonNumber)) {
-                    _logger.LogWarning("Unable to find series info for Season {SeasonNumber} in group for series. (Group={GroupId})", seasonNumber, showInfo.ShokoGroupId);
+                    _logger.LogWarning("Unable to find season info for Season {SeasonNumber}. (MainSeason={MainSeasonId})", seasonNumber, showInfo.Id);
                     continue;
                 }
 

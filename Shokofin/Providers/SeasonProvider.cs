@@ -60,11 +60,11 @@ public class SeasonProvider(IHttpClientFactory _httpClientFactory, ILogger<Seaso
 
             var seasonInfo = showInfo.GetSeasonInfoBySeasonNumber(seasonNumber);
             if (seasonInfo == null || !showInfo.TryGetBaseSeasonNumberForSeasonInfo(seasonInfo, out var baseSeasonNumber)) {
-                _logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (MainSeason={MainSeasonId},Group={GroupId})", seasonNumber, seasonId, showInfo.ShokoGroupId);
+                _logger.LogWarning("Unable to find series info for Season {SeasonNumber}. (MainSeason={MainSeasonId})", seasonNumber, seasonId);
                 return result;
             }
 
-            _logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (MainSeason={MainSeasonId},Group={GroupId})", seasonNumber, showInfo.Title, seasonId, showInfo.ShokoGroupId);
+            _logger.LogInformation("Found info for Season {SeasonNumber} in Series {SeriesName} (MainSeason={MainSeasonId})", seasonNumber, showInfo.Title, seasonId);
 
             var offset = Math.Abs(seasonNumber - baseSeasonNumber);
 
@@ -145,10 +145,10 @@ public class SeasonProvider(IHttpClientFactory _httpClientFactory, ILogger<Seaso
         }
 
         season.SetProviderId(ShokoInternalId.Name, seasonInfo.InternalId);
-        if (!string.IsNullOrEmpty(seasonInfo.ShokoSeriesId))
-            season.SetProviderId(ProviderNames.ShokoSeries, seasonInfo.ShokoSeriesId);
-        if (Plugin.Instance.Configuration.AddAniDBId && !string.IsNullOrEmpty(seasonInfo.AnidbId))
-            season.SetProviderId(ProviderNames.Anidb, seasonInfo.AnidbId);
+        if (seasonInfo.ShokoSeriesId is { Length: > 0 } shokoSeriesId)
+            season.SetProviderId(ProviderNames.ShokoSeries, shokoSeriesId);
+        if (Plugin.Instance.Configuration.AddAniDBId && seasonInfo.AnidbAnimeId is { Length: > 0 } anidbAnimeId)
+            season.SetProviderId(ProviderNames.Anidb, anidbAnimeId);
 
         return season;
     }

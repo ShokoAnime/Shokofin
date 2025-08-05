@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Jellyfin.Data.Enums;
+using Shokofin.API.Info.TMDB;
 
 namespace Shokofin.API.Models.TMDB;
 
@@ -17,6 +18,12 @@ public class TmdbShow : ITmdbParentEntity {
     /// </summary>
     [JsonPropertyName("TvdbID")]
     public int? TvdbId { get; set; }
+
+    /// <summary>
+    /// The ID of the alternate ordering currently in use for the show.
+    /// </summary>
+    [JsonPropertyName("AlternateOrderingID")]
+    public string AlternateOrderingId { get; init; } = string.Empty;
 
     /// <summary>
     /// Preferred title based upon series title preference.
@@ -118,4 +125,10 @@ public class TmdbShow : ITmdbParentEntity {
     string ITmdbEntity.Id => Id.ToString();
 
     BaseItemKind ITmdbEntity.Kind => BaseItemKind.Series;
+
+    public TmdbShowInfo ToInfo() => new() {
+        TmdbShowId = Id.ToString(),
+        TmdbAlternateOrderingId = AlternateOrderingId,
+        TvdbShowId = TvdbId?.ToString(),
+    };
 }

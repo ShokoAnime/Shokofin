@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Shokofin.API.Info.AniDB;
 
 namespace Shokofin.API.Models.AniDB;
 
 public class AnidbEpisode {
     [JsonPropertyName("ID")]
     public int Id { get; set; }
+
+    [JsonPropertyName("AnimeID")]
+    public int AnimeId { get; set; }
 
     /// <summary>
     /// The duration of the episode.
@@ -25,4 +29,11 @@ public class AnidbEpisode {
     public string Description { get; set; } = string.Empty;
 
     public Rating Rating { get; set; } = new();
+
+    public AnidbEpisodeInfo ToInfo() => new() {
+        AnidbAnimeId = AnimeId.ToString(),
+        AnidbEpisodeId = Id.ToString(),
+        EpisodeNumber = EpisodeNumber,
+        Type = Type,
+    };
 }

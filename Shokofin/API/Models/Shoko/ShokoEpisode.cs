@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Shokofin.API.Info.Shoko;
 using Shokofin.API.Models.AniDB;
 
 namespace Shokofin.API.Models.Shoko;
@@ -37,7 +38,7 @@ public class ShokoEpisode {
     public bool IsHidden { get; set; }
 
     /// <summary>
-    /// Number of files 
+    /// Number of files linked to the episode.
     /// </summary>
     /// <value></value>
     public int Size { get; set; }
@@ -64,6 +65,11 @@ public class ShokoEpisode {
     /// </summary>
     [JsonPropertyName("Updated")]
     public DateTime LastUpdatedAt { get; set; }
+
+    public ShokoEpisodeInfo ToInfo() => new() {
+        ShokoSeriesId = IDs.ParentSeries.ToString(),
+        ShokoEpisodeId = Id,
+    };
 
     public class EpisodeIDs : IDs {
         public int ParentSeries { get; set; }

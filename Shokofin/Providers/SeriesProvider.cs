@@ -74,9 +74,9 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
             foreach (var person in showInfo.Staff)
                 result.AddPerson(person);
 
-            AddProviderIds(result.Item, showInfo.InternalId, seriesId: showInfo.ShokoSeriesId, groupId: showInfo.ShokoGroupId, anidbId: showInfo.AnidbId, tmdbId: showInfo.TmdbId, tvdbId: showInfo.TvdbId);
+            AddProviderIds(result.Item, showInfo.InternalId, seriesId: showInfo.ShokoSeriesId, groupId: showInfo.ShokoGroupId, anidbId: showInfo.AnidbAnimeId, tmdbId: showInfo.TmdbShowId, tvdbId: showInfo.TvdbShowId);
 
-            _logger.LogInformation("Found series {SeriesName} (MainSeason={MainSeasonId},Group={GroupId})", displayTitle, showInfo.Id, showInfo.ShokoGroupId);
+            _logger.LogInformation("Found series {SeriesName} (MainSeason={MainSeasonId})", displayTitle, showInfo.Id);
 
             return result;
         }

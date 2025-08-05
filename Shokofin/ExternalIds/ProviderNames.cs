@@ -1,9 +1,14 @@
 
 namespace Shokofin.ExternalIds;
 
-public struct ProviderNames
-{
+public struct ProviderNames {
     public const string Anidb = "AniDB";
+
+    public const string Tmdb = "TheMovieDb";
+    
+    public const string Tvdb = "TheTVDB";
+
+    public const string Shoko = "Shoko";
 
     public const string ShokoGroup = "Shoko Group";
 

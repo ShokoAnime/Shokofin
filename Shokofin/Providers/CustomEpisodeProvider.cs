@@ -93,7 +93,7 @@ public class CustomEpisodeProvider(ILogger<CustomEpisodeProvider> _logger, ILibr
         return false;
     }
 
-    private static bool EpisodeExists(ILibraryManager libraryManager, ILogger logger, string seriesPresentationUniqueKey, string episodeId, string seasonId, string? groupId) {
+    private static bool EpisodeExists(ILibraryManager libraryManager, ILogger logger, string seriesPresentationUniqueKey, string episodeId, string seasonId) {
         var searchList = libraryManager.GetItemList(
             new() {
                 IncludeItemTypes = [Jellyfin.Data.Enums.BaseItemKind.Episode],
@@ -106,20 +106,20 @@ public class CustomEpisodeProvider(ILogger<CustomEpisodeProvider> _logger, ILibr
             true
         );
         if (searchList.Count > 0) {
-            logger.LogTrace("A virtual or physical episode entry already exists for Episode {EpisodeName}. Ignoring. (Episode={EpisodeId},Season={SeasonId},Group={GroupId})", searchList[0].Name, episodeId, seasonId, groupId);
+            logger.LogTrace("A virtual or physical episode entry already exists for Episode {EpisodeName}. Ignoring. (Episode={EpisodeId},Season={SeasonId})", searchList[0].Name, episodeId, seasonId);
             return true;
         }
         return false;
     }
 
     public static bool AddVirtualEpisode(ILibraryManager libraryManager, ILogger logger, Info.ShowInfo showInfo, Info.SeasonInfo seasonInfo, Info.EpisodeInfo episodeInfo, Season season, Series series) {
-        if (EpisodeExists(libraryManager, logger, series.GetPresentationUniqueKey(), episodeInfo.Id, seasonInfo.Id, showInfo.ShokoGroupId))
+        if (EpisodeExists(libraryManager, logger, series.GetPresentationUniqueKey(), episodeInfo.Id, seasonInfo.Id))
             return false;
 
         var episodeId = libraryManager.GetNewItemId(season.Series.Id + " Season " + seasonInfo.Id + " Episode " + episodeInfo.Id, typeof(Episode));
         var episode = EpisodeProvider.CreateMetadata(showInfo, seasonInfo, episodeInfo, season, episodeId);
 
-        logger.LogInformation("Adding virtual Episode {EpisodeNumber} in Season {SeasonNumber} for Series {SeriesName}. (Episode={EpisodeId},Season={SeasonId},ExtraSeasons={ExtraIds},Group={GroupId})", episode.IndexNumber, season.IndexNumber, showInfo.Title, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds, showInfo.ShokoGroupId);
+        logger.LogInformation("Adding virtual Episode {EpisodeNumber} in Season {SeasonNumber} for Series {SeriesName}. (Episode={EpisodeId},Season={SeasonId},ExtraSeasons={ExtraIds})", episode.IndexNumber, season.IndexNumber, showInfo.Title, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds);
 
         season.AddChild(episode);
 

@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Model.Entities;
+using Shokofin.API.Info.AniDB;
+using Shokofin.API.Info.Shoko;
+using Shokofin.API.Info.TMDB;
 using Shokofin.API.Models;
 using Shokofin.API.Models.Shoko;
 using Shokofin.API.Models.TMDB;
-using Shokofin.Configuration;
 using Shokofin.Events.Interfaces;
 using Shokofin.Extensions;
 using Shokofin.ExternalIds;
@@ -28,14 +30,6 @@ public class EpisodeInfo : IExtendedItemInfo {
     public string Id { get; init; }
 
     public string SeasonId { get; init; }
-
-    public string? AnidbId { get; init; }
-
-    public string? TmdbMovieId { get; init; }
-
-    public string? TmdbEpisodeId { get; init; }
-
-    public string? TvdbEpisodeId { get; init; }
 
     public EpisodeType Type { get; init; }
 
@@ -87,6 +81,38 @@ public class EpisodeInfo : IExtendedItemInfo {
 
     public bool IsAvailable => CrossReferences.Count is > 0;
 
+    #region Shoko Episode Metadata
+
+    public ShokoEpisodeInfo[] ShokoEpisodes { get; init; }
+
+    #endregion
+
+    #region Anidb Episode Metadata
+
+    public string? AnidbEpisodeId => AnidbEpisodes.FirstOrDefault()?.AnidbEpisodeId;
+
+    public AnidbEpisodeInfo[] AnidbEpisodes { get; init; }
+
+    #endregion
+
+    #region TMDB Movie Metadata
+
+    public string? TmdbMovieId => TmdbMovies.FirstOrDefault()?.TmdbMovieId;
+
+    public TmdbMovieInfo[] TmdbMovies { get; init; }
+
+    #endregion
+
+    #region TMDB Episode Metadata
+
+    public string? TmdbEpisodeId => TmdbEpisodes.FirstOrDefault()?.TmdbEpisodeId;
+
+    public string? TvdbEpisodeId => TmdbEpisodes.FirstOrDefault()?.TvdbEpisodeId;
+
+    public TmdbEpisodeInfo[] TmdbEpisodes { get; init; }
+
+    #endregion
+
     public EpisodeInfo(
         ShokoApiClient client,
         ShokoEpisode episode, 
@@ -95,6 +121,8 @@ public class EpisodeInfo : IExtendedItemInfo {
         List<string> tags,
         string[] productionLocations,
         string? anidbContentRating,
+        TmdbMovieInfo[] tmdbMovies,
+        TmdbEpisodeInfo[] tmdbEpisodes,
         ITmdbEntity? tmdbEntity = null,
         ITmdbParentEntity? tmdbParentEntity = null
     ) {
@@ -117,7 +145,6 @@ public class EpisodeInfo : IExtendedItemInfo {
         _client = client;
         Id = episode.Id;
         SeasonId = episode.IDs.ParentSeries.ToString();
-        AnidbId = episode.AniDB.Id.ToString();
         Type = episode.AniDB.Type;
         IsHidden = episode.IsHidden;
         IsMainEntry = isMainEntry;
@@ -130,7 +157,7 @@ public class EpisodeInfo : IExtendedItemInfo {
             ..episode.AniDB.Titles,
             ..(tmdbEntity?.Titles ?? []),
         ];
-    Overview = episode.Description == episode.AniDB.Description
+        Overview = episode.Description == episode.AniDB.Description
             ? TextUtility.SanitizeAnidbDescription(episode.Description)
             : episode.Description;
         Overviews = [
@@ -149,7 +176,6 @@ public class EpisodeInfo : IExtendedItemInfo {
         if (tmdbMovie is not null) {
             Runtime = tmdbMovie.Runtime ?? episode.AniDB.Duration;
             AiredAt = tmdbMovie.ReleasedAt?.ToDateTime(TimeOnly.Parse("00:00:00", CultureInfo.InvariantCulture), DateTimeKind.Local);
-            TmdbMovieId = tmdbMovie.Id.ToString();
             CommunityRating = tmdbMovie.UserRating;
             Staff = tmdbMovie.Cast.Concat(tmdbMovie.Crew)
                 .GroupBy(role => (role.Type, role.Staff.Id))
@@ -175,8 +201,6 @@ public class EpisodeInfo : IExtendedItemInfo {
                 genres.AddRange(tmdbMovie.Genres);
         }
         else if (tmdbEpisode is not null) {
-            TmdbEpisodeId = tmdbEpisode.Id.ToString();
-            TvdbEpisodeId = tmdbEpisode.TvdbEpisodeId?.ToString();
             Runtime = tmdbEpisode.Runtime ?? episode.AniDB.Duration;
             AiredAt = tmdbEpisode.AiredAt?.ToDateTime(TimeOnly.Parse("00:00:00", CultureInfo.InvariantCulture), DateTimeKind.Local);
             CommunityRating = tmdbEpisode.UserRating;
@@ -236,9 +260,13 @@ public class EpisodeInfo : IExtendedItemInfo {
         ProductionLocations = productionLocationDict;
         ContentRatings = contentRatings.Distinct().ToList();
         CrossReferences = episode.CrossReferences;
+        ShokoEpisodes = [episode.ToInfo()];
+        AnidbEpisodes = [episode.AniDB.ToInfo()];
+        TmdbMovies = tmdbMovies;
+        TmdbEpisodes = tmdbEpisodes;
     }
 
-    public EpisodeInfo(ShokoApiClient client, TmdbEpisode tmdbEpisode, TmdbShow tmdbShow) {
+    public EpisodeInfo(ShokoApiClient client, TmdbEpisode tmdbEpisode, TmdbShow tmdbShow, ShokoEpisodeInfo[] shokoEpisodes, AnidbEpisodeInfo[] anidbEpisodes) {
         var tags = new List<string>();
         var genres = new List<string>();
         if (Plugin.Instance.Configuration.TagSources.HasFlag(TagFilter.TagSource.TmdbKeywords))
@@ -253,8 +281,6 @@ public class EpisodeInfo : IExtendedItemInfo {
         _client = client;
         Id = IdPrefix.TmdbShow + tmdbEpisode.Id.ToString();
         SeasonId = IdPrefix.TmdbShow + tmdbEpisode.SeasonId;
-        TmdbEpisodeId = tmdbEpisode.Id.ToString();
-        TvdbEpisodeId = tmdbEpisode.TvdbEpisodeId?.ToString();
         Type = tmdbEpisode.SeasonNumber is 0 ? EpisodeType.Special : EpisodeType.Normal;
         IsHidden = false;
         IsMainEntry = false;
@@ -288,9 +314,13 @@ public class EpisodeInfo : IExtendedItemInfo {
             .SelectMany(a => a.Episodes)
             .DistinctBy(a => (a.ED2K, a.FileSize))
             .ToList();
+        ShokoEpisodes = shokoEpisodes;
+        AnidbEpisodes = anidbEpisodes;
+        TmdbEpisodes = [tmdbEpisode.ToInfo()];
+        TmdbMovies = [];
     }
 
-    public EpisodeInfo(ShokoApiClient client, TmdbMovie tmdbMovie) {
+    public EpisodeInfo(ShokoApiClient client, TmdbMovie tmdbMovie, ShokoEpisodeInfo[] shokoEpisodes, AnidbEpisodeInfo[] anidbEpisodes) {
         var tags = new List<string>();
         var genres = new List<string>();
         if (Plugin.Instance.Configuration.TagSources.HasFlag(TagFilter.TagSource.TmdbKeywords))
@@ -307,7 +337,6 @@ public class EpisodeInfo : IExtendedItemInfo {
         SeasonId = tmdbMovie.CollectionId.HasValue && Plugin.Instance.Configuration.SeparateMovies && Plugin.Instance.Configuration.CollectionGrouping is Ordering.CollectionCreationType.Movies
             ? IdPrefix.TmdbMovieCollection + tmdbMovie.CollectionId.Value.ToString()
             : IdPrefix.TmdbMovie + tmdbMovie.Id.ToString();
-        TmdbMovieId = tmdbMovie.Id.ToString();
         Type = EpisodeType.Normal;
         IsHidden = false;
         IsMainEntry = false;
@@ -341,6 +370,10 @@ public class EpisodeInfo : IExtendedItemInfo {
             .SelectMany(a => a.Episodes)
             .DistinctBy(a => (a.ED2K, a.FileSize))
             .ToList();
+        ShokoEpisodes = shokoEpisodes;
+        AnidbEpisodes = anidbEpisodes;
+        TmdbEpisodes = [];
+        TmdbMovies = [tmdbMovie.ToInfo()];
     }
 
     public async Task<EpisodeImages> GetImages(CancellationToken cancellationToken)

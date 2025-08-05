@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Shokofin.API.Info.AniDB;
+using Shokofin.API.Info.Shoko;
+using Shokofin.API.Info.TMDB;
 using Shokofin.API.Models;
 using Shokofin.API.Models.Shoko;
 using Shokofin.API.Models.TMDB;
@@ -26,25 +29,15 @@ public class SeasonInfo : IExtendedItemInfo {
 
     public IReadOnlyList<string> ExtraIds { get; init; }
 
-    public string? AnidbId { get; init; }
-
-    public string? ShokoSeriesId { get; init; }
-
-    public string? ShokoGroupId { get; init; }
-
     public string? TopLevelShokoGroupId { get; init; }
 
-    public string? TmdbSeasonId { get; init; }
-
-    public string? TmdbMovieCollectionId { get; init; }
+    public SeriesType Type { get; init; }
 
     public SeriesStructureType StructureType { get; init; }
 
     public Ordering.OrderType SeasonOrdering { get; init; }
 
     public Ordering.SpecialOrderType SpecialsPlacement { get; init; }
-
-    public SeriesType Type { get; init; }
 
     public bool IsMultiEntry { get; init; }
 
@@ -152,6 +145,57 @@ public class SeasonInfo : IExtendedItemInfo {
     /// </summary>
     public IReadOnlyDictionary<string, RelationType> RelationMap { get; init; }
 
+    #region Shoko Series Metadata
+
+    /// <summary>
+    /// The main Shoko series ID for the season info.
+    /// </summary>
+    public string? ShokoSeriesId => ShokoSeries.FirstOrDefault()?.ShokoSeriesId;
+
+    /// <summary>
+    /// The main Shoko group ID for the season info.
+    /// </summary>
+    public string? ShokoGroupId => ShokoSeries.FirstOrDefault()?.ShokoGroupId;
+
+    /// <summary>
+    /// All Shoko series linked to the season info.
+    /// </summary>
+    public ShokoSeriesInfo[] ShokoSeries { get; init; }
+
+    #endregion
+    
+    #region AniDB Anime Metadata
+
+    /// <summary>
+    /// The main AniDB anime ID for the season info.
+    /// </summary>
+    public string? AnidbAnimeId => AnidbAnime.FirstOrDefault()?.AnidbAnimeId;
+
+    /// <summary>
+    /// All AniDB anime linked to the season info.
+    /// </summary>
+    public AnidbAnimeInfo[] AnidbAnime { get; init; }
+
+    #endregion
+
+    #region TMDB Season Metadata
+
+    /// <summary>
+    /// All TMDB seasons linked to the season info.
+    /// </summary>
+    public TmdbSeasonInfo[] TmdbSeasons { get; init; }
+
+    #endregion
+
+    #region TMDB Movie Metadata
+
+    /// <summary>
+    /// All TMDB movies linked to the season info.
+    /// </summary>
+    public TmdbMovieInfo[] TmdbMovies { get; init; }
+
+    #endregion
+
     public SeasonInfo(
         ShokoApiClient client,
         ShokoSeries series,
@@ -159,7 +203,8 @@ public class SeasonInfo : IExtendedItemInfo {
         List<EpisodeInfo> episodes,
         IReadOnlyList<Relation> relations,
         ITmdbEntity? tmdbEntity,
-        IReadOnlyDictionary<string, SeriesConfiguration> seriesConfigurationMap
+        IReadOnlyDictionary<string, SeriesConfiguration> seriesConfigurationMap,
+        TmdbSeasonInfo[] tmdbSeasons
     ) {
         var seasonId = series.Id;
         var relationMap = relations
@@ -310,15 +355,6 @@ public class SeasonInfo : IExtendedItemInfo {
         _client = client;
         Id = seasonId;
         ExtraIds = extraIds.ToArray();
-        if (tmdbEntity is TmdbSeason tmdbSeason) {
-            TmdbSeasonId = tmdbSeason.Id;
-        }
-        if (tmdbEntity is TmdbMovieCollection tmdbMovieCollection) {
-            TmdbMovieCollectionId = tmdbMovieCollection.Id.ToString();
-        }
-        AnidbId = series.AniDB.Id.ToString();
-        ShokoSeriesId = series.IDs.Shoko.ToString();
-        ShokoGroupId = series.IDs.ParentGroup.ToString();
         TopLevelShokoGroupId = series.IDs.TopLevelGroup.ToString();
         StructureType = seriesConfigurationMap[seasonId].StructureType;
         SeasonOrdering = seriesConfigurationMap[seasonId].SeasonOrdering;
@@ -394,9 +430,26 @@ public class SeasonInfo : IExtendedItemInfo {
         SpecialsAnchors = specialsAnchorDictionary;
         Relations = relations;
         RelationMap = relationMap;
+        ShokoSeries = [
+            new() {
+                ShokoSeriesId = series.Id,
+                ShokoGroupId = series.IDs.ParentGroup.ToString(),
+                TopLevelShokoGroupId = series.IDs.TopLevelGroup.ToString(),
+            },
+            ..extraIds.Select(extraId => new ShokoSeriesInfo {
+                ShokoSeriesId = extraId,
+                ShokoGroupId = series.IDs.ParentGroup.ToString(),
+                TopLevelShokoGroupId = series.IDs.TopLevelGroup.ToString(),
+            }),
+        ];
+        AnidbAnime = [new() {
+            AnidbAnimeId = series.AniDB.Id.ToString(),
+        }];
+        TmdbSeasons = tmdbSeasons ?? [];
+        TmdbMovies = [..EpisodeList.SelectMany(eI => eI.TmdbMovies).Distinct()];
     }
 
-    public SeasonInfo(ShokoApiClient client, TmdbSeason tmdbSeason, TmdbShow tmdbShow, IReadOnlyList<EpisodeInfo> episodes, string? anidbId = null, string? shokoSeriesId = null, string? shokoGroupId = null, string? topLevelShokoGroupId = null) {
+    public SeasonInfo(ShokoApiClient client, TmdbSeason tmdbSeason, TmdbShow tmdbShow, IReadOnlyList<EpisodeInfo> episodes, string? topLevelShokoGroupId, AnidbAnimeInfo[] anidbAnime, ShokoSeriesInfo[] shokoSeries) {
         var tags = new List<string>();
         var genres = new List<string>();
         if (Plugin.Instance.Configuration.TagSources.HasFlag(TagFilter.TagSource.TmdbKeywords))
@@ -412,10 +465,6 @@ public class SeasonInfo : IExtendedItemInfo {
         _client = client;
         Id = IdPrefix.TmdbShow + tmdbSeason.Id;
         ExtraIds = [];
-        TmdbSeasonId = tmdbSeason.Id;
-        AnidbId = anidbId;
-        ShokoSeriesId = shokoSeriesId;
-        ShokoGroupId = shokoGroupId;
         TopLevelShokoGroupId = topLevelShokoGroupId;
         StructureType = SeriesStructureType.TMDB_SeriesAndMovies;
         SeasonOrdering = Ordering.OrderType.None;
@@ -423,7 +472,7 @@ public class SeasonInfo : IExtendedItemInfo {
         Type = SeriesType.TV;
         IsMultiEntry = true;
         IsRestricted = tmdbShow.IsRestricted;
-        Title = tmdbShow.Title;
+        Title = tmdbSeason.Title;
         Titles = tmdbSeason.Titles;
         Overview = tmdbSeason.Overview;
         Overviews = tmdbSeason.Overviews;
@@ -452,6 +501,8 @@ public class SeasonInfo : IExtendedItemInfo {
             // In case the two first episodes got an early screening in a 12-13 episode single cour anime.
             .Skip(2)
             .Select(e => e.DayOfWeek)
+            .Distinct()
+            .Order()
             .ToArray();
         YearlySeasons = tmdbSeason.YearlySeasons;
         Staff = episodes.SelectMany(s => s.Staff).DistinctBy(p => new { p.Type, p.Name, p.Role }).ToArray();
@@ -463,9 +514,13 @@ public class SeasonInfo : IExtendedItemInfo {
         SpecialsAnchors = new Dictionary<EpisodeInfo, EpisodeInfo>();
         Relations = [];
         RelationMap = new Dictionary<string, RelationType>();
+        ShokoSeries = shokoSeries ?? [];
+        AnidbAnime = anidbAnime ?? [];
+        TmdbSeasons = [tmdbSeason.ToInfo()];
+        TmdbMovies = [];
     }
 
-    public SeasonInfo(ShokoApiClient client, TmdbMovie tmdbMovie, EpisodeInfo episodeInfo, string? anidbId = null, string? shokoSeriesId = null, string? shokoGroupId = null, string? topLevelShokoGroupId = null) {
+    public SeasonInfo(ShokoApiClient client, TmdbMovie tmdbMovie, EpisodeInfo episodeInfo, string? topLevelShokoGroupId, AnidbAnimeInfo[] anidbAnime, ShokoSeriesInfo[] shokoSeries) {
         var genres = episodeInfo.Genres.ToList();
         var tags = episodeInfo.Tags.ToList();
         AddYearlySeasons(ref genres, ref tags, tmdbMovie.YearlySeasons);
@@ -473,10 +528,6 @@ public class SeasonInfo : IExtendedItemInfo {
         _client = client;
         Id = IdPrefix.TmdbMovie + tmdbMovie.Id.ToString();
         ExtraIds = [];
-        TmdbMovieCollectionId = tmdbMovie.CollectionId?.ToString();
-        AnidbId = anidbId;
-        ShokoSeriesId = shokoSeriesId;
-        ShokoGroupId = shokoGroupId;
         TopLevelShokoGroupId = topLevelShokoGroupId;
         StructureType = SeriesStructureType.TMDB_SeriesAndMovies;
         SeasonOrdering = Ordering.OrderType.None;
@@ -510,9 +561,16 @@ public class SeasonInfo : IExtendedItemInfo {
         SpecialsAnchors = new Dictionary<EpisodeInfo, EpisodeInfo>();
         Relations = [];
         RelationMap = new Dictionary<string, RelationType>();
+        ShokoSeries = shokoSeries;
+        AnidbAnime = anidbAnime;
+        TmdbSeasons = [];
+        TmdbMovies = [new() {
+            TmdbMovieId = tmdbMovie.Id.ToString(),
+            TmdbMovieCollectionId = tmdbMovie.CollectionId?.ToString(),
+        }];
     }
 
-    public SeasonInfo(ShokoApiClient client, TmdbMovieCollection tmdbMovieCollection, IReadOnlyList<TmdbMovie> movies, IReadOnlyList<EpisodeInfo> episodes, string? anidbId = null, string? shokoSeriesId = null, string? shokoGroupId = null, string? topLevelShokoGroupId = null) {
+    public SeasonInfo(ShokoApiClient client, TmdbMovieCollection tmdbMovieCollection, IReadOnlyList<TmdbMovie> movies, IReadOnlyList<EpisodeInfo> episodes, string? topLevelShokoGroupId, AnidbAnimeInfo[] anidbAnime, ShokoSeriesInfo[] shokoSeries) {
         var genres = episodes.SelectMany(m => m.Genres).ToList();
         var tags = episodes.SelectMany(m => m.Genres).ToList();
         AddYearlySeasons(ref genres, ref tags, movies.SelectMany(m => m.YearlySeasons));
@@ -520,10 +578,6 @@ public class SeasonInfo : IExtendedItemInfo {
         _client = client;
         Id = IdPrefix.TmdbMovieCollection + tmdbMovieCollection.Id.ToString();
         ExtraIds = [];
-        TmdbMovieCollectionId = tmdbMovieCollection.Id.ToString();
-        AnidbId = anidbId;
-        ShokoSeriesId = shokoSeriesId;
-        ShokoGroupId = shokoGroupId;
         TopLevelShokoGroupId = topLevelShokoGroupId;
         StructureType = SeriesStructureType.TMDB_SeriesAndMovies;
         SeasonOrdering = Ordering.OrderType.None;
@@ -563,6 +617,15 @@ public class SeasonInfo : IExtendedItemInfo {
         SpecialsAnchors = new Dictionary<EpisodeInfo, EpisodeInfo>();
         Relations = [];
         RelationMap = new Dictionary<string, RelationType>();
+        ShokoSeries = shokoSeries;
+        AnidbAnime = anidbAnime;
+        TmdbSeasons = [];
+        TmdbMovies = [
+            ..movies.Select(movie => new TmdbMovieInfo {
+                TmdbMovieId = movie.Id.ToString(),
+                TmdbMovieCollectionId = movie.CollectionId?.ToString(),
+            }),
+        ];
     }
 
     private void AddYearlySeasons(ref List<string> genres, ref List<string> tags, IEnumerable<YearlySeason> yearlySeasons) {

@@ -51,7 +51,7 @@ public class TrailerProvider(IHttpClientFactory _httpClientFactory, ILogger<Trai
                 Overview = description,
                 CommunityRating = episodeInfo.CommunityRating.Value > 0 ? episodeInfo.CommunityRating.ToFloat(10) : 0,
             };
-            _logger.LogInformation("Found trailer {EpisodeName} (File={FileId},Episode={EpisodeId},Season={SeasonId},ExtraSeasons={ExtraIds},Group={GroupId})", result.Item.Name, fileInfo.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds, showInfo?.ShokoGroupId);
+            _logger.LogInformation("Found trailer {EpisodeName} (File={FileId},Episode={EpisodeId},Season={SeasonId},ExtraSeasons={ExtraIds})", result.Item.Name, fileInfo.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds);
 
             result.Item.SetProviderId(ProviderNames.ShokoFile, fileInfo.Id);
             result.Item.SetProviderId(ProviderNames.ShokoEpisode, episodeInfo.Id);

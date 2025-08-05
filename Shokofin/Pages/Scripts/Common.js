@@ -396,6 +396,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   ServerVersion: ServerInformation | null;
  *   Username: string;
  *   ApiKey: string;
+ *   DisplayMoreExternalUrls: boolean;
  *   ThirdPartyIdProviderList: Except<DescriptionProvider, "Shoko">[];
  *   Title: AllTitlesConfiguration;
  *   MarkSpecialsWhenGrouped: boolean;
