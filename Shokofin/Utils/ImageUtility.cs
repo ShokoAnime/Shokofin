@@ -278,12 +278,12 @@ public static class ImageUtility {
         var remoteImage = new RemoteImageInfo {
             ProviderName = $"{image.Source.ToString().Replace("TMDB", "TheMovieDb")} ({Plugin.MetadataProviderName})",
             Type = imageType,
-            Width = image.Width,
-            Height = image.Height,
             Url = image.ToURLString(),
         };
 
         if (displayMode) {
+            remoteImage.Width = image.Width;
+            remoteImage.Height = image.Height;
             remoteImage.Language = image.LanguageCode;
             if (image.CommunityRating is { } rating) {
                 remoteImage.CommunityRating = rating.ToFloat(10);
