@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.24",
+                "changelog": "`chore`: **Tweak style**. (_Skip CI_)\n\n`misc`: **Expose VFS thread debug option**.\n\n`misc`: **Fix mislabeled debug options**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.24/shoko_5.0.4.24.zip",
+                "checksum": "923308191b079b9e58d7117706432abb",
+                "timestamp": "2025-08-07T23:49:45Z"
+            },
+            {
                 "version": "5.0.4.23",
                 "changelog": "`chore`: **Tweak style**.\n\n`misc`: **Remove now unnecessary call**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.20/shoko_5.0.4.20.zip",
                 "checksum": "ec2a5d0f41d7fa8f420f7d0ee69660b0",
                 "timestamp": "2025-08-05T23:56:58Z"
-            },
-            {
-                "version": "5.0.4.19",
-                "changelog": "`fix`: **Check if enabled for item before getting external URLs**.\n\n`chore`: **Change compare for Guid.Empty**.\n\n`chore`: **Move TODO below summary**.\n\n`fix`: **Check if enabled for item first**.\n\n`fix`: **Properly clear cache in merge version manager**.\n\n`fix`: **Don't use provider ids for collections**.\n\n`fix`: **Make endpoints use auth**.\n\n`chore`: **Fix bracket styling**.\n\n`refactor`: **Add more debug settings**.\n\n`fix`: **Only set width/height for images in display mode**.\n\n`misc`: **Update option description**.\n\n`refactor`: **Rework how IDs are linked to the info objects + more**:\n\nReworked how the metadata IDs are linked to the info objects, allowing us to display _all_ external links for the entities if the new setting to display _more_ external URLs is enabled. Also streamlined the usage of the IDs internally.\n\n**Note**: _This change may slow down the metadata construction for info objects which will have multiple metadata IDs linked, since we're now fetching more info from the server compared to before._",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.19/shoko_5.0.4.19.zip",
-                "checksum": "aa3d3b0a9ad3013c9793527e2adb108b",
-                "timestamp": "2025-08-05T23:52:27Z"
             }
         ]
     }
