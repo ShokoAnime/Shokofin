@@ -223,10 +223,10 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages {
     }
 
     public void UpdateConfiguration() {
-        UpdateConfiguration(this.Configuration);
+        UpdateConfiguration(Configuration);
     }
 
-    public void OnConfigChanged(object? sender, BasePluginConfiguration e) {
+    private void OnConfigChanged(object? sender, BasePluginConfiguration e) {
         if (e is not PluginConfiguration config)
             return;
 
