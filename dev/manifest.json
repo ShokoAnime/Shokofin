@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.23",
+                "changelog": "`chore`: **Tweak style**.\n\n`misc`: **Remove now unnecessary call**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.23/shoko_5.0.4.23.zip",
+                "checksum": "af865fecb281e9412454e6df2d02d91f",
+                "timestamp": "2025-08-07T22:58:17Z"
+            },
+            {
                 "version": "5.0.4.22",
                 "changelog": "`fix`: **Set missing defaults for image config**.\n\n`misc`: **Mark image settings basic/non-advanced**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.19/shoko_5.0.4.19.zip",
                 "checksum": "aa3d3b0a9ad3013c9793527e2adb108b",
                 "timestamp": "2025-08-05T23:52:27Z"
-            },
-            {
-                "version": "5.0.4.18",
-                "changelog": "`misc`: **Separate debug settings into debug mode**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.18/shoko_5.0.4.18.zip",
-                "checksum": "de6e87896acb5b50d631b3439c956fa0",
-                "timestamp": "2025-08-03T02:16:15Z"
             }
         ]
     }
