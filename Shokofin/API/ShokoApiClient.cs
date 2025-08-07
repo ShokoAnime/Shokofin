@@ -310,9 +310,6 @@ public class ShokoApiClient : IDisposable {
             return null;
 
         var result = await JsonSerializer.DeserializeAsync<ApiKey>(response.Content.ReadAsStreamAsync().Result).ConfigureAwait(false);
-        if (!forUser && result != null)
-            HasPluginsExposed = (await Get($"/api/v3/Plugin", HttpMethod.Get, apiKey: result.Token).ConfigureAwait(false)) is { StatusCode: HttpStatusCode.OK };
-
         return result;
     }
 
