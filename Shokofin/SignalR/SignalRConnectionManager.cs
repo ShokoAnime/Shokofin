@@ -72,6 +72,7 @@ public class SignalRConnectionManager {
 
         var connection = Connection = builder.Build();
 
+        connection.ServerTimeout = TimeSpan.FromMinutes(1);
         connection.Closed += OnDisconnected;
         connection.Reconnecting += OnReconnecting;
         connection.Reconnected += OnReconnected;
