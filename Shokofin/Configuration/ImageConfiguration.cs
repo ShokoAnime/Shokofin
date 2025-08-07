@@ -8,19 +8,19 @@ public class ImageConfiguration {
     /// Indicates we should respect the preferred image flag sent by the server
     /// when selecting the images to use for an item.
     /// </summary>
-    public bool UsePreferred { get; set; }
+    public bool UsePreferred { get; set; } = false;
 
     /// <summary>
     /// Indicates that we should use the community ratings to order the images
     /// for an item.
     /// </summary>
-    public bool UseCommunityRating { get; set; }
+    public bool UseCommunityRating { get; set; } = false;
 
     /// <summary>
     /// Indicates that we should set the dimensions for the images when
     /// selecting the images to use for an item.
     /// </summary>
-    public bool UseDimensions { get; set; }
+    public bool UseDimensions { get; set; } = false;
 
     /// <summary>
     /// The enabled image types for posters.

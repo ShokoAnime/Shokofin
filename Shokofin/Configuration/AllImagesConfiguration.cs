@@ -14,7 +14,9 @@ public class AllImagesConfiguration {
     /// <summary>
     /// Default image settings.
     /// </summary>
-    public ImageConfiguration Default { get; set; } = new();
+    public ImageConfiguration Default { get; set; } = new() {
+        UsePreferred = true,
+    };
 
     /// <summary>
     /// Image settings for Shoko collections.
