@@ -17,6 +17,12 @@ public class ImageConfiguration {
     public bool UseCommunityRating { get; set; }
 
     /// <summary>
+    /// Indicates that we should set the dimensions for the images when
+    /// selecting the images to use for an item.
+    /// </summary>
+    public bool UseDimensions { get; set; }
+
+    /// <summary>
     /// The enabled image types for posters.
     /// </summary>
     public ImageLanguageType[] PosterList { get; set; } = [];

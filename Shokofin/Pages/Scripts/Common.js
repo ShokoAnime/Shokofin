@@ -357,6 +357,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  * @typedef {{
  *   UsePreferred: boolean;
  *   UseCommunityRating: boolean;
+ *   UseDimensions: boolean;
  *   PosterList: ImageLanguageType[];
  *   PosterOrder: ImageLanguageType[];
  *   LogoList: ImageLanguageType[];

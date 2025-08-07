@@ -1144,6 +1144,15 @@ form:not(.advanced-mode) .advanced-only {
                                 Use the community ratings to order the images in automatic image searches.
                             </div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Image_UseDimensions" />
+                                <span>Set Image Dimensions in Automatic Image Search</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Set the image dimensions the images in automatic image searches. This will allow Jellyfin to select the "best" image to use based on the image dimensions, if a minimum dimension is specified in the settings for the library.
+                            </div>
+                        </div>
                         <div id="Image_PosterList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Only Allow Posters By Language</h3>
                             <div class="checkboxList paperList checkboxList-paperList">

@@ -239,8 +239,9 @@ public static class ImageUtility {
             orderedImages = [(images.First(image => image is { Source: API.Models.ImageSource.AniDB, Type: API.Models.ShokoImageType.Poster, IsAvailable: true }), ImageLanguageType.None)];
 
         var index = orderedImages.Count - 1;
+        var useDimensions = config.UseDimensions;
         foreach (var (image, _) in orderedImages) {
-            var remoteImage = SelectImage(image, imageType, metadataLanguage, displayMode, index);
+            var remoteImage = SelectImage(image, imageType, metadataLanguage, displayMode, useDimensions, index);
             if (remoteImage is not null)
                 yield return remoteImage;
 
@@ -264,7 +265,7 @@ public static class ImageUtility {
         return ImageLanguageType.Unknown;
     }
 
-    private static RemoteImageInfo? SelectImage(API.Models.Image? image, ImageType imageType, string? metadataLanguage, bool displayMode, int index) {
+    private static RemoteImageInfo? SelectImage(API.Models.Image? image, ImageType imageType, string? metadataLanguage, bool displayMode, bool useDimensions, int index) {
         if (image is not { IsAvailable: true })
             return null;
 
@@ -285,6 +286,8 @@ public static class ImageUtility {
             }
         }
         else {
+            remoteImage.Width = useDimensions ? image.Width : null;
+            remoteImage.Height = useDimensions ? image.Height : null;
             remoteImage.Language = metadataLanguage;
             remoteImage.CommunityRating = Over9K + index;
             remoteImage.VoteCount = Over9K + index;

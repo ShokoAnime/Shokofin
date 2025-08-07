@@ -541,6 +541,7 @@ function applyFormToConfig(form, config) {
 
             config.Image.Default.UsePreferred = form.querySelector("#Image_UsePreferred").checked;
             config.Image.Default.UseCommunityRating = form.querySelector("#Image_UseCommunityRating").checked;
+            config.Image.Default.UseDimensions = form.querySelector("#Image_UseDimensions").checked;
             ([config.Image.Default.PosterList, config.Image.Default.PosterOrder] = retrieveSortableCheckboxList(form, "Image_PosterList"));
             ([config.Image.Default.LogoList, config.Image.Default.LogoOrder] = retrieveSortableCheckboxList(form, "Image_LogoList"));
             ([config.Image.Default.BackdropList, config.Image.Default.BackdropOrder] = retrieveSortableCheckboxList(form, "Image_BackdropList"));
@@ -731,6 +732,7 @@ async function applyConfigToForm(form, config) {
 
             form.querySelector("#Image_UsePreferred").checked = config.Image.Default.UsePreferred;
             form.querySelector("#Image_UseCommunityRating").checked = config.Image.Default.UseCommunityRating;
+            form.querySelector("#Image_UseDimensions").checked = config.Image.Default.UseDimensions;
             renderSortableCheckboxList(form, "Image_PosterList", config.Image.Default.PosterList, config.Image.Default.PosterOrder);
             renderSortableCheckboxList(form, "Image_LogoList", config.Image.Default.LogoList, config.Image.Default.LogoOrder);
             renderSortableCheckboxList(form, "Image_BackdropList", config.Image.Default.BackdropList, config.Image.Default.BackdropOrder);
