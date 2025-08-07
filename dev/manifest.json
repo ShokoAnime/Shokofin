@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.22",
+                "changelog": "`fix`: **Set missing defaults for image config**.\n\n`misc`: **Mark image settings basic/non-advanced**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.22/shoko_5.0.4.22.zip",
+                "checksum": "0164bda4c85c4df192168e98de796f04",
+                "timestamp": "2025-08-07T05:13:24Z"
+            },
+            {
                 "version": "5.0.4.21",
                 "changelog": "`fix`: **Cache plugins exposed state**:\n\nCache the 'has plugins API' state to prevent needing to contact the server before attempting to establish a SignalR connection, among other things.\n\nThis change will fix the regression causing the auto-start SignalR option to causing Jellyfin to fail to start properly if the Shoko Server instance is available while Jellyfin is starting.\n\n`chore`: **Minor tweaks**.\n\n`fix`: **Re-allow anon. traffic for images**:\n\nFixes the regression caused by \"fix: make endpoints use auth\".\n\n`fix`: **Don't auto enable display mode for auto search**:\n\nFixes a bug where auto image search would use display mode values causing the selection logic to be more dependent on Jellyfin then on the plugin due to community ratings and/or image dimensions being set.\n\n`chore`: **Consolidate code paths**.\n\n`fix`: **Fix tmdb episode page urls**.\n\n`misc`: **Tweak logging during signalr connect**.\n\n`misc`: **Tweak signalr server timeout to match server**.\n\n`feat`: **Add option to set image dimensions in auto image search**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.18/shoko_5.0.4.18.zip",
                 "checksum": "de6e87896acb5b50d631b3439c956fa0",
                 "timestamp": "2025-08-03T02:16:15Z"
-            },
-            {
-                "version": "5.0.4.17",
-                "changelog": "`fix`: **Use thumbnails and backdrops for episode images**:\n\nThumbnails are hooked up for episodes while backdrops for movies in the backend, so pick the source that's available for the entity.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.17/shoko_5.0.4.17.zip",
-                "checksum": "312eba6fff9d641b7c2c8067d9b26b39",
-                "timestamp": "2025-08-03T01:33:09Z"
             }
         ]
     }
