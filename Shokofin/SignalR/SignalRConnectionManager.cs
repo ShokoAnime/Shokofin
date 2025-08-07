@@ -74,7 +74,7 @@ public class SignalRConnectionManager {
         connection.Reconnecting += OnReconnecting;
         connection.Reconnected += OnReconnected;
 
-        if (await ApiClient.HasPluginsExposed().ConfigureAwait(false)) {
+        if (Plugin.Instance.Configuration.HasPluginsExposed) {
             // Attach metadata events.
             connection.On<EpisodeInfoUpdatedEventArgs>("metadata:episode.added", OnInfoUpdated);
             connection.On<EpisodeInfoUpdatedEventArgs>("metadata:episode.updated", OnInfoUpdated);

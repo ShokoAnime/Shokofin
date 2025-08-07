@@ -73,7 +73,12 @@ public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager
                 updated = true;
             }
 
-            await _apiClient.HasPluginsExposed(cancellationToken).ConfigureAwait(false);
+            var hasPluginsExposed = await _apiClient.CheckIfPluginsExposed(cancellationToken).ConfigureAwait(false);
+            if (Plugin.Instance.Configuration.HasPluginsExposed != hasPluginsExposed) {
+                _logger.LogDebug("Plugin based API; {hasPluginsExposed}", hasPluginsExposed);
+                Plugin.Instance.Configuration.HasPluginsExposed = hasPluginsExposed;
+                updated = true;
+            }
 
             var mediaFolders = Plugin.Instance.Configuration.MediaFolders.ToList();
             var managedFolderNameMap = await Task

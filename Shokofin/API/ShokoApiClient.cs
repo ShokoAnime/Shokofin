@@ -38,6 +38,16 @@ public class ShokoApiClient : IDisposable {
 
     private readonly GuardedMemoryCache _cache;
 
+    private bool _connectionUsable;
+
+    private static bool HasPluginsExposed {
+        get => Plugin.Instance.Configuration.HasPluginsExposed;
+        set {
+            Plugin.Instance.Configuration.HasPluginsExposed = value;
+            Plugin.Instance.UpdateConfiguration();
+        }
+    }
+
     public ShokoApiClient(ILogger<ShokoApiClient> logger, UsageTracker tracker) {
         var config = Plugin.Instance.Configuration;
 
@@ -53,6 +63,7 @@ public class ShokoApiClient : IDisposable {
             new() { ExpirationScanFrequency = config.Debug.ExpirationScanFrequency },
             new() { AbsoluteExpirationRelativeToNow = config.Debug.AbsoluteExpirationRelativeToNow }
         );
+        _connectionUsable = Plugin.Instance.Configuration.IsConnectionUsable;
 
         Plugin.Instance.ConfigurationChanged += OnConfigurationChanged;
         _tracker.Stalled += OnTrackerStalled;
@@ -69,6 +80,17 @@ public class ShokoApiClient : IDisposable {
             _logger.LogInformation("Updating request limit to {MaxRequests}", maxRequests);
             _requestLimiter = new(maxRequests, maxRequests);
             _maxInFlightRequests = maxRequests;
+        }
+
+        var connectionUsable = config.IsConnectionUsable;
+        if (_connectionUsable != connectionUsable) {
+            _connectionUsable = connectionUsable;
+            if (connectionUsable) {
+                var hasPluginsExposed = CheckIfPluginsExposed().ConfigureAwait(false).GetAwaiter().GetResult();
+                if (hasPluginsExposed != HasPluginsExposed) {
+                    HasPluginsExposed = hasPluginsExposed;
+                }
+            }
         }
     }
 
@@ -289,7 +311,7 @@ public class ShokoApiClient : IDisposable {
 
         var result = await JsonSerializer.DeserializeAsync<ApiKey>(response.Content.ReadAsStreamAsync().Result).ConfigureAwait(false);
         if (!forUser && result != null)
-            _hasPluginsExposed = (await Get($"/api/v3/Plugin", HttpMethod.Get, apiKey: result.Token).ConfigureAwait(false)) is { StatusCode: HttpStatusCode.OK };
+            HasPluginsExposed = (await Get($"/api/v3/Plugin", HttpMethod.Get, apiKey: result.Token).ConfigureAwait(false)) is { StatusCode: HttpStatusCode.OK };
 
         return result;
     }
@@ -316,10 +338,8 @@ public class ShokoApiClient : IDisposable {
         return null;
     }
 
-    private bool? _hasPluginsExposed;
-
-    public async Task<bool> HasPluginsExposed(CancellationToken cancellationToken = default)
-        => (_hasPluginsExposed = (await Get($"/api/v3/Plugin", HttpMethod.Get, cancellationToken: cancellationToken).ConfigureAwait(false)) is { StatusCode: HttpStatusCode.OK }).Value;
+    public async Task<bool> CheckIfPluginsExposed(CancellationToken cancellationToken = default)
+        => (await Get($"/api/v3/Plugin", HttpMethod.Get, cancellationToken: cancellationToken).ConfigureAwait(false)) is { StatusCode: HttpStatusCode.OK };
 
     public async Task<string?> GetWebPrefix(CancellationToken cancellationToken = default)
     {
@@ -351,16 +371,14 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<ManagedFolder?> GetManagedFolder(int managedFolderId)
     {
-        var hasPlugins = _hasPluginsExposed ?? await HasPluginsExposed().ConfigureAwait(false);
-        if (hasPlugins)
+        if (HasPluginsExposed)
             return await GetOrNull<ManagedFolder>($"/api/v3/ManagedFolder/{managedFolderId}").ConfigureAwait(false);
         return await GetOrNull<ManagedFolder>($"/api/v3/ImportFolder/{managedFolderId}").ConfigureAwait(false);
     }
 
     public async Task<ListResult<File>> GetFilesInManagedFolder(int managedFolderId, string subPath, int page = 1)
     {
-        var hasPlugins = _hasPluginsExposed ?? await HasPluginsExposed().ConfigureAwait(false);
-        if (hasPlugins)
+        if (HasPluginsExposed)
             return await GetOrNull<ListResult<File>>($"/api/v3/ManagedFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}").ConfigureAwait(false) ?? new();
         return await GetOrNull<ListResult<File>>($"/api/v3/ImportFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}").ConfigureAwait(false) ?? new();
     }
@@ -371,8 +389,7 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<File?> GetFile(string fileId)
     {
-        var hasPlugins = _hasPluginsExposed ?? await HasPluginsExposed().ConfigureAwait(false);
-        if (hasPlugins)
+        if (HasPluginsExposed)
            return await GetOrNull<File>($"/api/v3/File/{fileId}?include=XRefs,ReleaseInfo").ConfigureAwait(false);
         return await GetOrNull<File>($"/api/v3/File/{fileId}?include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false);
     }
@@ -382,8 +399,7 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<IReadOnlyList<File>> GetFileByPath(string relativePath)
     {
-        var hasPlugins = _hasPluginsExposed ?? await HasPluginsExposed().ConfigureAwait(false);
-        if (hasPlugins)
+        if (HasPluginsExposed)
             return await Get<IReadOnlyList<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(relativePath)}&include=XRefs,ReleaseInfo&limit=10").ConfigureAwait(false);
         return await Get<IReadOnlyList<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(relativePath)}&include=XRefs&includeDataFrom=AniDB&limit=10").ConfigureAwait(false);
     }
@@ -498,8 +514,7 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<IReadOnlyList<File>> GetFilesForShokoSeries(string seriesId)
     {
-        var hasPlugins = _hasPluginsExposed ?? await HasPluginsExposed().ConfigureAwait(false);
-        if (hasPlugins)
+        if (HasPluginsExposed)
             return (await GetOrNull<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? [];
         return (await GetOrNull<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
     }
@@ -545,8 +560,7 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<IReadOnlyList<File>> GetFilesForTmdbEpisode(string episodeId)
     {
-        var hasPlugins = _hasPluginsExposed ?? await HasPluginsExposed().ConfigureAwait(false);
-        if (hasPlugins)
+        if (HasPluginsExposed)
             return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Episode/{episodeId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? [];
         return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Episode/{episodeId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
     }
@@ -569,8 +583,7 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<IReadOnlyList<File>> GetFilesForTmdbSeason(string seasonId)
     {
-        var hasPlugins = _hasPluginsExposed ?? await HasPluginsExposed().ConfigureAwait(false);
-        if (hasPlugins)
+        if (HasPluginsExposed)
             return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? [];
         return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
     }
@@ -587,8 +600,7 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<IReadOnlyList<File>> GetFilesForTmdbShow(string showId)
     {
-        var hasPlugins = _hasPluginsExposed ?? await HasPluginsExposed().ConfigureAwait(false);
-        if (hasPlugins)
+        if (HasPluginsExposed)
             return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Show/{showId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? [];
         return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Show/{showId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
     }
@@ -611,8 +623,7 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<IReadOnlyList<File>> GetFilesForTmdbMovie(string movieId)
     {
-        var hasPlugins = _hasPluginsExposed ?? await HasPluginsExposed().ConfigureAwait(false);
-        if (hasPlugins)
+        if (HasPluginsExposed)
             return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? [];
         return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
     }

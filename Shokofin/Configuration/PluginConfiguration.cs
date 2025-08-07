@@ -35,6 +35,9 @@ public class PluginConfiguration : BasePluginConfiguration {
     public bool CanCreateSymbolicLinks => Plugin.Instance.CanCreateSymbolicLinks;
 #pragma warning restore CA1822
 
+    [XmlIgnore, JsonIgnore]
+    public bool IsConnectionUsable => Uri.IsWellFormedUriString(Url, UriKind.Absolute) && !string.IsNullOrEmpty(ApiKey);
+
     /// <summary>
     /// The URL for where to connect to shoko internally.
     /// And externally if no <seealso cref="PublicUrl"/> is set.
@@ -80,6 +83,12 @@ public class PluginConfiguration : BasePluginConfiguration {
     /// </summary>
     [XmlElement("HostVersion")]
     public ComponentVersion? ServerVersion { get; set; }
+
+    /// <summary>
+    /// Indicates which set of endpoints to use dependent on which branch of
+    /// Shoko we are using.
+    /// </summary>
+    public bool HasPluginsExposed { get; set; } = false;
 
     #endregion
 
