@@ -590,12 +590,16 @@ function applyFormToConfig(form, config) {
         }
 
         case "vfs": {
+            const vfsTreads = sanitizeNumber(form.querySelector("#VFS_Threads").value, -1);
+
             config.AddTrailers = form.querySelector("#AddTrailers").checked;
             config.AddCreditsAsThemeVideos = form.querySelector("#AddCreditsAsThemeVideos").checked;
             config.AddCreditsAsSpecialFeatures = form.querySelector("#AddCreditsAsSpecialFeatures").checked;
             config.VFS_AddReleaseGroup = form.querySelector("#VFS_AddReleaseGroup").checked;
             config.VFS_AddResolution = form.querySelector("#VFS_AddResolution").checked;
 
+            config.VFS_Threads = vfsTreads;
+            form.querySelector("#VFS_Threads").value = vfsTreads;
             config.VFS_ResolveLinks = form.querySelector("#VFS_ResolveLinks").checked;
             config.VFS_AttachRoot = form.querySelector("#VFS_AttachRoot").checked;
             config.VFS_IterativeFileChecks = form.querySelector("#VFS_IterativeFileChecks").checked;
@@ -792,6 +796,7 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#VFS_AddReleaseGroup").checked = config.VFS_AddReleaseGroup;
             form.querySelector("#VFS_AddResolution").checked = config.VFS_AddResolution;
 
+            form.querySelector("#VFS_Threads").value = config.VFS_Threads;
             form.querySelector("#VFS_ResolveLinks").checked = config.VFS_ResolveLinks;
             form.querySelector("#VFS_AttachRoot").checked = config.VFS_AttachRoot;
             form.querySelector("#VFS_IterativeFileChecks").checked = config.VFS_IterativeFileChecks;

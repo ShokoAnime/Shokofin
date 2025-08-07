@@ -1926,10 +1926,14 @@ form:not(.advanced-mode) .advanced-only {
                     </fieldset>
                     <fieldset id="VFS_Location_Section" class="verticalSection verticalSection-extrabottompadding advanced-only" hidden>
                         <legend>
-                            <h3>VFS Location Settings</h3>
+                            <h3>Generation Settings</h3>
                         </legend>
                         <div class="fieldDescription verticalSection-extrabottompadding">
                             Configure where to place the VFS in the file system and how to attach it to your libraries. <strong>Tweak at your own risk.</strong>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="VFS_Threads" label="VFS Threads" placeholder="0" type="number" pattern="[0-9]*" min="-1" step="1" />
+                            <div class="fieldDescription">Number of threads to concurrently generate links for the VFS. Set to -1 to to match the Jellyfin scan fanout concurrency. Set to 0 or below to use the core count.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
                             <label class="emby-checkbox-label">

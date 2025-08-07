@@ -568,7 +568,9 @@ public class PluginConfiguration : BasePluginConfiguration {
     public bool? VFS_Legacy_Enabled { get; set; }
 
     /// <summary>
-    /// Number of threads to concurrently generate links for the VFS.
+    /// Number of threads to concurrently generate links for the VFS. Set to -1
+    /// to to match the Jellyfin scan fanout concurrency. Set to 0 or below to
+    /// use the core count.
     /// </summary>
     [XmlElement("VirtualFileSystemThreads")]
     public int VFS_Threads { get; set; }
