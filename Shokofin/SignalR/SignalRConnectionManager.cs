@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -108,12 +110,18 @@ public class SignalRConnectionManager {
 
         EventSubmitterLease = Events.RegisterEventSubmitter();
         try {
+            Logger.LogInformation("Connecting to Shoko Server.");
+
             await connection.StartAsync().ConfigureAwait(false);
 
             Logger.LogInformation("Connected to Shoko Server.");
         }
+        catch (HttpRequestException ex) when (ex is { HttpRequestError: HttpRequestError.ConnectionError, InnerException: SocketException { SocketErrorCode: SocketError.ConnectionRefused } }) {
+            Logger.LogWarning("Unable to connect to Shoko Server due to a connection error. Please reconnect manually.");
+            await DisconnectAsync().ConfigureAwait(false);
+        }
         catch (Exception ex) {
-            Logger.LogError(ex, "Unable to connect to Shoko Server at this time. Please reconnect manually.");
+            Logger.LogError(ex, "An unexpected error occurred while attempting to connect to Shoko Server. Please reconnect manually.");
             await DisconnectAsync().ConfigureAwait(false);
         }
     }
