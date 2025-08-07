@@ -302,7 +302,10 @@ public class ShokoApiClient : IDisposable {
             Plugin.Instance.UpdateConfiguration();
         }
 
-        var postData = JsonSerializer.Serialize(new Dictionary<string, string> { {"user", username}, {"pass", password}, {"device", forUser ? "Shoko Jellyfin Plugin (Shokofin) - User Key" : "Shoko Jellyfin Plugin (Shokofin)"},
+        var postData = JsonSerializer.Serialize(new Dictionary<string, string> {
+            {"user", username},
+            {"pass", password},
+            {"device", forUser ? "Shoko Jellyfin Plugin (Shokofin) - User Key" : "Shoko Jellyfin Plugin (Shokofin)"},
         });
         var apiBaseUrl = Plugin.Instance.Configuration.Url;
         var response = await _httpClient.PostAsync($"{apiBaseUrl}/api/auth", new StringContent(postData, Encoding.UTF8, "application/json")).ConfigureAwait(false);
