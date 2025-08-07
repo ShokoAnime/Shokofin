@@ -298,12 +298,12 @@ public class ShokoExternalUrlHandler(ILogger<ShokoExternalUrlHandler> logger, Sh
             if (tmdbInfo.UsesAlternateOrdering)
                 result.Add((
                     $"{ProviderNames.Tmdb} (e{tmdbInfo.TmdbEpisodeId}) (tv{tmdbInfo.TmdbShowId} > g{tmdbInfo.TmdbAlternateOrderingId} > S{tmdbInfo.SeasonNumber}E{tmdbInfo.EpisodeNumber})",
-                    $"https://www.themoviedb.org/tv/{tmdbInfo.TmdbShowId}/season/{tmdbInfo.OriginalSeasonNumber}episode/{tmdbInfo.OriginalEpisodeNumber}"
+                    $"https://www.themoviedb.org/tv/{tmdbInfo.TmdbShowId}/season/{tmdbInfo.OriginalSeasonNumber}/episode/{tmdbInfo.OriginalEpisodeNumber}"
                 ));
             else
                 result.Add((
                     $"{ProviderNames.Tmdb} (e{tmdbInfo.TmdbEpisodeId}) (tv{tmdbInfo.TmdbShowId} > S{tmdbInfo.SeasonNumber}E{tmdbInfo.EpisodeNumber})",
-                    $"https://www.themoviedb.org/tv/{tmdbInfo.TmdbShowId}/season/{tmdbInfo.SeasonNumber}episode/{tmdbInfo.EpisodeNumber}"
+                    $"https://www.themoviedb.org/tv/{tmdbInfo.TmdbShowId}/season/{tmdbInfo.SeasonNumber}/episode/{tmdbInfo.EpisodeNumber}"
                 ));
             if (!string.IsNullOrEmpty(tmdbInfo.TvdbEpisodeId))
                 result.Add(($"{ProviderNames.Tvdb} (e{tmdbInfo.TmdbEpisodeId})", $"https://thetvdb.com/?tab=episode&id={tmdbInfo.TmdbEpisodeId}"));
