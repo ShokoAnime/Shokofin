@@ -370,39 +370,31 @@ public class ShokoApiClient : IDisposable {
     #region Managed Folder
 
     public async Task<ManagedFolder?> GetManagedFolder(int managedFolderId)
-    {
-        if (HasPluginsExposed)
-            return await GetOrNull<ManagedFolder>($"/api/v3/ManagedFolder/{managedFolderId}").ConfigureAwait(false);
-        return await GetOrNull<ManagedFolder>($"/api/v3/ImportFolder/{managedFolderId}").ConfigureAwait(false);
-    }
+        => HasPluginsExposed
+            ? await GetOrNull<ManagedFolder>($"/api/v3/ManagedFolder/{managedFolderId}").ConfigureAwait(false)
+            : await GetOrNull<ManagedFolder>($"/api/v3/ImportFolder/{managedFolderId}").ConfigureAwait(false);
 
     public async Task<ListResult<File>> GetFilesInManagedFolder(int managedFolderId, string subPath, int page = 1)
-    {
-        if (HasPluginsExposed)
-            return await GetOrNull<ListResult<File>>($"/api/v3/ManagedFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}").ConfigureAwait(false) ?? new();
-        return await GetOrNull<ListResult<File>>($"/api/v3/ImportFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}").ConfigureAwait(false) ?? new();
-    }
+        => HasPluginsExposed
+            ? await GetOrNull<ListResult<File>>($"/api/v3/ManagedFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}").ConfigureAwait(false) ?? new()
+            : await GetOrNull<ListResult<File>>($"/api/v3/ImportFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}").ConfigureAwait(false) ?? new();
 
     #endregion
 
     #region File
 
     public async Task<File?> GetFile(string fileId)
-    {
-        if (HasPluginsExposed)
-           return await GetOrNull<File>($"/api/v3/File/{fileId}?include=XRefs,ReleaseInfo").ConfigureAwait(false);
-        return await GetOrNull<File>($"/api/v3/File/{fileId}?include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false);
-    }
+        => HasPluginsExposed
+            ? await GetOrNull<File>($"/api/v3/File/{fileId}?include=XRefs,ReleaseInfo").ConfigureAwait(false)
+            :  await GetOrNull<File>($"/api/v3/File/{fileId}?include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false);
 
     public Task<File?> GetFileByEd2kAndFileSize(string ed2k, long fileSize)
         => GetOrNull<File>($"/api/v3/File/Hash/ED2K?hash={Uri.EscapeDataString(ed2k)}&size={fileSize}");
 
     public async Task<IReadOnlyList<File>> GetFileByPath(string relativePath)
-    {
-        if (HasPluginsExposed)
-            return await Get<IReadOnlyList<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(relativePath)}&include=XRefs,ReleaseInfo&limit=10").ConfigureAwait(false);
-        return await Get<IReadOnlyList<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(relativePath)}&include=XRefs&includeDataFrom=AniDB&limit=10").ConfigureAwait(false);
-    }
+        => HasPluginsExposed
+            ? await Get<IReadOnlyList<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(relativePath)}&include=XRefs,ReleaseInfo&limit=10").ConfigureAwait(false)
+            : await Get<IReadOnlyList<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(relativePath)}&include=XRefs&includeDataFrom=AniDB&limit=10").ConfigureAwait(false);
 
     #region File User Stats
 
@@ -513,11 +505,9 @@ public class ShokoApiClient : IDisposable {
         => GetOrNull<Images>($"/api/v3/Series/{seriesId}/Images", cancellationToken: cancellationToken);
 
     public async Task<IReadOnlyList<File>> GetFilesForShokoSeries(string seriesId)
-    {
-        if (HasPluginsExposed)
-            return (await GetOrNull<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? [];
-        return (await GetOrNull<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
-    }
+        => HasPluginsExposed
+            ? (await GetOrNull<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? []
+            : (await GetOrNull<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
 
     public async Task<IReadOnlyList<TmdbEpisodeCrossReference>> GetTmdbCrossReferencesForShokoSeries(string seriesId)
         => (await GetOrNull<ListResult<TmdbEpisodeCrossReference>>($"/api/v3/Series/{seriesId}/TMDB/Show/CrossReferences/Episode?pageSize=0").ConfigureAwait(false))?.List ?? [];
@@ -559,11 +549,9 @@ public class ShokoApiClient : IDisposable {
         => GetOrNull<EpisodeImages>($"/api/v3/TMDB/Episode/{episodeId}/Images", cancellationToken: cancellationToken);
 
     public async Task<IReadOnlyList<File>> GetFilesForTmdbEpisode(string episodeId)
-    {
-        if (HasPluginsExposed)
-            return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Episode/{episodeId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? [];
-        return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Episode/{episodeId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
-    }
+        => HasPluginsExposed
+            ? (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Episode/{episodeId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? []
+            : (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Episode/{episodeId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
 
     #endregion
 
@@ -582,11 +570,9 @@ public class ShokoApiClient : IDisposable {
         => GetOrNull<Images>($"/api/v3/TMDB/Season/{seasonId}/Images", cancellationToken: cancellationToken);
 
     public async Task<IReadOnlyList<File>> GetFilesForTmdbSeason(string seasonId)
-    {
-        if (HasPluginsExposed)
-            return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? [];
-        return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
-    }
+        => HasPluginsExposed
+            ? (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? []
+            : (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
 
     #endregion
 
@@ -599,11 +585,9 @@ public class ShokoApiClient : IDisposable {
         => GetOrNull<Images>($"/api/v3/TMDB/Show/{showId}/Images", cancellationToken: cancellationToken);
 
     public async Task<IReadOnlyList<File>> GetFilesForTmdbShow(string showId)
-    {
-        if (HasPluginsExposed)
-            return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Show/{showId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? [];
-        return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Show/{showId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
-    }
+        => HasPluginsExposed
+            ? (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Show/{showId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? []
+            : (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Show/{showId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
 
     public async Task<IReadOnlyList<TmdbEpisodeCrossReference>> GetTmdbCrossReferencesForTmdbShow(string showId)
         => (await GetOrNull<ListResult<TmdbEpisodeCrossReference>>($"/api/v3/TMDB/Show/{showId}/Episode/CrossReferences?pageSize=0").ConfigureAwait(false))?.List ?? [];
@@ -622,11 +606,9 @@ public class ShokoApiClient : IDisposable {
         => GetOrNull<EpisodeImages>($"/api/v3/TMDB/Movie/{movieId}/Images", cancellationToken: cancellationToken);
 
     public async Task<IReadOnlyList<File>> GetFilesForTmdbMovie(string movieId)
-    {
-        if (HasPluginsExposed)
-            return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? [];
-        return (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
-    }
+        => HasPluginsExposed
+            ? (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/File?pageSize=0&include=XRefs,ReleaseInfo").ConfigureAwait(false))?.List ?? []
+            : (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false))?.List ?? [];
 
     public async Task<IReadOnlyList<TmdbMovieCrossReference>> GetTmdbCrossReferencesForTmdbMovie(string showId)
         => await GetOrNull<IReadOnlyList<TmdbMovieCrossReference>>($"/api/v3/TMDB/Movie/{showId}/CrossReferences").ConfigureAwait(false) ?? [];
