@@ -74,6 +74,7 @@ public class ShokofinHostController(ILogger<ShokofinHostController> logger, Shok
     /// <summary>
     /// Simple forward to grab the image from Shoko Server.
     /// </summary>
+    [AllowAnonymous]
     [ResponseCache(Duration = 3600 /* 1 hour in seconds */)]
     [ProducesResponseType(typeof(FileStreamResult), 200)]
     [ProducesResponseType(404)]
