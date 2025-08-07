@@ -255,12 +255,39 @@ public class ShokoExternalUrlHandler(ILogger<ShokoExternalUrlHandler> logger, Sh
             return result;
         }
 
-        var url = Plugin.Instance.Configuration.WebUrl;
         if (await apiManager.GetEpisodeInfo(shokoEpisodeId) is not { } episodeInfo) {
             logger.LogWarning("Unable to find episode info for Virtual Episode {EpisodePath}.", episode.Path);
             return result;
         }
 
+        AddEpisodeInfoUrls(ref result, episodeInfo);
+
+        return result.Distinct().ToList();
+    }
+
+    private async Task<IReadOnlyCollection<(string Name, string Url)>> GetVideoUrlsAsync(Video video) {
+        var result = new List<(string, string)>();
+        using (tracker.Enter("Get External Urls for Video (Async)")) {
+            if (!lookup.TryGetFileAndSeriesIdFor(video, out var fileId, out var seriesId))
+                return result;
+
+            var url = Plugin.Instance.Configuration.WebUrl;
+            result.Add(($"{ProviderNames.Shoko} (f{fileId})", $"{url}/collection/series/{seriesId}/files?fileId={fileId}"));
+            result.Add(($"{ProviderNames.Shoko} (s{seriesId})", $"{url}/collection/series/{seriesId}"));
+            if (await apiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false) is not { } fileInfo) {
+                logger.LogWarning("Unable to find file info for Video {VideoId}. (File={FileId},Series={SeriesId})", video.Path, fileId, seriesId);
+                return result;
+            }
+
+            foreach (var (episodeInfo, _, _) in fileInfo.EpisodeList)
+                AddEpisodeInfoUrls(ref result, episodeInfo);
+        }
+
+        return result.Distinct().ToList();
+    }
+
+    private static void AddEpisodeInfoUrls(ref List<(string Name, string Url)> result, API.Info.EpisodeInfo episodeInfo) {
+        var url = Plugin.Instance.Configuration.WebUrl;
         foreach (var shokoInfo in episodeInfo.ShokoEpisodes)
             result.Add(($"{ProviderNames.Shoko} (e{shokoInfo.ShokoEpisodeId}) (s{shokoInfo.ShokoSeriesId})", $"{url}/collection/series/{shokoInfo.ShokoSeriesId}/episodes?episodeId={shokoInfo.ShokoEpisodeId}"));
 
@@ -287,57 +314,7 @@ public class ShokoExternalUrlHandler(ILogger<ShokoExternalUrlHandler> logger, Sh
             if (!string.IsNullOrEmpty(tmdbInfo.TmdbMovieCollectionId))
                 result.Add(($"{ProviderNames.Tmdb} (c{tmdbInfo.TmdbMovieCollectionId})", $"https://www.themoviedb.org/collection/{tmdbInfo.TmdbMovieCollectionId}"));
         }
-
-        return result.Distinct().ToList();
     }
-
-    private async Task<IReadOnlyCollection<(string Name, string Url)>> GetVideoUrlsAsync(Video video) {
-        var result = new List<(string, string)>();
-        using (tracker.Enter("Get External Urls for Video (Async)")) {
-            if (!lookup.TryGetFileAndSeriesIdFor(video, out var fileId, out var seriesId))
-                return result;
-
-            var url = Plugin.Instance.Configuration.WebUrl;
-            result.Add(($"{ProviderNames.Shoko} (f{fileId})", $"{url}/collection/series/{seriesId}/files?fileId={fileId}"));
-            result.Add(($"{ProviderNames.Shoko} (s{seriesId})", $"{url}/collection/series/{seriesId}"));
-            if (await apiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false) is not { } fileInfo) {
-                logger.LogWarning("Unable to find file info for Video {VideoId}. (File={FileId},Series={SeriesId})", video.Path, fileId, seriesId);
-                return result;
-            }
-
-            foreach (var (episodeInfo, _, _) in fileInfo.EpisodeList) {
-                foreach (var shokoInfo in episodeInfo.ShokoEpisodes)
-                    result.Add(($"{ProviderNames.Shoko} (e{shokoInfo.ShokoEpisodeId}) (s{shokoInfo.ShokoSeriesId})", $"{url}/collection/series/{shokoInfo.ShokoSeriesId}/episodes?episodeId={shokoInfo.ShokoEpisodeId}"));
-
-                foreach (var anidbInfo in episodeInfo.AnidbEpisodes)
-                    result.Add(($"{ProviderNames.Anidb} (e{anidbInfo.AnidbAnimeId}) (a{anidbInfo.AnidbAnimeId} > {anidbInfo.GetEpisodeNumberText()})", $"https://anidb.net/episode/{anidbInfo.AnidbAnimeId}"));
-
-                foreach (var tmdbInfo in episodeInfo.TmdbEpisodes) {
-                    if (tmdbInfo.UsesAlternateOrdering)
-                        result.Add((
-                            $"{ProviderNames.Tmdb} (e{tmdbInfo.TmdbEpisodeId}) (tv{tmdbInfo.TmdbShowId} > g{tmdbInfo.TmdbAlternateOrderingId} > S{tmdbInfo.SeasonNumber}E{tmdbInfo.EpisodeNumber})",
-                            $"https://www.themoviedb.org/tv/{tmdbInfo.TmdbShowId}/season/{tmdbInfo.OriginalSeasonNumber}episode/{tmdbInfo.OriginalEpisodeNumber}"
-                        ));
-                    else
-                        result.Add((
-                            $"{ProviderNames.Tmdb} (e{tmdbInfo.TmdbEpisodeId}) (tv{tmdbInfo.TmdbShowId} > S{tmdbInfo.SeasonNumber}E{tmdbInfo.EpisodeNumber})",
-                            $"https://www.themoviedb.org/tv/{tmdbInfo.TmdbShowId}/season/{tmdbInfo.SeasonNumber}episode/{tmdbInfo.EpisodeNumber}"
-                        ));
-                    if (!string.IsNullOrEmpty(tmdbInfo.TvdbEpisodeId))
-                        result.Add(($"{ProviderNames.Tvdb} (e{tmdbInfo.TmdbEpisodeId})", $"https://thetvdb.com/?tab=episode&id={tmdbInfo.TmdbEpisodeId}"));
-                }
-
-                foreach (var tmdbInfo in episodeInfo.TmdbMovies) {
-                    result.Add(($"{ProviderNames.Tmdb} (m{tmdbInfo.TmdbMovieId})", $"https://www.themoviedb.org/movie/{tmdbInfo.TmdbMovieId}"));
-                    if (!string.IsNullOrEmpty(tmdbInfo.TmdbMovieCollectionId))
-                        result.Add(($"{ProviderNames.Tmdb} (c{tmdbInfo.TmdbMovieCollectionId})", $"https://www.themoviedb.org/collection/{tmdbInfo.TmdbMovieCollectionId}"));
-                }
-            }
-        }
-
-        return result.Distinct().ToList();
-    }
-
 
     #endregion
 }
