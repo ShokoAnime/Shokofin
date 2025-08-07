@@ -216,16 +216,9 @@ public static class ImageUtility {
     private static IEnumerable<RemoteImageInfo> ProcessImages(IReadOnlyList<API.Models.Image> images, ImageType imageType, string metadataLanguage, string[] originLanguages, bool displayMode, ImageConfiguration config,  IReadOnlyList<ImageLanguageType> orderedTypes) {
         var filteredImages = images
             .Select(image => (image, type: GetTypeForImage(image, metadataLanguage, originLanguages)));
-        if (!displayMode) {
-            // Enable display mode if we're not going to filter the list.
-            if (orderedTypes.Count == 0)
-                displayMode = true;
-            // Else filter the list so we only have the images we're interested in.
-            else
-                filteredImages = filteredImages
-                    .Where(tuple => config.UsePreferred && tuple.image.IsPreferred || orderedTypes.Contains(tuple.type));
-        }
-
+        if (!displayMode && orderedTypes.Count > 0)
+            filteredImages = filteredImages
+                .Where(tuple => config.UsePreferred && tuple.image.IsPreferred || orderedTypes.Contains(tuple.type));
         var orderedImages = filteredImages
             .OrderByDescending(tuple => !config.UsePreferred || tuple.image.IsPreferred)
             .ThenByDescending(tuple => orderedTypes.IndexOf(tuple.type))
