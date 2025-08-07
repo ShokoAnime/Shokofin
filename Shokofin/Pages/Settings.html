@@ -2427,7 +2427,7 @@ form:not(.advanced-mode) .advanced-only {
                             <span>${Save}</span>
                         </button>
                     </fieldset>
-                    <fieldset id="Debug_Section" class="verticalSection verticalSection-extrabottompadding advanced-only" hidden>
+                    <fieldset id="Debug_Section" class="verticalSection verticalSection-extrabottompadding debug-only" hidden>
                         <legend>
                             <h3>Debug Settings</h3>
                         </legend>
@@ -2439,21 +2439,21 @@ form:not(.advanced-mode) .advanced-only {
                             <input is="emby-input" type="number" id="Debug_MaxInFlightRequests" label="Max In-Flight Requests" placeholder="0" type="number" pattern="[0-9]*" min="1" max="1000" step="1" />
                             <div class="fieldDescription">Maximum number of requests of outgoing traffic at any given time.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="Debug_AutoClearClientCache" />
                                 <span>Auto-Clear Client Cache</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Whether or not to automatically clear the API client cache.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="Debug_AutoClearManagerCache" />
                                 <span>Auto-Clear Manager Cache</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Whether or not to automatically clear the API manager's cache.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="Debug_AutoClearVfsCache" />
                                 <span>Auto-Clear VFS Cache</span>
