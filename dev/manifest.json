@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.26",
+                "changelog": "`fix`: **Fix return type for Shoko episodes endpoint (take 2)**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.26/shoko_5.0.4.26.zip",
+                "checksum": "562ab993fe7f3de3b64a679361fcf62e",
+                "timestamp": "2025-08-08T16:11:54Z"
+            },
+            {
                 "version": "5.0.4.25",
                 "changelog": "`fix`: **Fix return type for Shoko episodes endpoint**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.22/shoko_5.0.4.22.zip",
                 "checksum": "0164bda4c85c4df192168e98de796f04",
                 "timestamp": "2025-08-07T05:13:24Z"
-            },
-            {
-                "version": "5.0.4.21",
-                "changelog": "`fix`: **Cache plugins exposed state**:\n\nCache the 'has plugins API' state to prevent needing to contact the server before attempting to establish a SignalR connection, among other things.\n\nThis change will fix the regression causing the auto-start SignalR option to causing Jellyfin to fail to start properly if the Shoko Server instance is available while Jellyfin is starting.\n\n`chore`: **Minor tweaks**.\n\n`fix`: **Re-allow anon. traffic for images**:\n\nFixes the regression caused by \"fix: make endpoints use auth\".\n\n`fix`: **Don't auto enable display mode for auto search**:\n\nFixes a bug where auto image search would use display mode values causing the selection logic to be more dependent on Jellyfin then on the plugin due to community ratings and/or image dimensions being set.\n\n`chore`: **Consolidate code paths**.\n\n`fix`: **Fix tmdb episode page urls**.\n\n`misc`: **Tweak logging during signalr connect**.\n\n`misc`: **Tweak signalr server timeout to match server**.\n\n`feat`: **Add option to set image dimensions in auto image search**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.21/shoko_5.0.4.21.zip",
-                "checksum": "e644060a4b1394cfbe6dabb0cb236504",
-                "timestamp": "2025-08-07T04:53:58Z"
             }
         ]
     }
