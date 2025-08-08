@@ -440,7 +440,7 @@ public class ShokoApiClient : IDisposable {
         => (await GetOrNull<ListResult<ShokoEpisode>>($"/api/v3/Series/{seriesId}/Episode?pageSize=0&includeHidden=true&includeMissing=true&includeUnaired=true&includeDataFrom=AniDB&includeXRefs=true").ConfigureAwait(false))?.List ?? [];
 
     public async Task<IReadOnlyList<ShokoEpisode>> GetShokoEpisodesForTmdbEpisode(string tmdbEpisodeId)
-        => (await GetOrNull<ListResult<ShokoEpisode>>($"/api/v3/TMDB/Episode/{tmdbEpisodeId}/Shoko/Episode?includeDataFrom=AniDB&includeXRefs=true").ConfigureAwait(false))?.List ?? [];
+        => await GetOrNull<IReadOnlyList<ShokoEpisode>>($"/api/v3/TMDB/Episode/{tmdbEpisodeId}/Shoko/Episode?includeDataFrom=AniDB&includeXRefs=true").ConfigureAwait(false) ?? [];
 
     public async Task<IReadOnlyList<ShokoEpisode>> GetShokoEpisodesForTmdbMovie(string tmdbMovieId)
         => (await GetOrNull<ListResult<ShokoEpisode>>($"/api/v3/TMDB/Movie/{tmdbMovieId}/Shoko/Episode?includeDataFrom=AniDB&includeXRefs=true").ConfigureAwait(false))?.List ?? [];
