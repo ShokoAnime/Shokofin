@@ -443,7 +443,7 @@ public class ShokoApiClient : IDisposable {
         => await GetOrNull<IReadOnlyList<ShokoEpisode>>($"/api/v3/TMDB/Episode/{tmdbEpisodeId}/Shoko/Episode?includeDataFrom=AniDB&includeXRefs=true").ConfigureAwait(false) ?? [];
 
     public async Task<IReadOnlyList<ShokoEpisode>> GetShokoEpisodesForTmdbMovie(string tmdbMovieId)
-        => (await GetOrNull<ListResult<ShokoEpisode>>($"/api/v3/TMDB/Movie/{tmdbMovieId}/Shoko/Episode?includeDataFrom=AniDB&includeXRefs=true").ConfigureAwait(false))?.List ?? [];
+        => await GetOrNull<IReadOnlyList<ShokoEpisode>>($"/api/v3/TMDB/Movie/{tmdbMovieId}/Shoko/Episode?includeDataFrom=AniDB&includeXRefs=true").ConfigureAwait(false) ?? [];
 
     public async Task<EpisodeImages?> GetImagesForShokoEpisode(string episodeId, CancellationToken cancellationToken = default) {
         var episodeImages = await GetOrNull<EpisodeImages>($"/api/v3/Episode/{episodeId}/Images", cancellationToken: cancellationToken).ConfigureAwait(false);
