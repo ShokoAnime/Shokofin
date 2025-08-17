@@ -855,10 +855,10 @@ public class VirtualFileSystemService {
             if (extrasFolders != null) {
                 foreach (var extrasFolder in extrasFolders)
                     foreach (var episodeInfo in season.EpisodeList.Where(e => e.IsAvailable))
-                        folders.Add(Path.Join(vfsPath, $"{showName} [{ProviderNames.ShokoSeries}={show.Id}] [{ProviderNames.ShokoEpisode}={episodeInfo.Id}]", extrasFolder));
+                        folders.Add(Path.Join(vfsPath, $"{showName} [{ProviderNames.ShokoSeries}={season.Id}] [{ProviderNames.ShokoEpisode}={episodeInfo.Id}]", extrasFolder));
             }
             else {
-                folders.Add(Path.Join(vfsPath, $"{showName} [{ProviderNames.ShokoSeries}={show.Id}] [{ProviderNames.ShokoEpisode}={episode.Id}]"));
+                folders.Add(Path.Join(vfsPath, $"{showName} [{ProviderNames.ShokoSeries}={season.Id}] [{ProviderNames.ShokoEpisode}={episode.Id}]"));
                 episodeName = "Movie";
             }
         }
