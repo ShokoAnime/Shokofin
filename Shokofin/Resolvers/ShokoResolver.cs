@@ -143,16 +143,26 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                             return [];
                         }
 
-                        var show = ApiManager.GetShowInfoBySeasonId(seasonId)
-                            .ConfigureAwait(false)
-                            .GetAwaiter()
-                            .GetResult();
-                        if (show is null || !show.IsAvailable) {
-                            pathsToRemoveBag.Add((dirInfo.FullName, true));
-                            return [];
-                        }
+                        if (dirInfo.Name.TryGetAttributeValue(ProviderNames.ShokoEpisode, out var episodeId)) {
+                            var episode = ApiManager.GetEpisodeInfo(episodeId)
+                                .ConfigureAwait(false)
+                                .GetAwaiter()
+                                .GetResult();
+                            if (episode is null || !episode.IsAvailable) {
+                                pathsToRemoveBag.Add((dirInfo.FullName, true));
+                                return [];
+                            }
 
-                        if (createMovies && (season.Type is SeriesType.Movie || collectionType is CollectionType.movies && !Plugin.Instance.Configuration.FilterMovieLibraries)) {
+                            if (episode.SeasonId != seasonId) {
+                                pathsToRemoveBag.Add((dirInfo.FullName, true));
+                                return [];
+                            }
+
+                            if (!(createMovies && (season.Type is SeriesType.Movie || collectionType is CollectionType.movies && !Plugin.Instance.Configuration.FilterMovieLibraries))) {
+                                pathsToRemoveBag.Add((dirInfo.FullName, true));
+                                return [];
+                            }
+
                             return FileSystem.GetFiles(dirInfo.FullName)
                                 .AsParallel()
                                 .Select(fileInfo => {
@@ -185,6 +195,20 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                                     } as BaseItem;
                                 })
                                 .ToArray();
+                        }
+
+                        var show = ApiManager.GetShowInfoBySeasonId(seasonId)
+                            .ConfigureAwait(false)
+                            .GetAwaiter()
+                            .GetResult();
+                        if (show is null || !show.IsAvailable) {
+                            pathsToRemoveBag.Add((dirInfo.FullName, true));
+                            return [];
+                        }
+
+                        if (seasonId != show.Id) {
+                            pathsToRemoveBag.Add((dirInfo.FullName, true));
+                            return [];
                         }
 
                         return [
