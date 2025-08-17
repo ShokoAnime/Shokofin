@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.27",
+                "changelog": "`fix`: **Better cleanup of folders in root of VFS**.\n\n`fix`: **Use season id for movies in VFS folder names**.\n\n`fix`: **Don't rely on season id in folder to iterate movie files**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.27/shoko_5.0.4.27.zip",
+                "checksum": "201d104a5c3c7aeddffdafdca33eceea",
+                "timestamp": "2025-08-17T22:57:25Z"
+            },
+            {
                 "version": "5.0.4.26",
                 "changelog": "`fix`: **Fix return type for Shoko episodes endpoint (take 2)**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.23/shoko_5.0.4.23.zip",
                 "checksum": "af865fecb281e9412454e6df2d02d91f",
                 "timestamp": "2025-08-07T22:58:17Z"
-            },
-            {
-                "version": "5.0.4.22",
-                "changelog": "`fix`: **Set missing defaults for image config**.\n\n`misc`: **Mark image settings basic/non-advanced**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.22/shoko_5.0.4.22.zip",
-                "checksum": "0164bda4c85c4df192168e98de796f04",
-                "timestamp": "2025-08-07T05:13:24Z"
             }
         ]
     }
