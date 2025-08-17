@@ -222,7 +222,7 @@ public class VirtualFileSystemService {
                         // movie-folder
                         if (seriesName.TryGetAttributeValue(ProviderNames.ShokoEpisode, out var episodeId) ) {
                             pathToClean = path;
-                            allFiles = GetFilesForMovie(episodeId, seasonId, mediaConfigs, fileChecker);
+                            allFiles = GetFilesForMovie(episodeId, mediaConfigs, fileChecker);
                             break;
                         }
 
@@ -416,16 +416,17 @@ public class VirtualFileSystemService {
         );
     }
 
-    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForMovie(string episodeId, string seasonId, IReadOnlyList<MediaFolderConfiguration> mediaConfigs, Func<string, bool> fileExists) {
+    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForMovie(string episodeId, IReadOnlyList<MediaFolderConfiguration> mediaConfigs, Func<string, bool> fileExists) {
         var start = DateTime.UtcNow;
         var totalFiles = 0;
-        var seasonInfo = ApiManager.GetSeasonInfo(seasonId)
+        var seasonInfo = ApiManager.GetSeasonInfoForEpisode(episodeId)
             .ConfigureAwait(false)
             .GetAwaiter()
             .GetResult();
         if (seasonInfo is null)
             yield break;
 
+        var seasonId = seasonInfo.Id;
         Logger.LogDebug(
             "Iterating files to potentially use within {Count} media folders. (Episode={EpisodeId},Season={SeasonId},Library={LibraryId})",
             mediaConfigs.Count,
