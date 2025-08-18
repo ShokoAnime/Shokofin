@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
@@ -8,6 +9,9 @@ using MediaBrowser.Common.Providers;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using Shokofin.ExternalIds;
+
+using TvSeries = MediaBrowser.Controller.Entities.TV.Series;
+using TvSeriesInfo = MediaBrowser.Controller.Providers.SeriesInfo;
 
 namespace Shokofin.Extensions;
 
@@ -165,6 +169,21 @@ public static partial class StringExtensions {
     }
 
     public static bool TryGetSeasonId(this IHasProviderIds providerIds, [NotNullWhen(true)] out string? seasonId) {
+        if (
+            providerIds is TvSeries { Path.Length: > 0 } series &&
+            series.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar) &&
+            series.Path.TryGetAttributeValue(ProviderNames.ShokoSeries, out seasonId)
+        ) {
+            return true;
+        }
+        if (
+            providerIds is TvSeriesInfo { Path.Length: > 0 } seriesInfo &&
+            seriesInfo.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar) &&
+            seriesInfo.Path.TryGetAttributeValue(ProviderNames.ShokoSeries, out seasonId)
+        ) {
+            return true;
+        }
+
         if (!providerIds.TryGetProviderId(ShokoInternalId.Name, out var internalId)) {
             seasonId = null;
             return false;
