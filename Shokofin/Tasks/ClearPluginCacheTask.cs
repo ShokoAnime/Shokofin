@@ -33,10 +33,10 @@ public class ClearPluginCacheTask(
     public string Key => "ShokoClearPluginCache";
 
     /// <inheritdoc />
-    public bool IsHidden => !Plugin.Instance.Configuration.AdvancedMode;
+    public bool IsHidden => !Plugin.Instance.Configuration.Debug.ShowInUI;
 
     /// <inheritdoc />
-    public bool IsEnabled => Plugin.Instance.Configuration.AdvancedMode;
+    public bool IsEnabled => Plugin.Instance.Configuration.Debug.ShowInUI;
 
     /// <inheritdoc />
     public bool IsLogged => true;
