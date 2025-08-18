@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Model.Tasks;
 using Shokofin.API;
 using Shokofin.Events;
+using Shokofin.MergeVersions;
 using Shokofin.Resolvers;
 
 namespace Shokofin.Tasks;
@@ -16,6 +17,7 @@ public class ClearPluginCacheTask(
     ShokoApiManager _apiManager,
     ShokoApiClient _apiClient,
     VirtualFileSystemService _vfsService,
+    MergeVersionsManager _mergeVersionsManager,
     EventDispatchService _eventDispatchService
 ) : IScheduledTask, IConfigurableScheduledTask {
     /// <inheritdoc />
@@ -46,6 +48,7 @@ public class ClearPluginCacheTask(
         _apiClient.Clear();
         _apiManager.Clear();
         _vfsService.Clear();
+        _mergeVersionsManager.Clear();
         _eventDispatchService.Clear();
         return Task.CompletedTask;
     }
