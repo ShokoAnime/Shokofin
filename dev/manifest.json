@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.29",
+                "changelog": "`misc`: **Update setting text**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.29/shoko_5.0.4.29.zip",
+                "checksum": "0273e73cd394cecf97ad088e69228147",
+                "timestamp": "2025-08-21T13:19:43Z"
+            },
+            {
                 "version": "5.0.4.28",
                 "changelog": "`misc`: **Clear merge manager cache in clear task**.\n\n`misc`: **Hide clear task behind debug flag**.\n\n`fix`: **Even faster season id lookup for series in VFS**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.25/shoko_5.0.4.25.zip",
                 "checksum": "d2deaedaef8754b3c741e22b875177f0",
                 "timestamp": "2025-08-08T16:03:30Z"
-            },
-            {
-                "version": "5.0.4.24",
-                "changelog": "`chore`: **Tweak style**. (_Skip CI_)\n\n`misc`: **Expose VFS thread debug option**.\n\n`misc`: **Fix mislabeled debug options**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.24/shoko_5.0.4.24.zip",
-                "checksum": "923308191b079b9e58d7117706432abb",
-                "timestamp": "2025-08-07T23:49:45Z"
             }
         ]
     }
