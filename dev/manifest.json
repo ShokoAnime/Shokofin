@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.30",
+                "changelog": "`feat`: **Display images for season 0 in images search performed by client(s)**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.30/shoko_5.0.4.30.zip",
+                "checksum": "cd8b68a54b0d16211e92c668993a1d7e",
+                "timestamp": "2025-08-21T13:33:20Z"
+            },
+            {
                 "version": "5.0.4.29",
                 "changelog": "`misc`: **Update setting text**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.26/shoko_5.0.4.26.zip",
                 "checksum": "562ab993fe7f3de3b64a679361fcf62e",
                 "timestamp": "2025-08-08T16:11:54Z"
-            },
-            {
-                "version": "5.0.4.25",
-                "changelog": "`fix`: **Fix return type for Shoko episodes endpoint**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.25/shoko_5.0.4.25.zip",
-                "checksum": "d2deaedaef8754b3c741e22b875177f0",
-                "timestamp": "2025-08-08T16:03:30Z"
             }
         ]
     }
