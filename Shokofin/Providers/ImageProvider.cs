@@ -25,7 +25,8 @@ public class ImageProvider(IHttpClientFactory _httpClientFactory, ILogger<ImageP
     public int Order => 0;
 
     public async Task<IEnumerable<RemoteImageInfo>> GetImages(BaseItem item, CancellationToken cancellationToken) {
-        var displayMode = !Plugin.Instance.Configuration.Image.DebugMode && ImageHostUrl.CurrentItemId is { } currentItemId && currentItemId == item.Id;
+        var isRequest = ImageHostUrl.CurrentItemId is { } currentItemId && currentItemId == item.Id;
+        var displayMode = !Plugin.Instance.Configuration.Image.DebugMode && isRequest;
         var list = new List<RemoteImageInfo>();
         var metadataLanguage = item.GetPreferredMetadataLanguage();
         var baseKind = item.GetBaseItemKind();
@@ -54,7 +55,11 @@ public class ImageProvider(IHttpClientFactory _httpClientFactory, ILogger<ImageP
                     _logger.LogInformation("Getting {Count} images for series {SeriesName} (MainSeason={MainSeasonId},Language={MetadataLanguage})", list.Count, series.Name, seasonId, metadataLanguage);
                     break;
                 }
-                case Season season: {
+                // Per a user request, we'll allow getting images for the "Specials" season when the client requests them.
+                case Season { IndexNumber: 0 } season when isRequest: {
+                    return await GetImages(season.Series, cancellationToken).ConfigureAwait(false);
+                }
+                case Season { IndexNumber: > 0 } season: {
                     if (!_lookup.TryGetSeasonIdFor(season, out var seasonId) || await _apiManager.GetSeasonInfo(seasonId).ConfigureAwait(false) is not { } seasonInfo)
                         break;
 
