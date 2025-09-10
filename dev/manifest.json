@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.35",
+                "changelog": "`refactor`: **Cache extra external urls at item refresh**:\n\nCache the external urls at item refresh because loading them on-demand seems laggy from a user's POV for larger/more-complex series/shows. Also enable it by default now that it's cached.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.35/shoko_5.0.4.35.zip",
+                "checksum": "302a3c3febe61d6c1f78b094d9619685",
+                "timestamp": "2025-09-10T04:40:29Z"
+            },
+            {
                 "version": "5.0.4.34",
                 "changelog": "`fix`: **Path to remove is a folder**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.31/shoko_5.0.4.31.zip",
                 "checksum": "e37a7f9b2cbc223a0ad0e7c0f4d58d35",
                 "timestamp": "2025-08-25T22:32:19Z"
-            },
-            {
-                "version": "5.0.4.30",
-                "changelog": "`feat`: **Display images for season 0 in images search performed by client(s)**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.30/shoko_5.0.4.30.zip",
-                "checksum": "cd8b68a54b0d16211e92c668993a1d7e",
-                "timestamp": "2025-08-21T13:33:20Z"
             }
         ]
     }
