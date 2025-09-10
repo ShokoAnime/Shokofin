@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.32",
+                "changelog": "`fix`: **Ignore external files within designated directories for extras**.\n\n`fix`: **Better removal of non-managed folders in root of VFS**:\n\nAdded some better removal logic of non-managed folders in the root of a VFS by returning a set of all files and folders that should be present in the VFS and flagging any it finds for removal for the existing removal logic to handle.\n\n`misc`: **Change log level of log statements for when a media folder is not found**.\n\n`chore`: **Remove unreachable/dead code**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.32/shoko_5.0.4.32.zip",
+                "checksum": "d7e4b6b23d5b85e6e616d1536af9451d",
+                "timestamp": "2025-09-10T02:08:34Z"
+            },
+            {
                 "version": "5.0.4.31",
                 "changelog": "`fix`: **Fix warning id**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.28/shoko_5.0.4.28.zip",
                 "checksum": "2d26ea886296cfe4134bfd413ad24462",
                 "timestamp": "2025-08-18T01:29:16Z"
-            },
-            {
-                "version": "5.0.4.27",
-                "changelog": "`fix`: **Better cleanup of folders in root of VFS**.\n\n`fix`: **Use season id for movies in VFS folder names**.\n\n`fix`: **Don't rely on season id in folder to iterate movie files**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.27/shoko_5.0.4.27.zip",
-                "checksum": "201d104a5c3c7aeddffdafdca33eceea",
-                "timestamp": "2025-08-17T22:57:25Z"
             }
         ]
     }
