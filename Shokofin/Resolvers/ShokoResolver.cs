@@ -127,7 +127,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
 
                         // We have an id, but the path does not belong to the generated set of paths.
                         if (!paths.Contains(dirInfo.FullName)) {
-                            pathsToRemoveBag.Add((dirInfo.FullName, false));
+                            pathsToRemoveBag.Add((dirInfo.FullName, true));
                             return [];
                         }
 
