@@ -78,7 +78,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve path \"{fileInfo.FullName}\".");
-            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName).ConfigureAwait(false);
+            var (vfsPath, shouldContinue, _) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
@@ -120,7 +120,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve children of \"{parent.Path}\". (Children={fileInfoList.Count})");
-            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path).ConfigureAwait(false);
+            var (vfsPath, shouldContinue, paths) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
@@ -133,6 +133,12 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                     .SelectMany(dirInfo => {
                         if (!dirInfo.Name.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seasonId))
                             return [];
+
+                        // We have an id, but the path does not belong to the generated set of paths.
+                        if (!paths.Contains(dirInfo.FullName)) {
+                            pathsToRemoveBag.Add((dirInfo.FullName, false));
+                            return [];
+                        }
 
                         var season = ApiManager.GetSeasonInfo(seasonId)
                             .ConfigureAwait(false)

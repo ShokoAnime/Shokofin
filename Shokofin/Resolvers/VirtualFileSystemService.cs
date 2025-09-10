@@ -163,23 +163,24 @@ public class VirtualFileSystemService {
     /// <param name="mediaFolder">The media folder to generate a structure for.</param>
     /// <param name="path">The file or folder within the media folder to generate a structure for.</param>
     /// <returns>The VFS path, if it succeeded.</returns>
-    public async Task<(string? vfsPath, bool shouldContinue)> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path) {
+    public async Task<(string? vfsPath, bool shouldContinue, HashSet<string> alteredPaths)> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path) {
         var (vfsPath, mainMediaFolderPath, mediaConfigs, skipGeneration) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType, config => config.IsVirtualFileSystemEnabled).ConfigureAwait(false);
         if (string.IsNullOrEmpty(vfsPath) || string.IsNullOrEmpty(mainMediaFolderPath) || mediaConfigs.Count is 0)
-            return (null, false);
+            return (null, false, []);
 
         if (!Plugin.Instance.CanCreateSymbolicLinks)
             throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
 
         var shouldContinue = path.StartsWith(vfsPath + Path.DirectorySeparatorChar) || path == mainMediaFolderPath;
         if (!shouldContinue)
-            return (vfsPath, false);
+            return (vfsPath, false, []);
 
         // Skip link generation if we've already generated for the library.
-        if (DataCache.TryGetValue<bool>($"should-skip-vfs-path:{vfsPath}", out var shouldReturnPath))
+        if (DataCache.TryGetValue<HashSet<string>?>($"should-skip-vfs-path:{vfsPath}", out var alteredPaths))
             return (
-                shouldReturnPath ? vfsPath : null,
-                true
+                alteredPaths is not null ? vfsPath : null,
+                true,
+                alteredPaths ?? []
             );
 
         // Check full path and all parent directories if they have been indexed.
@@ -187,8 +188,8 @@ public class VirtualFileSystemService {
             var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).Prepend(vfsPath).ToArray();
             while (pathSegments.Length > 1) {
                 var subPath = Path.Join(pathSegments);
-                if (DataCache.TryGetValue<bool>($"should-skip-vfs-path:{subPath}", out _))
-                    return (vfsPath, true);
+                if (DataCache.TryGetValue($"should-skip-vfs-path:{subPath}", out alteredPaths))
+                    return (vfsPath, true, alteredPaths ?? []);
                 pathSegments = pathSegments.SkipLast(1).ToArray();
             }
         }
@@ -197,7 +198,7 @@ public class VirtualFileSystemService {
         var key = !path.StartsWith(vfsPath) && mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath))
             ? $"should-skip-vfs-path:{vfsPath}"
             : $"should-skip-vfs-path:{path}";
-        shouldReturnPath = await DataCache.GetOrCreateAsync<bool>(key, async () => {
+        alteredPaths = await DataCache.GetOrCreateAsync(key, async () => {
             Logger.LogInformation(
                 "Generating VFS structure for library {LibraryName} at sub-path {Path}. This might take some time depending on your collection size. (Library={LibraryId})",
                 mediaConfigs[0].LibraryName,
@@ -210,7 +211,7 @@ public class VirtualFileSystemService {
             IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
             if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
                 if (!TryGetFileCheckerForMediaFolders(mediaConfigs, out var fileChecker))
-                    return true;
+                    return AddParentDirectories(vfsPath, FileSystem.GetFileSystemEntryPaths(path, true));
 
                 var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
                 switch (pathSegments.Length) {
@@ -283,18 +284,18 @@ public class VirtualFileSystemService {
             // Iterate files in the "real" media folder.
             else if (mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath)) || path == vfsPath) {
                 if (!TryGetFileCheckerForMediaFolders(mediaConfigs, out var fileChecker))
-                    return true;
+                    return AddParentDirectories(vfsPath, FileSystem.GetFileSystemEntryPaths(vfsPath, true));
 
                 pathToClean = vfsPath;
                 allFiles = GetFilesForManagedFolders(mediaConfigs, fileChecker);
             }
 
             if (allFiles is null)
-                return false;
+                return null;
 
             // Skip generation if we're going to (re-)schedule a library scan.
             if (skipGeneration)
-                return true;
+                return AddParentDirectories(vfsPath, FileSystem.GetFileSystemEntryPaths(path.StartsWith(vfsPath + Path.DirectorySeparatorChar) ? path : vfsPath, true));
 
             // Generate and cleanup the structure in the VFS.
             var result = await GenerateStructure(collectionType, vfsPath, allFiles).ConfigureAwait(false);
@@ -305,12 +306,13 @@ public class VirtualFileSystemService {
             // for them and their sub-paths later, and also print the result.
             result.Print(Logger, mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath)) ? vfsPath : path);
 
-            return true;
+            return AddParentDirectories(vfsPath, result.Paths.ToArray());
         }).ConfigureAwait(false);
 
         return (
-            shouldReturnPath ? vfsPath : null,
-            true
+            alteredPaths is not null ? vfsPath : null,
+            true,
+            alteredPaths ?? []
         );
     }
 
@@ -1300,6 +1302,31 @@ public class VirtualFileSystemService {
         Logger.LogTrace("Cleaned {CleanedCount} directories in {DirectoryToClean} in {TimeSpent} (Total={TotalSpent})", cleaned, directoryToClean, nextStep - previousStep, nextStep - start);
 
         return result;
+    }
+
+    private static HashSet<string> AddParentDirectories(string rootDirectoryPath, IEnumerable<string> input) {
+        var allKnownPaths = new HashSet<string>(input);
+        var parentsToAdd = allKnownPaths
+            .SelectMany(filePath => {
+                var directoryPath = Path.GetDirectoryName(filePath);
+                var tuple = new List<(string path, int level)>();
+                while (!string.IsNullOrEmpty(directoryPath)) {
+                    var level = directoryPath == rootDirectoryPath ? 0 : directoryPath[(rootDirectoryPath.Length + 1)..].Split(Path.DirectorySeparatorChar).Length;
+                    tuple.Add((directoryPath, level));
+                    if (directoryPath == rootDirectoryPath)
+                        break;
+                    directoryPath = Path.GetDirectoryName(directoryPath);
+                }
+                return tuple;
+            })
+            .DistinctBy(tuple => tuple.path)
+            .OrderByDescending(tuple => tuple.level)
+            .ThenBy(tuple => tuple.path)
+            .Select(tuple => tuple.path)
+            .ToList();
+        foreach (var directoryPath in parentsToAdd)
+            allKnownPaths.Add(directoryPath);
+        return allKnownPaths;
     }
 
     private bool TryMoveExternalFile(IReadOnlyList<string> allKnownPaths, string externalFilePath, bool preview, out bool skip) {
