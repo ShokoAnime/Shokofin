@@ -16,6 +16,9 @@ public class AllImagesConfiguration {
     /// </summary>
     public ImageConfiguration Default { get; set; } = new() {
         UsePreferred = true,
+        PosterList = [
+            ImageLanguageType.None,
+        ],
     };
 
     /// <summary>
