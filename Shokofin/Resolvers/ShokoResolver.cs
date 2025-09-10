@@ -82,15 +82,6 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
-            if (parent.Id == mediaFolder.Id && fileInfo.IsDirectory) {
-                if (!fileInfo.Name.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seasonId))
-                    return null;
-
-                return new TvSeries() {
-                    Path = fileInfo.FullName,
-                };
-            }
-
             return null;
         }
         catch (Exception ex) {
