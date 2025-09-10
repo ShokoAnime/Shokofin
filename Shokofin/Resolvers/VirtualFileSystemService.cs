@@ -66,6 +66,7 @@ public class VirtualFileSystemService {
         "other",
         "extras",
         "trailers",
+        "theme-music",
     ];
 
     public VirtualFileSystemService(
@@ -1199,6 +1200,12 @@ public class VirtualFileSystemService {
                 result.RemovedTrickplayDirectories++;
             }
             else if (NamingOptions.SubtitleFileExtensions.Contains(extName) || NamingOptions.AudioFileExtensions.Contains(extName)) {
+                if (ShouldIgnoreFile(vfsPath, location)) {
+                    result.Paths.Add(location);
+                    result.SkippedExternalFiles++;
+                    continue;
+                }
+
                 if (TryMoveExternalFile(allKnownPaths, location, preview, out var skip)) {
                     result.Paths.Add(location);
                     if (skip) {
@@ -1224,7 +1231,7 @@ public class VirtualFileSystemService {
                 result.RemovedExternalFiles++;
             }
             else {
-                if (ShouldIgnoreVideo(vfsPath, location)) {
+                if (ShouldIgnoreFile(vfsPath, location)) {
                     result.Paths.Add(location);
                     result.SkippedVideos++;
                     continue;
@@ -1474,7 +1481,7 @@ public class VirtualFileSystemService {
         }
     }
 
-    private static bool ShouldIgnoreVideo(string vfsPath, string path) {
+    private static bool ShouldIgnoreFile(string vfsPath, string path) {
         // Ignore the video if it's within one of the folders to potentially ignore _and_ it doesn't have any shoko ids set.
         var parentDirectories = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).SkipLast(1).ToArray();
         return parentDirectories.Length > 1 && IgnoreFolderNames.Contains(parentDirectories.Last()) && !TryGetIdsForPath(path, out _, out _);
