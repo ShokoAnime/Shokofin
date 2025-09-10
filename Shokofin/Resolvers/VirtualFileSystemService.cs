@@ -318,7 +318,7 @@ public class VirtualFileSystemService {
 
     private bool TryGetFileCheckerForMediaFolders(IReadOnlyList<MediaFolderConfiguration> mediaConfigs, [NotNullWhen(true)] out Func<string, bool>? fileChecker) {
         if (mediaConfigs.Count is 0) {
-            Logger.LogDebug("No media folders to create a file checker for.");
+            Logger.LogWarning("No media folders to create a file checker for.");
             fileChecker = null;
             return false;
         }
@@ -328,11 +328,11 @@ public class VirtualFileSystemService {
         var shouldReturn = false;
         foreach (var mediaConfig in mediaConfigs) {
             if (!FileSystem.DirectoryExists(mediaConfig.MediaFolderPath)) {
-                Logger.LogDebug("Unable to create a file checker because a folder does not exist; {Path} (Library={LibraryId})", mediaConfig.MediaFolderPath, mediaConfig.LibraryId);
+                Logger.LogWarning("Unable to create a file checker because a folder does not exist; {Path} (Library={LibraryId})", mediaConfig.MediaFolderPath, mediaConfig.LibraryId);
                 shouldReturn = true;
             }
             else if (!FileSystem.GetFilePaths(mediaConfig.MediaFolderPath, true).Any()) {
-                Logger.LogDebug("Unable to create a file checker because the folder is empty; {Path} (Library={LibraryId})", mediaConfig.MediaFolderPath, mediaConfig.LibraryId);
+                Logger.LogWarning("Unable to create a file checker because the folder is empty; {Path} (Library={LibraryId})", mediaConfig.MediaFolderPath, mediaConfig.LibraryId);
                 shouldReturn = true;
             }
         }
