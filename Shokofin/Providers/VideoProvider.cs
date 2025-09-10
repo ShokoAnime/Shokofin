@@ -56,6 +56,8 @@ public class VideoProvider(IHttpClientFactory _httpClientFactory, ILogger<VideoP
             result.Item.SetProviderId(ProviderNames.ShokoFile, fileInfo.Id);
             result.Item.SetProviderId(ProviderNames.ShokoEpisode, episodeInfo.Id);
             result.Item.SetProviderId(ProviderNames.ShokoSeries, fileInfo.SeriesId);
+            if (Plugin.Instance.Configuration.DisplayMoreExternalUrls)
+                result.Item.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetEpisodeInfoUrls(fileInfo));
 
             result.HasMetadata = true;
 

@@ -100,7 +100,7 @@ public class PluginConfiguration : BasePluginConfiguration {
     /// <remarks>
     /// Will load the metadata to display the UIs, which may be slow.
     /// </remarks>
-    public bool DisplayMoreExternalUrls { get; set; } = false;
+    public bool DisplayMoreExternalUrls { get; set; } = true;
 
     /// <summary>
     /// Add IDs from the enabled provider to entities that support it.

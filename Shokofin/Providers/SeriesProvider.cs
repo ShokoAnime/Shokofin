@@ -75,6 +75,8 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
                 result.AddPerson(person);
 
             AddProviderIds(result.Item, showInfo.InternalId, seriesId: showInfo.ShokoSeriesId, groupId: showInfo.ShokoGroupId, anidbId: showInfo.AnidbAnimeId, tmdbId: showInfo.TmdbShowId, tvdbId: showInfo.TvdbShowId);
+            if (Plugin.Instance.Configuration.DisplayMoreExternalUrls)
+                result.Item.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetShowInfoUrls(showInfo));
 
             _logger.LogInformation("Found series {SeriesName} (MainSeason={MainSeasonId})", displayTitle, showInfo.Id);
 

@@ -66,6 +66,8 @@ public class MovieProvider(IHttpClientFactory _httpClientFactory, ILogger<MovieP
                 result.Item.SetProviderId(ProviderNames.Anidb, anidbAnimeId);
             if (Plugin.Instance.Configuration.AddTMDBId && episodeInfo.TmdbMovieId is { Length: > 0 } tmdbMovieId)
                 result.Item.SetProviderId(MetadataProvider.Tmdb, tmdbMovieId);
+            if (Plugin.Instance.Configuration.DisplayMoreExternalUrls)
+                result.Item.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetEpisodeInfoUrls(fileInfo));
 
             result.HasMetadata = true;
 

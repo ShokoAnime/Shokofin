@@ -228,6 +228,13 @@ public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<Epis
         }
 
         AddProviderIds(result, episodeId: episodeInfo.Id, fileId: file?.Id, seriesId: file?.SeriesId, anidbId: episodeInfo.AnidbEpisodeId, tmdbId: episodeInfo.TmdbEpisodeId, tvdbId: episodeInfo.TvdbEpisodeId);
+        if (Plugin.Instance.Configuration.DisplayMoreExternalUrls)
+            result.SetProviderId(
+                ProviderNames.Shoko,
+                file is not null
+                    ? ShokoExternalUrlHandler.GetEpisodeInfoUrls(file)
+                    : ShokoExternalUrlHandler.GetEpisodeInfoUrls(episodeInfo)
+            );
 
         return result;
     }
