@@ -87,6 +87,11 @@ public static partial class TextUtility {
     [GeneratedRegex(@"^(?:Special|Episode|Volume|OVA|OAD|Web) \d+$|^Part \d+ of \d+$|^Episode [COPRST]\d+$|^(?:OVA|OAD|Movie|Complete Movie|Short Movie|TV Special|Music Video|Web|Volume)$", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
     private static partial Regex InvalidEpisodeTitleRegex();
 
+    // Currently copied from these two locations until I have more time to research if there are even more patterns across languages to support;
+    // https://github.com/jellyfin/jellyfin/blob/4b6fb6c4bb2478badad068ce18aabe0c2955db48/Emby.Naming/TV/SeasonPathParser.cs#L13
+    // https://github.com/jellyfin/jellyfin/blob/4b6fb6c4bb2478badad068ce18aabe0c2955db48/Emby.Naming/TV/SeasonPathParser.cs#L16
+    [GeneratedRegex(@"^\s*((?:(?>\d+))(?:st|nd|rd|th|\.)*(?!\s*[Ee]\d+))\s*(?:[[시즌]*|[シーズン]*|[sS](?:eason|æson|esong|aison|taffel|eries|tagione|äsong|eizoen|easong|ezon|ezona|ezóna|ezonul)*|[tT](?:emporada)*|[kK](?:ausi)*|[Сс](?:езон)*)\s*(?<rightpart>.*)$|^\s*(?:[[시즌]*|[シーズン]*|[sS](?:eason|æson|esong|aison|taffel|eries|tagione|äsong|eizoen|easong|ezon|ezona|ezóna|ezonul)*|[tT](?:emporada)*|[kK](?:ausi)*|[Сс](?:езон)*)\s*(?:(?>\d+)(?!\s*[Ee]\d+))(?<rightpart>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
+    private static partial Regex InvalidSeriesOrSeasonTitleRegex();
 
     /// <summary>
     /// Determines which provider to use to provide the descriptions.
@@ -489,7 +494,7 @@ public static partial class TextUtility {
                     GetTitleForLanguage(baseInfo.Titles.Where(t => t.Source is "TMDB").ToList(), true, configuration.AllowAny, baseInfo.OriginalLanguageCode),
                 _ => null,
             };
-            if (!string.IsNullOrEmpty(title))
+            if (!string.IsNullOrEmpty(title) && !InvalidSeriesOrSeasonTitleRegex().IsMatch(title))
                 return title.Trim();
         }
         return null;
