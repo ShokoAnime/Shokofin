@@ -30,10 +30,14 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
 
     public void Clear() {
         Logger.LogDebug("Clearing cache…");
+        // TODO: Improve this logic. Currently it should only be ran programmatically after all interactions with the cache has been done, but in cases it's cleared before that it may result in a bad state.
         var cache = Cache;
+        var semaphores = Semaphores;
+
         Cache = new MemoryCache(CacheOptions);
-        Semaphores.Dispose();
         Semaphores = new(AsyncKeyedLockOptions);
+
+        semaphores.Dispose();
         cache.Dispose();
     }
 
