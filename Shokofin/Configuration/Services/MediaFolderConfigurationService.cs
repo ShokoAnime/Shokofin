@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Emby.Naming.Common;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
@@ -36,8 +35,6 @@ public class MediaFolderConfigurationService {
 
     private readonly ShokoApiClient ApiClient;
 
-    private readonly NamingOptions NamingOptions;
-
     private readonly Dictionary<Guid, string> MediaFolderChangeKeys = [];
 
     private readonly Dictionary<Guid, (string libraryName, HashSet<string> add, HashSet<string> remove)> LibraryEdits = [];
@@ -60,8 +57,7 @@ public class MediaFolderConfigurationService {
         LibraryScanWatcher libraryScanWatcher,
         ShokoIdLookup lookup,
         UsageTracker usageTracker,
-        ShokoApiClient apiClient,
-        NamingOptions namingOptions
+        ShokoApiClient apiClient
     ) {
         Logger = logger;
         LibraryManager = libraryManager;
@@ -71,7 +67,6 @@ public class MediaFolderConfigurationService {
         Lookup = lookup;
         UsageTracker = usageTracker;
         ApiClient = apiClient;
-        NamingOptions = namingOptions;
 
         foreach (var mediaConfig in Plugin.Instance.Configuration.MediaFolders)
             MediaFolderChangeKeys[mediaConfig.MediaFolderId] = ConstructKey(mediaConfig);
