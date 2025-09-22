@@ -721,7 +721,7 @@ public partial class ShokoApiManager : IDisposable {
             }
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Encountered an error while trying to lookup the file id for {Path}", path);
+            Logger.LogError(ex, "Encountered an error while trying to lookup the file id for path. (Path={Path})", path);
         }
 
         fileId = null;
@@ -874,10 +874,15 @@ public partial class ShokoApiManager : IDisposable {
 
         // Slow path; getting the show from cache or remote and finding the default season's id.
         Logger.LogDebug("Trying to find episode ids using the slow path. (Path={FullPath})", path);
-        if (GetFileInfoByPath(path).ConfigureAwait(false).GetAwaiter().GetResult() is { } tuple && tuple.Item1 is not null) {
-            var (fileInfo, _, _) = tuple;
-            episodeIds = [.. fileInfo.EpisodeList.Select(episodeInfo => episodeInfo.Id)];
-            return episodeIds.Count is > 0;
+        try {
+            if (GetFileInfoByPath(path).ConfigureAwait(false).GetAwaiter().GetResult() is { } tuple && tuple.Item1 is not null) {
+                var (fileInfo, _, _) = tuple;
+                episodeIds = [.. fileInfo.EpisodeList.Select(episodeInfo => episodeInfo.Id)];
+                return episodeIds.Count is > 0;
+            }
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Encountered an error while trying to lookup the episode id for path. (Path={Path})", path);
         }
 
         episodeIds = null;
@@ -894,11 +899,16 @@ public partial class ShokoApiManager : IDisposable {
         if (FileAndSeasonIdToEpisodeIdDictionary.TryGetValue($"{fileId}:{seriesId}", out episodeIds))
             return true;
 
-        // Slow path; getting the show from cache or remote and finding the default season's id.
         Logger.LogDebug("Trying to find episode ids using the slow path. (Series={SeriesId},File={FileId})", seriesId, fileId);
-        if (GetFileInfo(fileId, seriesId).ConfigureAwait(false).GetAwaiter().GetResult() is { } fileInfo) {
-            episodeIds = [.. fileInfo.EpisodeList.Select(episodeInfo => episodeInfo.Id)];
-            return true;
+        try {
+            // Slow path; getting the show from cache or remote and finding the default season's id.
+            if (GetFileInfo(fileId, seriesId).ConfigureAwait(false).GetAwaiter().GetResult() is { } fileInfo) {
+                episodeIds = [.. fileInfo.EpisodeList.Select(episodeInfo => episodeInfo.Id)];
+                return true;
+            }
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Encountered an error while trying to lookup the episode ids for file and series ids. (Series={SeriesId},File={FileId})", fileId, seriesId);
         }
 
         episodeIds = null;
@@ -1571,9 +1581,14 @@ public partial class ShokoApiManager : IDisposable {
 
         // Slow path; getting the show from cache or remote and finding the season's series id.
         Logger.LogDebug("Trying to find the season's series id for {Path} using the slow path.", path);
-        if (GetSeasonInfoByPath(path).ConfigureAwait(false).GetAwaiter().GetResult() is { } seasonInfo) {
-            seasonId = seasonInfo.Id;
-            return true;
+        try {
+            if (GetSeasonInfoByPath(path).ConfigureAwait(false).GetAwaiter().GetResult() is { } seasonInfo) {
+                seasonId = seasonInfo.Id;
+                return true;
+            }
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Encountered an error while trying to lookup the season id for path. (Path={Path})", path);
         }
 
         seasonId = null;
@@ -1592,29 +1607,37 @@ public partial class ShokoApiManager : IDisposable {
 
         // Slow path; asking the http client to get the series from remote to look up it's id.
         Logger.LogDebug("Trying to find episode ids using the slow path. (Episode={EpisodeId})", episodeId);
-        switch (episodeId[0]) {
-            case IdPrefix.TmdbShow:
-                if (ApiClient.GetTmdbSeasonForTmdbEpisode(episodeId[1..]).ConfigureAwait(false).GetAwaiter().GetResult() is not { } tmdbSeason) {
-                    seasonId = null;
-                    return false;
-                }
+        try {
+            switch (episodeId[0]) {
+                case IdPrefix.TmdbShow:
+                    if (ApiClient.GetTmdbSeasonForTmdbEpisode(episodeId[1..]).ConfigureAwait(false).GetAwaiter().GetResult() is not { } tmdbSeason) {
+                        seasonId = null;
+                        return false;
+                    }
 
-                seasonId = IdPrefix.TmdbShow + tmdbSeason.Id;
-                return true;
+                    seasonId = IdPrefix.TmdbShow + tmdbSeason.Id;
+                    return true;
 
-            case IdPrefix.TmdbMovie:
-                seasonId = episodeId;
-                return true;
+                case IdPrefix.TmdbMovie:
+                    seasonId = episodeId;
+                    return true;
 
-            default:
-                if (ApiClient.GetShokoSeriesForShokoEpisode(episodeId).ConfigureAwait(false).GetAwaiter().GetResult() is not { } series) {
-                    seasonId = null;
-                    return false;
-                }
+                default:
+                    if (ApiClient.GetShokoSeriesForShokoEpisode(episodeId).ConfigureAwait(false).GetAwaiter().GetResult() is not { } series) {
+                        seasonId = null;
+                        return false;
+                    }
 
-                seasonId = series.Id;
-                return true;
+                    seasonId = series.Id;
+                    return true;
+            }
         }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Encountered an error while trying to lookup the season id for episode id. (Episode={EpisodeId})", episodeId);
+        }
+
+        seasonId = null;
+        return false;
     }
 
     [System.Text.RegularExpressions.GeneratedRegex(@"Season (?<seasonNumber>\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
@@ -1923,9 +1946,14 @@ public partial class ShokoApiManager : IDisposable {
 
         // Slow path; getting the show from cache or remote and finding the show id.
         Logger.LogDebug("Trying to find the show id for season using the slow path. (Season={SeasonId})", seasonId);
-        if (GetShowInfoBySeasonId(seasonId).ConfigureAwait(false).GetAwaiter().GetResult() is { } showInfo) {
-            showId = showInfo.Id;
-            return true;
+        try {
+            if (GetShowInfoBySeasonId(seasonId).ConfigureAwait(false).GetAwaiter().GetResult() is { } showInfo) {
+                showId = showInfo.Id;
+                return true;
+            }
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Encountered an error while trying to lookup the show id for season id. (Season={SeasonId})", seasonId);
         }
 
         showId = null;
