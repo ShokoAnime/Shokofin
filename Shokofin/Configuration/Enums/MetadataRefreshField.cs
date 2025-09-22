@@ -54,14 +54,19 @@ public enum MetadataRefreshField : ulong {
     PreferredImages = 1 << 7,
 
     /// <summary>
-    /// Will update all child/owned metadata recursively.
+    /// Will update all child metadata recursively.
     /// </summary>
     Recursive = 1 << 8,
+    
+    /// <summary>
+    /// Will update all owned metadata.
+    /// </summary>
+    OwnedItems = 1 << 9,
 
     /// <summary>
     /// Will run the custom provider.
     /// </summary>
-    CustomProvider = 1 << 9,
+    CustomProvider = 1L << 30,
 
     /// <summary>
     /// Will use the legacy refresh behavior.
