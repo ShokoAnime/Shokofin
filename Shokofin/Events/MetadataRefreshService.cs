@@ -562,20 +562,24 @@ public class MetadataRefreshService {
             .Where(series => series is not null)
             .ToList();
 
+        var movieConfig = config.Movie & ~MetadataRefreshField.Recursive;
         foreach (var movie in movieList) {
-            await RefreshMovie(movie, config.Movie, cancellationToken).ConfigureAwait(false);
+            await RefreshMovie(movie, movieConfig, cancellationToken).ConfigureAwait(false);
         }
 
+        var seriesConfig = config.Series & ~MetadataRefreshField.Recursive;
         foreach (var series in seriesList) {
-            await RefreshSeries(series, config.Series, cancellationToken).ConfigureAwait(false);
+            await RefreshSeries(series, seriesConfig, cancellationToken).ConfigureAwait(false);
         }
 
+        var seasonConfig = config.Season & ~MetadataRefreshField.Recursive;
         foreach (var season in seasonList) {
-            await RefreshSeason(season, config.Season, cancellationToken).ConfigureAwait(false);
+            await RefreshSeason(season, seasonConfig, cancellationToken).ConfigureAwait(false);
         }
 
+        var episodeConfig = config.Episode & ~MetadataRefreshField.Recursive;
         foreach (var episode in episodeList) {
-            await RefreshEpisode(episode, config.Episode, cancellationToken).ConfigureAwait(false);
+            await RefreshEpisode(episode, episodeConfig, cancellationToken).ConfigureAwait(false);
         }
     }
 
