@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -256,30 +257,25 @@ public class MergeVersionsManager {
         double currentCount = 0d;
         double totalCount = videos.Count;
         var visitedVideos = new HashSet<Guid>();
+        var duplicationGroups = videos
+            .GroupBy(video => (video.GetTopParent()?.Path, video.GetProviderId(ProviderNames.ShokoEpisode)))
+            .Where(groupBy => groupBy.Count() > 1)
+            .ToList();
+        var processVideos = duplicationGroups
+            .SelectMany(groupBy => groupBy)
+            .Select(video => video.Id)
+            .ToHashSet();
         foreach (var video in videos) {
             // Handle cancellation and update progress.
             cancellationToken?.ThrowIfCancellationRequested();
             var percent = currentCount++ / totalCount * 50d;
             progress?.Report(percent);
 
-            // Remove all alternate sources linked to the video.
-            await RemoveAlternateSources(video, visitedVideos).ConfigureAwait(false);
+            // Remove all alternate sources linked to the videos we're not processing.
+            await CleanVideo(video, visitedVideos, toSkip: processVideos).ConfigureAwait(false);
         }
 
-        // This will likely tax the CPU a bit… maybe, but we need to make sure the videos we're about to merge are up to date.
-        var oldCount = videos.Count;
-        videos = videos
-            .Select(video => (TVideo)_libraryManager.GetItemById(video.Id)!)
-            .Where(video => video is not null)
-            .ToList();
-        if (videos.Count != oldCount)
-            _logger.LogWarning("{OldCount} videos were removed while running. {NewCount} videos remain.", videos.Count - oldCount, videos.Count);
-
-        // Merge all videos with more than one version (again).
-        var duplicationGroups = videos
-            .GroupBy(video => (video.GetTopParent()?.Path, video.GetProviderId(ProviderNames.ShokoEpisode)))
-            .Where(groupBy => groupBy.Count() > 1)
-            .ToList();
+        // Correctly merge all videos with more than one version available.
         currentCount = 0d;
         totalCount = duplicationGroups.Count;
         foreach (var videoGroup in duplicationGroups) {
@@ -308,6 +304,7 @@ public class MergeVersionsManager {
         // Split up any existing merged videos.
         double currentCount = 0d;
         double totalMovies = videos.Count;
+        var toSkipVideos = new HashSet<Guid>();
         var visitedVideos = new HashSet<Guid>();
         foreach (var video in videos) {
             // Handle cancellation and update progress.
@@ -316,7 +313,7 @@ public class MergeVersionsManager {
             progress?.Report(percent);
 
             // Remove all alternate sources linked to the video.
-            await RemoveAlternateSources(video, visitedVideos).ConfigureAwait(false);
+            await CleanVideo(video, visitedVideos, toSkipVideos).ConfigureAwait(false);
         }
 
         progress?.Report(100);
@@ -329,35 +326,81 @@ public class MergeVersionsManager {
     /// Modified from;
     /// https://github.com/jellyfin/jellyfin/blob/9c97c533eff94d25463fb649c9572234da4af1ea/Jellyfin.Api/Controllers/VideosController.cs#L192
     private async Task MergeVideos<TVideo>(IEnumerable<TVideo> input) where TVideo : Video {
-        if (input is not IList<TVideo> videos)
-            videos = input.ToList();
-        if (videos.Count < 2)
+        if (input is not List<TVideo> videos)
+            videos = [.. input];
+        if (videos is not { Count: > 1 })
             return;
 
         var orderedVideos = await OrderVideos(videos).ConfigureAwait(false);
-        var (primaryVersion, primarySortName) = orderedVideos.First();
+        var (primaryVideo, primarySortName) = orderedVideos[0];
 
-        // Add any videos not already linked to the primary version to the list.
-        var alternateVersionsOfPrimary = primaryVersion.LinkedAlternateVersions.ToList();
+        // Process the other videos and link them to the primary video if
+        // they're not already linked.
+        var updated = false;
+        var alternateVersions = new List<LinkedChild>();
         foreach (var (video, sortName) in orderedVideos.Skip(1)) {
-            video.SetPrimaryVersionId(primaryVersion.Id.ToString("N", CultureInfo.InvariantCulture));
-            if (!alternateVersionsOfPrimary.Any(i => string.Equals(i.Path, video.Path, StringComparison.OrdinalIgnoreCase))) {
-                _logger.LogTrace("Adding linked alternate version. (PrimaryVideo={PrimaryVideoId},Video={VideoId})", primaryVersion.Id, video.Id);
-                alternateVersionsOfPrimary.Add(new() {
-                    Path = video.Path,
-                    ItemId = video.Id,
-                });
+            if (alternateVersions.Any(i => string.Equals(i.Path, video.Path, StringComparison.OrdinalIgnoreCase))) {
+                _logger.LogTrace("Skipping already linked alternate version. (PrimaryVideo={PrimaryVideoId},Video={VideoId})", primaryVideo.Id, video.Id);
+                continue;
             }
 
-            // Save the changes back to the repository.
-            video.ForcedSortName = sortName;
-            await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
+            // Conditionally save the changes back to the repository.
+            _logger.LogTrace("Found a new linked alternate version. (PrimaryVideo={PrimaryVideoId},Video={VideoId})", primaryVideo.Id, video.Id);
+            alternateVersions.Add(new() {
+                Path = video.Path,
+                ItemId = video.Id,
+            });
+            updated = false;
+            if (video.PrimaryVersionId != primaryVideo.Id.ToString("N", CultureInfo.InvariantCulture)) {
+                video.SetPrimaryVersionId(primaryVideo.Id.ToString("N", CultureInfo.InvariantCulture));
+                updated = true;
+            }
+            if (!string.Equals(video.ForcedSortName, sortName, StringComparison.Ordinal)) {
+                video.ForcedSortName = sortName;
+                updated = true;
+            }
+            if (video.LocalAlternateVersions.Length > 0) {
+                video.LocalAlternateVersions = [];
+                updated = true;
+            }
+            if (video.LinkedAlternateVersions.Length > 0) {
+                video.LinkedAlternateVersions = [];
+                updated = true;
+            }
+            if (updated) {
+                _logger.LogDebug("Saving linked video changes. (PrimaryVideo={PrimaryVideoId},Video={VideoId})", primaryVideo.Id, video.Id);
+                await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
+            }
         }
 
-        _logger.LogTrace("Saving {Count} linked alternate versions. (PrimaryVideo={PrimaryVideoId})", alternateVersionsOfPrimary.Count, primaryVersion.Id);
-        primaryVersion.ForcedSortName = primarySortName;
-        primaryVersion.LinkedAlternateVersions = [.. alternateVersionsOfPrimary.OrderBy(i => i.Path)];
-        await primaryVersion.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
+        // Order the alternate sources by path, to make sure we always have it
+        // in the same order. The UI list is (partially) ordered by the forced
+        // sort name, so this won't affect that.
+        alternateVersions = [.. alternateVersions.OrderBy(i => i.Path)];
+
+        // Conditionally save the changes back to the repository.
+        _logger.LogTrace("Found primary video with {Count} linked alternate versions. (PrimaryVideo={PrimaryVideoId})", alternateVersions.Count, primaryVideo.Id);
+        updated = false;
+        if (primaryVideo.PrimaryVersionId is not null) {
+            primaryVideo.SetPrimaryVersionId(null);
+            updated = true;
+        }
+        if (!string.Equals(primaryVideo.ForcedSortName, primarySortName, StringComparison.Ordinal)) {
+            primaryVideo.ForcedSortName = primarySortName;
+            updated = true;
+        }
+        if (primaryVideo.LocalAlternateVersions.Length > 0) {
+            primaryVideo.LocalAlternateVersions = [];
+            updated = true;
+        }
+        if (primaryVideo.LinkedAlternateVersions.Length != alternateVersions.Count || !primaryVideo.LinkedAlternateVersions.SequenceEqual(alternateVersions, LinkedChildComparer.Instance)) {
+            primaryVideo.LinkedAlternateVersions = [..alternateVersions];
+            updated = true;
+        }
+        if (updated) {
+            _logger.LogDebug("Saving primary video changes with {Count} linked alternate versions. (PrimaryVideo={PrimaryVideoId})", alternateVersions.Count, primaryVideo.Id);
+            await primaryVideo.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -370,57 +413,54 @@ public class MergeVersionsManager {
     /// <typeparam name="TVideo">The type of the video.</typeparam>
     /// <returns>A task that completes when all alternate video sources have been
     /// removed.</returns>
-    private async Task RemoveAlternateSources<TVideo>(TVideo? video, HashSet<Guid> visited, int depth = 0) where TVideo : Video {
+    private async Task CleanVideo<TVideo>(TVideo? video, HashSet<Guid> visited, HashSet<Guid> toSkip, int depth = 0) where TVideo : Video {
         if (video is null)
             return;
 
-        if (visited.Contains(video.Id)) {
+        // Only visit a video once per run.
+        if (!visited.Add(video.Id)) {
             _logger.LogTrace("Skipping already visited video. (Video={VideoId},Depth={Depth})", video.Id, depth);
             return;
         }
 
-        visited.Add(video.Id);
-
-        // Remove all links for the primary video if this is not the primary video.
+        // Visit the primary video if this is not the primary video.
         if (video.PrimaryVersionId is not null) {
             var primaryVideo = _libraryManager.GetItemById(video.PrimaryVersionId) as TVideo;
             if (primaryVideo is not null) {
                 _logger.LogTrace("Found primary video to clean up first. (Video={VideoId},Depth={Depth})", primaryVideo.Id, depth);
-                await RemoveAlternateSources(primaryVideo, visited, depth + 1).ConfigureAwait(false);
+                await CleanVideo(primaryVideo, visited, toSkip, depth + 1).ConfigureAwait(false);
             }
         }
 
-        // Re-fetch the video in case it was updated
-        var videoId = video.Id;
-        video = _libraryManager.GetItemById(videoId) as TVideo;
-        if (video is null) {
-            _logger.LogTrace("Could not find video to clean up. (Video={VideoId},Depth={Depth})", videoId, depth);
+        // Visit every linked video.
+        if (video.GetLinkedAlternateVersions().ToList() is { Count: > 0 } linkedAlternateVersions) {
+            _logger.LogTrace("Removing {Count} linked alternate sources for video. (Video={VideoId},Depth={Depth})", linkedAlternateVersions.Count, video.Id, depth);
+            foreach (var linkedVideo in linkedAlternateVersions) {
+                await CleanVideo(linkedVideo, visited, toSkip, depth + 1).ConfigureAwait(false);
+            }
+        }
+
+        // Visit every local linked video.
+        if (video.GetLocalAlternateVersionIds().Select(id => _libraryManager.GetItemById(id) as TVideo).WhereNotNull().ToList() is { Count: > 0 } localAlternateVersions) {
+            _logger.LogTrace("Removing {Count} local alternate sources for video. (Video={VideoId},Depth={Depth})", localAlternateVersions.Count, video.Id, depth);
+            foreach (var linkedVideo in localAlternateVersions) {
+                await CleanVideo(linkedVideo, visited, toSkip, depth + 1).ConfigureAwait(false);
+            }
+        }
+
+        // Skip cleaning this video if it's in the skip list.
+        if (toSkip?.Contains(video.Id) ?? false) {
+            _logger.LogTrace("Skipped cleaning video. (Video={VideoId},Depth={Depth})", video.Id, depth);
             return;
         }
 
-        // Remove the link for every linked video.
-        var linkedAlternateVersions = video.GetLinkedAlternateVersions().ToList();
-        _logger.LogTrace("Removing {Count} linked alternate sources for video. (Video={VideoId},Depth={Depth})", linkedAlternateVersions.Count, video.Id, depth);
-        foreach (var linkedVideo in linkedAlternateVersions) {
-            await RemoveAlternateSources(linkedVideo, visited, depth + 1).ConfigureAwait(false);
-        }
-
-        // Remove the link for every local linked video.
-        var localAlternateVersions = video.GetLocalAlternateVersionIds()
-            .Select(id => _libraryManager.GetItemById(id) as TVideo)
-            .Where(i => i is not null)
-            .ToList();
-        _logger.LogTrace("Removing {Count} local alternate sources for video. (Video={VideoId},Depth={Depth})", localAlternateVersions.Count, video.Id, depth);
-        foreach (var linkedVideo in localAlternateVersions) {
-            await RemoveAlternateSources(linkedVideo, visited, depth + 1).ConfigureAwait(false);
-        }
-
-        // Remove the link for the primary video.
-        if (!string.IsNullOrEmpty(video.PrimaryVersionId) || video.LinkedAlternateVersions.Length > 0 || video.LocalAlternateVersions.Length > 0) {
+        // Clean the current video if it's not already clean.
+        if (!string.IsNullOrEmpty(video.PrimaryVersionId) || video.ForcedSortName is not null || video.LinkedAlternateVersions.Length > 0 || video.LocalAlternateVersions.Length > 0) {
             _logger.LogTrace("Cleaning up video. (PrimaryVideo={PrimaryVideoId},Video={VideoId},Depth={Depth})", video.PrimaryVersionId, video.Id, depth);
             video.SetPrimaryVersionId(null);
-            video.LinkedAlternateVersions = [];
+            video.ForcedSortName = null;
             video.LocalAlternateVersions = [];
+            video.LinkedAlternateVersions = [];
             await video.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
         }
         else {
@@ -490,5 +530,18 @@ public class MergeVersionsManager {
             _ => string.Empty,
         };
 
-    #endregion Shared Methods
+  internal class LinkedChildComparer : IEqualityComparer<LinkedChild>
+  {
+    private static LinkedChildComparer? _instance;
+
+    public static LinkedChildComparer Instance => _instance ??= new LinkedChildComparer();
+
+    public bool Equals(LinkedChild? x, LinkedChild? y)
+        => x is not null && y is not null && GetHashCode(x) == GetHashCode(y);
+
+    public int GetHashCode([DisallowNull] LinkedChild obj)
+        => HashCode.Combine(obj.Path, obj.LibraryItemId, obj.Type, obj.ItemId);
+  }
+
+  #endregion Shared Methods
 }
