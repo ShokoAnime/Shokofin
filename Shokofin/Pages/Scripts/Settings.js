@@ -550,7 +550,6 @@ function applyFormToConfig(form, config) {
             config.Metadata_StudioOnlyAnimationWorks = form.querySelector("#Metadata_StudioOnlyAnimationWorks").checked;
             ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableCheckboxList(form, "Metadata_ContentRatingList"));
             ([config.ProductionLocationList, config.ProductionLocationOrder] = retrieveSortableCheckboxList(form, "Metadata_ProductionLocationList"));
-            config.DisplayMoreExternalUrls = form.querySelector("#Metadata_DisplayMoreExternalUrls").checked;
             config.ThirdPartyIdProviderList = retrieveCheckboxList(form, "Metadata_ThirdPartyIdProviderList");
             break;
         }
@@ -745,7 +744,6 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#Metadata_StudioOnlyAnimationWorks").checked = config.Metadata_StudioOnlyAnimationWorks;
             renderSortableCheckboxList(form, "Metadata_ContentRatingList", config.ContentRatingList, config.ContentRatingOrder);
             renderSortableCheckboxList(form, "Metadata_ProductionLocationList", config.ProductionLocationList, config.ProductionLocationOrder);
-            form.querySelector("#Metadata_DisplayMoreExternalUrls").checked = config.DisplayMoreExternalUrls;
             renderCheckboxList(form, "Metadata_ThirdPartyIdProviderList", config.ThirdPartyIdProviderList.map(s => s.trim()).filter(s => s));
             break;
         }

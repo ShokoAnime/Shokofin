@@ -99,16 +99,16 @@ public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<Epis
     public static Episode CreateMetadata(Info.ShowInfo showInfo, Info.SeasonInfo seasonInfo, Info.EpisodeInfo episodeInfo, Info.FileInfo? file, string metadataLanguage, string metadataCountryCode)
         => CreateMetadata(showInfo, seasonInfo, episodeInfo, file, metadataLanguage, metadataCountryCode, null, Guid.Empty);
 
-    private static Episode CreateMetadata(Info.ShowInfo showInfo, Info.SeasonInfo seasonInfo, Info.EpisodeInfo episodeInfo, Info.FileInfo? file, string metadataLanguage, string metadataCountryCode, Season? season, Guid episodeId) {
+    private static Episode CreateMetadata(Info.ShowInfo showInfo, Info.SeasonInfo seasonInfo, Info.EpisodeInfo episodeInfo, Info.FileInfo? fileInfo, string metadataLanguage, string metadataCountryCode, Season? season, Guid episodeId) {
         var config = Plugin.Instance.Configuration;
         var episodeNumber = Ordering.GetEpisodeNumber(showInfo, seasonInfo, episodeInfo);
         var seasonNumber = Ordering.GetSeasonNumber(showInfo, seasonInfo, episodeInfo);
         var (airsBeforeEpisodeNumber, airsBeforeSeasonNumber, airsAfterSeasonNumber, isSpecial) = Ordering.GetSpecialPlacement(showInfo, seasonInfo, episodeInfo);
         string? displayTitle, alternateTitle, description;
-        if (file != null && file.EpisodeList.Count > 1) {
+        if (fileInfo is not null && fileInfo.EpisodeList.Count > 1) {
             var displayTitles = new List<string?>();
             var alternateTitles = new List<string?>();
-            foreach (var (eI, _, _) in file.EpisodeList) {
+            foreach (var (eI, _, _) in fileInfo.EpisodeList) {
                 string defaultEpisodeTitle = eI.Title;
                 string? dTitle, aTitle;
                 if (
@@ -139,7 +139,7 @@ public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<Epis
             }
             displayTitle = TextUtility.JoinText(displayTitles);
             alternateTitle = TextUtility.JoinText(alternateTitles);
-            description = TextUtility.GetEpisodeDescription(file.EpisodeList.Select(tuple => tuple.Episode), seasonInfo, metadataLanguage);
+            description = TextUtility.GetEpisodeDescription(fileInfo.EpisodeList.Select(tuple => tuple.Episode), seasonInfo, metadataLanguage);
         }
         else {
             string defaultEpisodeTitle = episodeInfo.Title;
@@ -177,7 +177,7 @@ public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<Epis
         }
 
         Episode result;
-        if (season != null) {
+        if (season is not null) {
             result = new Episode {
                 Name = displayTitle ?? $"Episode {episodeNumber}",
                 OriginalTitle = alternateTitle ?? "",
@@ -221,37 +221,31 @@ public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<Epis
             };
         }
 
-        if (file != null && file.EpisodeList.Count > 1) {
-            var episodeNumberEnd = episodeNumber + file.EpisodeList.Count - 1;
+        if (fileInfo is not null && fileInfo.EpisodeList.Count > 1) {
+            var episodeNumberEnd = episodeNumber + fileInfo.EpisodeList.Count - 1;
             if (episodeNumberEnd != episodeNumber && episodeInfo.EpisodeNumber != episodeNumberEnd)
                 result.IndexNumberEnd = episodeNumberEnd;
         }
 
-        AddProviderIds(result, episodeId: episodeInfo.Id, fileId: file?.Id, seriesId: file?.SeriesId, anidbId: episodeInfo.AnidbEpisodeId, tmdbId: episodeInfo.TmdbEpisodeId, tvdbId: episodeInfo.TvdbEpisodeId);
-        if (Plugin.Instance.Configuration.DisplayMoreExternalUrls)
-            result.SetProviderId(
-                ProviderNames.Shoko,
-                file is not null
-                    ? ShokoExternalUrlHandler.GetEpisodeInfoUrls(file)
-                    : ShokoExternalUrlHandler.GetEpisodeInfoUrls(episodeInfo)
-            );
+        if (fileInfo is not null) {
+            result.SetProviderId(ShokoInternalId.Name, fileInfo.InternalId);
+            result.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetFileInfoUrls(fileInfo));
+            result.SetProviderId(ProviderNames.ShokoFile, fileInfo.Id);
+            result.SetProviderId(ProviderNames.ShokoSeries, fileInfo.SeriesId);
+        }
+        else {
+            result.SetProviderId(ShokoInternalId.Name, episodeInfo.InternalId);
+            result.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetEpisodeInfoUrls(episodeInfo));
+        }
+        result.SetProviderId(ProviderNames.ShokoEpisode, episodeInfo.Id);
+        if (config.AddAniDBId && episodeInfo.AnidbEpisodeId is { Length: > 0 } anidbEpisodeId)
+            result.SetProviderId(ProviderNames.Anidb, anidbEpisodeId);
+        if (config.AddTMDBId && episodeInfo.TmdbEpisodeId is { Length: > 0 } tmdbEpisodeId)
+            result.SetProviderId(MetadataProvider.Tmdb, tmdbEpisodeId);
+        if (config.AddTvDBId && episodeInfo.TvdbEpisodeId is { Length: > 0 } tvdbEpisodeId)
+            result.SetProviderId(MetadataProvider.Tvdb, tvdbEpisodeId);
 
         return result;
-    }
-
-    private static void AddProviderIds(IHasProviderIds item, string episodeId, string? fileId = null, string? seriesId = null, string? anidbId = null, string? tmdbId = null, string? tvdbId = null) {
-        var config = Plugin.Instance.Configuration;
-        item.SetProviderId(ProviderNames.ShokoEpisode, episodeId);
-        if (!string.IsNullOrEmpty(fileId))
-            item.SetProviderId(ProviderNames.ShokoFile, fileId);
-        if (!string.IsNullOrEmpty(seriesId))
-            item.SetProviderId(ProviderNames.ShokoSeries, seriesId);
-        if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId))
-            item.SetProviderId(ProviderNames.Anidb, anidbId);
-        if (config.AddTMDBId && !string.IsNullOrEmpty(tmdbId))
-            item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
-        if (config.AddTvDBId && !string.IsNullOrEmpty(tvdbId))
-            item.SetProviderId(MetadataProvider.Tvdb, tvdbId);
     }
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo searchInfo, CancellationToken cancellationToken)

@@ -59,15 +59,15 @@ public class MovieProvider(IHttpClientFactory _httpClientFactory, ILogger<MovieP
                 CommunityRating = rating,
             };
 
+            result.Item.SetProviderId(ShokoInternalId.Name, fileInfo.InternalId);
+            result.Item.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetFileInfoUrls(fileInfo));
             result.Item.SetProviderId(ProviderNames.ShokoFile, fileInfo.Id);
-            result.Item.SetProviderId(ProviderNames.ShokoEpisode, episodeInfo.Id);
             result.Item.SetProviderId(ProviderNames.ShokoSeries, fileInfo.SeriesId);
+            result.Item.SetProviderId(ProviderNames.ShokoEpisode, episodeInfo.Id);
             if (Plugin.Instance.Configuration.AddAniDBId && seasonInfo.AnidbAnimeId is { Length: > 0 } anidbAnimeId)
                 result.Item.SetProviderId(ProviderNames.Anidb, anidbAnimeId);
             if (Plugin.Instance.Configuration.AddTMDBId && episodeInfo.TmdbMovieId is { Length: > 0 } tmdbMovieId)
                 result.Item.SetProviderId(MetadataProvider.Tmdb, tmdbMovieId);
-            if (Plugin.Instance.Configuration.DisplayMoreExternalUrls)
-                result.Item.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetEpisodeInfoUrls(fileInfo));
 
             result.HasMetadata = true;
 

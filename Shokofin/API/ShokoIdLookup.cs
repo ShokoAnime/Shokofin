@@ -109,9 +109,9 @@ public class ShokoIdLookup(ShokoApiManager _apiManager, ILibraryManager _library
 
         if (TryGetSeasonIdFor(series.Path, out seasonId)) {
             if (_apiManager.TryGetShowIdForSeasonId(seasonId, out var mainSeasonId))
-                SeriesProvider.AddProviderIds(series, mainSeasonId);
+                series.SetProviderId(ShokoInternalId.Name, mainSeasonId);
             else
-                SeriesProvider.AddProviderIds(series, seasonId);
+                series.SetProviderId(ShokoInternalId.Name, seasonId);
             // Make sure the presentation unique is not cached, so we won't reuse the cache key.
             // This is for series-merging in a non-VFS based library.
             series.PresentationUniqueKey = null;

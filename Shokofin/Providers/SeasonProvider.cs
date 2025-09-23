@@ -145,12 +145,11 @@ public class SeasonProvider(IHttpClientFactory _httpClientFactory, ILogger<Seaso
         }
 
         season.SetProviderId(ShokoInternalId.Name, seasonInfo.InternalId);
+        season.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetSeasonInfoUrls(seasonInfo));
         if (seasonInfo.ShokoSeriesId is { Length: > 0 } shokoSeriesId)
             season.SetProviderId(ProviderNames.ShokoSeries, shokoSeriesId);
         if (Plugin.Instance.Configuration.AddAniDBId && seasonInfo.AnidbAnimeId is { Length: > 0 } anidbAnimeId)
             season.SetProviderId(ProviderNames.Anidb, anidbAnimeId);
-        if (Plugin.Instance.Configuration.DisplayMoreExternalUrls)
-            season.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetSeasonInfoUrls(seasonInfo));
 
         return season;
     }

@@ -29,6 +29,8 @@ public class EpisodeInfo : IExtendedItemInfo {
 
     public string Id { get; init; }
 
+    public string InternalId => ShokoInternalId.EpisodeNamespace + Id;
+
     public string SeasonId { get; init; }
 
     public EpisodeType Type { get; init; }

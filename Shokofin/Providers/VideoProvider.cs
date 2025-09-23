@@ -53,11 +53,11 @@ public class VideoProvider(IHttpClientFactory _httpClientFactory, ILogger<VideoP
             };
             _logger.LogInformation("Found video {EpisodeName} (File={FileId},Episode={EpisodeId},Season={SeasonId},ExtraSeasons={ExtraIds})", result.Item.Name, fileInfo.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds);
 
+            result.Item.SetProviderId(ShokoInternalId.Name, fileInfo.InternalId);
+            result.Item.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetFileInfoUrls(fileInfo));
             result.Item.SetProviderId(ProviderNames.ShokoFile, fileInfo.Id);
             result.Item.SetProviderId(ProviderNames.ShokoEpisode, episodeInfo.Id);
             result.Item.SetProviderId(ProviderNames.ShokoSeries, fileInfo.SeriesId);
-            if (Plugin.Instance.Configuration.DisplayMoreExternalUrls)
-                result.Item.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetEpisodeInfoUrls(fileInfo));
 
             result.HasMetadata = true;
 

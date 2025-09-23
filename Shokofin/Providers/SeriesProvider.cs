@@ -33,7 +33,7 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
                     var entries = _fileSystem.GetDirectories(info.Path, false);
                     foreach (var entry in entries) {
                         showInfo = await _apiManager.GetShowInfoByPath(entry.FullName).ConfigureAwait(false);
-                        if (showInfo != null)
+                        if (showInfo is not null)
                             break;
                     }
                     if (showInfo == null) {
@@ -74,9 +74,19 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
             foreach (var person in showInfo.Staff)
                 result.AddPerson(person);
 
-            AddProviderIds(result.Item, showInfo.InternalId, seriesId: showInfo.ShokoSeriesId, groupId: showInfo.ShokoGroupId, anidbId: showInfo.AnidbAnimeId, tmdbId: showInfo.TmdbShowId, tvdbId: showInfo.TvdbShowId);
-            if (Plugin.Instance.Configuration.DisplayMoreExternalUrls)
-                result.Item.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetShowInfoUrls(showInfo));
+            var config = Plugin.Instance.Configuration;
+            result.Item.SetProviderId(ShokoInternalId.Name, showInfo.InternalId);
+            result.Item.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetShowInfoUrls(showInfo));
+            if (showInfo.ShokoSeriesId is { Length: > 0 } shokoSeriesId)
+                result.Item.SetProviderId(ProviderNames.ShokoSeries, shokoSeriesId);
+            if (showInfo.ShokoGroupId is { Length: > 0 } shokoGroupId)
+                result.Item.SetProviderId(ProviderNames.ShokoGroup, shokoGroupId);
+            if (config.AddAniDBId && showInfo.AnidbAnimeId is { Length: > 0 } anidbAnimeId)
+                result.Item.SetProviderId(ProviderNames.Anidb, anidbAnimeId);
+            if (config.AddTMDBId && showInfo.TmdbShowId is { Length: > 0 } tmdbShowId)
+                result.Item.SetProviderId(ProviderNames.Tmdb, tmdbShowId);
+            if (config.AddTvDBId && showInfo.TvdbShowId is { Length: > 0 } tvdbShowId)
+                result.Item.SetProviderId(MetadataProvider.Tvdb, tvdbShowId);
 
             _logger.LogInformation("Found series {SeriesName} (MainSeason={MainSeasonId})", displayTitle, showInfo.Id);
 
@@ -89,22 +99,6 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
         finally {
             Plugin.Instance.Tracker.Remove(trackerId);
         }
-    }
-
-    public static void AddProviderIds(IHasProviderIds item, string internalId, string? seriesId = null, string? groupId = null, string? anidbId = null, string? tmdbId = null, string? tvdbId = null) {
-        var config = Plugin.Instance.Configuration;
-
-        item.SetProviderId(ShokoInternalId.Name, internalId);
-        if (!string.IsNullOrEmpty(seriesId))
-            item.SetProviderId(ProviderNames.ShokoSeries, seriesId);
-        if (!string.IsNullOrEmpty(groupId))
-            item.SetProviderId(ProviderNames.ShokoGroup, groupId);
-        if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId))
-            item.SetProviderId(ProviderNames.Anidb, anidbId);
-        if (config.AddTMDBId && !string.IsNullOrEmpty(tmdbId))
-            item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
-        if (config.AddTvDBId && !string.IsNullOrEmpty(tvdbId))
-            item.SetProviderId(MetadataProvider.Tvdb, tvdbId);
     }
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo info, CancellationToken cancellationToken)
