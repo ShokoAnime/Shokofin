@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.38",
+                "changelog": "`misc`: **Tweak default season merging behavior**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.38/shoko_5.0.4.38.zip",
+                "checksum": "54f8047c45603e0d5d225e66747b8ff6",
+                "timestamp": "2025-09-23T14:43:56Z"
+            },
+            {
                 "version": "5.0.4.37",
                 "changelog": "`fix`: **Make `TryGet*` methods on api manager safer by not throwing if Shoko is unreachable**.\n\n`refactor`: **Conditional merging of multiple version**:\n\nLeave things as-is if everything is as intended, and only conditionally update the videos that needs to be updated. This will sped it up from 2m to 7s with a hot cache, and from 4m to 2m on a cold cache for my test server, in addition it will now NOT touch things which are already correctly linked/unlinked.\n\n`refactor`: **Rework external url & provider id logic**:\n\n- Store external urls without the base to save space.\n\n- Inflate/deflate the external url array after/before storing it.\n\n- Made the (new) stored external urls mandatory, and removed the option to display more _optional_ urls from the config and UI.\n\n- Simplified parts of the provider id handling for some providers.\n\n- Set the internal ID on all items. The lookup paths already existed, but the IDs were not set on all items.\n\n- Minor variable name tweaks.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.34/shoko_5.0.4.34.zip",
                 "checksum": "d863f10c5fbf1abcc69ac2641ceface2",
                 "timestamp": "2025-09-10T02:48:43Z"
-            },
-            {
-                "version": "5.0.4.33",
-                "changelog": "`misc`: **Enable text-less images by default for new installs**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.33/shoko_5.0.4.33.zip",
-                "checksum": "7f6734b17effd5a85e989cab6a7772d3",
-                "timestamp": "2025-09-10T02:42:55Z"
             }
         ]
     }
