@@ -848,7 +848,7 @@ public class PluginConfiguration : BasePluginConfiguration {
         SignalR_RefreshEnabled = false;
         SignalR_FileEvents = true;
         SeasonMerging_Enabled = false;
-        SeasonMerging_DefaultBehavior = SeasonMergingBehavior.None;
+        SeasonMerging_DefaultBehavior = SeasonMergingBehavior.NoMerge;
         SeasonMerging_SeriesTypes = [SeriesType.OVA, SeriesType.TV, SeriesType.TVSpecial, SeriesType.Web, SeriesType.OVA];
         SeasonMerging_MergeWindowInDays = 185;
         MetadataRefresh = new();
