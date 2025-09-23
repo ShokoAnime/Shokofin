@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.37",
+                "changelog": "`fix`: **Make `TryGet*` methods on api manager safer by not throwing if Shoko is unreachable**.\n\n`refactor`: **Conditional merging of multiple version**:\n\nLeave things as-is if everything is as intended, and only conditionally update the videos that needs to be updated. This will sped it up from 2m to 7s with a hot cache, and from 4m to 2m on a cold cache for my test server, in addition it will now NOT touch things which are already correctly linked/unlinked.\n\n`refactor`: **Rework external url & provider id logic**:\n\n- Store external urls without the base to save space.\n\n- Inflate/deflate the external url array after/before storing it.\n\n- Made the (new) stored external urls mandatory, and removed the option to display more _optional_ urls from the config and UI.\n\n- Simplified parts of the provider id handling for some providers.\n\n- Set the internal ID on all items. The lookup paths already existed, but the IDs were not set on all items.\n\n- Minor variable name tweaks.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.37/shoko_5.0.4.37.zip",
+                "checksum": "67dbcaf6a3b5fdb77bcbbba33580bbf5",
+                "timestamp": "2025-09-23T13:45:00Z"
+            },
+            {
                 "version": "5.0.4.36",
                 "changelog": "`fix`: **Add anti season name patterns**.\n\n`chore`: **Remove unnecessary import**.\n\n`fix`: **Create new instance before disposing previous, add TODO**.\n\n`feat`: **Add refresh field value to update owned items**.\n\n`fix`: **Don't do recursive updates during auto refresh**:\n\nSince we're updating the items bottom-up, so we shouldn't allow it to do a top-down search.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.33/shoko_5.0.4.33.zip",
                 "checksum": "7f6734b17effd5a85e989cab6a7772d3",
                 "timestamp": "2025-09-10T02:42:55Z"
-            },
-            {
-                "version": "5.0.4.32",
-                "changelog": "`fix`: **Ignore external files within designated directories for extras**.\n\n`fix`: **Better removal of non-managed folders in root of VFS**:\n\nAdded some better removal logic of non-managed folders in the root of a VFS by returning a set of all files and folders that should be present in the VFS and flagging any it finds for removal for the existing removal logic to handle.\n\n`misc`: **Change log level of log statements for when a media folder is not found**.\n\n`chore`: **Remove unreachable/dead code**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.32/shoko_5.0.4.32.zip",
-                "checksum": "d7e4b6b23d5b85e6e616d1536af9451d",
-                "timestamp": "2025-09-10T02:08:34Z"
             }
         ]
     }
