@@ -1,3 +1,4 @@
+using TitleProvider = Shokofin.Utils.TextUtility.TitleProvider;
 
 namespace Shokofin.Configuration;
 
@@ -9,7 +10,11 @@ public class AllTitlesConfiguration {
     /// <summary>
     /// Default title settings.
     /// </summary>
-    public TitlesConfiguration Default { get; set; } = new();
+    public TitlesConfiguration Default { get; set; } = new() {
+        MainTitle = new() {
+            List = [TitleProvider.Shoko_Default],
+        },
+    };
 
     /// <summary>
     /// Title settings for Shoko collections.

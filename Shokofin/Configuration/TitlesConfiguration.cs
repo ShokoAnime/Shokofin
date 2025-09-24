@@ -1,7 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 
-using TitleProvider = Shokofin.Utils.TextUtility.TitleProvider;
-
 namespace Shokofin.Configuration;
 
 /// <summary>
@@ -16,9 +14,7 @@ public class TitlesConfiguration {
     /// <summary>
     /// The main title configuration.
     /// </summary>
-    public TitleConfiguration MainTitle { get; set; } = new() {
-        List = [TitleProvider.Shoko_Default],
-    };
+    public TitleConfiguration MainTitle { get; set; } = new();
 
     /// <summary>
     /// The alternate title configurations.
