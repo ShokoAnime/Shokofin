@@ -244,15 +244,16 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages {
 
     private void MigrateConfiguration(PluginConfiguration config) {
         var changed = false;
+
+        // Upgrade deprecated configuration options.
         if (config.Description.Default.Order.Length != Enum.GetValues<TextUtility.DescriptionProvider>().Length) {
             var current = config.Description.Default.Order;
             config.Description.Default.Order = Enum.GetValues<TextUtility.DescriptionProvider>()
+                .Except([TextUtility.DescriptionProvider.TvDB])
                 .OrderBy(x => Array.IndexOf(current, x) == -1 ? int.MaxValue : Array.IndexOf(current, x))
                 .ToArray();
             changed = true;
         }
-
-        // Upgrade deprecated configuration options.
         if (config.RespectPreferredImage.HasValue) {
             config.Image.Default.UsePreferred = config.RespectPreferredImage.Value;
             config.RespectPreferredImage = null;
