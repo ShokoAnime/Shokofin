@@ -101,7 +101,47 @@ form:not(.advanced-mode) .advanced-only {
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Adds the type and number to the title of non-standard episodes such as specials. (e.g. S1)</div>
                         </div>
+                        <hr class="advanced-only" />
+                        <div class="selectContainer selectContainer-withDescription advanced-only">
+                            <label class="selectLabel" for="Title_ConfigureFor">Configure settings for</label>
+                            <select is="emby-select" id="Title_ConfigureFor" name="Title_ConfigureFor" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Global Settings</option>
+                                <optgroup label="AniDB Anime Structure">
+                                    <option value="AniDBCollection" disabled>Box-Set / Collection (AniDB Anime Structure)</option>
+                                    <option value="AnidbMovie">Movie / Film (AniDB Anime Structure)</option>
+                                    <option value="AnidbAnime">Series / Show (AniDB Anime Structure)</option>
+                                    <option value="AnidbSeason">Season (AniDB Anime Structure)</option>
+                                    <option value="AnidbEpisode">Episode (AniDB Anime Structure)</option>
+                                </optgroup>
+                                <optgroup label="Shoko Group Structure">
+                                    <option value="ShokoCollection">Box-Set / Collection (Shoko Group Structure)</option>
+                                    <option value="ShokoMovie">Movie / Film (Shoko Group Structure)</option>
+                                    <option value="ShokoSeries">Series / Show (Shoko Group Structure)</option>
+                                    <option value="ShokoSeason">Season (Shoko Group Structure)</option>
+                                    <option value="ShokoEpisode">Episode (Shoko Group Structure)</option>
+                                </optgroup>
+                                <optgroup label="TheMovieDb Shows &amp; Movies Structure">
+                                    <option value="TmdbCollection">Box-Set / Collection (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbMovie">Movie / Film (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbShow">Series / Show (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbSeason">Season (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbEpisode">Episode (TheMovieDb Shows &amp; Movies Structure)</option>
+                                </optgroup>
+                            </select>
+                            <div class="fieldDescription">
+                                Determines which entity type to configure the settings for.
+                            </div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Title_ConfigureFor_Enabled" disabled checked />
+                                <span>Enabled</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Determines if the settings override is enabled for the selected entity type.
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="RemoveDuplicateTitles" class="emby-checkbox">
                                 <span class="checkboxLabel">Remove Duplicate Titles</span>
@@ -200,7 +240,7 @@ form:not(.advanced-mode) .advanced-only {
                                 </div>
                                 <div class="fieldDescription">The metadata providers to use as the source of the main title for entities, in priority order.</div>
                             </div>
-                            <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="TitleMainAllowAny" />
                                     <span>Allow Any Title in Selected Language</span>
@@ -301,7 +341,7 @@ form:not(.advanced-mode) .advanced-only {
                                     </div>
                                     <div class="fieldDescription">The metadata providers to use as the source of the %number_formatted%alternate/original title for entities, in priority order.</div>
                                 </div>
-                                <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                                <div class="checkboxContainer checkboxContainer-withDescription">
                                     <label class="emby-checkbox-label">
                                         <input is="emby-checkbox" type="checkbox" id="TitleAlternateAllowAny_%number%" class="emby-checkbox">
                                         <span class="checkboxLabel">Allow Any Title in Selected Language</span>
@@ -339,6 +379,46 @@ form:not(.advanced-mode) .advanced-only {
                             </select>
                             <div class="fieldDescription">
                                 Determines how to convert the AniDB descriptions. If disabled, the description will not be converted.
+                            </div>
+                        </div>
+                        <hr class="advanced-only" />
+                        <div class="selectContainer selectContainer-withDescription advanced-only">
+                            <label class="selectLabel" for="Description_ConfigureFor">Configure settings for</label>
+                            <select is="emby-select" id="Description_ConfigureFor" name="Description_ConfigureFor" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Global Settings</option>
+                                <optgroup label="AniDB Anime Structure">
+                                    <option value="AniDBCollection" disabled>Box-Set / Collection (AniDB Anime Structure)</option>
+                                    <option value="AnidbMovie">Movie / Film (AniDB Anime Structure)</option>
+                                    <option value="AnidbAnime">Series / Show (AniDB Anime Structure)</option>
+                                    <option value="AnidbSeason">Season (AniDB Anime Structure)</option>
+                                    <option value="AnidbEpisode">Episode (AniDB Anime Structure)</option>
+                                </optgroup>
+                                <optgroup label="Shoko Group Structure">
+                                    <option value="ShokoCollection">Box-Set / Collection (Shoko Group Structure)</option>
+                                    <option value="ShokoMovie">Movie / Film (Shoko Group Structure)</option>
+                                    <option value="ShokoSeries">Series / Show (Shoko Group Structure)</option>
+                                    <option value="ShokoSeason">Season (Shoko Group Structure)</option>
+                                    <option value="ShokoEpisode">Episode (Shoko Group Structure)</option>
+                                </optgroup>
+                                <optgroup label="TheMovieDb Shows &amp; Movies Structure">
+                                    <option value="TmdbCollection">Box-Set / Collection (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbMovie">Movie / Film (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbShow">Series / Show (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbSeason">Season (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbEpisode">Episode (TheMovieDb Shows &amp; Movies Structure)</option>
+                                </optgroup>
+                            </select>
+                            <div class="fieldDescription">
+                                Determines which entity type to configure the settings for.
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Description_ConfigureFor_Enabled" disabled checked />
+                                <span>Enabled</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Determines if the settings override is enabled for the selected entity type.
                             </div>
                         </div>
                         <div id="DescriptionSourceList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
@@ -1126,6 +1206,45 @@ form:not(.advanced-mode) .advanced-only {
                         <legend>
                             <h3>Image Settings</h3>
                         </legend>
+                        <div class="selectContainer selectContainer-withDescription advanced-only">
+                            <label class="selectLabel" for="Image_ConfigureFor">Configure settings for</label>
+                            <select is="emby-select" id="Image_ConfigureFor" name="Image_ConfigureFor" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Global Settings</option>
+                                <optgroup label="AniDB Anime Structure">
+                                    <option value="AniDBCollection" disabled>Box-Set / Collection (AniDB Anime Structure)</option>
+                                    <option value="AnidbMovie">Movie / Film (AniDB Anime Structure)</option>
+                                    <option value="AnidbAnime">Series / Show (AniDB Anime Structure)</option>
+                                    <option value="AnidbSeason">Season (AniDB Anime Structure)</option>
+                                    <option value="AnidbEpisode">Episode (AniDB Anime Structure)</option>
+                                </optgroup>
+                                <optgroup label="Shoko Group Structure">
+                                    <option value="ShokoCollection">Box-Set / Collection (Shoko Group Structure)</option>
+                                    <option value="ShokoMovie">Movie / Film (Shoko Group Structure)</option>
+                                    <option value="ShokoSeries">Series / Show (Shoko Group Structure)</option>
+                                    <option value="ShokoSeason">Season (Shoko Group Structure)</option>
+                                    <option value="ShokoEpisode">Episode (Shoko Group Structure)</option>
+                                </optgroup>
+                                <optgroup label="TheMovieDb Shows &amp; Movies Structure">
+                                    <option value="TmdbCollection">Box-Set / Collection (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbMovie">Movie / Film (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbShow">Series / Show (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbSeason">Season (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbEpisode">Episode (TheMovieDb Shows &amp; Movies Structure)</option>
+                                </optgroup>
+                            </select>
+                            <div class="fieldDescription">
+                                Determines which entity type to configure the settings for. To revert back an entity type to following the global settings, disable all settings for that entity type.
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Image_ConfigureFor_Enabled" disabled checked />
+                                <span>Enabled</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Determines if the settings override is enabled for the selected entity type.
+                            </div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="Image_UsePreferred" />
@@ -1315,6 +1434,7 @@ form:not(.advanced-mode) .advanced-only {
                             </div>
                             <div class="fieldDescription">Filter the images during an automatic image search for backdrops/banners/thumbnails to only allow the specified languages, in the specified order. If no languages are selected then no filtering will occur in the automatic image search.</div>
                         </div>
+                        <hr class="debug-only" />
                         <div class="checkboxContainer checkboxContainer-withDescription debug-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="Image_DebugMode" />

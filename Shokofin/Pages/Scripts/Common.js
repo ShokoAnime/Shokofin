@@ -264,6 +264,10 @@ export const LibraryMenu = globalThis.LibraryMenu;
  */
 
 /**
+ * @typedef {"Default" | "ShokoCollection" | "TmdbCollection" | "AnidbMovie" | "ShokoMovie" | "TmdbMovie" | "AnidbAnime" | "ShokoSeries" | "TmdbShow" | "AnidbSeason" | "ShokoSeason" | "TmdbSeason" | "AnidbEpisode" | "ShokoEpisode"} AllConfigurationTypes
+ */
+
+/**
 * @typedef {{
 *   UserId: string;
 *   EnableSynchronization: boolean;
@@ -323,8 +327,27 @@ export const LibraryMenu = globalThis.LibraryMenu;
  */
 
 /**
+ * @typedef {TitleConfiguration & {
+ *   Enabled: boolean
+ * }} ToggleTitlesConfiguration
+ */
+
+/**
  * @typedef {{
  *   Default: TitlesConfiguration;
+ *   ShokoCollection: ToggleTitlesConfiguration;
+ *   TmdbCollection: ToggleTitlesConfiguration;
+ *   AnidbMovie: ToggleTitlesConfiguration;
+ *   ShokoMovie: ToggleTitlesConfiguration;
+ *   TmdbMovie: ToggleTitlesConfiguration;
+ *   AnidbAnime: ToggleTitlesConfiguration;
+ *   ShokoSeries: ToggleTitlesConfiguration;
+ *   TmdbShow: ToggleTitlesConfiguration;
+ *   AnidbSeason: ToggleTitlesConfiguration;
+ *   ShokoSeason: ToggleTitlesConfiguration;
+ *   TmdbSeason: ToggleTitlesConfiguration;
+ *   AnidbEpisode: ToggleTitlesConfiguration;
+ *   ShokoEpisode: ToggleTitlesConfiguration;
  *}} AllTitlesConfiguration
  */
 
@@ -332,7 +355,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  * @typedef {{
  *   Type: SeriesType | "None";
  *   StructureType: SeriesStructureType | "None";
-*    SeasonOrdering: SeasonOrderType | "None";
+ *   SeasonOrdering: SeasonOrderType | "None";
  *   SpecialsPlacement: SpecialOrderType | "None";
  *   SeasonMergingBehavior: SeasonMergingBehavior;
  *   EpisodeConversion: SeriesEpisodeConversion;
@@ -348,8 +371,27 @@ export const LibraryMenu = globalThis.LibraryMenu;
  */
 
 /**
+ * @typedef {DescriptionConfiguration &{
+ *    Enabled: boolean;
+ * }} ToggleDescriptionConfiguration
+ */
+
+/**
  * @typedef {{
  *   Default: DescriptionConfiguration;
+ *   ShokoCollection: ToggleDescriptionConfiguration;
+ *   TmdbCollection: ToggleDescriptionConfiguration;
+ *   AnidbMovie: ToggleDescriptionConfiguration;
+ *   ShokoMovie: ToggleDescriptionConfiguration;
+ *   TmdbMovie: ToggleDescriptionConfiguration;
+ *   AnidbAnime: ToggleDescriptionConfiguration;
+ *   ShokoSeries: ToggleDescriptionConfiguration;
+ *   TmdbShow: ToggleDescriptionConfiguration;
+ *   AnidbSeason: ToggleDescriptionConfiguration;
+ *   ShokoSeason: ToggleDescriptionConfiguration;
+ *   TmdbSeason: ToggleDescriptionConfiguration;
+ *   AnidbEpisode: ToggleDescriptionConfiguration;
+ *   ShokoEpisode: ToggleDescriptionConfiguration;
  * }} AllDescriptionsConfiguration
  */
 
@@ -368,9 +410,28 @@ export const LibraryMenu = globalThis.LibraryMenu;
  */
 
 /**
+ * @typedef {ImageConfiguration & {
+ *   Enabled: boolean;
+ * }} ToggleImageConfiguration
+ */
+
+/**
  * @typedef {{
  *   DebugMode: boolean;
  *   Default: ImageConfiguration;
+ *   ShokoCollection: ToggleImageConfiguration;
+ *   TmdbCollection: ToggleImageConfiguration;
+ *   AnidbMovie: ToggleImageConfiguration;
+ *   ShokoMovie: ToggleImageConfiguration;
+ *   TmdbMovie: ToggleImageConfiguration;
+ *   AnidbAnime: ToggleImageConfiguration;
+ *   ShokoSeries: ToggleImageConfiguration;
+ *   TmdbShow: ToggleImageConfiguration;
+ *   AnidbSeason: ToggleImageConfiguration;
+ *   ShokoSeason: ToggleImageConfiguration;
+ *   TmdbSeason: ToggleImageConfiguration;
+ *   AnidbEpisode: ToggleImageConfiguration;
+ *   ShokoEpisode: ToggleImageConfiguration;
  * }} AllImagesConfiguration
  */
 
@@ -632,6 +693,11 @@ globalThis.ShokoApiClient = ShokoApiClient;
 /**
  * @type {{
  *   config: PluginConfiguration | null;
+ *   metadata: {
+ *     title: AllConfigurationTypes;
+ *     description: AllConfigurationTypes;
+ *     image: AllConfigurationTypes;
+ *   }
  *   seriesId: string;
  *   seriesQuery: string;
  *   seriesList: SimpleSeries[] | null;
@@ -645,17 +711,22 @@ globalThis.ShokoApiClient = ShokoApiClient;
  * }}
  */
 export const State = window["SHOKO_STATE_OBJECT"] || (window["SHOKO_STATE_OBJECT"] = {
-   config: null,
-   seriesId: "",
-   seriesQuery: "",
-   seriesList: null,
-   seriesTimeout: null,
-   currentTab: "connection",
-   clickCounter: 0,
-   advancedMode: false,
-   debugMode: false,
-   connected: false,
-   timeout: null,
+  config: null,
+  metadata: {
+    title: "Default",
+    description: "Default",
+    image: "Default",
+  },
+  seriesId: "",
+  seriesQuery: "",
+  seriesList: null,
+  seriesTimeout: null,
+  currentTab: "connection",
+  clickCounter: 0,
+  advancedMode: false,
+  debugMode: false,
+  connected: false,
+  timeout: null,
 });
 
 //#endregion
@@ -1000,6 +1071,11 @@ export function setupEvents(view, events, initialTab = "connection", hide = fals
             // to another view.
             State.timeout = setTimeout(() => {
                 State.config = null;
+                State.metadata = {
+                    title: "Default",
+                    description: "Default",
+                    image: "Default",
+                };
                 State.currentTab = initialTab;
                 State.clickCounter = 0;
                 State.advancedMode = false;

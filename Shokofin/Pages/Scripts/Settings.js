@@ -104,6 +104,12 @@ createControllerFactory({
                     State.clickCounter = 0;
                     State.advancedMode = !State.advancedMode;
                     State.debugMode = false;
+                    // Reset the metadata views if we're disabling expert mode.
+                    if (!State.advancedMode) {
+                        State.metadata.title = "Default";
+                        State.metadata.description = "Default";
+                        State.metadata.image = "Default";
+                    }
                     const config = await toggleExpertMode(State.advancedMode, State.debugMode);
                     await updateView(view, form, config);
                     return;
@@ -119,6 +125,12 @@ createControllerFactory({
                     State.clickCounter = 0;
                     State.advancedMode = !State.advancedMode;
                     State.debugMode = State.advancedMode;
+                    // Reset the metadata views if we're disabling expert mode.
+                    if (!State.advancedMode) {
+                        State.metadata.title = "Default";
+                        State.metadata.description = "Default";
+                        State.metadata.image = "Default";
+                    }
                     const config = await toggleExpertMode(State.advancedMode, State.debugMode);
                     await updateView(view, form, config);
                     return;
@@ -211,6 +223,24 @@ createControllerFactory({
                     }
                 }
             }
+
+            form.querySelector("#Title_ConfigureFor").addEventListener("change", function () {
+                applyTitleFormToConfig(form, State.config);
+                State.metadata.title = this.value;
+                applyConfigToForm(form, State.config);
+            });
+
+            form.querySelector("#Description_ConfigureFor").addEventListener("change", function () {
+                applyDescriptionFormToConfig(form, State.config);
+                State.metadata.description = this.value;
+                applyConfigToForm(form, State.config);
+            });
+
+            form.querySelector("#Image_ConfigureFor").addEventListener("change", function () {
+                applyImageFormToConfig(form, State.config);
+                State.metadata.image = this.value;
+                applyConfigToForm(form, State.config);
+            });
 
             form.querySelector("#MediaFolderSelector").addEventListener("change", function () {
                 applyLibraryConfigToForm(form, this.value);
@@ -407,6 +437,15 @@ async function updateView(view, form, config) {
 
         case "metadata":
             activeSections.push("Metadata_Title", "Metadata_Description", "Metadata_TagGenre", "Metadata_Image", "Metadata_Misc");
+            if (form.querySelector("#Title_ConfigureFor").value !== State.metadata.title) {
+                form.querySelector("#Title_ConfigureFor").value = State.metadata.title;
+            }
+            if (form.querySelector("#Description_ConfigureFor").value !== State.metadata.description) {
+                form.querySelector("#Description_ConfigureFor").value = State.metadata.description;
+            }
+            if (form.querySelector("#Image_ConfigureFor").value !== State.metadata.image) {
+                form.querySelector("#Image_ConfigureFor").value = State.metadata.image;
+            }
             if (form.querySelectorAll("#TitleAlternateListContainer > fieldset").length >= 5) {
                 form.querySelector("button[name=\"add-alternate-title\"]").setAttribute("disabled", "");
             }
@@ -504,26 +543,13 @@ function applyFormToConfig(form, config) {
     switch (State.currentTab) {
         case "metadata": {
             config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
-            config.Title.Default.RemoveDuplicates = form.querySelector("#RemoveDuplicateTitles").checked;
-            ([config.Title.Default.MainTitle.List, config.Title.Default.MainTitle.Order] = retrieveSortableCheckboxList(form, "TitleMainList"));
-            config.Title.Default.MainTitle.AllowAny = form.querySelector("#TitleMainAllowAny").checked;
+            applyTitleFormToConfig(form, config);
 
-            const alternateTitles = form.querySelectorAll("#TitleAlternateListContainer > fieldset");
-            config.Title.Default.AlternateTitles = [];
-            for (let i = 1; i <= alternateTitles.length; i++) {
-                const [list, order] = retrieveSortableCheckboxList(form, `TitleAlternateList_${i}`);
-                config.Title.Default.AlternateTitles.push({
-                    List: list,
-                    Order: order,
-                    AllowAny: form.querySelector(`#TitleAlternateAllowAny_${i}`).checked,
-                });
-            }
+            config.DescriptionConversionMode = form.querySelector("#DescriptionConversionMode").value;
+            applyDescriptionFormToConfig(form, config);
 
             const tagExcludeList = filterTags(form.querySelector("#TagExcludeList").value);
             const genreExcludeList = filterTags(form.querySelector("#GenreExcludeList").value);
-            ([config.Description.Default.List, config.Description.Default.Order] = retrieveSortableCheckboxList(form, "DescriptionSourceList"));
-            config.DescriptionConversionMode = form.querySelector("#DescriptionConversionMode").value;
-
             config.HideUnverifiedTags = form.querySelector("#HideUnverifiedTags").checked;
             config.TagSources = retrieveCheckboxList(form, "TagSources").join(", ");
             config.TagIncludeFilters = retrieveCheckboxList(form, "TagIncludeFilters").join(", ");
@@ -539,13 +565,8 @@ function applyFormToConfig(form, config) {
             config.GenreExcludeList = genreExcludeList;
             form.querySelector("#GenreExcludeList").value = genreExcludeList.join(", ");
 
-            config.Image.Default.UsePreferred = form.querySelector("#Image_UsePreferred").checked;
-            config.Image.Default.UseCommunityRating = form.querySelector("#Image_UseCommunityRating").checked;
-            config.Image.Default.UseDimensions = form.querySelector("#Image_UseDimensions").checked;
-            ([config.Image.Default.PosterList, config.Image.Default.PosterOrder] = retrieveSortableCheckboxList(form, "Image_PosterList"));
-            ([config.Image.Default.LogoList, config.Image.Default.LogoOrder] = retrieveSortableCheckboxList(form, "Image_LogoList"));
-            ([config.Image.Default.BackdropList, config.Image.Default.BackdropOrder] = retrieveSortableCheckboxList(form, "Image_BackdropList"));
             config.Image.DebugMode = form.querySelector("#Image_DebugMode").checked;
+            applyImageFormToConfig(form, config);
 
             config.Metadata_StudioOnlyAnimationWorks = form.querySelector("#Metadata_StudioOnlyAnimationWorks").checked;
             ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableCheckboxList(form, "Metadata_ContentRatingList"));
@@ -684,6 +705,64 @@ function applyFormToConfig(form, config) {
     }
 }
 
+/**
+ * Apply the title settings from a form to a configuration object.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ */
+function applyTitleFormToConfig(form, config) {
+    if (config.Title[State.metadata.title].Enabled !== undefined) {
+        config.Title[State.metadata.title].Enabled = form.querySelector("#Title_ConfigureFor_Enabled").checked;
+    }
+    config.Title[State.metadata.title].RemoveDuplicates = form.querySelector("#RemoveDuplicateTitles").checked;
+    ([config.Title[State.metadata.title].MainTitle.List, config.Title[State.metadata.title].MainTitle.Order] = retrieveSortableCheckboxList(form, "TitleMainList"));
+    config.Title[State.metadata.title].MainTitle.AllowAny = form.querySelector("#TitleMainAllowAny").checked;
+
+    config.Title[State.metadata.title].AlternateTitles = [];
+    const alternateTitles = form.querySelectorAll("#TitleAlternateListContainer > fieldset");
+    for (let i = 1; i <= alternateTitles.length; i++) {
+        const [list, order] = retrieveSortableCheckboxList(form, `TitleAlternateList_${i}`);
+        config.Title[State.metadata.title].AlternateTitles.push({
+            List: list,
+            Order: order,
+            AllowAny: form.querySelector(`#TitleAlternateAllowAny_${i}`).checked,
+        });
+    }
+}
+
+/**
+ * Apply the description settings from a form to a configuration object.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ */
+function applyDescriptionFormToConfig(form, config) {
+    if (config.Description[State.metadata.description].Enabled !== undefined) {
+        config.Description[State.metadata.description].Enabled = form.querySelector("#Description_ConfigureFor_Enabled").checked;
+    }
+    ([config.Description[State.metadata.description].List, config.Description[State.metadata.description].Order] = retrieveSortableCheckboxList(form, "DescriptionSourceList"));
+}
+
+/**
+ * Apply the image settings from a form to a configuration object.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ */
+function applyImageFormToConfig(form, config) {
+    if (config.Image[State.metadata.image].Enabled !== undefined) {
+        config.Image[State.metadata.image].Enabled = form.querySelector("#Image_ConfigureFor_Enabled").checked;
+    }
+    config.Image[State.metadata.image].UsePreferred = form.querySelector("#Image_UsePreferred").checked;
+    config.Image[State.metadata.image].UseCommunityRating = form.querySelector("#Image_UseCommunityRating").checked;
+    config.Image[State.metadata.image].UseDimensions = form.querySelector("#Image_UseDimensions").checked;
+    ([config.Image[State.metadata.image].PosterList, config.Image[State.metadata.image].PosterOrder] = retrieveSortableCheckboxList(form, "Image_PosterList"));
+    ([config.Image[State.metadata.image].LogoList, config.Image[State.metadata.image].LogoOrder] = retrieveSortableCheckboxList(form, "Image_LogoList"));
+    ([config.Image[State.metadata.image].BackdropList, config.Image[State.metadata.image].BackdropOrder] = retrieveSortableCheckboxList(form, "Image_BackdropList"));
+}
+
+
 //#endregion
 
 //#region Configuration → Form
@@ -705,19 +784,23 @@ async function applyConfigToForm(form, config) {
         }
 
         case "metadata": {
+            form.querySelector("#Title_ConfigureFor_Enabled").checked = config.Title[State.metadata.title].Enabled !== false;
+            form.querySelector("#Title_ConfigureFor_Enabled").disabled = config.Title[State.metadata.title].Enabled === undefined;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
-            form.querySelector("#RemoveDuplicateTitles").checked = config.Title.Default.RemoveDuplicates;
-            renderSortableCheckboxList(form, "TitleMainList", config.Title.Default.MainTitle.List, config.Title.Default.MainTitle.Order);
-            form.querySelector("#TitleMainAllowAny").checked = config.Title.Default.MainTitle.AllowAny;
+            form.querySelector("#RemoveDuplicateTitles").checked = config.Title[State.metadata.title].RemoveDuplicates;
+            renderSortableCheckboxList(form, "TitleMainList", config.Title[State.metadata.title].MainTitle.List, config.Title[State.metadata.title].MainTitle.Order);
+            form.querySelector("#TitleMainAllowAny").checked = config.Title[State.metadata.title].MainTitle.AllowAny;
 
-            const configAlternateTitles = [...config.Title.Default.AlternateTitles];
+            const configAlternateTitles = [...config.Title[State.metadata.title].AlternateTitles];
             if (configAlternateTitles.length === 0) {
                 configAlternateTitles.push({ List: [], Order: [], AllowAny: false });
             }
 
             renderAlternateTitles(form, configAlternateTitles);
 
-            renderSortableCheckboxList(form, "DescriptionSourceList", config.Description.Default.List, config.Description.Default.Order);
+            form.querySelector("#Description_ConfigureFor_Enabled").checked = config.Description[State.metadata.description].Enabled !== false;
+            form.querySelector("#Description_ConfigureFor_Enabled").disabled = config.Description[State.metadata.description].Enabled === undefined;
+            renderSortableCheckboxList(form, "DescriptionSourceList", config.Description[State.metadata.description].List, config.Description[State.metadata.description].Order);
             form.querySelector("#DescriptionConversionMode").value = config.DescriptionConversionMode;
 
             form.querySelector("#HideUnverifiedTags").checked = config.HideUnverifiedTags;
@@ -733,12 +816,14 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#GenreMaximumDepth").value = config.GenreMaximumDepth.toString();
             form.querySelector("#GenreExcludeList").value = config.GenreExcludeList.join(", ");
 
-            form.querySelector("#Image_UsePreferred").checked = config.Image.Default.UsePreferred;
-            form.querySelector("#Image_UseCommunityRating").checked = config.Image.Default.UseCommunityRating;
-            form.querySelector("#Image_UseDimensions").checked = config.Image.Default.UseDimensions;
-            renderSortableCheckboxList(form, "Image_PosterList", config.Image.Default.PosterList, config.Image.Default.PosterOrder);
-            renderSortableCheckboxList(form, "Image_LogoList", config.Image.Default.LogoList, config.Image.Default.LogoOrder);
-            renderSortableCheckboxList(form, "Image_BackdropList", config.Image.Default.BackdropList, config.Image.Default.BackdropOrder);
+            form.querySelector("#Image_ConfigureFor_Enabled").checked = config.Image[State.metadata.image].Enabled !== false;
+            form.querySelector("#Image_ConfigureFor_Enabled").disabled = config.Image[State.metadata.image].Enabled === undefined;
+            form.querySelector("#Image_UsePreferred").checked = config.Image[State.metadata.image].UsePreferred;
+            form.querySelector("#Image_UseCommunityRating").checked = config.Image[State.metadata.image].UseCommunityRating;
+            form.querySelector("#Image_UseDimensions").checked = config.Image[State.metadata.image].UseDimensions;
+            renderSortableCheckboxList(form, "Image_PosterList", config.Image[State.metadata.image].PosterList, config.Image[State.metadata.image].PosterOrder);
+            renderSortableCheckboxList(form, "Image_LogoList", config.Image[State.metadata.image].LogoList, config.Image[State.metadata.image].LogoOrder);
+            renderSortableCheckboxList(form, "Image_BackdropList", config.Image[State.metadata.image].BackdropList, config.Image[State.metadata.image].BackdropOrder);
             form.querySelector("#Image_DebugMode").checked = config.Image.DebugMode;
 
             form.querySelector("#Metadata_StudioOnlyAnimationWorks").checked = config.Metadata_StudioOnlyAnimationWorks;
