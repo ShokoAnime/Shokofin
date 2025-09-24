@@ -223,7 +223,7 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
             result.Add((
                 ProviderNames.Anidb,
                 $"(a{anidbInfo.AnidbAnimeId})",
-                $"{ProviderUrls.Anidb}/anime/{anidbInfo.AnidbAnimeId}"
+                $"/anime/{anidbInfo.AnidbAnimeId}"
             ));
 
         foreach (var tmdbInfo in seasonInfo.TmdbSeasons) {
@@ -268,7 +268,7 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
             result.Add((
                 ProviderNames.Anidb,
                 $"(e{anidbInfo.AnidbAnimeId}) (a{anidbInfo.AnidbAnimeId} > {anidbInfo.GetEpisodeNumberText()})",
-                $"{ProviderUrls.Anidb}/episode/{anidbInfo.AnidbAnimeId}"
+                $"/episode/{anidbInfo.AnidbAnimeId}"
             ));
 
         foreach (var tmdbInfo in episodeInfo.TmdbEpisodes) {
