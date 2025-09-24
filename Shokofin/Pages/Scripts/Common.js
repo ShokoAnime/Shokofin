@@ -1410,8 +1410,7 @@ export function renderSortableCheckboxList(form, name, enabled, order) {
         if (!item)
             continue;
         list.append(item);
-        if (enabled.includes(option))
-            checkbox.checked = true;
+        checkbox.checked = enabled.includes(option);
         if (isSortable)
             adjustSortableListElement(item, index++);
     }
