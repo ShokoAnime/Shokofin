@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.41",
+                "changelog": "`fix`: **Add missing branch for movie collection**.\n\n`fix`: **No stall files during VFS generation for entities**:\n\nDisable the request cache for the 'get files' endpoints, so the VFS generation won't fail in edge cases where the series metadata has been updated right before a file is matched, preventing said file from being discovered.\n\nAlso removed the unused 'get files' endpoints. We can add them back if/when necessary.\n\n`fix`: **Add missing enablement checks**.\n\n`chore`: **Remove double `;`s**.\n\n`fix`: **Add dedicated path for legacy refresh w/image refresh**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.41/shoko_5.0.4.41.zip",
+                "checksum": "c333872f2af2a5d719ca6721cb578f13",
+                "timestamp": "2025-09-25T22:51:18Z"
+            },
+            {
                 "version": "5.0.4.40",
                 "changelog": "`feat`: **Expose per-entity-type overrides for title, desc. & image settings in UI**.\n\n`fix`: **Properly set checked state when rendering sortable checkbox list**.\n\n`fix`: **Only set a default option for the default title config**.\n\n`fix`: **Don't add tvdb to default description order list upon startup**.\n\n`misc`: **Move image settings section**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.37/shoko_5.0.4.37.zip",
                 "checksum": "67dbcaf6a3b5fdb77bcbbba33580bbf5",
                 "timestamp": "2025-09-23T13:45:00Z"
-            },
-            {
-                "version": "5.0.4.36",
-                "changelog": "`fix`: **Add anti season name patterns**.\n\n`chore`: **Remove unnecessary import**.\n\n`fix`: **Create new instance before disposing previous, add TODO**.\n\n`feat`: **Add refresh field value to update owned items**.\n\n`fix`: **Don't do recursive updates during auto refresh**:\n\nSince we're updating the items bottom-up, so we shouldn't allow it to do a top-down search.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.36/shoko_5.0.4.36.zip",
-                "checksum": "eb856a75977c7816a3371cadf9346682",
-                "timestamp": "2025-09-22T18:52:38Z"
             }
         ]
     }
