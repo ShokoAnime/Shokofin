@@ -644,12 +644,7 @@ public class SeasonInfo : IExtendedItemInfo {
         }
     }
 
-    private IReadOnlyList<(File file, string seriesId, HashSet<string> episodeIds)>? _cachedFiles = null;
-
     public async Task<IReadOnlyList<(File file, string seriesId, HashSet<string> episodeIds)>> GetFiles() {
-        if (_cachedFiles != null)
-            return _cachedFiles;
-
         var list = new List<(File file, string seriesId, HashSet<string> episodeIds)>();
         if (StructureType is SeriesStructureType.TMDB_SeriesAndMovies) {
             if (Id[0] is IdPrefix.TmdbShow) {
@@ -718,7 +713,6 @@ public class SeasonInfo : IExtendedItemInfo {
                 );
         }
 
-        _cachedFiles = list;
         return list;
     }
 
