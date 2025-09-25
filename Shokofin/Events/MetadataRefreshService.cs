@@ -97,9 +97,9 @@ public class MetadataRefreshService {
         var updated = false;
         refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Collection;
         if (refreshFields.Value.HasFlag(MetadataRefreshField.LegacyRefresh))
-            updated = await LegacyRefreshMetadata(boxSet).ConfigureAwait(false);
+            updated = await LegacyRefreshMetadata(boxSet, refreshFields.Value.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
 
-        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh) {
+        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
             _boxSetProvider ??= _serviceProvider.GetRequiredService<BoxSetProvider>();
             var metadataResult = await _boxSetProvider.GetMetadata(new() {
                 Name = boxSet.Name,
@@ -138,9 +138,9 @@ public class MetadataRefreshService {
         var updated = false;
         refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Movie;
         if (refreshFields.Value.HasFlag(MetadataRefreshField.LegacyRefresh))
-            updated = await LegacyRefreshMetadata(movie).ConfigureAwait(false) || updated;
+            updated = await LegacyRefreshMetadata(movie, refreshFields.Value.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false) || updated;
 
-        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh) {
+        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
             _movieProvider ??= _serviceProvider.GetRequiredService<MovieProvider>();
             var metadataResult = await _movieProvider.GetMetadata(new() {
                 Path = movie.Path,
@@ -194,9 +194,9 @@ public class MetadataRefreshService {
         var updated = false;
         refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Series;
         if (!_lookup.IsEnabledForItem(series) || refreshFields.Value.HasFlag(MetadataRefreshField.LegacyRefresh))
-            updated = await LegacyRefreshMetadata(series).ConfigureAwait(false);
+            updated = await LegacyRefreshMetadata(series, refreshFields.Value.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
 
-        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh) {
+        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
             _seriesProvider ??= _serviceProvider.GetRequiredService<SeriesProvider>();
             var metadataResult = await _seriesProvider.GetMetadata(new() {
                 Path = series.Path,
@@ -239,9 +239,9 @@ public class MetadataRefreshService {
         var updated = false;
         refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Season;
         if (!_lookup.IsEnabledForItem(season) || refreshFields.Value.HasFlag(MetadataRefreshField.LegacyRefresh))
-            updated = await LegacyRefreshMetadata(season).ConfigureAwait(false);
+            updated = await LegacyRefreshMetadata(season, refreshFields.Value.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
 
-        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh) {
+        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
             if (season.Series is not { } series)
                 return updated;
 
@@ -289,9 +289,9 @@ public class MetadataRefreshService {
         var updated = false;
         refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Episode;
         if (!_lookup.IsEnabledForItem(episode) || refreshFields.Value.HasFlag(MetadataRefreshField.LegacyRefresh))
-            updated = await LegacyRefreshMetadata(episode).ConfigureAwait(false);
+            updated = await LegacyRefreshMetadata(episode, refreshFields.Value.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
 
-        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh) {
+        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
             _episodeProvider ??= _serviceProvider.GetRequiredService<EpisodeProvider>();
             var metadataResult = await _episodeProvider.GetMetadata(new() {
                 Path = episode.Path,
@@ -356,9 +356,9 @@ public class MetadataRefreshService {
         var updated = false;
         refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Video;
         if (!_lookup.IsEnabledForItem(video) || refreshFields.Value.HasFlag(MetadataRefreshField.LegacyRefresh))
-            return await LegacyRefreshMetadata(video).ConfigureAwait(false);
+            return await LegacyRefreshMetadata(video, refreshFields.Value.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
 
-        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh) {
+        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
             if (video is Trailer trailer) {
                 _trailerProvider ??= _serviceProvider.GetRequiredService<TrailerProvider>();
                 var metadataResult = await _trailerProvider.GetMetadata(new() {
@@ -532,15 +532,15 @@ public class MetadataRefreshService {
         return updatedFields.Count > 0;
     }
 
-    private async Task<bool> LegacyRefreshMetadata(BaseItem item)
+    private async Task<bool> LegacyRefreshMetadata(BaseItem item, bool updateImages = false)
     {
         var updateType = await item.RefreshMetadata(new(_directoryService) {
             MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
-            ImageRefreshMode = MetadataRefreshMode.None,
+            ImageRefreshMode = updateImages ? MetadataRefreshMode.FullRefresh : MetadataRefreshMode.None,
             ReplaceAllMetadata = true,
-            ReplaceAllImages = false,
+            ReplaceAllImages = updateImages,
             RemoveOldMetadata = true,
-            ReplaceImages = [],
+            ReplaceImages = updateImages ? Enum.GetValues<ImageType>().ToArray() : [],
             IsAutomated = true,
             EnableRemoteContentProbe = true,
         }, CancellationToken.None).ConfigureAwait(false);
