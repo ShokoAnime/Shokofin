@@ -480,6 +480,23 @@ public partial class ShokoApiManager : IDisposable {
                             break;
                         }
 
+                        case IdPrefix.TmdbMovieCollection: {
+                            var movies = (await ApiClient.GetTmdbMoviesInMovieCollection(seasonId[1..]).ConfigureAwait(false))
+                                .Select(m => m.Id)
+                                .ToHashSet();
+                            foreach (var episodeInfo in seasonInfo.EpisodeList) {
+                                var episodeFiles = await ApiClient.GetFilesForTmdbMovie(episodeInfo.Id[1..]).ConfigureAwait(false);
+                                var movieId = int.Parse(episodeInfo.Id[1..]);
+                                foreach (var file in episodeFiles) {
+                                    if (file.CrossReferences.FirstOrDefault(x => x.Series.Shoko.HasValue && x.Episodes.Any(e => e.Shoko.HasValue && e.TMDB.Movie.Contains(movieId))) is not { } xref)
+                                        continue;
+
+                                    episodeIds.Add(IdPrefix.TmdbMovie + movieId.ToString());
+                                }
+                            }
+                            break;
+                        }
+
                         default: {
                             var files = await ApiClient.GetFilesForShokoSeries(seasonId).ConfigureAwait(false);
                             foreach (var file in files) {
