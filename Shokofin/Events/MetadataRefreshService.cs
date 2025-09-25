@@ -91,6 +91,9 @@ public class MetadataRefreshService {
         if (!_refreshedItems.TryAdd(boxSet.Id, new()))
             return false;
 
+        if (!_lookup.IsEnabledForItem(boxSet))
+            return await LegacyRefreshMetadata(boxSet).ConfigureAwait(false);
+
         var updated = false;
         refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Collection;
         if (refreshFields.Value.HasFlag(MetadataRefreshField.LegacyRefresh))
@@ -185,6 +188,9 @@ public class MetadataRefreshService {
         if (!_refreshedItems.TryAdd(series.Id, new()))
             return false;
 
+        if (!_lookup.IsEnabledForItem(series))
+            return await LegacyRefreshMetadata(series).ConfigureAwait(false);
+
         var updated = false;
         refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Series;
         if (!_lookup.IsEnabledForItem(series) || refreshFields.Value.HasFlag(MetadataRefreshField.LegacyRefresh))
@@ -226,6 +232,9 @@ public class MetadataRefreshService {
     public async Task<bool> RefreshSeason(Season season, MetadataRefreshField? refreshFields = null, CancellationToken cancellationToken = default) {
         if (!_refreshedItems.TryAdd(season.Id, new()))
             return false;
+
+        if (!_lookup.IsEnabledForItem(season))
+            return await LegacyRefreshMetadata(season).ConfigureAwait(false);
 
         var updated = false;
         refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Season;
@@ -273,6 +282,9 @@ public class MetadataRefreshService {
     public async Task<bool> RefreshEpisode(Episode episode, MetadataRefreshField? refreshFields = null, CancellationToken cancellationToken = default) {
         if (!_refreshedItems.TryAdd(episode.Id, new()))
             return false;
+
+        if (!_lookup.IsEnabledForItem(episode))
+            return await LegacyRefreshMetadata(episode).ConfigureAwait(false);
 
         var updated = false;
         refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Episode;
@@ -337,6 +349,9 @@ public class MetadataRefreshService {
     public async Task<bool> RefreshVideo(Video video, MetadataRefreshField? refreshFields = null, CancellationToken cancellationToken = default) {
         if (!_refreshedItems.TryAdd(video.Id, new()))
             return false;
+
+        if (!_lookup.IsEnabledForItem(video))
+            return await LegacyRefreshMetadata(video).ConfigureAwait(false);
 
         var updated = false;
         refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Video;
