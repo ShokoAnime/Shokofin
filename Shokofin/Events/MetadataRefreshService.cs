@@ -148,7 +148,7 @@ public class MetadataRefreshService {
                 MetadataLanguage = movie.GetPreferredMetadataLanguage(),
                 MetadataCountryCode = movie.GetPreferredMetadataCountryCode(),
                 IsAutomated = true,
-            }, cancellationToken).ConfigureAwait(false);;
+            }, cancellationToken).ConfigureAwait(false);
             if (metadataResult is not { HasMetadata: true, Item: { } metadata })
                 return updated;
 
@@ -204,7 +204,7 @@ public class MetadataRefreshService {
                 MetadataLanguage = series.GetPreferredMetadataLanguage(),
                 MetadataCountryCode = series.GetPreferredMetadataCountryCode(),
                 IsAutomated = true,
-            }, cancellationToken).ConfigureAwait(false);;
+            }, cancellationToken).ConfigureAwait(false);
             if (metadataResult is not { HasMetadata: true, Item: { } metadata })
                 return updated;
 
@@ -254,7 +254,7 @@ public class MetadataRefreshService {
                 MetadataCountryCode = season.GetPreferredMetadataCountryCode(),
                 SeriesProviderIds = series.ProviderIds.ToDictionary(),
                 IsAutomated = true,
-            }, cancellationToken).ConfigureAwait(false);;
+            }, cancellationToken).ConfigureAwait(false);
             if (metadataResult is not { HasMetadata: true, Item: { } metadata })
                 return updated;
 
@@ -300,7 +300,7 @@ public class MetadataRefreshService {
                 MetadataCountryCode = episode.GetPreferredMetadataCountryCode(),
                 IsMissingEpisode = episode.IsMissingEpisode,
                 IsAutomated = true,
-            }, cancellationToken).ConfigureAwait(false);;
+            }, cancellationToken).ConfigureAwait(false);
             if (metadataResult is not { HasMetadata: true, Item: { } metadata })
                 return updated;
 
@@ -366,7 +366,7 @@ public class MetadataRefreshService {
                     MetadataLanguage = trailer.GetPreferredMetadataLanguage(),
                     MetadataCountryCode = trailer.GetPreferredMetadataCountryCode(),
                     IsAutomated = true,
-                }, cancellationToken).ConfigureAwait(false);;
+                }, cancellationToken).ConfigureAwait(false);
                 if (metadataResult is not { HasMetadata: true, Item: { } metadata })
                     return updated;
 
@@ -543,7 +543,7 @@ public class MetadataRefreshService {
             ReplaceImages = [],
             IsAutomated = true,
             EnableRemoteContentProbe = true,
-        }, CancellationToken.None).ConfigureAwait(false);;
+        }, CancellationToken.None).ConfigureAwait(false);
         return updateType is not ItemUpdateType.None;
     }
 
