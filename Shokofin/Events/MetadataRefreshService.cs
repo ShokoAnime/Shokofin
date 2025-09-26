@@ -517,17 +517,15 @@ public class MetadataRefreshService {
             updatedFields.Add(nameof(MetadataRefreshField.CastAndCrew));
         }
 
-        if (updatedFields.Count > 0) {
-            item.DateLastRefreshed = DateTime.UtcNow;
-
 #pragma warning disable CA2254 // Template should be a static expression
-            _logger.LogDebug($"Updating fields for {item.GetBaseItemKind()} {{ItemName}} (Id={{Guid}},UpdatedFields={{UpdatedFieldList}})", item.Name, item.Id, updatedFields);
+        var reason = updatedFields.Count > 0 ? ItemUpdateType.MetadataImport : ItemUpdateType.None;
+        _logger.LogDebug($"Updating fields for {item.GetBaseItemKind()} {{ItemName}} (Id={{Guid}},Reason={{Reason}},UpdatedFields={{UpdatedFieldList}})", item.Name, item.Id, reason, updatedFields);
 
-            await item.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken).ConfigureAwait(false);
+        item.DateLastRefreshed = DateTime.UtcNow;
+        await item.UpdateToRepositoryAsync(ItemUpdateType.MetadataImport, cancellationToken).ConfigureAwait(false);
 
-            _logger.LogDebug($"Updated fields for {item.GetBaseItemKind()} {{ItemName}} (Id={{Guid}},UpdatedFields={{UpdatedFieldList}})", item.Name, item.Id, updatedFields);
+        _logger.LogDebug($"Updated fields for {item.GetBaseItemKind()} {{ItemName}} (Id={{Guid}},Reason={{Reason}},UpdatedFields={{UpdatedFieldList}})", item.Name, item.Id, reason, updatedFields);
 #pragma warning restore CA2254 // Template should be a static expression
-        }
 
         return updatedFields.Count > 0;
     }
