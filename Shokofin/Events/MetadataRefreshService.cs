@@ -5,13 +5,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
+using MediaBrowser.Controller;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
@@ -51,9 +51,9 @@ public class MetadataRefreshService {
 
     private readonly ILogger<MetadataRefreshService> _logger;
 
-    private readonly ILibraryManager _libraryManager;
+    private readonly IServerApplicationHost _applicationHost;
 
-    private readonly IServiceProvider _serviceProvider;
+    private readonly ILibraryManager _libraryManager;
 
     private readonly IDirectoryService _directoryService;
 
@@ -63,15 +63,15 @@ public class MetadataRefreshService {
 
     public MetadataRefreshService(
         ILogger<MetadataRefreshService> logger,
+        IServerApplicationHost applicationHost,
         ILibraryManager libraryManager,
-        IServiceProvider serviceProvider,
         IDirectoryService directoryService,
         ShokoIdLookup lookup,
         UsageTracker usageTracker
     ) {
         _logger = logger;
+        _applicationHost = applicationHost;
         _libraryManager = libraryManager;
-        _serviceProvider = serviceProvider;
         _directoryService = directoryService;
         _lookup = lookup;
         _usageTracker = usageTracker;
@@ -100,7 +100,7 @@ public class MetadataRefreshService {
             updated = await LegacyRefreshMetadata(boxSet, refreshFields.Value.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
 
         if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
-            _boxSetProvider ??= _serviceProvider.GetRequiredService<BoxSetProvider>();
+            _boxSetProvider ??= _applicationHost.GetExports<BoxSetProvider>().First();
             var metadataResult = await _boxSetProvider.GetMetadata(new() {
                 Name = boxSet.Name,
                 Path = boxSet.Path,
@@ -121,7 +121,7 @@ public class MetadataRefreshService {
                     updated = await RefreshVideo(extra, refreshFields.Value, cancellationToken).ConfigureAwait(false) || updated;
             }
 
-            _customBoxSetProvider ??= _serviceProvider.GetRequiredService<CustomBoxSetProvider>();
+            _customBoxSetProvider ??= _applicationHost.GetExports<CustomBoxSetProvider>().First();
             updated = await RefreshBaseItem(boxSet, metadata, metadataResult, refreshFields.Value, _customBoxSetProvider, cancellationToken).ConfigureAwait(false) || updated;
         }
 
@@ -141,7 +141,7 @@ public class MetadataRefreshService {
             updated = await LegacyRefreshMetadata(movie, refreshFields.Value.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false) || updated;
 
         if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
-            _movieProvider ??= _serviceProvider.GetRequiredService<MovieProvider>();
+            _movieProvider ??= _applicationHost.GetExports<MovieProvider>().First();
             var metadataResult = await _movieProvider.GetMetadata(new() {
                 Path = movie.Path,
                 Name = movie.Name,
@@ -161,7 +161,7 @@ public class MetadataRefreshService {
                     updated = await RefreshVideo(extra, refreshFields.Value, cancellationToken).ConfigureAwait(false) || updated;
             }
 
-            _customMovieProvider ??= _serviceProvider.GetRequiredService<CustomMovieProvider>();
+            _customMovieProvider ??= _applicationHost.GetExports<CustomMovieProvider>().First();
             updated = await RefreshBaseItem(movie, metadata, metadataResult, refreshFields.Value, _customMovieProvider, cancellationToken).ConfigureAwait(false) || updated;
             if (movie.LinkedAlternateVersions.Length > 0) {
                 foreach (var part in movie.LinkedAlternateVersions) {
@@ -197,7 +197,7 @@ public class MetadataRefreshService {
             updated = await LegacyRefreshMetadata(series, refreshFields.Value.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
 
         if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
-            _seriesProvider ??= _serviceProvider.GetRequiredService<SeriesProvider>();
+            _seriesProvider ??= _applicationHost.GetExports<SeriesProvider>().First();
             var metadataResult = await _seriesProvider.GetMetadata(new() {
                 Path = series.Path,
                 Name = series.Name,
@@ -208,7 +208,7 @@ public class MetadataRefreshService {
             if (metadataResult is not { HasMetadata: true, Item: { } metadata })
                 return updated;
 
-            _customSeriesProvider ??= _serviceProvider.GetRequiredService<CustomSeriesProvider>();
+            _customSeriesProvider ??= _applicationHost.GetExports<CustomSeriesProvider>().First();
             updated = await RefreshBaseItem(series, metadata, metadataResult, refreshFields.Value, _customSeriesProvider, cancellationToken).ConfigureAwait(false) || updated;
 
             if (refreshFields.Value.HasFlag(MetadataRefreshField.OwnedItems)) {
@@ -245,7 +245,7 @@ public class MetadataRefreshService {
             if (season.Series is not { } series)
                 return updated;
 
-            _seasonProvider ??= _serviceProvider.GetRequiredService<SeasonProvider>();
+            _seasonProvider ??= _applicationHost.GetExports<SeasonProvider>().First();
             var metadataResult = await _seasonProvider.GetMetadata(new() {
                 Path = season.Path,
                 Name = season.Name,
@@ -258,7 +258,7 @@ public class MetadataRefreshService {
             if (metadataResult is not { HasMetadata: true, Item: { } metadata })
                 return updated;
 
-            _customSeasonProvider ??= _serviceProvider.GetRequiredService<CustomSeasonProvider>();
+            _customSeasonProvider ??= _applicationHost.GetExports<CustomSeasonProvider>().First();
             updated = await RefreshBaseItem(season, metadata, metadataResult, refreshFields.Value, _customSeasonProvider, cancellationToken).ConfigureAwait(false) || updated;
 
             if (refreshFields.Value.HasFlag(MetadataRefreshField.OwnedItems)) {
@@ -292,7 +292,7 @@ public class MetadataRefreshService {
             updated = await LegacyRefreshMetadata(episode, refreshFields.Value.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
 
         if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
-            _episodeProvider ??= _serviceProvider.GetRequiredService<EpisodeProvider>();
+            _episodeProvider ??= _applicationHost.GetExports<EpisodeProvider>().First();
             var metadataResult = await _episodeProvider.GetMetadata(new() {
                 Path = episode.Path,
                 Name = episode.Name,
@@ -304,7 +304,7 @@ public class MetadataRefreshService {
             if (metadataResult is not { HasMetadata: true, Item: { } metadata })
                 return updated;
 
-            _customEpisodeProvider ??= _serviceProvider.GetRequiredService<CustomEpisodeProvider>();
+            _customEpisodeProvider ??= _applicationHost.GetExports<CustomEpisodeProvider>().First();
             updated = await RefreshBaseItem(episode, metadata, metadataResult, refreshFields.Value, _customEpisodeProvider, cancellationToken).ConfigureAwait(false) || updated;
             if (episode.AdditionalParts.Length > 0) {
                 foreach (var part in episode.AdditionalParts) {
@@ -360,7 +360,7 @@ public class MetadataRefreshService {
 
         if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
             if (video is Trailer trailer) {
-                _trailerProvider ??= _serviceProvider.GetRequiredService<TrailerProvider>();
+                _trailerProvider ??= _applicationHost.GetExports<TrailerProvider>().First();
                 var metadataResult = await _trailerProvider.GetMetadata(new() {
                     Path = trailer.Path,
                     MetadataLanguage = trailer.GetPreferredMetadataLanguage(),
@@ -373,7 +373,7 @@ public class MetadataRefreshService {
                 updated = await RefreshBaseItem(trailer, metadata, metadataResult, refreshFields.Value, cancellationToken: cancellationToken).ConfigureAwait(false) || updated;
             }
             else {
-                _videoProvider ??= _serviceProvider.GetRequiredService<VideoProvider>();
+                _videoProvider ??= _applicationHost.GetExports<VideoProvider>().First();
                 var metadataResult = await _videoProvider.GetMetadata(new() {
                     Path = video.Path,
                     MetadataLanguage = video.GetPreferredMetadataLanguage(),
