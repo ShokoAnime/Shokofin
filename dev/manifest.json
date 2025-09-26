@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.42",
+                "changelog": "`fix`: **Use application host instead of service provider to get required providers in metadata refresh service**.\n\n`fix`: **Always set refreshed at timestamp**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.42/shoko_5.0.4.42.zip",
+                "checksum": "abaeda855ec39752d7834bf0b4a34bcd",
+                "timestamp": "2025-09-26T21:37:02Z"
+            },
+            {
                 "version": "5.0.4.41",
                 "changelog": "`fix`: **Add missing branch for movie collection**.\n\n`fix`: **No stall files during VFS generation for entities**:\n\nDisable the request cache for the 'get files' endpoints, so the VFS generation won't fail in edge cases where the series metadata has been updated right before a file is matched, preventing said file from being discovered.\n\nAlso removed the unused 'get files' endpoints. We can add them back if/when necessary.\n\n`fix`: **Add missing enablement checks**.\n\n`chore`: **Remove double `;`s**.\n\n`fix`: **Add dedicated path for legacy refresh w/image refresh**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.38/shoko_5.0.4.38.zip",
                 "checksum": "54f8047c45603e0d5d225e66747b8ff6",
                 "timestamp": "2025-09-23T14:43:56Z"
-            },
-            {
-                "version": "5.0.4.37",
-                "changelog": "`fix`: **Make `TryGet*` methods on api manager safer by not throwing if Shoko is unreachable**.\n\n`refactor`: **Conditional merging of multiple version**:\n\nLeave things as-is if everything is as intended, and only conditionally update the videos that needs to be updated. This will sped it up from 2m to 7s with a hot cache, and from 4m to 2m on a cold cache for my test server, in addition it will now NOT touch things which are already correctly linked/unlinked.\n\n`refactor`: **Rework external url & provider id logic**:\n\n- Store external urls without the base to save space.\n\n- Inflate/deflate the external url array after/before storing it.\n\n- Made the (new) stored external urls mandatory, and removed the option to display more _optional_ urls from the config and UI.\n\n- Simplified parts of the provider id handling for some providers.\n\n- Set the internal ID on all items. The lookup paths already existed, but the IDs were not set on all items.\n\n- Minor variable name tweaks.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.37/shoko_5.0.4.37.zip",
-                "checksum": "67dbcaf6a3b5fdb77bcbbba33580bbf5",
-                "timestamp": "2025-09-23T13:45:00Z"
             }
         ]
     }
