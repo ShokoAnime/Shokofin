@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace Shokofin.API.Models.TMDB;

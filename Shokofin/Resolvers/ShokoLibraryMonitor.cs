@@ -20,8 +20,6 @@ using Shokofin.ExternalIds;
 using Shokofin.Resolvers.Models;
 using Shokofin.Utils;
 
-using ApiException = Shokofin.API.Models.ApiException;
-
 namespace Shokofin.Resolvers;
 
 public class ShokoLibraryMonitor : IHostedService {

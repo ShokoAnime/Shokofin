@@ -9,7 +9,6 @@ using MediaBrowser.Model.Configuration;
 using MediaBrowser.Model.Entities;
 using Shokofin.Extensions;
 using Shokofin.ExternalIds;
-using Shokofin.Providers;
 
 namespace Shokofin.API;
 

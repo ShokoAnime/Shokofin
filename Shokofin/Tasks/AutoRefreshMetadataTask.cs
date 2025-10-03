@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Model.Tasks;
-using Shokofin.Collections;
 using Shokofin.Events;
 using Shokofin.Utils;
 
