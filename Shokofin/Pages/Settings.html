@@ -2048,6 +2048,13 @@ form:not(.advanced-mode) .advanced-only {
                             <input is="emby-input" type="number" id="VFS_Threads" label="VFS Threads" placeholder="0" type="number" pattern="[0-9]*" min="-1" step="1" />
                             <div class="fieldDescription">Number of threads to concurrently generate links for the VFS. Set to -1 to to match the Jellyfin scan fanout concurrency. Set to 0 or below to use the core count.</div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_AttachRoot" />
+                                <span>Attach VFS to Libraries</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Makes the VFS structure that the plugin automatically creates show up as a folder for your libraries. This allows reusing the same media folder(s) across multiple libraries without needing any other workarounds. Useful for separating movies and series into separate libraries while still using the same media folder(s) for both.</div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="VFS_ResolveLinks" />
@@ -2055,12 +2062,13 @@ form:not(.advanced-mode) .advanced-only {
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">If the library contains symbolic links to media, it will follow them until a final "real" file is found and use the path of said file for the VFS.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="VFS_AttachRoot" />
-                                <span>Attach VFS to Libraries</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Makes the VFS structure that the plugin automatically creates show up as a folder for your libraries. This allows reusing the same media folder(s) across multiple libraries without needing any other workarounds. Useful for separating movies and series into separate libraries while still using the same media folder(s) for both.</div>
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="VFS_MaxTotalExceptionsBeforeAbort" label="Max Total Exceptions Before Abort" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" max="10000" />
+                            <div class="fieldDescription">Maximum number of exceptions before aborting the VFS generation. Set to 0 to disable limit.</div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="VFS_MaxSeriesExceptionsBeforeAbort" label="Max Series Exceptions Before Abort" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" max="10000" />
+                            <div class="fieldDescription">Maximum number of series with exceptions before aborting the VFS generation. Set to 0 to disable limit.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
                             <label class="emby-checkbox-label">

@@ -591,16 +591,17 @@ public class PluginConfiguration : BasePluginConfiguration {
     public bool VFS_ResolveLinks { get; set; }
 
     /// <summary>
-    /// Maximum number of exceptions before aborting the VFS generation.
+    /// Maximum number of exceptions before aborting the VFS generation. Set to
+    /// 0 to disable limit.
     /// </summary>
-    [Range(-1, 1000)]
+    [Range(0, 10_000)]
     public int VFS_MaxTotalExceptionsBeforeAbort { get; set; }
 
     /// <summary>
     /// Maximum number of series with exceptions before aborting the VFS
-    /// generation.
+    /// generation.  Set to 0 to disable limit.
     /// </summary>
-    [Range(-1, 100)]
+    [Range(0, 1_000)]
     public int VFS_MaxSeriesExceptionsBeforeAbort { get; set; }
 
     /// <summary>
