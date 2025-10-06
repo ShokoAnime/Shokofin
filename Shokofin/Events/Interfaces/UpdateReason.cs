@@ -9,4 +9,7 @@ public enum UpdateReason {
     Added = 1,
     Updated = 2,
     Removed = 3,
+    ImageAdded = 4,
+    ImageUpdated = 5,
+    ImageRemoved = 6,
 }
