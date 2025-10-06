@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.44",
+                "changelog": "`fix`: **Add new update reasons to accommodate changes in daily server**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.44/shoko_5.0.4.44.zip",
+                "checksum": "c17b0ee7c2fa45d4ca43569c65e24495",
+                "timestamp": "2025-10-06T13:44:47Z"
+            },
+            {
                 "version": "5.0.4.43",
                 "changelog": "`chore`: **Remove unused imports**. (_Skip CI_)\n\n`feat`: **Expose more VFS debug options in the UI**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.40/shoko_5.0.4.40.zip",
                 "checksum": "877093041f1f3e85d98c82255e041e95",
                 "timestamp": "2025-09-24T22:33:00Z"
-            },
-            {
-                "version": "5.0.4.39",
-                "changelog": "`fix`: **Remove duplicate base url**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.39/shoko_5.0.4.39.zip",
-                "checksum": "0f59c437d4dd31def1efd8cdfb5a784f",
-                "timestamp": "2025-09-24T17:39:37Z"
             }
         ]
     }
