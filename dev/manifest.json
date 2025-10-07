@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.45",
+                "changelog": "`fix`: **Always use tmdb titles/overviews for show instead of season for show info**.\n\n`refactor`: **Make physical vfs folder mandatory**.\n\n`chore`: **Fix brackets**.\n\n`feat`: **Add new **EXPERIMENTAL** iterative VFS generation**:\n\nAdded a new **EXPERIMENTAL** mode to iteratively generate the VFS for only newly imported files. There are also a few options to do a full generation every `X` generation, and to forcefully generate the whole VFS on next generation. It has no effect on generations _within_ the library, only when the library itself is generated (be it in the scheduled task or from a refresh/scan of the media folder itself).",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.45/shoko_5.0.4.45.zip",
+                "checksum": "e5a19f5b8e15626e809a0417545b16ed",
+                "timestamp": "2025-10-07T21:55:16Z"
+            },
+            {
                 "version": "5.0.4.44",
                 "changelog": "`fix`: **Add new update reasons to accommodate changes in daily server**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.41/shoko_5.0.4.41.zip",
                 "checksum": "c333872f2af2a5d719ca6721cb578f13",
                 "timestamp": "2025-09-25T22:51:18Z"
-            },
-            {
-                "version": "5.0.4.40",
-                "changelog": "`feat`: **Expose per-entity-type overrides for title, desc. & image settings in UI**.\n\n`fix`: **Properly set checked state when rendering sortable checkbox list**.\n\n`fix`: **Only set a default option for the default title config**.\n\n`fix`: **Don't add tvdb to default description order list upon startup**.\n\n`misc`: **Move image settings section**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.40/shoko_5.0.4.40.zip",
-                "checksum": "877093041f1f3e85d98c82255e041e95",
-                "timestamp": "2025-09-24T22:33:00Z"
             }
         ]
     }
