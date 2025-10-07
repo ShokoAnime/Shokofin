@@ -231,7 +231,7 @@ public class VirtualFileSystemService {
                             lastGeneratedAt = vfsConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
                     }
 
-                    vfsConfig.IterativeVfsGeneration_LastGeneratedAt = DateTime.Now;
+                    vfsConfig.IterativeVfsGeneration_LastGeneratedAt = DateTime.UtcNow;
                     Plugin.Instance.SaveConfiguration();
                 }
                 // Reset state if the option has been disabled.
@@ -1207,7 +1207,7 @@ public class VirtualFileSystemService {
 
         if (!preview)
             Logger.LogDebug("Looking for file system entries to remove in folder: {Path}", directoryToClean);
-        var start = DateTime.Now;
+        var start = DateTime.UtcNow;
         var previousStep = start;
         var result = new LinkGenerationResult();
         var allKnownPaths = allKnownPathsEnumerable is IReadOnlyList<string> allKnownPathsList ? allKnownPathsList : [.. allKnownPathsEnumerable];
@@ -1218,7 +1218,7 @@ public class VirtualFileSystemService {
             .ExceptBy(allKnownPaths, tuple => tuple.path)
             .ToList();
 
-        var nextStep = DateTime.Now;
+        var nextStep = DateTime.UtcNow;
         if (!preview)
             Logger.LogDebug("Found {FileCount} file system entries to potentially remove or fix in {TimeSpent} in folder: {DirectoryToClean}", entriesToBeRemoved.Count, nextStep - previousStep, directoryToClean);
         previousStep = nextStep;
@@ -1321,7 +1321,7 @@ public class VirtualFileSystemService {
             }
         }
 
-        nextStep = DateTime.Now;
+        nextStep = DateTime.UtcNow;
         if (!preview) {
             Logger.LogTrace("Removed {FileCount} file system entries in {DirectoryToClean} in {TimeSpent} (Total={TotalSpent})", result.Removed, directoryToClean, nextStep - previousStep, nextStep - start);
         }
@@ -1330,7 +1330,7 @@ public class VirtualFileSystemService {
         if (preview)
             return result;
 
-        nextStep = DateTime.Now;
+        nextStep = DateTime.UtcNow;
         Logger.LogTrace("Removed {FileCount} file system entries in {DirectoryToClean} in {TimeSpent} (Total={TotalSpent})", result.Removed, directoryToClean, nextStep - previousStep, nextStep - start);
         previousStep = nextStep;
 
@@ -1354,7 +1354,7 @@ public class VirtualFileSystemService {
             .Select(tuple => tuple.path)
             .ToList();
 
-        nextStep = DateTime.Now;
+        nextStep = DateTime.UtcNow;
         Logger.LogDebug("Found {DirectoryCount} directories to potentially clean in {DirectoryToClean} in {TimeSpent} (Total={TotalSpent})", directoriesToClean.Count, directoryToClean, nextStep - previousStep, nextStep - start);
         previousStep = nextStep;
 
