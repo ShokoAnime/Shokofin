@@ -1329,19 +1329,19 @@ public class VirtualFileSystemService {
     }
 
     private bool TryMoveExternalFile(IReadOnlyList<string> allKnownPaths, string externalFilePath, bool preview, out bool skip) {
-        if (!TryGetIdsForPath(externalFilePath, out var fileId, out var seriesId)){
+        if (!TryGetIdsForPath(externalFilePath, out var fileId, out var seriesId)) {
             skip = false;
             return false;
         }
 
         var symbolicLink = allKnownPaths.FirstOrDefault(knownPath => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(knownPath)) && TryGetIdsForPath(knownPath, out var knownFileId, out var knownSeriesId) && seriesId == knownSeriesId && fileId == knownFileId);
-        if (string.IsNullOrEmpty(symbolicLink)){
+        if (string.IsNullOrEmpty(symbolicLink)) {
             skip = false;
             return false;
         }
 
         var sourcePathWithoutExt = symbolicLink[..^Path.GetExtension(symbolicLink).Length];
-        if (!externalFilePath.StartsWith(sourcePathWithoutExt)){
+        if (!externalFilePath.StartsWith(sourcePathWithoutExt)) {
             skip = false;
             return false;
         }
@@ -1352,12 +1352,12 @@ public class VirtualFileSystemService {
             realTarget = File.ResolveLinkTarget(symbolicLink, false)?.FullName;
         }
         catch { }
-        if (string.IsNullOrEmpty(realTarget)){
+        if (string.IsNullOrEmpty(realTarget)) {
             skip = false;
             return false;
         }
 
-        if (preview){
+        if (preview) {
             skip = true;
             return true;
         }
@@ -1366,7 +1366,7 @@ public class VirtualFileSystemService {
             var currentTarget = File.ResolveLinkTarget(externalFilePath, false)?.FullName;
             if (!string.IsNullOrEmpty(currentTarget)) {
                 // Just remove the link if the target doesn't exist.
-                if (!File.Exists(currentTarget)){
+                if (!File.Exists(currentTarget)) {
                     skip = false;
                     return false;
                 }
@@ -1415,13 +1415,13 @@ public class VirtualFileSystemService {
         }
 
         var linkToMove = allKnownPaths.FirstOrDefault(knownPath => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(knownPath)) && TryGetIdsForPath(knownPath, out var knownFileId, out var knownSeriesId) && seriesId == knownSeriesId && fileId == knownFileId);
-        if (string.IsNullOrEmpty(linkToMove)){
+        if (string.IsNullOrEmpty(linkToMove)) {
             skip = false;
             return false;
         }
 
         var sourcePathWithoutExt = linkToMove[..^Path.GetExtension(linkToMove).Length];
-        if (!trickplayDirectory.StartsWith(sourcePathWithoutExt)){
+        if (!trickplayDirectory.StartsWith(sourcePathWithoutExt)) {
             skip = false;
             return false;
         }
@@ -1432,12 +1432,12 @@ public class VirtualFileSystemService {
             realTarget = Directory.ResolveLinkTarget(linkToMove, false)?.FullName;
         }
         catch { }
-        if (string.IsNullOrEmpty(realTarget)){
+        if (string.IsNullOrEmpty(realTarget)) {
             skip = false;
             return false;
         }
 
-        if (preview){
+        if (preview) {
             skip = true;
             return true;
         }
@@ -1446,7 +1446,7 @@ public class VirtualFileSystemService {
             var currentTarget = Directory.ResolveLinkTarget(trickplayDirectory, false)?.FullName;
             if (!string.IsNullOrEmpty(currentTarget)) {
                 // Just remove the link if the target doesn't exist.
-                if (!Directory.Exists(currentTarget)){
+                if (!Directory.Exists(currentTarget)) {
                     skip = false;
                     return false;
                 }
