@@ -229,7 +229,7 @@ public class ShowInfo : IExtendedItemInfo {
 
     #endregion
 
-    public ShowInfo(ShokoApiClient client, SeasonInfo seasonInfo, string? collectionId = null) {
+    public ShowInfo(ShokoApiClient client, SeasonInfo seasonInfo, TmdbShow? tmdbShow = null, string? collectionId = null) {
         var seasonNumberBaseDictionary = new Dictionary<string, int>();
         var seasonOrderDictionary = new Dictionary<int, SeasonInfo>();
         var seasonNumberOffset = 1;
@@ -246,9 +246,15 @@ public class ShowInfo : IExtendedItemInfo {
         IsMovieCollection = seasonInfo.Type is SeriesType.Movie;
         IsStandalone = true;
         Title = seasonInfo.Title;
-        Titles = seasonInfo.Titles;
         Overview = seasonInfo.Overview;
-        Overviews = seasonInfo.Overviews;
+        if (tmdbShow != null) {
+            Titles = seasonInfo.Titles.Where(t => t.Source is not "TMDB").Concat(tmdbShow.Titles).ToList();
+            Overviews = seasonInfo.Overviews.Where(t => t.Source is not "TMDB").Concat(tmdbShow.Overviews).ToList();
+        }
+        else {
+            Titles = seasonInfo.Titles;
+            Overviews = seasonInfo.Overviews;
+        }
         OriginalLanguageCode = seasonInfo.OriginalLanguageCode;
         CommunityRating = seasonInfo.CommunityRating.ToFloat(10);
         Tags = seasonInfo.Tags;

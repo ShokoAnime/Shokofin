@@ -1790,7 +1790,7 @@ public partial class ShokoApiManager : IDisposable {
         // Create a standalone group if grouping is disabled and/or for each series in a group with sub-groups.
         var seriesConfig = await GetSeriesConfiguration(seasonId).ConfigureAwait(false);
         if (seriesConfig.StructureType is not SeriesStructureType.Shoko_Groups)
-            return CreateShowInfoForShokoSeries(seasonInfo);
+            return await CreateShowInfoForShokoSeries(seasonInfo).ConfigureAwait(false);
 
         var group = await ApiClient.GetShokoGroupForShokoSeries(seasonId).ConfigureAwait(false);
         if (group == null)
@@ -1798,13 +1798,13 @@ public partial class ShokoApiManager : IDisposable {
 
         // Create a standalone group if grouping is disabled and/or for each series in a group with sub-groups.
         if (group.Sizes.SubGroups > 0)
-            return CreateShowInfoForShokoSeries(seasonInfo);
+            return await CreateShowInfoForShokoSeries(seasonInfo).ConfigureAwait(false);
 
         // If we found a movie, and we're assigning movies as stand-alone shows, and we didn't create a stand-alone show
         // above, then attach the stand-alone show to the parent group of the group that might otherwise
         // contain the movie.
         if (seasonInfo.Type == SeriesType.Movie && Plugin.Instance.Configuration.SeparateMovies)
-            return CreateShowInfoForShokoSeries(seasonInfo, group.Size > 0 ? group.IDs.ParentGroup?.ToString() : null);
+            return await CreateShowInfoForShokoSeries(seasonInfo, group.Size > 0 ? group.IDs.ParentGroup?.ToString() : null).ConfigureAwait(false);
 
         return await CreateShowInfoForShokoGroup(group, group.Id).ConfigureAwait(false);
     }
@@ -1932,14 +1932,18 @@ public partial class ShokoApiManager : IDisposable {
             }
         );
 
-    private ShowInfo CreateShowInfoForShokoSeries(SeasonInfo seasonInfo, string? collectionId = null)
-        => DataCache.GetOrCreate(
+    private Task<ShowInfo> CreateShowInfoForShokoSeries(SeasonInfo seasonInfo, string? collectionId = null)
+        => DataCache.GetOrCreateAsync(
             $"show:by-series-id:{seasonInfo.Id}",
             (showInfo) => Logger.LogTrace("Reusing info object for show {GroupName}. (Source=Shoko,Series={SeriesId})", showInfo.Title, seasonInfo.Id),
-            () => {
+            async () => {
                 Logger.LogTrace("Creating info object for show {SeriesName}. (Source=Shoko,Series={SeriesId})", seasonInfo.Title, seasonInfo.Id);
 
-                var showInfo = new ShowInfo(ApiClient, seasonInfo, collectionId);
+                TmdbShow? tmdbShow = null;
+                if (seasonInfo.TmdbSeasons.DistinctBy(tmdbSeason => tmdbSeason.TmdbShowId).Count() is 1) {
+                    tmdbShow = await ApiClient.GetTmdbShowForSeason(seasonInfo.TmdbSeasons[0].TmdbSeasonId).ConfigureAwait(false);
+                }
+                var showInfo = new ShowInfo(ApiClient, seasonInfo, tmdbShow, collectionId);
 
                 SeasonIdToShowIdDictionary[seasonInfo.Id] = showInfo.Id;
 
