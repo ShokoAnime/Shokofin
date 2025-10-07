@@ -622,7 +622,6 @@ function applyFormToConfig(form, config) {
 
             config.VFS_Threads = vfsTreads;
             form.querySelector("#VFS_Threads").value = vfsTreads;
-            config.VFS_AttachRoot = form.querySelector("#VFS_AttachRoot").checked;
             config.VFS_ResolveLinks = form.querySelector("#VFS_ResolveLinks").checked;
             config.VFS_MaxTotalExceptionsBeforeAbort = vfsMaxTotalExceptionsBeforeAbort;
             form.querySelector("#VFS_MaxTotalExceptionsBeforeAbort").value = vfsMaxTotalExceptionsBeforeAbort;
@@ -886,7 +885,6 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#VFS_AddResolution").checked = config.VFS_AddResolution;
 
             form.querySelector("#VFS_Threads").value = config.VFS_Threads;
-            form.querySelector("#VFS_AttachRoot").checked = config.VFS_AttachRoot;
             form.querySelector("#VFS_ResolveLinks").checked = config.VFS_ResolveLinks;
             form.querySelector("#VFS_MaxTotalExceptionsBeforeAbort").value = config.VFS_MaxTotalExceptionsBeforeAbort;
             form.querySelector("#VFS_MaxSeriesExceptionsBeforeAbort").value = config.VFS_MaxSeriesExceptionsBeforeAbort;

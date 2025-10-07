@@ -183,7 +183,7 @@ public class MediaFolderConfigurationService {
 
     #region Media Folder Mapping
 
-    public async Task<IReadOnlyList<(string vfsPath, string mainMediaFolderPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)>> GetAvailableMediaFoldersForLibraries(Func<MediaFolderConfiguration, bool>? filter = null) {
+    public async Task<IReadOnlyList<(string vfsPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)>> GetAvailableMediaFoldersForLibraries(Func<MediaFolderConfiguration, bool>? filter = null) {
         await LockObj.WaitAsync().ConfigureAwait(false);
         try {
             var virtualFolders = LibraryManager.GetVirtualFolders();
@@ -192,7 +192,6 @@ public class MediaFolderConfigurationService {
                 await GenerateAllConfigurations(virtualFolders).ConfigureAwait(false);
             }
 
-            var attachRoot = Plugin.Instance.Configuration.VFS_AttachRoot;
             return Plugin.Instance.Configuration.MediaFolders
                 .Where(config => config.IsMapped && !config.IsVirtualRoot && (filter is null || filter(config)) && LibraryManager.GetItemById(config.MediaFolderId) is Folder)
                 .GroupBy(config => config.LibraryId)
@@ -204,13 +203,10 @@ public class MediaFolderConfigurationService {
                 .Where(tuple => tuple.libraryFolder is not null && tuple.virtualFolder is not null && tuple.virtualFolder.Locations.Length is > 0 && tuple.mediaList.Count is > 0)
                 .Select(tuple => (
                     vfsPath: tuple.libraryFolder!.GetVirtualRoot(),
-                    mainMediaFolderPath: attachRoot
-                        ? tuple.libraryFolder!.GetVirtualRoot()
-                        : tuple.virtualFolder!.Locations.FirstOrDefault(a => DirectoryService.IsAccessible(a)) ?? string.Empty,
                     collectionType: tuple.virtualFolder!.CollectionType.ConvertToCollectionType(),
                     tuple.mediaList
                 ))
-                .Where(tuple => !string.IsNullOrEmpty(tuple.vfsPath) && !string.IsNullOrEmpty(tuple.mainMediaFolderPath))
+                .Where(tuple => !string.IsNullOrEmpty(tuple.vfsPath))
                 .ToList();
         }
         finally {
@@ -218,28 +214,28 @@ public class MediaFolderConfigurationService {
         }
     }
 
-    public async Task<(string vfsPath, string mainMediaFolderPath, IReadOnlyList<MediaFolderConfiguration> mediaList, bool skipGeneration)> GetMediaFoldersForLibraryInVFS(Folder mediaFolder, CollectionType? collectionType, Func<MediaFolderConfiguration, bool>? filter = null) {
+    public async Task<(MediaFolderConfiguration? vfsRootConfig, IReadOnlyList<MediaFolderConfiguration> mediaList, bool skipGeneration)> GetMediaFoldersForLibraryInVFS(Folder mediaFolder, CollectionType? collectionType, Func<MediaFolderConfiguration, bool>? filter = null) {
         var mediaFolderConfig = await GetOrCreateConfigurationForMediaFolder(mediaFolder, collectionType).ConfigureAwait(false);
         await LockObj.WaitAsync().ConfigureAwait(false);
         try {
             var skipGeneration = LibraryEdits.Count is > 0 && LibraryManager.IsScanRunning;
             if (LibraryManager.GetItemById(mediaFolderConfig.LibraryId) is not Folder libraryFolder)
-                return (string.Empty, string.Empty, [], skipGeneration);
+                return (null, [], skipGeneration);
 
             var virtualFolder = LibraryManager.GetVirtualFolders()
                 .FirstOrDefault(folder => Guid.TryParse(folder.ItemId, out var guid) && guid == mediaFolderConfig.LibraryId);
             if (virtualFolder is null || virtualFolder.Locations.Length is 0)
-                return (string.Empty, string.Empty, [], skipGeneration);
+                return (null, [], skipGeneration);
 
             var vfsPath = libraryFolder.GetVirtualRoot();
+            var vfsRootConfig = Plugin.Instance.Configuration.MediaFolders.FirstOrDefault(config => config.IsVirtualRoot && config.LibraryId == mediaFolderConfig.LibraryId);
+            if (vfsRootConfig is null || vfsPath is null || vfsRootConfig.MediaFolderPath != vfsPath)
+                return (null, [], skipGeneration);
+
             var mediaFolders = Plugin.Instance.Configuration.MediaFolders
                 .Where(config => config.IsMapped && !config.IsVirtualRoot && config.LibraryId == mediaFolderConfig.LibraryId && (filter is null || filter(config)) && LibraryManager.GetItemById(config.MediaFolderId) is Folder)
                 .ToList();
-            if (Plugin.Instance.Configuration.VFS_AttachRoot && mediaFolderConfig.IsVirtualFileSystemEnabled)
-                return (vfsPath, vfsPath, mediaFolders, skipGeneration);
-
-            var mainMediaFolderPath = virtualFolder.Locations.FirstOrDefault(a => DirectoryService.IsAccessible(a)) ?? string.Empty;
-            return (vfsPath, mainMediaFolderPath, mediaFolders, skipGeneration);
+            return (vfsRootConfig, mediaFolders, skipGeneration);
         }
         finally {
             LockObj.Release();
@@ -311,7 +307,7 @@ public class MediaFolderConfigurationService {
 
             var vfsPath = libraryFolder.GetVirtualRoot();
             var vfsFolderName = Path.GetFileName(vfsPath);
-            var shouldAttach = config.VFS_AttachRoot && mediaFolderConfig.IsVirtualFileSystemEnabled;
+            var shouldAttach = mediaFolderConfig.IsVirtualFileSystemEnabled;
             if (shouldAttach && !virtualFolder.Locations.Contains(vfsPath, Path.DirectorySeparatorChar is '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)) {
                 if (!LibraryEdits.TryGetValue(libraryId, out var edits))
                     LibraryEdits[libraryId] = edits = (libraryFolder.Name, [], []);

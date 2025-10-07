@@ -501,7 +501,6 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   VFS_Threads: number;
  *   VFS_AddReleaseGroup: boolean;
  *   VFS_AddResolution: boolean;
- *   VFS_AttachRoot: boolean;
  *   VFS_ResolveLinks: boolean;
  *   VFS_MaxTotalExceptionsBeforeAbort: number;
  *   VFS_MaxSeriesExceptionsBeforeAbort: number;

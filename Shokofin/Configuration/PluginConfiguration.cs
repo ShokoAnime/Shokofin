@@ -578,12 +578,6 @@ public class PluginConfiguration : BasePluginConfiguration {
     public bool VFS_AddResolution { get; set; }
 
     /// <summary>
-    /// Attach a physical VFS root as a media folder instead of attaching the
-    /// VFS children to one of the "normal" media folders.
-    /// </summary>
-    public bool VFS_AttachRoot { get; set; }
-
-    /// <summary>
     /// If the library contains symbolic links to media, it will follow them
     /// until a final "real" file is found and use the path of said file for the
     /// VFS
@@ -801,7 +795,6 @@ public class PluginConfiguration : BasePluginConfiguration {
         VFS_Threads = 4;
         VFS_AddReleaseGroup = false;
         VFS_AddResolution = false;
-        VFS_AttachRoot = true;
         VFS_Location = VirtualRootLocation.Default;
         VFS_CustomLocation = null;
         VFS_ResolveLinks = false;

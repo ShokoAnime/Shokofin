@@ -213,13 +213,12 @@ public class EventDispatchService {
 
             // Something was added or updated.
             var locationsToNotify = new List<string>();
-            var mediaFoldersToNotify = new Dictionary<string, (string pathToReport, Folder mediaFolder)>();
             var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences)).ConfigureAwait(false);
             var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => c.IsFileEventsEnabled).ConfigureAwait(false);
             var (reason, managedFolderId, relativePath, lastEvent) = changes.Last();
             if (reason is not UpdateReason.Removed) {
                 Logger.LogTrace("Processing file changed. (File={FileId})", fileId);
-                foreach (var (vfsPath, mainMediaFolderPath, collectionType, mediaConfigs) in libraries) {
+                foreach (var (vfsPath, collectionType, mediaConfigs) in libraries) {
                     foreach (var (managedFolderSubPath, vfsEnabled, mediaFolderPaths) in mediaConfigs.ToManagedFolderList(managedFolderId, relativePath)) {
                         foreach (var mediaFolderPath in mediaFolderPaths) {
                             var sourceLocation = Path.Join(mediaFolderPath, relativePath[managedFolderSubPath.Length..]);
@@ -269,16 +268,7 @@ public class EventDispatchService {
 
                             result.Print(Logger, mediaFolderPath);
 
-                            // If we're using a physical VFS or all the "top-level-folders" exist, then let the core logic handle the rest.
-                            if (vfsPath == mainMediaFolderPath || topFolders.All(path => LibraryManager.FindByPath(path, true) is not null)) {
-                                locationsToNotify.AddRange(vfsLocations.SelectMany(tuple => tuple.symbolicLinks));
-                            }
-                            // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
-                            else {
-                                var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mainMediaFolderPath, false).FirstOrDefault();
-                                if (!string.IsNullOrEmpty(fileOrFolder))
-                                    mediaFoldersToNotify.TryAdd(mainMediaFolderPath, (fileOrFolder, mainMediaFolderPath.GetFolderForPath()));
-                            }
+                            locationsToNotify.AddRange(vfsLocations.SelectMany(tuple => tuple.symbolicLinks));
                             break;
                         }
                     }
@@ -289,13 +279,8 @@ public class EventDispatchService {
                 // If we don't know which series to remove, then add all of them to be scanned.
                 if (seriesIds.Count is 0) {
                     Logger.LogTrace("No series found for file. Adding all libraries. (File={FileId})", fileId);
-                    foreach (var (vfsPath, mainMediaFolderPath, collectionType, mediaConfigs) in libraries) {
-                        // Give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
-                        var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mainMediaFolderPath, false).FirstOrDefault();
-                        if (vfsPath == mainMediaFolderPath)
-                            locationsToNotify.Add(vfsPath);
-                        else if (!string.IsNullOrEmpty(fileOrFolder))
-                            mediaFoldersToNotify.TryAdd(mainMediaFolderPath, (fileOrFolder, mainMediaFolderPath.GetFolderForPath()));
+                    foreach (var (vfsPath, collectionType, mediaConfigs) in libraries) {
+                        locationsToNotify.Add(vfsPath);
                     }
 
                     goto aLabelToReduceNesting;
@@ -304,7 +289,7 @@ public class EventDispatchService {
                 Logger.LogTrace("Processing file removed. (File={FileId})", fileId);
                 relativePath = firstRemovedEvent.RelativePath;
                 managedFolderId = firstRemovedEvent.ManagedFolderId;
-                foreach (var (vfsPath, mainMediaFolderPath, collectionType, mediaConfigs) in libraries) {
+                foreach (var (vfsPath, collectionType, mediaConfigs) in libraries) {
                     foreach (var (managedFolderSubPath, vfsEnabled, mediaFolderPaths) in mediaConfigs.ToManagedFolderList(managedFolderId, relativePath)) {
                         foreach (var mediaFolderPath in mediaFolderPaths) {
                             // Let the core logic handle the rest.
@@ -356,16 +341,7 @@ public class EventDispatchService {
 
                             result.Print(Logger, mediaFolderPath);
 
-                            // If we're using a physical VFS or all the "top-level-folders" exist, then let the core logic handle the rest.
-                            if (vfsPath == mainMediaFolderPath || topFolders.All(path => LibraryManager.FindByPath(path, true) is not null)) {
-                                locationsToNotify.AddRange(vfsSymbolicLinks);
-                            }
-                            // Else give the core logic _any_ file or folder placed directly in the media folder, so it will schedule the media folder to be refreshed.
-                            else {
-                                var fileOrFolder = FileSystem.GetFileSystemEntryPaths(mainMediaFolderPath, false).FirstOrDefault();
-                                if (!string.IsNullOrEmpty(fileOrFolder))
-                                    mediaFoldersToNotify.TryAdd(mainMediaFolderPath, (fileOrFolder, mainMediaFolderPath.GetFolderForPath()));
-                            }
+                            locationsToNotify.AddRange(vfsSymbolicLinks);
                             break;
                         }
                     }
@@ -379,14 +355,12 @@ public class EventDispatchService {
             }
 
             // We let jellyfin take it from here.
-            Logger.LogDebug("Notifying Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count + mediaFoldersToNotify.Count, fileId.ToString());
+            Logger.LogDebug("Notifying Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count, fileId.ToString());
             foreach (var location in locationsToNotify) {
                 Logger.LogTrace("Notifying Jellyfin about changes to {Location}. (File={FileId})", location, fileId.ToString());
                 LibraryMonitor.ReportFileSystemChanged(location);
             }
-            if (mediaFoldersToNotify.Count > 0)
-                await Task.WhenAll(mediaFoldersToNotify.Values.Select(tuple => ReportMediaFolderChanged(tuple.mediaFolder, tuple.pathToReport))).ConfigureAwait(false);
-            Logger.LogDebug("Notified Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count + mediaFoldersToNotify.Count, fileId.ToString());
+            Logger.LogDebug("Notified Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count, fileId.ToString());
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Error processing {EventCount} file change events. (File={FileId})", changes.Count, fileId);
@@ -484,55 +458,6 @@ public class EventDispatchService {
         catch (Exception ex) {
             Logger.LogTrace(ex, "Unable to check if file path exists and is a reparse point; {FilePath}", filePath);
         }
-    }
-
-    private async Task ReportMediaFolderChanged(Folder mediaFolder, string pathToReport) {
-        // Block real-time file events if real-time monitoring is disabled.
-        if (LibraryManager.GetLibraryOptions(mediaFolder) is not LibraryOptions libraryOptions ||
-            !libraryOptions.EnableRealtimeMonitor
-        ) {
-            LibraryMonitor.ReportFileSystemChanged(pathToReport);
-            return;
-        }
-
-        // Since we're blocking real-time file events on the media folder because
-        // it uses the VFS then we need to temporarily unblock it, then block it
-        // afterwards again.
-        var path = mediaFolder.Path;
-        var delayTime = TimeSpan.Zero;
-        lock (MediaFolderChangeMonitor) {
-            if (MediaFolderChangeMonitor.TryGetValue(path, out var entry)) {
-                MediaFolderChangeMonitor[path] = (entry.refCount + 1, entry.delayEnd);
-                delayTime = entry.delayEnd - DateTime.Now;
-            }
-            else {
-                MediaFolderChangeMonitor[path] = (1, DateTime.Now + TimeSpan.FromMilliseconds(MagicalDelayValue));
-                delayTime = TimeSpan.FromMilliseconds(MagicalDelayValue);
-            }
-        }
-
-        LibraryMonitor.ReportFileSystemChangeComplete(path, false);
-
-        if (delayTime > TimeSpan.Zero)
-            await Task.Delay((int)delayTime.TotalMilliseconds).ConfigureAwait(false);
-
-        LibraryMonitor.ReportFileSystemChanged(pathToReport);
-
-        var shouldResume = false;
-        lock (MediaFolderChangeMonitor) {
-            if (MediaFolderChangeMonitor.TryGetValue(path, out var tuple)) {
-                if (tuple.refCount is 1) {
-                    shouldResume = true;
-                    MediaFolderChangeMonitor.Remove(path);
-                }
-                else {
-                    MediaFolderChangeMonitor[path] = (tuple.refCount - 1, tuple.delayEnd);
-                }
-            }
-        }
-
-        if (shouldResume)
-            LibraryMonitor.ReportFileSystemChangeBeginning(path);
     }
 
     #endregion

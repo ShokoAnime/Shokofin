@@ -126,11 +126,12 @@ public class VirtualFileSystemService {
             return ([], [], selectedFolder, null, string.Empty);
 
         var collectionType = selectedFolder.CollectionType.ConvertToCollectionType();
-        var (vfsPath, _, mediaConfigs, _) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType, config => config.IsVirtualFileSystemEnabled).ConfigureAwait(false);
-        if (string.IsNullOrEmpty(vfsPath) || mediaConfigs.Count is 0)
+        var (vfsConfig, mediaConfigs, _) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType, config => config.IsVirtualFileSystemEnabled).ConfigureAwait(false);
+        if (vfsConfig is null || mediaConfigs.Count is 0)
             return ([], [], selectedFolder, null, string.Empty);
 
         // Only allow the preview to run once per caching cycle.
+        var vfsPath = vfsConfig.MediaFolderPath;
         return await DataCache.GetOrCreateAsync($"preview-changes:{vfsPath}", async () => {
             // This call will be slow depending on the size of your collection.
             var existingPaths = FileSystem.DirectoryExists(vfsPath)
@@ -164,14 +165,15 @@ public class VirtualFileSystemService {
     /// <param name="path">The file or folder within the media folder to generate a structure for.</param>
     /// <returns>The VFS path, if it succeeded.</returns>
     public async Task<(string? vfsPath, bool shouldContinue, HashSet<string> alteredPaths)> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path) {
-        var (vfsPath, mainMediaFolderPath, mediaConfigs, skipGeneration) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType, config => config.IsVirtualFileSystemEnabled).ConfigureAwait(false);
-        if (string.IsNullOrEmpty(vfsPath) || string.IsNullOrEmpty(mainMediaFolderPath) || mediaConfigs.Count is 0)
+        var (vfsConfig, mediaConfigs, skipGeneration) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType, config => config.IsVirtualFileSystemEnabled).ConfigureAwait(false);
+        if (vfsConfig is null || mediaConfigs.Count is 0)
             return (null, false, []);
 
         if (!Plugin.Instance.CanCreateSymbolicLinks)
             throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
 
-        var shouldContinue = path.StartsWith(vfsPath + Path.DirectorySeparatorChar) || path == mainMediaFolderPath;
+        var vfsPath = vfsConfig.MediaFolderPath;
+        var shouldContinue = path.StartsWith(vfsPath + Path.DirectorySeparatorChar) || path == vfsPath;
         if (!shouldContinue)
             return (vfsPath, false, []);
 
@@ -195,10 +197,7 @@ public class VirtualFileSystemService {
         }
 
         // Only do this once.
-        var key = !path.StartsWith(vfsPath) && mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath))
-            ? $"should-skip-vfs-path:{vfsPath}"
-            : $"should-skip-vfs-path:{path}";
-        alteredPaths = await DataCache.GetOrCreateAsync(key, async () => {
+        alteredPaths = await DataCache.GetOrCreateAsync($"should-skip-vfs-path:{path}", async () => {
             Logger.LogInformation(
                 "Generating VFS structure for library {LibraryName} at sub-path {Path}. This might take some time depending on your collection size. (Library={LibraryId})",
                 mediaConfigs[0].LibraryName,
