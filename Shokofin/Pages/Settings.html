@@ -1712,6 +1712,17 @@ form:not(.advanced-mode) .advanced-only {
                                 </details>
                             </div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only experimental-setting">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_IterativeGenerationEnabled" />
+                                <span>Default Iterative VFS Generation Enabled</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enable the iterative generation of the VFS for new libraries. Only generate links in the VFS for files changed since the last check occurred.</div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription advanced-only experimental-setting">
+                            <input is="emby-input" type="number" id="VFS_IterativeGenerationMaxCount" label="Default Max Iterations Before Forced Full Generation" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" max="100" />
+                            <div class="fieldDescription">Maximum number of iterations to perform when generating the VFS for new libraries. Set to a value above 0 to enable.</div>
+                        </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="MediaFolderSelector">Configure settings for</label>
                             <select is="emby-select" id="MediaFolderSelector" name="MediaFolderSelector" value="" class="emby-select-withcolor emby-select">
@@ -1751,6 +1762,24 @@ form:not(.advanced-mode) .advanced-only {
                                         Using legacy filtering in lax mode means the plugin will operate on your media folders as-is, but it will not filter out anything from the library. Use this only if intend to mix Shoko with other metadata providers.
                                     </details>
                                 </div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription advanced-only experimental-setting">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="MediaFolderLibraryIterativeGenerationEnabled" />
+                                    <span>Iterative VFS Generation Enabled</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">Enable the iterative generation of the VFS for the existing library. Only generate links in the VFS for files changed since the last check occurred.</div>
+                            </div>
+                            <div class="inputContainer inputContainer-withDescription advanced-only experimental-setting">
+                                <input is="emby-input" type="number" id="MediaFolderLibraryIterativeGenerationMaxCount" label="Max Iterations Before Forced Full Generation" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" max="100" />
+                                <div class="fieldDescription">Maximum number of iterations to perform when generating the VFS for the existing library. Set to a value above 0 to enable.</div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription advanced-only experimental-setting">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="MediaFolderLibraryForceFullGenerationOnNextRefresh" />
+                                    <span>Force Full VFS Generation on Next Library Refresh</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">Force a full generation of the VFS on the next library generation. This option will be turned off once the next generation has started.</div>
                             </div>
                             <div class="inputContainer inputContainer-withDescription">
                                 <button is="emby-button" type="submit" name="remove-library" class="raised button-delete block emby-button">

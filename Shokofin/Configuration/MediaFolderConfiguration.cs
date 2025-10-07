@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
@@ -100,6 +101,48 @@ public class MediaFolderConfiguration {
     /// </summary>
     [XmlElement("LibraryFilteringMode")]
     public LibraryOperationMode LibraryOperationMode { get; set; } = LibraryOperationMode.VFS;
+
+    /// <summary>
+    /// Only generate links in the VFS for files changed since the last check occurred.
+    /// </summary>
+    public bool IterativeVfsGeneration_Enabled { get; set; } = false;
+
+    /// <summary>
+    /// The last time the VFS was iteratively generated.
+    /// </summary>
+    /// <remarks>
+    /// This will be null if the VFS has never been iteratively generated, or if
+    /// a generation with <seealso cref="IterativeVfsGeneration_Enabled"/>
+    /// disabled has occurred.
+    /// </remarks>
+    public DateTime? IterativeVfsGeneration_LastGeneratedAt { get; set; } = null;
+
+    /// <summary>
+    /// The current number of times the VFS has been iteratively generated.
+    /// </summary>
+    /// <remarks>
+    /// Will be incremented by the system, but only if
+    /// <seealso cref="MaxIterativeGenerationCount"/> is set to a value above 0.
+    /// Otherwise the VFS will always be iteratively generated if
+    /// <seealso cref="IterativeVfsGenerationEnabled"/> is enabled.
+    /// </remarks>
+    [Range(0, 100)]
+    public int IterativeVfsGeneration_CurrentCount { get; set; } = 0;
+
+    /// <summary>
+    /// The maximum number of times the VFS should be iteratively generated
+    /// before a full generation is performed. Set to a value above 0 to enable.
+    /// </summary>
+    [Range(0, 100)]
+    public int IterativeVfsGeneration_MaxCount { get; set; } = 0;
+
+    /// <summary>
+    /// Force a full generation of the VFS on the next library generation.
+    /// </summary>
+    /// <remarks>
+    /// This will be turned off once the next generation has started.
+    /// </remarks>
+    public bool IterativeVfsGeneration_ForceFullGenerationOnNextRefresh { get; set; } = false;
 
     /// <summary>
     /// Check if a relative path within the managed folder is potentially available in this media folder.

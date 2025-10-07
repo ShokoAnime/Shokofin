@@ -350,6 +350,8 @@ public class MediaFolderConfigurationService {
             IsFileEventsEnabled = libraryConfig?.IsFileEventsEnabled ?? config.SignalR_FileEvents,
             IsRefreshEventsEnabled = libraryConfig?.IsRefreshEventsEnabled ?? config.SignalR_RefreshEnabled,
             LibraryOperationMode = libraryConfig?.LibraryOperationMode ?? config.DefaultLibraryOperationMode,
+            IterativeVfsGeneration_Enabled = libraryConfig?.IterativeVfsGeneration_Enabled ?? config.VFS_IterativeGenerationEnabled,
+            IterativeVfsGeneration_MaxCount = libraryConfig?.IterativeVfsGeneration_MaxCount ?? config.VFS_IterativeGenerationMaxCount,
         };
 
         var start = DateTime.UtcNow;

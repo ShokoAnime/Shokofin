@@ -205,12 +205,54 @@ public class VirtualFileSystemService {
                 mediaConfigs[0].LibraryId
             );
 
+            // Check if we want to do an iterative generation of the VFS.
+            var lastGeneratedAt = (DateTime?)null;
+            var iterativeGeneration = false;
+            if (path == vfsPath) {
+                if (vfsConfig.IterativeVfsGeneration_Enabled) {
+                    if (vfsConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh) {
+                        vfsConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh = false;
+                        vfsConfig.IterativeVfsGeneration_CurrentCount = 0;
+                    }
+                    else if (vfsConfig.IterativeVfsGeneration_MaxCount > 0) {
+                        if (vfsConfig.IterativeVfsGeneration_CurrentCount + 1 < vfsConfig.IterativeVfsGeneration_MaxCount) {
+                            iterativeGeneration = true;
+                            vfsConfig.IterativeVfsGeneration_CurrentCount++;
+                            if (vfsConfig.IterativeVfsGeneration_LastGeneratedAt.HasValue)
+                                lastGeneratedAt = vfsConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
+                        }
+                        else if (vfsConfig.IterativeVfsGeneration_CurrentCount > 0) {
+                            vfsConfig.IterativeVfsGeneration_CurrentCount = 0;
+                        }
+                    }
+                    else {
+                        iterativeGeneration = true;
+                        if (vfsConfig.IterativeVfsGeneration_LastGeneratedAt.HasValue)
+                            lastGeneratedAt = vfsConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
+                    }
+
+                    vfsConfig.IterativeVfsGeneration_LastGeneratedAt = DateTime.Now;
+                    Plugin.Instance.SaveConfiguration();
+                }
+                // Reset state if the option has been disabled.
+                else if (
+                    vfsConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh ||
+                    vfsConfig.IterativeVfsGeneration_LastGeneratedAt.HasValue ||
+                    vfsConfig.IterativeVfsGeneration_CurrentCount > 0
+                ) {
+                    vfsConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh = false;
+                    vfsConfig.IterativeVfsGeneration_CurrentCount = 0;
+                    vfsConfig.IterativeVfsGeneration_LastGeneratedAt = null;
+                    Plugin.Instance.SaveConfiguration();
+                }
+            }
+
             // Iterate the files already in the VFS.
             string? pathToClean = null;
             IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
             if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
                 if (!TryGetFileCheckerForMediaFolders(mediaConfigs, out var fileChecker))
-                    return AddParentDirectories(vfsPath, FileSystem.GetFileSystemEntryPaths(path, true));
+                    return AddParentDirectories(vfsPath, GetFilePaths(path));
 
                 var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
                 switch (pathSegments.Length) {
@@ -283,10 +325,10 @@ public class VirtualFileSystemService {
             // Iterate files in the "real" media folder.
             else if (mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath)) || path == vfsPath) {
                 if (!TryGetFileCheckerForMediaFolders(mediaConfigs, out var fileChecker))
-                    return AddParentDirectories(vfsPath, FileSystem.GetFileSystemEntryPaths(vfsPath, true));
+                    return AddParentDirectories(vfsPath, GetFilePaths(vfsPath));
 
                 pathToClean = vfsPath;
-                allFiles = GetFilesForManagedFolders(mediaConfigs, fileChecker);
+                allFiles = GetFilesForManagedFolders(mediaConfigs, fileChecker, lastGeneratedAt);
             }
 
             if (allFiles is null)
@@ -294,12 +336,23 @@ public class VirtualFileSystemService {
 
             // Skip generation if we're going to (re-)schedule a library scan.
             if (skipGeneration)
-                return AddParentDirectories(vfsPath, FileSystem.GetFileSystemEntryPaths(path.StartsWith(vfsPath + Path.DirectorySeparatorChar) ? path : vfsPath, true));
+                return AddParentDirectories(vfsPath, GetFilePaths(path.StartsWith(vfsPath + Path.DirectorySeparatorChar) ? path : vfsPath));
 
             // Generate and cleanup the structure in the VFS.
             var result = await GenerateStructure(collectionType, vfsPath, allFiles).ConfigureAwait(false);
-            if (!string.IsNullOrEmpty(pathToClean))
-                result += CleanupStructure(vfsPath, pathToClean, result.Paths.ToArray());
+            if (!string.IsNullOrEmpty(pathToClean)) {
+                var allPaths = result.Paths.ToArray();
+                // Note: for now we're overcompensating by also "cleaning" the
+                // files for the other videos in the directory when iterative
+                // generation is enabled, because that's easier then calculating
+                // which paths we need to clean related to _just_ the generated
+                // files.
+                var allPathsToClean = iterativeGeneration
+                    // We want to clean all but the video files inside the directory to clean.
+                    ? GetFilePaths(pathToClean, true).Where(path => !NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+                    : allPaths;
+                result += CleanupStructure(vfsPath, pathToClean, allPaths);
+            }
 
             // Save which paths we've already generated so we can skip generation
             // for them and their sub-paths later, and also print the result.
@@ -313,6 +366,16 @@ public class VirtualFileSystemService {
             true,
             alteredPaths ?? []
         );
+    }
+
+    private IEnumerable<string> GetFilePaths(string directoryPath, bool withDirectory = false) {
+        if (!FileSystem.DirectoryExists(directoryPath))
+            return [];
+
+        if (withDirectory)
+            return FileSystem.GetFileSystemEntryPaths(directoryPath, true);
+
+        return FileSystem.GetFilePaths(directoryPath, true);
     }
 
     private bool TryGetFileCheckerForMediaFolders(IReadOnlyList<MediaFolderConfiguration> mediaConfigs, [NotNullWhen(true)] out Func<string, bool>? fileChecker) {
@@ -600,7 +663,7 @@ public class VirtualFileSystemService {
         );
     }
 
-    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForManagedFolders(IReadOnlyList<MediaFolderConfiguration> mediaConfigs, Func<string, bool> fileExists) {
+    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForManagedFolders(IReadOnlyList<MediaFolderConfiguration> mediaConfigs, Func<string, bool> fileExists, DateTime? lastGeneratedAt = null) {
         var start = DateTime.UtcNow;
         var singleSeriesIds = new HashSet<int>();
         var multiSeriesFiles = new List<(API.Models.File, string)>();
@@ -652,6 +715,10 @@ public class VirtualFileSystemService {
                         .Where(location => location.ManagedFolderId == managedFolderId && (managedFolderSubPath.Length is 0 || location.RelativePath.StartsWith(managedFolderSubPath)))
                         .FirstOrDefault();
                     if (location is null)
+                        continue;
+
+                    // Skip files that were generated before the last generated at time if we're doing an iterative run.
+                    if (lastGeneratedAt.HasValue && (file.ImportedAt ?? file.CreatedAt) < lastGeneratedAt.Value)
                         continue;
 
                     foreach (var mediaFolderPath in mediaFolderPaths) {
@@ -1131,7 +1198,7 @@ public class VirtualFileSystemService {
         }
     }
 
-    private LinkGenerationResult CleanupStructure(string vfsPath, string directoryToClean, IReadOnlyList<string> allKnownPaths, bool preview = false) {
+    private LinkGenerationResult CleanupStructure(string vfsPath, string directoryToClean, IEnumerable<string> allKnownPathsEnumerable, bool preview = false) {
         if (!FileSystem.DirectoryExists(directoryToClean)) {
             if (!preview)
                 Logger.LogDebug("Skipped cleaning up folder because it does not exist: {Path}", directoryToClean);
@@ -1143,6 +1210,7 @@ public class VirtualFileSystemService {
         var start = DateTime.Now;
         var previousStep = start;
         var result = new LinkGenerationResult();
+        var allKnownPaths = allKnownPathsEnumerable is IReadOnlyList<string> allKnownPathsList ? allKnownPathsList : [.. allKnownPathsEnumerable];
         var searchExtensions = NamingOptions.VideoFileExtensions.Concat(NamingOptions.SubtitleFileExtensions).Concat(NamingOptions.AudioFileExtensions).Concat([".nfo", ".trickplay"]).ToHashSet();
         var entriesToBeRemoved = FileSystem.GetFileSystemEntryPaths(directoryToClean, true)
             .Select(path => (path, extName: Path.GetExtension(path)))
@@ -1371,9 +1439,13 @@ public class VirtualFileSystemService {
                     return false;
                 }
 
-                // // This statement will never be true. Because it would never had hit this path if it were true.
-                // if (currentTarget == realTarget)
-                //     return true;
+                // If we're cleaning up during an iterative generation then we
+                // might hit this path, so abort here if everything is as it
+                // should be.
+                if (currentTarget == realTarget) {
+                    skip = true;
+                    return true;
+                }
 
                 // Copy the link so we can move it to where it should be.
                 File.Delete(externalFilePath);
@@ -1451,9 +1523,13 @@ public class VirtualFileSystemService {
                     return false;
                 }
 
-                // // This statement will never be true. Because it would never had hit this path if it were true.
-                // if (currentTarget == realTarget)
-                //     return true;
+                // If we're cleaning up during an iterative generation then we
+                // might hit this path, so abort here if everything is as it
+                // should be.
+                if (currentTarget == realTarget) {
+                    skip = true;
+                    return true;
+                }
 
                 // Copy the link so we can move it to where it should be.
                 Directory.Delete(trickplayDirectory, recursive: true);

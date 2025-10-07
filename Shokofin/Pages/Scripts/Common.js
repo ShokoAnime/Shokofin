@@ -285,30 +285,35 @@ export const LibraryMenu = globalThis.LibraryMenu;
 */
 
 /**
-* @typedef {{
-*   LibraryId: string;
-*   LibraryName: string | null;
-*   MediaFolderId: string;
-*   MediaFolderPath: string;
-*   ManagedFolderId: number;
-*   ManagedFolderName: string | null;
-*   ManagedFolderRelativePath: string;
-*   IsVirtualRoot: boolean;
-*   IsMapped: boolean;
-*   IsFileEventsEnabled: boolean;
-*   IsRefreshEventsEnabled: boolean;
-*   LibraryOperationMode: LibraryOperationMode;
-* }} MediaFolderConfig
-*/
+ * @typedef {{
+ *   LibraryId: string;
+ *   LibraryName: string | null;
+ *   MediaFolderId: string;
+ *   MediaFolderPath: string;
+ *   ManagedFolderId: number;
+ *   ManagedFolderName: string | null;
+ *   ManagedFolderRelativePath: string;
+ *   IsVirtualRoot: boolean;
+ *   IsMapped: boolean;
+ *   IsFileEventsEnabled: boolean;
+ *   IsRefreshEventsEnabled: boolean;
+ *   LibraryOperationMode: LibraryOperationMode;
+ *   IterativeVfsGeneration_Enabled: boolean;
+ *   IterativeVfsGeneration_LastGeneratedAt: string | null;
+ *   IterativeVfsGeneration_CurrentCount: number;
+ *   IterativeVfsGeneration_MaxCount: number;
+ *   IterativeVfsGeneration_ForceFullGenerationOnNextRefresh: boolean;
+ * }} MediaFolderConfig
+ */
 
 /**
-* @typedef {{
-*   Version: string;
-*   Commit: string | null;
-*   ReleaseChannel: "Stable" | "Dev" | "Debug" | null;
-*   ReleaseDate: string | null;
-* }} ServerInformation
-*/
+ * @typedef {{
+ *   Version: string;
+ *   Commit: string | null;
+ *   ReleaseChannel: "Stable" | "Dev" | "Debug" | null;
+ *   ReleaseDate: string | null;
+ * }} ServerInformation
+ */
 
 /**
  * @typedef {{
@@ -507,6 +512,8 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   VFS_Location: VirtualRootLocation;
  *   VFS_CustomLocation: string;
  *   VFS_IterativeFileChecks: boolean;
+ *   VFS_IterativeGenerationEnabled: boolean;
+ *   VFS_IterativeGenerationMaxCount: number;
  *   MediaFolders: MediaFolderConfig[];
  *   SignalR_AutoConnectEnabled: boolean;
  *   SignalR_AutoReconnectInSeconds: number[];

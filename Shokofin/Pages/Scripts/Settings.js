@@ -579,6 +579,7 @@ function applyFormToConfig(form, config) {
             const libraryId = form.querySelector("#MediaFolderSelector").value;
             const mediaFolders = libraryId ? config.MediaFolders.filter((m) => m.LibraryId === libraryId) : undefined;
             const seasonMergeWindow = sanitizeNumber(form.querySelector("#SeasonMerging_MergeWindowInDays").value);
+            const vfsIterativeGenerationMaxCount = sanitizeNumber(form.querySelector("#VFS_IterativeGenerationMaxCount").value, 0, 100);
 
             config.DefaultLibraryStructure = form.querySelector("#DefaultLibraryStructure").value;
             config.DefaultSeasonOrdering = form.querySelector("#DefaultSeasonOrdering").value;
@@ -595,9 +596,17 @@ function applyFormToConfig(form, config) {
             ([config.MergeVersionSortSelectorList, config.MergeVersionSortSelectorOrder] = retrieveSortableCheckboxList(form, "MergeVersionSortSelectorList"));
 
             config.DefaultLibraryOperationMode = form.querySelector("#DefaultLibraryOperationMode").value;
+            config.VFS_IterativeGenerationEnabled = form.querySelector("#VFS_IterativeGenerationEnabled").checked;
+            config.VFS_IterativeGenerationMaxCount = vfsIterativeGenerationMaxCount;
+            form.querySelector("#VFS_IterativeGenerationMaxCount").value = vfsIterativeGenerationMaxCount;
             if (mediaFolders) {
                 for (const c of mediaFolders) {
+                    const maxCount = sanitizeNumber(form.querySelector("#MediaFolderLibraryIterativeGenerationMaxCount").value, 0, 100);
                     c.LibraryOperationMode = form.querySelector("#MediaFolderLibraryOperationMode").value;
+                    c.IterativeVfsGeneration_Enabled = form.querySelector("#MediaFolderLibraryIterativeGenerationEnabled").checked;
+                    c.IterativeVfsGeneration_MaxCount = maxCount;
+                    form.querySelector("#MediaFolderLibraryIterativeGenerationMaxCount").value = maxCount;
+                    c.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh = form.querySelector("#MediaFolderLibraryForceFullGenerationOnNextRefresh").checked;
                 }
             }
 
@@ -866,6 +875,8 @@ async function applyConfigToForm(form, config) {
             renderSortableCheckboxList(form, "MergeVersionSortSelectorList", config.MergeVersionSortSelectorList, config.MergeVersionSortSelectorOrder);
 
             form.querySelector("#DefaultLibraryOperationMode").value = config.DefaultLibraryOperationMode;
+            form.querySelector("#VFS_IterativeGenerationEnabled").checked = config.VFS_IterativeGenerationEnabled;
+            form.querySelector("#VFS_IterativeGenerationMaxCount").value = config.VFS_IterativeGenerationMaxCount;
             form.querySelector("#MediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + libraries
                 .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}${State.advancedMode ? ` (${library.LibraryId})` : ""}</option>`)
                 .join("");
@@ -1108,7 +1119,7 @@ async function applyLibraryConfigToForm(form, libraryId, config = null) {
         }
     }
 
-    const mediaFolders = State.config.MediaFolders.filter((c) => c.LibraryId === libraryId && !c.IsVirtualRoot);
+    const mediaFolders = config.MediaFolders.filter((c) => c.LibraryId === libraryId && !c.IsVirtualRoot);
     if (!mediaFolders.length) {
         renderReadonlyList(form, "MediaFolderManagedFolderMapping", []);
 
@@ -1126,8 +1137,11 @@ async function applyLibraryConfigToForm(form, libraryId, config = null) {
     ));
 
     // Configure the elements within the media folder container
-    const libraryConfig = mediaFolders[0];
+    const libraryConfig = config.MediaFolders.find((c) => c.LibraryId === libraryId && c.IsVirtualRoot) || mediaFolders[0];
     form.querySelector("#MediaFolderLibraryOperationMode").value = libraryConfig.LibraryOperationMode;
+    form.querySelector("#MediaFolderLibraryIterativeGenerationEnabled").checked = libraryConfig.IterativeVfsGeneration_Enabled;
+    form.querySelector("#MediaFolderLibraryIterativeGenerationMaxCount").value = libraryConfig.IterativeVfsGeneration_MaxCount;
+    form.querySelector("#MediaFolderLibraryForceFullGenerationOnNextRefresh").checked = libraryConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh;
 
     // Show the media folder settings now if it was previously hidden.
     form.querySelector("#MediaFolderPerFolderSettingsContainer").removeAttribute("hidden");

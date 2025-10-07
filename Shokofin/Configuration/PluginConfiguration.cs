@@ -629,6 +629,18 @@ public class PluginConfiguration : BasePluginConfiguration {
     /// </summary>
     public int[] VFS_AlwaysIncludedAnidbIdList { get; set; }
 
+    /// <summary>
+    /// Enable the iterative generation of the VFS for new libraries.
+    /// </summary>
+    public bool VFS_IterativeGenerationEnabled { get; set; } = false;
+
+    /// <summary>
+    /// Maximum number of iterations to perform when generating the VFS by
+    /// default. Set to a value above 0 to enable.
+    /// </summary>
+    [Range(0, 100)]
+    public int VFS_IterativeGenerationMaxCount { get; set; } = 0;
+
     #endregion
 
     #region Media Folder
