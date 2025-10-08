@@ -264,6 +264,9 @@ public class Ordering {
                     title.Contains("manners movie", StringComparison.OrdinalIgnoreCase)
                 )
                     return ExtraType.Clip;
+                // Special endings for episodes
+                if (title.StartsWith("episode", StringComparison.OrdinalIgnoreCase) && title.Contains("ending"))
+                    return ExtraType.Clip;
                 // Behind the Scenes
                 if (title.Contains("behind the scenes", StringComparison.OrdinalIgnoreCase))
                     return ExtraType.BehindTheScenes;
