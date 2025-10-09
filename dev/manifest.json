@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.50",
+                "changelog": "`fix`: **Fix anidb episode urls**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.50/shoko_5.0.4.50.zip",
+                "checksum": "bb4a5a913135efb26ace91271292f5f2",
+                "timestamp": "2025-10-09T11:43:26Z"
+            },
+            {
                 "version": "5.0.4.49",
                 "changelog": "`fix`: **Always set expiration**.\n\n`fix`: **Optimize first iterative VFS generation path**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.46/shoko_5.0.4.46.zip",
                 "checksum": "7de436bdf6360d9f1f0a9111611988e6",
                 "timestamp": "2025-10-07T21:58:22Z"
-            },
-            {
-                "version": "5.0.4.45",
-                "changelog": "`fix`: **Always use tmdb titles/overviews for show instead of season for show info**.\n\n`refactor`: **Make physical vfs folder mandatory**.\n\n`chore`: **Fix brackets**.\n\n`feat`: **Add new **EXPERIMENTAL** iterative VFS generation**:\n\nAdded a new **EXPERIMENTAL** mode to iteratively generate the VFS for only newly imported files. There are also a few options to do a full generation every `X` generation, and to forcefully generate the whole VFS on next generation. It has no effect on generations _within_ the library, only when the library itself is generated (be it in the scheduled task or from a refresh/scan of the media folder itself).",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.45/shoko_5.0.4.45.zip",
-                "checksum": "e5a19f5b8e15626e809a0417545b16ed",
-                "timestamp": "2025-10-07T21:55:16Z"
             }
         ]
     }
