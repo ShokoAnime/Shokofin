@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.49",
+                "changelog": "`fix`: **Always set expiration**.\n\n`fix`: **Optimize first iterative VFS generation path**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.49/shoko_5.0.4.49.zip",
+                "checksum": "08ef9bc940301dcadd0cbd29b00494b7",
+                "timestamp": "2025-10-09T02:15:46Z"
+            },
+            {
                 "version": "5.0.4.48",
                 "changelog": "`refactor`: **Hook up resolver for iterative VFS generation + more**:\n\n- Hooked up the resolver for iterative VFS generation. Added a way to skip validating links which wasn't generated in the previous generation.\n\n- Removed the option to enable iterative file checks. It is now always enabled, because of the rework of the internals of the VFS service to make the iterative generation work.\n\n- Overhauled the internals of the VFS service to better support iterative VFS generation. It will now only lock and not cache the results when iterating over root of the VFS folder, so two refreshes back-to-back will check with the upstream both times if there has been any changes, instead of only the first time working.\n\n`chore`: **Move more unused properties to DEBUG only builds**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.45/shoko_5.0.4.45.zip",
                 "checksum": "e5a19f5b8e15626e809a0417545b16ed",
                 "timestamp": "2025-10-07T21:55:16Z"
-            },
-            {
-                "version": "5.0.4.44",
-                "changelog": "`fix`: **Add new update reasons to accommodate changes in daily server**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.44/shoko_5.0.4.44.zip",
-                "checksum": "c17b0ee7c2fa45d4ca43569c65e24495",
-                "timestamp": "2025-10-06T13:44:47Z"
             }
         ]
     }
