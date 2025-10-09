@@ -88,6 +88,57 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
         }
     }
 
+    public TItem GetOrCreate<TItem>(object key, Action<TItem> foundAction, Func<MemoryCacheEntryOptions, TItem> createFactory, CancellationToken cancellationToken = default) {
+        if (TryGetValue<TItem>(key, out var value)) {
+            foundAction(value);
+            return value;
+        }
+
+        try {
+            using (Semaphores.Lock(key, cancellationToken)) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (TryGetValue(key, out value)) {
+                    foundAction(value);
+                    return value;
+                }
+
+                var createOptions = CreateNewOptions();
+                value = createFactory(createOptions);
+                if (
+                    !(createOptions.AbsoluteExpiration.HasValue && createOptions.AbsoluteExpiration.Value < DateTime.UtcNow) &&
+                    !(createOptions.AbsoluteExpirationRelativeToNow.HasValue && createOptions.AbsoluteExpirationRelativeToNow.Value <= TimeSpan.Zero) &&
+                    !(createOptions.SlidingExpiration.HasValue && createOptions.SlidingExpiration.Value <= TimeSpan.Zero)
+                ) {
+                    using var entry = Cache.CreateEntry(key);
+                    entry.SetOptions(createOptions);
+                    entry.Value = value;
+                }
+                return value;
+            }
+        }
+        catch (SemaphoreFullException) {
+            Logger.LogWarning("Got a semaphore full exception for key: {Key}", key);
+
+            if (value is not null) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was assigned for key: {Key}", key);
+                return value;
+            }
+
+            if (TryGetValue(key, out value)) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was in the cache for key: {Key}", key);
+                foundAction(value);
+                return value;
+            }
+
+            throw;
+        }
+        catch (Exception ex) {
+            Logger.LogTrace(ex, "Got an unexpected exception for key: {Key}", key);
+            throw;
+        }
+    }
+
     public async Task<TItem> GetOrCreateAsync<TItem>(object key, Action<TItem> foundAction, Func<Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null, CancellationToken cancellationToken = default) {
         if (TryGetValue<TItem>(key, out var value)) {
             foundAction(value);
@@ -110,6 +161,57 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
 
                 value = await createFactory().ConfigureAwait(false);
                 entry.Value = value;
+                return value;
+            }
+        }
+        catch (SemaphoreFullException) {
+            Logger.LogWarning("Got a semaphore full exception for key: {Key}", key);
+
+            if (value is not null) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was assigned for key: {Key}", key);
+                return value;
+            }
+
+            if (TryGetValue(key, out value)) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was in the cache for key: {Key}", key);
+                foundAction(value);
+                return value;
+            }
+
+            throw;
+        }
+        catch (Exception ex) {
+            Logger.LogTrace(ex, "Got an unexpected exception for key: {Key}", key);
+            throw;
+        }
+    }
+
+    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Action<TItem> foundAction, Func<MemoryCacheEntryOptions, Task<TItem>> createFactory, CancellationToken cancellationToken = default) {
+        if (TryGetValue<TItem>(key, out var value)) {
+            foundAction(value);
+            return value;
+        }
+
+        try {
+            using (await Semaphores.LockAsync(key, cancellationToken).ConfigureAwait(false)) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (TryGetValue(key, out value)) {
+                    foundAction(value);
+                    return value;
+                }
+
+                var createOptions = CreateNewOptions();
+                value = await createFactory(createOptions).ConfigureAwait(false);
+                if (
+                    !(createOptions.AbsoluteExpiration.HasValue && createOptions.AbsoluteExpiration.Value < DateTime.UtcNow) &&
+                    !(createOptions.AbsoluteExpirationRelativeToNow.HasValue && createOptions.AbsoluteExpirationRelativeToNow.Value <= TimeSpan.Zero) &&
+                    !(createOptions.SlidingExpiration.HasValue && createOptions.SlidingExpiration.Value <= TimeSpan.Zero)
+                ) {
+                    using var entry = Cache.CreateEntry(key);
+                    entry.SetOptions(createOptions);
+                    entry.Value = value;
+                }
                 return value;
             }
         }
@@ -177,6 +279,52 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
         }
     }
 
+    public TItem GetOrCreate<TItem>(object key, Func<MemoryCacheEntryOptions, TItem> createFactory, CancellationToken cancellationToken = default) {
+        if (TryGetValue<TItem>(key, out var value))
+            return value;
+
+        try {
+            using (Semaphores.Lock(key, cancellationToken)) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (TryGetValue(key, out value))
+                    return value;
+
+                var createOptions = CreateNewOptions();
+                value = createFactory(createOptions);
+                if (
+                    !(createOptions.AbsoluteExpiration.HasValue && createOptions.AbsoluteExpiration.Value < DateTime.UtcNow) &&
+                    !(createOptions.AbsoluteExpirationRelativeToNow.HasValue && createOptions.AbsoluteExpirationRelativeToNow.Value <= TimeSpan.Zero) &&
+                    !(createOptions.SlidingExpiration.HasValue && createOptions.SlidingExpiration.Value <= TimeSpan.Zero)
+                ) {
+                    using var entry = Cache.CreateEntry(key);
+                    entry.SetOptions(createOptions);
+                    entry.Value = value;
+                }
+                return value;
+            }
+        }
+        catch (SemaphoreFullException) {
+            Logger.LogWarning("Got a semaphore full exception for key: {Key}", key);
+
+            if (value is not null) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was assigned for key: {Key}", key);
+                return value;
+            }
+
+            if (TryGetValue(key, out value)) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was in the cache for key: {Key}", key);
+                return value;
+            }
+
+            throw;
+        }
+        catch (Exception ex) {
+            Logger.LogTrace(ex, "Got an unexpected exception for key: {Key}", key);
+            throw;
+        }
+    }
+
     public async Task<TItem> GetOrCreateAsync<TItem>(object key, Func<Task<TItem>> createFactory, MemoryCacheEntryOptions? createOptions = null, CancellationToken cancellationToken = default) {
         if (TryGetValue<TItem>(key, out var value))
             return value;
@@ -218,6 +366,61 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
             throw;
         }
     }
+
+    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Func<MemoryCacheEntryOptions, Task<TItem>> createFactory, CancellationToken cancellationToken = default) {
+        if (TryGetValue<TItem>(key, out var value))
+            return value;
+
+        try {
+            using (await Semaphores.LockAsync(key, cancellationToken).ConfigureAwait(false)) {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (TryGetValue(key, out value))
+                    return value;
+
+                var createOptions = CreateNewOptions();
+                value = await createFactory(createOptions).ConfigureAwait(false);
+                if (
+                    !(createOptions.AbsoluteExpiration.HasValue && createOptions.AbsoluteExpiration.Value < DateTime.UtcNow) &&
+                    !(createOptions.AbsoluteExpirationRelativeToNow.HasValue && createOptions.AbsoluteExpirationRelativeToNow.Value <= TimeSpan.Zero) &&
+                    !(createOptions.SlidingExpiration.HasValue && createOptions.SlidingExpiration.Value <= TimeSpan.Zero)
+                ) {
+                    using var entry = Cache.CreateEntry(key);
+                    entry.SetOptions(createOptions);
+                    entry.Value = value;
+                }
+                return value;
+            }
+        }
+        catch (SemaphoreFullException) {
+            Logger.LogWarning("Got a semaphore full exception for key: {Key}", key);
+
+            if (value is not null) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was assigned for key: {Key}", key);
+                return value;
+            }
+
+            if (TryGetValue(key, out value)) {
+                Logger.LogInformation("Recovered from the semaphore full exception because the value was in the cache for key: {Key}", key);
+                return value;
+            }
+
+            throw;
+        }
+        catch (Exception ex) {
+            Logger.LogTrace(ex, "Got an unexpected exception for key: {Key}", key);
+            throw;
+        }
+    }
+
+    private MemoryCacheEntryOptions CreateNewOptions()
+        => new() {
+            AbsoluteExpiration = CacheEntryOptions?.AbsoluteExpiration is { } aE ? new DateTimeOffset(aE.UtcDateTime.Ticks, aE.Offset) : null,
+            AbsoluteExpirationRelativeToNow = CacheEntryOptions?.AbsoluteExpirationRelativeToNow is { } aER ? new TimeSpan(aER.Ticks) : null,
+            SlidingExpiration = CacheEntryOptions?.SlidingExpiration is { } sE ? new TimeSpan(sE.Ticks) : null,
+            Priority = CacheEntryOptions?.Priority ?? CacheItemPriority.Normal,
+            Size = CacheEntryOptions?.Size,
+        };
 
     public void Dispose() {
         Semaphores.Dispose();

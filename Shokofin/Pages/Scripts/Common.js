@@ -511,7 +511,6 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   VFS_MaxSeriesExceptionsBeforeAbort: number;
  *   VFS_Location: VirtualRootLocation;
  *   VFS_CustomLocation: string;
- *   VFS_IterativeFileChecks: boolean;
  *   VFS_IterativeGenerationEnabled: boolean;
  *   VFS_IterativeGenerationMaxCount: number;
  *   MediaFolders: MediaFolderConfig[];

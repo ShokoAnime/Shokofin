@@ -616,14 +616,6 @@ public class PluginConfiguration : BasePluginConfiguration {
     }
 
     /// <summary>
-    /// Skips the file search pre-generation step for library scans and instead
-    /// performs file existence checks during the generation phase. This can be
-    /// useful if iterating the file system is expensive, such as when using
-    /// network mapped libraries.
-    /// </summary>
-    public bool VFS_IterativeFileChecks { get; set; }
-
-    /// <summary>
     /// A list of AniDB anime IDs to always include during VFS generation, if 
     /// all the files are shared between different series.
     /// </summary>
@@ -812,7 +804,6 @@ public class PluginConfiguration : BasePluginConfiguration {
         VFS_ResolveLinks = false;
         VFS_MaxTotalExceptionsBeforeAbort = 10;
         VFS_MaxSeriesExceptionsBeforeAbort = 3;
-        VFS_IterativeFileChecks = false;
         VFS_AlwaysIncludedAnidbIdList = [
             3651, // Suzumiya Haruhi no Yuuutsu (2006)
         ];

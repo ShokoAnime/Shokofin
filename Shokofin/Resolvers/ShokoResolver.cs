@@ -78,7 +78,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve path \"{fileInfo.FullName}\".");
-            var (vfsPath, shouldContinue, _) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName).ConfigureAwait(false);
+            var (vfsPath, shouldContinue, _, _) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
@@ -111,7 +111,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve children of \"{parent.Path}\". (Children={fileInfoList.Count})");
-            var (vfsPath, shouldContinue, paths) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path).ConfigureAwait(false);
+            var (vfsPath, shouldContinue, skipValidation, paths) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
@@ -126,7 +126,40 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                             return [];
 
                         // We have an id, but the path does not belong to the generated set of paths.
+                        var episodeId = (string?)null;
                         if (!paths.Contains(dirInfo.FullName)) {
+                            // If we've been asked to skip validation, then just iterate it as-is, otherwise mark it for removal.
+                            if (skipValidation) {
+                                if (dirInfo.Name.TryGetAttributeValue(ProviderNames.ShokoEpisode, out episodeId)) {
+                                    if (collectionType is CollectionType.tvshows) {
+                                        pathsToRemoveBag.Add((dirInfo.FullName, true));
+                                        return [];
+                                    }
+
+                                    return FileSystem.GetFiles(dirInfo.FullName)
+                                        .AsParallel()
+                                        .Select(fileInfo => {
+                                            // Only allow the video files, since the subtitle files also have the ids set.
+                                            if (!NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(fileInfo.Name)))
+                                                return null;
+
+                                            if (!VirtualFileSystemService.TryGetIdsForPath(fileInfo.FullName, out var fileId, out var seriesId))
+                                                return null;
+
+                                            return new Movie() {
+                                                Path = fileInfo.FullName,
+                                            } as BaseItem;
+                                        })
+                                        .ToArray();
+                                }
+
+                                return [
+                                    new TvSeries() {
+                                        Path = dirInfo.FullName,
+                                    },
+                                ];
+                            }
+
                             pathsToRemoveBag.Add((dirInfo.FullName, true));
                             return [];
                         }
@@ -140,7 +173,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                             return [];
                         }
 
-                        if (dirInfo.Name.TryGetAttributeValue(ProviderNames.ShokoEpisode, out var episodeId)) {
+                        if (dirInfo.Name.TryGetAttributeValue(ProviderNames.ShokoEpisode, out episodeId)) {
                             var episode = ApiManager.GetEpisodeInfo(episodeId)
                                 .ConfigureAwait(false)
                                 .GetAwaiter()

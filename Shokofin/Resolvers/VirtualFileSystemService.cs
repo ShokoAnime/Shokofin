@@ -137,7 +137,9 @@ public class VirtualFileSystemService {
             var existingPaths = FileSystem.DirectoryExists(vfsPath)
                 ? FileSystem.GetFilePaths(vfsPath, true).ToHashSet()
                 : [];
-            if (!TryGetFileCheckerForMediaFolders(mediaConfigs, out var fileChecker))
+
+            // Validate if we can use the media folders.
+            if (!TryGetFileCheckerForMediaFolders(vfsConfig, mediaConfigs, out var fileChecker))
                 return (existingPaths, [], selectedFolder, new(), vfsPath);
 
             var allFiles = GetFilesForManagedFolders(mediaConfigs, fileChecker);
@@ -158,31 +160,33 @@ public class VirtualFileSystemService {
 
     #region Generate Structure
 
+    private const string CachePrefix = "vfs-path:";
+
     /// <summary>
     /// Generates the VFS structure if the VFS is enabled for the <paramref name="mediaFolder"/>.
     /// </summary>
     /// <param name="mediaFolder">The media folder to generate a structure for.</param>
     /// <param name="path">The file or folder within the media folder to generate a structure for.</param>
     /// <returns>The VFS path, if it succeeded.</returns>
-    public async Task<(string? vfsPath, bool shouldContinue, HashSet<string> alteredPaths)> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path) {
+    public async Task<(string? vfsPath, bool shouldContinue, bool skipValidation, HashSet<string> alteredPaths)> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path) {
         var (vfsConfig, mediaConfigs, skipGeneration) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType, config => config.IsVirtualFileSystemEnabled).ConfigureAwait(false);
         if (vfsConfig is null || mediaConfigs.Count is 0)
-            return (null, false, []);
+            return (null, false, false, []);
 
         if (!Plugin.Instance.CanCreateSymbolicLinks)
             throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
 
         var vfsPath = vfsConfig.MediaFolderPath;
-        var shouldContinue = path.StartsWith(vfsPath + Path.DirectorySeparatorChar) || path == vfsPath;
-        if (!shouldContinue)
-            return (vfsPath, false, []);
+        if (!string.Equals(vfsPath, path, StringComparison.Ordinal) && !path.StartsWith(vfsPath + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            return (vfsPath, false, false, []);
 
         // Skip link generation if we've already generated for the library.
-        if (DataCache.TryGetValue<HashSet<string>?>($"should-skip-vfs-path:{vfsPath}", out var alteredPaths))
+        if (DataCache.TryGetValue<(HashSet<string>? alteredPaths, bool iterative)>(CachePrefix + vfsPath, out var tuple) && !tuple.iterative)
             return (
-                alteredPaths is not null ? vfsPath : null,
+                tuple.alteredPaths is not null ? vfsPath : null,
                 true,
-                alteredPaths ?? []
+                false,
+                tuple.alteredPaths ?? []
             );
 
         // Check full path and all parent directories if they have been indexed.
@@ -190,14 +194,101 @@ public class VirtualFileSystemService {
             var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).Prepend(vfsPath).ToArray();
             while (pathSegments.Length > 1) {
                 var subPath = Path.Join(pathSegments);
-                if (DataCache.TryGetValue($"should-skip-vfs-path:{subPath}", out alteredPaths))
-                    return (vfsPath, true, alteredPaths ?? []);
+                if (DataCache.TryGetValue(CachePrefix + subPath, out tuple))
+                    return (vfsPath, true, false, tuple.alteredPaths ?? []);
                 pathSegments = pathSegments.SkipLast(1).ToArray();
             }
         }
 
+        // Validate if we can use the media folders.
+        if (!TryGetFileCheckerForMediaFolders(vfsConfig, mediaConfigs, out var fileChecker))
+            return (vfsPath, true, true, []);
+
+        // Since the generator is lazily started then we can do this outside
+        // the guarded cache to check if we should abort or not.
+        string? pathToClean = null;
+        IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
+        if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
+            var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
+            switch (pathSegments.Length) {
+                // show/movie-folder level
+                case 1: {
+                    var seriesName = pathSegments[0];
+                    if (!seriesName.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seasonId))
+                        break;
+
+                    // movie-folder
+                    if (seriesName.TryGetAttributeValue(ProviderNames.ShokoEpisode, out var episodeId) ) {
+                        pathToClean = path;
+                        allFiles = GetFilesForMovie(episodeId, mediaConfigs, fileChecker);
+                        break;
+                    }
+
+                    // show
+                    pathToClean = path;
+                    allFiles = GetFilesForShow(seasonId, null, mediaConfigs, fileChecker);
+                    break;
+                }
+
+                // season/movie level
+                case 2: {
+                    var (seriesName, seasonOrMovieName) = pathSegments;
+                    if (!seriesName.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seasonId))
+                        break;
+
+                    // movie
+                    if (seriesName.TryGetAttributeValue(ProviderNames.ShokoEpisode, out _)) {
+                        if (!seasonOrMovieName.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seriesId) || !int.TryParse(seriesId, out _))
+                            break;
+
+                        if (!seasonOrMovieName.TryGetAttributeValue(ProviderNames.ShokoFile, out var fileId) || !int.TryParse(fileId, out _))
+                            break;
+
+                        allFiles = GetFilesForEpisode(fileId, seriesId, mediaConfigs, fileChecker);
+                        break;
+                    }
+
+                    // "season" or extras
+                    if (!seasonOrMovieName.StartsWith("Season ") || !int.TryParse(seasonOrMovieName.Split(' ').Last(), out var seasonNumber))
+                        break;
+
+                    pathToClean = path;
+                    allFiles = GetFilesForShow(seasonId, seasonNumber, mediaConfigs, fileChecker);
+                    break;
+                }
+
+                // episodes level
+                case 3: {
+                    var (seriesName, seasonName, episodeName) = pathSegments;
+                    if (!seriesName.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seasonId))
+                        break;
+
+                    if (!seasonName.StartsWith("Season ") || !int.TryParse(seasonName.Split(' ').Last(), out _))
+                        break;
+
+                    if (!episodeName.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seriesId) || !int.TryParse(seriesId, out _))
+                        break;
+
+                    if (!episodeName.TryGetAttributeValue(ProviderNames.ShokoFile, out var fileId) || !int.TryParse(fileId, out _))
+                        break;
+
+                    allFiles = GetFilesForEpisode(fileId, seriesId, mediaConfigs, fileChecker);
+                    break;
+                }
+            }
+
+            // The only reason `allFiles` can be null after this check is if we're
+            // trying to generate the root folder.
+            if (allFiles is null)
+                return (null, true, false, []);
+        }
+
+        // Skip generation if we're going to (re-)schedule a library scan.
+        if (skipGeneration)
+            return (vfsPath, true, true, []);
+
         // Only do this once.
-        alteredPaths = await DataCache.GetOrCreateAsync($"should-skip-vfs-path:{path}", async () => {
+        tuple = await DataCache.GetOrCreateAsync(CachePrefix + path, async (options) => {
             Logger.LogInformation(
                 "Generating VFS structure for library {LibraryName} at sub-path {Path}. This might take some time depending on your collection size. (Library={LibraryId})",
                 mediaConfigs[0].LibraryName,
@@ -205,10 +296,14 @@ public class VirtualFileSystemService {
                 mediaConfigs[0].LibraryId
             );
 
-            // Check if we want to do an iterative generation of the VFS.
             var lastGeneratedAt = (DateTime?)null;
             var iterativeGeneration = false;
-            if (path == vfsPath) {
+            // `allFiles` will only be null if we'te trying to generate the root folder,
+            // so it's effectively the same as if we had done `vfsPath == path`, but we
+            // get to tell the compiler that `allFiles` will not be null after this point.
+            if (allFiles is null) {
+                // Check if we want to do an iterative generation of the VFS since we're
+                // operating on the root folder.
                 if (vfsConfig.IterativeVfsGeneration_Enabled) {
                     if (vfsConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh) {
                         vfsConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh = false;
@@ -217,6 +312,7 @@ public class VirtualFileSystemService {
                     else if (vfsConfig.IterativeVfsGeneration_MaxCount > 0) {
                         if (vfsConfig.IterativeVfsGeneration_CurrentCount + 1 < vfsConfig.IterativeVfsGeneration_MaxCount) {
                             iterativeGeneration = true;
+                            options.AbsoluteExpirationRelativeToNow = TimeSpan.Zero;
                             vfsConfig.IterativeVfsGeneration_CurrentCount++;
                             if (vfsConfig.IterativeVfsGeneration_LastGeneratedAt.HasValue)
                                 lastGeneratedAt = vfsConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
@@ -227,6 +323,7 @@ public class VirtualFileSystemService {
                     }
                     else {
                         iterativeGeneration = true;
+                        options.AbsoluteExpirationRelativeToNow = TimeSpan.Zero;
                         if (vfsConfig.IterativeVfsGeneration_LastGeneratedAt.HasValue)
                             lastGeneratedAt = vfsConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
                     }
@@ -245,126 +342,39 @@ public class VirtualFileSystemService {
                     vfsConfig.IterativeVfsGeneration_LastGeneratedAt = null;
                     Plugin.Instance.SaveConfiguration();
                 }
-            }
-
-            // Iterate the files already in the VFS.
-            string? pathToClean = null;
-            IEnumerable<(string sourceLocation, string fileId, string seriesId)>? allFiles = null;
-            if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
-                if (!TryGetFileCheckerForMediaFolders(mediaConfigs, out var fileChecker))
-                    return AddParentDirectories(vfsPath, GetFilePaths(path));
-
-                var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
-                switch (pathSegments.Length) {
-                    // show/movie-folder level
-                    case 1: {
-                        var seriesName = pathSegments[0];
-                        if (!seriesName.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seasonId))
-                            break;
-
-                        // movie-folder
-                        if (seriesName.TryGetAttributeValue(ProviderNames.ShokoEpisode, out var episodeId) ) {
-                            pathToClean = path;
-                            allFiles = GetFilesForMovie(episodeId, mediaConfigs, fileChecker);
-                            break;
-                        }
-
-                        // show
-                        pathToClean = path;
-                        allFiles = GetFilesForShow(seasonId, null, mediaConfigs, fileChecker);
-                        break;
-                    }
-
-                    // season/movie level
-                    case 2: {
-                        var (seriesName, seasonOrMovieName) = pathSegments;
-                        if (!seriesName.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seasonId))
-                            break;
-
-                        // movie
-                        if (seriesName.TryGetAttributeValue(ProviderNames.ShokoEpisode, out _)) {
-                            if (!seasonOrMovieName.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seriesId) || !int.TryParse(seriesId, out _))
-                                break;
-
-                            if (!seasonOrMovieName.TryGetAttributeValue(ProviderNames.ShokoFile, out var fileId) || !int.TryParse(fileId, out _))
-                                break;
-
-                            allFiles = GetFilesForEpisode(fileId, seriesId, mediaConfigs, fileChecker);
-                            break;
-                        }
-
-                        // "season" or extras
-                        if (!seasonOrMovieName.StartsWith("Season ") || !int.TryParse(seasonOrMovieName.Split(' ').Last(), out var seasonNumber))
-                            break;
-
-                        pathToClean = path;
-                        allFiles = GetFilesForShow(seasonId, seasonNumber, mediaConfigs, fileChecker);
-                        break;
-                    }
-
-                    // episodes level
-                    case 3: {
-                        var (seriesName, seasonName, episodeName) = pathSegments;
-                        if (!seriesName.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seasonId))
-                            break;
-
-                        if (!seasonName.StartsWith("Season ") || !int.TryParse(seasonName.Split(' ').Last(), out _))
-                            break;
-
-                        if (!episodeName.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seriesId) || !int.TryParse(seriesId, out _))
-                            break;
-
-                        if (!episodeName.TryGetAttributeValue(ProviderNames.ShokoFile, out var fileId) || !int.TryParse(fileId, out _))
-                            break;
-
-                        allFiles = GetFilesForEpisode(fileId, seriesId, mediaConfigs, fileChecker);
-                        break;
-                    }
-                }
-            }
-            // Iterate files in the "real" media folder.
-            else if (mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath)) || path == vfsPath) {
-                if (!TryGetFileCheckerForMediaFolders(mediaConfigs, out var fileChecker))
-                    return AddParentDirectories(vfsPath, GetFilePaths(vfsPath));
 
                 pathToClean = vfsPath;
                 allFiles = GetFilesForManagedFolders(mediaConfigs, fileChecker, lastGeneratedAt);
             }
 
-            if (allFiles is null)
-                return null;
-
-            // Skip generation if we're going to (re-)schedule a library scan.
-            if (skipGeneration)
-                return AddParentDirectories(vfsPath, GetFilePaths(path.StartsWith(vfsPath + Path.DirectorySeparatorChar) ? path : vfsPath));
-
-            // Generate and cleanup the structure in the VFS.
+            // Generate any new structure in the VFS.
             var result = await GenerateStructure(collectionType, vfsPath, allFiles).ConfigureAwait(false);
-            if (!string.IsNullOrEmpty(pathToClean)) {
-                var allPaths = result.Paths.ToArray();
-                // Note: for now we're overcompensating by also "cleaning" the
-                // files for the other videos in the directory when iterative
-                // generation is enabled, because that's easier then calculating
-                // which paths we need to clean related to _just_ the generated
-                // files.
+            // Cleanup any residual entries from old structure in the VFS if interactive
+            // generation is disabled, or if it's enabled and we generated something new.
+            if (!string.IsNullOrEmpty(pathToClean) && (!iterativeGeneration || !result.Paths.IsEmpty)) {
+                // Note: for now we're overcompensating when "cleaning" by also checking
+                // the other videos in the directory when iterative generation is enabled,
+                // because that's easier to do it this way then to calculate _exactly_
+                // which paths we need to clean related to _just_ the generated files.
                 var allPathsToClean = iterativeGeneration
                     // We want to clean all but the video files inside the directory to clean.
-                    ? GetFilePaths(pathToClean, true).Where(path => !NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
-                    : allPaths;
-                result += CleanupStructure(vfsPath, pathToClean, allPaths);
+                    ? GetFilePaths(pathToClean).Where(path => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+                    : result.Paths.ToArray();
+                result += CleanupStructure(vfsPath, pathToClean, allPathsToClean);
             }
 
             // Save which paths we've already generated so we can skip generation
             // for them and their sub-paths later, and also print the result.
             result.Print(Logger, mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath)) ? vfsPath : path);
 
-            return AddParentDirectories(vfsPath, result.Paths.ToArray());
+            return (AddParentDirectories(vfsPath, result.Paths.ToArray()), iterativeGeneration);
         }).ConfigureAwait(false);
 
         return (
-            alteredPaths is not null ? vfsPath : null,
+            tuple.alteredPaths is not null ? vfsPath : null,
             true,
-            alteredPaths ?? []
+            tuple.iterative,
+            tuple.alteredPaths ?? []
         );
     }
 
@@ -378,9 +388,9 @@ public class VirtualFileSystemService {
         return FileSystem.GetFilePaths(directoryPath, true);
     }
 
-    private bool TryGetFileCheckerForMediaFolders(IReadOnlyList<MediaFolderConfiguration> mediaConfigs, [NotNullWhen(true)] out Func<string, bool>? fileChecker) {
+    private bool TryGetFileCheckerForMediaFolders(MediaFolderConfiguration vfsConfig, IReadOnlyList<MediaFolderConfiguration> mediaConfigs, [NotNullWhen(true)] out Func<string, bool>? fileChecker) {
         if (mediaConfigs.Count is 0) {
-            Logger.LogWarning("No media folders to create a file checker for.");
+            Logger.LogWarning("No media folders to create a file checker for. (Library={LibraryId})", vfsConfig.LibraryId);
             fileChecker = null;
             return false;
         }
@@ -404,29 +414,8 @@ public class VirtualFileSystemService {
             return false;
         }
 
-        if (Plugin.Instance.Configuration.VFS_IterativeFileChecks) {
-            Logger.LogDebug("Creating an iterative file checker for {Count} folders.", mediaConfigs.Count);
-            fileChecker = FileSystem.FileExists;
-            return true;
-        }
-
-        var libraryId = mediaConfigs[0].LibraryId;
-        Logger.LogDebug("Looking for files in library across {Count} folders. (Library={LibraryId})", mediaConfigs.Count, libraryId);
-        var start = DateTime.UtcNow;
-        var paths = new HashSet<string>();
-        foreach (var mediaConfig in mediaConfigs) {
-            Logger.LogDebug("Looking for files in folder at {Path}. (Library={LibraryId})", mediaConfig.MediaFolderPath, libraryId);
-            var folderStart = DateTime.UtcNow;
-            var before = paths.Count;
-            paths.UnionWith(
-                FileSystem.GetFilePaths(mediaConfig.MediaFolderPath, true)
-                    .Where(path => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
-            );
-            Logger.LogDebug("Found {FileCount} files in folder at {Path} in {TimeSpan}. (Library={LibraryId})", paths.Count - before, mediaConfig.MediaFolderPath, DateTime.UtcNow - folderStart, libraryId);
-        }
-
-        Logger.LogDebug("Found {FileCount} files in library across {Count} in {TimeSpan}. (Library={LibraryId})", paths.Count, mediaConfigs.Count, DateTime.UtcNow - start, libraryId);
-        fileChecker = paths.Contains;
+        Logger.LogDebug("Creating an iterative file checker for {Count} folders. (Library={LibraryId})", mediaConfigs.Count, vfsConfig.LibraryId);
+        fileChecker = FileSystem.FileExists;
         return true;
     }
 

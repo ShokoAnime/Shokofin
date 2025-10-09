@@ -2092,13 +2092,6 @@ form:not(.advanced-mode) .advanced-only {
                             <input is="emby-input" type="number" id="VFS_MaxSeriesExceptionsBeforeAbort" label="Max Series Exceptions Before Abort" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" max="10000" />
                             <div class="fieldDescription">Maximum number of series with exceptions before aborting the VFS generation. Set to 0 to disable limit.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="VFS_IterativeFileChecks" />
-                                <span>Iterative File Checks</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Skips the file search pre-generation step for library scans and instead performs file existence checks during the generation phase. This can be useful if iterating the file system is expensive, such as when using network mapped libraries.</div>
-                        </div>
                         <div class="selectContainer selectContainer-withDescription advanced-only">
                             <label class="selectLabel" for="VFS_Location">VFS Location</label>
                             <select is="emby-select" id="VFS_Location" name="VFS_Location" class="emby-select-withcolor emby-select">
