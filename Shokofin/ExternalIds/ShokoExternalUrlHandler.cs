@@ -267,8 +267,8 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
         foreach (var anidbInfo in episodeInfo.AnidbEpisodes)
             result.Add((
                 ProviderNames.Anidb,
-                $"(e{anidbInfo.AnidbAnimeId}) (a{anidbInfo.AnidbAnimeId} > {anidbInfo.GetEpisodeNumberText()})",
-                $"/episode/{anidbInfo.AnidbAnimeId}"
+                $"(e{anidbInfo.AnidbEpisodeId}) (a{anidbInfo.AnidbAnimeId} > {anidbInfo.GetEpisodeNumberText()})",
+                $"/episode/{anidbInfo.AnidbEpisodeId}"
             ));
 
         foreach (var tmdbInfo in episodeInfo.TmdbEpisodes) {
