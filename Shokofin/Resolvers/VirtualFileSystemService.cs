@@ -312,7 +312,6 @@ public class VirtualFileSystemService {
                     else if (vfsConfig.IterativeVfsGeneration_MaxCount > 0) {
                         if (vfsConfig.IterativeVfsGeneration_CurrentCount + 1 < vfsConfig.IterativeVfsGeneration_MaxCount) {
                             iterativeGeneration = true;
-                            options.AbsoluteExpirationRelativeToNow = TimeSpan.Zero;
                             vfsConfig.IterativeVfsGeneration_CurrentCount++;
                             if (vfsConfig.IterativeVfsGeneration_LastGeneratedAt.HasValue)
                                 lastGeneratedAt = vfsConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
@@ -323,11 +322,11 @@ public class VirtualFileSystemService {
                     }
                     else {
                         iterativeGeneration = true;
-                        options.AbsoluteExpirationRelativeToNow = TimeSpan.Zero;
                         if (vfsConfig.IterativeVfsGeneration_LastGeneratedAt.HasValue)
                             lastGeneratedAt = vfsConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
                     }
 
+                    options.AbsoluteExpirationRelativeToNow = TimeSpan.Zero;
                     vfsConfig.IterativeVfsGeneration_LastGeneratedAt = DateTime.UtcNow;
                     Plugin.Instance.SaveConfiguration();
                 }
