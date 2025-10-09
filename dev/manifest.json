@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.48",
+                "changelog": "`refactor`: **Hook up resolver for iterative VFS generation + more**:\n\n- Hooked up the resolver for iterative VFS generation. Added a way to skip validating links which wasn't generated in the previous generation.\n\n- Removed the option to enable iterative file checks. It is now always enabled, because of the rework of the internals of the VFS service to make the iterative generation work.\n\n- Overhauled the internals of the VFS service to better support iterative VFS generation. It will now only lock and not cache the results when iterating over root of the VFS folder, so two refreshes back-to-back will check with the upstream both times if there has been any changes, instead of only the first time working.\n\n`chore`: **Move more unused properties to DEBUG only builds**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.48/shoko_5.0.4.48.zip",
+                "checksum": "ab9969705e6d773349e4c94ba2b4e7d7",
+                "timestamp": "2025-10-09T01:58:17Z"
+            },
+            {
                 "version": "5.0.4.47",
                 "changelog": "`fix`: **Add edge case for special episode endings to be mapped as extras**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.44/shoko_5.0.4.44.zip",
                 "checksum": "c17b0ee7c2fa45d4ca43569c65e24495",
                 "timestamp": "2025-10-06T13:44:47Z"
-            },
-            {
-                "version": "5.0.4.43",
-                "changelog": "`chore`: **Remove unused imports**. (_Skip CI_)\n\n`feat`: **Expose more VFS debug options in the UI**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.43/shoko_5.0.4.43.zip",
-                "checksum": "a976b5db71936ca3c2ca72b3ba663399",
-                "timestamp": "2025-10-04T19:29:41Z"
             }
         ]
     }
