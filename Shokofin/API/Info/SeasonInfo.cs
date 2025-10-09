@@ -94,6 +94,9 @@ public class SeasonInfo : IExtendedItemInfo {
     /// </summary>
     public IReadOnlyList<YearlySeason> YearlySeasons { get; init; }
 
+    /// <summary>
+    /// All staff for the season across all episodes.
+    /// </summary>
     public IReadOnlyList<PersonInfo> Staff { get; init; }
 
     /// <summary>
