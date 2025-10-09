@@ -74,11 +74,13 @@ public class ShokoEpisode {
     public class EpisodeIDs : IDs {
         public int ParentSeries { get; set; }
 
+#if DEBUG
         public int AniDB { get; set; }
 
         public List<int> TvDB { get; set; } = [];
 
         public List<string> IMDB { get; set; } = [];
+#endif
 
         public TmdbEpisodeIDs TMDB { get; init; } = new();
     }
@@ -88,6 +90,8 @@ public class ShokoEpisode {
 
         public List<int> Movie { get; init; } = [];
 
+#if DEBUG
         public List<int> Show { get; init; } = [];
+#endif
     }
 }
