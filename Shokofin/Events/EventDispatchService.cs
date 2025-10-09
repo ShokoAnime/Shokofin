@@ -237,7 +237,7 @@ public class EventDispatchService {
                                 .Where(tuple => tuple.symbolicLinks.Length > 0 && tuple.importedAt.HasValue)
                                 .ToList();
                             foreach (var (symLinks, importDate) in vfsLocations) {
-                                result += ResolveManager.GenerateSymbolicLinks(sourceLocation, symLinks, importDate!.Value);
+                                result += ResolveManager.GenerateSymbolicLinks(vfsPath, sourceLocation, symLinks, importDate!.Value);
                                 foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
                                     topFolders.Add(path);
                             }
@@ -309,7 +309,7 @@ public class EventDispatchService {
                                 .Where(tuple => tuple.symbolicLinks.Length > 0 && tuple.importedAt.HasValue)
                                     .ToList();
                                 foreach (var (symLinks, importDate) in vfsLocations) {
-                                    result += ResolveManager.GenerateSymbolicLinks(newSourceLocation, symLinks, importDate!.Value);
+                                    result += ResolveManager.GenerateSymbolicLinks(vfsPath, newSourceLocation, symLinks, importDate!.Value);
                                     foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
                                         topFolders.Add(path);
                                 }

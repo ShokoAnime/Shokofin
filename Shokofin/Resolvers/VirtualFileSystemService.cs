@@ -812,7 +812,7 @@ public class VirtualFileSystemService {
                 if (symbolicLinks.Length == 0 || !importedAt.HasValue)
                     return;
 
-                var subResult = GenerateSymbolicLinks(sourceLocation, symbolicLinks, importedAt.Value, preview);
+                var subResult = GenerateSymbolicLinks(vfsPath, sourceLocation, symbolicLinks, importedAt.Value, preview);
 
                 // Combine the current results with the overall results.
                 lock (semaphore) {
@@ -976,7 +976,7 @@ public class VirtualFileSystemService {
         return (symbolicLinks, (file.Shoko.ImportedAt ?? file.Shoko.CreatedAt).ToLocalTime());
     }
 
-    public LinkGenerationResult GenerateSymbolicLinks(string sourceLocation, string[] symbolicLinks, DateTime importedAt, bool preview = false) {
+    public LinkGenerationResult GenerateSymbolicLinks(string vfsPath, string sourceLocation, string[] symbolicLinks, DateTime importedAt, bool preview = false) {
         try {
             var result = new LinkGenerationResult();
             if (Plugin.Instance.Configuration.VFS_ResolveLinks && !preview) {
@@ -1001,6 +1001,8 @@ public class VirtualFileSystemService {
                 var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
                 if (!Directory.Exists(symbolicDirectory))
                     Directory.CreateDirectory(symbolicDirectory);
+
+                EnsureCreationDateForDirectories(vfsPath, symbolicDirectory, importedAt);
 
                 result.Paths.Add(symbolicLink);
                 if (!File.Exists(symbolicLink)) {
@@ -1139,6 +1141,25 @@ public class VirtualFileSystemService {
         }
 
         return externalPaths;
+    }
+
+    private void EnsureCreationDateForDirectories(string vfsPath, string path, DateTime dateTime) {
+        var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).Prepend(vfsPath).ToArray();
+        while (pathSegments.Length > 1) {
+            try {
+                var subPath = Path.Join(pathSegments);
+                var createdDate = Directory.GetCreationTimeUtc(subPath);
+                var modifiedDate = Directory.GetLastAccessTimeUtc(subPath);
+                if (createdDate > dateTime) {
+                    Directory.SetCreationTimeUtc(subPath, dateTime);
+                }
+            }
+            catch (Exception ex) {
+                Logger.LogError(ex, "Failed to set creation date for directory at {Path}", path);
+            }
+
+            pathSegments = pathSegments.SkipLast(1).ToArray();
+        }
     }
 
     private void LinkExternalFiles(List<string> externalFiles, string symbolicLink, string symbolicDirectory, int sourcePrefixLength, LinkGenerationResult result, bool preview) {
