@@ -53,6 +53,8 @@ public class EpisodeInfo : IExtendedItemInfo {
 
     public IReadOnlyList<Text> Overviews { get; init; }
 
+    public IReadOnlyList<string> Notes { get; init; } = [];
+
     public string? OriginalLanguageCode { get; init; }
 
     public ExtraType? ExtraType { get; init; }
@@ -159,6 +161,7 @@ public class EpisodeInfo : IExtendedItemInfo {
             ..episode.AniDB.Titles,
             ..(tmdbEntity?.Titles ?? []),
         ];
+        var notes = (IReadOnlyList<string>)[];
         Overview = episode.Description == episode.AniDB.Description
             ? TextUtility.SanitizeAnidbDescription(episode.Description)
             : episode.Description;
@@ -169,11 +172,12 @@ public class EpisodeInfo : IExtendedItemInfo {
                     IsPreferred = string.Equals(episode.Description, episode.AniDB.Description),
                     LanguageCode = "en",
                     Source = "AniDB",
-                    Value = TextUtility.SanitizeAnidbDescription(episode.AniDB.Description),
+                    Value = TextUtility.SanitizeAnidbDescription(episode.AniDB.Description, out notes),
                 },
             ] : Array.Empty<Text>()),
             ..(tmdbEntity?.Overviews ?? []),
         ];
+        Notes = notes;
         Studios = [];
         if (tmdbMovie is not null) {
             Runtime = tmdbMovie.Runtime ?? episode.AniDB.Duration;

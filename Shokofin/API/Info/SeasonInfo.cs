@@ -51,6 +51,8 @@ public class SeasonInfo : IExtendedItemInfo {
 
     public IReadOnlyList<Text> Overviews { get; init; }
 
+    public IReadOnlyList<string> Notes { get; init; } = [];
+
     public string? OriginalLanguageCode { get; init; }
 
     public Rating CommunityRating { get; init; }
@@ -370,7 +372,8 @@ public class SeasonInfo : IExtendedItemInfo {
             ..series.AniDB.Titles,
             ..(tmdbEntity?.Titles ?? []),
         ];
-    Overview = series.Description == series.AniDB.Description
+        var notes = (IReadOnlyList<string>)[];
+        Overview = series.Description == series.AniDB.Description
             ? TextUtility.SanitizeAnidbDescription(series.Description)
             : series.Description;
         Overviews = [
@@ -380,11 +383,12 @@ public class SeasonInfo : IExtendedItemInfo {
                     IsPreferred = string.Equals(series.Description, series.AniDB.Description),
                     LanguageCode = "en",
                     Source = "AniDB",
-                    Value = TextUtility.SanitizeAnidbDescription(series.AniDB.Description),
+                    Value = TextUtility.SanitizeAnidbDescription(series.AniDB.Description, out notes),
                 },
             ] : Array.Empty<Text>()),
             ..(tmdbEntity?.Overviews ?? []),
         ];
+        Notes = notes;
         OriginalLanguageCode = null;
         CommunityRating = series.AniDB.Rating;
         PremiereDate = series.AniDB.AirDate;

@@ -34,6 +34,11 @@ public interface IBaseItemInfo {
     IReadOnlyList<Text> Overviews { get; }
 
     /// <summary>
+    /// Notes.
+    /// </summary>
+    IReadOnlyList<string> Notes { get => []; }
+
+    /// <summary>
     /// Original language code for the base item if available.
     /// </summary>
     string? OriginalLanguageCode { get; }

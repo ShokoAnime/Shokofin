@@ -41,6 +41,8 @@ public class ShowInfo : IExtendedItemInfo {
 
     public IReadOnlyList<Text> Overviews { get; init; }
 
+    public IReadOnlyList<string> Notes { get; init; } = [];
+
     public string? OriginalLanguageCode { get; init; }
 
     public DateTime CreatedAt { get; init; }
@@ -255,6 +257,7 @@ public class ShowInfo : IExtendedItemInfo {
             Titles = seasonInfo.Titles;
             Overviews = seasonInfo.Overviews;
         }
+        Notes = seasonInfo.Notes;
         OriginalLanguageCode = seasonInfo.OriginalLanguageCode;
         CommunityRating = seasonInfo.CommunityRating.ToFloat(10);
         Tags = seasonInfo.Tags;
@@ -357,13 +360,14 @@ public class ShowInfo : IExtendedItemInfo {
             ..defaultSeason.Titles.Where(t => t.Source is "AniDB"),
             ..(tmdbEntity?.Titles ?? []),
         ];
-    Overview = !group.HasCustomDescription
+        Overview = !group.HasCustomDescription
             ? TextUtility.SanitizeAnidbDescription(group.Description)
             : group.Description;
         Overviews = [
             ..defaultSeason.Overviews.Where(t => t.Source is "AniDB"),
             ..(tmdbEntity?.Overviews ?? []),
         ];
+        Notes = defaultSeason.Notes;
         CollectionId = useGroupIdForCollection ? groupId : group.IDs.ParentGroup?.ToString();
         IsStandalone = false;
         PremiereDate = seasonList.Select(s => s.PremiereDate).Where(s => s.HasValue).Min();

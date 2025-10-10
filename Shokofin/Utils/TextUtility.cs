@@ -327,8 +327,30 @@ public static partial class TextUtility {
                     baseInfo.Overviews.Where(o => o.Source is "TMDB" && string.Equals(o.LanguageCode, metadataLanguage, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault()?.Value,
                 _ => null
             };
-            if (!string.IsNullOrEmpty(overview))
-                return overview;
+            if (!string.IsNullOrEmpty(overview)) {
+                if (baseInfo.Notes.Count == 1) {
+                    overview = overview.TrimEnd() + "\n\n";
+                    if (Plugin.Instance.Configuration.SynopsisEnableMarkdown) {
+                        overview += "**Note:** " + baseInfo.Notes[0];
+                    }
+                    else {
+                        overview += "Note: " + baseInfo.Notes[0];
+                    }
+                }
+                else if (baseInfo.Notes.Count > 1) {
+                    overview = overview.TrimEnd() + "\n\n";
+                    var count = 1;
+                    foreach (var note in baseInfo.Notes) {
+                        if (Plugin.Instance.Configuration.SynopsisEnableMarkdown) {
+                            overview += "**Note " + count++ + ":** " + note + "\n\n";
+                        }
+                        else {
+                            overview += "Note " + count++ + ": " + note + "\n\n";
+                        }
+                    }
+                }
+                return overview.Trim();
+            }
         }
         return string.Empty;
     }
