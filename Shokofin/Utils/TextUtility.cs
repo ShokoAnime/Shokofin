@@ -383,26 +383,14 @@ public static partial class TextUtility {
             return string.Empty;
         }
 
-        summary = summary.Replace(SynopsisCleanBBCodes, string.Empty);
-        if (SynopsisExtractNote.Match(summary) is { Success: true } anyNoteMatch) {
-            var noteText = summary[(anyNoteMatch.Index + anyNoteMatch.Length)..].TrimStart();
-            summary = summary[..anyNoteMatch.Index];
-
-            while (SynopsisExtractNote.Match(noteText) is { Success: true } additionalNoteMatch) {
-                var note = noteText[0..additionalNoteMatch.Index];
-                noteList.Add(note);
-                noteText = noteText[(additionalNoteMatch.Index + additionalNoteMatch.Length)..].TrimStart();
-            }
-
-            noteList.Add(noteText);
-        }
-
         var config = Plugin.Instance.Configuration;
         if (config.SynopsisCleanLinks)
             summary = summary.Replace(SynopsisCleanLinks, match => config.SynopsisEnableMarkdown ? $"[{match.Groups["text"].Value}]({match.Groups["url"].Value})" : match.Groups["text"].Value);
 
         if (config.SynopsisCleanMiscLines)
-            summary = summary.Replace(SynopsisCleanMiscLines, string.Empty)
+            summary = summary
+                .Replace(SynopsisCleanBBCodes, string.Empty)
+                .Replace(SynopsisCleanMiscLines, string.Empty)
                 .Replace(SynopsisSpoiler, match => config.SynopsisEnableMarkdown ? $"**{match.Groups[1].Value}**:\n_{match.Groups[2].Value.Split('\n').Join("_\n_")}_" : string.Empty);
 
         if (config.SynopsisRemoveSummary)
@@ -415,6 +403,19 @@ public static partial class TextUtility {
             summary = summary
                 .Replace(SynopsisConvertNewLines, "\n")
                 .Replace(SynopsisCleanMultiEmptyLines, "\n");
+
+        if (SynopsisExtractNote.Match(summary) is { Success: true } anyNoteMatch) {
+            var noteText = summary[(anyNoteMatch.Index + anyNoteMatch.Length)..].TrimStart();
+            summary = summary[..anyNoteMatch.Index];
+
+            while (SynopsisExtractNote.Match(noteText) is { Success: true } additionalNoteMatch) {
+                var note = noteText[0..additionalNoteMatch.Index];
+                noteList.Add(note);
+                noteText = noteText[(additionalNoteMatch.Index + additionalNoteMatch.Length)..].TrimStart();
+            }
+
+            noteList.Add(noteText);
+        }
 
         return summary.Trim();
     }
