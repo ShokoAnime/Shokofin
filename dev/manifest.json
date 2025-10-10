@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.52",
+                "changelog": "`misc`: **Extract notes _after_ cleaning**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.52/shoko_5.0.4.52.zip",
+                "checksum": "b945461d4e04929512f9f2c7b37e42cd",
+                "timestamp": "2025-10-10T03:20:17Z"
+            },
+            {
                 "version": "5.0.4.51",
                 "changelog": "`fix`: **Set creation date for directories in the VFS**.\n\n`misc`: **Add doc comment**.\n\n`refactor`: **Improve description cleanup logic**:\n\nUpdate the description cleanup logic to better accommodate the current descriptions I found on anime across AniDB. Also added logic to extract the notes to use in the next commit. With the notes extracted and with the cleanup logic enabled then it will allow the description to fall-through to the next description source (if any) if the description was only a note or otherwise cleaned-up text.\n\n`feat`: **Always display notes**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.48/shoko_5.0.4.48.zip",
                 "checksum": "ab9969705e6d773349e4c94ba2b4e7d7",
                 "timestamp": "2025-10-09T01:58:17Z"
-            },
-            {
-                "version": "5.0.4.47",
-                "changelog": "`fix`: **Add edge case for special episode endings to be mapped as extras**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.47/shoko_5.0.4.47.zip",
-                "checksum": "9a49e1c702d584516788a38290873bd1",
-                "timestamp": "2025-10-08T12:44:19Z"
             }
         ]
     }
