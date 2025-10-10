@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Shokofin.API;
 using Shokofin.API.Info;
@@ -72,16 +73,15 @@ public static partial class TextUtility {
         "Web",
     };
 
-    private static readonly Regex SynopsisCleanLinks = new(@"(https?:\/\/\w+.\w+(?:\/?\w+)?) \[([^\]]+)\]", RegexOptions.Compiled);
-
-    private static readonly Regex SynopsisCleanMiscLines = new(@"^(\*|--|~)\s*", RegexOptions.Multiline | RegexOptions.Compiled);
-
-    private static readonly Regex SynopsisRemoveSummary1 = new(@"\b(Note|Summary):\s*", RegexOptions.Singleline | RegexOptions.Compiled);
-
-    private static readonly Regex SynopsisRemoveSummary2 = new(@"\bSource: [^ ]+", RegexOptions.Singleline | RegexOptions.Compiled);
-
+    private static readonly Regex SynopsisCleanLinks = new(@"(?<url>https?:\/\/\w+.\w+(?:\/?\w+)?) \[(?<text>[^\]]+)\]|\[URL=(?<url>[^\]]+)\](?<text>[^\[]+)\[\/URL\]", RegexOptions.Compiled);
+    private static readonly Regex SynopsisSpoiler = new(@"\[spoiler=\""([^""]+)\""\](.+?)\[/spoiler\]", RegexOptions.Singleline | RegexOptions.Compiled);
+    private static readonly Regex SynopsisCleanBBCodes = new(@"\[\/?[ib]\]", RegexOptions.Multiline | RegexOptions.Compiled);
+    private static readonly Regex SynopsisCleanMiscLines = new(@"(?:^\*|\n\* Based)[^\r\n$]+|\n--{2,5}\s*", RegexOptions.Multiline | RegexOptions.Compiled);
+    private static readonly Regex SynopsisExtractNote = new(@"(?:^|\r\n|\r|\n|\* ?)Note(?: [1-9][0-9]?)?:", RegexOptions.Multiline | RegexOptions.Compiled);
+    private static readonly Regex SynopsisRemoveSummary = new(@"\nSummary(:| by| written by| of the previous)[^\r\n]+", RegexOptions.Compiled);
+    private static readonly Regex SynopsisRemoveSource = new(@"(?:\r\n|\r|\n| )?(?:\(Sources?(?: *:?) *(?<source>[^\r\n\)]+)\)|\[Sources?(?: *:?) *(?<source>[^\r\n\]]+)\]|Sources?(?: *:?) *(?<source>[^\n\r\[\)\(]+)(?: ?\(edited\)|:)?)|\[[^\]]+\]$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex SynopsisRemoveEmptyBrackets = new(@"\[\s*\]|\(\s*\)|\{\s*\}", RegexOptions.Singleline | RegexOptions.Compiled);
     private static readonly Regex SynopsisConvertNewLines = new(@"\r\n|\r", RegexOptions.Singleline | RegexOptions.Compiled);
-
     private static readonly Regex SynopsisCleanMultiEmptyLines = new(@"\n{2,}", RegexOptions.Singleline | RegexOptions.Compiled);
 
     [GeneratedRegex(@"^(?:Special|Episode|Volume|OVA|OAD|Web) \d+$|^Part \d+ of \d+$|^Episode [COPRST]\d+$|^(?:OVA|OAD|Movie|Complete Movie|Short Movie|TV Special|Music Video|Web|Volume)$", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
@@ -341,21 +341,53 @@ public static partial class TextUtility {
     /// </remarks>
     /// <param name="summary">The raw AniDB description.</param>
     /// <returns>The sanitized AniDB description.</returns>
-    public static string SanitizeAnidbDescription(string summary) {
-        if (string.IsNullOrWhiteSpace(summary))
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string SanitizeAnidbDescription(string summary)
+        => SanitizeAnidbDescription(summary, out _);
+
+    /// <summary>
+    /// Sanitize the AniDB entry description to something usable by Jellyfin.
+    /// </summary>
+    /// <remarks>
+    /// Based on ShokoMetadata's summary sanitizer which in turn is based on HAMA's summary sanitizer.
+    /// </remarks>
+    /// <param name="summary">The raw AniDB description.</param>
+    /// <param name="notes">The extracted notes.</param>
+    /// <returns>The sanitized AniDB description.</returns>
+    public static string SanitizeAnidbDescription(string summary, out IReadOnlyList<string> notes) {
+        var noteList = new List<string>();
+        notes = noteList;
+        if (string.IsNullOrWhiteSpace(summary)) {
             return string.Empty;
+        }
+
+        summary = summary.Replace(SynopsisCleanBBCodes, string.Empty);
+        if (SynopsisExtractNote.Match(summary) is { Success: true } anyNoteMatch) {
+            var noteText = summary[(anyNoteMatch.Index + anyNoteMatch.Length)..].TrimStart();
+            summary = summary[..anyNoteMatch.Index];
+
+            while (SynopsisExtractNote.Match(noteText) is { Success: true } additionalNoteMatch) {
+                var note = noteText[0..additionalNoteMatch.Index];
+                noteList.Add(note);
+                noteText = noteText[(additionalNoteMatch.Index + additionalNoteMatch.Length)..].TrimStart();
+            }
+
+            noteList.Add(noteText);
+        }
 
         var config = Plugin.Instance.Configuration;
         if (config.SynopsisCleanLinks)
-            summary = summary.Replace(SynopsisCleanLinks, match => config.SynopsisEnableMarkdown ? $"[{match.Groups[2].Value}]({match.Groups[1].Value})" : match.Groups[2].Value);
+            summary = summary.Replace(SynopsisCleanLinks, match => config.SynopsisEnableMarkdown ? $"[{match.Groups["text"].Value}]({match.Groups["url"].Value})" : match.Groups["text"].Value);
 
         if (config.SynopsisCleanMiscLines)
-            summary = summary.Replace(SynopsisCleanMiscLines, string.Empty);
+            summary = summary.Replace(SynopsisCleanMiscLines, string.Empty)
+                .Replace(SynopsisSpoiler, match => config.SynopsisEnableMarkdown ? $"**{match.Groups[1].Value}**:\n_{match.Groups[2].Value.Split('\n').Join("_\n_")}_" : string.Empty);
 
         if (config.SynopsisRemoveSummary)
             summary = summary
-                .Replace(SynopsisRemoveSummary1, match => config.SynopsisEnableMarkdown ? $"**{match.Groups[1].Value}**: " : "")
-                .Replace(SynopsisRemoveSummary2, string.Empty);
+                .Replace(SynopsisRemoveSource, string.Empty)
+                .Replace(SynopsisRemoveSummary, string.Empty)
+                .Replace(SynopsisRemoveEmptyBrackets, string.Empty);
 
         if (config.SynopsisCleanMultiEmptyLines)
             summary = summary
