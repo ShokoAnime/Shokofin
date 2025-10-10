@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.51",
+                "changelog": "`fix`: **Set creation date for directories in the VFS**.\n\n`misc`: **Add doc comment**.\n\n`refactor`: **Improve description cleanup logic**:\n\nUpdate the description cleanup logic to better accommodate the current descriptions I found on anime across AniDB. Also added logic to extract the notes to use in the next commit. With the notes extracted and with the cleanup logic enabled then it will allow the description to fall-through to the next description source (if any) if the description was only a note or otherwise cleaned-up text.\n\n`feat`: **Always display notes**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.51/shoko_5.0.4.51.zip",
+                "checksum": "7c94626a526c8de666ef081fcf849a2d",
+                "timestamp": "2025-10-10T03:03:42Z"
+            },
+            {
                 "version": "5.0.4.50",
                 "changelog": "`fix`: **Fix anidb episode urls**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.47/shoko_5.0.4.47.zip",
                 "checksum": "9a49e1c702d584516788a38290873bd1",
                 "timestamp": "2025-10-08T12:44:19Z"
-            },
-            {
-                "version": "5.0.4.46",
-                "changelog": "`chore`: **Use `DateTime.UtcNow` instead of `DateTime.Now`**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.46/shoko_5.0.4.46.zip",
-                "checksum": "7de436bdf6360d9f1f0a9111611988e6",
-                "timestamp": "2025-10-07T21:58:22Z"
             }
         ]
     }
