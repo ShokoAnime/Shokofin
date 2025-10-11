@@ -28,7 +28,7 @@ namespace Shokofin.API;
 
 public partial class ShokoApiManager : IDisposable {
     // Note: This regex will only get uglier with time.
-    [System.Text.RegularExpressions.GeneratedRegex(@"\s+\((?<year>\d{4})(?: dai [2-9] bu)?\)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase, "en-US")]
+    [System.Text.RegularExpressions.GeneratedRegex(@"\s+\((?<year>\d{4})(?: dai [2-9] (?:bu|cour))?\)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex YearRegex();
 
     private readonly ILogger<ShokoApiManager> Logger;
