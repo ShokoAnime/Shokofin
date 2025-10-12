@@ -108,6 +108,13 @@ public class MediaFolderConfiguration {
     public bool IterativeVfsGeneration_Enabled { get; set; } = false;
 
     /// <summary>
+    /// Disable the caching on the library itself, making it always iteratively
+    /// re-generate the VFS for the library, and forcing all generations
+    /// occurring within the library to occur.
+    /// </summary>
+    public bool IterativeVfsGeneration_NoCache { get; set; } = false;
+
+    /// <summary>
     /// The last time the VFS was iteratively generated.
     /// </summary>
     /// <remarks>

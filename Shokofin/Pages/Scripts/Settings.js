@@ -604,6 +604,7 @@ function applyFormToConfig(form, config) {
                     const maxCount = sanitizeNumber(form.querySelector("#MediaFolderLibraryIterativeGenerationMaxCount").value, 0, 100);
                     c.LibraryOperationMode = form.querySelector("#MediaFolderLibraryOperationMode").value;
                     c.IterativeVfsGeneration_Enabled = form.querySelector("#MediaFolderLibraryIterativeGenerationEnabled").checked;
+                    c.IterativeVfsGeneration_NoCache = form.querySelector("#MediaFolderLibraryIterativeGenerationNoCache").checked;
                     c.IterativeVfsGeneration_MaxCount = maxCount;
                     form.querySelector("#MediaFolderLibraryIterativeGenerationMaxCount").value = maxCount;
                     c.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh = form.querySelector("#MediaFolderLibraryForceFullGenerationOnNextRefresh").checked;
@@ -1138,6 +1139,7 @@ async function applyLibraryConfigToForm(form, libraryId, config = null) {
     const libraryConfig = config.MediaFolders.find((c) => c.LibraryId === libraryId && c.IsVirtualRoot) || mediaFolders[0];
     form.querySelector("#MediaFolderLibraryOperationMode").value = libraryConfig.LibraryOperationMode;
     form.querySelector("#MediaFolderLibraryIterativeGenerationEnabled").checked = libraryConfig.IterativeVfsGeneration_Enabled;
+    form.querySelector("#MediaFolderLibraryIterativeGenerationNoCache").checked = libraryConfig.IterativeVfsGeneration_NoCache;
     form.querySelector("#MediaFolderLibraryIterativeGenerationMaxCount").value = libraryConfig.IterativeVfsGeneration_MaxCount;
     form.querySelector("#MediaFolderLibraryForceFullGenerationOnNextRefresh").checked = libraryConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh;
 

@@ -299,6 +299,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   IsRefreshEventsEnabled: boolean;
  *   LibraryOperationMode: LibraryOperationMode;
  *   IterativeVfsGeneration_Enabled: boolean;
+ *   IterativeVfsGeneration_NoCache: boolean;
  *   IterativeVfsGeneration_LastGeneratedAt: string | null;
  *   IterativeVfsGeneration_CurrentCount: number;
  *   IterativeVfsGeneration_MaxCount: number;

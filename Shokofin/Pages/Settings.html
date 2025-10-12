@@ -1770,6 +1770,13 @@ form:not(.advanced-mode) .advanced-only {
                                 </label>
                                 <div class="fieldDescription checkboxFieldDescription">Enable the iterative generation of the VFS for the existing library. Only generate links in the VFS for files changed since the last check occurred.</div>
                             </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription debug-only">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="MediaFolderLibraryIterativeGenerationNoCache" />
+                                    <span>Iterative VFS Generation — Disable Caching</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">Disable the caching on the library itself, making it always iteratively re-generate the VFS for the library, and forcing all generations occurring within the library to occur.</div>
+                            </div>
                             <div class="inputContainer inputContainer-withDescription advanced-only experimental-setting">
                                 <input is="emby-input" type="number" id="MediaFolderLibraryIterativeGenerationMaxCount" label="Max Iterations Before Forced Full Generation" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" max="100" />
                                 <div class="fieldDescription">Maximum number of iterations to perform when generating the VFS for the existing library. Set to a value above 0 to enable.</div>

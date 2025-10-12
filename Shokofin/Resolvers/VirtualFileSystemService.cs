@@ -181,11 +181,11 @@ public class VirtualFileSystemService {
             return (vfsPath, false, false, []);
 
         // Skip link generation if we've already generated for the library.
-        if (DataCache.TryGetValue<(HashSet<string>? alteredPaths, bool iterative)>(CachePrefix + vfsPath, out var tuple) && !tuple.iterative)
+        if (DataCache.TryGetValue<(HashSet<string>? alteredPaths, bool iterative)>(CachePrefix + vfsPath, out var tuple))
             return (
                 tuple.alteredPaths is not null ? vfsPath : null,
                 true,
-                false,
+                tuple.iterative,
                 tuple.alteredPaths ?? []
             );
 
@@ -327,7 +327,7 @@ public class VirtualFileSystemService {
                         lastGeneratedAt = vfsConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
                     }
 
-                    options.NoCache = true;
+                    options.NoCache = vfsConfig.IterativeVfsGeneration_NoCache;
                     vfsConfig.IterativeVfsGeneration_LastGeneratedAt = DateTime.UtcNow;
                     Plugin.Instance.SaveConfiguration();
                 }
