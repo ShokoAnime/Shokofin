@@ -1497,7 +1497,14 @@ public class VirtualFileSystemService {
             return true;
         }
 
-        var linkToMove = allKnownPaths.FirstOrDefault(knownPath => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(knownPath)) && TryGetIdsForPath(knownPath, out var knownFileId, out var knownSeriesId) && seriesId == knownSeriesId && fileId == knownFileId);
+        var linkToMove = allKnownPaths.FirstOrDefault(knownPath =>
+            Path.GetExtension(knownPath) is { Length: > 0 } extName &&
+            NamingOptions.VideoFileExtensions.Contains(extName, StringComparer.OrdinalIgnoreCase) &&
+            trickplayDirectory.StartsWith(knownPath[..^extName.Length]) &&
+            TryGetIdsForPath(knownPath, out var knownFileId, out var knownSeriesId) &&
+            seriesId == knownSeriesId &&
+            fileId == knownFileId
+        );
         if (string.IsNullOrEmpty(linkToMove)) {
             skip = false;
             return false;
