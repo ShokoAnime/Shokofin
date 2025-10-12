@@ -327,7 +327,7 @@ public class VirtualFileSystemService {
                         lastGeneratedAt = vfsConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
                     }
 
-                    options.AbsoluteExpirationRelativeToNow = TimeSpan.Zero;
+                    options.NoCache = true;
                     vfsConfig.IterativeVfsGeneration_LastGeneratedAt = DateTime.UtcNow;
                     Plugin.Instance.SaveConfiguration();
                 }

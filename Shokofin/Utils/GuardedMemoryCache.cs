@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Shokofin.Utils;
 
-sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
+internal class GuardedMemoryCache : IDisposable, IMemoryCache {
     private readonly MemoryCacheOptions CacheOptions;
 
     private readonly MemoryCacheEntryOptions? CacheEntryOptions;
@@ -88,7 +88,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
         }
     }
 
-    public TItem GetOrCreate<TItem>(object key, Action<TItem> foundAction, Func<MemoryCacheEntryOptions, TItem> createFactory, CancellationToken cancellationToken = default) {
+    public TItem GetOrCreate<TItem>(object key, Action<TItem> foundAction, Func<GuardedMemoryCacheEntryOptions, TItem> createFactory, CancellationToken cancellationToken = default) {
         if (TryGetValue<TItem>(key, out var value)) {
             foundAction(value);
             return value;
@@ -105,11 +105,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
 
                 var createOptions = CreateNewOptions();
                 value = createFactory(createOptions);
-                if (
-                    !(createOptions.AbsoluteExpiration.HasValue && createOptions.AbsoluteExpiration.Value < DateTime.UtcNow) &&
-                    !(createOptions.AbsoluteExpirationRelativeToNow.HasValue && createOptions.AbsoluteExpirationRelativeToNow.Value <= TimeSpan.Zero) &&
-                    !(createOptions.SlidingExpiration.HasValue && createOptions.SlidingExpiration.Value <= TimeSpan.Zero)
-                ) {
+                if (!createOptions.NoCache) {
                     using var entry = Cache.CreateEntry(key);
                     entry.SetOptions(createOptions);
                     entry.Value = value;
@@ -186,7 +182,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
         }
     }
 
-    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Action<TItem> foundAction, Func<MemoryCacheEntryOptions, Task<TItem>> createFactory, CancellationToken cancellationToken = default) {
+    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Action<TItem> foundAction, Func<GuardedMemoryCacheEntryOptions, Task<TItem>> createFactory, CancellationToken cancellationToken = default) {
         if (TryGetValue<TItem>(key, out var value)) {
             foundAction(value);
             return value;
@@ -203,11 +199,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
 
                 var createOptions = CreateNewOptions();
                 value = await createFactory(createOptions).ConfigureAwait(false);
-                if (
-                    !(createOptions.AbsoluteExpiration.HasValue && createOptions.AbsoluteExpiration.Value < DateTime.UtcNow) &&
-                    !(createOptions.AbsoluteExpirationRelativeToNow.HasValue && createOptions.AbsoluteExpirationRelativeToNow.Value <= TimeSpan.Zero) &&
-                    !(createOptions.SlidingExpiration.HasValue && createOptions.SlidingExpiration.Value <= TimeSpan.Zero)
-                ) {
+                if (!createOptions.NoCache) {
                     using var entry = Cache.CreateEntry(key);
                     entry.SetOptions(createOptions);
                     entry.Value = value;
@@ -279,7 +271,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
         }
     }
 
-    public TItem GetOrCreate<TItem>(object key, Func<MemoryCacheEntryOptions, TItem> createFactory, CancellationToken cancellationToken = default) {
+    public TItem GetOrCreate<TItem>(object key, Func<GuardedMemoryCacheEntryOptions, TItem> createFactory, CancellationToken cancellationToken = default) {
         if (TryGetValue<TItem>(key, out var value))
             return value;
 
@@ -292,11 +284,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
 
                 var createOptions = CreateNewOptions();
                 value = createFactory(createOptions);
-                if (
-                    !(createOptions.AbsoluteExpiration.HasValue && createOptions.AbsoluteExpiration.Value < DateTime.UtcNow) &&
-                    !(createOptions.AbsoluteExpirationRelativeToNow.HasValue && createOptions.AbsoluteExpirationRelativeToNow.Value <= TimeSpan.Zero) &&
-                    !(createOptions.SlidingExpiration.HasValue && createOptions.SlidingExpiration.Value <= TimeSpan.Zero)
-                ) {
+                if (!createOptions.NoCache) {
                     using var entry = Cache.CreateEntry(key);
                     entry.SetOptions(createOptions);
                     entry.Value = value;
@@ -367,7 +355,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
         }
     }
 
-    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Func<MemoryCacheEntryOptions, Task<TItem>> createFactory, CancellationToken cancellationToken = default) {
+    public async Task<TItem> GetOrCreateAsync<TItem>(object key, Func<GuardedMemoryCacheEntryOptions, Task<TItem>> createFactory, CancellationToken cancellationToken = default) {
         if (TryGetValue<TItem>(key, out var value))
             return value;
 
@@ -380,11 +368,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
 
                 var createOptions = CreateNewOptions();
                 value = await createFactory(createOptions).ConfigureAwait(false);
-                if (
-                    !(createOptions.AbsoluteExpiration.HasValue && createOptions.AbsoluteExpiration.Value < DateTime.UtcNow) &&
-                    !(createOptions.AbsoluteExpirationRelativeToNow.HasValue && createOptions.AbsoluteExpirationRelativeToNow.Value <= TimeSpan.Zero) &&
-                    !(createOptions.SlidingExpiration.HasValue && createOptions.SlidingExpiration.Value <= TimeSpan.Zero)
-                ) {
+                if (!createOptions.NoCache) {
                     using var entry = Cache.CreateEntry(key);
                     entry.SetOptions(createOptions);
                     entry.Value = value;
@@ -413,7 +397,7 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
         }
     }
 
-    private MemoryCacheEntryOptions CreateNewOptions()
+    private GuardedMemoryCacheEntryOptions CreateNewOptions()
         => new() {
             AbsoluteExpiration = CacheEntryOptions?.AbsoluteExpiration is { } aE ? new DateTimeOffset(aE.UtcDateTime.Ticks, aE.Offset) : null,
             AbsoluteExpirationRelativeToNow = CacheEntryOptions?.AbsoluteExpirationRelativeToNow is { } aER ? new TimeSpan(aER.Ticks) : null,
@@ -441,4 +425,12 @@ sealed class GuardedMemoryCache : IDisposable, IMemoryCache {
 
     public TItem? Set<TItem>(object key, [NotNullIfNotNull(nameof(value))] TItem? value, MemoryCacheEntryOptions? createOptions = null)
         => Cache.Set(key, value, createOptions ?? CacheEntryOptions);
+
+    internal class GuardedMemoryCacheEntryOptions : MemoryCacheEntryOptions {
+        /// <summary>
+        /// Turns the key into a non-cached lock key to ensure only one thread can process the
+        /// value at a time.
+        /// </summary>
+        public bool NoCache { get; set; } = false;
+    }
 }
