@@ -351,7 +351,7 @@ public class VirtualFileSystemService {
             var result = await GenerateStructure(collectionType, vfsPath, allFiles).ConfigureAwait(false);
             // Cleanup any residual entries from old structure in the VFS if interactive
             // generation is disabled, or if it's enabled and we generated something new.
-            if (!string.IsNullOrEmpty(pathToClean) && (!iterativeGeneration || !result.Paths.IsEmpty)) {
+            if (!string.IsNullOrEmpty(pathToClean) && (iterativeGeneration || !result.Paths.IsEmpty)) {
                 // Note: for now we're overcompensating when "cleaning" by also checking
                 // the other videos in the directory when iterative generation is enabled,
                 // because that's easier to do it this way then to calculate _exactly_
