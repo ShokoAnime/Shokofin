@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using Emby.Naming.Common;
 using Emby.Naming.ExternalFiles;
 using Jellyfin.Data.Enums;
@@ -13,7 +16,6 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
-using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Models;
@@ -35,8 +37,6 @@ public class VirtualFileSystemService {
     private readonly ILibraryManager LibraryManager;
 
     private readonly IServerConfigurationManager ConfigurationManager;
-
-    private readonly IFileSystem FileSystem;
 
     private readonly ILogger<VirtualFileSystemService> Logger;
 
@@ -75,7 +75,6 @@ public class VirtualFileSystemService {
         MediaFolderConfigurationService configurationService,
         ILibraryManager libraryManager,
         IServerConfigurationManager configurationManager,
-        IFileSystem fileSystem,
         ILogger<VirtualFileSystemService> logger,
         ILocalizationManager localizationManager,
         NamingOptions namingOptions
@@ -85,7 +84,6 @@ public class VirtualFileSystemService {
         ConfigurationService = configurationService;
         LibraryManager = libraryManager;
         ConfigurationManager = configurationManager;
-        FileSystem = fileSystem;
         Logger = logger;
         DataCache = new(
             logger,
@@ -134,9 +132,7 @@ public class VirtualFileSystemService {
         var vfsPath = vfsConfig.MediaFolderPath;
         return await DataCache.GetOrCreateAsync($"preview-changes:{vfsPath}", async () => {
             // This call will be slow depending on the size of your collection.
-            var existingPaths = FileSystem.DirectoryExists(vfsPath)
-                ? FileSystem.GetFilePaths(vfsPath, true).ToHashSet()
-                : [];
+            var existingPaths = GetFilePaths(vfsPath, true).ToHashSet();
 
             // Validate if we can use the media folders.
             if (!TryGetFileCheckerForMediaFolders(vfsConfig, mediaConfigs, out var fileChecker))
@@ -358,7 +354,7 @@ public class VirtualFileSystemService {
                 // which paths we need to clean related to _just_ the generated files.
                 var allPathsToClean = iterativeGeneration
                     // We want to clean all but the video files inside the directory to clean.
-                    ? GetFilePaths(pathToClean).Where(path => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(path)))
+                    ? GetFilePaths(pathToClean, true, NamingOptions.VideoFileExtensions)
                     : result.Paths.ToArray();
                 result += CleanupStructure(vfsPath, pathToClean, allPathsToClean);
             }
@@ -378,16 +374,6 @@ public class VirtualFileSystemService {
         );
     }
 
-    private IEnumerable<string> GetFilePaths(string directoryPath, bool withDirectory = false) {
-        if (!FileSystem.DirectoryExists(directoryPath))
-            return [];
-
-        if (withDirectory)
-            return FileSystem.GetFileSystemEntryPaths(directoryPath, true);
-
-        return FileSystem.GetFilePaths(directoryPath, true);
-    }
-
     private bool TryGetFileCheckerForMediaFolders(MediaFolderConfiguration vfsConfig, IReadOnlyList<MediaFolderConfiguration> mediaConfigs, [NotNullWhen(true)] out Func<string, bool>? fileChecker) {
         if (mediaConfigs.Count is 0) {
             Logger.LogWarning("No media folders to create a file checker for. (Library={LibraryId})", vfsConfig.LibraryId);
@@ -399,11 +385,11 @@ public class VirtualFileSystemService {
         // in case a mount point failed to mount.
         var shouldReturn = false;
         foreach (var mediaConfig in mediaConfigs) {
-            if (!FileSystem.DirectoryExists(mediaConfig.MediaFolderPath)) {
+            if (!Directory.Exists(mediaConfig.MediaFolderPath)) {
                 Logger.LogWarning("Unable to create a file checker because a folder does not exist; {Path} (Library={LibraryId})", mediaConfig.MediaFolderPath, mediaConfig.LibraryId);
                 shouldReturn = true;
             }
-            else if (!FileSystem.GetFilePaths(mediaConfig.MediaFolderPath, true).Any()) {
+            else if (!ContainsFileSystemEntryPaths(mediaConfig.MediaFolderPath)) {
                 Logger.LogWarning("Unable to create a file checker because the folder is empty; {Path} (Library={LibraryId})", mediaConfig.MediaFolderPath, mediaConfig.LibraryId);
                 shouldReturn = true;
             }
@@ -415,7 +401,7 @@ public class VirtualFileSystemService {
         }
 
         Logger.LogDebug("Creating an iterative file checker for {Count} folders. (Library={LibraryId})", mediaConfigs.Count, vfsConfig.LibraryId);
-        fileChecker = FileSystem.FileExists;
+        fileChecker = File.Exists;
         return true;
     }
 
@@ -790,12 +776,7 @@ public class VirtualFileSystemService {
         var failedSeries = new HashSet<string>();
         var failedExceptions = new List<Exception>();
         var cancelTokenSource = new CancellationTokenSource();
-        var threadCount = Plugin.Instance.Configuration.VFS_Threads is > 0
-            ? Plugin.Instance.Configuration.VFS_Threads
-            : Plugin.Instance.Configuration.VFS_Threads is -1
-                ? ConfigurationManager.Configuration.LibraryScanFanoutConcurrency
-                : Environment.ProcessorCount;
-        var semaphore = new SemaphoreSlim(threadCount);
+        var semaphore = new SemaphoreSlim(GetThreadCount());
         await Task.WhenAll(allFiles.Select(async (tuple) => {
             await semaphore.WaitAsync().ConfigureAwait(false);
             var (sourceLocation, fileId, seriesId) = tuple;
@@ -1120,10 +1101,10 @@ public class VirtualFileSystemService {
     private List<string> FindExternalFilesForPath(string sourcePath, ExternalPathParser parser) {
         var externalPaths = new List<string>();
         var folderPath = Path.GetDirectoryName(sourcePath);
-        if (string.IsNullOrEmpty(folderPath) || !FileSystem.DirectoryExists(folderPath))
+        if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
             return externalPaths;
 
-        var files = FileSystem.GetFilePaths(folderPath)
+        var files = GetFilePaths(folderPath)
             .Except([sourcePath])
             .ToList();
         var sourcePrefix = Path.GetFileNameWithoutExtension(sourcePath);
@@ -1208,8 +1189,8 @@ public class VirtualFileSystemService {
         }
     }
 
-    private LinkGenerationResult CleanupStructure(string vfsPath, string directoryToClean, IEnumerable<string> allKnownPathsEnumerable, bool preview = false) {
-        if (!FileSystem.DirectoryExists(directoryToClean)) {
+    private LinkGenerationResult CleanupStructure(string vfsPath, string directoryToClean, IReadOnlyList<string> allKnownPaths, bool preview = false) {
+        if (!Directory.Exists(directoryToClean)) {
             if (!preview)
                 Logger.LogDebug("Skipped cleaning up folder because it does not exist: {Path}", directoryToClean);
             return new();
@@ -1220,12 +1201,9 @@ public class VirtualFileSystemService {
         var start = DateTime.UtcNow;
         var previousStep = start;
         var result = new LinkGenerationResult();
-        var allKnownPaths = allKnownPathsEnumerable is IReadOnlyList<string> allKnownPathsList ? allKnownPathsList : [.. allKnownPathsEnumerable];
         var searchExtensions = NamingOptions.VideoFileExtensions.Concat(NamingOptions.SubtitleFileExtensions).Concat(NamingOptions.AudioFileExtensions).Concat([".nfo", ".trickplay"]).ToHashSet();
-        var entriesToBeRemoved = FileSystem.GetFileSystemEntryPaths(directoryToClean, true)
+        var entriesToBeRemoved = GetFileSystemEntryPaths(directoryToClean, true, searchExtensions, (path, isDirectory) => !allKnownPaths.Contains(path))
             .Select(path => (path, extName: Path.GetExtension(path)))
-            .Where(tuple => !string.IsNullOrEmpty(tuple.extName) && searchExtensions.Contains(tuple.extName))
-            .ExceptBy(allKnownPaths, tuple => tuple.path)
             .ToList();
 
         var nextStep = DateTime.UtcNow;
@@ -1331,12 +1309,6 @@ public class VirtualFileSystemService {
             }
         }
 
-        nextStep = DateTime.UtcNow;
-        if (!preview) {
-            Logger.LogTrace("Removed {FileCount} file system entries in {DirectoryToClean} in {TimeSpent} (Total={TotalSpent})", result.Removed, directoryToClean, nextStep - previousStep, nextStep - start);
-        }
-        previousStep = nextStep;
-
         if (preview)
             return result;
 
@@ -1369,7 +1341,7 @@ public class VirtualFileSystemService {
         previousStep = nextStep;
 
         foreach (var directoryPath in directoriesToClean) {
-            if (Directory.Exists(directoryPath) && !Directory.EnumerateFileSystemEntries(directoryPath).Any()) {
+            if (Directory.Exists(directoryPath) && !ContainsFileSystemEntryPaths(directoryPath)) {
                 Logger.LogTrace("Removing empty directory at {Path}", directoryPath);
                 Directory.Delete(directoryPath);
                 cleaned++;
@@ -1561,7 +1533,7 @@ public class VirtualFileSystemService {
             return false;
         }
 
-        if (!FileSystem.DirectoryExists(realPath)) {
+        if (!Directory.Exists(realPath)) {
             try {
                 Directory.Move(trickplayDirectory, realPath);
             }
@@ -1592,10 +1564,10 @@ public class VirtualFileSystemService {
         if (!Directory.Exists(destination))
             Directory.CreateDirectory(destination);
 
-        foreach (var file in FileSystem.GetFilePaths(source, true)) {
+        foreach (var file in GetFilePaths(source, true)) {
             var newFile = Path.Combine(destination, file[(source.Length + 1)..]);
             var directoryOfFile = Path.GetDirectoryName(newFile)!;
-            if (!FileSystem.DirectoryExists(directoryOfFile))
+            if (!Directory.Exists(directoryOfFile))
                 Directory.CreateDirectory(directoryOfFile);
             File.Copy(file, newFile, true);
         }
@@ -1618,6 +1590,92 @@ public class VirtualFileSystemService {
 
         return true;
     }
+
+    private readonly EnumerationOptions _cachedEnumerationOptions = new() { RecurseSubdirectories = false, IgnoreInaccessible = true, AttributesToSkip = 0 };
+
+    private bool ContainsFileSystemEntryPaths(string directoryPath)
+        => Directory.EnumerateFileSystemEntries(directoryPath, "*", _cachedEnumerationOptions).Any();
+
+    private string[] GetFilePaths(string directoryPath, bool recursive = false, string[]? extensions = null, Func<string, bool, bool>? filter = null)
+        => GetFileSystemEntryPaths(directoryPath, recursive, extensions, filter, outputFiles: true, outputDirectories: false);
+
+    private string[] GetFileSystemEntryPaths(string directoryPath, bool recursive = false, IEnumerable<string>? extensions = null, Func<string, bool, bool>? filter = null, bool outputFiles = true, bool outputDirectories = true) {
+        if (!Directory.Exists(directoryPath))
+            return [];
+        Logger.LogDebug("Enumerating directory. (Path={Path})", directoryPath);
+        var pendingCount = 1;
+        var startedAt = DateTime.UtcNow;
+        var outputBag = new ConcurrentBag<string>();
+        var canOutputPath = GetPathValidator(extensions, filter);
+        var bufferBlock = new BufferBlock<string>(new() { BoundedCapacity = DataflowBlockOptions.Unbounded });
+        var actionBlock = new ActionBlock<string>(path => {
+            try {
+#if DEBUG
+                Logger.LogTrace("Enumerating directory. (Path={Path})", path);
+                var outputCount = 0;
+                var recurseCount = 0;
+                var dirStartedAt = DateTime.UtcNow;
+#endif
+                if (outputFiles) {
+                    foreach (var file in Directory.EnumerateFiles(path, "*", _cachedEnumerationOptions)) {
+                        if (canOutputPath(file, false)) {
+                            outputBag.Add(file);
+#if DEBUG
+                            outputCount++;
+#endif
+                        }
+                    }
+                }
+                if (outputDirectories || recursive) {
+                    foreach (var directory in Directory.EnumerateDirectories(path, "*", _cachedEnumerationOptions)) {
+                        if (outputDirectories && canOutputPath(directory, true)) {
+                            outputBag.Add(directory);
+#if DEBUG
+                            outputCount++;
+#endif
+                        }
+                        if (recursive && Path.GetExtension(directory) is not ".trickplay") {
+                            Interlocked.Increment(ref pendingCount);
+                            bufferBlock.Post(directory);
+#if DEBUG
+                            recurseCount++;
+#endif
+                        }
+                    }
+                }
+#if DEBUG
+                Logger.LogTrace("Enumerated {FileCount} outputs and {RecurseCount} recursions in directory in {Elapsed}. (Path={Path})", outputCount, recurseCount, DateTime.UtcNow - dirStartedAt, path);
+#endif
+            }
+            finally {
+                if (Interlocked.Decrement(ref pendingCount) == 0) {
+                    bufferBlock.Complete();
+                }
+            }
+        }, new() { MaxDegreeOfParallelism = GetThreadCount(), BoundedCapacity = DataflowBlockOptions.Unbounded });
+        bufferBlock.LinkTo(actionBlock, new() { PropagateCompletion = true });
+        bufferBlock.Post(directoryPath);
+        actionBlock.Completion.Wait();
+        Logger.LogDebug("Enumerated {FileCount} outputs in directory in {Elapsed}. (Path={Path})", outputBag.Count, DateTime.UtcNow - startedAt, directoryPath);
+        return outputBag.ToArray();
+    }
+
+    private static Func<string, bool, bool> GetPathValidator(IEnumerable<string>? extensions, Func<string, bool, bool>? filter) {
+        if (extensions is null)
+            return filter ?? ((_, _) => true);
+        var extensionSet = new HashSet<string>(extensions, StringComparer.OrdinalIgnoreCase);
+        if (filter is not null)
+            return (path, isDirectory) => (Path.GetExtension(path) is { Length: > 0 } ext) && extensionSet.Contains(Path.GetExtension(path)) && filter(path, isDirectory);
+        return (path, _) => (Path.GetExtension(path) is { Length: > 0 } ext) && extensionSet.Contains(Path.GetExtension(path));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int GetThreadCount()
+        => Plugin.Instance.Configuration.VFS_Threads is > 0
+            ? Plugin.Instance.Configuration.VFS_Threads
+            : Plugin.Instance.Configuration.VFS_Threads is -1
+                ? ConfigurationManager.Configuration.LibraryScanFanoutConcurrency
+                : Environment.ProcessorCount;
 
     #endregion
 }
