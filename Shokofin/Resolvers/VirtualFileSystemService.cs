@@ -1491,9 +1491,10 @@ public class VirtualFileSystemService {
     }
 
     private bool TryMoveTrickplayDirectory(IReadOnlyList<string> allKnownPaths, string trickplayDirectory, bool preview, out bool skip) {
+        // Ignore all trickplay directories that don't have any shoko ids set.
         if (!TryGetIdsForPath(trickplayDirectory, out var fileId, out var seriesId)) {
-            skip = false;
-            return false;
+            skip = true;
+            return true;
         }
 
         var linkToMove = allKnownPaths.FirstOrDefault(knownPath => NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(knownPath)) && TryGetIdsForPath(knownPath, out var knownFileId, out var knownSeriesId) && seriesId == knownSeriesId && fileId == knownFileId);
