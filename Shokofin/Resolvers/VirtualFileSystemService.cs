@@ -1440,6 +1440,7 @@ public class VirtualFileSystemService {
             return true;
         }
 
+        var realExternalFilePath = realTarget[..^Path.GetExtension(realTarget).Length] + extName;
         try {
             var currentTarget = File.ResolveLinkTarget(externalFilePath, false)?.FullName;
             if (!string.IsNullOrEmpty(currentTarget)) {
@@ -1452,7 +1453,7 @@ public class VirtualFileSystemService {
                 // If we're cleaning up during an iterative generation then we
                 // might hit this path, so abort here if everything is as it
                 // should be.
-                if (currentTarget == realTarget) {
+                if (currentTarget == realExternalFilePath) {
                     skip = true;
                     return true;
                 }
@@ -1468,7 +1469,6 @@ public class VirtualFileSystemService {
             return false;
         }
 
-        var realExternalFilePath = realTarget[..^Path.GetExtension(realTarget).Length] + extName;
         if (!File.Exists(realExternalFilePath)) {
             try {
                 File.Move(externalFilePath, realExternalFilePath);
@@ -1524,6 +1524,7 @@ public class VirtualFileSystemService {
             return true;
         }
 
+        var realPath = realTarget[..^Path.GetExtension(realTarget).Length] + extName;
         try {
             var currentTarget = Directory.ResolveLinkTarget(trickplayDirectory, false)?.FullName;
             if (!string.IsNullOrEmpty(currentTarget)) {
@@ -1536,7 +1537,7 @@ public class VirtualFileSystemService {
                 // If we're cleaning up during an iterative generation then we
                 // might hit this path, so abort here if everything is as it
                 // should be.
-                if (currentTarget == realTarget) {
+                if (currentTarget == realPath) {
                     skip = true;
                     return true;
                 }
@@ -1552,7 +1553,6 @@ public class VirtualFileSystemService {
             return false;
         }
 
-        var realPath = realTarget[..^Path.GetExtension(realTarget).Length] + extName;
         if (!FileSystem.DirectoryExists(realPath)) {
             try {
                 Directory.Move(trickplayDirectory, realPath);
