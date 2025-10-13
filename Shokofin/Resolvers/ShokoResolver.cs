@@ -119,7 +119,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
             if (parent.IsTopParent) {
                 var createMovies = collectionType is CollectionType.movies || (collectionType is null && Plugin.Instance.Configuration.SeparateMovies);
                 var pathsToRemoveBag = new ConcurrentBag<(string, bool)>();
-                var items = (FileSystem.DirectoryExists(vfsPath) ? FileSystem.GetDirectories(vfsPath) : [])
+                var items = fileInfoList
                     .AsParallel()
                     .SelectMany(dirInfo => {
                         if (!dirInfo.Name.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seasonId))
