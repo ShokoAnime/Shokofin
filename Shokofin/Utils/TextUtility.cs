@@ -328,7 +328,7 @@ public static partial class TextUtility {
                 _ => null
             };
             if (!string.IsNullOrEmpty(overview)) {
-                if (baseInfo.Notes.Count == 1) {
+                if (config.AddNotes && baseInfo.Notes.Count == 1) {
                     overview = overview.TrimEnd() + "\n\n";
                     if (Plugin.Instance.Configuration.SynopsisEnableMarkdown) {
                         overview += "**Note:** " + baseInfo.Notes[0];
@@ -337,7 +337,7 @@ public static partial class TextUtility {
                         overview += "Note: " + baseInfo.Notes[0];
                     }
                 }
-                else if (baseInfo.Notes.Count > 1) {
+                else if (config.AddNotes && baseInfo.Notes.Count > 1) {
                     overview = overview.TrimEnd() + "\n\n";
                     var count = 1;
                     foreach (var note in baseInfo.Notes) {

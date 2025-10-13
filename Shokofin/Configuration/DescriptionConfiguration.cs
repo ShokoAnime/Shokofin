@@ -7,6 +7,12 @@ namespace Shokofin.Configuration;
 
 public class DescriptionConfiguration {
     /// <summary>
+    /// Determines if we should add the note(s) which show up on the AniDB anime
+    /// page to the description for the series and/or season entities.
+    /// </summary>
+    public bool AddNotes { get; set; } = true;
+
+    /// <summary>
     /// The collection of providers for descriptions. Replaces the former `DescriptionSource`.
     /// </summary>
     public DescriptionProvider[] List { get; set; } = [];

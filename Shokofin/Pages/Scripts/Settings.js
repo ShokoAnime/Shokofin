@@ -755,6 +755,7 @@ function applyDescriptionFormToConfig(form, config) {
     if (config.Description[State.metadata.description].Enabled !== undefined) {
         config.Description[State.metadata.description].Enabled = form.querySelector("#Description_ConfigureFor_Enabled").checked;
     }
+    config.Description[State.metadata.description].AddNotes = form.querySelector("#Description_AddNotes").checked;
     ([config.Description[State.metadata.description].List, config.Description[State.metadata.description].Order] = retrieveSortableCheckboxList(form, "DescriptionSourceList"));
 }
 
@@ -814,6 +815,7 @@ async function applyConfigToForm(form, config) {
 
             form.querySelector("#Description_ConfigureFor_Enabled").checked = config.Description[State.metadata.description].Enabled !== false;
             form.querySelector("#Description_ConfigureFor_Enabled").disabled = config.Description[State.metadata.description].Enabled === undefined;
+            form.querySelector("#Description_AddNotes").checked = config.Description[State.metadata.description].AddNotes;
             renderSortableCheckboxList(form, "DescriptionSourceList", config.Description[State.metadata.description].List, config.Description[State.metadata.description].Order);
             form.querySelector("#DescriptionConversionMode").value = config.DescriptionConversionMode;
 

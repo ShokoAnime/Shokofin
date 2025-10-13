@@ -371,6 +371,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
 
 /**
  * @typedef {{
+ *   AddNotes: boolean;
  *   List: DescriptionProvider[];
  *   Order: DescriptionProvider[];
  * }} DescriptionConfiguration
