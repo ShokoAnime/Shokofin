@@ -783,40 +783,83 @@ public class VirtualFileSystemService {
         var failedSeries = new HashSet<string>();
         var failedExceptions = new List<Exception>();
         var cancelTokenSource = new CancellationTokenSource();
-        var actionBlock = new ActionBlock<(string sourceLocation, string fileId, string seriesId)>(async tuple => {
-            var (sourceLocation, fileId, seriesId) = tuple;
-            try {
-                if (cancelTokenSource.IsCancellationRequested) {
-                    Logger.LogTrace("Cancelling generation of links for {Path}", sourceLocation);
-                    return;
-                }
-                Logger.LogTrace("Generating links for {Path} (File={FileId},Series={SeriesId})", sourceLocation, fileId, seriesId);
-                var (symbolicLinks, importedAt) = await GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId, seriesId).ConfigureAwait(false);
-                if (symbolicLinks.Length == 0 || !importedAt.HasValue)
-                    return;
-                var subResult = GenerateSymbolicLinks(vfsPath, sourceLocation, symbolicLinks, importedAt.Value, preview);
-                // Combine the current results with the overall results.
-                lock (cancelTokenSource) {
-                    result += subResult;
-                }
-            }
-            catch (Exception ex) {
-                Logger.LogWarning(ex, "Failed to generate links for {Path} (File={FileId},Series={SeriesId})", sourceLocation, fileId, seriesId);
-                lock (cancelTokenSource) {
-                    failedSeries.Add(seriesId);
-                    failedExceptions.Add(ex);
-                    if ((maxSeriesExceptions > 0 && failedSeries.Count >= maxSeriesExceptions) ||
-                        (maxTotalExceptions > 0 && failedExceptions.Count >= maxTotalExceptions)) {
-                        cancelTokenSource.Cancel();
+        if (Plugin.Instance.Configuration.VFS_UseSemaphore) {
+            var semaphore = new SemaphoreSlim(GetThreadCount());
+            await Task.WhenAll(allFiles.Select(async (tuple) => {
+                await semaphore.WaitAsync().ConfigureAwait(false);
+                var (sourceLocation, fileId, seriesId) = tuple;
+
+                try {
+                    if (cancelTokenSource.IsCancellationRequested) {
+                        Logger.LogTrace("Cancelling generation of links for {Path}", sourceLocation);
+                        return;
+                    }
+
+                    Logger.LogTrace("Generating links for {Path} (File={FileId},Series={SeriesId})", sourceLocation, fileId, seriesId);
+
+                    var (symbolicLinks, importedAt) = await GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId, seriesId).ConfigureAwait(false);
+                    if (symbolicLinks.Length == 0 || !importedAt.HasValue)
+                        return;
+
+                    var subResult = GenerateSymbolicLinks(vfsPath, sourceLocation, symbolicLinks, importedAt.Value, preview);
+
+                    // Combine the current results with the overall results.
+                    lock (semaphore) {
+                        result += subResult;
                     }
                 }
-            }
-        }, new() { CancellationToken = cancelTokenSource.Token, MaxDegreeOfParallelism = GetThreadCount(), BoundedCapacity = DataflowBlockOptions.Unbounded });
-        foreach (var tuple in allFiles) {
-            actionBlock.Post(tuple);
+                catch (Exception ex) {
+                    Logger.LogWarning(ex, "Failed to generate links for {Path} (File={FileId},Series={SeriesId})", sourceLocation, fileId, seriesId);
+                    lock (semaphore) {
+                        failedSeries.Add(seriesId);
+                        failedExceptions.Add(ex);
+                        if ((maxSeriesExceptions > 0 && failedSeries.Count == maxSeriesExceptions) ||
+                            (maxTotalExceptions > 0 && failedExceptions.Count == maxTotalExceptions)) {
+                            cancelTokenSource.Cancel();
+                        }
+                    }
+                }
+                finally {
+                    semaphore.Release();
+                }
+            })).ConfigureAwait(false);
         }
-        actionBlock.Complete();
-        await actionBlock.Completion.ConfigureAwait(false);
+        else {
+            var actionBlock = new ActionBlock<(string sourceLocation, string fileId, string seriesId)>(async tuple => {
+                var (sourceLocation, fileId, seriesId) = tuple;
+                try {
+                    if (cancelTokenSource.IsCancellationRequested) {
+                        Logger.LogTrace("Cancelling generation of links for {Path}", sourceLocation);
+                        return;
+                    }
+                    Logger.LogTrace("Generating links for {Path} (File={FileId},Series={SeriesId})", sourceLocation, fileId, seriesId);
+                    var (symbolicLinks, importedAt) = await GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId, seriesId).ConfigureAwait(false);
+                    if (symbolicLinks.Length == 0 || !importedAt.HasValue)
+                        return;
+                    var subResult = GenerateSymbolicLinks(vfsPath, sourceLocation, symbolicLinks, importedAt.Value, preview);
+                    // Combine the current results with the overall results.
+                    lock (cancelTokenSource) {
+                        result += subResult;
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.LogWarning(ex, "Failed to generate links for {Path} (File={FileId},Series={SeriesId})", sourceLocation, fileId, seriesId);
+                    lock (cancelTokenSource) {
+                        failedSeries.Add(seriesId);
+                        failedExceptions.Add(ex);
+                        if ((maxSeriesExceptions > 0 && failedSeries.Count >= maxSeriesExceptions) ||
+                            (maxTotalExceptions > 0 && failedExceptions.Count >= maxTotalExceptions)) {
+                            cancelTokenSource.Cancel();
+                        }
+                    }
+                }
+            }, new() { CancellationToken = cancelTokenSource.Token, MaxDegreeOfParallelism = GetThreadCount(), BoundedCapacity = DataflowBlockOptions.Unbounded });
+            foreach (var tuple in allFiles) {
+                actionBlock.Post(tuple);
+            }
+            actionBlock.Complete();
+            await actionBlock.Completion.ConfigureAwait(false);
+        }
         // Throw an `AggregateException` if any series exceeded the maximum number of exceptions, or if the total number of exceptions exceeded the maximum allowed. Additionally,
         // if no links were generated and there were any exceptions, but we haven't reached the maximum allowed exceptions yet, then also throw an `AggregateException`.
         if (cancelTokenSource.IsCancellationRequested || (failedExceptions.Count > 0 && (maxTotalExceptions > 0 || maxSeriesExceptions > 0) && result.TotalVideos == 0)) {

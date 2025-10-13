@@ -599,6 +599,12 @@ public class PluginConfiguration : BasePluginConfiguration {
     public int VFS_MaxSeriesExceptionsBeforeAbort { get; set; }
 
     /// <summary>
+    /// Use a semaphore instead of an action block to limit concurrency during
+    /// VFS generation.
+    /// </summary>
+    public bool VFS_UseSemaphore { get; set; } = true;
+
+    /// <summary>
     /// Places the VFS in the cache directory instead of the config directory.
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]

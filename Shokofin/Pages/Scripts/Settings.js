@@ -637,6 +637,7 @@ function applyFormToConfig(form, config) {
             form.querySelector("#VFS_MaxTotalExceptionsBeforeAbort").value = vfsMaxTotalExceptionsBeforeAbort;
             config.VFS_MaxSeriesExceptionsBeforeAbort = vfsMaxSeriesExceptionsBeforeAbort;
             form.querySelector("#VFS_MaxSeriesExceptionsBeforeAbort").value = vfsMaxSeriesExceptionsBeforeAbort;
+            config.VFS_UseSemaphore = form.querySelector("#VFS_UseSemaphore").checked;
             config.VFS_Location = form.querySelector("#VFS_Location").value;
             config.VFS_CustomLocation = form.querySelector("#VFS_CustomLocation").value.trim() || null;
             break;
@@ -901,6 +902,7 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#VFS_ResolveLinks").checked = config.VFS_ResolveLinks;
             form.querySelector("#VFS_MaxTotalExceptionsBeforeAbort").value = config.VFS_MaxTotalExceptionsBeforeAbort;
             form.querySelector("#VFS_MaxSeriesExceptionsBeforeAbort").value = config.VFS_MaxSeriesExceptionsBeforeAbort;
+            form.querySelector("#VFS_UseSemaphore").checked = config.VFS_UseSemaphore;
             form.querySelector("#VFS_Location").value = config.VFS_Location;
             form.querySelector("#VFS_CustomLocation").value = config.VFS_CustomLocation || "";
             form.querySelector("#VFS_CustomLocation").disabled = config.VFS_Location !== "Custom";
