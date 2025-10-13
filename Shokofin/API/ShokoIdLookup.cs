@@ -173,6 +173,10 @@ public class ShokoIdLookup(ShokoApiManager _apiManager, ILibraryManager _library
     /// <returns>True if it successfully retrieved the ids for the <see cref="BaseItem" />.</returns>
     public bool TryGetEpisodeIdsFor(BaseItem item, [NotNullWhen(true)] out List<string>? episodeIds) {
         // This will account for existing episodes.
+        if (item.TryGetEpisodeIds(out episodeIds))
+            return true;
+
+        // Older path for legacy compatibility, but same as above.
         if (item.TryGetFileAndSeriesId(out var fileId, out var seasonId) && _apiManager.TryGetEpisodeIdsForFileId(fileId, seasonId, out episodeIds))
             return true;
 
@@ -181,8 +185,10 @@ public class ShokoIdLookup(ShokoApiManager _apiManager, ILibraryManager _library
             return true;
 
         // This will account for "missing" episodes.
-        if (item.TryGetEpisodeIds(out episodeIds))
+        if (item.TryGetEpisodeId(out var episodeId)) {
+            episodeIds = [episodeId];
             return true;
+        }
 
         episodeIds = null;
         return false;

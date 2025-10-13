@@ -223,14 +223,23 @@ public static partial class StringExtensions {
         return false;
     }
 
-    public static bool TryGetEpisodeIds(this IHasProviderIds providerIds, [NotNullWhen(true)] out List<string>? episodeIds) {
+    public static bool TryGetEpisodeId(this IHasProviderIds providerIds, [NotNullWhen(true)] out string? episodeId) {
         if (!providerIds.TryGetProviderId(ShokoInternalId.Name, out var internalId) || string.IsNullOrEmpty(internalId)) {
             // TODO: Remove this backwards compatibility in the next major version.
-            if (providerIds.TryGetProviderId(ProviderNames.ShokoEpisode, out var episodeId)) {
-                episodeIds = [episodeId];
+            if (providerIds.TryGetProviderId(ProviderNames.ShokoEpisode, out episodeId)) {
                 return true;
             }
 
+            episodeId = null;
+            return false;
+        }
+
+        episodeId = null;
+        return false;
+    }
+
+    public static bool TryGetEpisodeIds(this IHasProviderIds providerIds, [NotNullWhen(true)] out List<string>? episodeIds) {
+        if (!providerIds.TryGetProviderId(ShokoInternalId.Name, out var internalId) || string.IsNullOrEmpty(internalId)) {
             episodeIds = null;
             return false;
         }
