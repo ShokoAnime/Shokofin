@@ -347,14 +347,18 @@ public class VirtualFileSystemService {
             var result = await GenerateStructure(collectionType, vfsPath, allFiles).ConfigureAwait(false);
             // Cleanup any residual entries from old structure in the VFS if interactive
             // generation is disabled, or if it's enabled and we generated something new.
-            if (!string.IsNullOrEmpty(pathToClean) && (iterativeGeneration || !result.Paths.IsEmpty)) {
+            if (!string.IsNullOrEmpty(pathToClean)) {
                 if (iterativeGeneration) {
+                    var newPaths = result.Paths.ToArray();
                     // For now we're overcompensating when "cleaning" by also checking
                     // all other videos in the directory when iterative generation is enabled,
                     // so we move the sub/audio files and trickplay directories if necessary.
                     var allPaths = GetFilePaths(pathToClean, true, NamingOptions.VideoFileExtensions, (path, __) => TryGetIdsForPath(path, out _, out _));
-                    result.SkippedVideos = allPaths.Except(result.Paths).Count();
+                    result.SkippedVideos = allPaths.Except(newPaths).Count();
                     result += CleanupStructure(vfsPath, pathToClean, allPaths);
+                    // The resolver only care about the new files, if any, so revert the
+                    // paths back to the original ones after the cleanup.
+                    result.Paths = [.. newPaths];
                 }
                 else {
                     var allPaths = result.Paths.ToArray();

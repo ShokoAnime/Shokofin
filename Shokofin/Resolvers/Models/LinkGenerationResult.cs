@@ -8,9 +8,9 @@ namespace Shokofin.Resolvers.Models;
 public class LinkGenerationResult {
     private DateTime CreatedAt { get; init; } = DateTime.Now;
 
-    public ConcurrentBag<string> Paths { get; init; } = [];
+    public ConcurrentBag<string> Paths { get; set; } = [];
 
-    public ConcurrentBag<string> RemovedPaths { get; init; } = [];
+    public ConcurrentBag<string> RemovedPaths { get; set; } = [];
 
     public int Total =>
         TotalVideos + TotalExternalFiles + TotalTrickplayDirectories;
