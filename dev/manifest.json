@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.54",
+                "changelog": "`fix`: **Absolute expiration cannot be below or equal to zero**.\n\n`fix`: **Use correct paths for equality check when trying to move files/directories out of VFS**.\n\n`fix`: **Ignore all trickplay directories which don't have shoko ids set**.\n\n`fix`: **Search for the link with the exact same base path and base name**.\n\n`fix`: **Inverse reversed boolean check**.\n\n`feat`: **Make no caching during iterative VFS gen. a debug option and disable it by default**.\n\n`refactor`: **Improve throughput when enumerating files in VFS service**:\n\nReplaced the file and directory enumeration logic in the VFS service with a custom C# implementation that performs recursive traversal in parallel. Previously, the recursion was delegated to .NET Core, which in turn relied on the OS to handle directory walking. We still use the core enumeration methods, but now manage the recursion ourselves \u2014 in parallel. The parallelism is handled for us by the `ActionBlock`, with the maximum parallelism relying on the existing VFS threads (debug) setting.\n\nIn testing, walking the entire structure on my network-attached storage dropped from roughly 15 minutes per iteration to about 30 seconds.\n\n`refactor`: **Use `ActionBlock` while generating structure in VFS service**:\n\nReplaced the ol' async semaphore mess with a proper `ActionBlock`-based implementation, giving us better control over task scheduling and concurrency. Instead of queueing up all the async work at once and juggling semaphore waits everywhere, we now let the block handle throttling and dispatch order cleanly.\n\n`fix`: **Use new fast path for episode ids when available**.\n\n`fix`: **Add skipped videos to result during iterative generation**.\n\n`fix`: **Use the provided list in resolver**:\n\nNow that the VFS is always physical, we can use the provided file list. We previously had to iterate over the VFS folder ourselves because we might be masking the children as children of another media folder, but now that we don't need to care for that we can just as well just use the provided list.\n\n`fix`: **Only output new paths from VFS gen. to resolver**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.54/shoko_5.0.4.54.zip",
+                "checksum": "1b147fac81e7fe919dadddf7901ee585",
+                "timestamp": "2025-10-13T01:36:45Z"
+            },
+            {
                 "version": "5.0.4.53",
                 "changelog": "`fix`: **Edit year regex**:\n\nEdited the year regex\u2026 because there were more cases.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.50/shoko_5.0.4.50.zip",
                 "checksum": "bb4a5a913135efb26ace91271292f5f2",
                 "timestamp": "2025-10-09T11:43:26Z"
-            },
-            {
-                "version": "5.0.4.49",
-                "changelog": "`fix`: **Always set expiration**.\n\n`fix`: **Optimize first iterative VFS generation path**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.49/shoko_5.0.4.49.zip",
-                "checksum": "08ef9bc940301dcadd0cbd29b00494b7",
-                "timestamp": "2025-10-09T02:15:46Z"
             }
         ]
     }
