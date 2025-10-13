@@ -348,15 +348,18 @@ public class VirtualFileSystemService {
             // Cleanup any residual entries from old structure in the VFS if interactive
             // generation is disabled, or if it's enabled and we generated something new.
             if (!string.IsNullOrEmpty(pathToClean) && (iterativeGeneration || !result.Paths.IsEmpty)) {
-                // Note: for now we're overcompensating when "cleaning" by also checking
-                // the other videos in the directory when iterative generation is enabled,
-                // because that's easier to do it this way then to calculate _exactly_
-                // which paths we need to clean related to _just_ the generated files.
-                var allPathsToClean = iterativeGeneration
-                    // We want to clean all but the video files inside the directory to clean.
-                    ? GetFilePaths(pathToClean, true, NamingOptions.VideoFileExtensions)
-                    : result.Paths.ToArray();
-                result += CleanupStructure(vfsPath, pathToClean, allPathsToClean);
+                if (iterativeGeneration) {
+                    // For now we're overcompensating when "cleaning" by also checking
+                    // all other videos in the directory when iterative generation is enabled,
+                    // so we move the sub/audio files and trickplay directories if necessary.
+                    var allPaths = GetFilePaths(pathToClean, true, NamingOptions.VideoFileExtensions, (path, __) => TryGetIdsForPath(path, out _, out _));
+                    result.SkippedVideos = allPaths.Except(result.Paths).Count();
+                    result += CleanupStructure(vfsPath, pathToClean, allPaths);
+                }
+                else {
+                    var allPaths = result.Paths.ToArray();
+                    result += CleanupStructure(vfsPath, pathToClean, allPaths);
+                }
             }
 
             // Save which paths we've already generated so we can skip generation
