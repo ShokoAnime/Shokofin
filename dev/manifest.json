@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.56",
+                "changelog": "`refactor`: **Add back the semaphore concurrency**:\n\nAdded back the semaphore based concurrency limit during VFS generation to test it in the wild against the new `ActionBlock` based generation. The semaphore based approach is enabled by default for now until the test results from the in-the-wild testing reveals which of them to keep going forward.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.56/shoko_5.0.4.56.zip",
+                "checksum": "edc3cd242c9f8bf07fcd7ab67538edac",
+                "timestamp": "2025-10-13T02:51:50Z"
+            },
+            {
                 "version": "5.0.4.55",
                 "changelog": "`feat`: **Add setting to add notes, enabled by default**:\n\nAdded a new setting to add the AniDB anime summary note(s) to the description for the series/season entities. It's enabled by default to match the older behavior in stable where notes are always included in the description from AniDB.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.52/shoko_5.0.4.52.zip",
                 "checksum": "b945461d4e04929512f9f2c7b37e42cd",
                 "timestamp": "2025-10-10T03:20:17Z"
-            },
-            {
-                "version": "5.0.4.51",
-                "changelog": "`fix`: **Set creation date for directories in the VFS**.\n\n`misc`: **Add doc comment**.\n\n`refactor`: **Improve description cleanup logic**:\n\nUpdate the description cleanup logic to better accommodate the current descriptions I found on anime across AniDB. Also added logic to extract the notes to use in the next commit. With the notes extracted and with the cleanup logic enabled then it will allow the description to fall-through to the next description source (if any) if the description was only a note or otherwise cleaned-up text.\n\n`feat`: **Always display notes**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.51/shoko_5.0.4.51.zip",
-                "checksum": "7c94626a526c8de666ef081fcf849a2d",
-                "timestamp": "2025-10-10T03:03:42Z"
             }
         ]
     }
