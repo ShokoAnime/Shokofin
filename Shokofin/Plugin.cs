@@ -127,14 +127,17 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages {
     /// </summary>
     public string VirtualRoot {
         get {
-            var virtualRoot = _virtualRoot ??= Configuration.VFS_Location switch {
+            if (_virtualRoot is not null)
+                return _virtualRoot;
+
+            var virtualRoot = Configuration.VFS_Location switch {
                 VirtualRootLocation.Custom => VirtualRoot_Custom ?? VirtualRoot_Default,
                 VirtualRootLocation.Default or _ => VirtualRoot_Default,
             };
             if (!Directory.Exists(virtualRoot))
                 Directory.CreateDirectory(virtualRoot);
 
-            return virtualRoot;
+            return _virtualRoot = virtualRoot;
         }
     }
 
