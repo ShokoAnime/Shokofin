@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -116,7 +115,7 @@ public class VirtualFileSystemService {
 
     #region Preview Structure
 
-    public async Task<(HashSet<string> filesBefore, HashSet<string> filesAfter, VirtualFolderInfo? virtualFolder, LinkGenerationResult? result, string vfsPath)> PreviewChangesForLibrary(Guid libraryId) {
+    public async Task<(HashSet<string> filesBefore, HashSet<string> filesAfter, VirtualFolderInfo? virtualFolder, LinkGenerationResult? result, string vfsPath)> PreviewChangesForLibrary(Guid libraryId, CancellationToken cancellationToken = default) {
         // Don't allow starting a preview if a library scan is running.
         var virtualFolders = LibraryManager.GetVirtualFolders();
         var selectedFolder = virtualFolders.FirstOrDefault(folder => Guid.TryParse(folder.ItemId, out var guid) && guid == libraryId);
@@ -132,15 +131,15 @@ public class VirtualFileSystemService {
         var vfsPath = vfsConfig.MediaFolderPath;
         return await DataCache.GetOrCreateAsync($"preview-changes:{vfsPath}", async () => {
             // This call will be slow depending on the size of your collection.
-            var existingPaths = GetFilePaths(vfsPath, true).ToHashSet();
+            var existingPaths = GetFilePaths(vfsPath, true, cancellationToken: cancellationToken).ToHashSet();
 
             // Validate if we can use the media folders.
             if (!TryGetFileCheckerForMediaFolders(vfsConfig, mediaConfigs, out var fileChecker))
                 return (existingPaths, [], selectedFolder, new(), vfsPath);
 
             var allFiles = GetFilesForManagedFolders(mediaConfigs, fileChecker);
-            var result = await GenerateStructure(collectionType, vfsPath, allFiles, preview: true).ConfigureAwait(false);
-            result += CleanupStructure(vfsPath, vfsPath, result.Paths.ToArray(), preview: true);
+            var result = await GenerateStructure(collectionType, vfsPath, allFiles, preview: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+            result += CleanupStructure(vfsPath, vfsPath, result.Paths.ToArray(), preview: true, cancellationToken: cancellationToken);
 
             // Alter the paths to match the new structure.
             var alteredPaths = existingPaths
@@ -149,7 +148,7 @@ public class VirtualFileSystemService {
                 .ToHashSet();
 
             return (existingPaths, alteredPaths, selectedFolder, result, vfsPath);
-        }).ConfigureAwait(false);
+        }, cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
     #endregion
@@ -164,7 +163,7 @@ public class VirtualFileSystemService {
     /// <param name="mediaFolder">The media folder to generate a structure for.</param>
     /// <param name="path">The file or folder within the media folder to generate a structure for.</param>
     /// <returns>The VFS path, if it succeeded.</returns>
-    public async Task<(string? vfsPath, bool shouldContinue, bool skipValidation, HashSet<string> alteredPaths)> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path) {
+    public async Task<(string? vfsPath, bool shouldContinue, bool skipValidation, HashSet<string> alteredPaths)> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path, CancellationToken cancellationToken = default) {
         var (vfsConfig, mediaConfigs, skipGeneration) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType, config => config.IsVirtualFileSystemEnabled).ConfigureAwait(false);
         if (vfsConfig is null || mediaConfigs.Count is 0)
             return (null, false, false, []);
@@ -344,7 +343,7 @@ public class VirtualFileSystemService {
             }
 
             // Generate any new structure in the VFS.
-            var result = await GenerateStructure(collectionType, vfsPath, allFiles).ConfigureAwait(false);
+            var result = await GenerateStructure(collectionType, vfsPath, allFiles, cancellationToken: cancellationToken).ConfigureAwait(false);
             // Cleanup any residual entries from old structure in the VFS if interactive
             // generation is disabled, or if it's enabled and we generated something new.
             if (!string.IsNullOrEmpty(pathToClean)) {
@@ -355,14 +354,14 @@ public class VirtualFileSystemService {
                     // so we move the sub/audio files and trickplay directories if necessary.
                     var allPaths = GetFilePaths(pathToClean, true, NamingOptions.VideoFileExtensions, (path, __) => TryGetIdsForPath(path, out _, out _));
                     result.SkippedVideos = allPaths.Except(newPaths).Count();
-                    result += CleanupStructure(vfsPath, pathToClean, allPaths);
+                    result += CleanupStructure(vfsPath, pathToClean, allPaths, cancellationToken: cancellationToken);
                     // The resolver only care about the new files, if any, so revert the
                     // paths back to the original ones after the cleanup.
                     result.Paths = [.. newPaths];
                 }
                 else {
                     var allPaths = result.Paths.ToArray();
-                    result += CleanupStructure(vfsPath, pathToClean, allPaths);
+                    result += CleanupStructure(vfsPath, pathToClean, allPaths, cancellationToken: cancellationToken);
                 }
             }
 
@@ -371,7 +370,7 @@ public class VirtualFileSystemService {
             result.Print(Logger, mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath)) ? vfsPath : path);
 
             return (AddParentDirectories(vfsPath, result.Paths.ToArray()), iterativeGeneration);
-        }).ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
 
         return (
             tuple.alteredPaths is not null ? vfsPath : null,
@@ -776,13 +775,13 @@ public class VirtualFileSystemService {
         return await ApiClient.GetFilesInManagedFolder(managedFolderId, managedFolderSubPath, page).ConfigureAwait(false);
     }
 
-    private async Task<LinkGenerationResult> GenerateStructure(CollectionType? collectionType, string vfsPath, IEnumerable<(string sourceLocation, string fileId, string seriesId)> allFiles, bool preview = false) {
+    private async Task<LinkGenerationResult> GenerateStructure(CollectionType? collectionType, string vfsPath, IEnumerable<(string sourceLocation, string fileId, string seriesId)> allFiles, bool preview = false, CancellationToken cancellationToken = default) {
         var result = new LinkGenerationResult();
         var maxTotalExceptions = Plugin.Instance.Configuration.VFS_MaxTotalExceptionsBeforeAbort;
         var maxSeriesExceptions = Plugin.Instance.Configuration.VFS_MaxSeriesExceptionsBeforeAbort;
         var failedSeries = new HashSet<string>();
         var failedExceptions = new List<Exception>();
-        var cancelTokenSource = new CancellationTokenSource();
+        var cancelTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         if (Plugin.Instance.Configuration.VFS_UseSemaphore) {
             var semaphore = new SemaphoreSlim(GetThreadCount());
             await Task.WhenAll(allFiles.Select(async (tuple) => {
@@ -825,7 +824,7 @@ public class VirtualFileSystemService {
             })).ConfigureAwait(false);
         }
         else {
-            var actionBlock = new ActionBlock<(string sourceLocation, string fileId, string seriesId)>(async tuple => {
+            await Parallelize(allFiles, async tuple => {
                 var (sourceLocation, fileId, seriesId) = tuple;
                 try {
                     if (cancelTokenSource.IsCancellationRequested) {
@@ -853,13 +852,9 @@ public class VirtualFileSystemService {
                         }
                     }
                 }
-            }, new() { CancellationToken = cancelTokenSource.Token, MaxDegreeOfParallelism = GetThreadCount(), BoundedCapacity = DataflowBlockOptions.Unbounded });
-            foreach (var tuple in allFiles) {
-                actionBlock.Post(tuple);
-            }
-            actionBlock.Complete();
-            await actionBlock.Completion.ConfigureAwait(false);
+            }, cancelTokenSource.Token).ConfigureAwait(false);
         }
+        cancellationToken.ThrowIfCancellationRequested();
         // Throw an `AggregateException` if any series exceeded the maximum number of exceptions, or if the total number of exceptions exceeded the maximum allowed. Additionally,
         // if no links were generated and there were any exceptions, but we haven't reached the maximum allowed exceptions yet, then also throw an `AggregateException`.
         if (cancelTokenSource.IsCancellationRequested || (failedExceptions.Count > 0 && (maxTotalExceptions > 0 || maxSeriesExceptions > 0) && result.TotalVideos == 0)) {
@@ -1233,7 +1228,11 @@ public class VirtualFileSystemService {
         }
     }
 
-    private LinkGenerationResult CleanupStructure(string vfsPath, string directoryToClean, IReadOnlyList<string> allKnownPaths, bool preview = false) {
+    #endregion
+
+    #region Cleanup Structure
+
+    private LinkGenerationResult CleanupStructure(string vfsPath, string directoryToClean, IReadOnlyList<string> allKnownPaths, bool preview = false, CancellationToken cancellationToken = default) {
         if (!Directory.Exists(directoryToClean)) {
             if (!preview)
                 Logger.LogDebug("Skipped cleaning up folder because it does not exist: {Path}", directoryToClean);
@@ -1246,7 +1245,7 @@ public class VirtualFileSystemService {
         var previousStep = start;
         var result = new LinkGenerationResult();
         var searchExtensions = NamingOptions.VideoFileExtensions.Concat(NamingOptions.SubtitleFileExtensions).Concat(NamingOptions.AudioFileExtensions).Concat([".nfo", ".trickplay"]).ToHashSet();
-        var entriesToBeRemoved = GetFileSystemEntryPaths(directoryToClean, true, searchExtensions, (path, isDirectory) => !allKnownPaths.Contains(path))
+        var entriesToBeRemoved = GetFileSystemEntryPaths(directoryToClean, true, searchExtensions, (path, isDirectory) => !allKnownPaths.Contains(path), cancellationToken: cancellationToken)
             .Select(path => (path, extName: Path.GetExtension(path)))
             .ToList();
 
@@ -1255,7 +1254,8 @@ public class VirtualFileSystemService {
             Logger.LogDebug("Found {FileCount} file system entries to potentially remove or fix in {TimeSpent} in folder: {DirectoryToClean}", entriesToBeRemoved.Count, nextStep - previousStep, directoryToClean);
         previousStep = nextStep;
 
-        foreach (var (location, extName) in entriesToBeRemoved) {
+        Parallelize(entriesToBeRemoved, (path) => {
+            var (location, extName) = path;
             if (extName is ".nfo") {
                 if (!preview) {
                     try {
@@ -1264,7 +1264,7 @@ public class VirtualFileSystemService {
                     }
                     catch (Exception ex) {
                         Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
-                        continue;
+                        return;
                     }
                 }
                 result.RemovedPaths.Add(location);
@@ -1279,7 +1279,7 @@ public class VirtualFileSystemService {
                     else {
                         result.FixedTrickplayDirectories++;
                     }
-                    continue;
+                    return;
                 }
 
                 if (!preview) {
@@ -1294,7 +1294,7 @@ public class VirtualFileSystemService {
                     }
                     catch (Exception ex) {
                         Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
-                        continue;
+                        return;
                     }
                 }
                 result.RemovedPaths.Add(location);
@@ -1304,7 +1304,7 @@ public class VirtualFileSystemService {
                 if (ShouldIgnoreFile(vfsPath, location)) {
                     result.Paths.Add(location);
                     result.SkippedExternalFiles++;
-                    continue;
+                    return;
                 }
 
                 if (TryMoveExternalFile(allKnownPaths, location, preview, out var skip)) {
@@ -1315,7 +1315,7 @@ public class VirtualFileSystemService {
                     else {
                         result.FixedExternalFiles++;
                     }
-                    continue;
+                    return;
                 }
 
                 if (!preview) {
@@ -1325,7 +1325,7 @@ public class VirtualFileSystemService {
                     }
                     catch (Exception ex) {
                         Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
-                        continue;
+                        return;
                     }
                 }
                 result.RemovedPaths.Add(location);
@@ -1335,7 +1335,7 @@ public class VirtualFileSystemService {
                 if (ShouldIgnoreFile(vfsPath, location)) {
                     result.Paths.Add(location);
                     result.SkippedVideos++;
-                    continue;
+                    return;
                 }
 
                 if (!preview) {
@@ -1345,13 +1345,14 @@ public class VirtualFileSystemService {
                     }
                     catch (Exception ex) {
                         Logger.LogError(ex, "Encountered an error trying to remove {FilePath}", location);
-                        continue;
+                        return;
                     }
                 }
                 result.RemovedPaths.Add(location);
                 result.RemovedVideos++;
             }
-        }
+        }, cancellationToken).Wait(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
 
         if (preview)
             return result;
@@ -1635,72 +1636,49 @@ public class VirtualFileSystemService {
         return true;
     }
 
+    #endregion
+
+    #region File System Path
+
     private readonly EnumerationOptions _cachedEnumerationOptions = new() { RecurseSubdirectories = false, IgnoreInaccessible = true, AttributesToSkip = 0 };
 
     private bool ContainsFileSystemEntryPaths(string directoryPath)
         => Directory.EnumerateFileSystemEntries(directoryPath, "*", _cachedEnumerationOptions).Any();
 
-    private string[] GetFilePaths(string directoryPath, bool recursive = false, string[]? extensions = null, Func<string, bool, bool>? filter = null)
-        => GetFileSystemEntryPaths(directoryPath, recursive, extensions, filter, outputFiles: true, outputDirectories: false);
+    private string[] GetFilePaths(string directoryPath, bool recursive = false, string[]? extensions = null, Func<string, bool, bool>? filter = null, CancellationToken cancellationToken = default)
+        => GetFileSystemEntryPaths(directoryPath, recursive, extensions, filter, outputFiles: true, outputDirectories: false, cancellationToken: cancellationToken);
 
-    private string[] GetFileSystemEntryPaths(string directoryPath, bool recursive = false, IEnumerable<string>? extensions = null, Func<string, bool, bool>? filter = null, bool outputFiles = true, bool outputDirectories = true) {
+    private string[] GetFileSystemEntryPaths(string directoryPath, bool recursive = false, IEnumerable<string>? extensions = null, Func<string, bool, bool>? filter = null, bool outputFiles = true, bool outputDirectories = true, CancellationToken cancellationToken = default) {
         if (!Directory.Exists(directoryPath))
             return [];
-        Logger.LogDebug("Enumerating directory. (Path={Path})", directoryPath);
-        var pendingCount = 1;
+        Logger.LogTrace("Enumerating directory. (Path={Path})", directoryPath);
         var startedAt = DateTime.UtcNow;
         var outputBag = new ConcurrentBag<string>();
         var canOutputPath = GetPathValidator(extensions, filter);
-        var bufferBlock = new BufferBlock<string>(new() { BoundedCapacity = DataflowBlockOptions.Unbounded });
-        var actionBlock = new ActionBlock<string>(path => {
-            try {
-#if DEBUG
-                Logger.LogTrace("Enumerating directory. (Path={Path})", path);
-                var outputCount = 0;
-                var recurseCount = 0;
-                var dirStartedAt = DateTime.UtcNow;
-#endif
-                if (outputFiles) {
-                    foreach (var file in Directory.EnumerateFiles(path, "*", _cachedEnumerationOptions)) {
-                        if (canOutputPath(file, false)) {
-                            outputBag.Add(file);
-#if DEBUG
-                            outputCount++;
-#endif
-                        }
+        Parallelize(directoryPath, path => {
+            if (outputFiles) {
+                foreach (var file in Directory.EnumerateFiles(path, "*", _cachedEnumerationOptions)) {
+                    if (canOutputPath(file, false)) {
+                        outputBag.Add(file);
                     }
                 }
-                if (outputDirectories || recursive) {
-                    foreach (var directory in Directory.EnumerateDirectories(path, "*", _cachedEnumerationOptions)) {
-                        if (outputDirectories && canOutputPath(directory, true)) {
-                            outputBag.Add(directory);
-#if DEBUG
-                            outputCount++;
-#endif
-                        }
-                        if (recursive && Path.GetExtension(directory) is not ".trickplay") {
-                            Interlocked.Increment(ref pendingCount);
-                            bufferBlock.Post(directory);
-#if DEBUG
-                            recurseCount++;
-#endif
-                        }
+            }
+            if (outputDirectories || recursive) {
+                var outputs = new List<string>();
+                foreach (var directory in Directory.EnumerateDirectories(path, "*", _cachedEnumerationOptions)) {
+                    if (outputDirectories && canOutputPath(directory, true)) {
+                        outputBag.Add(directory);
+                    }
+                    if (recursive && Path.GetExtension(directory) is not ".trickplay") {
+                        outputs.Add(directory);
                     }
                 }
-#if DEBUG
-                Logger.LogTrace("Enumerated {FileCount} outputs and {RecurseCount} recursions in directory in {Elapsed}. (Path={Path})", outputCount, recurseCount, DateTime.UtcNow - dirStartedAt, path);
-#endif
+                return outputs;
             }
-            finally {
-                if (Interlocked.Decrement(ref pendingCount) == 0) {
-                    bufferBlock.Complete();
-                }
-            }
-        }, new() { MaxDegreeOfParallelism = GetThreadCount(), BoundedCapacity = DataflowBlockOptions.Unbounded });
-        bufferBlock.LinkTo(actionBlock, new() { PropagateCompletion = true });
-        bufferBlock.Post(directoryPath);
-        actionBlock.Completion.Wait();
-        Logger.LogDebug("Enumerated {FileCount} outputs in directory in {Elapsed}. (Path={Path})", outputBag.Count, DateTime.UtcNow - startedAt, directoryPath);
+            return null;
+        }, cancellationToken).Wait(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        Logger.LogTrace("Enumerated {FileCount} outputs in directory in {Elapsed}. (Path={Path})", outputBag.Count, DateTime.UtcNow - startedAt, directoryPath);
         return outputBag.ToArray();
     }
 
@@ -1713,13 +1691,82 @@ public class VirtualFileSystemService {
         return (path, _) => (Path.GetExtension(path) is { Length: > 0 } ext) && extensionSet.Contains(Path.GetExtension(path));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    #endregion
+
+    #region Parallelize
+
     private int GetThreadCount()
         => Plugin.Instance.Configuration.VFS_Threads is > 0
             ? Plugin.Instance.Configuration.VFS_Threads
             : Plugin.Instance.Configuration.VFS_Threads is -1
                 ? ConfigurationManager.Configuration.LibraryScanFanoutConcurrency
                 : Environment.ProcessorCount;
+
+    private Task Parallelize<T>(T initialValue, Func<T, IEnumerable<T>?> action, CancellationToken cancellationToken = default) {
+        var pendingCount = 1;
+        var bufferBlock = new BufferBlock<T>(new() { BoundedCapacity = DataflowBlockOptions.Unbounded });
+        var actionBlock = new ActionBlock<T>(
+            inputValue => {
+                try {
+                    var output = action(inputValue) ?? [];
+                    foreach (var outputAction in output) {
+                        Interlocked.Increment(ref pendingCount);
+                        bufferBlock.Post(outputAction);
+                    }
+                }
+                finally {
+                    if (Interlocked.Decrement(ref pendingCount) == 0) {
+                        bufferBlock.Complete();
+                    }
+                }
+            },
+            new() {
+                CancellationToken = cancellationToken,
+                MaxDegreeOfParallelism = GetThreadCount(),
+                BoundedCapacity = DataflowBlockOptions.Unbounded
+            }
+        );
+        bufferBlock.LinkTo(actionBlock, new() { PropagateCompletion = true });
+        bufferBlock.Post(initialValue);
+        bufferBlock.Complete();
+        return actionBlock.Completion;
+    }
+
+    private Task Parallelize<T>(IEnumerable<T> items, Func<T, Task> action, CancellationToken cancellationToken = default) {
+        var bufferBlock = new BufferBlock<T>(new() { BoundedCapacity = DataflowBlockOptions.Unbounded });
+        var actionBlock = new ActionBlock<T>(
+            action,
+            new() {
+                CancellationToken = cancellationToken,
+                MaxDegreeOfParallelism = GetThreadCount(),
+                BoundedCapacity = DataflowBlockOptions.Unbounded
+            }
+        );
+        bufferBlock.LinkTo(actionBlock, new() { PropagateCompletion = true });
+        foreach (var item in items) {
+            bufferBlock.Post(item);
+        }
+        bufferBlock.Complete();
+        return actionBlock.Completion;
+    }
+
+    private Task Parallelize<T>(IEnumerable<T> items, Action<T> action, CancellationToken cancellationToken = default) {
+        var bufferBlock = new BufferBlock<T>(new() { BoundedCapacity = DataflowBlockOptions.Unbounded });
+        var actionBlock = new ActionBlock<T>(
+            action,
+            new() {
+                CancellationToken = cancellationToken,
+                MaxDegreeOfParallelism = GetThreadCount(),
+                BoundedCapacity = DataflowBlockOptions.Unbounded
+            }
+        );
+        bufferBlock.LinkTo(actionBlock, new() { PropagateCompletion = true });
+        foreach (var item in items) {
+            bufferBlock.Post(item);
+        }
+        bufferBlock.Complete();
+        return actionBlock.Completion;
+    }
 
     #endregion
 }

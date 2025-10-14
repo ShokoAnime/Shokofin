@@ -50,7 +50,7 @@ public partial class ShokofinUtilityController(
     public async Task<ActionResult<VfsLibraryPreview>> PreviewVFS(Guid libraryId) {
         var trackerId = Plugin.Instance.Tracker.Add("Preview VFS");
         try {
-            var (filesBefore, filesAfter, virtualFolder, result, vfsPath) = await VirtualFileSystemService.PreviewChangesForLibrary(libraryId).ConfigureAwait(false);
+            var (filesBefore, filesAfter, virtualFolder, result, vfsPath) = await VirtualFileSystemService.PreviewChangesForLibrary(libraryId, HttpContext.RequestAborted).ConfigureAwait(false);
             if (virtualFolder is null)
                 return NotFound("Unable to find library with the given id.");
 

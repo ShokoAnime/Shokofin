@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Emby.Naming.Common;
 using Jellyfin.Data.Enums;
@@ -57,7 +58,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
         NamingOptions = namingOptions;
     }
 
-    public async Task<BaseItem?> ResolveSingle(Folder? parent, CollectionType? collectionType, FileSystemMetadata? fileInfo) {
+    public async Task<BaseItem?> ResolveSingle(Folder? parent, CollectionType? collectionType, FileSystemMetadata? fileInfo, CancellationToken cancellationToken = default) {
         if (!(collectionType is CollectionType.tvshows or CollectionType.movies or null) || parent is null || fileInfo is null)
             return null;
 
@@ -78,7 +79,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve path \"{fileInfo.FullName}\".");
-            var (vfsPath, shouldContinue, _, _) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName).ConfigureAwait(false);
+            var (vfsPath, shouldContinue, _, _) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName, cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
@@ -94,26 +95,26 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
         }
     }
 
-    public async Task<MultiItemResolverResult?> ResolveMultiple(Folder? parent, CollectionType? collectionType, List<FileSystemMetadata> fileInfoList) {
+    public async Task<MultiItemResolverResult> ResolveMultiple(Folder? parent, CollectionType? collectionType, List<FileSystemMetadata> fileInfoList, CancellationToken cancellationToken = default) {
         if (!(collectionType is CollectionType.tvshows or CollectionType.movies or null) || parent is null)
-            return null;
+            return new();
 
         var root = LibraryManager.RootFolder;
         if (root is null || parent == root)
-            return null;
+            return new();
 
         Guid? trackerId = null;
         try {
             if (!Lookup.IsEnabledForItem(parent))
-                return null;
+                return new();
 
             if (parent.GetTopParent() is not Folder mediaFolder)
-                return null;
+                return new();
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve children of \"{parent.Path}\". (Children={fileInfoList.Count})");
-            var (vfsPath, shouldContinue, skipValidation, paths) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path).ConfigureAwait(false);
+            var (vfsPath, shouldContinue, skipValidation, paths) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path, cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
-                return null;
+                return new();
 
             // Redirect children of a VFS managed media folder to the VFS.
             if (parent.IsTopParent) {
@@ -285,7 +286,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                 return new() { Items = items, ExtraFiles = [] };
             }
 
-            return null;
+            return new();
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
