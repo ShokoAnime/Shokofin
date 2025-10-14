@@ -1228,6 +1228,31 @@ public class VirtualFileSystemService {
         }
     }
 
+    private static HashSet<string> AddParentDirectories(string rootDirectoryPath, IEnumerable<string> input) {
+        var allKnownPaths = new HashSet<string>(input);
+        var parentsToAdd = allKnownPaths
+            .SelectMany(filePath => {
+                var directoryPath = Path.GetDirectoryName(filePath);
+                var tuple = new List<(string path, int level)>();
+                while (!string.IsNullOrEmpty(directoryPath)) {
+                    var level = directoryPath == rootDirectoryPath ? 0 : directoryPath[(rootDirectoryPath.Length + 1)..].Split(Path.DirectorySeparatorChar).Length;
+                    tuple.Add((directoryPath, level));
+                    if (directoryPath == rootDirectoryPath)
+                        break;
+                    directoryPath = Path.GetDirectoryName(directoryPath);
+                }
+                return tuple;
+            })
+            .DistinctBy(tuple => tuple.path)
+            .OrderByDescending(tuple => tuple.level)
+            .ThenBy(tuple => tuple.path)
+            .Select(tuple => tuple.path)
+            .ToList();
+        foreach (var directoryPath in parentsToAdd)
+            allKnownPaths.Add(directoryPath);
+        return allKnownPaths;
+    }
+
     #endregion
 
     #region Cleanup Structure
@@ -1396,31 +1421,6 @@ public class VirtualFileSystemService {
         Logger.LogTrace("Cleaned {CleanedCount} directories in {DirectoryToClean} in {TimeSpent} (Total={TotalSpent})", cleaned, directoryToClean, nextStep - previousStep, nextStep - start);
 
         return result;
-    }
-
-    private static HashSet<string> AddParentDirectories(string rootDirectoryPath, IEnumerable<string> input) {
-        var allKnownPaths = new HashSet<string>(input);
-        var parentsToAdd = allKnownPaths
-            .SelectMany(filePath => {
-                var directoryPath = Path.GetDirectoryName(filePath);
-                var tuple = new List<(string path, int level)>();
-                while (!string.IsNullOrEmpty(directoryPath)) {
-                    var level = directoryPath == rootDirectoryPath ? 0 : directoryPath[(rootDirectoryPath.Length + 1)..].Split(Path.DirectorySeparatorChar).Length;
-                    tuple.Add((directoryPath, level));
-                    if (directoryPath == rootDirectoryPath)
-                        break;
-                    directoryPath = Path.GetDirectoryName(directoryPath);
-                }
-                return tuple;
-            })
-            .DistinctBy(tuple => tuple.path)
-            .OrderByDescending(tuple => tuple.level)
-            .ThenBy(tuple => tuple.path)
-            .Select(tuple => tuple.path)
-            .ToList();
-        foreach (var directoryPath in parentsToAdd)
-            allKnownPaths.Add(directoryPath);
-        return allKnownPaths;
     }
 
     private bool TryMoveExternalFile(IReadOnlyList<string> allKnownPaths, string externalFilePath, bool preview, out bool skip) {
