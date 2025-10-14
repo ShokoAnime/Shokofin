@@ -50,7 +50,7 @@ public class ShokoIdLookup(ShokoApiManager _apiManager, ILibraryManager _library
     /// <param name="libraryOptions">The <see cref="LibraryOptions" /> to check.</param>
     /// <param name="isSoleProvider">True if the plugin is the only metadata provider enabled for the item.</param>
     /// <returns>True if the plugin is enabled for the <see cref="LibraryOptions" /></returns>
-    public bool IsEnabledForLibraryOptions(LibraryOptions libraryOptions) {
+    internal static bool IsEnabledForLibraryOptions(LibraryOptions libraryOptions) {
         var isEnabled = false;
         foreach (var options in libraryOptions.TypeOptions) {
             if (!AllowedTypes.Contains(options.Type))

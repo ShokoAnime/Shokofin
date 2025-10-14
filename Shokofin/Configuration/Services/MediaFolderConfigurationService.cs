@@ -26,8 +26,6 @@ public class MediaFolderConfigurationService {
 
     private readonly LibraryScanWatcher LibraryScanWatcher;
 
-    private readonly ShokoIdLookup Lookup;
-
     private readonly UsageTracker UsageTracker;
 
     private readonly ShokoApiClient ApiClient;
@@ -51,7 +49,6 @@ public class MediaFolderConfigurationService {
         ILibraryManager libraryManager,
         IFileSystem fileSystem,
         LibraryScanWatcher libraryScanWatcher,
-        ShokoIdLookup lookup,
         UsageTracker usageTracker,
         ShokoApiClient apiClient
     ) {
@@ -59,7 +56,6 @@ public class MediaFolderConfigurationService {
         LibraryManager = libraryManager;
         FileSystem = fileSystem;
         LibraryScanWatcher = libraryScanWatcher;
-        Lookup = lookup;
         UsageTracker = usageTracker;
         ApiClient = apiClient;
 
@@ -270,7 +266,7 @@ public class MediaFolderConfigurationService {
                 }
 
                 return virtualFolder.CollectionType.ConvertToCollectionType() is null or CollectionType.movies or CollectionType.tvshows &&
-                    Lookup.IsEnabledForLibraryOptions(virtualFolder.LibraryOptions);
+                    ShokoIdLookup.IsEnabledForLibraryOptions(virtualFolder.LibraryOptions);
             })
             .ToList();
         Logger.LogDebug("Found {Count} out of {TotalCount} libraries to check media folder configurations for.", filteredVirtualFolders.Count, allVirtualFolders.Count);
