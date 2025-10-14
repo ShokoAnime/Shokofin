@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
@@ -24,8 +23,6 @@ public class MediaFolderConfigurationService {
     private readonly ILibraryManager LibraryManager;
 
     private readonly IFileSystem FileSystem;
-
-    private readonly IDirectoryService DirectoryService;
 
     private readonly LibraryScanWatcher LibraryScanWatcher;
 
@@ -53,7 +50,6 @@ public class MediaFolderConfigurationService {
         ILogger<MediaFolderConfigurationService> logger,
         ILibraryManager libraryManager,
         IFileSystem fileSystem,
-        IDirectoryService directoryService,
         LibraryScanWatcher libraryScanWatcher,
         ShokoIdLookup lookup,
         UsageTracker usageTracker,
@@ -62,7 +58,6 @@ public class MediaFolderConfigurationService {
         Logger = logger;
         LibraryManager = libraryManager;
         FileSystem = fileSystem;
-        DirectoryService = directoryService;
         LibraryScanWatcher = libraryScanWatcher;
         Lookup = lookup;
         UsageTracker = usageTracker;
