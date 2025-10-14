@@ -249,7 +249,7 @@ public partial class ShokoApiManager : IDisposable {
         });
 
     private Task<SeriesConfiguration> GetSeriesConfiguration(string id)
-        => DataCache.GetOrCreateAsync($"series-settings:{id}", async () => {
+        => DataCache.GetOrCreateAsync($"series-configuration:{id}", async () => {
             var seriesSettings = await GetInternalSeriesConfiguration(id).ConfigureAwait(false);
             var config = Plugin.Instance.Configuration;
             if (seriesSettings.Type is SeriesType.None) {
