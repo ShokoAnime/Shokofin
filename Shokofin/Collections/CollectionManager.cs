@@ -542,7 +542,7 @@ public class CollectionManager(
                 continue;
 
             if (!_lookup.TryGetEpisodeIdsFor(movie, out var episodeIds) ||
-                !_lookup.TryGetSeasonIdFor(movie, out var seasonId))
+                !_apiManager.TryGetSeasonIdForEpisodeId(episodeIds[0], out var seasonId))
                 continue;
 
             _logger.LogTrace("Removing movie {MovieName} from collection {CollectionName}. (Episode={EpisodeId},Season={SeasonId})", movie.Name, movie.CollectionName, episodeIds[0], seasonId);

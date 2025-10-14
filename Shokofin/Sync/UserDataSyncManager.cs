@@ -423,7 +423,7 @@ public class UserDataSyncManager {
                 break;
             }
             case Season season: {
-                if (!season.IndexNumber.HasValue)
+                if (!season.IndexNumber.HasValue || season.IndexNumber.Value == 0)
                     return;
 
                 if (!Lookup.IsEnabledForItem(season) || !Lookup.TryGetSeasonIdFor(season, out var seasonId))
