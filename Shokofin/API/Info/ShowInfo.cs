@@ -490,7 +490,7 @@ public class ShowInfo : IExtendedItemInfo {
         var releasedAt = tmdbMovie.ReleasedAt?.ToDateTime(TimeOnly.Parse("00:00:00", CultureInfo.InvariantCulture), DateTimeKind.Local);
 
         _client = client;
-        Id = IdPrefix.TmdbMovie + tmdbMovie.Id.ToString();
+        Id = seasonInfo.Id;
         CollectionId = seasonInfo.ShokoGroupId ?? seasonInfo.TopLevelShokoGroupId;
         IsMovieCollection = true;
         IsStandalone = true;
