@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
@@ -69,34 +70,6 @@ public class ShokoIdLookup(ShokoApiManager _apiManager, ILibraryManager _library
     #region Season Id
 
     /// <summary>
-    /// Try to get the season id for the given path.
-    /// </summary>
-    /// <param name="path">The path to check for.</param>
-    /// <param name="seasonId">The variable to put the id in.</param>
-    /// <returns>True if it successfully retrieved the id for the <see cref="BaseItem" />.</returns>
-    public bool TryGetSeasonIdFor(string path, [NotNullWhen(true)] out string? seasonId) {
-        if (_apiManager.TryGetSeasonIdForPath(path, out seasonId))
-            return true;
-
-        seasonId = null;
-        return false;
-    }
-
-    /// <summary>
-    /// Try to get the season id from the given episode id.
-    /// </summary>
-    /// <param name="episodeId">The episode id to check for.</param>
-    /// <param name="seasonId">The variable to put the id in.</param>
-    /// <returns>True if it successfully retrieved the id for the <see cref="BaseItem" />.</returns>
-    public bool TryGetSeasonIdFromEpisodeId(string episodeId, [NotNullWhen(true)] out string? seasonId) {
-        if (_apiManager.TryGetSeasonIdForEpisodeId(episodeId, out seasonId))
-            return true;
-
-        seasonId = null;
-        return false;
-    }
-
-    /// <summary>
     /// Try to get the main season id for the <see cref="Series" />.
     /// </summary>
     /// <param name="series">The <see cref="Series" /> to check for.</param>
@@ -106,14 +79,15 @@ public class ShokoIdLookup(ShokoApiManager _apiManager, ILibraryManager _library
         if (series.TryGetSeasonId(out seasonId))
             return true;
 
-        if (TryGetSeasonIdFor(series.Path, out seasonId)) {
+        if (_apiManager.TryGetSeasonIdForPath(series.Path, out seasonId)) {
             if (_apiManager.TryGetShowIdForSeasonId(seasonId, out var mainSeasonId))
                 series.SetProviderId(ShokoInternalId.Name, mainSeasonId);
-            else
-                series.SetProviderId(ShokoInternalId.Name, seasonId);
+
             // Make sure the presentation unique is not cached, so we won't reuse the cache key.
             // This is for series-merging in a non-VFS based library.
-            series.PresentationUniqueKey = null;
+            if (!series.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar))
+                series.PresentationUniqueKey = null;
+
             return true;
         }
 
@@ -130,17 +104,7 @@ public class ShokoIdLookup(ShokoApiManager _apiManager, ILibraryManager _library
         if (season.TryGetSeasonId(out seasonId))
             return true;
 
-        return TryGetSeasonIdFor(season.Path, out seasonId);
-    }
-
-    /// <summary>
-    /// Try to get the season id for the <see cref="Movie" />.
-    /// </summary>
-    /// <param name="season">The <see cref="Movie" /> to check for.</param>
-    /// <param name="seasonId">The variable to put the id in.</param>
-    /// <returns>True if it successfully retrieved the id for the <see cref="Movie" />.</returns>
-    public bool TryGetSeasonIdFor(Movie movie, [NotNullWhen(true)] out string? seasonId) {
-        if (TryGetSeasonIdFor(movie.Path, out var episodeId) && TryGetSeasonIdFromEpisodeId(episodeId, out seasonId))
+        if (_apiManager.TryGetSeasonIdForPath(season.Path, out seasonId))
             return true;
 
         seasonId = null;
@@ -150,20 +114,6 @@ public class ShokoIdLookup(ShokoApiManager _apiManager, ILibraryManager _library
     #endregion
 
     #region Episode Id
-
-    /// <summary>
-    /// Try to get the episode ids for the given path.
-    /// </summary>
-    /// <param name="path">The path to check for.</param>
-    /// <param name="episodeIds">The variable to put the ids in.</param>
-    /// <returns>True if it successfully retrieved the ids for the <see cref="BaseItem" />.</returns>
-    public bool TryGetEpisodeIdsFor(string path, [NotNullWhen(true)] out List<string>? episodeIds) {
-        if (_apiManager.TryGetEpisodeIdsForPath(path, out episodeIds))
-            return true;
-
-        episodeIds = null;
-        return false;
-    }
 
     /// <summary>
     /// Try to get the episode ids for the given <see cref="BaseItem" />.
@@ -181,7 +131,7 @@ public class ShokoIdLookup(ShokoApiManager _apiManager, ILibraryManager _library
             return true;
 
         // This will account for new episodes that haven't received their first metadata update yet.
-        if (TryGetEpisodeIdsFor(item.Path, out episodeIds))
+        if (_apiManager.TryGetEpisodeIdsForPath(item.Path, out episodeIds))
             return true;
 
         // This will account for "missing" episodes.
