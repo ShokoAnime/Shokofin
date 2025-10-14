@@ -302,8 +302,14 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
 
     ResolverPriority IItemResolver.Priority => ResolverPriority.Plugin;
 
-    BaseItem? IItemResolver.ResolvePath(ItemResolveArgs args)
+    public BaseItem? ResolvePath(ItemResolveArgs args)
         => ResolveSingle(args.Parent, args.CollectionType, args.FileInfo)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult();
+
+    public BaseItem? ResolvePath(ItemResolveArgs args, CancellationToken cancellationToken)
+        => ResolveSingle(args.Parent, args.CollectionType, args.FileInfo, cancellationToken)
             .ConfigureAwait(false)
             .GetAwaiter()
             .GetResult();
@@ -312,8 +318,14 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
 
     #region IMultiItemResolver
 
-    MultiItemResolverResult? IMultiItemResolver.ResolveMultiple(Folder parent, List<FileSystemMetadata> files, CollectionType? collectionType, IDirectoryService directoryService)
+    public MultiItemResolverResult ResolveMultiple(Folder parent, List<FileSystemMetadata> files, CollectionType? collectionType, IDirectoryService directoryService)
         => ResolveMultiple(parent, collectionType, files)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult();
+
+    public MultiItemResolverResult ResolveMultiple(Folder parent, List<FileSystemMetadata> files, CollectionType? collectionType, IDirectoryService directoryService, CancellationToken cancellationToken)
+        => ResolveMultiple(parent, collectionType, files, cancellationToken)
             .ConfigureAwait(false)
             .GetAwaiter()
             .GetResult();
