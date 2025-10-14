@@ -64,6 +64,11 @@ public enum MetadataRefreshField : ulong {
     OwnedItems = 1 << 9,
 
     /// <summary>
+    /// Will update the plugin managed provider ids.
+    /// </summary>
+    ProviderIds = 1 << 10,
+
+    /// <summary>
     /// Will run the custom provider.
     /// </summary>
     CustomProvider = 1L << 30,

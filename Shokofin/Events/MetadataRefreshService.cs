@@ -496,6 +496,19 @@ public class MetadataRefreshService {
             }
         }
 
+        if (refreshFields.HasFlag(MetadataRefreshField.ProviderIds)) {
+            var updatedProviders = false;
+            foreach (var (providerId, expectedValue) in metadata.ProviderIds) {
+                if (!item.ProviderIds.TryGetValue(providerId, out string? currentValue) || currentValue != expectedValue) {
+                    item.ProviderIds[providerId] = expectedValue;
+                    updatedProviders = true;
+                }
+            }
+            if (updatedProviders) {
+                updatedFields.Add(nameof(BaseItem.ProviderIds));
+            }
+        }
+
         if (refreshFields.HasFlag(MetadataRefreshField.CustomProvider) && customMetadataProvider is not null) {
             var updatedItemType = await customMetadataProvider.FetchAsync(
                 item,
