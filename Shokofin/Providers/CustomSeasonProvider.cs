@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Extensions;
 using Shokofin.MergeVersions;
+using Shokofin.Resolvers;
 
 using Info = Shokofin.API.Info;
 
@@ -27,7 +28,7 @@ namespace Shokofin.Providers;
 /// about how a provider cannot also be a custom provider otherwise it won't
 /// save the metadata.
 /// </remarks>
-public class CustomSeasonProvider(ILogger<CustomSeasonProvider> _logger, ShokoApiManager _apiManager, ShokoIdLookup _lookup, ILibraryManager _libraryManager, MergeVersionsManager _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Season> {
+public class CustomSeasonProvider(ILogger<CustomSeasonProvider> _logger, VirtualFileSystemService _vfsService, ShokoApiManager _apiManager, ShokoIdLookup _lookup, ILibraryManager _libraryManager, MergeVersionsManager _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Season> {
     private static bool ShouldAddMetadata => Plugin.Instance.Configuration.AddMissingMetadata;
 
     public string Name => Plugin.MetadataProviderName;
@@ -62,10 +63,15 @@ public class CustomSeasonProvider(ILogger<CustomSeasonProvider> _logger, ShokoAp
         var seasonNumber = season.IndexNumber!.Value;
         var trackerId = Plugin.Instance.Tracker.Add($"Providing custom info for Season \"{season.Name}\". (Path=\"{season.Path}\",MainSeason=\"{seasonId}\",Season={seasonNumber})");
         try {
+            if (_vfsService.TryGetCurrentLibraryGenerationMode(series.Path, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
+                _logger.LogTrace("Skipped season during iterative generation. (MainSeason={MainSeasonId},Season={SeasonNumber})", seasonId, seasonNumber);
+                return ItemUpdateType.None;
+            }
+
             // Loudly abort if the show metadata doesn't exist.
             var showInfo = await _apiManager.GetShowInfoBySeasonId(seasonId).ConfigureAwait(false);
             if (showInfo == null || showInfo.SeasonList.Count == 0) {
-                _logger.LogWarning("Unable to find show info for season. (MainSeason={MainSeasonId})", seasonId);
+                _logger.LogWarning("Unable to find show info for season. (MainSeason={MainSeasonId},Season={SeasonNumber})", seasonId, seasonNumber);
                 return ItemUpdateType.None;
             }
 

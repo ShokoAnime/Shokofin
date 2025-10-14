@@ -8,8 +8,10 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using Shokofin.Extensions;
 using Shokofin.ExternalIds;
 using Shokofin.MergeVersions;
+using Shokofin.Resolvers;
 
 using Info = Shokofin.API.Info;
 
@@ -25,7 +27,7 @@ namespace Shokofin.Providers;
 /// about how a provider cannot also be a custom provider otherwise it won't
 /// save the metadata.
 /// </remarks>
-public class CustomEpisodeProvider(ILogger<CustomEpisodeProvider> _logger, ILibraryManager _libraryManager, ShokoIdLookup _lookup, MergeVersionsManager _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Episode> {
+public class CustomEpisodeProvider(ILogger<CustomEpisodeProvider> _logger, VirtualFileSystemService _vfsService, ILibraryManager _libraryManager, ShokoIdLookup _lookup, MergeVersionsManager _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Episode> {
     public string Name => Plugin.MetadataProviderName;
 
     public bool HasChanged(BaseItem item, IDirectoryService directoryService) {
@@ -42,26 +44,35 @@ public class CustomEpisodeProvider(ILogger<CustomEpisodeProvider> _logger, ILibr
 
     public async Task<ItemUpdateType> FetchAsync(Episode episode, MetadataRefreshOptions options, CancellationToken cancellationToken) {
         var series = episode.Series;
-        if (series is null)
+        if (!_lookup.IsEnabledForItem(series) || !series.TryGetSeasonId(out var seasonId))
             return ItemUpdateType.None;
 
-        var itemUpdated = ItemUpdateType.None;
-        if (_lookup.IsEnabledForItem(episode) && _lookup.TryGetEpisodeIdsFor(episode, out var episodeIds)) {
-            using (Plugin.Instance.Tracker.Enter($"Providing custom info for Episode \"{episode.Name}\". (Path=\"{episode.Path}\",IsMissingEpisode={episode.IsMissingEpisode})")) {
+        var trackerId = Plugin.Instance.Tracker.Add($"Providing custom info for Episode \"{episode.Name}\". (Path=\"{episode.Path}\",IsMissingEpisode={episode.IsMissingEpisode})");
+        try {
+            if (_vfsService.TryGetCurrentLibraryGenerationMode(series.Path, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
+                _logger.LogTrace("Skipped episode during iterative generation. (MainSeason={MainSeasonId},Season={SeasonNumber},Episode={EpisodeNumber})", seasonId, episode.ParentIndexNumber, episode.IndexNumber);
+                return ItemUpdateType.None;
+            }
+
+            var itemUpdated = ItemUpdateType.None;
+            if (_lookup.TryGetEpisodeIdsFor(episode, out var episodeIds)) {
                 foreach (var episodeId in episodeIds) {
                     if (RemoveDuplicates(_libraryManager, _logger, episodeId, episode, series.GetPresentationUniqueKey()))
                         itemUpdated |= ItemUpdateType.MetadataEdit;
                 }
+
+                if (Plugin.Instance.Configuration.AutoMergeVersions && !_libraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
+                    foreach (var episodeId in episodeIds)
+                        await _mergeVersionsManager.SplitAndMergeEpisodesByEpisodeId(episodeId).ConfigureAwait(false);
+                    itemUpdated |= ItemUpdateType.MetadataEdit;
+                }
             }
 
-            if (Plugin.Instance.Configuration.AutoMergeVersions && !_libraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
-                foreach (var episodeId in episodeIds)
-                    await _mergeVersionsManager.SplitAndMergeEpisodesByEpisodeId(episodeId).ConfigureAwait(false);
-                itemUpdated |= ItemUpdateType.MetadataEdit;
-            }
+            return itemUpdated;
         }
-
-        return itemUpdated;
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
+        }
     }
 
     public static bool RemoveDuplicates(ILibraryManager libraryManager, ILogger logger, string episodeId, Episode episode, string seriesPresentationUniqueKey) {

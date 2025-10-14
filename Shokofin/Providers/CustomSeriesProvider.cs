@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Extensions;
 using Shokofin.MergeVersions;
+using Shokofin.Resolvers;
 using Shokofin.Utils;
 
 using Info = Shokofin.API.Info;
@@ -28,7 +29,7 @@ namespace Shokofin.Providers;
 /// about how a provider cannot also be a custom provider otherwise it won't
 /// save the metadata.
 /// </remarks>
-public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, ShokoApiManager _apiManager, ShokoIdLookup _lookup, ILibraryManager _libraryManager, MergeVersionsManager _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Series> {
+public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, VirtualFileSystemService _vfsService, ShokoApiManager _apiManager, ShokoIdLookup _lookup, ILibraryManager _libraryManager, MergeVersionsManager _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Series> {
     private static bool ShouldAddMetadata => Plugin.Instance.Configuration.AddMissingMetadata;
 
     public string Name => Plugin.MetadataProviderName;
@@ -52,6 +53,11 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, ShokoAp
 
         var trackerId = Plugin.Instance.Tracker.Add($"Providing custom info for Series \"{series.Name}\". (MainSeason=\"{seasonId}\")");
         try {
+            if (_vfsService.TryGetCurrentLibraryGenerationMode(series.Path, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
+                _logger.LogTrace("Skipped series during iterative generation. (MainSeason={MainSeasonId})", seasonId);
+                return ItemUpdateType.None;
+            }
+
             // Provide metadata for a series using Shoko's Group feature
             var showInfo = await _apiManager.GetShowInfoBySeasonId(seasonId).ConfigureAwait(false);
             if (showInfo == null || showInfo.SeasonList.Count == 0) {

@@ -158,6 +158,39 @@ public class VirtualFileSystemService {
     private const string CachePrefix = "vfs-path:";
 
     /// <summary>
+    /// Tries to get the current library generation mode. If the library has not
+    /// been refreshed recently then it will return false, otherwise it will
+    /// return true, with the <paramref name="iterativeGeneration"/> set to true
+    /// if the library was iteratively generated.
+    /// </summary>
+    /// <param name="path">A path to the vfs folder for the library, or an entity within the vfs folder for the library.</param>
+    /// <param name="iterativeGeneration">Indicates the library were iteratively generated.</param>
+    /// <returns>True if the library was recently generated, false otherwise.</returns>
+    public bool TryGetCurrentLibraryGenerationMode(string path, out bool iterativeGeneration, out bool wasGenerated) {
+        if (string.IsNullOrEmpty(path)) {
+            return iterativeGeneration = wasGenerated = false;
+        }
+
+        var vfsRoot = Plugin.Instance.VirtualRoot;
+        if (!path.StartsWith(vfsRoot + Path.DirectorySeparatorChar)) {
+            return iterativeGeneration = wasGenerated = false;
+        }
+
+        if (!Guid.TryParse(path.AsSpan(vfsRoot.Length + 1, 36), out var libraryId)) {
+            return iterativeGeneration = wasGenerated = false;
+        }
+
+        var vfsPath = Path.Combine(vfsRoot, libraryId.ToString());
+        if (!DataCache.TryGetValue<(HashSet<string>? alteredPaths, bool iterative)>(CachePrefix + vfsPath, out var tuple)) {
+            return iterativeGeneration = wasGenerated = false;
+        }
+
+        iterativeGeneration = tuple.iterative;
+        wasGenerated = tuple.iterative && (tuple.alteredPaths?.Contains(path) ?? false);
+        return true;
+    }
+
+    /// <summary>
     /// Generates the VFS structure if the VFS is enabled for the <paramref name="mediaFolder"/>.
     /// </summary>
     /// <param name="mediaFolder">The media folder to generate a structure for.</param>
