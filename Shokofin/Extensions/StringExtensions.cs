@@ -10,6 +10,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using Shokofin.ExternalIds;
 
+using Video = MediaBrowser.Controller.Entities.Video;
 using TvSeries = MediaBrowser.Controller.Entities.TV.Series;
 using TvSeriesInfo = MediaBrowser.Controller.Providers.SeriesInfo;
 
@@ -262,6 +263,16 @@ public static partial class StringExtensions {
     }
 
     public static bool TryGetFileAndSeriesId(this IHasProviderIds providerIds, [NotNullWhen(true)] out string? fileId, [NotNullWhen(true)] out string? seriesId) {
+        if (
+            providerIds is Video { Path.Length: > 0 } video &&
+            video.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar) &&
+            Path.GetFileNameWithoutExtension(video.Path) is { Length: > 0 } filename &&
+            filename.TryGetAttributeValue(ProviderNames.ShokoSeries, out seriesId) &&
+            filename.TryGetAttributeValue(ProviderNames.ShokoFile, out fileId)
+        ) {
+            return true;
+        }
+
         if (!providerIds.TryGetProviderId(ShokoInternalId.Name, out var internalId) || string.IsNullOrEmpty(internalId)) {
             // TODO: Remove this backwards compatibility in the next major version.
             if (providerIds.TryGetProviderId(ProviderNames.ShokoFile, out fileId) && providerIds.TryGetProviderId(ProviderNames.ShokoSeries, out seriesId))
