@@ -34,6 +34,8 @@ public class MediaFolderConfigurationService {
 
     private readonly Dictionary<Guid, (string libraryName, HashSet<string> add, HashSet<string> remove)> LibraryEdits = [];
 
+    private List<VirtualFolderInfo>? CachedVirtualFolders = null;
+
     private bool ShouldGenerateAllConfigurations = true;
 
     private readonly SemaphoreSlim LockObj = new(1, 1);
@@ -92,6 +94,7 @@ public class MediaFolderConfigurationService {
     private async Task EditLibraries(bool shouldScheduleLibraryScan) {
         await LockObj.WaitAsync().ConfigureAwait(false);
         try {
+            CachedVirtualFolders = null;
             ShouldGenerateAllConfigurations = true;
 
             if (LibraryEdits.Count is 0)
@@ -142,7 +145,7 @@ public class MediaFolderConfigurationService {
         if (e.Item != null && root != null && e.Item != root && e.Item is Folder folder && folder.ParentId == Guid.Empty  && !string.IsNullOrEmpty(folder.Path) && !folder.Path.StartsWith(root.Path)) {
             await LockObj.WaitAsync().ConfigureAwait(false);
             try {
-                var virtualFolders = LibraryManager.GetVirtualFolders();
+                var virtualFolders = GetVirtualFolders();
                 var virtualFolderIds = virtualFolders
                     .Select(virtualFolder => string.IsNullOrEmpty(virtualFolder.ItemId) ? Guid.Empty : Guid.Parse(virtualFolder.ItemId))
                     .Except([Guid.Empty])
@@ -177,7 +180,7 @@ public class MediaFolderConfigurationService {
     public async Task<IReadOnlyList<(string vfsPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)>> GetAvailableMediaFoldersForLibraries(Func<MediaFolderConfiguration, bool>? filter = null) {
         await LockObj.WaitAsync().ConfigureAwait(false);
         try {
-            var virtualFolders = LibraryManager.GetVirtualFolders();
+            var virtualFolders = GetVirtualFolders();
             if (ShouldGenerateAllConfigurations) {
                 ShouldGenerateAllConfigurations = false;
                 await GenerateAllConfigurations(virtualFolders).ConfigureAwait(false);
@@ -213,7 +216,7 @@ public class MediaFolderConfigurationService {
             if (LibraryManager.GetItemById(mediaFolderConfig.LibraryId) is not Folder libraryFolder)
                 return (null, [], skipGeneration);
 
-            var virtualFolder = LibraryManager.GetVirtualFolders()
+            var virtualFolder = GetVirtualFolders()
                 .FirstOrDefault(folder => Guid.TryParse(folder.ItemId, out var guid) && guid == mediaFolderConfig.LibraryId);
             if (virtualFolder is null || virtualFolder.Locations.Length is 0)
                 return (null, [], skipGeneration);
@@ -236,7 +239,7 @@ public class MediaFolderConfigurationService {
     public async Task<MediaFolderConfiguration> GetOrCreateConfigurationForMediaFolder(Folder mediaFolder, CollectionType? collectionType = CollectionType.unknown) {
         await LockObj.WaitAsync().ConfigureAwait(false);
         try {
-            var allVirtualFolders = LibraryManager.GetVirtualFolders();
+            var allVirtualFolders = GetVirtualFolders();
             if (allVirtualFolders.FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path) && (collectionType is CollectionType.unknown || p.CollectionType.ConvertToCollectionType() == collectionType)) is not { } library)
                 throw new Exception($"Unable to find any library to use for media folder \"{mediaFolder.Path}\"");
 
@@ -470,6 +473,13 @@ public class MediaFolderConfigurationService {
             }
         }
     }
+
+    #endregion
+
+    #region Helpers
+
+    private List<VirtualFolderInfo> GetVirtualFolders()
+        => CachedVirtualFolders ??= LibraryManager.GetVirtualFolders();
 
     #endregion
 }
