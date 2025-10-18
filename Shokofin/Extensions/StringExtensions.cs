@@ -11,6 +11,8 @@ using MediaBrowser.Model.Entities;
 using Shokofin.ExternalIds;
 
 using Video = MediaBrowser.Controller.Entities.Video;
+using Movie = MediaBrowser.Controller.Entities.Movies.Movie;
+using MovieInfo = MediaBrowser.Controller.Providers.MovieInfo;
 using TvSeries = MediaBrowser.Controller.Entities.TV.Series;
 using TvSeriesInfo = MediaBrowser.Controller.Providers.SeriesInfo;
 
@@ -185,6 +187,20 @@ public static partial class StringExtensions {
             return true;
         }
 
+        if (providerIds is Movie { Path.Length: > 0 } movie &&
+            movie.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar) &&
+            Path.GetDirectoryName(movie.Path) is { Length: > 0 } movieDir &&
+            movieDir.TryGetAttributeValue(ProviderNames.ShokoSeries, out seasonId)) {
+            return true;
+        }
+
+        if (providerIds is MovieInfo { Path.Length: > 0 } movieInfo &&
+            movieInfo.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar) &&
+            Path.GetDirectoryName(movieInfo.Path) is { Length: > 0 } movieInfoDir &&
+            movieInfoDir.TryGetAttributeValue(ProviderNames.ShokoSeries, out seasonId)) {
+            return true;
+        }
+
         if (!providerIds.TryGetProviderId(ShokoInternalId.Name, out var internalId)) {
             seasonId = null;
             return false;
@@ -225,6 +241,13 @@ public static partial class StringExtensions {
     }
 
     public static bool TryGetEpisodeId(this IHasProviderIds providerIds, [NotNullWhen(true)] out string? episodeId) {
+        if (providerIds is Movie { Path.Length: > 0 } movie &&
+            movie.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar) &&
+            Path.GetDirectoryName(movie.Path) is { Length: > 0 } movieDir &&
+            movieDir.TryGetAttributeValue(ProviderNames.ShokoEpisode, out episodeId)) {
+            return true;
+        }
+
         if (!providerIds.TryGetProviderId(ShokoInternalId.Name, out var internalId) || string.IsNullOrEmpty(internalId)) {
             // TODO: Remove this backwards compatibility in the next major version.
             if (providerIds.TryGetProviderId(ProviderNames.ShokoEpisode, out episodeId)) {
@@ -294,5 +317,5 @@ public static partial class StringExtensions {
         fileId = null;
         seriesId = null;
         return false;
-        }
+    }
 }
