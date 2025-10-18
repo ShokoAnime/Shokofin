@@ -66,7 +66,6 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, Virtual
             }
 
             // Get the existing seasons and known seasons.
-            var itemUpdated = ItemUpdateType.None;
             var allSeasons = series.Children
                 .OfType<Season>()
                 .Where(season => season.IndexNumber.HasValue)
@@ -119,7 +118,6 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, Virtual
             // Add missing seasons.
             if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly)
                 foreach (var (seasonNumber, season) in CreateMissingSeasons(showInfo, series, seasons)) {
-                    itemUpdated |= ItemUpdateType.MetadataImport;
                     seasons.TryAdd(seasonNumber, season);
                 }
 
@@ -160,8 +158,7 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, Virtual
                             if (existingEpisodes.Contains(episodeInfo.Id))
                                 continue;
 
-                            if (CustomEpisodeProvider.AddVirtualEpisode(_libraryManager, _logger, showInfo, seasonInfo, episodeInfo, zeroSeason, series))
-                                itemUpdated |= ItemUpdateType.MetadataImport;
+                            CustomEpisodeProvider.AddVirtualEpisode(_libraryManager, _logger, showInfo, seasonInfo, episodeInfo, zeroSeason, series);
                         }
                     }
                 }
@@ -221,8 +218,7 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, Virtual
                         if (existingEpisodes.Contains(episodeInfo.Id))
                             continue;
 
-                        if (CustomEpisodeProvider.AddVirtualEpisode(_libraryManager, _logger, showInfo, seasonInfo, episodeInfo, season, series))
-                            itemUpdated |= ItemUpdateType.MetadataImport;
+                        CustomEpisodeProvider.AddVirtualEpisode(_libraryManager, _logger, showInfo, seasonInfo, episodeInfo, season, series);
                     }
                 }
 
@@ -234,7 +230,7 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, Virtual
                 }
             }
 
-            return itemUpdated;
+            return ItemUpdateType.None;
         }
         finally {
             Plugin.Instance.Tracker.Remove(trackerId);

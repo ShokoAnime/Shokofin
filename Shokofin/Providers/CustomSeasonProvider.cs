@@ -76,9 +76,7 @@ public class CustomSeasonProvider(ILogger<CustomSeasonProvider> _logger, Virtual
             }
 
             // Remove duplicates of the same season.
-            var itemUpdated = ItemUpdateType.None;
-            if (RemoveDuplicates(_libraryManager, _logger, seasonNumber, season, series, seasonId))
-                itemUpdated |= ItemUpdateType.MetadataEdit;
+            RemoveVirtualSeasons(_libraryManager, _logger, seasonNumber, season, series, seasonId);
 
             // Special handling of specials (pun intended).
             if (seasonNumber == 0) {
@@ -117,8 +115,7 @@ public class CustomSeasonProvider(ILogger<CustomSeasonProvider> _logger, Virtual
                             if (existingEpisodes.Contains(episodeInfo.Id))
                                 continue;
 
-                            if (CustomEpisodeProvider.AddVirtualEpisode(_libraryManager, _logger, showInfo, sI, episodeInfo, season, series))
-                                itemUpdated |= ItemUpdateType.MetadataImport;
+                            CustomEpisodeProvider.AddVirtualEpisode(_libraryManager, _logger, showInfo, sI, episodeInfo, season, series);
                         }
                     }
                 }
@@ -172,8 +169,7 @@ public class CustomSeasonProvider(ILogger<CustomSeasonProvider> _logger, Virtual
                         if (existingEpisodes.Contains(episodeInfo.Id))
                             continue;
 
-                        if (CustomEpisodeProvider.AddVirtualEpisode(_libraryManager, _logger, showInfo, seasonInfo, episodeInfo, season, series))
-                            itemUpdated |= ItemUpdateType.MetadataImport;
+                        CustomEpisodeProvider.AddVirtualEpisode(_libraryManager, _logger, showInfo, seasonInfo, episodeInfo, season, series);
                     }
                 }
 
@@ -185,14 +181,14 @@ public class CustomSeasonProvider(ILogger<CustomSeasonProvider> _logger, Virtual
                 }
             }
 
-            return itemUpdated;
+            return ItemUpdateType.None;
         }
         finally {
             Plugin.Instance.Tracker.Remove(trackerId);
         }
     }
 
-    private static bool RemoveDuplicates(ILibraryManager libraryManager, ILogger logger, int seasonNumber, Season season, Series series, string seasonId) {
+    private static bool RemoveVirtualSeasons(ILibraryManager libraryManager, ILogger logger, int seasonNumber, Season season, Series series, string seasonId) {
         // Remove the virtual season that matches the season.
         var searchList = libraryManager
             .GetItemList(

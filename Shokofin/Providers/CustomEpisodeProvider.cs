@@ -54,30 +54,25 @@ public class CustomEpisodeProvider(ILogger<CustomEpisodeProvider> _logger, Virtu
                 return ItemUpdateType.None;
             }
 
-            var itemUpdated = ItemUpdateType.None;
             if (_lookup.TryGetEpisodeIdsFor(episode, out var episodeIds)) {
                 foreach (var episodeId in episodeIds) {
-                    if (RemoveDuplicates(_libraryManager, _logger, episodeId, episode, series.GetPresentationUniqueKey()))
-                        itemUpdated |= ItemUpdateType.MetadataEdit;
-                }
-
-                if (Plugin.Instance.Configuration.AutoMergeVersions && !_libraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
-                    foreach (var episodeId in episodeIds)
+                    RemoveVirtualEpisodes(episodeId, episode, series.GetPresentationUniqueKey());
+                    if (Plugin.Instance.Configuration.AutoMergeVersions && !_libraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
                         await _mergeVersionsManager.SplitAndMergeEpisodesByEpisodeId(episodeId).ConfigureAwait(false);
-                    itemUpdated |= ItemUpdateType.MetadataEdit;
+                    }
                 }
             }
 
-            return itemUpdated;
+            return ItemUpdateType.None;
         }
         finally {
             Plugin.Instance.Tracker.Remove(trackerId);
         }
     }
 
-    public static bool RemoveDuplicates(ILibraryManager libraryManager, ILogger logger, string episodeId, Episode episode, string seriesPresentationUniqueKey) {
+    private bool RemoveVirtualEpisodes(string episodeId, Episode episode, string seriesPresentationUniqueKey) {
         // Remove any extra virtual episodes that matches the newly refreshed episode.
-        var searchList = libraryManager.GetItemList(
+        var searchList = _libraryManager.GetItemList(
             new() {
                 ExcludeItemIds = [episode.Id],
                 HasAnyProviderId = new() { { ProviderNames.ShokoEpisode, episodeId } },
@@ -92,11 +87,11 @@ public class CustomEpisodeProvider(ILogger<CustomEpisodeProvider> _logger, Virtu
             .Where(item => string.IsNullOrEmpty(item.Path))
             .ToList();
         if (searchList.Count > 0) {
-            logger.LogDebug("Removing {Count} duplicate episodes for episode {EpisodeName}. (Episode={EpisodeId})", searchList.Count, episode.Name, episodeId);
+            _logger.LogDebug("Removing {Count} duplicate episodes for episode {EpisodeName}. (Episode={EpisodeId})", searchList.Count, episode.Name, episodeId);
 
             var deleteOptions = new DeleteOptions { DeleteFileLocation = false };
             foreach (var item in searchList)
-                libraryManager.DeleteItem(item, deleteOptions);
+                _libraryManager.DeleteItem(item, deleteOptions);
 
             return true;
         }
