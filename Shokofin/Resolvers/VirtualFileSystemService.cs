@@ -1761,7 +1761,6 @@ public class VirtualFileSystemService {
         );
         bufferBlock.LinkTo(actionBlock, new() { PropagateCompletion = true });
         bufferBlock.Post(initialValue);
-        bufferBlock.Complete();
         return actionBlock.Completion;
     }
 
