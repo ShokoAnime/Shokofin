@@ -4,19 +4,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Model.Tasks;
 using Shokofin.MergeVersions;
-using Shokofin.Utils;
 
 namespace Shokofin.Tasks;
 
 /// <summary>
-/// Merge all movie entries with the same Shoko Episode ID set. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING. <summary>
+/// Merge all movie entries with the same Shoko Episode ID set. For debugging and troubleshooting. DO NOT MANUALLY RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING. <summary>
 /// </summary>
-public class MergeMoviesTask(MergeVersionsManager _mergeVersionsManager, LibraryScanWatcher _libraryScanWatcher) : IScheduledTask, IConfigurableScheduledTask {
+public class MergeMoviesTask(MergeVersionsManager _mergeVersionsManager) : IScheduledTask, IConfigurableScheduledTask {
     /// <inheritdoc />
     public string Name => "Merge Movies";
 
     /// <inheritdoc />
-    public string Description => "Merge all movie entries with the same Shoko Episode ID set. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.";
+    public string Description => "Merge all movie entries with the same Shoko Episode ID set. For debugging and troubleshooting. DO NOT MANUALLY RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.";
 
     /// <inheritdoc />
     public string Category => "Shokofin";
@@ -28,7 +27,7 @@ public class MergeMoviesTask(MergeVersionsManager _mergeVersionsManager, Library
     public bool IsHidden => !Plugin.Instance.Configuration.AdvancedMode;
 
     /// <inheritdoc />
-    public bool IsEnabled => Plugin.Instance.Configuration.AdvancedMode;
+    public bool IsEnabled => true;
 
     /// <inheritdoc />
     public bool IsLogged => true;
@@ -39,9 +38,6 @@ public class MergeMoviesTask(MergeVersionsManager _mergeVersionsManager, Library
 
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) {
-        if (_libraryScanWatcher.IsScanRunning)
-            return;
-
         using (Plugin.Instance.Tracker.Enter("Merge Movies Task")) {
             await _mergeVersionsManager.SplitAndMergeAllMovies(progress, cancellationToken).ConfigureAwait(false);
         }

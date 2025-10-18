@@ -2,32 +2,20 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Library;
-using Shokofin.Collections;
-using Shokofin.MergeVersions;
+using MediaBrowser.Model.Tasks;
 
 namespace Shokofin.Tasks;
 
-public class PostScanTask(MergeVersionsManager _mergeVersionsManager, CollectionManager _collectionManager) : ILibraryPostScanTask {
+public class PostScanTask(ITaskManager taskManager) : ILibraryPostScanTask {
     /// <inheritdoc />
-    public async Task Run(IProgress<double> progress, CancellationToken token) {
-        // Merge versions now if the setting is enabled.
+    public Task Run(IProgress<double> progress, CancellationToken token) {
+        if (Plugin.Instance.Configuration.AutoReconstructCollections) {
+            taskManager.CancelIfRunningAndQueue<ReconstructCollectionsTask>();
+        }
         if (Plugin.Instance.Configuration.AutoMergeVersions) {
-            // Setup basic progress tracking
-            var baseProgress = 0d;
-            var simpleProgress = new Progress<double>(value => progress.Report(baseProgress + (value / 2d)));
-
-            // Merge versions.
-            await _mergeVersionsManager.SplitAndMergeAll(simpleProgress, token).ConfigureAwait(false);
-
-            // Reconstruct collections.
-            baseProgress = 50;
-            await _collectionManager.ReconstructCollections(simpleProgress, token).ConfigureAwait(false);
-
-            progress.Report(100d);
+            taskManager.CancelIfRunningAndQueue<MergeMoviesTask>();
+            taskManager.CancelIfRunningAndQueue<MergeEpisodesTask>();
         }
-        else {
-            // Reconstruct collections.
-            await _collectionManager.ReconstructCollections(progress, token).ConfigureAwait(false);
-        }
+        return Task.CompletedTask;
     }
 }

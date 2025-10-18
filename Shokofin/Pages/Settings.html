@@ -1647,6 +1647,13 @@ form:not(.advanced-mode) .advanced-only {
                         <legend>
                             <h3>Collection Settings</h3>
                         </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AutoReconstructCollections" />
+                                <span>Automatically Reconstruct Collections</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Automatically reconstruct collections after a library scan.</div>
+                        </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="CollectionGrouping">Collections</label>
                             <select is="emby-select" id="CollectionGrouping" name="CollectionGrouping" class="emby-select-withcolor emby-select">

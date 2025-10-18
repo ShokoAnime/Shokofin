@@ -589,6 +589,7 @@ function applyFormToConfig(form, config) {
             config.MovieSpecialsAsExtraFeaturettes = form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked;
             config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
+            config.AutoReconstructCollections = form.querySelector("#AutoReconstructCollections").checked;
             config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
             config.CollectionMinSizeOfTwo = form.querySelector("#CollectionMinSizeOfTwo").checked;
 
@@ -871,6 +872,7 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked = config.MovieSpecialsAsExtraFeaturettes;
             form.querySelector("#AddMissingMetadata").checked = config.AddMissingMetadata;
 
+            form.querySelector("#AutoReconstructCollections").checked = config.AutoReconstructCollections;
             form.querySelector("#CollectionGrouping").value = config.CollectionGrouping;
             form.querySelector("#CollectionMinSizeOfTwo").checked = config.CollectionMinSizeOfTwo;
 

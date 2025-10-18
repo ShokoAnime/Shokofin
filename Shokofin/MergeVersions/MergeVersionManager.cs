@@ -88,76 +88,7 @@ public class MergeVersionsManager {
         _runGuard.Clear();
     }
 
-    #region Top Level
-
-    /// <summary>
-    /// Group and merge all videos with a Shoko Episode ID set.
-    /// </summary>
-    /// <param name="progress">Progress indicator.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An async task that will silently complete when the merging is
-    /// complete.</returns>
-    public async Task SplitAndMergeAll(IProgress<double>? progress, CancellationToken? cancellationToken = null) {
-        // Shared progress;
-        double episodeProgressValue = 0d, movieProgressValue = 0d;
-
-        // Setup the movie task.
-        var movieProgress = new Progress<double>(value => {
-            movieProgressValue = value / 2d;
-            progress?.Report(movieProgressValue + episodeProgressValue);
-        });
-        var movieTask = SplitAndMergeVideos(GetMoviesFromLibrary(), movieProgress, cancellationToken);
-
-        // Setup the episode task.
-        var episodeProgress = new Progress<double>(value => {
-            episodeProgressValue = value / 2d;
-            progress?.Report(movieProgressValue + episodeProgressValue);
-        });
-        var episodeTask = SplitAndMergeVideos(GetEpisodesFromLibrary(), episodeProgress, cancellationToken);
-
-        // Run them in parallel.
-        await Task.WhenAll(movieTask, episodeTask).ConfigureAwait(false);
-
-        Clear();
-        progress?.Report(100d);
-    }
-
-    /// <summary>
-    /// Split up all merged videos with a Shoko Episode ID set.
-    /// </summary>
-    /// <param name="progress">Progress indicator.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>An async task that will silently complete when the splitting is
-    /// complete.</returns>
-    public async Task SplitAll(IProgress<double> progress, CancellationToken cancellationToken) {
-        // Shared progress;
-        double episodeProgressValue = 0d, movieProgressValue = 0d;
-
-        // Setup the movie task.
-        var movieProgress = new Progress<double>(value => {
-            movieProgressValue = value / 2d;
-            progress?.Report(movieProgressValue + episodeProgressValue);
-        });
-        var movieTask = SplitVideos(GetMoviesFromLibrary(), movieProgress, cancellationToken);
-
-        // Setup the episode task.
-        var episodeProgress = new Progress<double>(value => {
-            episodeProgressValue = value / 2d;
-            progress?.Report(movieProgressValue + episodeProgressValue);
-            progress?.Report(50d + (value / 2d));
-        });
-        var episodeTask = SplitVideos(GetMoviesFromLibrary(), episodeProgress, cancellationToken);
-
-        // Run them in parallel.
-        await Task.WhenAll(movieTask, episodeTask).ConfigureAwait(false);
-
-        Clear();
-        progress.Report(100d);
-    }
-
-    #endregion
-
-    #region Episode Level
+    #region Episodes
 
     public async Task SplitAndMergeAllEpisodes(IProgress<double>? progress, CancellationToken? cancellationToken) {
         await SplitAndMergeVideos(GetEpisodesFromLibrary(), progress, cancellationToken);
@@ -180,7 +111,7 @@ public class MergeVersionsManager {
 
     #endregion
 
-    #region Movie Level
+    #region Movies
 
     public async Task SplitAndMergeAllMovies(IProgress<double>? progress, CancellationToken? cancellationToken) {
         await SplitAndMergeVideos(GetMoviesFromLibrary(), progress, cancellationToken);

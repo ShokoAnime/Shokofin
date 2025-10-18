@@ -501,17 +501,6 @@ public class PluginConfiguration : BasePluginConfiguration {
     public bool AddCreditsAsSpecialFeatures { get; set; }
 
     /// <summary>
-    /// Determines how collections are made.
-    /// </summary>
-    public CollectionCreationType CollectionGrouping { get; set; }
-
-    /// <summary>
-    /// Add a minimum requirement of two entries with the same collection id
-    /// before creating a collection for them.
-    /// </summary>
-    public bool CollectionMinSizeOfTwo { get; set; }
-
-    /// <summary>
     /// Determines how seasons are ordered within a show.
     /// </summary>
     [XmlElement("SeasonOrdering")]
@@ -541,6 +530,26 @@ public class PluginConfiguration : BasePluginConfiguration {
     /// List of folders to ignore when scanning media folders in a non-VFS library.
     /// </summary>
     public string[] IgnoredFolders { get; set; }
+
+    #endregion
+
+    #region Collection
+
+    /// <summary>
+    /// Automatically reconstruct collections after a library scan.
+    /// </summary>
+    public bool AutoReconstructCollections { get; set; } = true;
+
+    /// <summary>
+    /// Determines how collections are made.
+    /// </summary>
+    public CollectionCreationType CollectionGrouping { get; set; } = CollectionCreationType.None;
+
+    /// <summary>
+    /// Add a minimum requirement of two entries with the same collection id
+    /// before creating a collection for them.
+    /// </summary>
+    public bool CollectionMinSizeOfTwo { get; set; } = true;
 
     #endregion
 
@@ -839,8 +848,6 @@ public class PluginConfiguration : BasePluginConfiguration {
         DefaultSeasonOrdering = OrderType.Default;
         DefaultSpecialsPlacement = SpecialOrderType.Excluded;
         AddMissingMetadata = true;
-        CollectionGrouping = CollectionCreationType.None;
-        CollectionMinSizeOfTwo = true;
         UserList = [];
         MediaFolders = [];
         IgnoredFolders = [".streams", "@recently-snapshot"];
