@@ -10,9 +10,11 @@ using System.Threading.Tasks.Dataflow;
 using Emby.Naming.Common;
 using Emby.Naming.ExternalFiles;
 using Jellyfin.Data.Enums;
+using Jellyfin.Data.Events;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using Microsoft.Extensions.Logging;
@@ -32,6 +34,10 @@ public class VirtualFileSystemService {
     private readonly ShokoApiManager ApiManager;
 
     private readonly ShokoApiClient ApiClient;
+
+    private readonly UsageTracker UsageTracker;
+
+    private readonly IProviderManager ProviderManager;
 
     private readonly ILibraryManager LibraryManager;
 
@@ -71,7 +77,9 @@ public class VirtualFileSystemService {
     public VirtualFileSystemService(
         ShokoApiManager apiManager,
         ShokoApiClient apiClient,
+        UsageTracker usageTracker,
         MediaFolderConfigurationService configurationService,
+        IProviderManager providerManager,
         ILibraryManager libraryManager,
         IServerConfigurationManager configurationManager,
         ILogger<VirtualFileSystemService> logger,
@@ -80,7 +88,9 @@ public class VirtualFileSystemService {
     ) {
         ApiManager = apiManager;
         ApiClient = apiClient;
+        UsageTracker = usageTracker;
         ConfigurationService = configurationService;
+        ProviderManager = providerManager;
         LibraryManager = libraryManager;
         ConfigurationManager = configurationManager;
         Logger = logger;
@@ -95,11 +105,13 @@ public class VirtualFileSystemService {
         NamingOptions = namingOptions;
         ExternalSubtitlePathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Subtitle);
         ExternalAudioPathParser = new ExternalPathParser(namingOptions, localizationManager, MediaBrowser.Model.Dlna.DlnaProfileType.Audio);
-        Plugin.Instance.Tracker.Stalled += OnTrackerStalled;
+        UsageTracker.Stalled += OnTrackerStalled;
+        ProviderManager.RefreshStarted += OnProviderManagerRefreshStarted;
     }
 
     ~VirtualFileSystemService() {
-        Plugin.Instance.Tracker.Stalled -= OnTrackerStalled;
+        UsageTracker.Stalled -= OnTrackerStalled;
+        ProviderManager.RefreshStarted -= OnProviderManagerRefreshStarted;
         DataCache.Dispose();
     }
 
@@ -112,6 +124,29 @@ public class VirtualFileSystemService {
         Logger.LogDebug("Clearing data…");
         DataCache.Clear();
     }
+
+    #region Changes Tracking
+
+    private void OnProviderManagerRefreshStarted(object? sender, GenericEventArgs<BaseItem> e) {
+        var item = e.Argument;
+        var vfsRoot = Plugin.Instance.VirtualRoot;
+        if (
+            item.Path is not { Length: > 0 } ||
+            !item.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar) ||
+            item.GetBaseItemKind() is not BaseItemKind.Folder ||
+            !Guid.TryParse(item.Path.AsSpan(vfsRoot.Length + 1, 36), out var libraryId) ||
+            Plugin.Instance.Configuration.MediaFolders.FirstOrDefault(config => config.IsVirtualRoot && config.LibraryId == libraryId) is not {} config
+        )
+            return;
+
+        Logger.LogTrace("Refresh started for {Name}: {Path} ", config.LibraryName, item.Path);
+
+        if (config.IterativeVfsGeneration_Enabled) {
+            DataCache.Remove(CachePrefix + item.Path);
+        }
+    }
+
+    #endregion
 
     #region Preview Structure
 
