@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.4.59",
+                "changelog": "`refactor`: **Schedule tasks post library-scan**:\n\nFork out sub-tasks to run after a library scan to the pre-existing scheduled tasks, instead of running them all in the last 4% of the library scan. This also benefits that you will see the progress of each individual post-scan task as they're running, and you can cancel them induvidually of each other and the (hopefully finished) library scan.\n\nAlso added a new (advanced) setting to disable the automatic (re)construction of collections which used to always run after a library scan. It's enabled by default to match the previous behavior. The reconstruction is would slow down the scan in the post-task step when iterative generation was enabled, because it would have to fetch all the info regardless of how many links we generated, so most of what would had been cache hits becomes cache misses, slowing everything down to almost the same time as a full refresh instead.\n\nThe merge episodes/movies tasks will now also be displayed on the dashboard when they're automatically ran after a library scan, so you can track their progress and/or cancel them if you deem them unecessary for a single run. They already had their own (advanced) setting, so no need setting have been added.\n\n`fix`: **Don't over-report changes done in custom providers**.\n\n`fix`: **Conditionally also skip custom movie provider during iterative vfs gen**.\n\n`fix`: **Fix recursive file system iteration i borked when doing paralleism the \"proper\" way**.\n\n`refactor`: **Clear cache if iterative VFS gen. is enabled**:\n\nThis will clear the VFS generation cache every time a refresh is triggered for a media folder with iterative generation enabled. This will ensure the VFS gen. for said media folder will always occurr, but the items within the VFS will still use the cached value(s) until the cache expires or a new library-wide generation occurs.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.59/shoko_5.0.4.59.zip",
+                "checksum": "9c70dea65200ac2c0e5c0b9bf9730041",
+                "timestamp": "2025-10-18T04:25:56Z"
+            },
+            {
                 "version": "5.0.4.58",
                 "changelog": "`fix`: **Cache virtual library folder infos**.",
                 "targetAbi": "10.10.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.55/shoko_5.0.4.55.zip",
                 "checksum": "63afb7141e8ac63d66481c4accbd4fdc",
                 "timestamp": "2025-10-13T01:49:17Z"
-            },
-            {
-                "version": "5.0.4.54",
-                "changelog": "`fix`: **Absolute expiration cannot be below or equal to zero**.\n\n`fix`: **Use correct paths for equality check when trying to move files/directories out of VFS**.\n\n`fix`: **Ignore all trickplay directories which don't have shoko ids set**.\n\n`fix`: **Search for the link with the exact same base path and base name**.\n\n`fix`: **Inverse reversed boolean check**.\n\n`feat`: **Make no caching during iterative VFS gen. a debug option and disable it by default**.\n\n`refactor`: **Improve throughput when enumerating files in VFS service**:\n\nReplaced the file and directory enumeration logic in the VFS service with a custom C# implementation that performs recursive traversal in parallel. Previously, the recursion was delegated to .NET Core, which in turn relied on the OS to handle directory walking. We still use the core enumeration methods, but now manage the recursion ourselves \u2014 in parallel. The parallelism is handled for us by the `ActionBlock`, with the maximum parallelism relying on the existing VFS threads (debug) setting.\n\nIn testing, walking the entire structure on my network-attached storage dropped from roughly 15 minutes per iteration to about 30 seconds.\n\n`refactor`: **Use `ActionBlock` while generating structure in VFS service**:\n\nReplaced the ol' async semaphore mess with a proper `ActionBlock`-based implementation, giving us better control over task scheduling and concurrency. Instead of queueing up all the async work at once and juggling semaphore waits everywhere, we now let the block handle throttling and dispatch order cleanly.\n\n`fix`: **Use new fast path for episode ids when available**.\n\n`fix`: **Add skipped videos to result during iterative generation**.\n\n`fix`: **Use the provided list in resolver**:\n\nNow that the VFS is always physical, we can use the provided file list. We previously had to iterate over the VFS folder ourselves because we might be masking the children as children of another media folder, but now that we don't need to care for that we can just as well just use the provided list.\n\n`fix`: **Only output new paths from VFS gen. to resolver**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.54/shoko_5.0.4.54.zip",
-                "checksum": "1b147fac81e7fe919dadddf7901ee585",
-                "timestamp": "2025-10-13T01:36:45Z"
             }
         ]
     }
