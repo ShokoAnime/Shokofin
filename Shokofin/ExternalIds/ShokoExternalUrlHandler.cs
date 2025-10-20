@@ -97,7 +97,14 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
         => Convert.ToBase64String(Deflate(Encoding.UTF8.GetBytes(string.Join('\n', urls.Select(x => $"{x.ProviderName}|{x.Extras}|{x.UrlPathname}")))));
 
     private static IEnumerable<(string Name, string Url)> InflateInfoUrls(string deflatedUrls) {
-        var data = Encoding.UTF8.GetString(Inflate(Convert.FromBase64String(deflatedUrls)));
+        string? data;
+        try {
+            data = Encoding.UTF8.GetString(Inflate(Convert.FromBase64String(deflatedUrls)));
+        }
+        catch {
+            yield break;
+        }
+
         var shokoUrl = Plugin.Instance.Configuration.WebUrl;
         foreach (var line in data.Split('\n')) {
             var (ns, extra, urlPathname) = line.Split('|');
