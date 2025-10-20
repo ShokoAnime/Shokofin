@@ -21,7 +21,4 @@ public class ShokoSeriesId : IExternalId
 
     public ExternalIdMediaType? Type
         => null;
-
-    public virtual string UrlFormatString
-        => $"{Plugin.Instance.Configuration.PrettyUrl}/webui/collection/series/{{0}}";
 }

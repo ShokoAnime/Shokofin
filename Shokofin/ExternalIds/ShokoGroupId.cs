@@ -20,7 +20,4 @@ public class ShokoGroupId : IExternalId
 
     public ExternalIdMediaType? Type
         => null;
-
-    public virtual string UrlFormatString
-        => $"{Plugin.Instance.Configuration.PrettyUrl}/webui/collection/group/{{0}}";
 }

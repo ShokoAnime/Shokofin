@@ -53,7 +53,7 @@ public class CleanupVirtualRootTask(ILogger<CleanupVirtualRootTask> logger, ILib
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         => [
             new() {
-                Type = TaskTriggerInfo.TriggerStartup,
+                Type = TaskTriggerInfoType.StartupTrigger,
             },
         ];
 

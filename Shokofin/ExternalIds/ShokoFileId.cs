@@ -21,7 +21,4 @@ public class ShokoFileId : IExternalId
 
     public ExternalIdMediaType? Type
         => null;
-
-    public virtual string UrlFormatString
-        => $"{Plugin.Instance.Configuration.PrettyUrl}/webui/redirect/file/{{0}}";
 }
