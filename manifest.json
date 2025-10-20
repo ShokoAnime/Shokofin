@@ -4,7 +4,7 @@
         "name": "Shoko",
         "description": "Stub. manifest. Use a manifest from the metadata branch instead or learn more about how to set up the plugin at our docs site; https://docs.shokoanime.com/shokofin/install/",
         "owner": "ShokoAnime",
-        "category": "Metadata",
+        "category": "Anime",
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
         ]
