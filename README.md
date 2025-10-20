@@ -59,7 +59,7 @@ compatible with what.
 
 3. **Install Shokofin:**
    - Go to the catalog in the plugins section of the dashboard.
-   - Find and install `Shoko` from the `Metadata` section.
+   - Find and install `Shoko` from the `Anime` section.
 
 4. **Restart Jellyfin:**
    - Restart your server to apply the changes.
