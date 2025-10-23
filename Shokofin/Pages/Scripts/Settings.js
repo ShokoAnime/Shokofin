@@ -694,7 +694,7 @@ function applyFormToConfig(form, config) {
         case "misc": {
             const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
             const stallTime = sanitizeNumber(form.querySelector("#Debug_UsageTrackerStalledTimeInSeconds").value, 1, 10800);
-            const maxRequests = sanitizeNumber(form.querySelector("#Debug_MaxInFlightRequests").value, 1, 100);
+            const maxRequests = sanitizeNumber(form.querySelector("#Debug_MaxInFlightRequests").value, 1, 1000);
             const expirationScanFrequency = sanitizeNumber(form.querySelector("#Debug_ExpirationScanFrequencyInMinutes").value, 1, 180);
             const slidingExpiration = sanitizeNumber(form.querySelector("#Debug_SlidingExpirationInMinutes").value, 1, 180);
             const absoluteExpiration = sanitizeNumber(form.querySelector("#Debug_AbsoluteExpirationRelativeToNowInMinutes").value, 1, 1440);
