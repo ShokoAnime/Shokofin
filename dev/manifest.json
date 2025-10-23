@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.5.4",
+                "changelog": "`fix`: **Correct config sanitation for max in-flight requests**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.4/shoko_5.0.5.4.zip",
+                "checksum": "ffaa2334d094dcbb8f061f4c2ebfcca3",
+                "timestamp": "2025-10-23T23:26:40Z"
+            },
+            {
                 "version": "5.0.5.3",
                 "changelog": "`chore`: **Update manifest category in read-me file**. (_Skip CI_)\n\n`misc`: **Update install instructions in read-me file**.\n\n`revert`: **Revert \"fix: replace semaphore with actual lock object\"**:\n\nIt did not like that we were attempting to release the lock from another thread because of the async behavior inside the lock, so reverting back to semaphores.\n\nThis reverts commit 7162ef83b7f69f86dadc8f3238b060405a537ecf.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.60/shoko_5.0.4.60.zip",
                 "checksum": "b5f64b7166925b4356b0bd93892d6215",
                 "timestamp": "2025-10-20T01:39:55Z"
-            },
-            {
-                "version": "5.0.4.59",
-                "changelog": "`refactor`: **Schedule tasks post library-scan**:\n\nFork out sub-tasks to run after a library scan to the pre-existing scheduled tasks, instead of running them all in the last 4% of the library scan. This also benefits that you will see the progress of each individual post-scan task as they're running, and you can cancel them induvidually of each other and the (hopefully finished) library scan.\n\nAlso added a new (advanced) setting to disable the automatic (re)construction of collections which used to always run after a library scan. It's enabled by default to match the previous behavior. The reconstruction is would slow down the scan in the post-task step when iterative generation was enabled, because it would have to fetch all the info regardless of how many links we generated, so most of what would had been cache hits becomes cache misses, slowing everything down to almost the same time as a full refresh instead.\n\nThe merge episodes/movies tasks will now also be displayed on the dashboard when they're automatically ran after a library scan, so you can track their progress and/or cancel them if you deem them unecessary for a single run. They already had their own (advanced) setting, so no need setting have been added.\n\n`fix`: **Don't over-report changes done in custom providers**.\n\n`fix`: **Conditionally also skip custom movie provider during iterative vfs gen**.\n\n`fix`: **Fix recursive file system iteration i borked when doing paralleism the \"proper\" way**.\n\n`refactor`: **Clear cache if iterative VFS gen. is enabled**:\n\nThis will clear the VFS generation cache every time a refresh is triggered for a media folder with iterative generation enabled. This will ensure the VFS gen. for said media folder will always occurr, but the items within the VFS will still use the cached value(s) until the cache expires or a new library-wide generation occurs.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.59/shoko_5.0.4.59.zip",
-                "checksum": "9c70dea65200ac2c0e5c0b9bf9730041",
-                "timestamp": "2025-10-18T04:25:56Z"
             }
         ]
     }
