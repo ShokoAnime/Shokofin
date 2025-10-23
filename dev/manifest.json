@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.5.3",
+                "changelog": "`chore`: **Update manifest category in read-me file**. (_Skip CI_)\n\n`misc`: **Update install instructions in read-me file**.\n\n`revert`: **Revert \"fix: replace semaphore with actual lock object\"**:\n\nIt did not like that we were attempting to release the lock from another thread because of the async behavior inside the lock, so reverting back to semaphores.\n\nThis reverts commit 7162ef83b7f69f86dadc8f3238b060405a537ecf.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.3/shoko_5.0.5.3.zip",
+                "checksum": "c9d94f1481891ecf6be652c9d7d6dbb0",
+                "timestamp": "2025-10-23T21:38:35Z"
+            },
+            {
                 "version": "5.0.5.2",
                 "changelog": "`misc`: **Update version matrix in read-me file**. (_Skip CI_)\n\n`chore`: **Update manifest category**.\n\n`chore`: **Update link in stub manifest**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.59/shoko_5.0.4.59.zip",
                 "checksum": "9c70dea65200ac2c0e5c0b9bf9730041",
                 "timestamp": "2025-10-18T04:25:56Z"
-            },
-            {
-                "version": "5.0.4.58",
-                "changelog": "`fix`: **Cache virtual library folder infos**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.58/shoko_5.0.4.58.zip",
-                "checksum": "68b333dd14b5e9c57a1fcd8dc3a23ebf",
-                "timestamp": "2025-10-16T01:55:21Z"
             }
         ]
     }
