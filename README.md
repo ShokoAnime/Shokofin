@@ -50,7 +50,7 @@ compatible with what.
 ### Official Repository
 
 1. **Access Plugin Repositories:**
-   - Go to `Dashboard` -> `Plugins` -> `Catalog` -> `⚙ Gear icon`.
+   - Go to `Dashboard` -> `Plugins` -> `Manage Repositories` -> `New Repository`.
 
 2. **Add New Repository:**
    - Add a new repository with the following details:
@@ -58,8 +58,9 @@ compatible with what.
      * **Repository URL:** `https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/stable/manifest.json`
 
 3. **Install Shokofin:**
-   - Go to the catalog in the plugins section of the dashboard.
-   - Find and install `Shoko` from the `Anime` section.
+   - Go back to the catalog in the plugins section of the dashboard, filter to `All` or `Available` plugins,
+     then refresh the browser page to reload the plugin list.
+   - Find and install `Shoko` from the list, optionally by filtering the list by the `Anime` category.
 
 4. **Restart Jellyfin:**
    - Restart your server to apply the changes.
