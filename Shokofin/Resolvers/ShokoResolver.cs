@@ -278,7 +278,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                 }
 
                 var keepFile = Path.Join(vfsPath, ".keep");
-                if (File.Exists(keepFile)) {
+                if (File.Exists(keepFile) && !fileInfoList.ExceptBy([".keep"], fileInfo => fileInfo.Name).Any()) {
                     Logger.LogTrace("Removing now unneeded keep file: {Path}", keepFile);
                     File.Delete(keepFile);
                 }
