@@ -2605,6 +2605,10 @@ form:not(.advanced-mode) .advanced-only {
                             <input is="emby-input" type="number" id="Debug_MaxInFlightRequests" label="Max In-Flight Requests" placeholder="0" type="number" pattern="[0-9]*" min="1" max="1000" step="1" />
                             <div class="fieldDescription">Maximum number of requests of outgoing traffic at any given time.</div>
                         </div>
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="Debug_SeriesPageSize" label="Series Page Size" placeholder="0" type="number" pattern="[0-9]*" min="0" max="10000" step="1" />
+                            <div class="fieldDescription">The page size to use for series queries. Set to 0 to disable pagination.</div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription debug-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="Debug_AutoClearClientCache" />

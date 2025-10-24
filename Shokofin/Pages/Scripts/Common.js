@@ -447,6 +447,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   ShowInUI: boolean;
  *   UsageTrackerStalledTimeInSeconds: number;
  *   MaxInFlightRequests: number;
+ *   SeriesPageSize: number;
  *   AutoClearClientCache: boolean;
  *   AutoClearManagerCache: boolean;
  *   AutoClearVfsCache: boolean;

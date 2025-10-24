@@ -40,6 +40,15 @@ public class DebugConfiguration {
     public int MaxInFlightRequests { get; set; } = 10;
 
     /// <summary>
+    /// The page size to use for series queries.
+    /// </summary>
+    /// <remarks>
+    /// It can be configured between 1 and 10,000. Set to 0 to disable pagination.
+    /// </remarks>
+    [Range(0, 10_000)]
+    public int SeriesPageSize { get; set; } = 25;
+
+    /// <summary>
     /// Whether or not to automatically clear the API client's cache.
     /// </summary>
     public bool AutoClearClientCache { get; set; } = true;

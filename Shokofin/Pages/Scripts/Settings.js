@@ -695,6 +695,7 @@ function applyFormToConfig(form, config) {
             const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
             const stallTime = sanitizeNumber(form.querySelector("#Debug_UsageTrackerStalledTimeInSeconds").value, 1, 10800);
             const maxRequests = sanitizeNumber(form.querySelector("#Debug_MaxInFlightRequests").value, 1, 1000);
+            const seriesPageSize = sanitizeNumber(form.querySelector("#Debug_SeriesPageSize").value, 0, 10_000);
             const expirationScanFrequency = sanitizeNumber(form.querySelector("#Debug_ExpirationScanFrequencyInMinutes").value, 1, 180);
             const slidingExpiration = sanitizeNumber(form.querySelector("#Debug_SlidingExpirationInMinutes").value, 1, 180);
             const absoluteExpiration = sanitizeNumber(form.querySelector("#Debug_AbsoluteExpirationRelativeToNowInMinutes").value, 1, 1440);
@@ -707,6 +708,8 @@ function applyFormToConfig(form, config) {
             form.querySelector("#Debug_UsageTrackerStalledTimeInSeconds").value = config.Debug.UsageTrackerStalledTimeInSeconds;
             config.Debug.MaxInFlightRequests = maxRequests;
             form.querySelector("#Debug_MaxInFlightRequests").value = config.Debug.MaxInFlightRequests;
+            config.Debug.SeriesPageSize = seriesPageSize;
+            form.querySelector("#Debug_SeriesPageSize").value = config.Debug.SeriesPageSize;
             config.Debug.AutoClearClientCache = form.querySelector("#Debug_AutoClearClientCache").checked;
             config.Debug.AutoClearManagerCache = form.querySelector("#Debug_AutoClearManagerCache").checked;
             config.Debug.AutoClearVfsCache = form.querySelector("#Debug_AutoClearVfsCache").checked;
@@ -981,6 +984,7 @@ async function applyConfigToForm(form, config) {
 
             form.querySelector("#Debug_UsageTrackerStalledTimeInSeconds").value = config.Debug.UsageTrackerStalledTimeInSeconds;
             form.querySelector("#Debug_MaxInFlightRequests").value = config.Debug.MaxInFlightRequests;
+            form.querySelector("#Debug_SeriesPageSize").value = config.Debug.SeriesPageSize;
             form.querySelector("#Debug_AutoClearClientCache").checked = config.Debug.AutoClearClientCache;
             form.querySelector("#Debug_AutoClearManagerCache").checked = config.Debug.AutoClearManagerCache;
             form.querySelector("#Debug_AutoClearVfsCache").checked = config.Debug.AutoClearVfsCache;
