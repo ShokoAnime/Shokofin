@@ -442,7 +442,17 @@ public class ShokoApiClient : IDisposable {
     #region Shoko Episode
 
     public Task<ShokoEpisode?> GetShokoEpisode(string episodeId)
-        => GetOrNull<ShokoEpisode>($"/api/v3/Episode/{episodeId}?includeDataFrom=AniDB&includeXRefs=true");
+        => _cache.GetOrCreateAsync(
+            $"shoko-episode:{episodeId}",
+            (_) => _logger.LogTrace("Reusing object for Shoko episode {EpisodeId}", episodeId),
+            async () => {
+                _logger.LogTrace("Trying to get Shoko episode {EpisodeId}", episodeId);
+                var timeStart = DateTime.UtcNow;
+                var episode = await GetOrNull<ShokoEpisode>($"/api/v3/Episode/{episodeId}?includeDataFrom=AniDB&includeXRefs=true", skipCache: true).ConfigureAwait(false);
+                _logger.LogTrace("Got Shoko episode {EpisodeId} in {Time}", episodeId, DateTime.UtcNow - timeStart);
+                return episode;
+            }
+        );
 
     public Task<IReadOnlyList<ShokoEpisode>> GetShokoEpisodesInShokoSeries(string seriesId)
         => _cache.GetOrCreateAsync<IReadOnlyList<ShokoEpisode>>(
@@ -461,6 +471,12 @@ public class ShokoApiClient : IDisposable {
                     for (var page = 2; page <= totalPages; page++) {
                         var pageData = await Get<ListResult<ShokoEpisode>>($"/api/v3/Series/{seriesId}/Episode?pageSize={_pageSize}&includeHidden=true&includeMissing=true&includeUnaired=true&includeDataFrom=AniDB&includeXRefs=true&page={page}", skipCache: true).ConfigureAwait(false);
                         pages.Add(pageData.List);
+                    }
+                }
+
+                foreach (var page in pages) {
+                    foreach (var episode in page) {
+                        _cache.Set($"shoko-episode:{episode.Id}", episode);
                     }
                 }
 
@@ -567,7 +583,17 @@ public class ShokoApiClient : IDisposable {
     #region TMDB Episode
 
     public Task<TmdbEpisode?> GetTmdbEpisode(string episodeId, bool useDefaultOrdering = false)
-        => GetOrNull<TmdbEpisode>($"/api/v3/TMDB/Episode/{episodeId}?include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences{(useDefaultOrdering ? "&alternateOrderingID=default" : "")}");
+        => _cache.GetOrCreateAsync(
+            $"tmdb-episode:{episodeId}",
+            (_) => _logger.LogTrace("Reusing object for TMDB episode {EpisodeId}", episodeId),
+            async () => {
+                _logger.LogTrace("Trying to get TMDB episode {EpisodeId}", episodeId);
+                var timeStart = DateTime.UtcNow;
+                var episode = await GetOrNull<TmdbEpisode>($"/api/v3/TMDB/Episode/{episodeId}?include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences{(useDefaultOrdering ? "&alternateOrderingID=default" : "")}", skipCache: true);
+                _logger.LogTrace("Got TMDB episode {EpisodeId} in {Time}", episodeId, DateTime.UtcNow - timeStart);
+                return episode;
+            }
+        );
 
     public Task<IReadOnlyList<TmdbEpisode>> GetTmdbEpisodesInTmdbSeason(string seasonId)
         => _cache.GetOrCreateAsync<IReadOnlyList<TmdbEpisode>>(
@@ -586,6 +612,12 @@ public class ShokoApiClient : IDisposable {
                         for (var page = 2; page <= totalPages; page++) {
                             var pageData = await Get<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Season/{seasonId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences&page={page}", skipCache: true).ConfigureAwait(false);
                             pages.Add(pageData.List);
+                        }
+                    }
+
+                    foreach (var page in pages) {
+                        foreach (var episode in page) {
+                            _cache.Set($"tmdb-episode:{episode.Id}", episode);
                         }
                     }
 
@@ -611,6 +643,12 @@ public class ShokoApiClient : IDisposable {
                         for (var page = 2; page <= totalPages; page++) {
                             var pageData = await Get<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Show/{showId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences&page={page}", skipCache: true).ConfigureAwait(false);
                             pages.Add(pageData.List);
+                        }
+                    }
+
+                    foreach (var page in pages) {
+                        foreach (var episode in page) {
+                            _cache.Set($"tmdb-episode:{episode.Id}", episode);
                         }
                     }
 
