@@ -444,6 +444,11 @@ public class UserDataSyncManager {
                     return;
                 }
 
+                if (VfsService.TryGetCurrentLibraryGenerationMode(series.Path, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
+                    Logger.LogTrace("Skipped season during iterative generation. (Season={SeasonId})", seasonId);
+                    return;
+                }
+
                 if (seasonId[0] is IdPrefix.TmdbShow or IdPrefix.TmdbMovie) {
                     Logger.LogTrace("Skipping import user data for season {SeasonNumber} in series {SeriesName}; Season is not a Shoko Series. (Season={SeasonId})", season.IndexNumber, series.Name, seasonId);
                     return;
@@ -461,11 +466,16 @@ public class UserDataSyncManager {
                 break;
             }
             case Series series: {
-                if (!Lookup.IsEnabledForItem(series) || !Lookup.TryGetSeasonIdFor(series, out var seasonId))
+                if (!Lookup.IsEnabledForItem(series) || !Lookup.TryGetSeasonIdFor(series, out var mainSeasonId))
                     return;
 
-                if (seasonId[0] is IdPrefix.TmdbShow or IdPrefix.TmdbMovie) {
-                    Logger.LogTrace("Skipping import user data for Series {SeriesName}; Series is not a Shoko Series. (Season={SeasonId})", series.Name, seasonId);
+                if (VfsService.TryGetCurrentLibraryGenerationMode(series.Path, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
+                    Logger.LogTrace("Skipped series during iterative generation. (MainSeason={SeasonId})", mainSeasonId);
+                    return;
+                }
+
+                if (mainSeasonId[0] is IdPrefix.TmdbShow or IdPrefix.TmdbMovie) {
+                    Logger.LogTrace("Skipping import user data for Series {SeriesName}; Series is not a Shoko Series. (MainSeason={SeasonId})", series.Name, mainSeasonId);
                     return;
                 }
 
@@ -476,7 +486,7 @@ public class UserDataSyncManager {
                     if (!userConfig.SyncUserDataOnImport)
                         continue;
 
-                    SyncSeries(series, userConfig, null, SyncDirection.Import, seasonId).ConfigureAwait(false);
+                    SyncSeries(series, userConfig, null, SyncDirection.Import, mainSeasonId).ConfigureAwait(false);
                 }
                 break;
             }
