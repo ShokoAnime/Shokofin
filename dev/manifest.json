@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.5.5",
+                "changelog": "`refactor`: **Get episodes for show/series in pages instead of all at once**:\n\nAlso made the page size configurable as a debug option, with the option to disable the pagination again, to experiment with finding the optimal page size to get the episodes in. The initial default value is set to 25 because it will get most AniDB anime in 1 query.\n\n`fix`: **Add extra check before removing .keep file in case it's still necessary to keep**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.5/shoko_5.0.5.5.zip",
+                "checksum": "8a9a5d19dd2afac9848fdb15abbac310",
+                "timestamp": "2025-10-24T01:23:22Z"
+            },
+            {
                 "version": "5.0.5.4",
                 "changelog": "`fix`: **Correct config sanitation for max in-flight requests**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.1/shoko_5.0.5.1.zip",
                 "checksum": "dcab7d3d9798fef92419ece0a01f2924",
                 "timestamp": "2025-10-20T02:26:49Z"
-            },
-            {
-                "version": "5.0.4.60",
-                "changelog": "`fix`: **Remove defunct `IExternalId.UrlFormatString`**.\n\n`fix`: **Rename `TaskTriggerInfo.*` \u2192 `TaskTriggerInfoType.*`**.\n\n`misc`: **Update to dotnet9 & jellyfin 10.11**.\n\n`misc`: **Add dual resolvers for now**.\n\n`fix`: **Replace semaphore with actual lock object**.\n\n`fix`: **Complete move to dotnet 9.x**:\n\nCloses #87",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4-dev.60/shoko_5.0.4.60.zip",
-                "checksum": "b5f64b7166925b4356b0bd93892d6215",
-                "timestamp": "2025-10-20T01:39:55Z"
             }
         ]
     }
