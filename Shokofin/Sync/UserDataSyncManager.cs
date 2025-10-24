@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
 using Shokofin.Extensions;
+using Shokofin.Resolvers;
 
 using UserStats = Shokofin.API.Models.File.UserStats;
 
@@ -35,16 +36,19 @@ public class UserDataSyncManager {
 
     private readonly ILogger<UserDataSyncManager> Logger;
 
+    private readonly VirtualFileSystemService VfsService;
+
     private readonly ShokoApiClient ApiClient;
 
     private readonly ShokoIdLookup Lookup;
 
-    public UserDataSyncManager(IUserDataManager userDataManager, IUserManager userManager, ILibraryManager libraryManager, ISessionManager sessionManager, ILogger<UserDataSyncManager> logger, ShokoApiClient apiClient, ShokoIdLookup lookup) {
+    public UserDataSyncManager(IUserDataManager userDataManager, IUserManager userManager, ILibraryManager libraryManager, ISessionManager sessionManager, ILogger<UserDataSyncManager> logger, VirtualFileSystemService vfsService, ShokoApiClient apiClient, ShokoIdLookup lookup) {
         UserDataManager = userDataManager;
         UserManager = userManager;
         LibraryManager = libraryManager;
         SessionManager = sessionManager;
         Logger = logger;
+        VfsService = vfsService;
         ApiClient = apiClient;
         Lookup = lookup;
 
@@ -410,6 +414,12 @@ public class UserDataSyncManager {
             case Video video: {
                 if (!Lookup.IsEnabledForItem(video) || !Lookup.TryGetFileAndSeriesIdFor(video, out var fileId, out var seriesId))
                     return;
+
+                var path = video is Episode ep ? ep.Series.Path : video is Movie mv ? mv.ContainingFolderPath ?? mv.Path : video.Path;
+                if (VfsService.TryGetCurrentLibraryGenerationMode(path, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
+                    Logger.LogTrace("Skipped video during iterative generation. (Path={Path})", video.Path);
+                    return;
+                }
 
                 foreach (var userConfig in Plugin.Instance.Configuration.UserList) {
                     if (!userConfig.EnableSynchronization)

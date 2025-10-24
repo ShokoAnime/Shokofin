@@ -201,7 +201,7 @@ public class VirtualFileSystemService {
     /// <param name="path">A path to the vfs folder for the library, or an entity within the vfs folder for the library.</param>
     /// <param name="iterativeGeneration">Indicates the library were iteratively generated.</param>
     /// <returns>True if the library was recently generated, false otherwise.</returns>
-    public bool TryGetCurrentLibraryGenerationMode(string path, out bool iterativeGeneration, out bool wasGenerated) {
+    public bool TryGetCurrentLibraryGenerationMode(string? path, out bool iterativeGeneration, out bool wasGenerated) {
         if (string.IsNullOrEmpty(path)) {
             return iterativeGeneration = wasGenerated = false;
         }
