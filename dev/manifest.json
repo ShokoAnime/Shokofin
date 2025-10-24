@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.5.7",
+                "changelog": "`fix`: **Skip import of watch data during iterative generation for unrelated videos**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.7/shoko_5.0.5.7.zip",
+                "checksum": "2b601ade3c47ecac986c25715c9ffd5d",
+                "timestamp": "2025-10-24T02:49:54Z"
+            },
+            {
                 "version": "5.0.5.6",
                 "changelog": "`refactor`: **Cache episodes by id in client & fill episodes when getting all for series/show/season**.\n\n`chore`: **Fix indent**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.3/shoko_5.0.5.3.zip",
                 "checksum": "c9d94f1481891ecf6be652c9d7d6dbb0",
                 "timestamp": "2025-10-23T21:38:35Z"
-            },
-            {
-                "version": "5.0.5.2",
-                "changelog": "`misc`: **Update version matrix in read-me file**. (_Skip CI_)\n\n`chore`: **Update manifest category**.\n\n`chore`: **Update link in stub manifest**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.2/shoko_5.0.5.2.zip",
-                "checksum": "5c3817c82c335d436c5792b35da4e961",
-                "timestamp": "2025-10-20T04:27:40Z"
             }
         ]
     }
