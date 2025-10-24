@@ -415,7 +415,7 @@ public class UserDataSyncManager {
                 if (!Lookup.IsEnabledForItem(video) || !Lookup.TryGetFileAndSeriesIdFor(video, out var fileId, out var seriesId))
                     return;
 
-                var path = video is Episode ep ? ep.Series.Path : video is Movie mv ? mv.ContainingFolderPath ?? mv.Path : video.Path;
+                var path = video is Episode ep ? ep.Series?.Path : video is Movie mv ? mv.ContainingFolderPath : video.Path;
                 if (VfsService.TryGetCurrentLibraryGenerationMode(path, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
                     Logger.LogTrace("Skipped video during iterative generation. (Path={Path})", video.Path);
                     return;

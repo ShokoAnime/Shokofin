@@ -46,7 +46,7 @@ public class CustomMovieProvider(ILogger<CustomMovieProvider> _logger, VirtualFi
 
         var trackerId = Plugin.Instance.Tracker.Add($"Providing custom info for Movie \"{movie.Name}\". (Path=\"{movie.Path}\")");
         try {
-            if (_vfsService.TryGetCurrentLibraryGenerationMode(movie.Path, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
+            if (_vfsService.TryGetCurrentLibraryGenerationMode(movie.ContainingFolderPath, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
                 _logger.LogTrace("Skipped movie during iterative generation. (Season={SeasonId},Episode={EpisodeId})", seasonId, episodeId);
                 return ItemUpdateType.None;
             }
