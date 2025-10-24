@@ -597,65 +597,65 @@ public class ShokoApiClient : IDisposable {
 
     public Task<IReadOnlyList<TmdbEpisode>> GetTmdbEpisodesInTmdbSeason(string seasonId)
         => _cache.GetOrCreateAsync<IReadOnlyList<TmdbEpisode>>(
-                $"tmdb-season-episodes:{seasonId}",
-                (_) => _logger.LogTrace("Reusing object for TMDB episodes for season {SeasonId}", seasonId),
-                async () => {
-                    _logger.LogTrace("Trying to get TMDB episodes for season {SeasonId}", seasonId);
-                    var timeStart = DateTime.UtcNow;
-                    var firstPage = await GetOrNull<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Season/{seasonId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences", skipCache: true).ConfigureAwait(false);
-                    if (firstPage is null)
-                        return [];
+            $"tmdb-season-episodes:{seasonId}",
+            (_) => _logger.LogTrace("Reusing object for TMDB episodes for season {SeasonId}", seasonId),
+            async () => {
+                _logger.LogTrace("Trying to get TMDB episodes for season {SeasonId}", seasonId);
+                var timeStart = DateTime.UtcNow;
+                var firstPage = await GetOrNull<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Season/{seasonId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences", skipCache: true).ConfigureAwait(false);
+                if (firstPage is null)
+                    return [];
 
-                    var pages = new List<IReadOnlyList<TmdbEpisode>>() { firstPage.List };
-                    if (_pageSize > 0 && firstPage.Total > _pageSize) {
-                        var totalPages = (int)Math.Ceiling((float)firstPage.Total / firstPage.List.Count);
-                        for (var page = 2; page <= totalPages; page++) {
-                            var pageData = await Get<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Season/{seasonId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences&page={page}", skipCache: true).ConfigureAwait(false);
-                            pages.Add(pageData.List);
-                        }
+                var pages = new List<IReadOnlyList<TmdbEpisode>>() { firstPage.List };
+                if (_pageSize > 0 && firstPage.Total > _pageSize) {
+                    var totalPages = (int)Math.Ceiling((float)firstPage.Total / firstPage.List.Count);
+                    for (var page = 2; page <= totalPages; page++) {
+                        var pageData = await Get<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Season/{seasonId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences&page={page}", skipCache: true).ConfigureAwait(false);
+                        pages.Add(pageData.List);
                     }
-
-                    foreach (var page in pages) {
-                        foreach (var episode in page) {
-                            _cache.Set($"tmdb-episode:{episode.Id}", episode);
-                        }
-                    }
-
-                    _logger.LogTrace("Got TMDB episodes for season {SeasonId} in {Elapsed}", seasonId, DateTime.UtcNow - timeStart);
-                    return [..pages.SelectMany(x => x)];
                 }
-            );
+
+                foreach (var page in pages) {
+                    foreach (var episode in page) {
+                        _cache.Set($"tmdb-episode:{episode.Id}", episode);
+                    }
+                }
+
+                _logger.LogTrace("Got TMDB episodes for season {SeasonId} in {Elapsed}", seasonId, DateTime.UtcNow - timeStart);
+                return [..pages.SelectMany(x => x)];
+            }
+        );
 
     public Task<IReadOnlyList<TmdbEpisode>> GetTmdbEpisodesInTmdbShow(string showId)
         => _cache.GetOrCreateAsync<IReadOnlyList<TmdbEpisode>>(
-                $"tmdb-show-episodes:{showId}",
-                (_) => _logger.LogTrace("Reusing object for TMDB episodes for show {ShowId}", showId),
-                async () => {
-                    _logger.LogTrace("Trying to get TMDB episodes for show {ShowId}", showId);
-                    var timeStart = DateTime.UtcNow;
-                    var firstPage = await GetOrNull<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Show/{showId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences", skipCache: true).ConfigureAwait(false);
-                    if (firstPage is null)
-                        return [];
+            $"tmdb-show-episodes:{showId}",
+            (_) => _logger.LogTrace("Reusing object for TMDB episodes for show {ShowId}", showId),
+            async () => {
+                _logger.LogTrace("Trying to get TMDB episodes for show {ShowId}", showId);
+                var timeStart = DateTime.UtcNow;
+                var firstPage = await GetOrNull<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Show/{showId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences", skipCache: true).ConfigureAwait(false);
+                if (firstPage is null)
+                    return [];
 
-                    var pages = new List<IReadOnlyList<TmdbEpisode>>() { firstPage.List };
-                    if (_pageSize > 0 && firstPage.Total > _pageSize) {
-                        var totalPages = (int)Math.Ceiling((float)firstPage.Total / firstPage.List.Count);
-                        for (var page = 2; page <= totalPages; page++) {
-                            var pageData = await Get<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Show/{showId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences&page={page}", skipCache: true).ConfigureAwait(false);
-                            pages.Add(pageData.List);
-                        }
+                var pages = new List<IReadOnlyList<TmdbEpisode>>() { firstPage.List };
+                if (_pageSize > 0 && firstPage.Total > _pageSize) {
+                    var totalPages = (int)Math.Ceiling((float)firstPage.Total / firstPage.List.Count);
+                    for (var page = 2; page <= totalPages; page++) {
+                        var pageData = await Get<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Show/{showId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences&page={page}", skipCache: true).ConfigureAwait(false);
+                        pages.Add(pageData.List);
                     }
-
-                    foreach (var page in pages) {
-                        foreach (var episode in page) {
-                            _cache.Set($"tmdb-episode:{episode.Id}", episode);
-                        }
-                    }
-
-                    _logger.LogTrace("Got TMDB episodes for show {ShowId} in {Elapsed}", showId, DateTime.UtcNow - timeStart);
-                    return [..pages.SelectMany(x => x)];
                 }
-            );
+
+                foreach (var page in pages) {
+                    foreach (var episode in page) {
+                        _cache.Set($"tmdb-episode:{episode.Id}", episode);
+                    }
+                }
+
+                _logger.LogTrace("Got TMDB episodes for show {ShowId} in {Elapsed}", showId, DateTime.UtcNow - timeStart);
+                return [..pages.SelectMany(x => x)];
+            }
+        );
 
     public Task<EpisodeImages?> GetImagesForTmdbEpisode(string episodeId, CancellationToken cancellationToken = default)
         => GetOrNull<EpisodeImages>($"/api/v3/TMDB/Episode/{episodeId}/Images", cancellationToken: cancellationToken);
