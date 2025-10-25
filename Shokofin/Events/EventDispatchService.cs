@@ -214,7 +214,7 @@ public class EventDispatchService {
             // Something was added or updated.
             var locationsToNotify = new List<string>();
             var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences)).ConfigureAwait(false);
-            var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => c.IsFileEventsEnabled).ConfigureAwait(false);
+            var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => c.Library.IsFileEventsEnabled).ConfigureAwait(false);
             var (reason, managedFolderId, relativePath, lastEvent) = changes.Last();
             if (reason is not UpdateReason.Removed) {
                 Logger.LogTrace("Processing file changed. (File={FileId})", fileId);
@@ -247,7 +247,6 @@ public class EventDispatchService {
                                 .GetItemList(
                                     new() {
                                         SourceTypes = [SourceType.Library],
-                                        AncestorIds = mediaConfigs.Select(c => c.MediaFolderId).ToArray(),
                                         HasAnyProviderId = new Dictionary<string, string> { { ProviderNames.ShokoFile, fileId.ToString() } },
                                         DtoOptions = new(true),
                                     },

@@ -577,7 +577,7 @@ function applyFormToConfig(form, config) {
 
         case "library": {
             const libraryId = form.querySelector("#MediaFolderSelector").value;
-            const mediaFolders = libraryId ? config.MediaFolders.filter((m) => m.LibraryId === libraryId) : undefined;
+            const libraries = libraryId ? config.Libraries.filter((m) => m.Id === libraryId) : undefined;
             const seasonMergeWindow = sanitizeNumber(form.querySelector("#SeasonMerging_MergeWindowInDays").value);
             const vfsIterativeGenerationMaxCount = sanitizeNumber(form.querySelector("#VFS_IterativeGenerationMaxCount").value, 0, 100);
 
@@ -600,8 +600,8 @@ function applyFormToConfig(form, config) {
             config.VFS_IterativeGenerationEnabled = form.querySelector("#VFS_IterativeGenerationEnabled").checked;
             config.VFS_IterativeGenerationMaxCount = vfsIterativeGenerationMaxCount;
             form.querySelector("#VFS_IterativeGenerationMaxCount").value = vfsIterativeGenerationMaxCount;
-            if (mediaFolders) {
-                for (const c of mediaFolders) {
+            if (libraries) {
+                for (const c of libraries) {
                     const maxCount = sanitizeNumber(form.querySelector("#MediaFolderLibraryIterativeGenerationMaxCount").value, 0, 100);
                     c.LibraryOperationMode = form.querySelector("#MediaFolderLibraryOperationMode").value;
                     c.IterativeVfsGeneration_Enabled = form.querySelector("#MediaFolderLibraryIterativeGenerationEnabled").checked;
@@ -672,7 +672,7 @@ function applyFormToConfig(form, config) {
         case "signalr": {
             const reconnectIntervals = filterReconnectIntervals(form.querySelector("#SignalRAutoReconnectIntervals").value);
             const libraryId = form.querySelector("#SignalRMediaFolderSelector").value;
-            const mediaFolders = libraryId ? config.MediaFolders.filter((m) => m.LibraryId === libraryId) : undefined;
+            const libraries = libraryId ? config.Libraries.filter((m) => m.Id === libraryId) : undefined;
 
             config.SignalR_AutoConnectEnabled = form.querySelector("#SignalRAutoConnect").checked;
             config.SignalR_AutoReconnectInSeconds = reconnectIntervals;
@@ -682,8 +682,8 @@ function applyFormToConfig(form, config) {
             config.SignalR_FileEvents = form.querySelector("#SignalRDefaultFileEvents").checked;
             config.SignalR_RefreshEnabled = form.querySelector("#SignalRDefaultRefreshEvents").checked;
 
-            if (mediaFolders) {
-                for (const c of mediaFolders) {
+            if (libraries) {
+                for (const c of libraries) {
                     c.IsFileEventsEnabled = form.querySelector("#SignalRFileEvents").checked;
                     c.IsRefreshEventsEnabled = form.querySelector("#SignalRRefreshEvents").checked;
                 }
@@ -855,18 +855,6 @@ async function applyConfigToForm(form, config) {
         }
 
         case "library": {
-            const libraries = config.MediaFolders
-                .reduce((acc, mediaFolder) => {
-                    if (mediaFolder.IsVirtualRoot)
-                        return acc;
-
-                    if (acc.find((m) => m.LibraryId === mediaFolder.LibraryId))
-                        return acc;
-
-                    acc.push(mediaFolder);
-                    return acc;
-                }, []);
-
             form.querySelector("#DefaultLibraryStructure").value = config.DefaultLibraryStructure;
             form.querySelector("#DefaultSeasonOrdering").value = config.DefaultSeasonOrdering;
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies;
@@ -885,8 +873,8 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#DefaultLibraryOperationMode").value = config.DefaultLibraryOperationMode;
             form.querySelector("#VFS_IterativeGenerationEnabled").checked = config.VFS_IterativeGenerationEnabled;
             form.querySelector("#VFS_IterativeGenerationMaxCount").value = config.VFS_IterativeGenerationMaxCount;
-            form.querySelector("#MediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + libraries
-                .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}${State.advancedMode ? ` (${library.LibraryId})` : ""}</option>`)
+            form.querySelector("#MediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + config.Libraries
+                .map((library) => `<option value="${library.Id}">${library.Name}${State.advancedMode ? ` (${library.Id})` : ""}</option>`)
                 .join("");
 
             form.querySelector("#SeasonMerging_Enabled").checked = config.SeasonMerging_Enabled;
@@ -923,18 +911,6 @@ async function applyConfigToForm(form, config) {
         case "signalr": {
             Dashboard.showLoadingMsg();
             const signalrStatus = await ShokoApiClient.getSignalrStatus();
-            const libraries = config.MediaFolders
-                .reduce((acc, mediaFolder) => {
-                    if (mediaFolder.IsVirtualRoot)
-                        return acc;
-
-                    if (acc.find((m) => m.LibraryId === mediaFolder.LibraryId))
-                        return acc;
-
-                    acc.push(mediaFolder);
-                    return acc;
-                }, []);
-
             updateSignalrStatus(form, signalrStatus);
 
             form.querySelector("#SignalRAutoConnect").checked = config.SignalR_AutoConnectEnabled;
@@ -944,8 +920,8 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#SignalRDefaultFileEvents").checked = config.SignalR_FileEvents;
             form.querySelector("#SignalRDefaultRefreshEvents").checked = config.SignalR_RefreshEnabled;
 
-            form.querySelector("#SignalRMediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + libraries
-                .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}${State.advancedMode ? ` (${library.LibraryId})` : ""}</option>`)
+            form.querySelector("#SignalRMediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + config.Libraries
+                .map((library) => `<option value="${library.Id}">${library.Name}${State.advancedMode ? ` (${library.Id})` : ""}</option>`)
                 .join("");
             break;
         }
@@ -1128,7 +1104,7 @@ async function applyLibraryConfigToForm(form, libraryId, config = null) {
         }
     }
 
-    const mediaFolders = config.MediaFolders.filter((c) => c.LibraryId === libraryId && !c.IsVirtualRoot);
+    const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
     if (!mediaFolders.length) {
         renderReadonlyList(form, "MediaFolderManagedFolderMapping", []);
 
@@ -1141,12 +1117,12 @@ async function applyLibraryConfigToForm(form, libraryId, config = null) {
 
     renderReadonlyList(form, "MediaFolderManagedFolderMapping", mediaFolders.map((c) =>
         c.IsMapped
-            ? `${c.MediaFolderPath} | ${c.ManagedFolderName} (${c.ManagedFolderId}) ${c.ManagedFolderRelativePath}`.trimEnd()
-            : `${c.MediaFolderPath} | Not Mapped`
+            ? `${c.Path} | ${c.ManagedFolderName} (${c.ManagedFolderId}) ${c.ManagedFolderRelativePath}`.trimEnd()
+            : `${c.Path} | Not Mapped`
     ));
 
     // Configure the elements within the media folder container
-    const libraryConfig = config.MediaFolders.find((c) => c.LibraryId === libraryId && c.IsVirtualRoot) || mediaFolders[0];
+    const libraryConfig = config.Libraries.find((c) => c.Id === libraryId);
     form.querySelector("#MediaFolderLibraryOperationMode").value = libraryConfig.LibraryOperationMode;
     form.querySelector("#MediaFolderLibraryIterativeGenerationEnabled").checked = libraryConfig.IterativeVfsGeneration_Enabled;
     form.querySelector("#MediaFolderLibraryIterativeGenerationNoCache").checked = libraryConfig.IterativeVfsGeneration_NoCache;
@@ -1188,7 +1164,7 @@ async function applySignalrLibraryConfigToForm(form, libraryId, config = null) {
         }
     }
 
-    const libraryConfig = config.MediaFolders.find((c) => c.LibraryId === libraryId && !c.IsVirtualRoot);
+    const libraryConfig = config.Libraries.find((c) => c.Id === libraryId);
     if (!libraryConfig) {
         form.querySelector("#SignalRMediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
         if (shouldHide) {
@@ -1409,29 +1385,23 @@ async function removeLibraryConfig(form) {
     const libraryId = form.querySelector("#MediaFolderSelector").value;
     if (!libraryId) return config;
 
-    let index = config.MediaFolders.findIndex((m) => m.LibraryId === libraryId);
-    while (index !== -1) {
-        config.MediaFolders.splice(index, 1);
-        index = config.MediaFolders.findIndex((m) => m.LibraryId === libraryId);
+    let index = config.Libraries.findIndex((m) => m.Id === libraryId);
+    if (index !== -1) {
+        config.Libraries.splice(index, 1);
     }
 
-    const libraries = config.MediaFolders
-        .reduce((acc, mediaFolder) => {
-            if (mediaFolder.IsVirtualRoot)
-                return acc;
+    index = config.LibraryFolders.findIndex((m) => m.LibraryId === libraryId);
+    while (index !== -1) {
+        config.LibraryFolders.splice(index, 1);
+        index = config.LibraryFolders.findIndex((m) => m.LibraryId === libraryId);
+    }
 
-            if (acc.find((m) => m.LibraryId === mediaFolder.LibraryId))
-                return acc;
-
-            acc.push(mediaFolder);
-            return acc;
-        }, []);
     form.querySelector("#MediaFolderSelector").value = "";
-    form.querySelector("#MediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + libraries
-                    .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}</option>`)
+    form.querySelector("#MediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + config.Libraries
+                    .map((library) => `<option value="${library.Id}">${library.Name}</option>`)
                     .join("");
-    form.querySelector("#SignalRMediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + libraries
-                    .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}</option>`)
+    form.querySelector("#SignalRMediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + config.Libraries
+                    .map((library) => `<option value="${library.Id}">${library.Name}</option>`)
                     .join("");
 
     await ShokoApiClient.updateConfiguration(config);

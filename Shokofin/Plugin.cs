@@ -318,15 +318,42 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages {
             if (config.VFS_Legacy_Enabled.Value)
                 config.DefaultLibraryOperationMode = Ordering.LibraryOperationMode.VFS;
 
-            foreach (var mediaFolder in config.MediaFolders) {
-                if (mediaFolder.LegacyVirtualFileSystemEnabled.HasValue) {
-                    if (mediaFolder.LegacyVirtualFileSystemEnabled.Value)
-                        mediaFolder.LibraryOperationMode = Ordering.LibraryOperationMode.VFS;
+            config.VFS_Legacy_Enabled = null;
+            changed = true;
+        }
 
-                    mediaFolder.LegacyVirtualFileSystemEnabled = null;
+        if (config.LegacyMediaFolders is not null) {
+            foreach (var groupedMediaFolders in config.LegacyMediaFolders.GroupBy(c => c.LibraryId)) {
+                var mediaConfig = groupedMediaFolders.FirstOrDefault(c => c.IsVirtualRoot) ?? groupedMediaFolders.First();
+                var libraryConfig = new LibraryConfiguration {
+                    Id = groupedMediaFolders.Key,
+                    Name = mediaConfig.LibraryName ?? string.Empty,
+                    IsFileEventsEnabled = mediaConfig.IsFileEventsEnabled,
+                    IsRefreshEventsEnabled = mediaConfig.IsRefreshEventsEnabled,
+                    LibraryOperationMode = mediaConfig.LegacyVirtualFileSystemEnabled.HasValue && mediaConfig.LegacyVirtualFileSystemEnabled.Value
+                        ? Ordering.LibraryOperationMode.VFS
+                        : mediaConfig.LibraryOperationMode,
+                    IterativeVfsGeneration_Enabled = mediaConfig.IterativeVfsGeneration_Enabled,
+                    IterativeVfsGeneration_ForceFullGenerationOnNextRefresh = mediaConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh,
+                    IterativeVfsGeneration_CurrentCount = mediaConfig.IterativeVfsGeneration_CurrentCount,
+                    IterativeVfsGeneration_LastGeneratedAt = mediaConfig.IterativeVfsGeneration_LastGeneratedAt,
+                    IterativeVfsGeneration_MaxCount = mediaConfig.IterativeVfsGeneration_MaxCount,
+                    IterativeVfsGeneration_NoCache = mediaConfig.IterativeVfsGeneration_NoCache,
+                };
+                config.Libraries.Add(libraryConfig);
+                foreach (var mediaFolder in groupedMediaFolders.Where(c => !c.IsVirtualRoot)) {
+                    var mediaFolderConfig = new MediaFolderConfiguration {
+                        LibraryId = groupedMediaFolders.Key,
+                        Path = mediaFolder.MediaFolderPath,
+                        ManagedFolderId = mediaFolder.ManagedFolderId,
+                        ManagedFolderName = mediaFolder.ManagedFolderName,
+                        ManagedFolderRelativePath = mediaFolder.ManagedFolderRelativePath,
+                    };
+                    config.LibraryFolders.Add(mediaFolderConfig);
                 }
             }
-            config.VFS_Legacy_Enabled = null;
+
+            config.LegacyMediaFolders = null;
             changed = true;
         }
 

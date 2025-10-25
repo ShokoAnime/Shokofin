@@ -653,9 +653,23 @@ public class PluginConfiguration : BasePluginConfiguration {
     #region Media Folder
 
     /// <summary>
-    /// Per media folder configuration.
+    /// Per library configuration.
     /// </summary>
-    public List<MediaFolderConfiguration> MediaFolders { get; set; }
+    [XmlArray("Libraries")]
+    public List<LibraryConfiguration> Libraries { get; set; } = [];
+
+    /// <summary>
+    /// Per media folder configuration, new format.
+    /// </summary>
+    public List<MediaFolderConfiguration> LibraryFolders { get; set; } = [];
+
+    /// <summary>
+    /// Per media folder configuration, legacy format.
+    /// </summary>
+    /// TODO: Break this during the next major version of the plugin.
+    [JsonIgnore]
+    [XmlArray("MediaFolders")]
+    public List<LegacyMediaFolderConfiguration>? LegacyMediaFolders { get; set; } = null;
 
     #endregion
 
@@ -849,7 +863,6 @@ public class PluginConfiguration : BasePluginConfiguration {
         DefaultSpecialsPlacement = SpecialOrderType.Excluded;
         AddMissingMetadata = true;
         UserList = [];
-        MediaFolders = [];
         IgnoredFolders = [".streams", "@recently-snapshot"];
         LibraryScanReactionTimeInSeconds = 1;
         SignalR_AutoConnectEnabled = false;

@@ -80,29 +80,26 @@ public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager
                 updated = true;
             }
 
-            var mediaFolders = Plugin.Instance.Configuration.MediaFolders.ToList();
+            var mediaFolders = Plugin.Instance.Configuration.LibraryFolders.ToList();
             var managedFolderNameMap = await Task
                 .WhenAll(
                     mediaFolders
                         .Select(m => m.ManagedFolderId)
                         .Distinct()
                         .Except([0, -1])
-                        .Select(id => _apiClient.GetManagedFolder(id))
+                        .Select(_apiClient.GetManagedFolder)
                         .ToList()
                 )
                 .ContinueWith(task => task.Result.OfType<ManagedFolder>().ToDictionary(i => i.Id, i => i.Name))
                 .ConfigureAwait(false);
             foreach (var mediaFolderConfig in mediaFolders) {
-                if (mediaFolderConfig.IsVirtualRoot)
-                    continue;
-
                 if (!managedFolderNameMap.TryGetValue(mediaFolderConfig.ManagedFolderId, out var managedFolderName))
                     managedFolderName = null;
 
-                if (Guid.Empty == mediaFolderConfig.LibraryId && _libraryManager.GetItemById(mediaFolderConfig.MediaFolderId) is Folder mediaFolder &&
-                    _libraryManager.GetVirtualFolders().FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path)) is { } library &&
+                if (Guid.Empty == mediaFolderConfig.LibraryId &&
+                    _libraryManager.GetVirtualFolders().FirstOrDefault(p => p.Locations.Contains(mediaFolderConfig.Path)) is { } library &&
                     Guid.TryParse(library.ItemId, out var libraryId)) {
-                    _logger.LogDebug("Found new library for media folder; {LibraryName} (Library={LibraryId},MediaFolder={MediaFolderPath})", library.Name, libraryId, mediaFolder.Path);
+                    _logger.LogDebug("Found new library for media folder; {LibraryName} (Library={LibraryId},MediaFolder={MediaFolderPath})", library.Name, libraryId, mediaFolderConfig.Path);
                     mediaFolderConfig.LibraryId = libraryId;
                     updated = true;
                 }

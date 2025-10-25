@@ -135,11 +135,11 @@ public class VirtualFileSystemService {
             !item.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar) ||
             item.GetBaseItemKind() is not BaseItemKind.Folder ||
             !Guid.TryParse(item.Path.AsSpan(vfsRoot.Length + 1, 36), out var libraryId) ||
-            Plugin.Instance.Configuration.MediaFolders.FirstOrDefault(config => config.IsVirtualRoot && config.LibraryId == libraryId) is not {} config
+            Plugin.Instance.Configuration.Libraries.FirstOrDefault(config => config.Id == libraryId) is not {} config
         )
             return;
 
-        Logger.LogTrace("Refresh started for {Name}: {Path} ", config.LibraryName, item.Path);
+        Logger.LogTrace("Refresh started for {Name}: {Path} ", config.Name, item.Path);
 
         if (config.IterativeVfsGeneration_Enabled) {
             DataCache.Remove(CachePrefix + item.Path);
@@ -158,18 +158,18 @@ public class VirtualFileSystemService {
             return ([], [], selectedFolder, null, string.Empty);
 
         var collectionType = selectedFolder.CollectionType.ConvertToCollectionType();
-        var (vfsConfig, mediaConfigs, _) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType, config => config.IsVirtualFileSystemEnabled).ConfigureAwait(false);
-        if (vfsConfig is null || mediaConfigs.Count is 0)
+        var (libraryConfig, mediaConfigs, _) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType).ConfigureAwait(false);
+        if (libraryConfig is null || mediaConfigs.Count is 0)
             return ([], [], selectedFolder, null, string.Empty);
 
         // Only allow the preview to run once per caching cycle.
-        var vfsPath = vfsConfig.MediaFolderPath;
+        var vfsPath = libraryConfig.VirtualRoot;
         return await DataCache.GetOrCreateAsync($"preview-changes:{vfsPath}", async () => {
             // This call will be slow depending on the size of your collection.
             var existingPaths = GetFilePaths(vfsPath, true, cancellationToken: cancellationToken).ToHashSet();
 
             // Validate if we can use the media folders.
-            if (!TryGetFileCheckerForMediaFolders(vfsConfig, mediaConfigs, out var fileChecker))
+            if (!TryGetFileCheckerForMediaFolders(libraryConfig, mediaConfigs, out var fileChecker))
                 return (existingPaths, [], selectedFolder, new(), vfsPath);
 
             var allFiles = GetFilesForManagedFolders(mediaConfigs, fileChecker);
@@ -232,14 +232,14 @@ public class VirtualFileSystemService {
     /// <param name="path">The file or folder within the media folder to generate a structure for.</param>
     /// <returns>The VFS path, if it succeeded.</returns>
     public async Task<(string? vfsPath, bool shouldContinue, bool skipValidation, HashSet<string> alteredPaths)> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path, CancellationToken cancellationToken = default) {
-        var (vfsConfig, mediaConfigs, skipGeneration) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType, config => config.IsVirtualFileSystemEnabled).ConfigureAwait(false);
-        if (vfsConfig is null || mediaConfigs.Count is 0)
+        var (libraryConfig, mediaConfigs, skipGeneration) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType).ConfigureAwait(false);
+        if (libraryConfig is null || mediaConfigs.Count is 0)
             return (null, false, false, []);
 
         if (!Plugin.Instance.CanCreateSymbolicLinks)
             throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
 
-        var vfsPath = vfsConfig.MediaFolderPath;
+        var vfsPath = libraryConfig.VirtualRoot;
         if (!string.Equals(vfsPath, path, StringComparison.Ordinal) && !path.StartsWith(vfsPath + Path.DirectorySeparatorChar, StringComparison.Ordinal))
             return (vfsPath, false, false, []);
 
@@ -264,7 +264,7 @@ public class VirtualFileSystemService {
         }
 
         // Validate if we can use the media folders.
-        if (!TryGetFileCheckerForMediaFolders(vfsConfig, mediaConfigs, out var fileChecker))
+        if (!TryGetFileCheckerForMediaFolders(libraryConfig, mediaConfigs, out var fileChecker))
             return (vfsPath, true, true, []);
 
         // Since the generator is lazily started then we can do this outside
@@ -354,7 +354,7 @@ public class VirtualFileSystemService {
         tuple = await DataCache.GetOrCreateAsync(CachePrefix + path, async (options) => {
             Logger.LogInformation(
                 "Generating VFS structure for library {LibraryName} at sub-path {Path}. This might take some time depending on your collection size. (Library={LibraryId})",
-                mediaConfigs[0].LibraryName,
+                libraryConfig.Name,
                 path.StartsWith(vfsPath + Path.DirectorySeparatorChar) ? path[vfsPath.Length..] : Path.DirectorySeparatorChar,
                 mediaConfigs[0].LibraryId
             );
@@ -367,42 +367,42 @@ public class VirtualFileSystemService {
             if (allFiles is null) {
                 // Check if we want to do an iterative generation of the VFS since we're
                 // operating on the root folder.
-                if (vfsConfig.IterativeVfsGeneration_Enabled) {
-                    if (vfsConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh) {
-                        vfsConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh = false;
-                        vfsConfig.IterativeVfsGeneration_CurrentCount = 0;
+                if (libraryConfig.IterativeVfsGeneration_Enabled) {
+                    if (libraryConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh) {
+                        libraryConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh = false;
+                        libraryConfig.IterativeVfsGeneration_CurrentCount = 0;
                     }
-                    else if (!vfsConfig.IterativeVfsGeneration_LastGeneratedAt.HasValue) {
-                        vfsConfig.IterativeVfsGeneration_CurrentCount = 0;
+                    else if (!libraryConfig.IterativeVfsGeneration_LastGeneratedAt.HasValue) {
+                        libraryConfig.IterativeVfsGeneration_CurrentCount = 0;
                     }
-                    else if (vfsConfig.IterativeVfsGeneration_MaxCount > 0) {
-                        if (vfsConfig.IterativeVfsGeneration_CurrentCount + 1 < vfsConfig.IterativeVfsGeneration_MaxCount) {
+                    else if (libraryConfig.IterativeVfsGeneration_MaxCount > 0) {
+                        if (libraryConfig.IterativeVfsGeneration_CurrentCount + 1 < libraryConfig.IterativeVfsGeneration_MaxCount) {
                             iterativeGeneration = true;
-                            vfsConfig.IterativeVfsGeneration_CurrentCount++;
-                            lastGeneratedAt = vfsConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
+                            libraryConfig.IterativeVfsGeneration_CurrentCount++;
+                            lastGeneratedAt = libraryConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
                         }
-                        else if (vfsConfig.IterativeVfsGeneration_CurrentCount > 0) {
-                            vfsConfig.IterativeVfsGeneration_CurrentCount = 0;
+                        else if (libraryConfig.IterativeVfsGeneration_CurrentCount > 0) {
+                            libraryConfig.IterativeVfsGeneration_CurrentCount = 0;
                         }
                     }
                     else {
                         iterativeGeneration = true;
-                        lastGeneratedAt = vfsConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
+                        lastGeneratedAt = libraryConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
                     }
 
-                    options.NoCache = vfsConfig.IterativeVfsGeneration_NoCache;
-                    vfsConfig.IterativeVfsGeneration_LastGeneratedAt = DateTime.UtcNow;
+                    options.NoCache = libraryConfig.IterativeVfsGeneration_NoCache;
+                    libraryConfig.IterativeVfsGeneration_LastGeneratedAt = DateTime.UtcNow;
                     Plugin.Instance.SaveConfiguration();
                 }
                 // Reset state if the option has been disabled.
                 else if (
-                    vfsConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh ||
-                    vfsConfig.IterativeVfsGeneration_LastGeneratedAt.HasValue ||
-                    vfsConfig.IterativeVfsGeneration_CurrentCount > 0
+                    libraryConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh ||
+                    libraryConfig.IterativeVfsGeneration_LastGeneratedAt.HasValue ||
+                    libraryConfig.IterativeVfsGeneration_CurrentCount > 0
                 ) {
-                    vfsConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh = false;
-                    vfsConfig.IterativeVfsGeneration_CurrentCount = 0;
-                    vfsConfig.IterativeVfsGeneration_LastGeneratedAt = null;
+                    libraryConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh = false;
+                    libraryConfig.IterativeVfsGeneration_CurrentCount = 0;
+                    libraryConfig.IterativeVfsGeneration_LastGeneratedAt = null;
                     Plugin.Instance.SaveConfiguration();
                 }
 
@@ -435,7 +435,7 @@ public class VirtualFileSystemService {
 
             // Save which paths we've already generated so we can skip generation
             // for them and their sub-paths later, and also print the result.
-            result.Print(Logger, mediaConfigs.Any(config => path.StartsWith(config.MediaFolderPath)) ? vfsPath : path);
+            result.Print(Logger, path);
 
             return (AddParentDirectories(vfsPath, result.Paths.ToArray()), iterativeGeneration);
         }, cancellationToken).ConfigureAwait(false);
@@ -448,9 +448,9 @@ public class VirtualFileSystemService {
         );
     }
 
-    private bool TryGetFileCheckerForMediaFolders(MediaFolderConfiguration vfsConfig, IReadOnlyList<MediaFolderConfiguration> mediaConfigs, [NotNullWhen(true)] out Func<string, bool>? fileChecker) {
+    private bool TryGetFileCheckerForMediaFolders(LibraryConfiguration libraryConfig, IReadOnlyList<MediaFolderConfiguration> mediaConfigs, [NotNullWhen(true)] out Func<string, bool>? fileChecker) {
         if (mediaConfigs.Count is 0) {
-            Logger.LogWarning("No media folders to create a file checker for. (Library={LibraryId})", vfsConfig.LibraryId);
+            Logger.LogWarning("No media folders to create a file checker for. (Library={LibraryId})", libraryConfig.Id);
             fileChecker = null;
             return false;
         }
@@ -459,12 +459,12 @@ public class VirtualFileSystemService {
         // in case a mount point failed to mount.
         var shouldReturn = false;
         foreach (var mediaConfig in mediaConfigs) {
-            if (!Directory.Exists(mediaConfig.MediaFolderPath)) {
-                Logger.LogWarning("Unable to create a file checker because a folder does not exist; {Path} (Library={LibraryId})", mediaConfig.MediaFolderPath, mediaConfig.LibraryId);
+            if (!Directory.Exists(mediaConfig.Path)) {
+                Logger.LogWarning("Unable to create a file checker because a folder does not exist; {Path} (Library={LibraryId})", mediaConfig.Path, mediaConfig.LibraryId);
                 shouldReturn = true;
             }
-            else if (!ContainsFileSystemEntryPaths(mediaConfig.MediaFolderPath)) {
-                Logger.LogWarning("Unable to create a file checker because the folder is empty; {Path} (Library={LibraryId})", mediaConfig.MediaFolderPath, mediaConfig.LibraryId);
+            else if (!ContainsFileSystemEntryPaths(mediaConfig.Path)) {
+                Logger.LogWarning("Unable to create a file checker because the folder is empty; {Path} (Library={LibraryId})", mediaConfig.Path, mediaConfig.LibraryId);
                 shouldReturn = true;
             }
         }
@@ -474,7 +474,7 @@ public class VirtualFileSystemService {
             return false;
         }
 
-        Logger.LogDebug("Creating an iterative file checker for {Count} folders. (Library={LibraryId})", mediaConfigs.Count, vfsConfig.LibraryId);
+        Logger.LogDebug("Creating an iterative file checker for {Count} folders. (Library={LibraryId})", mediaConfigs.Count, libraryConfig.Id);
         fileChecker = File.Exists;
         return true;
     }

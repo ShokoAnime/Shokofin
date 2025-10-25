@@ -6,9 +6,7 @@ using Shokofin.Configuration;
 
 namespace Shokofin.Resolvers.Models;
 
-public class ShokoWatcher(Folder mediaFolder, MediaFolderConfiguration configuration, FileSystemWatcher watcher, IDisposable lease) {
-    public Folder MediaFolder = mediaFolder;
-
+public class ShokoWatcher(MediaFolderConfiguration configuration, FileSystemWatcher watcher, IDisposable lease) {
     public MediaFolderConfiguration Configuration = configuration;
 
     public FileSystemWatcher Watcher = watcher;

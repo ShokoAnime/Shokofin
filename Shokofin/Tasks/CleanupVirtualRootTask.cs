@@ -104,9 +104,8 @@ public class CleanupVirtualRootTask(
             var fixedCount = 0;
             var vfsPaths = mediaFolders
                 .DistinctBy(config => config.LibraryId)
-                .Select(config => _libraryManager.GetItemById(config.LibraryId) as Folder)
-                .Where(folder => folder is not null)
-                .Select(folder => folder!.GetVirtualRoot())
+                .Where(config => _libraryManager.GetItemById(config.LibraryId) is Folder)
+                .Select(config => config.Library.VirtualRoot)
                 .ToList();
             _logger.LogDebug("Ensuring {TotalCount} VFS roots exist.", vfsPaths.Count);
             foreach (var vfsPath in vfsPaths) {

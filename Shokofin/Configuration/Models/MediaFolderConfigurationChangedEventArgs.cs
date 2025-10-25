@@ -1,15 +1,9 @@
 using System;
-using MediaBrowser.Controller.Entities;
 
 namespace Shokofin.Configuration.Models;
 
-public class MediaConfigurationChangedEventArgs : EventArgs {
-    public MediaFolderConfiguration Configuration { get; private init; }
+public class MediaConfigurationChangedEventArgs(LibraryConfiguration libraryConfiguration, MediaFolderConfiguration config) : EventArgs {
+    public LibraryConfiguration LibraryConfiguration { get; private init; } = libraryConfiguration;
 
-    public Folder MediaFolder { get; private init; }
-
-    public MediaConfigurationChangedEventArgs(MediaFolderConfiguration config, Folder folder) {
-        Configuration = config;
-        MediaFolder = folder;
-    }
+    public MediaFolderConfiguration MediaFolderConfiguration { get; private init; } = config;
 }

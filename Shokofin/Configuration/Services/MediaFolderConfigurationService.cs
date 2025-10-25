@@ -30,7 +30,7 @@ public class MediaFolderConfigurationService {
 
     private readonly ShokoApiClient ApiClient;
 
-    private readonly Dictionary<Guid, string> MediaFolderChangeKeys = [];
+    private readonly Dictionary<Guid, int> LibraryChangeTracker = [];
 
     private readonly Dictionary<Guid, (string libraryName, HashSet<string> add, HashSet<string> remove)> LibraryEdits = [];
 
@@ -40,11 +40,15 @@ public class MediaFolderConfigurationService {
 
     private readonly SemaphoreSlim LockObj = new(1, 1);
 
-    public event EventHandler<MediaConfigurationChangedEventArgs>? ConfigurationAdded;
+    public event EventHandler<LibraryConfigurationChangedEventArgs>? LibraryConfigurationAdded;
 
-    public event EventHandler<MediaConfigurationChangedEventArgs>? ConfigurationUpdated;
+    public event EventHandler<LibraryConfigurationChangedEventArgs>? LibraryConfigurationChanged;
 
-    public event EventHandler<MediaConfigurationChangedEventArgs>? ConfigurationRemoved;
+    public event EventHandler<LibraryConfigurationChangedEventArgs>? LibraryConfigurationRemoved;
+
+    public event EventHandler<MediaConfigurationChangedEventArgs>? MediaFolderConfigurationAdded;
+
+    public event EventHandler<MediaConfigurationChangedEventArgs>? MediaFolderConfigurationRemoved;
 
     public MediaFolderConfigurationService(
         ILogger<MediaFolderConfigurationService> logger,
@@ -61,8 +65,8 @@ public class MediaFolderConfigurationService {
         UsageTracker = usageTracker;
         ApiClient = apiClient;
 
-        foreach (var mediaConfig in Plugin.Instance.Configuration.MediaFolders)
-            MediaFolderChangeKeys[mediaConfig.MediaFolderId] = ConstructKey(mediaConfig);
+        foreach (var libraryConfig in Plugin.Instance.Configuration.Libraries)
+            LibraryChangeTracker[libraryConfig.Id] = ConstructKey(libraryConfig);
         UsageTracker.Stalled += OnUsageTrackerStalled;
         LibraryScanWatcher.ValueChanged += OnLibraryScanValueChanged;
         LibraryManager.ItemRemoved += OnLibraryManagerItemRemoved;
@@ -74,7 +78,7 @@ public class MediaFolderConfigurationService {
         Plugin.Instance.ConfigurationChanged -= OnConfigurationChanged;
         LibraryScanWatcher.ValueChanged -= OnLibraryScanValueChanged;
         UsageTracker.Stalled -= OnUsageTrackerStalled;
-        MediaFolderChangeKeys.Clear();
+        LibraryChangeTracker.Clear();
         LockObj.Dispose();
     }
 
@@ -125,17 +129,15 @@ public class MediaFolderConfigurationService {
         }
     }
 
-    private static string ConstructKey(MediaFolderConfiguration config)
-        => $"IsMapped={config.IsMapped},IsFileEventsEnabled={config.IsFileEventsEnabled},IsRefreshEventsEnabled={config.IsRefreshEventsEnabled},LibraryOperationMode={config.LibraryOperationMode}";
+    private int ConstructKey(LibraryConfiguration config)
+        => HashCode.Combine(config.Id, config.IsFileEventsEnabled, config.IsRefreshEventsEnabled, config.LibraryOperationMode, config.IterativeVfsGeneration_Enabled);
 
     private void OnConfigurationChanged(object? sender, PluginConfiguration config) {
-        foreach (var mediaConfig in config.MediaFolders) {
-            var currentKey = ConstructKey(mediaConfig);
-            if (MediaFolderChangeKeys.TryGetValue(mediaConfig.MediaFolderId, out var previousKey) && previousKey != currentKey) {
-                MediaFolderChangeKeys[mediaConfig.MediaFolderId] = currentKey;
-                if (LibraryManager.GetItemById(mediaConfig.MediaFolderId) is not Folder mediaFolder)
-                    continue;
-                ConfigurationUpdated?.Invoke(sender, new(mediaConfig, mediaFolder));
+        foreach (var libraryConfig in config.Libraries) {
+            var currentKey = ConstructKey(libraryConfig);
+            if (LibraryChangeTracker.TryGetValue(libraryConfig.Id, out var previousKey) && previousKey != currentKey) {
+                LibraryChangeTracker[libraryConfig.Id] = currentKey;
+                LibraryConfigurationChanged?.Invoke(sender, new(libraryConfig, libraryConfig.MediaFolders));
             }
         }
     }
@@ -145,27 +147,8 @@ public class MediaFolderConfigurationService {
         if (e.Item != null && root != null && e.Item != root && e.Item is Folder folder && folder.ParentId == Guid.Empty  && !string.IsNullOrEmpty(folder.Path) && !folder.Path.StartsWith(root.Path)) {
             await LockObj.WaitAsync().ConfigureAwait(false);
             try {
-                var virtualFolders = GetVirtualFolders();
-                var virtualFolderIds = virtualFolders
-                    .Select(virtualFolder => string.IsNullOrEmpty(virtualFolder.ItemId) ? Guid.Empty : Guid.Parse(virtualFolder.ItemId))
-                    .Except([Guid.Empty])
-                    .ToList();
-                var mediaFolderConfigs = Plugin.Instance.Configuration.MediaFolders
-                    .Where(c => c.MediaFolderId == folder.Id && !virtualFolderIds.Contains(c.LibraryId))
-                    .ToList();
-                foreach (var mediaFolderConfig in mediaFolderConfigs) {
-                    Logger.LogDebug(
-                        "Removing stored configuration for folder at {Path} (ManagedFolder={ManagedFolderId},RelativePath={RelativePath})",
-                        folder.Path,
-                        mediaFolderConfig.ManagedFolderId,
-                        mediaFolderConfig.ManagedFolderRelativePath
-                    );
-                    Plugin.Instance.Configuration.MediaFolders.Remove(mediaFolderConfig);
-                    Plugin.Instance.UpdateConfiguration();
-
-                    MediaFolderChangeKeys.Remove(folder.Id);
-                    ConfigurationRemoved?.Invoke(null, new(mediaFolderConfig, folder));
-                }
+                ShouldGenerateAllConfigurations = false;
+                await GenerateAllConfigurations(GetVirtualFolders()).ConfigureAwait(false);
             }
             finally {
                 LockObj.Release();
@@ -186,17 +169,17 @@ public class MediaFolderConfigurationService {
                 await GenerateAllConfigurations(virtualFolders).ConfigureAwait(false);
             }
 
-            return Plugin.Instance.Configuration.MediaFolders
-                .Where(config => config.IsMapped && !config.IsVirtualRoot && (filter is null || filter(config)) && LibraryManager.GetItemById(config.MediaFolderId) is Folder)
+            return Plugin.Instance.Configuration.LibraryFolders
+                .Where(config => config.IsMapped && (filter is null || filter(config)))
                 .GroupBy(config => config.LibraryId)
                 .Select(groupBy => (
-                    libraryFolder: LibraryManager.GetItemById(groupBy.Key) as Folder,
+                    libraryConfig: groupBy.First().Library,
                     virtualFolder: virtualFolders.FirstOrDefault(folder => Guid.TryParse(folder.ItemId, out var guid) && guid == groupBy.Key),
                     mediaList: groupBy.ToList() as IReadOnlyList<MediaFolderConfiguration>
                 ))
-                .Where(tuple => tuple.libraryFolder is not null && tuple.virtualFolder is not null && tuple.virtualFolder.Locations.Length is > 0 && tuple.mediaList.Count is > 0)
+                .Where(tuple => tuple.virtualFolder is not null && tuple.virtualFolder.Locations.Length is > 0 && tuple.mediaList.Count is > 0)
                 .Select(tuple => (
-                    vfsPath: tuple.libraryFolder!.GetVirtualRoot(),
+                    vfsPath: tuple.libraryConfig.VirtualRoot,
                     collectionType: tuple.virtualFolder!.CollectionType.ConvertToCollectionType(),
                     tuple.mediaList
                 ))
@@ -208,35 +191,24 @@ public class MediaFolderConfigurationService {
         }
     }
 
-    public async Task<(MediaFolderConfiguration? vfsRootConfig, IReadOnlyList<MediaFolderConfiguration> mediaList, bool skipGeneration)> GetMediaFoldersForLibraryInVFS(Folder mediaFolder, CollectionType? collectionType, Func<MediaFolderConfiguration, bool>? filter = null) {
-        var mediaFolderConfig = await GetOrCreateConfigurationForMediaFolder(mediaFolder, collectionType).ConfigureAwait(false);
+    public async Task<(LibraryConfiguration? vfsRootConfig, IReadOnlyList<MediaFolderConfiguration> mediaList, bool skipGeneration)> GetMediaFoldersForLibraryInVFS(Folder mediaFolder, CollectionType? collectionType) {
+        var (libraryConfig, mediaFolderConfig) = await GetOrCreateConfigurationForMediaFolder(mediaFolder, collectionType).ConfigureAwait(false);
         await LockObj.WaitAsync().ConfigureAwait(false);
         try {
             var skipGeneration = LibraryEdits.Count is > 0 && LibraryManager.IsScanRunning;
-            if (LibraryManager.GetItemById(mediaFolderConfig.LibraryId) is not Folder libraryFolder)
+            if (libraryConfig is null || !libraryConfig.IsVirtualFileSystemEnabled || mediaFolderConfig is not null)
                 return (null, [], skipGeneration);
-
-            var virtualFolder = GetVirtualFolders()
-                .FirstOrDefault(folder => Guid.TryParse(folder.ItemId, out var guid) && guid == mediaFolderConfig.LibraryId);
-            if (virtualFolder is null || virtualFolder.Locations.Length is 0)
-                return (null, [], skipGeneration);
-
-            var vfsPath = libraryFolder.GetVirtualRoot();
-            var vfsRootConfig = Plugin.Instance.Configuration.MediaFolders.FirstOrDefault(config => config.IsVirtualRoot && config.LibraryId == mediaFolderConfig.LibraryId);
-            if (vfsRootConfig is null || vfsPath is null || vfsRootConfig.MediaFolderPath != vfsPath)
-                return (null, [], skipGeneration);
-
-            var mediaFolders = Plugin.Instance.Configuration.MediaFolders
-                .Where(config => config.IsMapped && !config.IsVirtualRoot && config.LibraryId == mediaFolderConfig.LibraryId && (filter is null || filter(config)) && LibraryManager.GetItemById(config.MediaFolderId) is Folder)
+            var mediaFolders = libraryConfig.MediaFolders
+                .Where(config => config.IsMapped)
                 .ToList();
-            return (vfsRootConfig, mediaFolders, skipGeneration);
+            return (libraryConfig, mediaFolders, skipGeneration);
         }
         finally {
             LockObj.Release();
         }
     }
 
-    public async Task<MediaFolderConfiguration> GetOrCreateConfigurationForMediaFolder(Folder mediaFolder, CollectionType? collectionType = CollectionType.unknown) {
+    public async Task<(LibraryConfiguration? libraryConfiguration, MediaFolderConfiguration? mediaFolderConfiguration)> GetOrCreateConfigurationForMediaFolder(Folder mediaFolder, CollectionType? collectionType = CollectionType.unknown) {
         await LockObj.WaitAsync().ConfigureAwait(false);
         try {
             var allVirtualFolders = GetVirtualFolders();
@@ -251,9 +223,14 @@ public class MediaFolderConfigurationService {
                 await GenerateAllConfigurations(allVirtualFolders).ConfigureAwait(false);
             }
 
-            var config = Plugin.Instance.Configuration;
-            var mediaFolderConfig = config.MediaFolders.First(c => c.MediaFolderId == mediaFolder.Id && c.LibraryId == libraryId);
-            return mediaFolderConfig;
+            if (Plugin.Instance.Configuration.Libraries.FirstOrDefault(lib => lib.IsVirtualFileSystemEnabled && lib.VirtualRoot == mediaFolder.Path) is { } libraryConfig) {
+                return (libraryConfig, null);
+            }
+
+            foreach (var mediaFolderConfig in Plugin.Instance.Configuration.LibraryFolders.Where(mf => mf.Path == mediaFolder.Path).ToList()) {
+                return (mediaFolderConfig.Library, mediaFolderConfig);
+            }
+            return (null, null);
         }
         finally {
             LockObj.Release();
@@ -267,151 +244,228 @@ public class MediaFolderConfigurationService {
                     Logger.LogWarning("Skipping virtual folder {Name} because it has no ItemId or LibraryOptions.", virtualFolder.Name);
                     return false;
                 }
-
                 return virtualFolder.CollectionType.ConvertToCollectionType() is null or CollectionType.movies or CollectionType.tvshows &&
                     ShokoIdLookup.IsEnabledForLibraryOptions(virtualFolder.LibraryOptions);
             })
             .ToList();
         Logger.LogDebug("Found {Count} out of {TotalCount} libraries to check media folder configurations for.", filteredVirtualFolders.Count, allVirtualFolders.Count);
+        var shouldSaveConfig = false;
+        var newLibraryConfigList = new List<LibraryConfiguration>();
+        var oldLibraryConfigList = new List<LibraryConfiguration>();
+        var newFolderConfigList = new List<(LibraryConfiguration libraryConfiguration, MediaFolderConfiguration mediaFolderConfiguration)>();
+        var oldFolderConfigList = new List<(LibraryConfiguration libraryConfiguration, MediaFolderConfiguration mediaFolderConfiguration)>();
+        var librariesToKeep = new HashSet<Guid>();
         var config = Plugin.Instance.Configuration;
         foreach (var virtualFolder in filteredVirtualFolders) {
-            if (!Guid.TryParse(virtualFolder.ItemId, out var libraryId) || LibraryManager.GetItemById(libraryId) is not Folder libraryFolder)
-                throw new Exception($"Unable to find virtual folder \"{virtualFolder.Name}\"");
-
-            Logger.LogDebug("Checking {MediaFolderCount} media folders for library {LibraryName}. (Library={LibraryId})", virtualFolder.Locations.Length, virtualFolder.Name, libraryId);
-            MediaFolderConfiguration? mediaFolderConfig = null;
-            var libraryConfig = config.MediaFolders.FirstOrDefault(c => c.LibraryId == libraryId);
-            foreach (var mediaFolderPath in virtualFolder.Locations) {
-                if (LibraryManager.FindByPath(mediaFolderPath, true) is not Folder secondFolder) {
-                    Logger.LogTrace("Unable to find database entry for {Path} (Library={LibraryId})", mediaFolderPath, libraryId);
-                    continue;
-                }
-
-                if (config.MediaFolders.Find(c => string.Equals(mediaFolderPath, c.MediaFolderPath) && c.LibraryId == libraryId) is { } mfc) {
-                    Logger.LogTrace("Found existing entry for media folder at {Path} (Library={LibraryId})", mediaFolderPath, libraryId);
-                    mediaFolderConfig = mfc;
-                    continue;
-                }
-
-                mediaFolderConfig = await CreateConfigurationForPath(libraryId, secondFolder, libraryConfig).ConfigureAwait(false);
-            }
-
-            if (mediaFolderConfig is null)
+            if (!Guid.TryParse(virtualFolder.ItemId, out var libraryId) || LibraryManager.GetItemById(libraryId) is not Folder libraryFolder) {
+                Logger.LogWarning("Unable to find virtual folder with name: {VirtualFolderName}", virtualFolder.Name);
                 continue;
-
-            var vfsPath = libraryFolder.GetVirtualRoot();
-            var vfsFolderName = Path.GetFileName(vfsPath);
-            var shouldAttach = mediaFolderConfig.IsVirtualFileSystemEnabled;
-            if (shouldAttach && !virtualFolder.Locations.Contains(vfsPath, Path.DirectorySeparatorChar is '\\' ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal)) {
-                if (!LibraryEdits.TryGetValue(libraryId, out var edits))
-                    LibraryEdits[libraryId] = edits = (libraryFolder.Name, [], []);
-                edits.add.Add(vfsPath);
             }
-
-            var toRemove = virtualFolder.Locations
-                .Except(shouldAttach ? [vfsPath] : [])
-                .Where(location =>
-                    // In case the VFS root changes.
-                    (string.Equals(Path.GetFileName(location), vfsFolderName) && !string.Equals(location, vfsPath)) ||
-                    // In case the libraryId changes but the root remains the same.
-                    Plugin.Instance.AllVirtualRoots.Any(virtualRoot => location.StartsWith(virtualRoot, Path.DirectorySeparatorChar is '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)))
-                .ToList();
-            if (toRemove.Count > 0) {
-                if (!LibraryEdits.TryGetValue(libraryId, out var edits))
-                    LibraryEdits[libraryId] = edits = (libraryFolder.Name, [], []);
-                foreach (var location in toRemove)
-                    edits.remove.Add(location);
+            if (!librariesToKeep.Add(libraryId)) {
+                Logger.LogTrace("Skipping library {LibraryName} because it has already been processed. (Library={LibraryId})", libraryFolder.Name, libraryId);
+                continue;
             }
-        }
-
-        var mediaFoldersToRemove = config.MediaFolders
-            .Where(c => !filteredVirtualFolders.Any(v => Guid.Parse(v.ItemId) == c.LibraryId))
-            .ToList();
-        Logger.LogDebug("Found {Count} out of {TotalCount} media folders to remove.", mediaFoldersToRemove.Count, config.MediaFolders.Count);
-        foreach (var mediaFolder in mediaFoldersToRemove) {
-            Logger.LogTrace("Removing config for media folder at path {Path} (Library={LibraryId})", mediaFolder.MediaFolderPath, mediaFolder.LibraryId);
-            config.MediaFolders.Remove(mediaFolder);
-        }
-    }
-
-    private async Task<MediaFolderConfiguration> CreateConfigurationForPath(Guid libraryId, Folder mediaFolder, MediaFolderConfiguration? libraryConfig) {
-        // Check if we should introduce the VFS for the media folder.
-        var config = Plugin.Instance.Configuration;
-        var mediaFolderConfig = new MediaFolderConfiguration() {
-            LibraryId = libraryId,
-            MediaFolderId = mediaFolder.Id,
-            MediaFolderPath = mediaFolder.Path,
-            IsFileEventsEnabled = libraryConfig?.IsFileEventsEnabled ?? config.SignalR_FileEvents,
-            IsRefreshEventsEnabled = libraryConfig?.IsRefreshEventsEnabled ?? config.SignalR_RefreshEnabled,
-            LibraryOperationMode = libraryConfig?.LibraryOperationMode ?? config.DefaultLibraryOperationMode,
-            IterativeVfsGeneration_Enabled = libraryConfig?.IterativeVfsGeneration_Enabled ?? config.VFS_IterativeGenerationEnabled,
-            IterativeVfsGeneration_MaxCount = libraryConfig?.IterativeVfsGeneration_MaxCount ?? config.VFS_IterativeGenerationMaxCount,
-        };
-
-        var start = DateTime.UtcNow;
-        var attempts = 0;
-        if (mediaFolder.Path.StartsWith(Plugin.Instance.VirtualRoot)) {
-            Logger.LogDebug("Not asking remote server because {Path} is a VFS root. (Library={LibraryId})", mediaFolder.Path, libraryId);
-            mediaFolderConfig.ManagedFolderId = -1;
-            mediaFolderConfig.ManagedFolderName = "VFS Root";
-            mediaFolderConfig.ManagedFolderRelativePath = string.Empty;
-        }
-        else {
-            var foundLocations = new List<(int, string)>();
-            var samplePaths = GetSamplePaths(mediaFolder.Path).ToList();
-
-            Logger.LogDebug("Asking remote server if it knows any of the {Count} sampled files in {Path}. (Library={LibraryId})", samplePaths.Count > 100 ? 100 : samplePaths.Count, mediaFolder.Path, libraryId);
-            foreach (var path in samplePaths) {
-                attempts++;
-                var partialPath = path[mediaFolder.Path.Length..];
-                var files = await ApiClient.GetFileByPath(partialPath).ConfigureAwait(false);
-                var file = files.FirstOrDefault();
-                if (file is null)
+            if (config.Libraries.FirstOrDefault(c => c.Id == libraryId) is not { } libraryConfig) {
+                libraryConfig = new() {
+                    Id = libraryId,
+                    Name = libraryFolder.Name,
+                    IsFileEventsEnabled = config.SignalR_FileEvents,
+                    IsRefreshEventsEnabled = config.SignalR_RefreshEnabled,
+                    LibraryOperationMode = config.DefaultLibraryOperationMode,
+                    IterativeVfsGeneration_Enabled = config.VFS_IterativeGenerationEnabled,
+                    IterativeVfsGeneration_MaxCount = config.VFS_IterativeGenerationMaxCount,
+                };
+                config.Libraries.Add(libraryConfig);
+                newLibraryConfigList.Add(libraryConfig);
+                shouldSaveConfig = true;
+            }
+            if (!string.Equals(libraryConfig.Name, libraryFolder.Name, StringComparison.Ordinal)) {
+                libraryConfig.Name = libraryFolder.Name;
+                shouldSaveConfig = true;
+            }
+            Logger.LogDebug("Checking {MediaFolderCount} media folders for library {LibraryName}. (Library={LibraryId})", virtualFolder.Locations.Length, virtualFolder.Name, libraryId);
+            foreach (var mediaFolderPath in virtualFolder.Locations) {
+                // Remove empty/invalid media folders.
+                if (string.IsNullOrEmpty(mediaFolderPath)) {
+                    RemoveFromLibrary(libraryConfig, string.Empty);
                     continue;
-
-                var fileId = file.Id.ToString();
-                var fileLocations = file.Locations
-                    .Where(location => location.RelativePath.EndsWith(partialPath))
-                    .ToList();
-                if (fileLocations.Count is 0)
-                    continue;
-
-                var fileLocation = fileLocations[0];
-                foundLocations.Add((fileLocation.ManagedFolderId, fileLocation.RelativePath[..^partialPath.Length]));
-            }
-
-            if (foundLocations.Count > 0) {
-                var groupedLocations = foundLocations
-                    .GroupBy(x => x)
-                    .ToDictionary(x => x.Key, x => x.Count());
-                foreach (var ((managedFolderId, relativePath), count) in groupedLocations) {
-                    Logger.LogDebug("Found {Count} hits for managed folder {Id} at relative path {RelativePath}. (Library={LibraryId})", count, managedFolderId, relativePath, libraryId);
                 }
-                (mediaFolderConfig.ManagedFolderId, mediaFolderConfig.ManagedFolderRelativePath) = groupedLocations
-                    .MaxBy(x => x.Value)!
-                    .Key;
+                // Add or remove the VFS root as a media folder as needed.
+                if (mediaFolderPath == libraryConfig.VirtualRoot) {
+                    if (!libraryConfig.IsVirtualFileSystemEnabled) {
+                        RemoveFromLibrary(libraryConfig, mediaFolderPath);
+                    }
+                    continue;
+                }
+                // Remove stale VFS roots.
+                if (Plugin.Instance.AllVirtualRoots.Any(mediaFolderPath.StartsWith)) {
+                    RemoveFromLibrary(libraryConfig, mediaFolderPath);
+                    continue;
+                }
+                // Add config if needed.
+                if (!libraryConfig.MediaFolders.Any(mf => mf.Path == mediaFolderPath)) {
+                    var mediaFolderConfig = CreateConfigurationForPath(libraryId, mediaFolderPath)
+                        .ConfigureAwait(false)
+                        .GetAwaiter()
+                        .GetResult();
+                    config.LibraryFolders.Add(mediaFolderConfig);
+                    newFolderConfigList.Add((libraryConfig, mediaFolderConfig));
+                    shouldSaveConfig = true;
+                }
+                // Remove folder from library if VFS is enabled.
+                if (libraryConfig.IsVirtualFileSystemEnabled) {
+                    RemoveFromLibrary(libraryConfig, mediaFolderPath);
+                }
             }
-
+            if (libraryConfig.IsVirtualFileSystemEnabled && !virtualFolder.Locations.Contains(libraryConfig.VirtualRoot)) {
+                AddToLibrary(libraryConfig, libraryConfig.VirtualRoot);
+            }
+            foreach (var mediaFolderConfig in libraryConfig.MediaFolders) {
+                if (!libraryConfig.IsVirtualFileSystemEnabled) {
+                    // We have disabled the VFS and need to re-add the media folders again.
+                    if (virtualFolder.Locations.Length == 1 && virtualFolder.Locations[0] == libraryConfig.VirtualRoot) {
+                        AddToLibrary(libraryConfig, mediaFolderConfig.Path);
+                    }
+                    // The VFS is disabled, and we have a mapping for a media folder which is not linked to the library,
+                    // so we need to remove it.
+                    else if (!virtualFolder.Locations.Contains(mediaFolderConfig.Path)) {
+                        config.LibraryFolders.Remove(mediaFolderConfig);
+                        oldFolderConfigList.Add((mediaFolderConfig.Library, mediaFolderConfig));
+                        shouldSaveConfig = true;
+                        continue;
+                    }
+                }
+                // Refresh config if needed.
+                if (mediaFolderConfig.NeedsRefresh) {
+                    var newMediaFolderConfig = CreateConfigurationForPath(libraryId, mediaFolderConfig.Path)
+                        .ConfigureAwait(false)
+                        .GetAwaiter()
+                        .GetResult();
+                    mediaFolderConfig.MergeWith(newMediaFolderConfig);
+                    mediaFolderConfig.NeedsRefresh = false;
+                    shouldSaveConfig = true;
+                }
+            }
+        }
+        var librariesToRemove = config.Libraries
+            .ExceptBy(librariesToKeep, c => c.Id)
+            .ToList();
+        var mediaFoldersToRemove = config.LibraryFolders
+            .ExceptBy(librariesToKeep, c => c.LibraryId)
+            .ToList();
+        foreach (var mediaFolder in mediaFoldersToRemove) {
+            Logger.LogTrace("Removing config for media folder at path {Path} (Library={LibraryId})", mediaFolder.Path, mediaFolder.LibraryId);
+            config.LibraryFolders.Remove(mediaFolder);
+            oldFolderConfigList.Add((mediaFolder.Library, mediaFolder));
+            shouldSaveConfig = true;
+        }
+        foreach (var library in librariesToRemove) {
+            Logger.LogTrace("Removing config for library {LibraryName} (Library={LibraryId})", library.Name, library.Id);
+            config.Libraries.Remove(library);
+            oldLibraryConfigList.Add(library);
+            shouldSaveConfig = true;
+        }
+        Logger.LogDebug("Removed {Count} libraries and {MediaFolderCount} media folders from configuration.", librariesToRemove.Count, mediaFoldersToRemove.Count);
+        if (shouldSaveConfig)
+            Plugin.Instance.SaveConfiguration(config);
+        foreach (var libraryConfig in newLibraryConfigList) {
+            LibraryChangeTracker[libraryConfig.Id] = ConstructKey(libraryConfig);
             try {
-                var managedFolder = await ApiClient.GetManagedFolder(mediaFolderConfig.ManagedFolderId).ConfigureAwait(false);
-                if (managedFolder != null)
-                    mediaFolderConfig.ManagedFolderName = managedFolder.Name;
+                LibraryConfigurationAdded?.Invoke(null, new(libraryConfig, libraryConfig.MediaFolders));
             }
             catch { }
         }
+        foreach (var (libraryConfig, mediaFolderConfig) in newFolderConfigList.ExceptBy(newLibraryConfigList, c => c.libraryConfiguration)) {
+            try {
+                MediaFolderConfigurationAdded?.Invoke(null, new(libraryConfig, mediaFolderConfig));
+            }
+            catch { }
+        }
+        foreach (var (libraryConfig, mediaFolderConfig) in oldFolderConfigList.ExceptBy(oldLibraryConfigList, c => c.libraryConfiguration)) {
+            try {
+                MediaFolderConfigurationRemoved?.Invoke(null, new(libraryConfig, mediaFolderConfig));
+            }
+            catch { }
+        }
+        foreach (var libraryConfig in oldLibraryConfigList) {
+            LibraryChangeTracker.Remove(libraryConfig.Id);
+            try {
+                var mediaFolders = mediaFoldersToRemove
+                    .Where(mf => mf.LibraryId == libraryConfig.Id)
+                    .ToList();
+                LibraryConfigurationRemoved?.Invoke(null, new(libraryConfig, mediaFolders));
+            }
+            catch { }
+        }
+    }
 
-        // Store and log the result.
-        MediaFolderChangeKeys[mediaFolder.Id] = ConstructKey(mediaFolderConfig);
-        config.MediaFolders.Add(mediaFolderConfig);
-        Plugin.Instance.UpdateConfiguration(config);
+    private void AddToLibrary(LibraryConfiguration config, string path) {
+        if (!LibraryEdits.TryGetValue(config.Id, out var edits))
+            LibraryEdits[config.Id] = edits = (config.Name, [], []);
+        edits.add.Add(path);
+    }
+
+    private void RemoveFromLibrary(LibraryConfiguration config, string path) {
+        if (!LibraryEdits.TryGetValue(config.Id, out var edits))
+            LibraryEdits[config.Id] = edits = (config.Name, [], []);
+        edits.remove.Add(path);
+    }
+
+    private async Task<MediaFolderConfiguration> CreateConfigurationForPath(Guid libraryId, string mediaFolderPath) {
+        // Check if we should introduce the VFS for the media folder.
+        var config = Plugin.Instance.Configuration;
+        var mediaFolderConfig = new MediaFolderConfiguration() { Path = mediaFolderPath };
+        var start = DateTime.UtcNow;
+        var attempts = 0;
+        var foundLocations = new List<(int, string)>();
+        var samplePaths = GetSamplePaths(mediaFolderPath).ToList();
+        Logger.LogDebug("Asking remote server if it knows any of the {Count} sampled files in {Path}. (Library={LibraryId})", samplePaths.Count > 100 ? 100 : samplePaths.Count, mediaFolderPath, libraryId);
+        foreach (var path in samplePaths) {
+            attempts++;
+            var partialPath = path[mediaFolderPath.Length..];
+            var files = await ApiClient.GetFileByPath(partialPath).ConfigureAwait(false);
+            var file = files.Count > 0 ? files[0] : null;
+            if (file is null)
+                continue;
+
+            var fileId = file.Id.ToString();
+            var fileLocations = file.Locations
+                .Where(location => location.RelativePath.EndsWith(partialPath))
+                .ToList();
+            if (fileLocations.Count is 0)
+                continue;
+
+            var fileLocation = fileLocations[0];
+            foundLocations.Add((fileLocation.ManagedFolderId, fileLocation.RelativePath[..^partialPath.Length]));
+        }
+
+        if (foundLocations.Count > 0) {
+            var groupedLocations = foundLocations
+                .GroupBy(x => x)
+                .ToDictionary(x => x.Key, x => x.Count());
+            foreach (var ((managedFolderId, relativePath), count) in groupedLocations) {
+                Logger.LogDebug("Found {Count} hits for managed folder {Id} at relative path {RelativePath}. (Library={LibraryId})", count, managedFolderId, relativePath, libraryId);
+            }
+            (mediaFolderConfig.ManagedFolderId, mediaFolderConfig.ManagedFolderRelativePath) = groupedLocations
+                .MaxBy(x => x.Value)!
+                .Key;
+        }
+
+        try {
+            var managedFolder = await ApiClient.GetManagedFolder(mediaFolderConfig.ManagedFolderId).ConfigureAwait(false);
+            if (managedFolder != null)
+                mediaFolderConfig.ManagedFolderName = managedFolder.Name;
+        }
+        catch { }
+
         if (mediaFolderConfig.IsMapped) {
             Logger.LogInformation(
                 "Found a match for media folder at {Path} in {TimeSpan}. (ManagedFolder={FolderId},RelativePath={RelativePath},MediaLibrary={Path},Attempts={Attempts},Library={LibraryId})",
-                mediaFolder.Path,
+                mediaFolderPath,
                 DateTime.UtcNow - start,
                 mediaFolderConfig.ManagedFolderId,
                 mediaFolderConfig.ManagedFolderRelativePath,
-                mediaFolder.Path,
+                mediaFolderPath,
                 attempts,
                 libraryId
             );
@@ -419,14 +473,12 @@ public class MediaFolderConfigurationService {
         else {
             Logger.LogWarning(
                 "Failed to find a match for media folder at {Path} after {Amount} attempts in {TimeSpan}. (Library={LibraryId})",
-                mediaFolder.Path,
+                mediaFolderPath,
                 attempts,
                 DateTime.UtcNow - start,
                 libraryId
             );
         }
-
-        ConfigurationAdded?.Invoke(null, new(mediaFolderConfig, mediaFolder));
 
         return mediaFolderConfig;
     }

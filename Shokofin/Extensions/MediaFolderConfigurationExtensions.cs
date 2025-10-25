@@ -14,13 +14,13 @@ public static class MediaFolderConfigurationExtensions {
     public static IReadOnlyList<(int managedFolderId, string managedFolderSubPath, IReadOnlyList<string> mediaFolderPaths)> ToManagedFolderList(this IEnumerable<MediaFolderConfiguration> mediaConfigs)
         => mediaConfigs
             .GroupBy(a => (a.ManagedFolderId, a.ManagedFolderRelativePath))
-            .Select(g => (g.Key.ManagedFolderId, g.Key.ManagedFolderRelativePath, g.Select(a => a.MediaFolderPath).ToList() as IReadOnlyList<string>))
+            .Select(g => (g.Key.ManagedFolderId, g.Key.ManagedFolderRelativePath, g.Select(a => a.Path).ToList() as IReadOnlyList<string>))
             .ToList();
 
     public static IReadOnlyList<(string managedFolderSubPath, bool vfsEnabled, IReadOnlyList<string> mediaFolderPaths)> ToManagedFolderList(this IEnumerable<MediaFolderConfiguration> mediaConfigs, int managedFolderId, string relativePath)
         => mediaConfigs
             .Where(a => a.ManagedFolderId == managedFolderId && a.IsEnabledForPath(relativePath))
-            .GroupBy(a => (a.ManagedFolderId, a.ManagedFolderRelativePath, a.IsVirtualFileSystemEnabled))
-            .Select(g => (g.Key.ManagedFolderRelativePath, g.Key.IsVirtualFileSystemEnabled, g.Select(a => a.MediaFolderPath).ToList() as IReadOnlyList<string>))
+            .GroupBy(a => (a.ManagedFolderId, a.ManagedFolderRelativePath, a.Library.IsVirtualFileSystemEnabled))
+            .Select(g => (g.Key.ManagedFolderRelativePath, g.Key.IsVirtualFileSystemEnabled, g.Select(a => a.Path).ToList() as IReadOnlyList<string>))
             .ToList();
 }

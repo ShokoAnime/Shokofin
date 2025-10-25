@@ -286,15 +286,8 @@ export const LibraryMenu = globalThis.LibraryMenu;
 
 /**
  * @typedef {{
- *   LibraryId: string;
- *   LibraryName: string | null;
- *   MediaFolderId: string;
- *   MediaFolderPath: string;
- *   ManagedFolderId: number;
- *   ManagedFolderName: string | null;
- *   ManagedFolderRelativePath: string;
- *   IsVirtualRoot: boolean;
- *   IsMapped: boolean;
+ *   Id: string;
+ *   Name: string;
  *   IsFileEventsEnabled: boolean;
  *   IsRefreshEventsEnabled: boolean;
  *   LibraryOperationMode: LibraryOperationMode;
@@ -304,6 +297,19 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   IterativeVfsGeneration_CurrentCount: number;
  *   IterativeVfsGeneration_MaxCount: number;
  *   IterativeVfsGeneration_ForceFullGenerationOnNextRefresh: boolean;
+ * }} LibraryConfig
+ */
+
+/**
+ * @typedef {{
+ *   LibraryId: string;
+ *   Path: string;
+ *   ManagedFolderId: number;
+ *   ManagedFolderName: string | null;
+ *   ManagedFolderRelativePath: string;
+ *   IsVirtualRoot: boolean;
+ *   IsMapped: boolean;
+ *   NeedsRefresh: boolean;
  * }} MediaFolderConfig
  */
 
@@ -519,7 +525,8 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   VFS_CustomLocation: string;
  *   VFS_IterativeGenerationEnabled: boolean;
  *   VFS_IterativeGenerationMaxCount: number;
- *   MediaFolders: MediaFolderConfig[];
+ *   Libraries: LibraryConfig[];
+ *   LibraryFolders: MediaFolderConfig[];
  *   SignalR_AutoConnectEnabled: boolean;
  *   SignalR_AutoReconnectInSeconds: number[];
  *   SignalR_RefreshEnabled: boolean;
