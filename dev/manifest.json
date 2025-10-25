@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.5.9",
+                "changelog": "`refactor`: **Rework library configuration**:\n\n- Reworked how the library configurations are stored, finally separating the library configuration from the media folder configurations. This has simplified the configuration for libraries, so we don't store `n` copies of the settings that applies to all the media folders.\n\n- We now automatically remove the media folders from the library and only store them in the configuration if the VFS is enabled. This will simplify some of the plugin internals, and also speed up the library validation as Jellyfin doesn't need to \"validate\" the contents within them before ignoring it all and instead use the VFS. Libraries not using the VFS should be unaffected by this change. In fact, we'll add them back to the library and remove the VFS root if you disable the VFS.\n\n- The real-time monitoring portions of the plugin has now been simplified for VFS based libraries as we're now not obstructing Jellyfin from seeing into the other media folders attached to the library \u2014 since they're simply not attached anymore! \ud83d\ude0c",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.9/shoko_5.0.5.9.zip",
+                "checksum": "aff71c7995dda665fc0cb78c2fa183b2",
+                "timestamp": "2025-10-25T06:27:38Z"
+            },
+            {
                 "version": "5.0.5.8",
                 "changelog": "`fix`: **Check containing folder path for movies**.\n\n`fix`: **Skip import of user data for series/seasons during iterative generation for unrelated entities**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.5/shoko_5.0.5.5.zip",
                 "checksum": "8a9a5d19dd2afac9848fdb15abbac310",
                 "timestamp": "2025-10-24T01:23:22Z"
-            },
-            {
-                "version": "5.0.5.4",
-                "changelog": "`fix`: **Correct config sanitation for max in-flight requests**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.4/shoko_5.0.5.4.zip",
-                "checksum": "ffaa2334d094dcbb8f061f4c2ebfcca3",
-                "timestamp": "2025-10-23T23:26:40Z"
             }
         ]
     }
