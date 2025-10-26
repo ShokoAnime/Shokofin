@@ -304,10 +304,7 @@ public class MediaFolderConfigurationService {
                 }
                 // Add config if needed.
                 if (!libraryConfig.MediaFolders.Any(mf => mf.Path == mediaFolderPath)) {
-                    var mediaFolderConfig = CreateConfigurationForPath(libraryId, mediaFolderPath)
-                        .ConfigureAwait(false)
-                        .GetAwaiter()
-                        .GetResult();
+                    var mediaFolderConfig = await CreateConfigurationForPath(libraryId, mediaFolderPath).ConfigureAwait(false);
                     config.LibraryFolders.Add(mediaFolderConfig);
                     newFolderConfigList.Add((libraryConfig, mediaFolderConfig));
                     shouldSaveConfig = true;
@@ -337,10 +334,7 @@ public class MediaFolderConfigurationService {
                 }
                 // Refresh config if needed.
                 if (mediaFolderConfig.NeedsRefresh) {
-                    var newMediaFolderConfig = CreateConfigurationForPath(libraryId, mediaFolderConfig.Path)
-                        .ConfigureAwait(false)
-                        .GetAwaiter()
-                        .GetResult();
+                    var newMediaFolderConfig = await CreateConfigurationForPath(libraryId, mediaFolderConfig.Path).ConfigureAwait(false);
                     mediaFolderConfig.MergeWith(newMediaFolderConfig);
                     mediaFolderConfig.NeedsRefresh = false;
                     shouldSaveConfig = true;
