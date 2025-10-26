@@ -1236,7 +1236,7 @@ async function applySignalrLibraryConfigToForm(form, libraryId, config = null) {
  */
 function addMediaFolder(form, libraryId, config, path) {
     const pathLower = path.toLowerCase();
-    if (config.LibraryFolders.filter(p => p.Path.toLowerCase() == pathLower).length) return;
+    if (config.LibraryFolders.filter(p => p.LibraryId === libraryId && p.Path.toLowerCase() == pathLower).length) return;
     config.LibraryFolders.push({
         LibraryId: libraryId,
         Path: path,
