@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.5.11",
+                "changelog": "`fix`: **Always display save button for library settings section**.\n\n`fix`: **Add missing library id check when adding a new path**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.11/shoko_5.0.5.11.zip",
+                "checksum": "356167b61c9503bcd6a5c483d67a9d5e",
+                "timestamp": "2025-10-26T01:03:02Z"
+            },
+            {
                 "version": "5.0.5.10",
                 "changelog": "`feat`: **Add per-library media folder management**:\n\nAllows adding and removing media folders per library configuration.\nRemoves the older approach of resetting all mappings and settings,\nas this is now handled individually per media folder.\n\n`chore`: **Change data option selector to use double quotes**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.7/shoko_5.0.5.7.zip",
                 "checksum": "2b601ade3c47ecac986c25715c9ffd5d",
                 "timestamp": "2025-10-24T02:49:54Z"
-            },
-            {
-                "version": "5.0.5.6",
-                "changelog": "`refactor`: **Cache episodes by id in client & fill episodes when getting all for series/show/season**.\n\n`chore`: **Fix indent**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.6/shoko_5.0.5.6.zip",
-                "checksum": "8028ac27d618c9401a999d9e7730addd",
-                "timestamp": "2025-10-24T02:29:17Z"
             }
         ]
     }
