@@ -2,38 +2,85 @@
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <OutputType>Library</OutputType>
-        <SignalRVersion>9.0.0</SignalRVersion>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="AsyncKeyedLock" Version="7.1.7" />
+    <!-- Exclude all DLLs from referenced projects by default -->
+    <ItemDefinitionGroup>
+        <ProjectReference>
+            <Private>false</Private>
+        </ProjectReference>
+    </ItemDefinitionGroup>
+
+    <!-- Jellyfin Core -->
+    <ItemGroup Condition="Exists('../../Jellyfin/MediaBrowser.Controller/MediaBrowser.Controller.csproj')">
+        <ProjectReference Include="../../Jellyfin/MediaBrowser.Controller/MediaBrowser.Controller.csproj" />
+    </ItemGroup>
+    <ItemGroup Condition="!Exists('../../Jellyfin/MediaBrowser.Controller/MediaBrowser.Controller.csproj')">
         <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="$(SignalRVersion)" />
-        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
+    </ItemGroup>
+
+    <!-- Shared dependencies with Jellyfin Core -->
+    <ItemGroup>
+        <PackageReference Include="AsyncKeyedLock" Version="7.1.*" />
         <PackageReference Include="DotNet.Glob" Version="3.1.*" />
     </ItemGroup>
 
+    <!-- Own dependencies we need to output with the package -->
+    <ItemGroup>
+        <CommonPackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.10" />
+        <CommonPackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="9.0.10" />
+        <CommonPackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="9.0.10" />
+        <CommonPackageReference Include="Microsoft.Extensions.Http" Version="9.0.10" />
+        <CommonPackageReference Include="System.Net.ServerSentEvents" Version="9.0.10" />
+        <PackageReference Include="@(CommonPackageReference)" />
+    </ItemGroup>
+
+    <!-- Code analyzers -->
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0" PrivateAssets="All" />
         <PackageReference Include="SerilogAnalyzer" Version="0.15.0" PrivateAssets="All" />
         <PackageReference Include="SmartAnalyzers.MultithreadingAnalyzer" Version="1.1.31" PrivateAssets="All" />
     </ItemGroup>
 
-    <Target Name="CopySignalRDLLsToOutputPath" AfterTargets="Build">
-        <ItemGroup>
-            <BasePackage Include="$(NuGetPackageRoot)\microsoft.aspnetcore.signalr.client\$(SignalRVersion)\lib\$(TargetFramework)\Microsoft.AspNetCore.SignalR.Client.dll" />
-            <CorePackage Include="$(NuGetPackageRoot)\microsoft.aspnetcore.signalr.client.core\$(SignalRVersion)\lib\$(TargetFramework)\Microsoft.AspNetCore.SignalR.Client.Core.dll" />
-            <HttpPackage Include="$(NuGetPackageRoot)\microsoft.aspnetcore.http.connections.client\$(SignalRVersion)\lib\$(TargetFramework)\Microsoft.AspNetCore.Http.Connections.Client.dll" />
-            <HttpPackage Include="$(NuGetPackageRoot)\system.net.serversentevents\$(SignalRVersion)\lib\$(TargetFramework)\System.Net.ServerSentEvents.dll" />
-        </ItemGroup>
-        <Copy SourceFiles="@(BasePackage)" DestinationFolder="$(OutputPath)" />
-        <Copy SourceFiles="@(CorePackage)" DestinationFolder="$(OutputPath)" />
-        <Copy SourceFiles="@(HttpPackage)" DestinationFolder="$(OutputPath)" />
-    </Target>
-
+    <!-- HTML / JS -->
     <ItemGroup>
         <None Remove="Pages\**\*" />
         <EmbeddedResource Include="Pages\**\*" />
     </ItemGroup>
+
+    <Target Name="CopyExtraOutputAssembliesToOutputPath" AfterTargets="Build">
+        <GetPublicPackageReferences TargetFramework="$(TargetFramework)" NuGetPackageRoot="$(NuGetPackageRoot)" PackageReference="@(CommonPackageReference)">
+            <Output TaskParameter="Results" ItemName="ExtraOutputAssemblies" />
+        </GetPublicPackageReferences>
+        <Copy SourceFiles="@(ExtraOutputAssemblies)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+    </Target>
+
+    <UsingTask TaskName="GetPublicPackageReferences" TaskFactory="RoslynCodeTaskFactory" AssemblyName="Microsoft.Build.Tasks.Core">
+        <ParameterGroup>
+            <TargetFramework ParameterType="System.String" Required="true" />
+            <NuGetPackageRoot ParameterType="System.String" Required="true" />
+            <PackageReference ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+            <Results Output="true" ParameterType="Microsoft.Build.Framework.ITaskItem[]" />
+        </ParameterGroup>
+        <Task>
+            <Using Namespace="System.IO" />
+            <Using Namespace="System.Linq" />
+            <Using Namespace="Microsoft.Build.Framework" />
+            <Code Type="Fragment" Language="cs"><![CDATA[
+                Results = PackageReference
+                    .Select(pkg => new TaskItem(
+                        Path.Combine(
+                            NuGetPackageRoot,
+                            pkg.ItemSpec.ToLowerInvariant(),
+                            pkg.GetMetadata("Version"),
+                            "lib",
+                            TargetFramework,
+                            pkg.ItemSpec + ".dll"
+                        )
+                    ))
+                    .ToArray();
+            ]]></Code>
+        </Task>
+    </UsingTask>
 </Project>

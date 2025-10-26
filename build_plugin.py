@@ -16,6 +16,14 @@ def extract_target_framework(csproj_path):
     else:
         return None
 
+def extract_packages_to_output(csproj_path):
+    with open(csproj_path, "r") as file:
+        content = file.read()
+    # create a list of all matches for r"<PackageReference Include="([^"]*?)" Version="(?:[^"]*?)" CopyToOutput="True" />" and filter to
+    # the first group in each match
+    matches = [match.group(1) + ".dll" for match in re.finditer(r"<PackageReference Include=\"([^\"]*?)\" Version=\"(?:[^\"]*?)\" CopyToOutput=\"True\" />", content)]
+    return matches
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--repo", required=True)
 parser.add_argument("--version", required=True)
@@ -46,6 +54,11 @@ if "changelog" in data:
         data["changelog"] = os.environ["CHANGELOG"].strip()
     else:
         data["changelog"] = ""
+
+if "artifacts" in data:
+    data["artifacts"].extend(extract_packages_to_output("./Shokofin/Shokofin.csproj"))
+else:
+    data["artifacts"] = extract_packages_to_output("./Shokofin/Shokofin.csproj")
 
 with open(build_file, "w") as file:
     yaml.dump(data, file, sort_keys=False)
