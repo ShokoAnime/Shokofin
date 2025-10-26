@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.5.13",
+                "changelog": "`repo`: **Move http extensions dll from own to shared**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.13/shoko_5.0.5.13.zip",
+                "checksum": "f58163c967b6d536dc74e21a65902f7e",
+                "timestamp": "2025-10-26T22:56:48Z"
+            },
+            {
                 "version": "5.0.5.12",
                 "changelog": "`chore`: **Await in async task**.\n\n`repo`: **Refine build process**:\n\n- Updated the .csproj project file to not hard code copying of the DLLs, and instead which DLLs to copy based on the project references\n\n- Updated the .csproj project file to conditionally load a local jellyfin project or the nuget package depending on if said local project is available or not.\n\n- Updated the JPRM build process to dynamically include the DLLs in the .csproj project file instead of hard coding them in the build configuration file.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.9/shoko_5.0.5.9.zip",
                 "checksum": "aff71c7995dda665fc0cb78c2fa183b2",
                 "timestamp": "2025-10-25T06:27:38Z"
-            },
-            {
-                "version": "5.0.5.8",
-                "changelog": "`fix`: **Check containing folder path for movies**.\n\n`fix`: **Skip import of user data for series/seasons during iterative generation for unrelated entities**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.8/shoko_5.0.5.8.zip",
-                "checksum": "f0a2952c7adebd98372488c535ad1702",
-                "timestamp": "2025-10-24T03:06:30Z"
             }
         ]
     }
