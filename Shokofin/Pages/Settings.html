@@ -1748,8 +1748,13 @@ form:not(.advanced-mode) .advanced-only {
                         </div>
                         <div id="MediaFolderPerFolderSettingsContainer" hidden>
                             <div id="MediaFolderManagedFolderMapping" style="margin-bottom: 2em;">
-                                <h3 class="checkboxListLabel">Managed Folder Mapping</h3>
-                                <div class="checkboxList paperList checkboxList-paperList">
+                                <div style="display: flex; align-items: center">
+                                    <h3 class="folderListLabel" style="margin: .5em 0">Managed Folder Mapping</h3>
+                                    <button is="emby-button" type="button" class="fab btnAddFolder submit emby-button" title="${Add}">
+                                        <span class="material-icons add"></span>
+                                    </button>
+                                </div>
+                                <div class="folderList paperList folderList-paperList">
                                 </div>
                                 <div class="fieldDescription">The Shoko Managed Folders the Media Folders are mapped to.</div>
                             </div>
@@ -1803,12 +1808,6 @@ form:not(.advanced-mode) .advanced-only {
                                     <span>Force Full VFS Generation on Next Library Refresh</span>
                                 </label>
                                 <div class="fieldDescription checkboxFieldDescription">Force a full generation of the VFS on the next library generation. This option will be turned off once the next generation has started.</div>
-                            </div>
-                            <div class="inputContainer inputContainer-withDescription">
-                                <button is="emby-button" type="submit" name="remove-library" class="raised button-delete block emby-button">
-                                    <span>${ButtonRemove}</span>
-                                </button>
-                                <div class="fieldDescription">This will delete the saved settings and reset the mapping for the library.</div>
                             </div>
                             <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                                 <span>${Save}</span>

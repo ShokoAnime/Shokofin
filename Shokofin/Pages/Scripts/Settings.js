@@ -22,10 +22,11 @@ promise.then(({
     ShokoApiClient,
     State,
     createControllerFactory,
+    escapeHtml,
+    getParentWithClass,
     handleError,
     overrideSortableCheckboxList,
     renderCheckboxList,
-    renderReadonlyList,
     renderSortableCheckboxList,
     retrieveCheckboxList,
     retrieveSortableCheckboxList,
@@ -246,6 +247,26 @@ createControllerFactory({
                 applyLibraryConfigToForm(form, this.value);
             });
 
+            form.querySelector("#MediaFolderManagedFolderMapping .btnAddFolder").addEventListener("click", function () {
+                const libraryId = form.querySelector("#MediaFolderSelector").value;
+                if (!libraryId) return;
+                const picker = new Dashboard.DirectoryBrowser();
+                picker.show({ callback: function (path) {
+                    if (path) {
+                        addMediaFolder(form, libraryId, State.config, path);
+                    }
+                    picker.close();
+                } });
+            });
+
+            form.querySelector("#MediaFolderManagedFolderMapping .folderList").addEventListener("click",  function (e) {
+                const button = getParentWithClass(e.target, "btnRemovePath");
+                const index = parseInt(button.getAttribute("data-index"), 10);
+                const libraryId = form.querySelector("#MediaFolderSelector").value;
+                if (Number.isNaN(index) || !libraryId) return;
+                removeMediaFolder(form, libraryId, State.config, index);
+            });
+
             form.querySelector("#SignalRMediaFolderSelector").addEventListener("change", function () {
                 applySignalrLibraryConfigToForm(form, this.value);
             });
@@ -276,11 +297,6 @@ createControllerFactory({
                     case "settings":
                         Dashboard.showLoadingMsg();
                         syncSettings(form)
-                            .then((config) => updateView(view, form, config))
-                            .catch(handleError);
-                        break;
-                    case "remove-library":
-                        removeLibraryConfig(form)
                             .then((config) => updateView(view, form, config))
                             .catch(handleError);
                         break;
@@ -1105,21 +1121,7 @@ async function applyLibraryConfigToForm(form, libraryId, config = null) {
     }
 
     const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
-    if (!mediaFolders.length) {
-        renderReadonlyList(form, "MediaFolderManagedFolderMapping", []);
-
-        form.querySelector("#MediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
-        if (shouldHide) {
-            Dashboard.hideLoadingMsg();
-        }
-        return;
-    }
-
-    renderReadonlyList(form, "MediaFolderManagedFolderMapping", mediaFolders.map((c) =>
-        c.IsMapped
-            ? `${c.Path} | ${c.ManagedFolderName} (${c.ManagedFolderId}) ${c.ManagedFolderRelativePath}`.trimEnd()
-            : `${c.Path} | Not Mapped`
-    ));
+    renderFolderList(form, "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
 
     // Configure the elements within the media folder container
     const libraryConfig = config.Libraries.find((c) => c.Id === libraryId);
@@ -1135,6 +1137,40 @@ async function applyLibraryConfigToForm(form, libraryId, config = null) {
     if (shouldHide) {
         Dashboard.hideLoadingMsg();
     }
+}
+
+/**
+ * Converts a media folder configuration to a stringified form for display in the UI.
+ *
+ * @param {import("./Common.js").MediaFolderConfig} c - Media Folder Configuration.
+ * @returns {string}
+ */
+function mediaFolderConfigToString(c) {
+    return c.IsMapped
+        ? `${escapeHtml(c.Path)} | ${c.ManagedFolderName} (${c.ManagedFolderId}) ${c.ManagedFolderRelativePath}${c.NeedsRefresh ? " (Refresh Pending)" : ""}`.trimEnd()
+        : `${escapeHtml(c.Path)} | Not Mapped${c.NeedsRefresh ? " (Refresh Pending)" : ""}`
+    ;
+}
+
+/**
+ * Render a folder list.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {string} name - The name of the selector list to render.
+ * @param {string[]} entries - The entries to render
+ * @returns {void}
+ */
+function renderFolderList(form, name, entries) {
+    const list = form.querySelector(`#${name} .folderList`);
+    const listItems = entries.map((entry, index) =>
+        `<div class="listItem listItem-border lnkPath"><div class="listItemBody"><div class="listItemBodyText" dir="ltr">${entry}</div></div><button type="button" is="paper-icon-button-light"" class="listItemButton btnRemovePath" data-index="${index}"><span class="material-icons remove_circle" aria-hidden="true"></span></button></div>`
+    );
+    if (entries.length) {
+        list.removeAttribute("hidden");
+    } else {
+        list.setAttribute("hidden", true);
+    }
+    list.innerHTML = listItems.join("");
 }
 
 /**
@@ -1183,6 +1219,53 @@ async function applySignalrLibraryConfigToForm(form, libraryId, config = null) {
     if (shouldHide) {
         Dashboard.hideLoadingMsg();
     }
+}
+
+//#endregion
+
+//#region Local Interactions
+
+/**
+ * Load the SignalR library configuration for the given library.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {string} libraryId - The library ID.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ * @param {string} path - The path to add.
+ * @returns {Promise<void>}
+ */
+function addMediaFolder(form, libraryId, config, path) {
+    const pathLower = path.toLowerCase();
+    if (config.LibraryFolders.filter(p => p.Path.toLowerCase() == pathLower).length) return;
+    config.LibraryFolders.push({
+        LibraryId: libraryId,
+        Path: path,
+        IsMapped: false,
+        ManagedFolderId: 0,
+        ManagedFolderName: null,
+        ManagedFolderRelativePath: "",
+        NeedsRefresh: true,
+    });
+    const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
+    renderFolderList(form, "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
+}
+
+/**
+ * Load the SignalR library configuration for the given library.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {string} libraryId - The library ID.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ * @param {number} index - The index to remove.
+ * @returns {Promise<void>}
+ */
+function removeMediaFolder(form, libraryId, config, index) {
+    const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
+    const toRemove = mediaFolders.splice(index, 1);
+    if (toRemove.length === 0) return;
+    const realIndex = config.LibraryFolders.indexOf(toRemove[0]);
+    config.LibraryFolders.splice(realIndex, 1);
+    renderFolderList(form, "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
 }
 
 //#endregion
@@ -1370,42 +1453,6 @@ async function removeUserConfig(form) {
     Dashboard.processPluginConfigurationUpdateResult();
 
     form.querySelector("#UserSelector").value = "";
-
-    return config;
-}
-
-/**
- * Remove a library from the configuration.
- *
- * @param {HTMLFormElement} form - The form element.
- * @returns {Promise<PluginConfiguration>} The updated plugin configuration.
- */
-async function removeLibraryConfig(form) {
-    const config = State.config || await ShokoApiClient.getConfiguration();
-    const libraryId = form.querySelector("#MediaFolderSelector").value;
-    if (!libraryId) return config;
-
-    let index = config.Libraries.findIndex((m) => m.Id === libraryId);
-    if (index !== -1) {
-        config.Libraries.splice(index, 1);
-    }
-
-    index = config.LibraryFolders.findIndex((m) => m.LibraryId === libraryId);
-    while (index !== -1) {
-        config.LibraryFolders.splice(index, 1);
-        index = config.LibraryFolders.findIndex((m) => m.LibraryId === libraryId);
-    }
-
-    form.querySelector("#MediaFolderSelector").value = "";
-    form.querySelector("#MediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + config.Libraries
-                    .map((library) => `<option value="${library.Id}">${library.Name}</option>`)
-                    .join("");
-    form.querySelector("#SignalRMediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + config.Libraries
-                    .map((library) => `<option value="${library.Id}">${library.Name}</option>`)
-                    .join("");
-
-    await ShokoApiClient.updateConfiguration(config);
-    Dashboard.processPluginConfigurationUpdateResult();
 
     return config;
 }
