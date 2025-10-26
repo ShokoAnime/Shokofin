@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.5.10",
+                "changelog": "`feat`: **Add per-library media folder management**:\n\nAllows adding and removing media folders per library configuration.\nRemoves the older approach of resetting all mappings and settings,\nas this is now handled individually per media folder.\n\n`chore`: **Change data option selector to use double quotes**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.10/shoko_5.0.5.10.zip",
+                "checksum": "4526b096d6f030cba8d92f1725c38658",
+                "timestamp": "2025-10-26T00:39:40Z"
+            },
+            {
                 "version": "5.0.5.9",
                 "changelog": "`refactor`: **Rework library configuration**:\n\n- Reworked how the library configurations are stored, finally separating the library configuration from the media folder configurations. This has simplified the configuration for libraries, so we don't store `n` copies of the settings that applies to all the media folders.\n\n- We now automatically remove the media folders from the library and only store them in the configuration if the VFS is enabled. This will simplify some of the plugin internals, and also speed up the library validation as Jellyfin doesn't need to \"validate\" the contents within them before ignoring it all and instead use the VFS. Libraries not using the VFS should be unaffected by this change. In fact, we'll add them back to the library and remove the VFS root if you disable the VFS.\n\n- The real-time monitoring portions of the plugin has now been simplified for VFS based libraries as we're now not obstructing Jellyfin from seeing into the other media folders attached to the library \u2014 since they're simply not attached anymore! \ud83d\ude0c",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.6/shoko_5.0.5.6.zip",
                 "checksum": "8028ac27d618c9401a999d9e7730addd",
                 "timestamp": "2025-10-24T02:29:17Z"
-            },
-            {
-                "version": "5.0.5.5",
-                "changelog": "`refactor`: **Get episodes for show/series in pages instead of all at once**:\n\nAlso made the page size configurable as a debug option, with the option to disable the pagination again, to experiment with finding the optimal page size to get the episodes in. The initial default value is set to 25 because it will get most AniDB anime in 1 query.\n\n`fix`: **Add extra check before removing .keep file in case it's still necessary to keep**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.5/shoko_5.0.5.5.zip",
-                "checksum": "8a9a5d19dd2afac9848fdb15abbac310",
-                "timestamp": "2025-10-24T01:23:22Z"
             }
         ]
     }
