@@ -24,6 +24,7 @@
     <ItemGroup>
         <PackageReference Include="AsyncKeyedLock" Version="7.1.*" />
         <PackageReference Include="DotNet.Glob" Version="3.1.*" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.*" />
     </ItemGroup>
 
     <!-- Own dependencies we need to output with the package -->
@@ -31,7 +32,6 @@
         <CommonPackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.10" />
         <CommonPackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="9.0.10" />
         <CommonPackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="9.0.10" />
-        <CommonPackageReference Include="Microsoft.Extensions.Http" Version="9.0.10" />
         <CommonPackageReference Include="System.Net.ServerSentEvents" Version="9.0.10" />
         <PackageReference Include="@(CommonPackageReference)" />
     </ItemGroup>
