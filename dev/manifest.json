@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.5.12",
+                "changelog": "`chore`: **Await in async task**.\n\n`repo`: **Refine build process**:\n\n- Updated the .csproj project file to not hard code copying of the DLLs, and instead which DLLs to copy based on the project references\n\n- Updated the .csproj project file to conditionally load a local jellyfin project or the nuget package depending on if said local project is available or not.\n\n- Updated the JPRM build process to dynamically include the DLLs in the .csproj project file instead of hard coding them in the build configuration file.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.12/shoko_5.0.5.12.zip",
+                "checksum": "a66301cc388d1250284736c5fb1772f8",
+                "timestamp": "2025-10-26T19:07:24Z"
+            },
+            {
                 "version": "5.0.5.11",
                 "changelog": "`fix`: **Always display save button for library settings section**.\n\n`fix`: **Add missing library id check when adding a new path**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.8/shoko_5.0.5.8.zip",
                 "checksum": "f0a2952c7adebd98372488c535ad1702",
                 "timestamp": "2025-10-24T03:06:30Z"
-            },
-            {
-                "version": "5.0.5.7",
-                "changelog": "`fix`: **Skip import of watch data during iterative generation for unrelated videos**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.7/shoko_5.0.5.7.zip",
-                "checksum": "2b601ade3c47ecac986c25715c9ffd5d",
-                "timestamp": "2025-10-24T02:49:54Z"
             }
         ]
     }
