@@ -210,7 +210,7 @@ createControllerFactory({
                 }
 
                 if (value) {
-                    const input = form.querySelector("#SeriesSeasonMergingBehavior input[data-option='NoMerge']");
+                    const input = form.querySelector("#SeriesSeasonMergingBehavior input[data-option=\"NoMerge\"]");
                     if (input.getAttribute("data-option") === "NoMerge" && input.checked) {
                         input.checked = false;
                     }
