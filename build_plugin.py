@@ -1,4 +1,4 @@
-﻿import os
+import os
 import json
 import yaml
 import argparse
@@ -21,7 +21,7 @@ def extract_packages_to_output(csproj_path):
         content = file.read()
     # create a list of all matches for r"<PackageReference Include="([^"]*?)" Version="(?:[^"]*?)" CopyToOutput="True" />" and filter to
     # the first group in each match
-    matches = [match.group(1) + ".dll" for match in re.finditer(r"<PackageReference Include=\"([^\"]*?)\" Version=\"(?:[^\"]*?)\" CopyToOutput=\"True\" />", content)]
+    matches = [match.group(1) + ".dll" for match in re.finditer(r"<CommonPackageReference Include=\"([^\"]*?)\" Version=\"(?:[^\"]*?)\" />", content)]
     return matches
 
 parser = argparse.ArgumentParser()
