@@ -17,7 +17,7 @@
         <ProjectReference Include="../../Jellyfin/MediaBrowser.Controller/MediaBrowser.Controller.csproj" />
     </ItemGroup>
     <ItemGroup Condition="!Exists('../../Jellyfin/MediaBrowser.Controller/MediaBrowser.Controller.csproj')">
-        <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
+        <PackageReference Include="Jellyfin.Controller" Version="10.11.1" />
     </ItemGroup>
 
     <!-- Shared dependencies with Jellyfin Core -->
