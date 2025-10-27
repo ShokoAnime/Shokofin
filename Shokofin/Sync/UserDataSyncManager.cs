@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
@@ -54,6 +55,8 @@ public class UserDataSyncManager {
 
         SessionManager.SessionStarted += OnSessionStarted;
         SessionManager.SessionEnded += OnSessionEnded;
+        SessionManager.PlaybackStart += OnPlaybackStart;
+        SessionManager.PlaybackStopped += OnPlaybackStopped;
         UserDataManager.UserDataSaved += OnUserDataSaved;
         LibraryManager.ItemAdded += OnItemAddedOrUpdated;
         LibraryManager.ItemUpdated += OnItemAddedOrUpdated;
@@ -62,6 +65,8 @@ public class UserDataSyncManager {
     public void Dispose() {
         SessionManager.SessionStarted -= OnSessionStarted;
         SessionManager.SessionEnded -= OnSessionEnded;
+        SessionManager.PlaybackStart -= OnPlaybackStart;
+        SessionManager.PlaybackStopped -= OnPlaybackStopped;
         UserDataManager.UserDataSaved -= OnUserDataSaved;
         LibraryManager.ItemAdded -= OnItemAddedOrUpdated;
         LibraryManager.ItemUpdated -= OnItemAddedOrUpdated;
@@ -76,6 +81,21 @@ public class UserDataSyncManager {
 
     internal class SessionMetadata {
         private readonly ILogger Logger;
+
+        /// <summary>
+        /// The current session Id.
+        /// </summary>
+        public string SessionId;
+
+        /// <summary>
+        /// The current user Id we're tracking for the session.
+        /// </summary>
+        public Guid UserId;
+
+        /// <summary>
+        /// The currently active item Id. Used to detect when the item changes.
+        /// </summary>
+        public Guid ActiveItemId;
 
         /// <summary>
         /// The video Id.
@@ -125,8 +145,10 @@ public class UserDataSyncManager {
         /// </summary>
         public int SkipEventCount;
 
-        public SessionMetadata(ILogger logger, SessionInfo sessionInfo) {
+        public SessionMetadata(ILogger logger, SessionInfo sessionInfo, Guid userId) {
             Logger = logger;
+            SessionId = sessionInfo.Id;
+            UserId = userId;
             ItemId = Guid.Empty;
             FileId = null;
             Session = sessionInfo;
@@ -152,25 +174,56 @@ public class UserDataSyncManager {
         }
     }
 
-    private readonly ConcurrentDictionary<Guid, SessionMetadata> ActiveSessions = new();
+    private readonly ConcurrentDictionary<string, SessionMetadata> ActiveSessions = new();
+
+    private IEnumerable<SessionMetadata> GetSessionsForSessionId(string sessionId) {
+        foreach (var session in ActiveSessions.Values) {
+            if (session.SessionId == sessionId) {
+                yield return session;
+            }
+        }
+    }
+
+    private bool TryGetSessionByUserId(Guid userId, Guid itemId, [NotNullWhen(true)] out SessionMetadata? session) {
+        foreach (var metadata in ActiveSessions.Values) {
+            if (metadata.UserId == userId && (metadata.ActiveItemId == itemId || metadata.ItemId == itemId)) {
+                session = metadata;
+                return true;
+            }
+        }
+
+        session = null;
+        return false;
+    }
+
+    public void OnPlaybackStart(object? sender, PlaybackProgressEventArgs e) {
+        foreach (var sessionMetadata in GetSessionsForSessionId(e.Session.Id))
+            sessionMetadata.ActiveItemId = e.Item.Id;
+    }
+
+    public void OnPlaybackStopped(object? sender, PlaybackProgressEventArgs e) {
+        foreach (var sessionMetadata in GetSessionsForSessionId(e.Session.Id))
+            sessionMetadata.ActiveItemId = Guid.Empty;
+    }
 
     public void OnSessionStarted(object? sender, SessionEventArgs e) {
         if (TryGetUserConfiguration(e.SessionInfo.UserId, out var userConfig) && userConfig.EnableSynchronization && (userConfig.SyncUserDataUnderPlayback || userConfig.SyncUserDataAfterPlayback)) {
-            var sessionMetadata = new SessionMetadata(Logger, e.SessionInfo);
-            ActiveSessions.TryAdd(e.SessionInfo.UserId, sessionMetadata);
+            var sessionMetadata = new SessionMetadata(Logger, e.SessionInfo, e.SessionInfo.UserId);
+            var key = $"{e.SessionInfo.Id}:{e.SessionInfo.UserId}";
+            ActiveSessions.TryAdd(key, sessionMetadata);
         }
         foreach (var user in e.SessionInfo.AdditionalUsers) {
             if (TryGetUserConfiguration(e.SessionInfo.UserId, out userConfig) && userConfig.EnableSynchronization && (userConfig.SyncUserDataUnderPlayback || userConfig.SyncUserDataAfterPlayback)) {
-                var sessionMetadata = new SessionMetadata(Logger, e.SessionInfo);
-                ActiveSessions.TryAdd(user.UserId, sessionMetadata);
+                var sessionMetadata = new SessionMetadata(Logger, e.SessionInfo, user.UserId);
+                var key = $"{e.SessionInfo.Id}:{user.UserId}";
+                ActiveSessions.TryAdd(key, sessionMetadata);
             }
         }
     }
 
     public void OnSessionEnded(object? sender, SessionEventArgs e) {
-        ActiveSessions.TryRemove(e.SessionInfo.UserId, out _);
-        foreach (var user in e.SessionInfo.AdditionalUsers) {
-            ActiveSessions.TryRemove(user.UserId, out _);
+        foreach (var session in GetSessionsForSessionId(e.SessionInfo.Id).ToArray()) {
+            ActiveSessions.TryRemove($"{e.SessionInfo.Id}:{session.UserId}", out _);
         }
     }
 
@@ -205,7 +258,7 @@ public class UserDataSyncManager {
                 case UserDataSaveReason.PlaybackStart:
                 case UserDataSaveReason.PlaybackProgress: {
                     // If a session can't be found or created then throw an error.
-                    if (!ActiveSessions.TryGetValue(e.UserId, out var sessionMetadata))
+                    if (!TryGetSessionByUserId(e.UserId, itemId, out var sessionMetadata))
                         return;
 
                     // The active video changed, so send a start event.
@@ -277,7 +330,7 @@ public class UserDataSyncManager {
                         return;
 
                     var shouldSendEvent = true;
-                    if (ActiveSessions.TryGetValue(e.UserId, out var sessionMetadata) && sessionMetadata.ItemId == e.Item.Id) {
+                    if (TryGetSessionByUserId(e.UserId, e.Item.Id, out var sessionMetadata) && sessionMetadata.ItemId == e.Item.Id) {
                         shouldSendEvent = sessionMetadata.ShouldSendEvent(true);
 
                         sessionMetadata.ItemId = Guid.Empty;
