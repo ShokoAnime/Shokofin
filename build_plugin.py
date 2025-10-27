@@ -1,4 +1,4 @@
-import os
+﻿import os
 import json
 import yaml
 import argparse
@@ -24,6 +24,15 @@ def extract_packages_to_output(csproj_path):
     matches = [match.group(1) + ".dll" for match in re.finditer(r"<CommonPackageReference Include=\"([^\"]*?)\" Version=\"(?:[^\"]*?)\" />", content)]
     return matches
 
+def extract_target_abi(csproj_path):
+    with open(csproj_path, "r") as file:
+        content = file.read()
+    target_abi_match = re.compile(r"<PackageReference Include=\"Jellyfin.Controller\" Version=\"([^\"]*?)\" />", re.IGNORECASE).search(content)
+    if not target_abi_match:
+        raise Exception("Jellyfin.Controller not found in Shokofin.csproj")
+    return target_abi_match.group(1) + ".0"
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--repo", required=True)
 parser.add_argument("--version", required=True)
@@ -31,7 +40,8 @@ parser.add_argument("--tag", required=True)
 parser.add_argument("--prerelease", default=False)
 opts = parser.parse_args()
 
-framework = extract_target_framework("./Shokofin/Shokofin.csproj")
+project_file = "./Shokofin/Shokofin.csproj"
+framework = extract_target_framework(project_file)
 version = opts.version
 tag = opts.tag
 prerelease = bool(opts.prerelease)
@@ -56,9 +66,11 @@ if "changelog" in data:
         data["changelog"] = ""
 
 if "artifacts" in data:
-    data["artifacts"].extend(extract_packages_to_output("./Shokofin/Shokofin.csproj"))
+    data["artifacts"].extend(extract_packages_to_output(project_file))
 else:
-    data["artifacts"] = extract_packages_to_output("./Shokofin/Shokofin.csproj")
+    data["artifacts"] = extract_packages_to_output(project_file)
+
+data["targetAbi"] = extract_target_abi(project_file)
 
 with open(build_file, "w") as file:
     yaml.dump(data, file, sort_keys=False)
