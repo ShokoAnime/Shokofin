@@ -279,8 +279,8 @@ public class UserDataSyncManager {
                         }
                     }
                     else {
-                        var isPaused = sessionMetadata.Session.PlayState?.IsPaused ?? false;
-                        var ticks = sessionMetadata.Session.PlayState?.PositionTicks ?? userData.PlaybackPositionTicks;
+                        var isPaused = sessionMetadata.Session.PlayState.IsPaused;
+                        var ticks = sessionMetadata.Session.PlayState.PositionTicks ?? userData.PlaybackPositionTicks;
                         // We received an event, but the position didn't change, so the playback is most likely paused.
                         if (isPaused) {
                             if (sessionMetadata.IsPaused)
