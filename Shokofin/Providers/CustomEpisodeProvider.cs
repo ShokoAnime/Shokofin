@@ -27,7 +27,7 @@ namespace Shokofin.Providers;
 /// about how a provider cannot also be a custom provider otherwise it won't
 /// save the metadata.
 /// </remarks>
-public class CustomEpisodeProvider(ILogger<CustomEpisodeProvider> _logger, VirtualFileSystemService _vfsService, ILibraryManager _libraryManager, ShokoIdLookup _lookup, MergeVersionsManager _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Episode> {
+public class CustomEpisodeProvider(ILogger<CustomEpisodeProvider> _logger, VirtualFileSystemService _vfsService, ILibraryManager _libraryManager, ShokoIdLookup _lookup, ShokoApiManager _apiManager, MergeVersionsManager _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Episode> {
     public string Name => Plugin.MetadataProviderName;
 
     public bool HasChanged(BaseItem item, IDirectoryService directoryService) {
@@ -54,6 +54,18 @@ public class CustomEpisodeProvider(ILogger<CustomEpisodeProvider> _logger, Virtu
                 return ItemUpdateType.None;
             }
 
+            // Since Jellyfin 10.11.1 onwards they've fixed it so the creation date for videos doesn't follow the symlink but instead follows the target location, so to match the older behavior to get the date to match the import date, we now make sure the creation date is set to the import date here.
+            var updateType = (ItemUpdateType)0;
+            if (episode.TryGetFileAndSeriesId(out var fileId, out var seriesId, vfsOnly: true)) {
+                if (await _apiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false) is { } fileInfo) {
+                    var createdAt = fileInfo.Shoko.ImportedAt ?? fileInfo.Shoko.CreatedAt;
+                    if (episode.DateCreated != createdAt) {
+                        episode.DateCreated = createdAt;
+                        updateType |= ItemUpdateType.MetadataImport;
+                    }
+                }
+            }
+
             if (_lookup.TryGetEpisodeIdsFor(episode, out var episodeIds)) {
                 foreach (var episodeId in episodeIds) {
                     RemoveVirtualEpisodes(episodeId, episode, series.GetPresentationUniqueKey());
@@ -63,7 +75,7 @@ public class CustomEpisodeProvider(ILogger<CustomEpisodeProvider> _logger, Virtu
                 }
             }
 
-            return ItemUpdateType.None;
+            return updateType is 0 ? ItemUpdateType.None : updateType;
         }
         finally {
             Plugin.Instance.Tracker.Remove(trackerId);

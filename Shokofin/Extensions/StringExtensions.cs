@@ -285,7 +285,7 @@ public static partial class StringExtensions {
         return false;
     }
 
-    public static bool TryGetFileAndSeriesId(this IHasProviderIds providerIds, [NotNullWhen(true)] out string? fileId, [NotNullWhen(true)] out string? seriesId) {
+    public static bool TryGetFileAndSeriesId(this IHasProviderIds providerIds, [NotNullWhen(true)] out string? fileId, [NotNullWhen(true)] out string? seriesId, bool vfsOnly = false) {
         if (
             providerIds is Video { Path.Length: > 0 } video &&
             video.Path.StartsWith(Plugin.Instance.VirtualRoot + Path.DirectorySeparatorChar) &&
@@ -294,6 +294,13 @@ public static partial class StringExtensions {
             filename.TryGetAttributeValue(ProviderNames.ShokoFile, out fileId)
         ) {
             return true;
+        }
+
+        // Abort now if we only want to check videos in the VFS.
+        if (vfsOnly) {
+            fileId = null;
+            seriesId = null;
+            return false;
         }
 
         if (!providerIds.TryGetProviderId(ShokoInternalId.Name, out var internalId) || string.IsNullOrEmpty(internalId)) {
