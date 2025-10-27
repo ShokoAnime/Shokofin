@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.5.15",
+                "changelog": "`repo`: **Fix included artifacts in builds**.\n\n`repo`: **Automatically set target abi for package based off project file**.\n\n`repo`: **Bump target abi to 10.11.1**.\n\n`repo`: **Revert target abi to 10.11.0**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.15/shoko_5.0.5.15.zip",
+                "checksum": "c958278f8291e99dc7399401219532db",
+                "timestamp": "2025-10-27T13:43:55Z"
+            },
+            {
                 "version": "5.0.5.14",
                 "changelog": "`fix`: **Track multiple sessions for the same user**.\n\n`fix`: **Send progress as ticks**.\n\n`fix`: **Set creation date in custom providers because Jellyfin 10.11.1 have fixed their symlink creation dates to ignore the symlink and instead look at the target location**.\n\n`fix`: **PlayState is never null**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.11/shoko_5.0.5.11.zip",
                 "checksum": "356167b61c9503bcd6a5c483d67a9d5e",
                 "timestamp": "2025-10-26T01:03:02Z"
-            },
-            {
-                "version": "5.0.5.10",
-                "changelog": "`feat`: **Add per-library media folder management**:\n\nAllows adding and removing media folders per library configuration.\nRemoves the older approach of resetting all mappings and settings,\nas this is now handled individually per media folder.\n\n`chore`: **Change data option selector to use double quotes**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.10/shoko_5.0.5.10.zip",
-                "checksum": "4526b096d6f030cba8d92f1725c38658",
-                "timestamp": "2025-10-26T00:39:40Z"
             }
         ]
     }
