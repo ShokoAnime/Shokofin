@@ -78,6 +78,5 @@ public class ImageHostUrl : IAsyncActionFilter {
                 }
             }
         }
-
     }
 }
