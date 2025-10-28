@@ -26,7 +26,9 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator {
         serviceCollection.AddSingleton<SignalR.SignalRConnectionManager>();
         serviceCollection.AddHostedService<SignalR.SignalREntryPoint>();
         serviceCollection.AddHostedService<Resolvers.ShokoLibraryMonitor>();
-        serviceCollection.AddControllers(options => options.Filters.Add<Web.ImageHostUrl>());
-        serviceCollection.AddSingleton<IActionResultExecutor<PhysicalFileResult>, Web.VfsPhysicalFileResultExecutor>();
+        serviceCollection.AddControllers(options => {
+            options.Filters.Add<Web.ImageHostUrl>();
+            options.Filters.Add<Web.VfsActionFilter>();
+        });
     }
 }
