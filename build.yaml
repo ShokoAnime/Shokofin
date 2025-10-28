@@ -15,7 +15,7 @@ description: >
   optionally managed) by Shoko Server. **Otherwise, the plugin won't be able to
   provide metadata for your files**, since there is no metadata to find for them.
 
-category: "Metadata"
+category: "Anime"
 artifacts:
 - "Shokofin.dll"
 - "Microsoft.AspNetCore.SignalR.Client.dll"
