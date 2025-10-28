@@ -408,7 +408,7 @@ public class MediaFolderConfigurationService {
     private async Task<MediaFolderConfiguration> CreateConfigurationForPath(Guid libraryId, string mediaFolderPath) {
         // Check if we should introduce the VFS for the media folder.
         var config = Plugin.Instance.Configuration;
-        var mediaFolderConfig = new MediaFolderConfiguration() { Path = mediaFolderPath };
+        var mediaFolderConfig = new MediaFolderConfiguration() { LibraryId = libraryId, Path = mediaFolderPath };
         var start = DateTime.UtcNow;
         var attempts = 0;
         var foundLocations = new List<(int, string)>();
