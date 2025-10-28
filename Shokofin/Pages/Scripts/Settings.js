@@ -247,6 +247,14 @@ createControllerFactory({
                 applyLibraryConfigToForm(form, this.value);
             });
 
+            form.querySelector("#MediaFolderLibraryOperationMode").addEventListener("change", function () {
+                const libraryId = form.querySelector("#MediaFolderSelector").value;
+                if (!libraryId) return;
+                const value = this.value;
+                const mediaFolders = State.config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
+                renderFolderList(form, value !== "VFS", "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
+            });
+
             form.querySelector("#MediaFolderManagedFolderMapping .btnAddFolder").addEventListener("click", function () {
                 const libraryId = form.querySelector("#MediaFolderSelector").value;
                 if (!libraryId) return;
@@ -260,10 +268,12 @@ createControllerFactory({
             });
 
             form.querySelector("#MediaFolderManagedFolderMapping .folderList").addEventListener("click",  function (e) {
-                const button = getParentWithClass(e.target, "btnRemovePath");
-                const index = parseInt(button.getAttribute("data-index"), 10);
                 const libraryId = form.querySelector("#MediaFolderSelector").value;
-                if (Number.isNaN(index) || !libraryId) return;
+                if (!libraryId) return;
+                const button = getParentWithClass(e.target, "btnRemovePath");
+                if (!button) return;
+                const index = parseInt(button.getAttribute("data-index"), 10);
+                if (Number.isNaN(index)) return;
                 removeMediaFolder(form, libraryId, State.config, index);
             });
 
@@ -1120,11 +1130,11 @@ async function applyLibraryConfigToForm(form, libraryId, config = null) {
         }
     }
 
+    const libraryConfig = config.Libraries.find((c) => c.Id === libraryId);
     const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
-    renderFolderList(form, "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
+    renderFolderList(form, libraryConfig.LibraryOperationMode !== "VFS", "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
 
     // Configure the elements within the media folder container
-    const libraryConfig = config.Libraries.find((c) => c.Id === libraryId);
     form.querySelector("#MediaFolderLibraryOperationMode").value = libraryConfig.LibraryOperationMode;
     form.querySelector("#MediaFolderLibraryIterativeGenerationEnabled").checked = libraryConfig.IterativeVfsGeneration_Enabled;
     form.querySelector("#MediaFolderLibraryIterativeGenerationNoCache").checked = libraryConfig.IterativeVfsGeneration_NoCache;
@@ -1156,18 +1166,26 @@ function mediaFolderConfigToString(c) {
  * Render a folder list.
  *
  * @param {HTMLFormElement} form - The form element.
+ * @param {bool} disableButtons - Whether to disable the add/remove buttons.
  * @param {string} name - The name of the selector list to render.
  * @param {string[]} entries - The entries to render
  * @returns {void}
  */
-function renderFolderList(form, name, entries) {
+function renderFolderList(form, disableButtons, name, entries) {
     const list = form.querySelector(`#${name} .folderList`);
+    if (disableButtons) {
+        form.querySelector(`#${name} .btnAddFolder`).setAttribute("disabled", true);
+    }
+    else {
+        form.querySelector(`#${name} .btnAddFolder`).removeAttribute("disabled");
+    }
     const listItems = entries.map((entry, index) =>
-        `<div class="listItem listItem-border lnkPath"><div class="listItemBody"><div class="listItemBodyText" dir="ltr">${entry}</div></div><button type="button" is="paper-icon-button-light"" class="listItemButton btnRemovePath" data-index="${index}"><span class="material-icons remove_circle" aria-hidden="true"></span></button></div>`
+        `<div class="listItem listItem-border lnkPath"><div class="listItemBody"><div class="listItemBodyText" dir="ltr">${entry}</div></div><button type="button" is="paper-icon-button-light"" class="listItemButton btnRemovePath" data-index="${index}"${disableButtons ? " disabled" : ""}><span class="material-icons remove_circle" aria-hidden="true"></span></button></div>`
     );
     if (entries.length) {
         list.removeAttribute("hidden");
-    } else {
+    }
+    else {
         list.setAttribute("hidden", true);
     }
     list.innerHTML = listItems.join("");
@@ -1247,7 +1265,7 @@ function addMediaFolder(form, libraryId, config, path) {
         NeedsRefresh: true,
     });
     const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
-    renderFolderList(form, "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
+    renderFolderList(form, false, "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
 }
 
 /**
@@ -1265,7 +1283,7 @@ function removeMediaFolder(form, libraryId, config, index) {
     if (toRemove.length === 0) return;
     const realIndex = config.LibraryFolders.indexOf(toRemove[0]);
     config.LibraryFolders.splice(realIndex, 1);
-    renderFolderList(form, "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
+    renderFolderList(form, false, "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
 }
 
 //#endregion
