@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.5.16",
+                "changelog": "`fix`: **Set library id on media folder**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.16/shoko_5.0.5.16.zip",
+                "checksum": "106d780e476697a924e760e2f31e1c8e",
+                "timestamp": "2025-10-28T01:51:51Z"
+            },
+            {
                 "version": "5.0.5.15",
                 "changelog": "`repo`: **Fix included artifacts in builds**.\n\n`repo`: **Automatically set target abi for package based off project file**.\n\n`repo`: **Bump target abi to 10.11.1**.\n\n`repo`: **Revert target abi to 10.11.0**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.12/shoko_5.0.5.12.zip",
                 "checksum": "a66301cc388d1250284736c5fb1772f8",
                 "timestamp": "2025-10-26T19:07:24Z"
-            },
-            {
-                "version": "5.0.5.11",
-                "changelog": "`fix`: **Always display save button for library settings section**.\n\n`fix`: **Add missing library id check when adding a new path**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.11/shoko_5.0.5.11.zip",
-                "checksum": "356167b61c9503bcd6a5c483d67a9d5e",
-                "timestamp": "2025-10-26T01:03:02Z"
             }
         ]
     }
