@@ -1,5 +1,7 @@
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Shokofin;
@@ -25,5 +27,6 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator {
         serviceCollection.AddHostedService<SignalR.SignalREntryPoint>();
         serviceCollection.AddHostedService<Resolvers.ShokoLibraryMonitor>();
         serviceCollection.AddControllers(options => options.Filters.Add<Web.ImageHostUrl>());
+        serviceCollection.AddSingleton<IActionResultExecutor<PhysicalFileResult>, Web.VfsPhysicalFileResultExecutor>();
     }
 }
