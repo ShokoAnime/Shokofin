@@ -221,7 +221,7 @@ public static class ImageUtility {
                 .Where(tuple => config.UsePreferred && tuple.image.IsPreferred || orderedTypes.Contains(tuple.type));
         var orderedImages = filteredImages
             .OrderByDescending(tuple => !config.UsePreferred || tuple.image.IsPreferred)
-            .ThenByDescending(tuple => orderedTypes.IndexOf(tuple.type))
+            .ThenBy(tuple => orderedTypes.IndexOf(tuple.type))
             .ThenByDescending(tuple => config.UseCommunityRating
                 ? (tuple.image.CommunityRating?.ToFloat(10) ?? 0, tuple.image.CommunityRating?.Votes ?? 0)
                 : (0, 0)
