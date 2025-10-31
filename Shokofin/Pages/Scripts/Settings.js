@@ -270,11 +270,24 @@ createControllerFactory({
             form.querySelector("#MediaFolderManagedFolderMapping .folderList").addEventListener("click",  function (e) {
                 const libraryId = form.querySelector("#MediaFolderSelector").value;
                 if (!libraryId) return;
-                const button = getParentWithClass(e.target, "btnRemovePath");
+                const button = getParentWithClass(e.target, "listItemButton");
                 if (!button) return;
-                const index = parseInt(button.getAttribute("data-index"), 10);
+                const name = button.getAttribute("name");
+                const listItem = getParentWithClass(button, "listItem");
+                if (!listItem || !name) return;
+                const index = parseInt(listItem.getAttribute("data-index"), 10);
                 if (Number.isNaN(index)) return;
-                removeMediaFolder(form, libraryId, State.config, index);
+                switch (name) {
+                    case "search":
+                        toggleRefreshOfMediaFolder(form, libraryId, State.config, index);
+                        break;
+                    case "ignore":
+                        toggleIgnoredMediaFolder(form, libraryId, State.config, index);
+                        break;
+                    case "remove-path":
+                        removeMediaFolder(form, libraryId, State.config, index);
+                        break;
+                }
             });
 
             form.querySelector("#SignalRMediaFolderSelector").addEventListener("change", function () {
@@ -1153,13 +1166,18 @@ async function applyLibraryConfigToForm(form, libraryId, config = null) {
  * Converts a media folder configuration to a stringified form for display in the UI.
  *
  * @param {import("./Common.js").MediaFolderConfig} c - Media Folder Configuration.
- * @returns {string}
+ * @returns {[string, import("./Common.js").MediaFolderConfig]}
  */
 function mediaFolderConfigToString(c) {
-    return c.IsMapped
-        ? `${escapeHtml(c.Path)} | ${c.ManagedFolderName} (${c.ManagedFolderId}) ${c.ManagedFolderRelativePath}${c.NeedsRefresh ? " (Refresh Pending)" : ""}`.trimEnd()
-        : `${escapeHtml(c.Path)} | Not Mapped${c.NeedsRefresh ? " (Refresh Pending)" : ""}`
-    ;
+    return [
+        (c.IsMapped
+            ? `${escapeHtml(c.Path)} | ${c.ManagedFolderName} (${c.ManagedFolderId}) ${c.ManagedFolderRelativePath}`.trimEnd()
+            : `${escapeHtml(c.Path)} | Not Mapped`
+        ) +
+        (!c.IsIgnored && c.NeedsRefresh ? " (Refresh Pending)" : "") +
+        (c.IsIgnored ? " (Ignored)" : ""),
+        c,
+    ];
 }
 
 /**
@@ -1168,7 +1186,7 @@ function mediaFolderConfigToString(c) {
  * @param {HTMLFormElement} form - The form element.
  * @param {bool} disableButtons - Whether to disable the add/remove buttons.
  * @param {string} name - The name of the selector list to render.
- * @param {string[]} entries - The entries to render
+ * @param {[string, import("./Common.js").MediaFolderConfig][]} entries - The entries to render
  * @returns {void}
  */
 function renderFolderList(form, disableButtons, name, entries) {
@@ -1179,8 +1197,19 @@ function renderFolderList(form, disableButtons, name, entries) {
     else {
         form.querySelector(`#${name} .btnAddFolder`).removeAttribute("disabled");
     }
-    const listItems = entries.map((entry, index) =>
-        `<div class="listItem listItem-border lnkPath"><div class="listItemBody"><div class="listItemBodyText" dir="ltr">${entry}</div></div><button type="button" is="paper-icon-button-light"" class="listItemButton btnRemovePath" data-index="${index}"${disableButtons ? " disabled" : ""}><span class="material-icons remove_circle" aria-hidden="true"></span></button></div>`
+    const listItems = entries.map(([entry, mediaFolderConfig], index) =>
+        `<div class="listItem listItem-border lnkPath" data-index="${index}">`+
+            `<div class="listItemBody"><div class="listItemBodyText" dir="ltr">${entry}</div></div>`+
+            (mediaFolderConfig.NeedsRefresh
+                ? `<button type="button" name="search" is="paper-icon-button-light"" class="listItemButton"${mediaFolderConfig.IsIgnored ? " disabled" : ""}><span class="material-icons search" aria-hidden="true"></span></button>`
+                : `<button type="button" name="search" is="paper-icon-button-light"" class="listItemButton"${mediaFolderConfig.IsIgnored ? " disabled" : ""}><span class="material-icons search_off" aria-hidden="true"></span></button>`
+            ) +
+            (mediaFolderConfig.IsIgnored
+                ? `<button type="button" name="ignore" is="paper-icon-button-light"" class="listItemButton"><span class="material-icons folder_off" aria-hidden="true"></span></button>`
+                : `<button type="button" name="ignore" is="paper-icon-button-light"" class="listItemButton"><span class="material-icons folder" aria-hidden="true"></span></button>`
+            ) +
+            `<button type="button" name="remove-path" is="paper-icon-button-light"" class="listItemButton"${disableButtons ? " disabled" : ""}><span class="material-icons remove_circle" aria-hidden="true"></span></button>`+
+        `</div>`
     );
     if (entries.length) {
         list.removeAttribute("hidden");
@@ -1244,7 +1273,7 @@ async function applySignalrLibraryConfigToForm(form, libraryId, config = null) {
 //#region Local Interactions
 
 /**
- * Load the SignalR library configuration for the given library.
+ * Add a media folder to the list.
  *
  * @param {HTMLFormElement} form - The form element.
  * @param {string} libraryId - The library ID.
@@ -1258,6 +1287,7 @@ function addMediaFolder(form, libraryId, config, path) {
     config.LibraryFolders.push({
         LibraryId: libraryId,
         Path: path,
+        IsIgnored: false,
         IsMapped: false,
         ManagedFolderId: 0,
         ManagedFolderName: null,
@@ -1269,7 +1299,7 @@ function addMediaFolder(form, libraryId, config, path) {
 }
 
 /**
- * Load the SignalR library configuration for the given library.
+ * Remove a media folder from the list.
  *
  * @param {HTMLFormElement} form - The form element.
  * @param {string} libraryId - The library ID.
@@ -1284,6 +1314,45 @@ function removeMediaFolder(form, libraryId, config, index) {
     const realIndex = config.LibraryFolders.indexOf(toRemove[0]);
     config.LibraryFolders.splice(realIndex, 1);
     renderFolderList(form, false, "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
+}
+
+/**
+ * Toggle search for a media folder in the list.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {string} libraryId - The library ID.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ * @param {number} index - The index to remove.
+ * @returns {Promise<void>}
+ */
+function toggleRefreshOfMediaFolder(form, libraryId, config, index) {
+    const libraryConfig = config.Libraries.find((c) => c.Id === libraryId);
+    if (!libraryConfig) return;
+    const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
+    const toToggle = mediaFolders[index];
+    toToggle.NeedsRefresh = !toToggle.NeedsRefresh;
+    renderFolderList(form, libraryConfig.LibraryOperationMode !== "VFS", "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
+}
+
+/**
+ * Toggle ignore a media folder in the list.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {string} libraryId - The library ID.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ * @param {number} index - The index to remove.
+ * @returns {Promise<void>}
+ */
+function toggleIgnoredMediaFolder(form, libraryId, config, index) {
+    const libraryConfig = config.Libraries.find((c) => c.Id === libraryId);
+    if (!libraryConfig) return;
+    const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
+    const toToggle = mediaFolders[index];
+    toToggle.IsIgnored = !toToggle.IsIgnored;
+    if (toToggle.IsIgnored && !toToggle.NeedsRefresh) {
+        toToggle.NeedsRefresh = false;
+    }
+    renderFolderList(form, libraryConfig.LibraryOperationMode !== "VFS", "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
 }
 
 //#endregion

@@ -303,14 +303,14 @@ public class MediaFolderConfigurationService {
                     continue;
                 }
                 // Add config if needed.
-                if (!libraryConfig.MediaFolders.Any(mf => mf.Path == mediaFolderPath)) {
-                    var mediaFolderConfig = await CreateConfigurationForPath(libraryId, mediaFolderPath).ConfigureAwait(false);
+                if (libraryConfig.MediaFolders.FirstOrDefault(mf => mf.Path == mediaFolderPath) is not { } mediaFolderConfig) {
+                    mediaFolderConfig = await CreateConfigurationForPath(libraryId, mediaFolderPath).ConfigureAwait(false);
                     config.LibraryFolders.Add(mediaFolderConfig);
                     newFolderConfigList.Add((libraryConfig, mediaFolderConfig));
                     shouldSaveConfig = true;
                 }
-                // Remove folder from library if VFS is enabled.
-                if (libraryConfig.IsVirtualFileSystemEnabled) {
+                // Remove folder from library if VFS is enabled and it's not ignored.
+                if (libraryConfig.IsVirtualFileSystemEnabled && !mediaFolderConfig.IsIgnored) {
                     RemoveFromLibrary(libraryConfig, mediaFolderPath);
                 }
             }
@@ -319,8 +319,9 @@ public class MediaFolderConfigurationService {
             }
             foreach (var mediaFolderConfig in libraryConfig.MediaFolders) {
                 if (!libraryConfig.IsVirtualFileSystemEnabled) {
-                    // We have disabled the VFS and need to re-add the media folders again.
-                    if (virtualFolder.Locations.Length == 1 && virtualFolder.Locations[0] == libraryConfig.VirtualRoot) {
+                    // We have disabled the VFS and need to re-add the plugin managed media folders again.
+                    var ignoredFolders = libraryConfig.MediaFolders.Where(mf => mf.IsIgnored).Select(mf => mf.Path).ToHashSet();
+                    if (virtualFolder.Locations.Length == ignoredFolders.Count + 1 && virtualFolder.Locations.All(l => l == libraryConfig.VirtualRoot || ignoredFolders.Contains(l))) {
                         AddToLibrary(libraryConfig, mediaFolderConfig.Path);
                     }
                     // The VFS is disabled, and we have a mapping for a media folder which is not linked to the library,
@@ -332,8 +333,13 @@ public class MediaFolderConfigurationService {
                         continue;
                     }
                 }
+                // If we have an ignored media folder that's not added to the library when the VFS is enabled,
+                // then we need to add it.
+                else if (mediaFolderConfig.IsIgnored && !virtualFolder.Locations.Contains(mediaFolderConfig.Path)) {
+                    AddToLibrary(libraryConfig, mediaFolderConfig.Path);
+                }
                 // Refresh config if needed.
-                if (mediaFolderConfig.NeedsRefresh) {
+                if (!mediaFolderConfig.IsIgnored && mediaFolderConfig.NeedsRefresh) {
                     var newMediaFolderConfig = await CreateConfigurationForPath(libraryId, mediaFolderConfig.Path).ConfigureAwait(false);
                     mediaFolderConfig.MergeWith(newMediaFolderConfig);
                     mediaFolderConfig.NeedsRefresh = false;

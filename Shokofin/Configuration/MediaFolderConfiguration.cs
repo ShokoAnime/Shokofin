@@ -50,6 +50,12 @@ public class MediaFolderConfiguration {
     public bool NeedsRefresh { get; set; } = false;
 
     /// <summary>
+    /// Indicates that the media folder should be ignored by the plugin, and be available as a media
+    /// folder of the library if the VFS is enabled.
+    /// </summary>
+    public bool IsIgnored { get; set; } = false;
+
+    /// <summary>
     /// Indicates the Jellyfin Media Folder is mapped to a Shoko Managed Folder.
     /// </summary>
     [XmlIgnore]

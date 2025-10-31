@@ -328,6 +328,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   ManagedFolderId: number;
  *   ManagedFolderName: string | null;
  *   ManagedFolderRelativePath: string;
+ *   IsIgnored: boolean;
  *   IsMapped: boolean;
  *   NeedsRefresh: boolean;
  * }} MediaFolderConfig
