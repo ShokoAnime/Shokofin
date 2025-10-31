@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.6.3",
+                "changelog": "`fix`: **Inverse reversed order when ordering images**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.3/shoko_5.0.6.3.zip",
+                "checksum": "7aefdf6424a485667cf2ed2a5d2b9b53",
+                "timestamp": "2025-10-31T00:31:06Z"
+            },
+            {
                 "version": "5.0.6.2",
                 "changelog": "`refactor`: **Replace action result executor with an action filter for Direct Play fix**:\n\nThis change was done so the ASP.NET (core) instance will not freak out if upstream adds an action result executor or action filter for physical file results, since you can only have 1 executor per type, but any number of filters (within reason).\n\n`chore`: **Remove extra whitespace**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.17/shoko_5.0.5.17.zip",
                 "checksum": "e39fd99edabad0594ae0aa30864aafae",
                 "timestamp": "2025-10-28T03:39:28Z"
-            },
-            {
-                "version": "5.0.5.16",
-                "changelog": "`fix`: **Set library id on media folder**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.16/shoko_5.0.5.16.zip",
-                "checksum": "106d780e476697a924e760e2f31e1c8e",
-                "timestamp": "2025-10-28T01:51:51Z"
             }
         ]
     }
