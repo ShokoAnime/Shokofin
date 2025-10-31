@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.6.4",
+                "changelog": "`feat`: **Allow ignoring media folders**:\n\n- Allow ignoring media folders. Which will (re-)attach them to the library if the VFS is enabled, and/or don't remove remove them from the library (again).\n\n- Added refresh/not-refresh and ignore/not-ignore buttons per media folder to the UI.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.4/shoko_5.0.6.4.zip",
+                "checksum": "855b07e6db025f071c2788deb1e4417a",
+                "timestamp": "2025-10-31T02:10:52Z"
+            },
+            {
                 "version": "5.0.6.3",
                 "changelog": "`fix`: **Inverse reversed order when ordering images**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.18/shoko_5.0.5.18.zip",
                 "checksum": "b8a494d8fb63ca50ca37135bd83da113",
                 "timestamp": "2025-10-28T22:02:50Z"
-            },
-            {
-                "version": "5.0.5.17",
-                "changelog": "`fix`: **Disable adding/removing media folders for non-vfs libraries**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.17/shoko_5.0.5.17.zip",
-                "checksum": "e39fd99edabad0594ae0aa30864aafae",
-                "timestamp": "2025-10-28T03:39:28Z"
             }
         ]
     }
