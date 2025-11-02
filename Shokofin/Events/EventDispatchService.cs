@@ -549,7 +549,7 @@ public class EventDispatchService {
                 }
 
                 Logger.LogInformation("Refreshing show {ShowName}. (Show={ShowId},Series={SeriesId})", show.Name, show.Id, showInfo.Id);
-                await MetadataRefreshService.RefreshSeries(show).ConfigureAwait(false);
+                await MetadataRefreshService.RefreshSeries(show, Plugin.Instance.Configuration.MetadataRefresh.Series).ConfigureAwait(false);
                 updateCount++;
             }
         }
@@ -594,7 +594,7 @@ public class EventDispatchService {
                     }
 
                     Logger.LogInformation("Refreshing season {SeasonName}. (TvSeason={SeasonId},Season={SeasonId},ExtraSeries={ExtraIds})", season.Name, season.Id, seasonInfo.Id, seasonInfo.ExtraIds);
-                    await MetadataRefreshService.RefreshSeason(season).ConfigureAwait(false);
+                    await MetadataRefreshService.RefreshSeason(season, Plugin.Instance.Configuration.MetadataRefresh.Season).ConfigureAwait(false);
                     updateCount++;
                 }
             }
@@ -633,7 +633,7 @@ public class EventDispatchService {
                     }
 
                     Logger.LogInformation("Refreshing episode {EpisodeName}. (Episode={EpisodeId},Episode={EpisodeId},Season={SeasonId})", episode.Name, episode.Id, episodeInfo.Id, episodeInfo.SeasonId);
-                    await MetadataRefreshService.RefreshEpisode(episode).ConfigureAwait(false);
+                    await MetadataRefreshService.RefreshEpisode(episode, Plugin.Instance.Configuration.MetadataRefresh.Episode).ConfigureAwait(false);
                     updateCount++;
                 }
             }
@@ -675,7 +675,7 @@ public class EventDispatchService {
                 }
 
                 Logger.LogInformation("Refreshing movie {MovieName}. (Movie={MovieId},Episode={EpisodeId},Season={SeasonId},ExtraSeasons={ExtraIds})", movie.Name, movie.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds);
-                await MetadataRefreshService.RefreshMovie(movie).ConfigureAwait(false);
+                await MetadataRefreshService.RefreshMovie(movie, Plugin.Instance.Configuration.MetadataRefresh.Movie).ConfigureAwait(false);
                 updateCount++;
             }
         }
