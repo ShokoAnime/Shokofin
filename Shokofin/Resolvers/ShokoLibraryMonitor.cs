@@ -291,7 +291,7 @@ public class ShokoLibraryMonitor : IHostedService {
             (_) => Logger.LogTrace("Skipped path because it was handled within a second ago; {Path}", path),
             async () => {
                 string? fileId = null;
-                IFileEventArgs eventArgs;
+                FileEventArgsStub eventArgs;
                 var reason = changeTypes is WatcherChangeTypes.Deleted ? (
                     UpdateReason.MetadataRemoved
                 ) : changeTypes is WatcherChangeTypes.Created ? (
