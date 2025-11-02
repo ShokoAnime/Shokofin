@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -17,7 +16,7 @@ using Shokofin.API;
 using Shokofin.Configuration;
 using Shokofin.ExternalIds;
 using Shokofin.Providers;
-using Shokofin.Utils;
+
 using ImageType = MediaBrowser.Model.Entities.ImageType;
 
 namespace Shokofin.Events;
@@ -47,8 +46,6 @@ public class MetadataRefreshService {
 
     private VideoProvider? _videoProvider = null;
 
-    private readonly ConcurrentDictionary<Guid, object> _refreshedItems = new();
-
     private readonly ILogger<MetadataRefreshService> _logger;
 
     private readonly IServerApplicationHost _applicationHost;
@@ -59,38 +56,21 @@ public class MetadataRefreshService {
 
     private readonly ShokoIdLookup _lookup;
 
-    private readonly UsageTracker _usageTracker;
-
     public MetadataRefreshService(
         ILogger<MetadataRefreshService> logger,
         IServerApplicationHost applicationHost,
         ILibraryManager libraryManager,
         IDirectoryService directoryService,
-        ShokoIdLookup lookup,
-        UsageTracker usageTracker
+        ShokoIdLookup lookup
     ) {
         _logger = logger;
         _applicationHost = applicationHost;
         _libraryManager = libraryManager;
         _directoryService = directoryService;
         _lookup = lookup;
-        _usageTracker = usageTracker;
-
-        _usageTracker.Stalled += OnStalled;
-    }
-
-    ~MetadataRefreshService() {
-        _usageTracker.Stalled -= OnStalled;
-    }
-
-    private void OnStalled(object? sender, EventArgs eventArgs) {
-        _refreshedItems.Clear();
     }
 
     public async Task<bool> RefreshCollection(BoxSet boxSet, MetadataRefreshField? refreshFields = null, CancellationToken cancellationToken = default) {
-        if (!_refreshedItems.TryAdd(boxSet.Id, new()))
-            return false;
-
         if (!_lookup.IsEnabledForItem(boxSet))
             return await LegacyRefreshMetadata(boxSet).ConfigureAwait(false);
 
@@ -129,9 +109,6 @@ public class MetadataRefreshService {
     }
 
     public async Task<bool> RefreshMovie(Movie movie, MetadataRefreshField? refreshFields = null, CancellationToken cancellationToken = default) {
-        if (!_refreshedItems.TryAdd(movie.Id, new()))
-            return false;
-
         if (!_lookup.IsEnabledForItem(movie))
             return await LegacyRefreshMetadata(movie).ConfigureAwait(false);
 
@@ -185,9 +162,6 @@ public class MetadataRefreshService {
     }
 
     public async Task<bool> RefreshSeries(Series series, MetadataRefreshField? refreshFields = null, CancellationToken cancellationToken = default) {
-        if (!_refreshedItems.TryAdd(series.Id, new()))
-            return false;
-
         if (!_lookup.IsEnabledForItem(series))
             return await LegacyRefreshMetadata(series).ConfigureAwait(false);
 
@@ -230,9 +204,6 @@ public class MetadataRefreshService {
     }
 
     public async Task<bool> RefreshSeason(Season season, MetadataRefreshField? refreshFields = null, CancellationToken cancellationToken = default) {
-        if (!_refreshedItems.TryAdd(season.Id, new()))
-            return false;
-
         if (!_lookup.IsEnabledForItem(season))
             return await LegacyRefreshMetadata(season).ConfigureAwait(false);
 
@@ -280,9 +251,6 @@ public class MetadataRefreshService {
     }
 
     public async Task<bool> RefreshEpisode(Episode episode, MetadataRefreshField? refreshFields = null, CancellationToken cancellationToken = default) {
-        if (!_refreshedItems.TryAdd(episode.Id, new()))
-            return false;
-
         if (!_lookup.IsEnabledForItem(episode))
             return await LegacyRefreshMetadata(episode).ConfigureAwait(false);
 
@@ -347,9 +315,6 @@ public class MetadataRefreshService {
     }
 
     public async Task<bool> RefreshVideo(Video video, MetadataRefreshField? refreshFields = null, CancellationToken cancellationToken = default) {
-        if (!_refreshedItems.TryAdd(video.Id, new()))
-            return false;
-
         if (!_lookup.IsEnabledForItem(video))
             return await LegacyRefreshMetadata(video).ConfigureAwait(false);
 
