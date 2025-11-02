@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Jellyfin.Data.Enums;
+using Shokofin.API.Converters;
 using Shokofin.Events.Interfaces;
 
 namespace Shokofin.SignalR.Models;
@@ -21,8 +22,8 @@ public class MovieInfoUpdatedEventArgs : IMetadataUpdatedEventArgs {
     /// <summary>
     /// The provided metadata movie id.
     /// </summary>
-    [JsonInclude, JsonPropertyName("MovieID")]
-    public int ProviderId { get; set; }
+    [JsonInclude, JsonPropertyName("MovieID"), JsonConverter(typeof(JsonAutoStringConverter))]
+    public string ProviderId { get; set; } = string.Empty;
 
     /// <summary>
     /// The provided metadata series id.

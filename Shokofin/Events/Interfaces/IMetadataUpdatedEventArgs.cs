@@ -23,7 +23,7 @@ public interface IMetadataUpdatedEventArgs {
     /// <summary>
     /// The provided metadata episode id.
     /// </summary>
-    int ProviderId { get; }
+    string ProviderId { get; }
 
     /// <summary>
     /// Provider unique id.

@@ -559,8 +559,8 @@ public class EventDispatchService {
                 .Where(e => e.EpisodeId.HasValue && e.Reason is not UpdateReason.MetadataRemoved)
                 .SelectMany(e => new List<string>([
                     ..e.EpisodeIds.Select(eI => eI.ToString()),
-                    ..(e.Kind is BaseItemKind.Movie && e.ProviderName is ProviderName.TMDB) ? [IdPrefix.TmdbMovie + e.ProviderId.ToString()] : Array.Empty<string>(),
-                    ..(e.Kind is BaseItemKind.Episode && e.ProviderName is ProviderName.TMDB) ? [IdPrefix.TmdbShow + e.ProviderId.ToString()] : Array.Empty<string>(),
+                    ..(e.Kind is BaseItemKind.Movie && e.ProviderName is ProviderName.TMDB) ? [IdPrefix.TmdbMovie + e.ProviderId] : Array.Empty<string>(),
+                    ..(e.Kind is BaseItemKind.Episode && e.ProviderName is ProviderName.TMDB) ? [IdPrefix.TmdbShow + e.ProviderId] : Array.Empty<string>(),
                 ]))
                 .ToHashSet();
             var seasonIds = changes
