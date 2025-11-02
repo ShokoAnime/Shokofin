@@ -248,7 +248,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                             },
                         ];
                     })
-                    .OfType<BaseItem>()
+                    .WhereNotNull()
                     .ToList();
 
                 if (!pathsToRemoveBag.IsEmpty) {

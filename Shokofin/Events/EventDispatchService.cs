@@ -501,7 +501,7 @@ public class EventDispatchService {
             }
 
             var showInfoList = (await Task.WhenAll(seasonInfoDict.Values.Select(s => ApiManager.GetShowInfoBySeasonId(s.Id))).ConfigureAwait(false))
-                .OfType<ShowInfo>()
+                .WhereNotNull()
                 .DistinctBy(s => s.Id)
                 .ToList();
             if (showInfoList.Count is 0) {

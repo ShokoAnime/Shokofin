@@ -95,7 +95,7 @@ public static partial class StringExtensions {
         => c == 32 || c > 47 && c < 58 || c > 64 && c < 91 || c > 96 && c < 123 ? c : '_';
 
     public static string ForceASCII(this string value)
-        => value.Select(c => c.IsAllowedCharacter()).OfType<char>().Join("");
+        => value.Select(c => c.IsAllowedCharacter()).WhereNotNull().Join("");
 
     private static string CompactUnderscore(this string path)
         => Regex.Replace(path, @"_{2,}", "_", RegexOptions.Singleline);

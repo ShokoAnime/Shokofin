@@ -1749,7 +1749,7 @@ public partial class ShokoApiManager : IDisposable {
 
         var showInfoList = await Task.WhenAll(seasonInfoList.Select(seasonInfo => GetShowInfoBySeasonId(seasonInfo.Id))).ConfigureAwait(false);
         return showInfoList
-            .OfType<ShowInfo>()
+            .WhereNotNull()
             .DistinctBy(showInfo => showInfo.Id)
             .ToList();
     }

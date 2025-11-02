@@ -452,7 +452,7 @@ public class CollectionManager(
 
             var expectedCollections = collectionInfo.SubCollections
                 .Select(subCollectionInfo => toCheck.TryGetValue(subCollectionInfo.Id, out var boxSet) ? boxSet : null)
-                .OfType<BoxSet>()
+                .WhereNotNull()
                 .ToList();
             var expectedShows = collectionInfo.Shows
                 .SelectMany(showInfo => showDict.Where(pair => pair.Value.Id == showInfo.Id))

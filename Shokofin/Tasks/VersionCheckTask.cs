@@ -7,6 +7,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using Shokofin.Extensions;
 
 namespace Shokofin.Tasks;
 
@@ -88,7 +89,7 @@ public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager
                         .Select(_apiClient.GetManagedFolder)
                         .ToList()
                 )
-                .ContinueWith(task => task.Result.OfType<ManagedFolder>().ToDictionary(i => i.Id, i => i.Name))
+                .ContinueWith(task => task.Result.WhereNotNull().ToDictionary(i => i.Id, i => i.Name))
                 .ConfigureAwait(false);
             foreach (var mediaFolderConfig in mediaFolders) {
                 if (!managedFolderNameMap.TryGetValue(mediaFolderConfig.ManagedFolderId, out var managedFolderName))

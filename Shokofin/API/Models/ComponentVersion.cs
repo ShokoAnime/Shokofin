@@ -48,7 +48,7 @@ public class ComponentVersion {
             ReleaseChannel?.ToString(),
             Commit?[0..7],
             ReleaseDate?.ToUniversalTime().ToString("yyyy-MM-ddThh:mm:ssZ"),
-        }.Where(s => !string.IsNullOrEmpty(s)).OfType<string>().Join(", ");
+        }.Where(s => !string.IsNullOrEmpty(s)).WhereNotNull().Join(", ");
         if (extraDetails.Length == 0)
             return $"Version {Version}";
 

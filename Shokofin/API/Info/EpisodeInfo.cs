@@ -186,13 +186,13 @@ public class EpisodeInfo : IExtendedItemInfo {
             Staff = tmdbMovie.Cast.Concat(tmdbMovie.Crew)
                 .GroupBy(role => (role.Type, role.Staff.Id))
                 .Select(roles => RoleToPersonInfo(roles.ToList(), MetadataProvider.Tmdb.ToString()))
-                .OfType<PersonInfo>()
+                .WhereNotNull()
                 .ToArray();
             if (Staff.Count is 0)
                 Staff = cast
                     .GroupBy(role => (role.Type, role.Staff.Id))
                     .Select(roles => RoleToPersonInfo(roles.ToList(), ProviderNames.Anidb))
-                    .OfType<PersonInfo>()
+                    .WhereNotNull()
                     .ToArray();
             productionLocationDict[ProviderName.TMDB] = tmdbMovie.ProductionCountries.Values.ToArray();
             contentRatings.AddRange(tmdbMovie.ContentRatings);
@@ -213,13 +213,13 @@ public class EpisodeInfo : IExtendedItemInfo {
             Staff = tmdbEpisode.Cast.Concat(tmdbEpisode.Crew)
                 .GroupBy(role => (role.Type, role.Staff.Id))
                 .Select(roles => RoleToPersonInfo(roles.ToList(), MetadataProvider.Tmdb.ToString()))
-                .OfType<PersonInfo>()
+                .WhereNotNull()
                 .ToArray();
             if (Staff.Count is 0)
                 Staff = cast
                     .GroupBy(role => (role.Type, role.Staff.Id))
                     .Select(roles => RoleToPersonInfo(roles.ToList(), ProviderNames.Anidb))
-                    .OfType<PersonInfo>()
+                    .WhereNotNull()
                     .ToArray();
             if (tmdbParentEntity is not null) {
                 productionLocationDict[ProviderName.TMDB] = tmdbParentEntity.ProductionCountries.Values.ToArray();
@@ -244,7 +244,7 @@ public class EpisodeInfo : IExtendedItemInfo {
             Staff = cast
                 .GroupBy(role => (role.Type, role.Staff.Id))
                 .Select(roles => RoleToPersonInfo(roles.ToList(), ProviderNames.Anidb))
-                .OfType<PersonInfo>()
+                .WhereNotNull()
                 .ToArray();
             Studios = cast
                 .Where(role =>
@@ -314,7 +314,7 @@ public class EpisodeInfo : IExtendedItemInfo {
         Staff = tmdbEpisode.Cast.Concat(tmdbEpisode.Crew)
             .GroupBy(role => (role.Type, role.Staff.Id))
             .Select(roles => RoleToPersonInfo(roles.ToList(), MetadataProvider.Tmdb.ToString()))
-            .OfType<PersonInfo>()
+            .WhereNotNull()
             .ToArray();
         CrossReferences = tmdbEpisode.FileCrossReferences
             .SelectMany(a => a.Episodes)
@@ -370,7 +370,7 @@ public class EpisodeInfo : IExtendedItemInfo {
         Staff = tmdbMovie.Cast.Concat(tmdbMovie.Crew)
             .GroupBy(role => (role.Type, role.Staff.Id))
             .Select(roles => RoleToPersonInfo(roles.ToList(), MetadataProvider.Tmdb.ToString()))
-            .OfType<PersonInfo>()
+            .WhereNotNull()
             .ToArray();
         CrossReferences = tmdbMovie.FileCrossReferences
             .SelectMany(a => a.Episodes)

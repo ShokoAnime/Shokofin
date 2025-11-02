@@ -1029,7 +1029,7 @@ public class VirtualFileSystemService {
                 if (episodeXref.Percentage.Group is not 1) {
                     var list = episode.CrossReferences.Where(xref => xref.ReleaseGroup == episodeXref.ReleaseGroup && xref.Percentage.Group == episodeXref.Percentage.Group).ToList();
                     var files = (await Task.WhenAll(list.Select(xref => ApiClient.GetFileByEd2kAndFileSize(xref.ED2K, xref.FileSize))).ConfigureAwait(false))
-                        .OfType<API.Models.File>()
+                        .WhereNotNull()
                         .ToList();
                     if (files.Count != list.Count)
                         throw new Exception($"Mismatch between cross-references and files. (FileCount={files.Count},CrossReferenceCount={list.Count},Episode={episode.Id},File={fileId},Series={seriesId})");
