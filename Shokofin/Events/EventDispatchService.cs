@@ -21,7 +21,6 @@ using Shokofin.Resolvers.Models;
 using Shokofin.Utils;
 
 using File = System.IO.File;
-using LibraryOptions = MediaBrowser.Model.Configuration.LibraryOptions;
 using Movie = MediaBrowser.Controller.Entities.Movies.Movie;
 using Timer = System.Timers.Timer;
 using TvEpisode = MediaBrowser.Controller.Entities.TV.Episode;

@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
-using MediaBrowser.Controller.Entities;
 
 using LibraryOperationMode = Shokofin.Utils.Ordering.LibraryOperationMode;
 
