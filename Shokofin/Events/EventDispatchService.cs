@@ -215,7 +215,7 @@ public class EventDispatchService {
             var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences)).ConfigureAwait(false);
             var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => c.Library.IsFileEventsEnabled).ConfigureAwait(false);
             var (reason, managedFolderId, relativePath, lastEvent) = changes.Last();
-            if (reason is not UpdateReason.Removed) {
+            if (reason is not UpdateReason.MetadataRemoved) {
                 Logger.LogTrace("Processing file changed. (File={FileId})", fileId);
                 foreach (var (vfsPath, collectionType, mediaConfigs) in libraries) {
                     foreach (var (managedFolderSubPath, vfsEnabled, mediaFolderPaths) in mediaConfigs.ToManagedFolderList(managedFolderId, relativePath)) {
@@ -273,7 +273,7 @@ public class EventDispatchService {
                 }
             }
             // Something was removed, so assume the location is gone.
-            else if (changes.FirstOrDefault(t => t.Reason is UpdateReason.Removed).Event is IFileEventArgs firstRemovedEvent) {
+            else if (changes.FirstOrDefault(t => t.Reason is UpdateReason.MetadataRemoved).Event is IFileEventArgs firstRemovedEvent) {
                 // If we don't know which series to remove, then add all of them to be scanned.
                 if (seriesIds.Count is 0) {
                     Logger.LogTrace("No series found for file. Adding all libraries. (File={FileId})", fileId);
@@ -556,7 +556,7 @@ public class EventDispatchService {
         // Otherwise update all season/episodes where appropriate.
         else {
             var episodeIds = changes
-                .Where(e => e.EpisodeId.HasValue && e.Reason is not UpdateReason.Removed)
+                .Where(e => e.EpisodeId.HasValue && e.Reason is not UpdateReason.MetadataRemoved)
                 .SelectMany(e => new List<string>([
                     ..e.EpisodeIds.Select(eI => eI.ToString()),
                     ..(e.Kind is BaseItemKind.Movie && e.ProviderName is ProviderName.TMDB) ? [IdPrefix.TmdbMovie + e.ProviderId.ToString()] : Array.Empty<string>(),
@@ -564,7 +564,7 @@ public class EventDispatchService {
                 ]))
                 .ToHashSet();
             var seasonIds = changes
-                .Where(e => e.EpisodeId.HasValue && e.SeriesId.HasValue && e.Reason is UpdateReason.Removed)
+                .Where(e => e.EpisodeId.HasValue && e.SeriesId.HasValue && e.Reason is UpdateReason.MetadataRemoved)
                 .SelectMany(e => e.SeriesIds.SelectMany(s => seriesIdDict[s]))
                 .ToHashSet();
             var seasonList = showInfo.SeasonList
@@ -645,7 +645,7 @@ public class EventDispatchService {
         // Find movies and refresh them.
         var updateCount = 0;
         var episodeIds = changes
-            .Where(e => e.EpisodeId.HasValue && e.Reason is not UpdateReason.Removed)
+            .Where(e => e.EpisodeId.HasValue && e.Reason is not UpdateReason.MetadataRemoved)
             .SelectMany(e => new List<string>([
                 ..e.EpisodeIds.Select(eI => eI.ToString()),
                 ..(e.Kind is BaseItemKind.Movie && e.ProviderName is ProviderName.TMDB) ? [IdPrefix.TmdbMovie + e.ProviderId.ToString()] : Array.Empty<string>(),

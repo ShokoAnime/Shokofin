@@ -229,7 +229,7 @@ public class SignalRConnectionManager {
             return;
         }
 
-        Events.AddFileEvent(eventArgs.FileId, UpdateReason.Updated, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
+        Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataUpdated, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     private async Task OnReleaseSaved(IReleaseSavedEventArgs eventArgs0) {
@@ -262,7 +262,7 @@ public class SignalRConnectionManager {
             return;
         }
 
-        Events.AddFileEvent(eventArgs.FileId, UpdateReason.Updated, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
+        Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataUpdated, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     private void OnFileRelocated(IFileRelocationEventArgs eventArgs) {
@@ -286,8 +286,8 @@ public class SignalRConnectionManager {
             return;
         }
 
-        Events.AddFileEvent(eventArgs.FileId, UpdateReason.Removed, eventArgs.PreviousManagedFolderId, eventArgs.PreviousRelativePath, eventArgs);
-        Events.AddFileEvent(eventArgs.FileId, UpdateReason.Added, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
+        Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataRemoved, eventArgs.PreviousManagedFolderId, eventArgs.PreviousRelativePath, eventArgs);
+        Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataAdded, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     private void OnFileDeleted(IFileEventArgs eventArgs) {
@@ -309,7 +309,7 @@ public class SignalRConnectionManager {
             return;
         }
 
-        Events.AddFileEvent(eventArgs.FileId, UpdateReason.Removed, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
+        Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataRemoved, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     #endregion

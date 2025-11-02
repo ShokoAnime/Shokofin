@@ -292,7 +292,13 @@ public class ShokoLibraryMonitor : IHostedService {
             async () => {
                 string? fileId = null;
                 IFileEventArgs eventArgs;
-                var reason = changeTypes is WatcherChangeTypes.Deleted ? UpdateReason.Removed : changeTypes is WatcherChangeTypes.Created ? UpdateReason.Added : UpdateReason.Updated;
+                var reason = changeTypes is WatcherChangeTypes.Deleted ? (
+                    UpdateReason.MetadataRemoved
+                ) : changeTypes is WatcherChangeTypes.Created ? (
+                    UpdateReason.MetadataAdded
+                ) : (
+                    UpdateReason.MetadataUpdated
+                );
                 var relativePath = path[mediaConfig.Path.Length..];
                 using (Plugin.Instance.Tracker.Enter($"Library Monitor: Path=\"{path}\"")) {
                     var files = await ApiClient.GetFileByPath(relativePath).ConfigureAwait(false);
@@ -301,7 +307,7 @@ public class ShokoLibraryMonitor : IHostedService {
                         var fileLocation = file0.Locations.First(location => location.ManagedFolderId == mediaConfig.ManagedFolderId && location.RelativePath == mediaConfig.ManagedFolderRelativePath + relativePath);
                         eventArgs = new FileEventArgsStub(fileLocation, file0);
                     }
-                    else if (reason is not UpdateReason.Removed) {
+                    else if (reason is not UpdateReason.MetadataRemoved) {
                         Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
                         return null;
                     }
