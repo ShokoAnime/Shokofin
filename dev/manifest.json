@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.6.5",
+                "changelog": "`misc`: **Inverse media folder button icons**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.5/shoko_5.0.6.5.zip",
+                "checksum": "b3d11a251e29eea8f8fb2a4e18c2b5aa",
+                "timestamp": "2025-11-03T03:07:52Z"
+            },
+            {
                 "version": "5.0.6.4",
                 "changelog": "`feat`: **Allow ignoring media folders**:\n\n- Allow ignoring media folders. Which will (re-)attach them to the library if the VFS is enabled, and/or don't remove remove them from the library (again).\n\n- Added refresh/not-refresh and ignore/not-ignore buttons per media folder to the UI.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.1/shoko_5.0.6.1.zip",
                 "checksum": "6cf3978bf0c14bd291525b8e128ff480",
                 "timestamp": "2025-10-28T22:04:43Z"
-            },
-            {
-                "version": "5.0.5.18",
-                "changelog": "`fix`: **Fix Direct Play for symbolic links in the VFS**:\n\nThis patch will either be temporary until it's fixed upstream, or permanent if they won't want to deal with it upstream.\n\nFixes #93",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5-dev.18/shoko_5.0.5.18.zip",
-                "checksum": "b8a494d8fb63ca50ca37135bd83da113",
-                "timestamp": "2025-10-28T22:02:50Z"
             }
         ]
     }
