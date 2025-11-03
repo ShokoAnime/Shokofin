@@ -1201,12 +1201,12 @@ function renderFolderList(form, disableButtons, name, entries) {
         `<div class="listItem listItem-border lnkPath" data-index="${index}">`+
             `<div class="listItemBody"><div class="listItemBodyText" dir="ltr">${entry}</div></div>`+
             (mediaFolderConfig.NeedsRefresh
-                ? `<button type="button" name="search" is="paper-icon-button-light"" class="listItemButton"${mediaFolderConfig.IsIgnored ? " disabled" : ""}><span class="material-icons search" aria-hidden="true"></span></button>`
-                : `<button type="button" name="search" is="paper-icon-button-light"" class="listItemButton"${mediaFolderConfig.IsIgnored ? " disabled" : ""}><span class="material-icons search_off" aria-hidden="true"></span></button>`
+                ? `<button type="button" name="search" is="paper-icon-button-light"" class="listItemButton"${mediaFolderConfig.IsIgnored ? " disabled" : ""}><span class="material-icons search_off" aria-hidden="true"></span></button>`
+                : `<button type="button" name="search" is="paper-icon-button-light"" class="listItemButton"${mediaFolderConfig.IsIgnored ? " disabled" : ""}><span class="material-icons search" aria-hidden="true"></span></button>`
             ) +
             (mediaFolderConfig.IsIgnored
-                ? `<button type="button" name="ignore" is="paper-icon-button-light"" class="listItemButton"><span class="material-icons folder_off" aria-hidden="true"></span></button>`
-                : `<button type="button" name="ignore" is="paper-icon-button-light"" class="listItemButton"><span class="material-icons folder" aria-hidden="true"></span></button>`
+                ? `<button type="button" name="ignore" is="paper-icon-button-light"" class="listItemButton"><span class="material-icons folder" aria-hidden="true"></span></button>`
+                : `<button type="button" name="ignore" is="paper-icon-button-light"" class="listItemButton"><span class="material-icons folder_off" aria-hidden="true"></span></button>`
             ) +
             `<button type="button" name="remove-path" is="paper-icon-button-light"" class="listItemButton"${disableButtons ? " disabled" : ""}><span class="material-icons remove_circle" aria-hidden="true"></span></button>`+
         `</div>`
