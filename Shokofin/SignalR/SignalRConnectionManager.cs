@@ -317,6 +317,20 @@ public class SignalRConnectionManager {
     #region Refresh Events
 
     private void OnInfoUpdated(IMetadataUpdatedEventArgs eventArgs) {
+        if (eventArgs.IsUnknownUpdate) {
+            Logger.LogTrace(
+                "{ProviderName} {MetadataType} {ProviderId} ({ProviderParentId}) skipped event with {UpdateReason}; no operation. (Episode={EpisodeId},Series={SeriesId})",
+                eventArgs.ProviderName,
+                eventArgs.Kind,
+                eventArgs.ProviderId,
+                eventArgs.ProviderParentId,
+                eventArgs.Reason,
+                eventArgs.EpisodeIds,
+                eventArgs.SeriesIds
+            );
+            return;
+        }
+
         if (!Plugin.Instance.Configuration.SignalR_EventSources.Contains(eventArgs.ProviderName)) {
             Logger.LogTrace(
                 "{ProviderName} {MetadataType} {ProviderId} ({ProviderParentId}) skipped event with {UpdateReason}; provider is not enabled in the plugin settings. (Episode={EpisodeId},Series={SeriesId})",

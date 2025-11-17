@@ -70,16 +70,10 @@ public class MetadataRefreshService {
         _lookup = lookup;
     }
 
-    public async Task<bool> RefreshCollection(BoxSet boxSet, MetadataRefreshField refreshFields, CancellationToken cancellationToken = default) {
-        if (!_lookup.IsEnabledForItem(boxSet))
-            return await LegacyRefreshMetadata(boxSet).ConfigureAwait(false);
-
-        var updated = false;
-        // refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Collection;
-        if (refreshFields.HasFlag(MetadataRefreshField.LegacyRefresh))
-            updated = await LegacyRefreshMetadata(boxSet, refreshFields.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
-
-        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
+    public async Task<bool> RefreshCollection(BoxSet boxSet, MetadataRefreshField refreshFieldsMask = MetadataRefreshField.None, CancellationToken cancellationToken = default) {
+        var refreshFields = Plugin.Instance.Configuration.MetadataRefresh.Collection & refreshFieldsMask;
+        return await RefreshInternal(boxSet, refreshFields, async () => {
+            var updated = false;
             _boxSetProvider ??= _applicationHost.GetExports<BoxSetProvider>().First();
             var metadataResult = await _boxSetProvider.GetMetadata(new() {
                 Name = boxSet.Name,
@@ -98,25 +92,19 @@ public class MetadataRefreshService {
                     .Where(i => i is not null)
                     .ToArray();
                 foreach (var extra in extras)
-                    updated = await RefreshVideo(extra, refreshFields, cancellationToken).ConfigureAwait(false) || updated;
+                    updated = await RefreshVideo(extra, refreshFieldsMask, cancellationToken).ConfigureAwait(false) || updated;
             }
 
             _customBoxSetProvider ??= _applicationHost.GetExports<CustomBoxSetProvider>().First();
             updated = await RefreshBaseItem(boxSet, metadata, metadataResult, refreshFields, _customBoxSetProvider, cancellationToken).ConfigureAwait(false) || updated;
-        }
-
-        return updated;
+            return updated;
+        }).ConfigureAwait(false);
     }
 
-    public async Task<bool> RefreshMovie(Movie movie, MetadataRefreshField refreshFields, CancellationToken cancellationToken = default) {
-        if (!_lookup.IsEnabledForItem(movie))
-            return await LegacyRefreshMetadata(movie).ConfigureAwait(false);
-
-        var updated = false;
-        if (refreshFields.HasFlag(MetadataRefreshField.LegacyRefresh))
-            updated = await LegacyRefreshMetadata(movie, refreshFields.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false) || updated;
-
-        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
+    public async Task<bool> RefreshMovie(Movie movie, MetadataRefreshField refreshFieldsMask = MetadataRefreshField.None, CancellationToken cancellationToken = default) {
+        var refreshFields = Plugin.Instance.Configuration.MetadataRefresh.Movie & refreshFieldsMask;
+        return await RefreshInternal(movie, refreshFields, async () => {
+            var updated = false;
             _movieProvider ??= _applicationHost.GetExports<MovieProvider>().First();
             var metadataResult = await _movieProvider.GetMetadata(new() {
                 Path = movie.Path,
@@ -134,7 +122,7 @@ public class MetadataRefreshService {
                     .Where(i => i is not null)
                     .ToArray();
                 foreach (var extra in extras)
-                    updated = await RefreshVideo(extra, refreshFields, cancellationToken).ConfigureAwait(false) || updated;
+                    updated = await RefreshVideo(extra, refreshFieldsMask, cancellationToken).ConfigureAwait(false) || updated;
             }
 
             _customMovieProvider ??= _applicationHost.GetExports<CustomMovieProvider>().First();
@@ -144,7 +132,7 @@ public class MetadataRefreshService {
                     if (_libraryManager.FindByPath(part.Path, isFolder: false) is not Video video)
                         continue;
 
-                    updated = await RefreshVideo(video, refreshFields, cancellationToken).ConfigureAwait(false) || updated;
+                    updated = await RefreshVideo(video, refreshFieldsMask, cancellationToken).ConfigureAwait(false) || updated;
                 }
             }
             if (movie.LocalAlternateVersions.Length > 0) {
@@ -152,23 +140,17 @@ public class MetadataRefreshService {
                     if (_libraryManager.FindByPath(part, isFolder: false) is not Video video)
                         continue;
 
-                    updated = await RefreshVideo(video, refreshFields, cancellationToken).ConfigureAwait(false) || updated;
+                    updated = await RefreshVideo(video, refreshFieldsMask, cancellationToken).ConfigureAwait(false) || updated;
                 }
             }
-        }
-
-        return updated;
+            return updated;
+        }).ConfigureAwait(false);
     }
 
-    public async Task<bool> RefreshSeries(Series series, MetadataRefreshField refreshFields, CancellationToken cancellationToken = default) {
-        if (!_lookup.IsEnabledForItem(series))
-            return await LegacyRefreshMetadata(series).ConfigureAwait(false);
-
-        var updated = false;
-        if (!_lookup.IsEnabledForItem(series) || refreshFields.HasFlag(MetadataRefreshField.LegacyRefresh))
-            updated = await LegacyRefreshMetadata(series, refreshFields.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
-
-        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
+    public async Task<bool> RefreshSeries(Series series, MetadataRefreshField refreshFieldsMask = MetadataRefreshField.None, CancellationToken cancellationToken = default) {
+        var refreshFields = Plugin.Instance.Configuration.MetadataRefresh.Series & refreshFieldsMask;
+        return await RefreshInternal(series, refreshFields, async () => {
+            var updated = false;
             _seriesProvider ??= _applicationHost.GetExports<SeriesProvider>().First();
             var metadataResult = await _seriesProvider.GetMetadata(new() {
                 Path = series.Path,
@@ -189,27 +171,21 @@ public class MetadataRefreshService {
                     .Where(i => i is not null)
                     .ToArray();
                 foreach (var extra in extras)
-                    updated = await RefreshVideo(extra, refreshFields, cancellationToken).ConfigureAwait(false) || updated;
+                    updated = await RefreshVideo(extra, refreshFieldsMask, cancellationToken).ConfigureAwait(false) || updated;
             }
 
             if (refreshFields.HasFlag(MetadataRefreshField.Recursive)) {
                 foreach (var season in series.Children.OfType<Season>())
-                    updated = await RefreshSeason(season, refreshFields, cancellationToken).ConfigureAwait(false) || updated;
+                    updated = await RefreshSeason(season, refreshFieldsMask, cancellationToken).ConfigureAwait(false) || updated;
             }
-        }
-
-        return updated;
+            return updated;
+        }).ConfigureAwait(false);
     }
 
-    public async Task<bool> RefreshSeason(Season season, MetadataRefreshField refreshFields, CancellationToken cancellationToken = default) {
-        if (!_lookup.IsEnabledForItem(season))
-            return await LegacyRefreshMetadata(season).ConfigureAwait(false);
-
-        var updated = false;
-        if (!_lookup.IsEnabledForItem(season) || refreshFields.HasFlag(MetadataRefreshField.LegacyRefresh))
-            updated = await LegacyRefreshMetadata(season, refreshFields.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
-
-        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
+    public async Task<bool> RefreshSeason(Season season, MetadataRefreshField refreshFieldsMask = MetadataRefreshField.None, CancellationToken cancellationToken = default) {
+        var refreshFields = Plugin.Instance.Configuration.MetadataRefresh.Season & refreshFieldsMask;
+        return await RefreshInternal(season, refreshFields, async () => {
+            var updated = false;
             if (season.Series is not { } series)
                 return updated;
 
@@ -235,27 +211,21 @@ public class MetadataRefreshService {
                     .Where(i => i is not null)
                     .ToArray();
                 foreach (var extra in extras)
-                    updated = await RefreshVideo(extra, refreshFields, cancellationToken).ConfigureAwait(false) || updated;
+                    updated = await RefreshVideo(extra, refreshFieldsMask, cancellationToken).ConfigureAwait(false) || updated;
             }
 
             if (refreshFields.HasFlag(MetadataRefreshField.Recursive)) {
                 foreach (var episode in season.Children.OfType<Episode>())
-                    updated = await RefreshEpisode(episode, refreshFields, cancellationToken).ConfigureAwait(false) || updated;
+                    updated = await RefreshEpisode(episode, refreshFieldsMask, cancellationToken).ConfigureAwait(false) || updated;
             }
-        }
-
-        return updated;
+            return updated;
+        }).ConfigureAwait(false);
     }
 
-    public async Task<bool> RefreshEpisode(Episode episode, MetadataRefreshField refreshFields, CancellationToken cancellationToken = default) {
-        if (!_lookup.IsEnabledForItem(episode))
-            return await LegacyRefreshMetadata(episode).ConfigureAwait(false);
-
-        var updated = false;
-        if (!_lookup.IsEnabledForItem(episode) || refreshFields.HasFlag(MetadataRefreshField.LegacyRefresh))
-            updated = await LegacyRefreshMetadata(episode, refreshFields.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
-
-        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
+    public async Task<bool> RefreshEpisode(Episode episode, MetadataRefreshField refreshFieldsMask = MetadataRefreshField.None, CancellationToken cancellationToken = default) {
+        var refreshFields = Plugin.Instance.Configuration.MetadataRefresh.Episode & refreshFieldsMask;
+        return await RefreshInternal(episode, refreshFields, async () => {
+            var updated = false;
             _episodeProvider ??= _applicationHost.GetExports<EpisodeProvider>().First();
             var metadataResult = await _episodeProvider.GetMetadata(new() {
                 Path = episode.Path,
@@ -275,7 +245,7 @@ public class MetadataRefreshService {
                     if (_libraryManager.FindByPath(part, isFolder: false) is not Video video)
                         continue;
 
-                    updated = await RefreshVideo(video, refreshFields, cancellationToken).ConfigureAwait(false) || updated;
+                    updated = await RefreshVideo(video, refreshFieldsMask, cancellationToken).ConfigureAwait(false) || updated;
                 }
             }
 
@@ -285,7 +255,7 @@ public class MetadataRefreshService {
                     .Where(i => i is not null)
                     .ToArray();
                 foreach (var extra in extras)
-                    updated = await RefreshVideo(extra, refreshFields, cancellationToken).ConfigureAwait(false) || updated;
+                    updated = await RefreshVideo(extra, refreshFieldsMask, cancellationToken).ConfigureAwait(false) || updated;
             }
 
             if (episode.LinkedAlternateVersions.Length > 0) {
@@ -293,7 +263,7 @@ public class MetadataRefreshService {
                     if (_libraryManager.FindByPath(part.Path, isFolder: false) is not Video video)
                         continue;
 
-                    updated = await RefreshVideo(video, refreshFields, cancellationToken).ConfigureAwait(false) || updated;
+                    updated = await RefreshVideo(video, refreshFieldsMask, cancellationToken).ConfigureAwait(false) || updated;
                 }
             }
 
@@ -302,24 +272,17 @@ public class MetadataRefreshService {
                     if (_libraryManager.FindByPath(part, isFolder: false) is not Video video)
                         continue;
 
-                    updated = await RefreshVideo(video, refreshFields, cancellationToken).ConfigureAwait(false) || updated;
+                    updated = await RefreshVideo(video, refreshFieldsMask, cancellationToken).ConfigureAwait(false) || updated;
                 }
             }
-        }
-
-        return updated;
+            return updated;
+        }).ConfigureAwait(false);
     }
 
-    public async Task<bool> RefreshVideo(Video video, MetadataRefreshField? refreshFields = null, CancellationToken cancellationToken = default) {
-        if (!_lookup.IsEnabledForItem(video))
-            return await LegacyRefreshMetadata(video).ConfigureAwait(false);
-
-        var updated = false;
-        refreshFields ??= Plugin.Instance.Configuration.MetadataRefresh.Video;
-        if (!_lookup.IsEnabledForItem(video) || refreshFields.Value.HasFlag(MetadataRefreshField.LegacyRefresh))
-            return await LegacyRefreshMetadata(video, refreshFields.Value.HasFlag(MetadataRefreshField.Images)).ConfigureAwait(false);
-
-        if (refreshFields is not MetadataRefreshField.None and not MetadataRefreshField.LegacyRefresh and not (MetadataRefreshField.LegacyRefresh & MetadataRefreshField.Images)) {
+    public async Task<bool> RefreshVideo(Video video, MetadataRefreshField refreshFieldsMask = MetadataRefreshField.None, CancellationToken cancellationToken = default) {
+        var refreshFields = Plugin.Instance.Configuration.MetadataRefresh.Video & refreshFieldsMask;
+        return await RefreshInternal(video, refreshFields, async () => {
+            var updated = false;
             if (video is Trailer trailer) {
                 _trailerProvider ??= _applicationHost.GetExports<TrailerProvider>().First();
                 var metadataResult = await _trailerProvider.GetMetadata(new() {
@@ -331,7 +294,7 @@ public class MetadataRefreshService {
                 if (metadataResult is not { HasMetadata: true, Item: { } metadata })
                     return updated;
 
-                updated = await RefreshBaseItem(trailer, metadata, metadataResult, refreshFields.Value, cancellationToken: cancellationToken).ConfigureAwait(false) || updated;
+                updated = await RefreshBaseItem(trailer, metadata, metadataResult, refreshFields, cancellationToken: cancellationToken).ConfigureAwait(false) || updated;
             }
             else {
                 _videoProvider ??= _applicationHost.GetExports<VideoProvider>().First();
@@ -344,9 +307,23 @@ public class MetadataRefreshService {
                 if (metadataResult is not { HasMetadata: true, Item: { } metadata })
                     return updated;
 
-                updated = await RefreshBaseItem(video, metadata, metadataResult, refreshFields.Value, cancellationToken: cancellationToken).ConfigureAwait(false) || updated;
+                updated = await RefreshBaseItem(video, metadata, metadataResult, refreshFields, cancellationToken: cancellationToken).ConfigureAwait(false) || updated;
             }
-        }
+            return updated;
+        }).ConfigureAwait(false);
+    }
+
+    private async Task<bool> RefreshInternal(BaseItem item, MetadataRefreshField refreshFields, Func<Task<bool>> refreshLambda) {
+        if (!_lookup.IsEnabledForItem(item))
+            return await LegacyRefreshMetadata(item, updateImages: true, recursive: true).ConfigureAwait(false);
+
+        var updated = false;
+        if (refreshFields.HasFlag(MetadataRefreshField.LegacyRefresh))
+            updated = await LegacyRefreshMetadata(item, refreshFields.HasFlag(MetadataRefreshField.Images), refreshFields.HasFlag(MetadataRefreshField.Recursive)).ConfigureAwait(false);
+        if (refreshFields is MetadataRefreshField.Images or (MetadataRefreshField.Images | MetadataRefreshField.Recursive))
+            updated = await LegacyRefreshImages(item, refreshFields.HasFlag(MetadataRefreshField.Recursive)).ConfigureAwait(false);
+        if ((refreshFields & ~(MetadataRefreshField.LegacyRefresh | MetadataRefreshField.Images | MetadataRefreshField.Recursive)) is not MetadataRefreshField.None)
+            updated = await refreshLambda().ConfigureAwait(false) || updated;
 
         return updated;
     }
@@ -504,8 +481,7 @@ public class MetadataRefreshService {
         return updatedFields.Count > 0;
     }
 
-    private async Task<bool> LegacyRefreshMetadata(BaseItem item, bool updateImages = false)
-    {
+    private async Task<bool> LegacyRefreshMetadata(BaseItem item, bool updateImages = false, bool recursive = false) {
         var updateType = await item.RefreshMetadata(new(_directoryService) {
             MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
             ImageRefreshMode = updateImages ? MetadataRefreshMode.FullRefresh : MetadataRefreshMode.None,
@@ -515,11 +491,12 @@ public class MetadataRefreshService {
             ReplaceImages = updateImages ? Enum.GetValues<ImageType>().ToArray() : [],
             IsAutomated = true,
             EnableRemoteContentProbe = true,
+            RefreshPaths = recursive ? null : [item.Path ?? string.Empty],
         }, CancellationToken.None).ConfigureAwait(false);
         return updateType is not ItemUpdateType.None;
     }
 
-    private async Task<bool> LegacyRefreshImages(BaseItem item) {
+    private async Task<bool> LegacyRefreshImages(BaseItem item, bool recursive = false) {
         var updateType = await item.RefreshMetadata(new(_directoryService) {
             MetadataRefreshMode = MetadataRefreshMode.None,
             ImageRefreshMode = MetadataRefreshMode.FullRefresh,
@@ -529,12 +506,14 @@ public class MetadataRefreshService {
             ReplaceImages = Enum.GetValues<ImageType>().ToArray(),
             IsAutomated = true,
             EnableRemoteContentProbe = true,
+            RefreshPaths = recursive ? null : [item.Path ?? string.Empty],
         }, CancellationToken.None).ConfigureAwait(false);
         return updateType is not ItemUpdateType.None;
     }
 
     public async Task AutoRefresh(IProgress<double>? progress = null, CancellationToken cancellationToken = default) {
         // Get all movies, series, seasons, and episodes and refresh each one based on the configuration's fields per item
+        var refreshFieldsMask = ~MetadataRefreshField.Recursive;
         var config = Plugin.Instance.Configuration.MetadataRefresh;
         var movieList = GetMovies(config);
         var episodeList = GetEpisodes(config);
@@ -548,26 +527,14 @@ public class MetadataRefreshService {
             .Select(ep => ep.Series)
             .Where(series => series is not null)
             .ToList();
-
-        var movieConfig = config.Movie & ~MetadataRefreshField.Recursive;
-        foreach (var movie in movieList) {
-            await RefreshMovie(movie, movieConfig, cancellationToken).ConfigureAwait(false);
-        }
-
-        var seriesConfig = config.Series & ~MetadataRefreshField.Recursive;
-        foreach (var series in seriesList) {
-            await RefreshSeries(series, seriesConfig, cancellationToken).ConfigureAwait(false);
-        }
-
-        var seasonConfig = config.Season & ~MetadataRefreshField.Recursive;
-        foreach (var season in seasonList) {
-            await RefreshSeason(season, seasonConfig, cancellationToken).ConfigureAwait(false);
-        }
-
-        var episodeConfig = config.Episode & ~MetadataRefreshField.Recursive;
-        foreach (var episode in episodeList) {
-            await RefreshEpisode(episode, episodeConfig, cancellationToken).ConfigureAwait(false);
-        }
+        foreach (var movie in movieList)
+            await RefreshMovie(movie, refreshFieldsMask, cancellationToken).ConfigureAwait(false);
+        foreach (var series in seriesList)
+            await RefreshSeries(series, refreshFieldsMask, cancellationToken).ConfigureAwait(false);
+        foreach (var season in seasonList)
+            await RefreshSeason(season, refreshFieldsMask, cancellationToken).ConfigureAwait(false);
+        foreach (var episode in episodeList)
+            await RefreshEpisode(episode, refreshFieldsMask, cancellationToken).ConfigureAwait(false);
     }
 
     private List<Movie> GetMovies(MetadataRefreshConfiguration config)

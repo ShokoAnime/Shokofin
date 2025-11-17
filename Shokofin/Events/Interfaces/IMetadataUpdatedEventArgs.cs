@@ -11,6 +11,21 @@ public interface IMetadataUpdatedEventArgs {
     UpdateReason Reason { get; }
 
     /// <summary>
+    /// Indicates if this is an unknown update.
+    /// </summary>
+    bool IsUnknownUpdate => Reason is UpdateReason.None;
+
+    /// <summary>
+    /// Indicates if this is a metadata update.
+    /// </summary>
+    bool IsMetadataUpdate => Reason is UpdateReason.MetadataAdded or UpdateReason.MetadataUpdated or UpdateReason.MetadataRemoved;
+
+    /// <summary>
+    /// Indicates if this is an image update.
+    /// </summary>
+    bool IsImageUpdate => Reason is UpdateReason.ImageAdded or UpdateReason.ImageRemoved or UpdateReason.ImageUpdated;
+
+    /// <summary>
     /// The provider metadata type.
     /// </summary>
     BaseItemKind Kind { get; }
@@ -41,19 +56,9 @@ public interface IMetadataUpdatedEventArgs {
     string? ProviderParentUId => ProviderParentId.HasValue ? $"{ProviderName}:{ProviderParentId.Value.ToString(CultureInfo.InvariantCulture)}" : null;
 
     /// <summary>
-    /// The first shoko episode id affected by this update.
-    /// </summary>
-    int? EpisodeId => EpisodeIds.Count > 0 ? EpisodeIds[0] : null;
-
-    /// <summary>
     /// Shoko episode ids affected by this update.
     /// </summary>
     IReadOnlyList<int> EpisodeIds { get; }
-
-    /// <summary>
-    /// The first shoko series id affected by this update.
-    /// </summary>
-    int? SeriesId => SeriesIds.Count > 0 ? SeriesIds[0] : null;
 
     /// <summary>
     /// Shoko series ids affected by this update.

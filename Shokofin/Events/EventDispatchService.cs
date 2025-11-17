@@ -472,14 +472,77 @@ public class EventDispatchService {
         }
     }
 
-    private async Task ProcessMetadataEvents(string metadataId, List<IMetadataUpdatedEventArgs> changes, Guid trackerId) {
+    private async Task ProcessMetadataEvents(string metadataId, List<IMetadataUpdatedEventArgs> events, Guid trackerId) {
+        try {
+            var tasks = new List<Task>();
+            if (events.Where(e => e.IsImageUpdate).ToList() is { Count: > 0 } imageEvents)
+                tasks.Add(ProcessImageUpdateEvents(metadataId, imageEvents));
+            if (events.Where(e => e.IsMetadataUpdate).ToList() is { Count: > 0 } metadataEvents)
+                tasks.Add(ProcessMetadataUpdateEvents(metadataId, metadataEvents));
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+        }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
+        }
+    }
+
+    private async Task ProcessImageUpdateEvents(string metadataId, List<IMetadataUpdatedEventArgs> changes) {
+        try {
+            if (!changes.Any(e => e.Kind is BaseItemKind.Episode or BaseItemKind.Movie && e.EpisodeIds.Count > 0 || e.Kind is BaseItemKind.Series && e.SeriesIds.Count > 0)) {
+                Logger.LogDebug("Skipped processing {EventCount} image change events because no series or episode ids to use. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
+                return;
+            }
+
+            var allSeriesIds = changes.SelectMany(e => e.SeriesIds).ToHashSet();
+            var seasonInfoDict = new Dictionary<string, SeasonInfo>();
+            var seriesIdDict = new Dictionary<int, string[]>();
+            foreach (var seriesId in allSeriesIds) {
+                var seasonInfoList = await ApiManager.GetSeasonInfosForShokoSeries(seriesId.ToString()).ConfigureAwait(false);
+                foreach (var seasonInfo in seasonInfoList) {
+                    seasonInfoDict.Add(seasonInfo.Id, seasonInfo);
+                }
+                seriesIdDict.Add(seriesId, seasonInfoList.Select(s => s.Id).ToArray());
+            }
+
+            if (seasonInfoDict.Count is 0) {
+                Logger.LogDebug("Unable to find season info for series id. (Metadata={ProviderUniqueId})", metadataId);
+                return;
+            }
+
+            var showInfoList = (await Task.WhenAll(seasonInfoDict.Values.Select(s => ApiManager.GetShowInfoBySeasonId(s.Id))).ConfigureAwait(false))
+                .WhereNotNull()
+                .DistinctBy(s => s.Id)
+                .ToList();
+            if (showInfoList.Count is 0) {
+                Logger.LogDebug("Unable to find show info for series id. (Metadata={ProviderUniqueId})", metadataId);
+                return;
+            }
+
+            Logger.LogInformation("Processing {EventCount} image change events… (Metadata={ProviderUniqueId})", changes.Count, metadataId);
+
+            var updateCount = 0;
+            var refreshFieldsMask = MetadataRefreshField.Images | MetadataRefreshField.PreferredImages;
+            foreach (var showInfo in showInfoList)
+                updateCount += await ProcessSeriesEvents(showInfo, changes, seriesIdDict, refreshFieldsMask).ConfigureAwait(false);
+
+            foreach (var seasonInfo in seasonInfoDict.Values)
+                updateCount += await ProcessMovieEvents(seasonInfo, changes, refreshFieldsMask).ConfigureAwait(false);
+
+            Logger.LogInformation("Scheduled {UpdateCount} image updates for {EventCount} image change events. (Metadata={ProviderUniqueId})", updateCount, changes.Count, metadataId);
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Error processing {EventCount} image change events. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
+        }
+    }
+
+    private async Task ProcessMetadataUpdateEvents(string metadataId, List<IMetadataUpdatedEventArgs> changes) {
         try {
             if (LibraryScanWatcher.IsScanRunning) {
                 Logger.LogDebug("Skipped processing {EventCount} metadata change events because a library scan is running. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
                 return;
             }
 
-            if (!changes.Any(e => e.Kind is BaseItemKind.Episode or BaseItemKind.Movie && e.EpisodeId.HasValue || e.Kind is BaseItemKind.Series && e.SeriesId.HasValue)) {
+            if (!changes.Any(e => e.Kind is BaseItemKind.Episode or BaseItemKind.Movie && e.EpisodeIds.Count > 0 || e.Kind is BaseItemKind.Series && e.SeriesIds.Count > 0)) {
                 Logger.LogDebug("Skipped processing {EventCount} metadata change events because no series or episode ids to use. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
                 return;
             }
@@ -512,23 +575,21 @@ public class EventDispatchService {
             Logger.LogInformation("Processing {EventCount} metadata change events… (Metadata={ProviderUniqueId})", changes.Count, metadataId);
 
             var updateCount = 0;
+            var refreshFieldsMask = ~(MetadataRefreshField.Images | MetadataRefreshField.PreferredImages);
             foreach (var showInfo in showInfoList)
-                updateCount += await ProcessSeriesEvents(showInfo, changes, seriesIdDict).ConfigureAwait(false);
+                updateCount += await ProcessSeriesEvents(showInfo, changes, seriesIdDict, refreshFieldsMask).ConfigureAwait(false);
 
             foreach (var seasonInfo in seasonInfoDict.Values)
-                updateCount += await ProcessMovieEvents(seasonInfo, changes).ConfigureAwait(false);
+                updateCount += await ProcessMovieEvents(seasonInfo, changes, refreshFieldsMask).ConfigureAwait(false);
 
-            Logger.LogInformation("Scheduled {UpdateCount} updates for {EventCount} metadata change events. (Metadata={ProviderUniqueId})", updateCount, changes.Count, metadataId);
+            Logger.LogInformation("Scheduled {UpdateCount} metadata updates for {EventCount} metadata change events. (Metadata={ProviderUniqueId})", updateCount, changes.Count, metadataId);
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Error processing {EventCount} metadata change events. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
         }
-        finally {
-            Plugin.Instance.Tracker.Remove(trackerId);
-        }
     }
 
-    private async Task<int> ProcessSeriesEvents(ShowInfo showInfo, List<IMetadataUpdatedEventArgs> changes, IReadOnlyDictionary<int, string[]> seriesIdDict) {
+    private async Task<int> ProcessSeriesEvents(ShowInfo showInfo, List<IMetadataUpdatedEventArgs> changes, IReadOnlyDictionary<int, string[]> seriesIdDict, MetadataRefreshField refreshFieldsMask) {
         // Update the series if we got a series event.
         var updateCount = 0;
         if (changes.Find(e => e.Kind is BaseItemKind.Series) is not null) {
@@ -549,14 +610,14 @@ public class EventDispatchService {
                 }
 
                 Logger.LogInformation("Refreshing show {ShowName}. (Show={ShowId},Series={SeriesId})", show.Name, show.Id, showInfo.Id);
-                await MetadataRefreshService.RefreshSeries(show, Plugin.Instance.Configuration.MetadataRefresh.Series).ConfigureAwait(false);
+                await MetadataRefreshService.RefreshSeries(show, refreshFieldsMask).ConfigureAwait(false);
                 updateCount++;
             }
         }
         // Otherwise update all season/episodes where appropriate.
         else {
             var episodeIds = changes
-                .Where(e => e.EpisodeId.HasValue && e.Reason is not UpdateReason.MetadataRemoved)
+                .Where(e => e.EpisodeIds.Count > 0 && e.Reason is not UpdateReason.MetadataRemoved)
                 .SelectMany(e => new List<string>([
                     ..e.EpisodeIds.Select(eI => eI.ToString()),
                     ..(e.Kind is BaseItemKind.Movie && e.ProviderName is ProviderName.TMDB) ? [IdPrefix.TmdbMovie + e.ProviderId] : Array.Empty<string>(),
@@ -564,7 +625,7 @@ public class EventDispatchService {
                 ]))
                 .ToHashSet();
             var seasonIds = changes
-                .Where(e => e.EpisodeId.HasValue && e.SeriesId.HasValue && e.Reason is UpdateReason.MetadataRemoved)
+                .Where(e => e.EpisodeIds.Count > 0 && e.SeriesIds.Count > 0 && e.Reason is UpdateReason.MetadataRemoved)
                 .SelectMany(e => e.SeriesIds.SelectMany(s => seriesIdDict[s]))
                 .ToHashSet();
             var seasonList = showInfo.SeasonList
@@ -594,7 +655,7 @@ public class EventDispatchService {
                     }
 
                     Logger.LogInformation("Refreshing season {SeasonName}. (TvSeason={SeasonId},Season={SeasonId},ExtraSeries={ExtraIds})", season.Name, season.Id, seasonInfo.Id, seasonInfo.ExtraIds);
-                    await MetadataRefreshService.RefreshSeason(season, Plugin.Instance.Configuration.MetadataRefresh.Season).ConfigureAwait(false);
+                    await MetadataRefreshService.RefreshSeason(season, refreshFieldsMask).ConfigureAwait(false);
                     updateCount++;
                 }
             }
@@ -633,7 +694,7 @@ public class EventDispatchService {
                     }
 
                     Logger.LogInformation("Refreshing episode {EpisodeName}. (Episode={EpisodeId},Episode={EpisodeId},Season={SeasonId})", episode.Name, episode.Id, episodeInfo.Id, episodeInfo.SeasonId);
-                    await MetadataRefreshService.RefreshEpisode(episode, Plugin.Instance.Configuration.MetadataRefresh.Episode).ConfigureAwait(false);
+                    await MetadataRefreshService.RefreshEpisode(episode, refreshFieldsMask).ConfigureAwait(false);
                     updateCount++;
                 }
             }
@@ -641,11 +702,11 @@ public class EventDispatchService {
         return updateCount;
     }
 
-    private async Task<int> ProcessMovieEvents(SeasonInfo seasonInfo, List<IMetadataUpdatedEventArgs> changes) {
+    private async Task<int> ProcessMovieEvents(SeasonInfo seasonInfo, List<IMetadataUpdatedEventArgs> changes, MetadataRefreshField refreshFieldsMask) {
         // Find movies and refresh them.
         var updateCount = 0;
         var episodeIds = changes
-            .Where(e => e.EpisodeId.HasValue && e.Reason is not UpdateReason.MetadataRemoved)
+            .Where(e => e.EpisodeIds.Count > 0 && e.Reason is not UpdateReason.MetadataRemoved)
             .SelectMany(e => new List<string>([
                 ..e.EpisodeIds.Select(eI => eI.ToString()),
                 ..(e.Kind is BaseItemKind.Movie && e.ProviderName is ProviderName.TMDB) ? [IdPrefix.TmdbMovie + e.ProviderId.ToString()] : Array.Empty<string>(),
@@ -675,7 +736,7 @@ public class EventDispatchService {
                 }
 
                 Logger.LogInformation("Refreshing movie {MovieName}. (Movie={MovieId},Episode={EpisodeId},Season={SeasonId},ExtraSeasons={ExtraIds})", movie.Name, movie.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds);
-                await MetadataRefreshService.RefreshMovie(movie, Plugin.Instance.Configuration.MetadataRefresh.Movie).ConfigureAwait(false);
+                await MetadataRefreshService.RefreshMovie(movie, refreshFieldsMask).ConfigureAwait(false);
                 updateCount++;
             }
         }
