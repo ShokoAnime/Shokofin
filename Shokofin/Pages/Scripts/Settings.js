@@ -1500,7 +1500,7 @@ async function syncSettings(form, config) {
     if (seriesId) {
         let seriesConfig = await ShokoApiClient.getSeriesConfiguration(seriesId);
         if (seriesConfig) {
-            seriesConfig.SeriesType = form.querySelector("#SeriesType").value;
+            seriesConfig.Type = form.querySelector("#SeriesType").value;
             seriesConfig.StructureType = form.querySelector("#SeriesLibraryStructure").value;
             seriesConfig.SeasonOrdering = form.querySelector("#SeriesSeasonOrdering").value;
             seriesConfig.SpecialsPlacement = form.querySelector("#SeriesSpecialsPlacement").value;
