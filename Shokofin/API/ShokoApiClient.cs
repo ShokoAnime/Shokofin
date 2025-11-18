@@ -575,8 +575,8 @@ public class ShokoApiClient : IDisposable {
 
     #region AniDB Anime
 
-    public Task<ListResult<AnidbAnime>> GetAllAnidbAnime(int page = 1, int pageSize = 100)
-        => Get<ListResult<AnidbAnime>>($"/api/v3/Series/AniDB?pageSize={pageSize}&page={page}");
+    public Task<ListResult<AnidbAnime>> GetAllAnidbAnime(string query = "", int page = 1, int pageSize = 100)
+        => Get<ListResult<AnidbAnime>>($"/api/v3/Series/AniDB?pageSize={pageSize}&page={page}&q={Uri.EscapeDataString(query)}");
 
     #endregion
 
