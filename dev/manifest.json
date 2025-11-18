@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.6.7",
+                "changelog": "`fix`: **Ignore case when parsing series type enum value from custom tag**.\n\n`fix`: **Only remove keep file when vfs is not empty, and add it back if it becomes empty**.\n\n`refactor`: **Update series config search to use shoko for queries, and accept a shorthand for shoko series ids**.\n\n`chore`: **Reword setting description**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.7/shoko_5.0.6.7.zip",
+                "checksum": "6c03cc03df12c1c60caad301649f9156",
+                "timestamp": "2025-11-18T23:16:22Z"
+            },
+            {
                 "version": "5.0.6.6",
                 "changelog": "`chore`: **Remove unnecessary imports**.\n\n`chore`: **`.OfType<>()` \u2192 `.WhereNotNull()`**.\n\n`refactor`: **Update ` UpdateReason` enum members**.\n\n`chore`: **Use explicit type instead of interface**.\n\n`refactor`: **Remove metadata refresh guard**.\n\n`refactor`: **Mark `refreshFields` argument as required**.\n\n`refactor`: **Make provider id a string**.\n\n`fix`: **Fix setting series type**.\n\n`refactor`: **Separate image/metadata event processing, refactor metadata refresh service**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.3/shoko_5.0.6.3.zip",
                 "checksum": "7aefdf6424a485667cf2ed2a5d2b9b53",
                 "timestamp": "2025-10-31T00:31:06Z"
-            },
-            {
-                "version": "5.0.6.2",
-                "changelog": "`refactor`: **Replace action result executor with an action filter for Direct Play fix**:\n\nThis change was done so the ASP.NET (core) instance will not freak out if upstream adds an action result executor or action filter for physical file results, since you can only have 1 executor per type, but any number of filters (within reason).\n\n`chore`: **Remove extra whitespace**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.2/shoko_5.0.6.2.zip",
-                "checksum": "7560d2d8398896b794330798be1df239",
-                "timestamp": "2025-10-28T23:14:11Z"
             }
         ]
     }
