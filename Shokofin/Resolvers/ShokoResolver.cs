@@ -278,9 +278,15 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                 }
 
                 var keepFile = Path.Join(vfsPath, ".keep");
-                if (File.Exists(keepFile) && !fileInfoList.ExceptBy([".keep"], fileInfo => fileInfo.Name).Any()) {
-                    Logger.LogTrace("Removing now unneeded keep file: {Path}", keepFile);
+                var keepFileExists = File.Exists(keepFile);
+                var isEmpty = !ResolveManager.GetFileSystemEntryPaths(vfsPath).Except([keepFile]).Any();
+                if (keepFileExists && !isEmpty) {
+                    Logger.LogTrace("Removing now unnecessary keep file: {Path}", keepFile);
                     File.Delete(keepFile);
+                }
+                else if (!keepFileExists && isEmpty) {
+                    Logger.LogTrace("Creating necessary keep file: {Path}", keepFile);
+                    File.Create(keepFile).Dispose();
                 }
 
                 return new() { Items = items, ExtraFiles = [] };
