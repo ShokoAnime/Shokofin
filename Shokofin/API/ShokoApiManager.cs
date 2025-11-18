@@ -166,7 +166,7 @@ public partial class ShokoApiManager : IDisposable {
             };
             if (tags.TryGetValue("/custom user tags/series type", out var seriesTypeTag) &&
                 seriesTypeTag.Children.Count is >= 1 &&
-                Enum.TryParse<SeriesType>(NormalizeCustomSeriesType(seriesTypeTag.Children.Keys.First()), out var seriesType) &&
+                Enum.TryParse<SeriesType>(NormalizeCustomSeriesType(seriesTypeTag.Children.Keys.First()), ignoreCase: true, out var seriesType) &&
                 seriesType is not SeriesType.None
             )
                 seriesSettings.Type = seriesType;
