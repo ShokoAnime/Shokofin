@@ -98,43 +98,21 @@ public partial class ShokofinUtilityController(
         var simpleList = new List<SimpleSeries>();
         var trackerId = Plugin.Instance.Tracker.Add($"Get Simple Series List with Query: {query}");
         try {
-            const int PageSize = 100;
-            var firstPage = await apiClient.GetAllAnidbAnime(pageSize: PageSize);
-            foreach (var anime in firstPage.List) {
-                if (anime.ShokoId.HasValue)
-                    simpleList.Add(new() {
-                        Id = anime.ShokoId.Value,
-                        AnidbId = anime.Id,
-                        Title = anime.Title,
-                        DefaultTitle = anime.Titles?.FirstOrDefault(title => title.Type is API.Models.TitleType.Main)?.Value ?? anime.Title,
-                    });
-            }
-            if (firstPage.Total > PageSize) {
-                var total = firstPage.Total;
-                var page = 2;
-                while (total > 0) {
-                    var nextPage = await apiClient.GetAllAnidbAnime(query, page: page, pageSize: PageSize);
-                    foreach (var anime in nextPage.List) {
-                        if (anime.ShokoId.HasValue)
-                            simpleList.Add(new() {
-                                Id = anime.ShokoId.Value,
-                                AnidbId = anime.Id,
-                                Title = anime.Title,
-                                DefaultTitle = anime.Titles?.FirstOrDefault(title => title.Type is API.Models.TitleType.Main)?.Value ?? anime.Title,
-                            });
-                    }
-                    total -= PageSize;
-                    page++;
-                }
+            var listResult = await apiClient.GetAllAnidbAnime(query, pageSize: 0).ConfigureAwait(false);
+            foreach (var anime in listResult.List) {
+                simpleList.Add(new() {
+                    Id = anime.ShokoId!.Value,
+                    AnidbId = anime.Id,
+                    Title = anime.Title,
+                    DefaultTitle = anime.Titles?.FirstOrDefault(title => title.Type is API.Models.TitleType.Main)?.Value ?? anime.Title,
+                });
             }
         }
         finally {
             Plugin.Instance.Tracker.Remove(trackerId);
         }
 
-        return simpleList
-            .OrderBy(s => s.AnidbId)
-            .ToList();
+        return simpleList;
     }
 
     private Task<IReadOnlyList<SimpleSeries>> GetSeriesListInternal()
@@ -142,43 +120,21 @@ public partial class ShokofinUtilityController(
             var simpleList = new List<SimpleSeries>();
             var trackerId = Plugin.Instance.Tracker.Add($"Get Simple Series List");
             try {
-                const int PageSize = 100;
-                var firstPage = await apiClient.GetAllAnidbAnime(pageSize: PageSize);
-                foreach (var anime in firstPage.List) {
-                    if (anime.ShokoId.HasValue)
-                        simpleList.Add(new() {
-                            Id = anime.ShokoId.Value,
-                            AnidbId = anime.Id,
-                            Title = anime.Title,
-                            DefaultTitle = anime.Titles?.FirstOrDefault(title => title.Type is API.Models.TitleType.Main)?.Value ?? anime.Title,
-                        });
-                }
-                if (firstPage.Total > PageSize) {
-                    var total = firstPage.Total;
-                    var page = 2;
-                    while (total > 0) {
-                        var nextPage = await apiClient.GetAllAnidbAnime(page: page, pageSize: PageSize);
-                        foreach (var anime in nextPage.List) {
-                            if (anime.ShokoId.HasValue)
-                                simpleList.Add(new() {
-                                    Id = anime.ShokoId.Value,
-                                    AnidbId = anime.Id,
-                                    Title = anime.Title,
-                                    DefaultTitle = anime.Titles?.FirstOrDefault(title => title.Type is API.Models.TitleType.Main)?.Value ?? anime.Title,
-                                });
-                        }
-                        total -= PageSize;
-                        page++;
-                    }
+                var listResult = await apiClient.GetAllAnidbAnime(pageSize: 0).ConfigureAwait(false);
+                foreach (var anime in listResult.List) {
+                    simpleList.Add(new() {
+                        Id = anime.ShokoId!.Value,
+                        AnidbId = anime.Id,
+                        Title = anime.Title,
+                        DefaultTitle = anime.Titles?.FirstOrDefault(title => title.Type is API.Models.TitleType.Main)?.Value ?? anime.Title,
+                    });
                 }
             }
             finally {
                 Plugin.Instance.Tracker.Remove(trackerId);
             }
 
-            return simpleList
-                .OrderBy(s => s.AnidbId)
-                .ToList();
+            return simpleList;
         });
 
     private async Task<SimpleSeries?> GetSeriesByShokoSeriesId(int seriesId) {
