@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.6.8",
+                "changelog": "`fix`: **Fix upstream anidb search endpoint usage**:\n\n**Note**: _Be sure to update your server if you want the series search to function properly after this update._",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.8/shoko_5.0.6.8.zip",
+                "checksum": "950a598eebdd7fe493915c97637de84c",
+                "timestamp": "2025-11-19T01:01:59Z"
+            },
+            {
                 "version": "5.0.6.7",
                 "changelog": "`fix`: **Ignore case when parsing series type enum value from custom tag**.\n\n`fix`: **Only remove keep file when vfs is not empty, and add it back if it becomes empty**.\n\n`refactor`: **Update series config search to use shoko for queries, and accept a shorthand for shoko series ids**.\n\n`chore`: **Reword setting description**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.4/shoko_5.0.6.4.zip",
                 "checksum": "855b07e6db025f071c2788deb1e4417a",
                 "timestamp": "2025-10-31T02:10:52Z"
-            },
-            {
-                "version": "5.0.6.3",
-                "changelog": "`fix`: **Inverse reversed order when ordering images**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.3/shoko_5.0.6.3.zip",
-                "checksum": "7aefdf6424a485667cf2ed2a5d2b9b53",
-                "timestamp": "2025-10-31T00:31:06Z"
             }
         ]
     }
