@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.6.9",
+                "changelog": "`fix`: **Set modified date to match source file**:\n\nSet modified date to match source file to prevent jellyfin from refreshing  **E V E R Y T H I N G**   because it thinks the file content changed because since 10.11.1 it has been reading the modified dates from the source files and not the symbolic links anymore.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.9/shoko_5.0.6.9.zip",
+                "checksum": "a5b926d799cf625de32484515a2dd699",
+                "timestamp": "2025-11-19T03:21:59Z"
+            },
+            {
                 "version": "5.0.6.8",
                 "changelog": "`fix`: **Fix upstream anidb search endpoint usage**:\n\n**Note**: _Be sure to update your server if you want the series search to function properly after this update._",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.5/shoko_5.0.6.5.zip",
                 "checksum": "b3d11a251e29eea8f8fb2a4e18c2b5aa",
                 "timestamp": "2025-11-03T03:07:52Z"
-            },
-            {
-                "version": "5.0.6.4",
-                "changelog": "`feat`: **Allow ignoring media folders**:\n\n- Allow ignoring media folders. Which will (re-)attach them to the library if the VFS is enabled, and/or don't remove remove them from the library (again).\n\n- Added refresh/not-refresh and ignore/not-ignore buttons per media folder to the UI.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.4/shoko_5.0.6.4.zip",
-                "checksum": "855b07e6db025f071c2788deb1e4417a",
-                "timestamp": "2025-10-31T02:10:52Z"
             }
         ]
     }
