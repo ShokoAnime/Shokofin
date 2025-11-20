@@ -1102,7 +1102,7 @@ public class VirtualFileSystemService {
                         File.SetCreationTime(symbolicLink, importedAt);
                         // Set the modified at timestamp to match the source file so Jellyfin won't say it changed.
                         var lastModifiedAt = File.GetLastWriteTimeUtc(sourceLocation);
-                        if (lastModifiedAt != DateTime.MinValue)
+                        if (!CompareDateTimes(lastModifiedAt, DateTime.MinValue))
                             File.SetLastWriteTimeUtc(symbolicLink, lastModifiedAt);
                     }
                 }
@@ -1116,14 +1116,14 @@ public class VirtualFileSystemService {
                                 Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
                         }
                         var linkCreatedAt = File.GetCreationTime(symbolicLink).ToLocalTime();
-                        if (linkCreatedAt != importedAt) {
+                        if (!CompareDateTimes(linkCreatedAt, importedAt)) {
                             shouldFix = true;
                             if (!preview)
                                 Logger.LogWarning("Fixing broken symbolic link {Link} with incorrect creation date.", symbolicLink);
                         }
                         var realLastModifiedAt = File.GetLastWriteTimeUtc(sourceLocation);
                         var linkLastModifiedAt = File.GetLastWriteTimeUtc(symbolicLink);
-                        if (realLastModifiedAt != DateTime.MinValue && linkLastModifiedAt != realLastModifiedAt) {
+                        if (!CompareDateTimes(realLastModifiedAt, DateTime.MinValue) && !CompareDateTimes(linkLastModifiedAt, realLastModifiedAt)) {
                             shouldFix = true;
                             if (!preview)
                                 Logger.LogWarning("Fixing broken symbolic link {Link} with incorrect modified date.", symbolicLink);
@@ -1143,7 +1143,7 @@ public class VirtualFileSystemService {
                             File.SetCreationTime(symbolicLink, importedAt);
                             // Set the modified at timestamp to match the source file so Jellyfin won't say it changed.
                             var lastModifiedAt = File.GetLastWriteTimeUtc(sourceLocation);
-                            if (lastModifiedAt != DateTime.MinValue)
+                            if (!CompareDateTimes(lastModifiedAt, DateTime.MinValue))
                                 File.SetLastWriteTimeUtc(symbolicLink, lastModifiedAt);
                         }
                     }
@@ -1335,6 +1335,9 @@ public class VirtualFileSystemService {
             allKnownPaths.Add(directoryPath);
         return allKnownPaths;
     }
+
+    private static bool CompareDateTimes(DateTime first, DateTime second)
+        => TimeSpan.FromTicks(Math.Abs(first.Ticks - second.Ticks)).Seconds <= 1;
 
     #endregion
 
