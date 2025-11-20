@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.6.10",
+                "changelog": "`fix`: **Consider `DateTime`s as functionally equal when there is less than 1 second between them**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.10/shoko_5.0.6.10.zip",
+                "checksum": "3d37e0240348096c93747859a9fa9d8f",
+                "timestamp": "2025-11-20T02:12:48Z"
+            },
+            {
                 "version": "5.0.6.9",
                 "changelog": "`fix`: **Set modified date to match source file**:\n\nSet modified date to match source file to prevent jellyfin from refreshing  **E V E R Y T H I N G**   because it thinks the file content changed because since 10.11.1 it has been reading the modified dates from the source files and not the symbolic links anymore.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.6/shoko_5.0.6.6.zip",
                 "checksum": "6154557d84a4d8c55600b85daf08e403",
                 "timestamp": "2025-11-17T13:32:46Z"
-            },
-            {
-                "version": "5.0.6.5",
-                "changelog": "`misc`: **Inverse media folder button icons**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.5/shoko_5.0.6.5.zip",
-                "checksum": "b3d11a251e29eea8f8fb2a4e18c2b5aa",
-                "timestamp": "2025-11-03T03:07:52Z"
             }
         ]
     }
