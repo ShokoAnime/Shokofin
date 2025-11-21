@@ -1227,7 +1227,6 @@ public class VirtualFileSystemService {
             try {
                 var subPath = Path.Join(pathSegments);
                 var createdDate = Directory.GetCreationTimeUtc(subPath);
-                var modifiedDate = Directory.GetLastAccessTimeUtc(subPath);
                 if (createdDate > dateTime) {
                     Directory.SetCreationTimeUtc(subPath, dateTime);
                 }
