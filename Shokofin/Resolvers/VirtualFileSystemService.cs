@@ -1098,12 +1098,6 @@ public class VirtualFileSystemService {
                     if (!preview) {
                         Logger.LogDebug("Linking {Link} → {LinkTarget}", symbolicLink, sourceLocation);
                         File.CreateSymbolicLink(symbolicLink, sourceLocation);
-                        // Mock the creation date to fake the "date added" order in Jellyfin.
-                        File.SetCreationTime(symbolicLink, importedAt);
-                        // Set the modified at timestamp to match the source file so Jellyfin won't say it changed.
-                        var lastModifiedAt = File.GetLastWriteTimeUtc(sourceLocation);
-                        if (!CompareDateTimes(lastModifiedAt, DateTime.MinValue))
-                            File.SetLastWriteTimeUtc(symbolicLink, lastModifiedAt);
                     }
                 }
                 else {
@@ -1114,19 +1108,6 @@ public class VirtualFileSystemService {
                             shouldFix = true;
                             if (!preview)
                                 Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
-                        }
-                        var linkCreatedAt = File.GetCreationTime(symbolicLink).ToLocalTime();
-                        if (!CompareDateTimes(linkCreatedAt, importedAt)) {
-                            shouldFix = true;
-                            if (!preview)
-                                Logger.LogWarning("Fixing broken symbolic link {Link} with incorrect creation date.", symbolicLink);
-                        }
-                        var realLastModifiedAt = File.GetLastWriteTimeUtc(sourceLocation);
-                        var linkLastModifiedAt = File.GetLastWriteTimeUtc(symbolicLink);
-                        if (!CompareDateTimes(realLastModifiedAt, DateTime.MinValue) && !CompareDateTimes(linkLastModifiedAt, realLastModifiedAt)) {
-                            shouldFix = true;
-                            if (!preview)
-                                Logger.LogWarning("Fixing broken symbolic link {Link} with incorrect modified date.", symbolicLink);
                         }
                     }
                     catch (Exception ex) {
@@ -1139,12 +1120,6 @@ public class VirtualFileSystemService {
                         if (!preview) {
                             File.Delete(symbolicLink);
                             File.CreateSymbolicLink(symbolicLink, sourceLocation);
-                            // Mock the creation date to fake the "date added" order in Jellyfin.
-                            File.SetCreationTime(symbolicLink, importedAt);
-                            // Set the modified at timestamp to match the source file so Jellyfin won't say it changed.
-                            var lastModifiedAt = File.GetLastWriteTimeUtc(sourceLocation);
-                            if (!CompareDateTimes(lastModifiedAt, DateTime.MinValue))
-                                File.SetLastWriteTimeUtc(symbolicLink, lastModifiedAt);
                         }
                     }
                     else {
