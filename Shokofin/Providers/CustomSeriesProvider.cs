@@ -166,7 +166,7 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, Virtual
                 // Merge versions.
                 if (Plugin.Instance.Configuration.AutoMergeVersions && !_libraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
                     foreach (var episodeId in existingEpisodes) {
-                        await _mergeVersionsManager.SplitAndMergeEpisodesByEpisodeId(episodeId).ConfigureAwait(false);
+                        _mergeVersionsManager.ScheduleSplitAndMergeEpisodesByEpisodeId(episodeId);
                     }
                 }
             }
@@ -225,7 +225,7 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, Virtual
                 // Merge versions.
                 if (Plugin.Instance.Configuration.AutoMergeVersions && !_libraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
                     foreach (var episodeId in existingEpisodes) {
-                        await _mergeVersionsManager.SplitAndMergeEpisodesByEpisodeId(episodeId).ConfigureAwait(false);
+                        _mergeVersionsManager.ScheduleSplitAndMergeEpisodesByEpisodeId(episodeId);
                     }
                 }
             }

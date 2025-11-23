@@ -63,7 +63,7 @@ public class CustomMovieProvider(ILogger<CustomMovieProvider> _logger, VirtualFi
             }
 
             if (Plugin.Instance.Configuration.AutoMergeVersions && !_libraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
-                await _mergeVersionsManager.SplitAndMergeMoviesByEpisodeId(episodeId).ConfigureAwait(false);
+                _mergeVersionsManager.ScheduleSplitAndMergeMoviesByEpisodeId(episodeId);
             }
 
             return updateType is 0 ? ItemUpdateType.None : updateType;

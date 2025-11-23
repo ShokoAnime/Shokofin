@@ -70,7 +70,7 @@ public class CustomEpisodeProvider(ILogger<CustomEpisodeProvider> _logger, Virtu
                 foreach (var episodeId in episodeIds) {
                     RemoveVirtualEpisodes(episodeId, episode, series.GetPresentationUniqueKey());
                     if (Plugin.Instance.Configuration.AutoMergeVersions && !_libraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
-                        await _mergeVersionsManager.SplitAndMergeEpisodesByEpisodeId(episodeId).ConfigureAwait(false);
+                        _mergeVersionsManager.ScheduleSplitAndMergeEpisodesByEpisodeId(episodeId);
                     }
                 }
             }
