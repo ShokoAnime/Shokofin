@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.6.13",
+                "changelog": "`fix`: **Specify exact dependencies without auto-inference for patch number**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.13/shoko_5.0.6.13.zip",
+                "checksum": "0bfb3fe7b558a1ae9e18c2203880a213",
+                "timestamp": "2025-11-23T23:33:56Z"
+            },
+            {
                 "version": "5.0.6.12",
                 "changelog": "`refactor`: **Replace sync. merge operations with an async. queue-based system**:\n\nPreviously, merge operations happened the first time an episode or movie ID was encountered during a scan or refresh. This could trigger too early, while the core was still processing items, causing merge failures.\n\nNow, merges are queued and processed asynchronously once scanning completes. Two separate queues handle movies and episodes, with locks preventing parallel processing of the same type.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.9/shoko_5.0.6.9.zip",
                 "checksum": "a5b926d799cf625de32484515a2dd699",
                 "timestamp": "2025-11-19T03:21:59Z"
-            },
-            {
-                "version": "5.0.6.8",
-                "changelog": "`fix`: **Fix upstream anidb search endpoint usage**:\n\n**Note**: _Be sure to update your server if you want the series search to function properly after this update._",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.8/shoko_5.0.6.8.zip",
-                "checksum": "950a598eebdd7fe493915c97637de84c",
-                "timestamp": "2025-11-19T01:01:59Z"
             }
         ]
     }
