@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.6.12",
+                "changelog": "`refactor`: **Replace sync. merge operations with an async. queue-based system**:\n\nPreviously, merge operations happened the first time an episode or movie ID was encountered during a scan or refresh. This could trigger too early, while the core was still processing items, causing merge failures.\n\nNow, merges are queued and processed asynchronously once scanning completes. Two separate queues handle movies and episodes, with locks preventing parallel processing of the same type.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.12/shoko_5.0.6.12.zip",
+                "checksum": "074a1d9aa546d4a49a468f86c75b76ed",
+                "timestamp": "2025-11-23T22:29:14Z"
+            },
+            {
                 "version": "5.0.6.11",
                 "changelog": "`fix`: **Stop caring about creation time and last modified time for video file links**:\n\nWe've now stopped caring about the timestamps for the video file symbolic links, because from Jellyfin 10.11.1 and onwards the core doesn't use them anymore, so we don't have to support them either. The patch to set the creation date on the episodes/movies at a base-item level is still live, and hopefully is enough to mimic the older behavior we got from setting the creation time on the video file link.\n\nAs a side note on this topic, it also doesn't help that linux only have changed/modified/accessed times by default, with some file systems also having the birth time (AKA creation time). And it also doesn't help that attempting to set both the creation time and last modified time will set the _last modified time_ **twice** on linux in the core of the dotnet runtime.\n\n`misc`: **Remove unnecessary call for access time on directories**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.8/shoko_5.0.6.8.zip",
                 "checksum": "950a598eebdd7fe493915c97637de84c",
                 "timestamp": "2025-11-19T01:01:59Z"
-            },
-            {
-                "version": "5.0.6.7",
-                "changelog": "`fix`: **Ignore case when parsing series type enum value from custom tag**.\n\n`fix`: **Only remove keep file when vfs is not empty, and add it back if it becomes empty**.\n\n`refactor`: **Update series config search to use shoko for queries, and accept a shorthand for shoko series ids**.\n\n`chore`: **Reword setting description**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.7/shoko_5.0.6.7.zip",
-                "checksum": "6c03cc03df12c1c60caad301649f9156",
-                "timestamp": "2025-11-18T23:16:22Z"
             }
         ]
     }
