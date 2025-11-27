@@ -199,7 +199,7 @@ public class Ordering {
                     break;
                 }
 
-                if (seasonInfo.SpecialsAnchors.TryGetValue(episodeInfo, out var previousEpisode))
+                if (seasonInfo.SpecialsAnchors.TryGetValue(episodeInfo.Id, out var previousEpisode))
                     episodeNumber = GetEpisodeNumber(showInfo, seasonInfo, previousEpisode);
 
                 if (episodeNumber.HasValue && episodeNumber.Value < seasonInfo.EpisodeList.Count) {

@@ -138,7 +138,7 @@ public class SeasonInfo : IExtendedItemInfo {
     /// <summary>
     /// A dictionary holding mappings for the previous normal episode for every special episode in a series.
     /// </summary>
-    public IReadOnlyDictionary<EpisodeInfo, EpisodeInfo> SpecialsAnchors { get; init; }
+    public IReadOnlyDictionary<string, EpisodeInfo> SpecialsAnchors { get; init; }
 
     /// <summary>
     /// Related series data available in Shoko.
@@ -217,7 +217,7 @@ public class SeasonInfo : IExtendedItemInfo {
             .DistinctBy(r => r.RelatedIDs.Shoko!.Value)
             .ToDictionary(r => r.RelatedIDs.Shoko!.Value.ToString(), r => r.Type);
         var specialsBeforeEpisodes = new HashSet<string>();
-        var specialsAnchorDictionary = new Dictionary<EpisodeInfo, EpisodeInfo>();
+        var specialsAnchorDictionary = new Dictionary<string, EpisodeInfo>();
         var specialsList = new List<EpisodeInfo>();
         var episodesList = new List<EpisodeInfo>();
         var extrasList = new List<EpisodeInfo>();
@@ -271,7 +271,7 @@ public class SeasonInfo : IExtendedItemInfo {
                                 .GetRange(lastNormalEpisode, index - lastNormalEpisode)
                                 .FirstOrDefault(e => e.Type is EpisodeType.Normal && seriesConfiguration.EpisodeConversion is not SeriesEpisodeConversion.EpisodesAsSpecials);
                             if (previousEpisode != null)
-                                specialsAnchorDictionary[episode] = previousEpisode;
+                                specialsAnchorDictionary[episode.Id] = previousEpisode;
                         }
                     }
                     break;
@@ -330,7 +330,7 @@ public class SeasonInfo : IExtendedItemInfo {
                             .GetRange(lastNormalEpisode, index - lastNormalEpisode)
                             .FirstOrDefault(e => episodesList.Contains(e));
                         if (previousEpisode != null)
-                            specialsAnchorDictionary[episode] = previousEpisode;
+                            specialsAnchorDictionary[episode.Id] = previousEpisode;
                     }
                 }
                 index++;
@@ -518,7 +518,7 @@ public class SeasonInfo : IExtendedItemInfo {
         ExtrasList = [];
         SpecialsList = tmdbSeason.SeasonNumber is 0 ? episodes.ToList() : [];
         SpecialsBeforeEpisodes = new HashSet<string>();
-        SpecialsAnchors = new Dictionary<EpisodeInfo, EpisodeInfo>();
+        SpecialsAnchors = new Dictionary<string, EpisodeInfo>();
         Relations = [];
         RelationMap = new Dictionary<string, RelationType>();
         ShokoSeries = shokoSeries ?? [];
@@ -565,7 +565,7 @@ public class SeasonInfo : IExtendedItemInfo {
         ExtrasList = [];
         SpecialsList = [];
         SpecialsBeforeEpisodes = new HashSet<string>();
-        SpecialsAnchors = new Dictionary<EpisodeInfo, EpisodeInfo>();
+        SpecialsAnchors = new Dictionary<string, EpisodeInfo>();
         Relations = [];
         RelationMap = new Dictionary<string, RelationType>();
         ShokoSeries = shokoSeries;
@@ -621,7 +621,7 @@ public class SeasonInfo : IExtendedItemInfo {
         ExtrasList = [];
         SpecialsList = [];
         SpecialsBeforeEpisodes = new HashSet<string>();
-        SpecialsAnchors = new Dictionary<EpisodeInfo, EpisodeInfo>();
+        SpecialsAnchors = new Dictionary<string, EpisodeInfo>();
         Relations = [];
         RelationMap = new Dictionary<string, RelationType>();
         ShokoSeries = shokoSeries;

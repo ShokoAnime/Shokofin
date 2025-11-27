@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using Shokofin.API.Info;
 using Shokofin.Configuration;
 using Shokofin.Resolvers;
 using Shokofin.Utils;
@@ -30,14 +31,11 @@ namespace Shokofin.Web;
 public partial class ShokofinUtilityController(
     ILogger<ShokofinUtilityController> logger,
     ShokoApiClient apiClient,
+    ShokoApiManager apiManager,
     SeriesConfigurationService seriesConfigurationService,
     VirtualFileSystemService virtualFileSystemService
 ) : ControllerBase {
     private readonly ILogger<ShokofinUtilityController> Logger = logger;
-
-    private readonly SeriesConfigurationService SeriesConfigurationService = seriesConfigurationService;
-
-    private readonly VirtualFileSystemService VirtualFileSystemService = virtualFileSystemService;
 
     private readonly GuardedMemoryCache Cache = new(logger, new() { ExpirationScanFrequency = TimeSpan.FromMinutes(25) }, new() { SlidingExpiration = new(0, 30, 0) });
 
@@ -50,7 +48,7 @@ public partial class ShokofinUtilityController(
     public async Task<ActionResult<VfsLibraryPreview>> PreviewVFS(Guid libraryId) {
         var trackerId = Plugin.Instance.Tracker.Add("Preview VFS");
         try {
-            var (filesBefore, filesAfter, virtualFolder, result, vfsPath) = await VirtualFileSystemService.PreviewChangesForLibrary(libraryId, HttpContext.RequestAborted).ConfigureAwait(false);
+            var (filesBefore, filesAfter, virtualFolder, result, vfsPath) = await virtualFileSystemService.PreviewChangesForLibrary(libraryId, HttpContext.RequestAborted).ConfigureAwait(false);
             if (virtualFolder is null)
                 return NotFound("Unable to find library with the given id.");
 
@@ -177,7 +175,7 @@ public partial class ShokofinUtilityController(
     ) {
         var trackerId = Plugin.Instance.Tracker.Add($"Get Series Configuration for {seriesId}");
         try {
-            var config = await SeriesConfigurationService.GetSeriesConfigurationForId(seriesId).ConfigureAwait(false);
+            var config = await seriesConfigurationService.GetSeriesConfigurationForId(seriesId).ConfigureAwait(false);
             if (config is null)
                 return NotFound("Unable to find series with the given id.");
 
@@ -201,7 +199,7 @@ public partial class ShokofinUtilityController(
     ) {
         var trackerId = Plugin.Instance.Tracker.Add($"Update Series Configuration for {seriesId} (Add)");
         try {
-            return await SeriesConfigurationService.UpdateSeriesConfigurationForId(seriesId, seriesConfiguration).ConfigureAwait(false);
+            return await seriesConfigurationService.UpdateSeriesConfigurationForId(seriesId, seriesConfiguration).ConfigureAwait(false);
         }
         finally {
             Plugin.Instance.Tracker.Remove(trackerId);
@@ -221,7 +219,19 @@ public partial class ShokofinUtilityController(
     ) {
         var trackerId = Plugin.Instance.Tracker.Add($"Update Series Configuration for {seriesId} (Replace)");
         try {
-            return await SeriesConfigurationService.UpdateSeriesConfigurationForId(seriesId, seriesConfiguration).ConfigureAwait(false);
+            return await seriesConfigurationService.UpdateSeriesConfigurationForId(seriesId, seriesConfiguration).ConfigureAwait(false);
+        }
+        finally {
+            Plugin.Instance.Tracker.Remove(trackerId);
+        }
+    }
+
+    [HttpGet("Series/{seriesId}/ShowInfo")]
+    public async Task<IReadOnlyList<ShowInfo>> GetShowInfoForSeriesId([FromRoute, Range(1, int.MaxValue)] int seriesId) {
+        var trackerId = Plugin.Instance.Tracker.Add($"Get Show Info for {seriesId}");
+        try {
+            var showInfo = await apiManager.GetShowInfosForShokoSeries(seriesId.ToString()).ConfigureAwait(false);
+            return showInfo;
         }
         finally {
             Plugin.Instance.Tracker.Remove(trackerId);
