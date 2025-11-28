@@ -153,6 +153,7 @@ public class MergeVersionsManager {
             if (episodeIds.Length is 0)
                 return;
             var episodes = episodeIds
+                .Distinct()
                 .SelectMany(GetEpisodesFromLibrary)
                 .ToList();
             _logger.LogDebug("Checking {Count} episodes if they need to be split or merged.", episodes.Count);
@@ -240,6 +241,7 @@ public class MergeVersionsManager {
             if (movieEpisodeIds.Length is 0)
                 return;
             var movies = movieEpisodeIds
+                .Distinct()
                 .SelectMany(GetMoviesFromLibrary)
                 .ToList();
             _logger.LogDebug("Checking {Count} movies if they need to be split or merged.", movies.Count);
