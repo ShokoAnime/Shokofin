@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.6.16",
+                "changelog": "`fix`: **Fix typo in tvdb episode ids**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.16/shoko_5.0.6.16.zip",
+                "checksum": "47571d2b4d7650ff0cd736a36df8ebec",
+                "timestamp": "2025-11-30T06:23:15Z"
+            },
+            {
                 "version": "5.0.6.15",
                 "changelog": "`fix`: **Distinct list before use**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.12/shoko_5.0.6.12.zip",
                 "checksum": "074a1d9aa546d4a49a468f86c75b76ed",
                 "timestamp": "2025-11-23T22:29:14Z"
-            },
-            {
-                "version": "5.0.6.11",
-                "changelog": "`fix`: **Stop caring about creation time and last modified time for video file links**:\n\nWe've now stopped caring about the timestamps for the video file symbolic links, because from Jellyfin 10.11.1 and onwards the core doesn't use them anymore, so we don't have to support them either. The patch to set the creation date on the episodes/movies at a base-item level is still live, and hopefully is enough to mimic the older behavior we got from setting the creation time on the video file link.\n\nAs a side note on this topic, it also doesn't help that linux only have changed/modified/accessed times by default, with some file systems also having the birth time (AKA creation time). And it also doesn't help that attempting to set both the creation time and last modified time will set the _last modified time_ **twice** on linux in the core of the dotnet runtime.\n\n`misc`: **Remove unnecessary call for access time on directories**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.11/shoko_5.0.6.11.zip",
-                "checksum": "6ca4cc77c00be041359c1c2bd4edbca9",
-                "timestamp": "2025-11-21T23:55:14Z"
             }
         ]
     }
