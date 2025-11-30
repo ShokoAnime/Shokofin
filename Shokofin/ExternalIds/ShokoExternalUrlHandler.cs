@@ -294,8 +294,8 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
             if (!string.IsNullOrEmpty(tmdbInfo.TvdbEpisodeId))
                 result.Add((
                     ProviderNames.Tvdb,
-                    $"(e{tmdbInfo.TmdbEpisodeId})",
-                    $"/?tab=episode&id={tmdbInfo.TmdbEpisodeId}"
+                    $"(e{tmdbInfo.TvdbEpisodeId})",
+                    $"/?tab=episode&id={tmdbInfo.TvdbEpisodeId}"
                 ));
         }
 
