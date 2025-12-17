@@ -412,9 +412,12 @@ public class MediaFolderConfigurationService {
     }
 
     private async Task<MediaFolderConfiguration> CreateConfigurationForPath(Guid libraryId, string mediaFolderPath) {
-        // Check if we should introduce the VFS for the media folder.
         var config = Plugin.Instance.Configuration;
         var mediaFolderConfig = new MediaFolderConfiguration() { LibraryId = libraryId, Path = mediaFolderPath };
+        if (File.Exists(Path.Join(mediaFolderPath, ".shoko-ignore"))) {
+            mediaFolderConfig.IsIgnored = true;
+            return mediaFolderConfig;
+        }
         var start = DateTime.UtcNow;
         var attempts = 0;
         var foundLocations = new List<(int, string)>();
