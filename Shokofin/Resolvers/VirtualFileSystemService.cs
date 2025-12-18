@@ -31,6 +31,8 @@ using File = System.IO.File;
 namespace Shokofin.Resolvers;
 
 public class VirtualFileSystemService {
+    const string TrickplayExtensionName = ".trickplay";
+
     private readonly ShokoApiManager ApiManager;
 
     private readonly ShokoApiClient ApiClient;
@@ -1127,10 +1129,10 @@ public class VirtualFileSystemService {
                     }
                 }
 
-                var trickplayLocation = Path.ChangeExtension(sourceLocation, ".trickplay");
+                var trickplayLocation = Path.ChangeExtension(sourceLocation, TrickplayExtensionName);
                 if (Directory.Exists(trickplayLocation)) {
                     var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
-                    var symbolicTrickplay = Path.Join(symbolicDirectory, symbolicName + ".trickplay");
+                    var symbolicTrickplay = Path.Join(symbolicDirectory, symbolicName + TrickplayExtensionName);
                     result.Paths.Add(symbolicTrickplay);
                     if (!Directory.Exists(symbolicTrickplay)) {
                         result.CreatedTrickplayDirectories++;
@@ -1329,7 +1331,7 @@ public class VirtualFileSystemService {
         var start = DateTime.UtcNow;
         var previousStep = start;
         var result = new LinkGenerationResult();
-        var searchExtensions = NamingOptions.VideoFileExtensions.Concat(NamingOptions.SubtitleFileExtensions).Concat(NamingOptions.AudioFileExtensions).Concat([".nfo", ".trickplay"]).ToHashSet();
+        var searchExtensions = NamingOptions.VideoFileExtensions.Concat(NamingOptions.SubtitleFileExtensions).Concat(NamingOptions.AudioFileExtensions).Concat([".nfo", TrickplayExtensionName]).ToHashSet();
         var entriesToBeRemoved = GetFileSystemEntryPaths(directoryToClean, true, searchExtensions, (path, isDirectory) => !allKnownPaths.Contains(path), cancellationToken: cancellationToken)
             .Select(path => (path, extName: Path.GetExtension(path)))
             .ToList();
@@ -1355,7 +1357,7 @@ public class VirtualFileSystemService {
                 result.RemovedPaths.Add(location);
                 result.RemovedNfos++;
             }
-            else if (extName is ".trickplay") {
+            else if (extName is TrickplayExtensionName) {
                 if (TryMoveTrickplayDirectory(allKnownPaths, location, preview, out var skip)) {
                     result.Paths.Add(location);
                     if (skip) {
@@ -1577,10 +1579,7 @@ public class VirtualFileSystemService {
         var linkToMove = allKnownPaths.FirstOrDefault(knownPath =>
             Path.GetExtension(knownPath) is { Length: > 0 } extName &&
             NamingOptions.VideoFileExtensions.Contains(extName, StringComparer.OrdinalIgnoreCase) &&
-            trickplayDirectory.StartsWith(knownPath[..^extName.Length]) &&
-            TryGetIdsForPath(knownPath, out var knownFileId, out var knownSeriesId) &&
-            seriesId == knownSeriesId &&
-            fileId == knownFileId
+            string.Equals(trickplayDirectory, knownPath[..^extName.Length] + TrickplayExtensionName)
         );
         if (string.IsNullOrEmpty(linkToMove)) {
             skip = false;
@@ -1588,12 +1587,6 @@ public class VirtualFileSystemService {
         }
 
         var sourcePathWithoutExt = linkToMove[..^Path.GetExtension(linkToMove).Length];
-        if (!trickplayDirectory.StartsWith(sourcePathWithoutExt)) {
-            skip = false;
-            return false;
-        }
-
-        var extName = trickplayDirectory[sourcePathWithoutExt.Length..];
         string? realTarget = null;
         try {
             realTarget = Directory.ResolveLinkTarget(linkToMove, false)?.FullName;
@@ -1609,7 +1602,7 @@ public class VirtualFileSystemService {
             return true;
         }
 
-        var realPath = realTarget[..^Path.GetExtension(realTarget).Length] + extName;
+        var realPath = realTarget[..^Path.GetExtension(realTarget).Length] + TrickplayExtensionName;
         try {
             var currentTarget = Directory.ResolveLinkTarget(trickplayDirectory, false)?.FullName;
             if (!string.IsNullOrEmpty(currentTarget)) {
@@ -1732,7 +1725,7 @@ public class VirtualFileSystemService {
                     if (outputDirectories && canOutputPath(directory, true)) {
                         outputBag.Add(directory);
                     }
-                    if (recursive && Path.GetExtension(directory) is not ".trickplay") {
+                    if (recursive && Path.GetExtension(directory) is not TrickplayExtensionName) {
                         outputs.Add(directory);
                     }
                 }
