@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.6.17",
+                "changelog": "`feat`: **Check for `.shoko-ignore` file to ignore newly found media folders**.\n\n`chore`: **Simplify code**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.17/shoko_5.0.6.17.zip",
+                "checksum": "ad43c923df0b18d4c59c97e96147550e",
+                "timestamp": "2025-12-18T13:02:20Z"
+            },
+            {
                 "version": "5.0.6.16",
                 "changelog": "`fix`: **Fix typo in tvdb episode ids**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.13/shoko_5.0.6.13.zip",
                 "checksum": "0bfb3fe7b558a1ae9e18c2203880a213",
                 "timestamp": "2025-11-23T23:33:56Z"
-            },
-            {
-                "version": "5.0.6.12",
-                "changelog": "`refactor`: **Replace sync. merge operations with an async. queue-based system**:\n\nPreviously, merge operations happened the first time an episode or movie ID was encountered during a scan or refresh. This could trigger too early, while the core was still processing items, causing merge failures.\n\nNow, merges are queued and processed asynchronously once scanning completes. Two separate queues handle movies and episodes, with locks preventing parallel processing of the same type.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.12/shoko_5.0.6.12.zip",
-                "checksum": "074a1d9aa546d4a49a468f86c75b76ed",
-                "timestamp": "2025-11-23T22:29:14Z"
             }
         ]
     }
