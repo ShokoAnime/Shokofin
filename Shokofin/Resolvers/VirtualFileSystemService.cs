@@ -1168,7 +1168,7 @@ public class VirtualFileSystemService {
                                         try {
                                             Directory.Delete(trickplayLocation, recursive: true);
                                             Directory.CreateDirectory(trickplayLocation);
-                                            CopyDirectory(symbolicDirectory, trickplayLocation);
+                                            CopyDirectory(symbolicTrickplay, trickplayLocation);
                                         }
                                         catch (Exception ex) {
                                             if (!preview)
