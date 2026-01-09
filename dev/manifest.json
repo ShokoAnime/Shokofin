@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "5.0.6.19",
+                "changelog": "`fix`: **Track which files were removed from the underlying library during iterative generation**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.19/shoko_5.0.6.19.zip",
+                "checksum": "afb8b922dd992c427175e8ea81b9d850",
+                "timestamp": "2026-01-09T10:40:49Z"
+            },
+            {
                 "version": "5.0.6.18",
                 "changelog": "`fix`: **Don't copy VFS season folder into video trickplay folder**:\n\nDon't copy VFS season folder into video trickplay folder when the trickplay folder exists as a non-link in both the underlying library and in the VFS.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.15/shoko_5.0.6.15.zip",
                 "checksum": "a669df7536f87a7690c7906c2288a4c4",
                 "timestamp": "2025-11-28T04:14:45Z"
-            },
-            {
-                "version": "5.0.6.14",
-                "changelog": "`feat`: **Add endpoint to get show info(s) for a shoko series id**:\n\n\u2026for debugging purposes.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.14/shoko_5.0.6.14.zip",
-                "checksum": "7882a8940094f278b7a7883fa715128b",
-                "timestamp": "2025-11-27T08:26:50Z"
             }
         ]
     }
