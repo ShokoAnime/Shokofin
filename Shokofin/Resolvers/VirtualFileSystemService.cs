@@ -363,6 +363,7 @@ public class VirtualFileSystemService {
 
             var lastGeneratedAt = (DateTime?)null;
             var iterativeGeneration = false;
+            var knownFileSeriesBag = (ConcurrentBag<(string fileId, string seriesId)>?)null;
             // `allFiles` will only be null if we'te trying to generate the root folder,
             // so it's effectively the same as if we had done `vfsPath == path`, but we
             // get to tell the compiler that `allFiles` will not be null after this point.
@@ -408,8 +409,15 @@ public class VirtualFileSystemService {
                     Plugin.Instance.SaveConfiguration();
                 }
 
+                // Initialise the bag and switch to the flood search file checker if we're
+                // doing an iterative generation and need to know which files were removed.
+                if (iterativeGeneration && lastGeneratedAt.HasValue) {
+                    knownFileSeriesBag = [];
+                    fileChecker = GetFloodSearchFileChecker(libraryConfig, mediaConfigs, cancellationToken);
+                }
+
                 pathToClean = vfsPath;
-                allFiles = GetFilesForManagedFolders(mediaConfigs, fileChecker, lastGeneratedAt);
+                allFiles = GetFilesForManagedFolders(mediaConfigs, fileChecker, lastGeneratedAt, knownFileSeriesBag);
             }
 
             // Generate any new structure in the VFS.
@@ -419,10 +427,22 @@ public class VirtualFileSystemService {
             if (!string.IsNullOrEmpty(pathToClean)) {
                 if (iterativeGeneration) {
                     var newPaths = result.Paths.ToArray();
+                    // If this was an iterative generation between now and the
+                    // last generation, then we need to filter the paths to exclude
+                    // the files which were removed from the underlying library.
+                    var fileSeriesIdSet = knownFileSeriesBag?.ToArray().ToHashSet();
                     // For now we're overcompensating when "cleaning" by also checking
                     // all other videos in the directory when iterative generation is enabled,
                     // so we move the sub/audio files and trickplay directories if necessary.
-                    var allPaths = GetFilePaths(pathToClean, true, NamingOptions.VideoFileExtensions, (path, __) => TryGetIdsForPath(path, out _, out _));
+                    var allPaths = GetFilePaths(
+                        pathToClean,
+                        recursive: true,
+                        extensions: NamingOptions.VideoFileExtensions,
+                        filter: (path, __) =>
+                            TryGetIdsForPath(path, out var fileId, out var seresId) &&
+                            (fileSeriesIdSet is null || fileSeriesIdSet.Contains((fileId, seresId))),
+                        cancellationToken: cancellationToken
+                    );
                     result.SkippedVideos = allPaths.Except(newPaths).Count();
                     result += CleanupStructure(vfsPath, pathToClean, allPaths, cancellationToken: cancellationToken);
                     // The resolver only care about the new files, if any, so revert the
@@ -479,6 +499,33 @@ public class VirtualFileSystemService {
         Logger.LogDebug("Creating an iterative file checker for {Count} folders. (Library={LibraryId})", mediaConfigs.Count, libraryConfig.Id);
         fileChecker = File.Exists;
         return true;
+    }
+
+    private Func<string, bool> GetFloodSearchFileChecker(LibraryConfiguration libraryConfig, IReadOnlyList<MediaFolderConfiguration> mediaConfigs, CancellationToken cancellationToken = default) {
+        var startTime = DateTime.UtcNow;
+        Logger.LogDebug(
+            "Switching to a flood search file checker for {Count} folders. (Library={LibraryId})",
+            mediaConfigs.Count,
+            libraryConfig.Id
+        );
+        var filePaths = (ConcurrentBag<string>?)[];
+        foreach (var (managedFolderId, managedFolderSubPath, mediaFolderPaths) in mediaConfigs.ToManagedFolderList()) {
+            Logger.LogTrace("Processing managed folder {ManagedFolderId} with {Count} paths. (Library={LibraryId})", managedFolderId, mediaFolderPaths.Count, libraryConfig.Id);
+            foreach (var path in mediaFolderPaths) {
+                Logger.LogTrace("Processing path {Path}. (Library={LibraryId})", path, libraryConfig.Id);
+                var allPaths = GetFilePaths(
+                    path,
+                    recursive: true,
+                    extensions: NamingOptions.VideoFileExtensions,
+                    cancellationToken: cancellationToken
+                );
+                Parallel.ForEach(allPaths, new() { MaxDegreeOfParallelism = GetThreadCount() }, path => filePaths?.Add(path));
+            }
+        }
+        var filePathSet = filePaths!.ToArray().ToHashSet();
+        filePaths = null;
+        Logger.LogTrace("Created a flood search file checker with {Count} paths in {Duration}. (Library={LibraryId})", filePathSet.Count, DateTime.UtcNow - startTime, libraryConfig.Id);
+        return filePathSet.Contains;
     }
 
     private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForEpisode(string fileId, string seriesId, IReadOnlyList<MediaFolderConfiguration> mediaConfigs, Func<string, bool> fileExists) {
@@ -714,7 +761,7 @@ public class VirtualFileSystemService {
         );
     }
 
-    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForManagedFolders(IReadOnlyList<MediaFolderConfiguration> mediaConfigs, Func<string, bool> fileExists, DateTime? lastGeneratedAt = null) {
+    private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForManagedFolders(IReadOnlyList<MediaFolderConfiguration> mediaConfigs, Func<string, bool> fileExists, DateTime? lastGeneratedAt = null, ConcurrentBag<(string, string)>? knownFileSeriesBag = null) {
         var start = DateTime.UtcNow;
         var singleSeriesIds = new HashSet<int>();
         var multiSeriesFiles = new List<(API.Models.File, string)>();
@@ -768,10 +815,6 @@ public class VirtualFileSystemService {
                     if (location is null)
                         continue;
 
-                    // Skip files that were generated before the last generated at time if we're doing an iterative run.
-                    if (lastGeneratedAt.HasValue && (file.ImportedAt ?? file.CreatedAt) < lastGeneratedAt.Value)
-                        continue;
-
                     foreach (var mediaFolderPath in mediaFolderPaths) {
                         var sourceLocation = Path.Join(mediaFolderPath, location.RelativePath[managedFolderSubPath.Length..]);
                         if (!fileExists(sourceLocation))
@@ -782,8 +825,16 @@ public class VirtualFileSystemService {
                         if (seriesIds.Count is 1) {
                             totalSingleSeriesFiles++;
                             singleSeriesIds.Add(seriesIds.First());
-                            foreach (var seriesId in seriesIds)
+                            foreach (var seriesId in seriesIds) {
+                                // Skip files that were generated before the last generated at time if we're doing an iterative run,
+                                // but still add it to the bag for validation of removed files.
+                                if (lastGeneratedAt.HasValue) {
+                                    knownFileSeriesBag!.Add((file.Id.ToString(), seriesId.ToString()));
+                                    if ((file.ImportedAt ?? file.CreatedAt) < lastGeneratedAt.Value)
+                                        continue;
+                                }
                                 yield return (sourceLocation, file.Id.ToString(), seriesId.ToString());
+                            }
                         }
                         else if (seriesIds.Count > 1) {
                             multiSeriesFiles.Add((file, sourceLocation));
@@ -822,8 +873,16 @@ public class VirtualFileSystemService {
                     .Where(tuple => tuple.showIds.Count > 0 && (mappedSingleSeriesIds.Overlaps(tuple.showIds) || anidbExceptionSet.Contains(tuple.anidbId)))
                     .Select(tuple => tuple.seriesId)
                     .ToList();
-                foreach (var seriesId in seriesIds)
+                foreach (var seriesId in seriesIds) {
+                    // Skip files that were generated before the last generated at time if we're doing an iterative run,
+                    // but still add it to the bag for validation of removed files.
+                    if (lastGeneratedAt.HasValue) {
+                        knownFileSeriesBag!.Add((file.Id.ToString(), seriesId));
+                        if ((file.ImportedAt ?? file.CreatedAt) < lastGeneratedAt.Value)
+                            continue;
+                    }
                     yield return (sourceLocation, file.Id.ToString(), seriesId);
+                }
                 totalMultiSeriesFiles += seriesIds.Count;
             }
         }
