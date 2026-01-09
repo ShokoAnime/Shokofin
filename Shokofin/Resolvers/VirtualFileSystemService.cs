@@ -362,7 +362,6 @@ public class VirtualFileSystemService {
             );
 
             var lastGeneratedAt = (DateTime?)null;
-            var iterativeGeneration = false;
             var knownFileSeriesBag = (ConcurrentBag<(string fileId, string seriesId)>?)null;
             // `allFiles` will only be null if we'te trying to generate the root folder,
             // so it's effectively the same as if we had done `vfsPath == path`, but we
@@ -380,7 +379,6 @@ public class VirtualFileSystemService {
                     }
                     else if (libraryConfig.IterativeVfsGeneration_MaxCount > 0) {
                         if (libraryConfig.IterativeVfsGeneration_CurrentCount + 1 < libraryConfig.IterativeVfsGeneration_MaxCount) {
-                            iterativeGeneration = true;
                             libraryConfig.IterativeVfsGeneration_CurrentCount++;
                             lastGeneratedAt = libraryConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
                         }
@@ -389,7 +387,6 @@ public class VirtualFileSystemService {
                         }
                     }
                     else {
-                        iterativeGeneration = true;
                         lastGeneratedAt = libraryConfig.IterativeVfsGeneration_LastGeneratedAt.Value;
                     }
 
@@ -411,7 +408,7 @@ public class VirtualFileSystemService {
 
                 // Initialise the bag and switch to the flood search file checker if we're
                 // doing an iterative generation and need to know which files were removed.
-                if (iterativeGeneration && lastGeneratedAt.HasValue) {
+                if (lastGeneratedAt.HasValue) {
                     knownFileSeriesBag = [];
                     fileChecker = GetFloodSearchFileChecker(libraryConfig, mediaConfigs, cancellationToken);
                 }
@@ -425,12 +422,10 @@ public class VirtualFileSystemService {
             // Cleanup any residual entries from old structure in the VFS if interactive
             // generation is disabled, or if it's enabled and we generated something new.
             if (!string.IsNullOrEmpty(pathToClean)) {
-                if (iterativeGeneration) {
+                if (lastGeneratedAt.HasValue) {
                     var newPaths = result.Paths.ToArray();
-                    // If this was an iterative generation between now and the
-                    // last generation, then we need to filter the paths to exclude
-                    // the files which were removed from the underlying library.
-                    var fileSeriesIdSet = knownFileSeriesBag?.ToArray().ToHashSet();
+                    // Collect the bag to filter out the removed files.
+                    var fileSeriesIdSet = knownFileSeriesBag!.ToArray().ToHashSet();
                     // For now we're overcompensating when "cleaning" by also checking
                     // all other videos in the directory when iterative generation is enabled,
                     // so we move the sub/audio files and trickplay directories if necessary.
@@ -438,9 +433,7 @@ public class VirtualFileSystemService {
                         pathToClean,
                         recursive: true,
                         extensions: NamingOptions.VideoFileExtensions,
-                        filter: (path, __) =>
-                            TryGetIdsForPath(path, out var fileId, out var seresId) &&
-                            (fileSeriesIdSet is null || fileSeriesIdSet.Contains((fileId, seresId))),
+                        filter: (path, __) => TryGetIdsForPath(path, out var fileId, out var seresId) && fileSeriesIdSet.Contains((fileId, seresId)),
                         cancellationToken: cancellationToken
                     );
                     result.SkippedVideos = allPaths.Except(newPaths).Count();
@@ -459,7 +452,7 @@ public class VirtualFileSystemService {
             // for them and their sub-paths later, and also print the result.
             result.Print(Logger, path);
 
-            return (AddParentDirectories(vfsPath, result.Paths.ToArray()), iterativeGeneration);
+            return (AddParentDirectories(vfsPath, result.Paths.ToArray()), lastGeneratedAt.HasValue);
         }, cancellationToken).ConfigureAwait(false);
 
         return (
