@@ -35,3 +35,4 @@ Desktop.ini
 /.idea/
 /.venv
 artifacts
+.github/workflows/email-to-github.json
