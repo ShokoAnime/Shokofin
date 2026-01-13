@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.0.1",
+                "changelog": "`repo`: **Synchronize 'dev' branch with 'stable' branch**.\n\n`repo`: **Update version matrix in read-me file**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.0-dev.1/shoko_6.0.0.1.zip",
+                "checksum": "d565138ec5f9f999dc3fd7444e70e988",
+                "timestamp": "2026-01-13T22:41:44Z"
+            },
+            {
                 "version": "5.0.6.20",
                 "changelog": "`chore`: **Simplify code**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.17/shoko_5.0.6.17.zip",
                 "checksum": "ad43c923df0b18d4c59c97e96147550e",
                 "timestamp": "2025-12-18T13:02:20Z"
-            },
-            {
-                "version": "5.0.6.16",
-                "changelog": "`fix`: **Fix typo in tvdb episode ids**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.16/shoko_5.0.6.16.zip",
-                "checksum": "47571d2b4d7650ff0cd736a36df8ebec",
-                "timestamp": "2025-11-30T06:23:15Z"
             }
         ]
     }
