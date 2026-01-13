@@ -4,8 +4,7 @@ using Shokofin.Events.Interfaces;
 
 namespace Shokofin.SignalR.Models;
 
-public class FileEventArgs : IFileEventArgs
-{
+public class FileEventArgs : IFileEventArgs {
     /// <inheritdoc/>
     [JsonInclude, JsonPropertyName("FileID")]
     public int FileId { get; set; }
@@ -16,7 +15,14 @@ public class FileEventArgs : IFileEventArgs
 
     /// <inheritdoc/>
     [JsonInclude, JsonPropertyName("ImportFolderID")]
-    public int ImportFolderId { get; set; }
+    public int ImportFolderId {
+        get => ManagedFolderId;
+        set => ManagedFolderId = value;
+    }
+
+    /// <inheritdoc/>
+    [JsonInclude, JsonPropertyName("ManagedFolderID")]
+    public int ManagedFolderId { get; set; }
 
     /// <summary>
     /// The relative path with no leading slash and directory separators used on
@@ -33,10 +39,8 @@ public class FileEventArgs : IFileEventArgs
 
     /// <inheritdoc/>
     [JsonIgnore]
-    public string RelativePath
-    {
-        get
-        {
+    public string RelativePath {
+        get {
             if (CachedPath != null)
                 return CachedPath;
             var relativePath = InternalPath

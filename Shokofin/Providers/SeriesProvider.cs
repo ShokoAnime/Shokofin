@@ -17,45 +17,27 @@ using Shokofin.Utils;
 
 namespace Shokofin.Providers;
 
-public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder
-{
+public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<SeriesProvider> _logger, ShokoApiManager _apiManager, IFileSystem _fileSystem) : IRemoteMetadataProvider<Series, SeriesInfo>, IHasOrder {
     public string Name => Plugin.MetadataProviderName;
 
     public int Order => 0;
 
-    private readonly IHttpClientFactory HttpClientFactory;
-
-    private readonly ILogger<SeriesProvider> Logger;
-
-    private readonly ShokoAPIManager ApiManager;
-
-    private readonly IFileSystem FileSystem;
-
-    public SeriesProvider(IHttpClientFactory httpClientFactory, ILogger<SeriesProvider> logger, ShokoAPIManager apiManager, IFileSystem fileSystem)
-    {
-        Logger = logger;
-        HttpClientFactory = httpClientFactory;
-        ApiManager = apiManager;
-        FileSystem = fileSystem;
-    }
-
-    public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken)
-    {
+    public async Task<MetadataResult<Series>> GetMetadata(SeriesInfo info, CancellationToken cancellationToken) {
         var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Series \"{info.Name}\". (Path=\"{info.Path}\")");
         try {
             var result = new MetadataResult<Series>();
-            var show = await ApiManager.GetShowInfoByPath(info.Path);
-            if (show == null) {
+            var showInfo = await _apiManager.GetShowInfoByPath(info.Path).ConfigureAwait(false);
+            if (showInfo == null) {
                 try {
                     // Look for the "season" directories to probe for the group information
-                    var entries = FileSystem.GetDirectories(info.Path, false);
+                    var entries = _fileSystem.GetDirectories(info.Path, false);
                     foreach (var entry in entries) {
-                        show = await ApiManager.GetShowInfoByPath(entry.FullName);
-                        if (show != null)
+                        showInfo = await _apiManager.GetShowInfoByPath(entry.FullName).ConfigureAwait(false);
+                        if (showInfo is not null)
                             break;
                     }
-                    if (show == null) {
-                        Logger.LogWarning("Unable to find show info for path {Path}", info.Path);
+                    if (showInfo == null) {
+                        _logger.LogWarning("Unable to find show info for path {Path}", info.Path);
                         return result;
                     }
                 }
@@ -64,38 +46,54 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasO
                 }
             }
 
-            var (displayTitle, alternateTitle) = Text.GetShowTitles(show, info.MetadataLanguage);
-            var premiereDate = show.PremiereDate;
-            var endDate = show.EndDate;
+            var (displayTitle, alternateTitle) = TextUtility.GetShowTitles(showInfo, info.MetadataLanguage);
+            if (string.IsNullOrEmpty(displayTitle))
+                displayTitle = showInfo.Title;
+
+            var premiereDate = showInfo.PremiereDate;
+            var endDate = showInfo.EndDate;
             result.Item = new Series {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
-                Overview = Text.GetDescription(show, info.MetadataLanguage),
+                Overview = TextUtility.GetShowDescription(showInfo, info.MetadataLanguage),
                 PremiereDate = premiereDate,
+                AirDays = showInfo.DaysOfWeek.ToArray(),
                 ProductionYear = premiereDate?.Year,
                 EndDate = endDate,
                 Status = !endDate.HasValue || endDate.Value > DateTime.UtcNow ? SeriesStatus.Continuing : SeriesStatus.Ended,
-                Tags = show.Tags.ToArray(),
-                Genres = show.Genres.ToArray(),
-                Studios = show.Studios.ToArray(),
-                ProductionLocations = TagFilter.GetShowProductionLocations(show),
-                OfficialRating = ContentRating.GetShowContentRating(show, info.MetadataCountryCode),
-                CustomRating = show.CustomRating,
-                CommunityRating = show.CommunityRating,
+                Tags = showInfo.Tags.ToArray(),
+                Genres = showInfo.Genres.ToArray(),
+                Studios = showInfo.Studios.ToArray(),
+                ProductionLocations = TagFilter.GetProductionLocations(showInfo),
+                OfficialRating = ContentRating.GetContentRating(showInfo, info.MetadataCountryCode),
+                CustomRating = showInfo.CustomRating,
+                CommunityRating = showInfo.CommunityRating,
             };
             result.HasMetadata = true;
             result.ResetPeople();
-            foreach (var person in show.Staff)
+            foreach (var person in showInfo.Staff)
                 result.AddPerson(person);
 
-            AddProviderIds(result.Item, show.Id, show.GroupId, show.DefaultSeason.AniDB.Id.ToString());
+            var config = Plugin.Instance.Configuration;
+            result.Item.SetProviderId(ShokoInternalId.Name, showInfo.InternalId);
+            result.Item.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetShowInfoUrls(showInfo));
+            if (showInfo.ShokoSeriesId is { Length: > 0 } shokoSeriesId)
+                result.Item.SetProviderId(ProviderNames.ShokoSeries, shokoSeriesId);
+            if (showInfo.ShokoGroupId is { Length: > 0 } shokoGroupId)
+                result.Item.SetProviderId(ProviderNames.ShokoGroup, shokoGroupId);
+            if (config.AddAniDBId && showInfo.AnidbAnimeId is { Length: > 0 } anidbAnimeId)
+                result.Item.SetProviderId(ProviderNames.Anidb, anidbAnimeId);
+            if (config.AddTMDBId && showInfo.TmdbShowId is { Length: > 0 } tmdbShowId)
+                result.Item.SetProviderId(ProviderNames.Tmdb, tmdbShowId);
+            if (config.AddTvDBId && showInfo.TvdbShowId is { Length: > 0 } tvdbShowId)
+                result.Item.SetProviderId(MetadataProvider.Tvdb, tvdbShowId);
 
-            Logger.LogInformation("Found series {SeriesName} (Series={SeriesId},Group={GroupId})", displayTitle, show.Id, show.GroupId);
+            _logger.LogInformation("Found series {SeriesName} (MainSeason={MainSeasonId})", displayTitle, showInfo.Id);
 
             return result;
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly while refreshing {Path}; {Message}", info.Path, ex.Message);
+            _logger.LogError(ex, "Threw unexpectedly while refreshing {Path}; {Message}", info.Path, ex.Message);
             return new MetadataResult<Series>();
         }
         finally {
@@ -103,23 +101,9 @@ public class SeriesProvider : IRemoteMetadataProvider<Series, SeriesInfo>, IHasO
         }
     }
 
-    public static void AddProviderIds(IHasProviderIds item, string seriesId, string? groupId = null, string? anidbId = null, string? tmdbId = null)
-    {
-        item.SetProviderId(MetadataProvider.Custom, $"shoko://series/{seriesId}");
-
-        var config = Plugin.Instance.Configuration;
-        item.SetProviderId(ShokoSeriesId.Name, seriesId);
-        if (!string.IsNullOrEmpty(groupId))
-            item.SetProviderId(ShokoGroupId.Name, groupId);
-        if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
-            item.SetProviderId("AniDB", anidbId);
-        if (config.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")
-            item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
-    }
-
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo info, CancellationToken cancellationToken)
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+        => _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,72 +14,70 @@ using Shokofin.Utils;
 
 namespace Shokofin.Providers;
 
-public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrder
-{
+public class MovieProvider(IHttpClientFactory _httpClientFactory, ILogger<MovieProvider> _logger, ShokoApiManager _apiManager) : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrder {
     public string Name => Plugin.MetadataProviderName;
 
     public int Order => 0;
 
-    private readonly IHttpClientFactory HttpClientFactory;
-
-    private readonly ILogger<MovieProvider> Logger;
-
-    private readonly ShokoAPIManager ApiManager;
-
-    public MovieProvider(IHttpClientFactory httpClientFactory, ILogger<MovieProvider> logger, ShokoAPIManager apiManager)
-    {
-        Logger = logger;
-        HttpClientFactory = httpClientFactory;
-        ApiManager = apiManager;
-    }
-
-    public async Task<MetadataResult<Movie>> GetMetadata(MovieInfo info, CancellationToken cancellationToken)
-    {
+    public async Task<MetadataResult<Movie>> GetMetadata(MovieInfo info, CancellationToken cancellationToken) {
         var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Movie \"{info.Name}\". (Path=\"{info.Path}\")");
         try {
             var result = new MetadataResult<Movie>();
-            var (file, season, _) = await ApiManager.GetFileInfoByPath(info.Path);
-            var episode = file?.EpisodeList.FirstOrDefault().Episode;
-
-            // if file is null then series and episode is also null.
-            if (file == null || episode == null || season == null) {
-                Logger.LogWarning("Unable to find movie info for path {Path}", info.Path);
+            var (fileInfo, seasonInfo, _) = await _apiManager.GetFileInfoByPath(info.Path).ConfigureAwait(false);
+            var episodeInfo = fileInfo is { EpisodeList.Count: > 0 } ? fileInfo.EpisodeList[0].Episode : null;
+            if (fileInfo == null || episodeInfo == null || seasonInfo == null) {
+                _logger.LogWarning("Unable to find movie info for path {Path}", info.Path);
                 return result;
             }
 
-            var (displayTitle, alternateTitle) = Text.GetMovieTitles(episode, season, info.MetadataLanguage);
-            Logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},ExtraSeries={ExtraIds})", displayTitle, file.Id, episode.Id, season.Id, season.ExtraIds);
+            var (displayTitle, alternateTitle) = TextUtility.GetMovieTitles(episodeInfo, seasonInfo, info.MetadataLanguage);
+            if (string.IsNullOrEmpty(displayTitle))
+                displayTitle = episodeInfo.Id[0] == IdPrefix.TmdbMovie
+                    ? episodeInfo.Title
+                    : TextUtility.IgnoredSubTitles.Contains(episodeInfo.Title)
+                        ? seasonInfo.Title
+                        : $"{seasonInfo.Title}: {episodeInfo.Title}";
 
-            bool isMultiEntry = season.Shoko.Sizes.Total.Episodes > 1;
-            var rating = isMultiEntry ? episode.AniDB.Rating.ToFloat(10) : season.AniDB.Rating.ToFloat(10);
+            var rating = seasonInfo.IsMultiEntry
+                ? episodeInfo.CommunityRating.ToFloat(10)
+                : seasonInfo.CommunityRating.ToFloat(10);
+
+            _logger.LogInformation("Found movie {EpisodeName} (File={FileId},Episode={EpisodeId},Season={SeasonId},ExtraSeasons={ExtraIds})", displayTitle, fileInfo.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds);
 
             result.Item = new Movie {
                 Name = displayTitle,
                 OriginalTitle = alternateTitle,
-                PremiereDate = episode.AniDB.AirDate,
-                Overview = Text.GetMovieDescription(episode, season, info.MetadataLanguage),
-                ProductionYear = episode.AniDB.AirDate?.Year,
-                Tags = season.Tags.ToArray(),
-                Genres = season.Genres.ToArray(),
-                Studios = season.Studios.ToArray(),
-                ProductionLocations = TagFilter.GetMovieProductionLocations(season, episode),
-                OfficialRating = ContentRating.GetMovieContentRating(season, episode, info.MetadataCountryCode),
+                PremiereDate = episodeInfo.AiredAt,
+                Overview = TextUtility.GetMovieDescription(episodeInfo, seasonInfo, info.MetadataLanguage),
+                ProductionYear = episodeInfo.AiredAt?.Year,
+                Tags = [.. episodeInfo.Tags],
+                Genres = [.. episodeInfo.Genres],
+                Studios = [.. episodeInfo.Studios],
+                ProductionLocations = TagFilter.GetProductionLocations(episodeInfo),
+                OfficialRating = ContentRating.GetContentRating(episodeInfo, info.MetadataCountryCode),
                 CommunityRating = rating,
             };
-            result.Item.SetProviderId(ShokoFileId.Name, file.Id);
-            result.Item.SetProviderId(ShokoEpisodeId.Name, episode.Id);
-            result.Item.SetProviderId(ShokoSeriesId.Name, season.Id);
+
+            result.Item.SetProviderId(ShokoInternalId.Name, fileInfo.InternalId);
+            result.Item.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetFileInfoUrls(fileInfo));
+            result.Item.SetProviderId(ProviderNames.ShokoFile, fileInfo.Id);
+            result.Item.SetProviderId(ProviderNames.ShokoSeries, fileInfo.SeriesId);
+            result.Item.SetProviderId(ProviderNames.ShokoEpisode, episodeInfo.Id);
+            if (Plugin.Instance.Configuration.AddAniDBId && seasonInfo.AnidbAnimeId is { Length: > 0 } anidbAnimeId)
+                result.Item.SetProviderId(ProviderNames.Anidb, anidbAnimeId);
+            if (Plugin.Instance.Configuration.AddTMDBId && episodeInfo.TmdbMovieId is { Length: > 0 } tmdbMovieId)
+                result.Item.SetProviderId(MetadataProvider.Tmdb, tmdbMovieId);
 
             result.HasMetadata = true;
 
             result.ResetPeople();
-            foreach (var person in season.Staff)
+            foreach (var person in episodeInfo.Staff)
                 result.AddPerson(person);
 
             return result;
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly while refreshing {Path}; {Message}", info.Path, ex.Message);
+            _logger.LogError(ex, "Threw unexpectedly while refreshing {Path}; {Message}", info.Path, ex.Message);
             return new MetadataResult<Movie>();
         }
         finally {
@@ -92,5 +89,5 @@ public class MovieProvider : IRemoteMetadataProvider<Movie, MovieInfo>, IHasOrde
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+        => _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }

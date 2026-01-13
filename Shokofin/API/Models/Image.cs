@@ -3,8 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Shokofin.API.Models;
 
-public class Image
-{
+public class Image {
     /// <summary>
     /// AniDB, TMDB, etc.
     /// </summary>
@@ -13,7 +12,7 @@ public class Image
     /// <summary>
     /// Poster, Banner, etc.
     /// </summary>
-    public ImageType Type { get; set; } = ImageType.Poster;
+    public ShokoImageType Type { get; set; } = ShokoImageType.Poster;
 
     /// <summary>
     /// The image's id.
@@ -23,8 +22,8 @@ public class Image
 
     /// <summary>
     /// True if the image is marked as the preferred for the given
-    /// <see cref="ImageType"/>. Only one preferred is possible for a given
-    /// <see cref="ImageType"/>.
+    /// <see cref="ShokoImageType"/>. Only one preferred is possible for a given
+    /// <see cref="ShokoImageType"/>.
     /// </summary>
     [JsonPropertyName("Preferred")]
     public bool IsPreferred { get; set; } = false;
@@ -66,6 +65,32 @@ public class Image
         => !string.IsNullOrEmpty(LocalPath);
 
     /// <summary>
+    /// Community rating for the image, if available.
+    /// </summary>
+    public Rating? CommunityRating { get; set; }
+
+    /// <summary>
+    /// Json deserialization constructor.
+    /// </summary>
+    public Image() { }
+
+    /// <summary>
+    /// Copy constructor.
+    /// </summary>
+    public Image(Image image) : this() {
+        Source = image.Source;
+        Type = image.Type;
+        ID = image.ID;
+        IsPreferred = image.IsPreferred;
+        IsDisabled = image.IsDisabled;
+        LanguageCode = image.LanguageCode;
+        Width = image.Width;
+        Height = image.Height;
+        LocalPath = image.LocalPath;
+        CommunityRating = image.CommunityRating is { } rating ? new(rating) : null;
+    }
+
+    /// <summary>
     /// Get an URL to both download the image on the backend and preview it for
     /// the clients.
     /// </summary>
@@ -75,43 +100,35 @@ public class Image
     /// </remarks>
     /// <returns>The image URL</returns>
     public string ToURLString(bool internalUrl = false)
-        => new Uri(new Uri(internalUrl ? Plugin.Instance.BaseUrl : Web.ImageHostUrl.BaseUrl), $"{(internalUrl ? Plugin.Instance.BasePath : Web.ImageHostUrl.BasePath)}/Plugin/Shokofin/Host/Image/{Source}/{Type}/{ID}").ToString();
+        => new Uri(new Uri(internalUrl ? Plugin.Instance.BaseUrl : Web.ImageHostUrl.BaseUrl), $"{(internalUrl ? Plugin.Instance.BasePath : Web.ImageHostUrl.BasePath)}/Shokofin/Host/Image/{Source}/{Type}/{ID}").ToString();
 }
 
 /// <summary>
 /// Image source.
 /// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum ImageSource
-{
+public enum ImageSource {
     /// <summary>
     ///
     /// </summary>
     AniDB = 1,
 
     /// <summary>
-    /// Deprecated, but kept until the next major release for backwards compatibility.
-    /// TODO: REMOVE THIS IN 6.0
+    ///
     /// </summary>
-    TvDB = 2,
+    TMDB = 2,
 
     /// <summary>
     ///
     /// </summary>
-    TMDB = 3,
-
-    /// <summary>
-    ///
-    /// </summary>
-    Shoko = 100
+    Shoko = 100,
 }
 
 /// <summary>
 /// Image type.
 /// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum ImageType
-{
+public enum ShokoImageType {
     /// <summary>
     ///
     /// </summary>

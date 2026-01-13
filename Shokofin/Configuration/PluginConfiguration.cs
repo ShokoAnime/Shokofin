@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -7,21 +8,22 @@ using MediaBrowser.Model.Plugins;
 using Shokofin.API.Models;
 
 using CollectionCreationType = Shokofin.Utils.Ordering.CollectionCreationType;
-using DescriptionProvider = Shokofin.Utils.Text.DescriptionProvider;
-using LibraryFilteringMode = Shokofin.Utils.Ordering.LibraryFilteringMode;
+using DescriptionProvider = Shokofin.Utils.TextUtility.DescriptionProvider;
+using DescriptionConversionMode = Shokofin.Utils.TextUtility.DescriptionConversionMode;
+using LibraryOperationMode = Shokofin.Utils.Ordering.LibraryOperationMode;
+using MergeVersionSortSelector = Shokofin.MergeVersions.MergeVersionSortSelector;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using ProviderName = Shokofin.Events.Interfaces.ProviderName;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
 using TagIncludeFilter = Shokofin.Utils.TagFilter.TagIncludeFilter;
 using TagSource = Shokofin.Utils.TagFilter.TagSource;
 using TagWeight = Shokofin.Utils.TagFilter.TagWeight;
-using TitleProvider = Shokofin.Utils.Text.TitleProvider;
+using TitleProvider = Shokofin.Utils.TextUtility.TitleProvider;
 
 namespace Shokofin.Configuration;
 
-// TODO: Split this up in the transition to 5.0 into multiple sub-classes.
-public class PluginConfiguration : BasePluginConfiguration
-{
+// TODO: Split this up in the transition to 6.0 into multiple sub-classes.
+public class PluginConfiguration : BasePluginConfiguration {
     #region Connection
 
 #pragma warning disable CA1822
@@ -32,6 +34,9 @@ public class PluginConfiguration : BasePluginConfiguration
     [XmlIgnore, JsonInclude]
     public bool CanCreateSymbolicLinks => Plugin.Instance.CanCreateSymbolicLinks;
 #pragma warning restore CA1822
+
+    [XmlIgnore, JsonIgnore]
+    public bool IsConnectionUsable => Uri.IsWellFormedUriString(Url, UriKind.Absolute) && !string.IsNullOrEmpty(ApiKey);
 
     /// <summary>
     /// The URL for where to connect to shoko internally.
@@ -47,6 +52,19 @@ public class PluginConfiguration : BasePluginConfiguration
     [JsonIgnore]
     public virtual string PrettyUrl
         => string.IsNullOrEmpty(PublicUrl) ? Url : PublicUrl;
+
+    private string _webPrefix;
+
+    /// <summary>
+    /// The prefix for the web ui on the server.
+    /// </summary>
+    public string WebPrefix {
+        get => _webPrefix;
+        set => _webPrefix = value?.Trim(['/', ' ', '\t', '\r', '\n']) ?? string.Empty;
+    }
+
+    public virtual string WebUrl =>
+        string.IsNullOrEmpty(WebPrefix) ? PrettyUrl : $"{PrettyUrl}/{WebPrefix}";
 
     /// <summary>
     /// The last known user name we used to try and connect to the server.
@@ -66,6 +84,12 @@ public class PluginConfiguration : BasePluginConfiguration
     [XmlElement("HostVersion")]
     public ComponentVersion? ServerVersion { get; set; }
 
+    /// <summary>
+    /// Indicates which set of endpoints to use dependent on which branch of
+    /// Shoko we are using.
+    /// </summary>
+    public bool HasPluginsExposed { get; set; } = false;
+
     #endregion
 
     #region Plugin Interoperability
@@ -80,10 +104,8 @@ public class PluginConfiguration : BasePluginConfiguration
     /// TODO: Break this during the next major version of the plugin.
     [JsonInclude]
     [XmlIgnore]
-    public DescriptionProvider[] ThirdPartyIdProviderList
-    {
-        get
-        {
+    public DescriptionProvider[] ThirdPartyIdProviderList {
+        get {
             var list = new List<DescriptionProvider>();
             if (AddAniDBId)
                 list.Add(DescriptionProvider.AniDB);
@@ -93,8 +115,7 @@ public class PluginConfiguration : BasePluginConfiguration
                 list.Add(DescriptionProvider.TMDB);
             return [.. list];
         }
-        set
-        {
+        set {
             AddAniDBId = value.Contains(DescriptionProvider.AniDB);
             AddTvDBId = value.Contains(DescriptionProvider.TvDB);
             AddTMDBId = value.Contains(DescriptionProvider.TMDB);
@@ -124,30 +145,54 @@ public class PluginConfiguration : BasePluginConfiguration
     #region Metadata
 
     /// <summary>
+    /// The advanced title configuration if you need more control of how to
+    /// handle titles on a per type basis.
+    /// </summary>
+    public AllTitlesConfiguration Title { get; set; }
+
+    /// <summary>
+    /// The main title configuration.
+    /// </summary>
+    /// TODO: Break this during the next major version of the plugin.
+    public TitleConfiguration? MainTitle { get; set; }
+
+    /// <summary>
+    /// The alternate title configurations.
+    /// </summary>
+    /// TODO: Break this during the next major version of the plugin.
+    [MaxLength(5, ErrorMessage = "Maximum of 5 alternate titles allowed.")]
+    public TitleConfiguration[]? AlternateTitles { get; set; }
+
+    /// <summary>
     /// Determines how we'll be selecting our main title for entries.
     /// </summary>
-    public TitleProvider[] TitleMainList { get; set; }
+    /// TODO: Break this during the next major version of the plugin.
+    public TitleProvider[]? TitleMainList { get; set; }
 
     /// <summary>
     /// The order of which we will be selecting our main title for entries.
     /// </summary>
-    public TitleProvider[] TitleMainOrder { get; set; }
+    /// TODO: Break this during the next major version of the plugin.
+    public TitleProvider[]? TitleMainOrder { get; set; }
 
     /// <summary>
     /// Determines how we'll be selecting our alternate title for entries.
     /// </summary>
-    public TitleProvider[] TitleAlternateList { get; set; }
+    /// TODO: Break this during the next major version of the plugin.
+    public TitleProvider[]? TitleAlternateList { get; set; }
 
     /// <summary>
     /// The order of which we will be selecting our alternate title for entries.
     /// </summary>
-    public TitleProvider[] TitleAlternateOrder { get; set; }
+    /// TODO: Break this during the next major version of the plugin.
+    public TitleProvider[]? TitleAlternateOrder { get; set; }
 
     /// <summary>
     /// Allow choosing any title in the selected language if no official
     /// title is available.
     /// </summary>
-    public bool TitleAllowAny { get; set; }
+    /// TODO: Break this during the next major version of the plugin.
+    public bool? TitleAllowAny { get; set; }
 
     /// <summary>
     /// Mark any episode that is not considered a normal season episode with a
@@ -156,50 +201,113 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool MarkSpecialsWhenGrouped { get; set; }
 
     /// <summary>
+    /// The new description configuration.
+    /// </summary>
+    public AllDescriptionsConfiguration Description { get; set; }
+
+    /// <summary>
     /// The collection of providers for descriptions. Replaces the former `DescriptionSource`.
     /// </summary>
-    public DescriptionProvider[] DescriptionSourceList { get; set; }
+    /// TODO: Break this during the next major version of the plugin.
+    public DescriptionProvider[]? DescriptionSourceList { get; set; }
 
     /// <summary>
     /// The prioritization order of source providers for description sources.
     /// </summary>
-    public DescriptionProvider[] DescriptionSourceOrder { get; set; }
+    /// TODO: Break this during the next major version of the plugin.
+    public DescriptionProvider[]? DescriptionSourceOrder { get; set; }
+
+    /// <summary>
+    /// The conversion mode for descriptions/synopses/summaries.
+    /// </summary>
+    /// TODO: Break this during the next major version of the plugin.
+    [XmlIgnore, JsonInclude]
+    public DescriptionConversionMode DescriptionConversionMode {
+        get {
+            if (SynopsisCleanLinks && SynopsisCleanMiscLines && SynopsisRemoveSummary && SynopsisCleanMultiEmptyLines)
+                return SynopsisEnableMarkdown ? DescriptionConversionMode.Markdown : DescriptionConversionMode.PlainText;
+            return DescriptionConversionMode.PlainText;
+        }
+        set {
+            switch (value) {
+                case DescriptionConversionMode.PlainText:
+                    SynopsisEnableMarkdown = false;
+                    SynopsisCleanLinks = true;
+                    SynopsisCleanMiscLines = true;
+                    SynopsisRemoveSummary = true;
+                    SynopsisCleanMultiEmptyLines = true;
+                    break;
+                case DescriptionConversionMode.Markdown:
+                    SynopsisEnableMarkdown = true;
+                    SynopsisCleanLinks = true;
+                    SynopsisCleanMiscLines = true;
+                    SynopsisRemoveSummary = true;
+                    SynopsisCleanMultiEmptyLines = true;
+                    break;
+                default:
+                    SynopsisEnableMarkdown = false;
+                    SynopsisCleanLinks = false;
+                    SynopsisCleanMiscLines = false;
+                    SynopsisRemoveSummary = false;
+                    SynopsisCleanMultiEmptyLines = false;
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Disable markdown in the description.
+    /// </summary>
+    [JsonIgnore]
+    public bool SynopsisEnableMarkdown { get; set; }
 
     /// <summary>
     /// Clean up links within the AniDB description for entries.
     /// </summary>
+    [JsonIgnore]
     public bool SynopsisCleanLinks { get; set; }
 
     /// <summary>
     /// Clean up misc. lines within the AniDB description for entries.
     /// </summary>
+    [JsonIgnore]
     public bool SynopsisCleanMiscLines { get; set; }
 
     /// <summary>
     /// Remove the "summary" preface text in the AniDB description for entries.
     /// </summary>
+    [JsonIgnore]
     public bool SynopsisRemoveSummary { get; set; }
 
     /// <summary>
     /// Collapse up multiple empty lines into a single line in the AniDB
     /// description for entries.
     /// </summary>
+    [JsonIgnore]
     public bool SynopsisCleanMultiEmptyLines { get; set; }
 
     /// <summary>
-    /// Add language code to image metadata provided to Jellyfin for it to
-    /// select the correct image to use for the library.
+    /// Only select studios responsible for the animation for entities. Only
+    /// applies to AniDB.
     /// </summary>
-    public bool AddImageLanguageCode { get; set; }
+    public bool Metadata_StudioOnlyAnimationWorks { get; set; }
+
+    #endregion
+
+    #region Images
 
     /// <summary>
-    /// Respect the preferred image flag sent from server when selecting the
-    /// correct image to use for the library. Setting this will also set the
-    /// language code to the preferred language code for the library if
-    /// <see cref="AddImageLanguageCode"/> is enabled, thus ensuring it is
-    /// always selected for the library.
+    /// This isn't used anymore, but is kept for upgrading the config in a
+    /// backwards compatible manner.
+    /// TODO: Break this during the next major version of the plugin.
     /// </summary>
-    public bool RespectPreferredImage { get; set; }
+    [JsonIgnore]
+    public bool? RespectPreferredImage { get; set; }
+
+    /// <summary>
+    /// The new image configuration
+    /// </summary>
+    public AllImagesConfiguration Image { get; set; }
 
     #endregion
 
@@ -229,6 +337,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public int TagMaximumDepth { get; set; }
 
     /// <summary>
+    /// Exclude tags by name. Tags in this list will not show up as tags.
+    /// </summary>
+    public string[] TagExcludeList { get; set; }
+
+    /// <summary>
     /// All tag sources to use for genres.
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -250,6 +363,11 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     [Range(0, 10)]
     public int GenreMaximumDepth { get; set; }
+
+    /// <summary>
+    /// Exclude genres by name. Tags in this list will not show up as genres.
+    /// </summary>
+    public string[] GenreExcludeList { get; set; }
 
     /// <summary>
     /// Hide tags that are not verified by the AniDB moderators yet.
@@ -287,7 +405,7 @@ public class PluginConfiguration : BasePluginConfiguration
 
     #endregion
 
-    #region Library
+    #region Video Version Merging
 
     /// <summary>
     /// Automagically merge alternate versions after a library scan.
@@ -296,9 +414,55 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool AutoMergeVersions { get; set; }
 
     /// <summary>
+    /// Enabled data selectors when merging versions.
+    /// </summary>
+    public MergeVersionSortSelector[] MergeVersionSortSelectorList { get; set; }
+
+    /// <summary>
+    /// The order to go through the selectors to produce the final sort string.
+    /// </summary>
+    public MergeVersionSortSelector[] MergeVersionSortSelectorOrder { get; set; }
+
+    #endregion
+
+    #region Library
+
+    [JsonInclude]
+    [XmlIgnore]
+    public SeriesStructureType DefaultLibraryStructure {
+        get {
+            if (UseGroupsForShows && !UseTmdbForShows)
+                return SeriesStructureType.Shoko_Groups;
+            if (UseTmdbForShows && !UseGroupsForShows)
+                return SeriesStructureType.TMDB_SeriesAndMovies;
+            return SeriesStructureType.AniDB_Anime;
+        }
+        set {
+            switch (value) {
+                case SeriesStructureType.Shoko_Groups:
+                    UseGroupsForShows = true;
+                    UseTmdbForShows = false;
+                    break;
+                case SeriesStructureType.TMDB_SeriesAndMovies:
+                    UseGroupsForShows = false;
+                    UseTmdbForShows = true;
+                    break;
+                default:
+                    UseGroupsForShows = false;
+                    UseTmdbForShows = false;
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
     /// Use Shoko Groups to group Shoko Series together to create the show entries.
     /// </summary>
+    [JsonIgnore]
     public bool UseGroupsForShows { get; set; }
+
+    [JsonIgnore]
+    public bool UseTmdbForShows { get; set; }
 
     /// <summary>
     /// Separate movies out of show type libraries.
@@ -337,25 +501,16 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool AddCreditsAsSpecialFeatures { get; set; }
 
     /// <summary>
-    /// Determines how collections are made.
-    /// </summary>
-    public CollectionCreationType CollectionGrouping { get; set; }
-
-    /// <summary>
-    /// Add a minimum requirement of two entries with the same collection id
-    /// before creating a collection for them.
-    /// </summary>
-    public bool CollectionMinSizeOfTwo { get; set; }
-
-    /// <summary>
     /// Determines how seasons are ordered within a show.
     /// </summary>
-    public OrderType SeasonOrdering { get; set; }
+    [XmlElement("SeasonOrdering")]
+    public OrderType DefaultSeasonOrdering { get; set; }
 
     /// <summary>
     /// Determines how specials are placed within seasons, if at all.
     /// </summary>
-    public SpecialOrderType SpecialsPlacement { get; set; }
+    [XmlElement("SpecialsPlacement")]
+    public SpecialOrderType DefaultSpecialsPlacement { get; set; }
 
     /// <summary>
     /// Add missing season and episode entries so the user can see at a glance
@@ -364,20 +519,59 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public bool AddMissingMetadata { get; set; }
 
+    /// <summary>
+    /// Reaction time to when a library scan starts/ends, because they don't
+    /// expose it as an event, so we need to poll instead.
+    /// </summary>
+    [Range(1, 10)]
+    public int LibraryScanReactionTimeInSeconds { get; set; }
+
+    /// <summary>
+    /// List of folders to ignore when scanning media folders in a non-VFS library.
+    /// </summary>
     public string[] IgnoredFolders { get; set; }
 
     #endregion
 
-    #region Media Folder
+    #region Collection
 
     /// <summary>
-    /// Enable/disable the VFS for new media-folders/libraries.
+    /// Automatically reconstruct collections after a library scan.
     /// </summary>
-    [XmlElement("VirtualFileSystem")]
-    public bool VFS_Enabled { get; set; }
+    public bool AutoReconstructCollections { get; set; } = true;
 
     /// <summary>
-    /// Number of threads to concurrently generate links for the VFS.
+    /// Determines how collections are made.
+    /// </summary>
+    public CollectionCreationType CollectionGrouping { get; set; } = CollectionCreationType.None;
+
+    /// <summary>
+    /// Add a minimum requirement of two entries with the same collection id
+    /// before creating a collection for them.
+    /// </summary>
+    public bool CollectionMinSizeOfTwo { get; set; } = true;
+
+    #endregion
+
+    #region Virtual File System (VFS)
+
+    /// <summary>
+    /// Determines how the plugin should operate on new libraries.
+    /// </summary>
+    [XmlElement("LibraryFiltering")]
+    public LibraryOperationMode DefaultLibraryOperationMode { get; set; }
+
+    /// <summary>
+    /// Legacy property used to upgrade to the new library operation mode if necessary.
+    /// </summary>
+    /// TODO: Break this during the next major version of the plugin.
+    [XmlElement("VirtualFileSystem")]
+    public bool? VFS_Legacy_Enabled { get; set; }
+
+    /// <summary>
+    /// Number of threads to concurrently generate links for the VFS. Set to -1
+    /// to to match the Jellyfin scan fanout concurrency. Set to 0 or below to
+    /// use the core count.
     /// </summary>
     [XmlElement("VirtualFileSystemThreads")]
     public int VFS_Threads { get; set; }
@@ -393,12 +587,6 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool VFS_AddResolution { get; set; }
 
     /// <summary>
-    /// Attach a physical VFS root as a media folder instead of attaching the
-    /// VFS children to one of the "normal" media folders.
-    /// </summary>
-    public bool VFS_AttachRoot { get; set; }
-
-    /// <summary>
     /// If the library contains symbolic links to media, it will follow them
     /// until a final "real" file is found and use the path of said file for the
     /// VFS
@@ -406,17 +594,24 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool VFS_ResolveLinks { get; set; }
 
     /// <summary>
-    /// Maximum number of exceptions before aborting the VFS generation.
+    /// Maximum number of exceptions before aborting the VFS generation. Set to
+    /// 0 to disable limit.
     /// </summary>
-    [Range(-1, 1000)]
+    [Range(0, 10_000)]
     public int VFS_MaxTotalExceptionsBeforeAbort { get; set; }
 
     /// <summary>
     /// Maximum number of series with exceptions before aborting the VFS
-    /// generation.
+    /// generation.  Set to 0 to disable limit.
     /// </summary>
-    [Range(-1, 100)]
+    [Range(0, 1_000)]
     public int VFS_MaxSeriesExceptionsBeforeAbort { get; set; }
+
+    /// <summary>
+    /// Use a semaphore instead of an action block to limit concurrency during
+    /// VFS generation.
+    /// </summary>
+    public bool VFS_UseSemaphore { get; set; } = true;
 
     /// <summary>
     /// Places the VFS in the cache directory instead of the config directory.
@@ -424,29 +619,57 @@ public class PluginConfiguration : BasePluginConfiguration
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public VirtualRootLocation VFS_Location { get; set; }
 
+    private string? vfs_CustomLocation;
+
     /// <summary>
     /// The custom location for the VFS root, if specified. Should be an
     /// absolute path or a path relative to the config directory.
     /// </summary>
-    public string? VFS_CustomLocation { get; set; }
+    public string? VFS_CustomLocation {
+        get => vfs_CustomLocation;
+        set => vfs_CustomLocation = string.IsNullOrWhiteSpace(value) ? null : value;
+    }
 
     /// <summary>
-    /// Enable/disable the filtering for new media-folders/libraries.
+    /// A list of AniDB anime IDs to always include during VFS generation, if 
+    /// all the files are shared between different series.
     /// </summary>
-    [XmlElement("LibraryFiltering")]
-    public LibraryFilteringMode LibraryFilteringMode { get; set; }
+    public int[] VFS_AlwaysIncludedAnidbIdList { get; set; }
 
     /// <summary>
-    /// Reaction time to when a library scan starts/ends, because they don't
-    /// expose it as an event, so we need to poll instead.
+    /// Enable the iterative generation of the VFS for new libraries.
     /// </summary>
-    [Range(1, 10)]
-    public int LibraryScanReactionTimeInSeconds { get; set; }
+    public bool VFS_IterativeGenerationEnabled { get; set; } = false;
 
     /// <summary>
-    /// Per media folder configuration.
+    /// Maximum number of iterations to perform when generating the VFS by
+    /// default. Set to a value above 0 to enable.
     /// </summary>
-    public List<MediaFolderConfiguration> MediaFolders { get; set; }
+    [Range(0, 100)]
+    public int VFS_IterativeGenerationMaxCount { get; set; } = 0;
+
+    #endregion
+
+    #region Media Folder
+
+    /// <summary>
+    /// Per library configuration.
+    /// </summary>
+    [XmlArray("Libraries")]
+    public List<LibraryConfiguration> Libraries { get; set; } = [];
+
+    /// <summary>
+    /// Per media folder configuration, new format.
+    /// </summary>
+    public List<MediaFolderConfiguration> LibraryFolders { get; set; } = [];
+
+    /// <summary>
+    /// Per media folder configuration, legacy format.
+    /// </summary>
+    /// TODO: Break this during the next major version of the plugin.
+    [JsonIgnore]
+    [XmlArray("MediaFolders")]
+    public List<LegacyMediaFolderConfiguration>? LegacyMediaFolders { get; set; } = null;
 
     #endregion
 
@@ -474,22 +697,65 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool SignalR_FileEvents { get; set; }
 
     /// <summary>
+    /// Indicates whether or not to replace images for entries if related
+    /// metadata is updated in Shoko.
+    /// </summary>
+    /// TODO: Break this during the next major version of the plugin.
+    public bool? SignalR_ReplaceImagesDuringRefresh { get; set; }
+
+    /// <summary>
     /// The different SignalR event sources to 'subscribe' to.
     /// </summary>
     public ProviderName[] SignalR_EventSources { get; set; }
 
     #endregion
 
-    #region Usage Tracker
+    #region Season Merging
 
     /// <summary>
-    /// Amount of seconds that needs to pass before the usage tracker considers the usage as stalled and resets it's tracking and dispatches it's <seealso cref="Utils.UsageTracker.Stalled"/> event.
+    /// Blur the boundaries between AniDB anime further by merging entries which could had just been a single anime entry based on name matching and a configurable merge window.
+    /// </summary>
+    [XmlElement("EXPERIMENTAL_MergeSeasons")]
+    public bool SeasonMerging_Enabled { get; set; }
+
+    /// <summary>
+    /// Determines the default merge behavior when not overridden on a per-shoko-series basis. Set to NoMerge to not do merges by default unless overridden.
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public SeasonMergingBehavior SeasonMerging_DefaultBehavior { get; set; }
+
+    /// <summary>
+    /// Series types to attempt to merge. Will respect custom series type overrides. 
+    /// </summary>
+    [XmlArray("EXPERIMENTAL_MergeSeasonsTypes")]
+    public SeriesType[] SeasonMerging_SeriesTypes { get; set; }
+
+    /// <summary>
+    /// Number of days to check between the start of each season, inclusive.
     /// </summary>
     /// <remarks>
-    /// It can be configured between 1 second and 3 hours.
+    /// Use 0 to disable the threshold and allow all merges, or use any negative
+    /// value to disallow all merges without an override set on one or both of
+    /// the series to merge.
     /// </remarks>
-    [Range(1, 10800)]
-    public int UsageTracker_StalledTimeInSeconds { get; set; }
+    [Range(0, int.MaxValue)]
+    [XmlElement("EXPERIMENTAL_MergeSeasonsMergeWindowInDays")]
+    public int SeasonMerging_MergeWindowInDays { get; set; }
+
+    #endregion
+
+    #region Metadata Refresh
+
+    public MetadataRefreshConfiguration MetadataRefresh { get; set; }
+
+    #endregion
+
+    #region Debug
+
+    /// <summary>
+    /// All debug related configuration.
+    /// </summary>
+    public DebugConfiguration Debug { get; set; } = new();
 
     #endregion
 
@@ -500,90 +766,46 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public bool Misc_ShowInMenu { get; set; }
 
-    #endregion
-
-    #region Experimental features
-
-    /// <summary>
-    /// Blur the boundaries between AniDB anime further by merging entries which could had just been a single anime entry based on name matching and a configurable merge window.
-    /// </summary>
-    public bool EXPERIMENTAL_MergeSeasons { get; set; }
-
-    /// <summary>
-    /// Series types to attempt to merge. Will respect custom series type overrides.
-    /// </summary>
-    public SeriesType[] EXPERIMENTAL_MergeSeasonsTypes { get; set; }
-
-    /// <summary>
-    /// Number of days to check between the start of each season, inclusive.
-    /// </summary>
-    /// <value></value>
-    public int EXPERIMENTAL_MergeSeasonsMergeWindowInDays { get; set; }
-
-    #endregion
-
-    #region Expert Mode
-
     /// <summary>
     /// Enable expert mode.
     /// </summary>
     [XmlElement("EXPERT_MODE")]
-    public bool ExpertMode { get; set; }
+    public bool AdvancedMode { get; set; }
 
     #endregion
 
-    public PluginConfiguration()
-    {
+    public PluginConfiguration() {
         Url = "http://127.0.0.1:8111";
         PublicUrl = string.Empty;
+        _webPrefix = "webui";
         Username = "Default";
         ApiKey = string.Empty;
         ServerVersion = null;
 
-        TitleMainList = [
-            TitleProvider.Shoko_Default,
-        ];
-        TitleMainOrder = [
-            TitleProvider.Shoko_Default,
-            TitleProvider.AniDB_Default,
-            TitleProvider.AniDB_LibraryLanguage,
-            TitleProvider.AniDB_CountryOfOrigin,
-            TitleProvider.TMDB_Default,
-            TitleProvider.TMDB_LibraryLanguage,
-            TitleProvider.TMDB_CountryOfOrigin,
-        ];
-        TitleAlternateList = [];
-        TitleAlternateOrder = [.. TitleMainOrder];
-        TitleAllowAny = false;
+        Title = new();
         MarkSpecialsWhenGrouped = true;
+        SynopsisEnableMarkdown = true;
         SynopsisCleanLinks = true;
         SynopsisCleanMiscLines = true;
         SynopsisRemoveSummary = true;
         SynopsisCleanMultiEmptyLines = true;
-        AddImageLanguageCode = false;
-        RespectPreferredImage = true;
-        DescriptionSourceList = [
-            DescriptionProvider.Shoko,
-        ];
-        DescriptionSourceOrder = [
-            DescriptionProvider.Shoko,
-            DescriptionProvider.AniDB,
-            DescriptionProvider.TMDB,
-        ];
+        Description = new();
         HideUnverifiedTags = true;
         TagSources = TagSource.ContentIndicators | TagSource.Dynamic | TagSource.DynamicCast | TagSource.DynamicEnding | TagSource.Elements |
             TagSource.ElementsPornographyAndSexualAbuse | TagSource.ElementsTropesAndMotifs | TagSource.Fetishes |
             TagSource.OriginProduction | TagSource.OriginDevelopment | TagSource.SourceMaterial | TagSource.SettingPlace |
             TagSource.SettingTimePeriod | TagSource.SettingTimeSeason | TagSource.TargetAudience | TagSource.TechnicalAspects |
             TagSource.TechnicalAspectsAdaptions | TagSource.TechnicalAspectsAwards | TagSource.TechnicalAspectsMultiAnimeProjects |
-            TagSource.Themes | TagSource.ThemesDeath | TagSource.ThemesTales | TagSource.CustomTags;
+            TagSource.Themes | TagSource.ThemesDeath | TagSource.ThemesTales | TagSource.CustomTags | TagSource.AllYearlySeasons;
         TagIncludeFilters = TagIncludeFilter.Parent | TagIncludeFilter.Child | TagIncludeFilter.Abstract | TagIncludeFilter.Weightless | TagIncludeFilter.Weighted;
         TagMinimumWeight = TagWeight.Weightless;
         TagMaximumDepth = 0;
+        TagExcludeList = ["18 restricted"];
         GenreSources = TagSource.SourceMaterial | TagSource.TargetAudience | TagSource.Elements;
         GenreIncludeFilters = TagIncludeFilter.Parent | TagIncludeFilter.Child | TagIncludeFilter.Abstract | TagIncludeFilter.Weightless | TagIncludeFilter.Weighted;
         GenreMinimumWeight = TagWeight.Four;
         GenreMaximumDepth = 1;
+        GenreExcludeList = ["18 restricted"];
         ContentRatingList = [
             ProviderName.TMDB,
             ProviderName.AniDB,
@@ -598,44 +820,62 @@ public class PluginConfiguration : BasePluginConfiguration
         AddTMDBId = false;
         AddTvDBId = false;
 
-        VFS_Enabled = true;
+        Metadata_StudioOnlyAnimationWorks = false;
+
+        Image = new();
+
+        DefaultLibraryOperationMode = LibraryOperationMode.VFS;
         VFS_Threads = 4;
         VFS_AddReleaseGroup = false;
         VFS_AddResolution = false;
-        VFS_AttachRoot = true;
         VFS_Location = VirtualRootLocation.Default;
         VFS_CustomLocation = null;
         VFS_ResolveLinks = false;
         VFS_MaxTotalExceptionsBeforeAbort = 10;
         VFS_MaxSeriesExceptionsBeforeAbort = 3;
+        VFS_AlwaysIncludedAnidbIdList = [
+            3651, // Suzumiya Haruhi no Yuuutsu (2006)
+        ];
+
         AutoMergeVersions = true;
+        MergeVersionSortSelectorList = [
+            MergeVersionSortSelector.ImportedAt,
+        ];
+        MergeVersionSortSelectorOrder = [
+            MergeVersionSortSelector.ImportedAt,
+            MergeVersionSortSelector.CreatedAt,
+            MergeVersionSortSelector.Resolution,
+            MergeVersionSortSelector.ReleaseGroupName,
+            MergeVersionSortSelector.FileSource,
+            MergeVersionSortSelector.FileVersion,
+            MergeVersionSortSelector.RelativeDepth,
+            MergeVersionSortSelector.NoVariation,
+        ];
         UseGroupsForShows = false;
+        UseTmdbForShows = false;
         SeparateMovies = false;
         FilterMovieLibraries = true;
         MovieSpecialsAsExtraFeaturettes = false;
         AddTrailers = true;
         AddCreditsAsThemeVideos = true;
         AddCreditsAsSpecialFeatures = false;
-        SeasonOrdering = OrderType.Default;
-        SpecialsPlacement = SpecialOrderType.AfterSeason;
+        DefaultSeasonOrdering = OrderType.Default;
+        DefaultSpecialsPlacement = SpecialOrderType.Excluded;
         AddMissingMetadata = true;
-        CollectionGrouping = CollectionCreationType.None;
-        CollectionMinSizeOfTwo = true;
         UserList = [];
-        MediaFolders = [];
         IgnoredFolders = [".streams", "@recently-snapshot"];
-        LibraryFilteringMode = LibraryFilteringMode.Auto;
         LibraryScanReactionTimeInSeconds = 1;
         SignalR_AutoConnectEnabled = false;
         SignalR_AutoReconnectInSeconds = [0, 2, 10, 30, 60, 120, 300];
         SignalR_EventSources = [ProviderName.Shoko, ProviderName.AniDB, ProviderName.TMDB];
         SignalR_RefreshEnabled = false;
         SignalR_FileEvents = true;
-        UsageTracker_StalledTimeInSeconds = 10;
+        SeasonMerging_Enabled = false;
+        SeasonMerging_DefaultBehavior = SeasonMergingBehavior.NoMerge;
+        SeasonMerging_SeriesTypes = [SeriesType.OVA, SeriesType.TV, SeriesType.TVSpecial, SeriesType.Web, SeriesType.OVA];
+        SeasonMerging_MergeWindowInDays = 185;
+        MetadataRefresh = new();
         Misc_ShowInMenu = false;
-        EXPERIMENTAL_MergeSeasons = false;
-        EXPERIMENTAL_MergeSeasonsTypes = [SeriesType.OVA, SeriesType.TV, SeriesType.TVSpecial, SeriesType.Web, SeriesType.OVA];
-        EXPERIMENTAL_MergeSeasonsMergeWindowInDays = 185;
-        ExpertMode = false;
+        AdvancedMode = false;
     }
 }

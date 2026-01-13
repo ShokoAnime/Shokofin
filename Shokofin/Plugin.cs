@@ -16,13 +16,14 @@ using Shokofin.Utils;
 
 namespace Shokofin;
 
-public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
-{
+public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages {
     private static TimeSpan BaseUrlUpdateDelay => TimeSpan.FromMinutes(15);
 
     private readonly IServerConfigurationManager _configurationManager;
 
     private readonly ILogger<Plugin> Logger;
+
+    private readonly object Lock = new();
 
     /// <summary>
     /// The last time the base URL and base path was updated.
@@ -38,23 +39,21 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <summary>
     /// Base URL where the Jellyfin server is running.
     /// </summary>
-    public string BaseUrl
-    {
-        get
-        {
+    public string BaseUrl {
+        get {
             if (CachedBaseUrl is not null && LastBaseUrlUpdate is not null && DateTime.Now - LastBaseUrlUpdate < BaseUrlUpdateDelay)
                 return CachedBaseUrl;
 
-            lock(this) {
+            lock (Lock) {
                 LastBaseUrlUpdate = DateTime.Now;
-                if (_configurationManager.GetNetworkConfiguration() is not { } networkOptions)
-                {
+                if (_configurationManager.GetNetworkConfiguration() is not { } networkOptions) {
                     CachedBaseUrl = "http://localhost:8096/";
                     CachedBasePath = string.Empty;
                     return CachedBaseUrl;
                 }
 
                 var protocol = networkOptions.RequireHttps && networkOptions.EnableHttps ? "https" : "http";
+                // TODO: Fix local network address being set. It breaks images currently.
                 var hostname = networkOptions.LocalNetworkAddresses.FirstOrDefault() is { } address && address is not "0.0.0.0" and not "::" ? address : "localhost";
                 var port = networkOptions.RequireHttps && networkOptions.EnableHttps ? networkOptions.InternalHttpsPort : networkOptions.InternalHttpPort;
                 var basePath = networkOptions.BaseUrl is { } baseUrl ? baseUrl : string.Empty;
@@ -76,20 +75,17 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <summary>
     /// Base path where the Jellyfin server is running on the domain.
     /// </summary>
-    public string BasePath
-    {
-        get
-        {
+    public string BasePath {
+        get {
             if (CachedBasePath is not null && LastBaseUrlUpdate is not null && DateTime.Now - LastBaseUrlUpdate < BaseUrlUpdateDelay)
                 return CachedBasePath;
 
-            lock(this) {
+            lock (Lock) {
                 LastBaseUrlUpdate = DateTime.Now;
-                if (_configurationManager.GetNetworkConfiguration() is not { } networkOptions)
-                {
+                if (_configurationManager.GetNetworkConfiguration() is not { } networkOptions) {
                     CachedBaseUrl = "http://localhost:8096/";
                     CachedBasePath = string.Empty;
-                    return CachedBaseUrl;
+                    return CachedBasePath;
                 }
 
                 var protocol = networkOptions.RequireHttps && networkOptions.EnableHttps ? "https" : "http";
@@ -129,19 +125,19 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <summary>
     /// "Virtual" File System Root Directory.
     /// </summary>
-    public string VirtualRoot
-    {
-        get
-        {
-            var virtualRoot = _virtualRoot ??= Configuration.VFS_Location switch {
+    public string VirtualRoot {
+        get {
+            if (_virtualRoot is not null)
+                return _virtualRoot;
+
+            var virtualRoot = Configuration.VFS_Location switch {
                 VirtualRootLocation.Custom => VirtualRoot_Custom ?? VirtualRoot_Default,
-                VirtualRootLocation.Cache => VirtualRoot_Cache,
                 VirtualRootLocation.Default or _ => VirtualRoot_Default,
             };
             if (!Directory.Exists(virtualRoot))
                 Directory.CreateDirectory(virtualRoot);
 
-            return virtualRoot;
+            return _virtualRoot = virtualRoot;
         }
     }
 
@@ -152,7 +148,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// </summary>
     public string[] AllVirtualRoots => _allVirtualRoots ??= (new string[] {
         VirtualRoot_Default,
-        VirtualRoot_Cache,
         VirtualRoot_Custom ?? string.Empty
     })
         .Except([string.Empty])
@@ -161,8 +156,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     private string VirtualRoot_Default => Path.Join(ApplicationPaths.ProgramDataPath, "Shokofin", "VFS");
 
-    private string VirtualRoot_Cache => Path.Join(ApplicationPaths.CachePath, Name);
-
     private string? VirtualRoot_Custom => string.IsNullOrWhiteSpace(Configuration.VFS_CustomLocation) ? null : Path.Combine(ApplicationPaths.ProgramDataPath, Configuration.VFS_CustomLocation);
 
     /// <summary>
@@ -170,8 +163,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// </summary>
     public new event EventHandler<PluginConfiguration>? ConfigurationChanged;
 
-    public Plugin(UsageTracker usageTracker, IServerConfigurationManager configurationManager, IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer)
-    {
+    public Plugin(UsageTracker usageTracker, IServerConfigurationManager configurationManager, IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger) : base(applicationPaths, xmlSerializer) {
         var configExists = File.Exists(ConfigurationFilePath);
         _configurationManager = configurationManager;
         Tracker = usageTracker;
@@ -201,48 +193,49 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             }
         }
 
+        MigrateConfiguration(Configuration);
+
         FixupConfiguration(Configuration);
 
         IgnoredFolders = Configuration.IgnoredFolders.ToHashSet();
-        Tracker.UpdateTimeout(TimeSpan.FromSeconds(Configuration.UsageTracker_StalledTimeInSeconds));
+        Tracker.UpdateTimeout(Configuration.Debug.UsageTrackerStalledTime);
 
         Logger.LogDebug("Virtual File System Root Directory; {Path}", VirtualRoot);
         Logger.LogDebug("Can create symbolic links; {Value}", CanCreateSymbolicLinks);
 
         // Disable VFS if we can't create symbolic links on Windows and no configuration exists.
         if (!configExists && !CanCreateSymbolicLinks) {
-            Configuration.VFS_Enabled = false;
+            Configuration.DefaultLibraryOperationMode = Ordering.LibraryOperationMode.Strict;
+
             // Remove TvDB from the list of description providers.
-            var index = Configuration.DescriptionSourceList.IndexOf(Text.DescriptionProvider.TvDB);
+            var index = Configuration.Description.Default.List.IndexOf(TextUtility.DescriptionProvider.TvDB);
             if (index != -1) {
-                var list = Configuration.DescriptionSourceList.ToList();
+                var list = Configuration.Description.Default.List.ToList();
                 list.RemoveAt(index);
-                Configuration.DescriptionSourceList = [.. list];
+                Configuration.Description.Default.List = [.. list];
             }
-            index = Configuration.DescriptionSourceOrder.IndexOf(Text.DescriptionProvider.TvDB);
+            index = Configuration.Description.Default.Order.IndexOf(TextUtility.DescriptionProvider.TvDB);
             if (index != -1) {
-                var list = Configuration.DescriptionSourceOrder.ToList();
+                var list = Configuration.Description.Default.Order.ToList();
                 list.RemoveAt(index);
-                Configuration.DescriptionSourceOrder = [.. list];
+                Configuration.Description.Default.Order = [.. list];
             }
             SaveConfiguration();
         }
     }
 
-    public void UpdateConfiguration()
-    {
-        UpdateConfiguration(this.Configuration);
+    public void UpdateConfiguration() {
+        UpdateConfiguration(Configuration);
     }
 
-    public void OnConfigChanged(object? sender, BasePluginConfiguration e)
-    {
+    private void OnConfigChanged(object? sender, BasePluginConfiguration e) {
         if (e is not PluginConfiguration config)
             return;
 
         FixupConfiguration(config);
 
         IgnoredFolders = config.IgnoredFolders.ToHashSet();
-        Tracker.UpdateTimeout(TimeSpan.FromSeconds(config.UsageTracker_StalledTimeInSeconds));
+        Tracker.UpdateTimeout(Configuration.Debug.UsageTrackerStalledTime);
 
         // Reset the cached VFS root directory in case it has changed.
         _virtualRoot = null;
@@ -251,21 +244,143 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         ConfigurationChanged?.Invoke(sender, config);
     }
 
-    public void FixupConfiguration(PluginConfiguration config)
-    {
-        // Fix-up faulty configuration.
+    private void MigrateConfiguration(PluginConfiguration config) {
         var changed = false;
-        if (string.IsNullOrWhiteSpace(config.VFS_CustomLocation) && config.VFS_CustomLocation is not null) {
-            config.VFS_CustomLocation = null;
-            changed = true;
-        }
-        if (config.DescriptionSourceOrder.Length != Enum.GetValues<Text.DescriptionProvider>().Length) {
-            var current = config.DescriptionSourceOrder;
-            config.DescriptionSourceOrder = Enum.GetValues<Text.DescriptionProvider>()
+
+        // Upgrade deprecated configuration options.
+        if (config.Description.Default.Order.Length != Enum.GetValues<TextUtility.DescriptionProvider>().Length) {
+            var current = config.Description.Default.Order;
+            config.Description.Default.Order = Enum.GetValues<TextUtility.DescriptionProvider>()
+                .Except([TextUtility.DescriptionProvider.TvDB])
                 .OrderBy(x => Array.IndexOf(current, x) == -1 ? int.MaxValue : Array.IndexOf(current, x))
                 .ToArray();
             changed = true;
         }
+        if (config.RespectPreferredImage.HasValue) {
+            config.Image.Default.UsePreferred = config.RespectPreferredImage.Value;
+            config.RespectPreferredImage = null;
+            changed = true;
+        }
+        if (config.TitleAllowAny is not null || config.TitleMainList is not null || config.TitleAlternateList is not null) {
+            if (config.TitleMainList is not null) {
+                config.Title.Default.MainTitle.List = config.TitleMainList;
+                if (config.TitleMainOrder is not null)
+                    config.Title.Default.MainTitle.Order = config.TitleMainOrder;
+                if (config.TitleAllowAny is not null)
+                    config.Title.Default.MainTitle.AllowAny = config.TitleAllowAny.Value;
+            }
+            if (config.TitleAlternateList is not null) {
+                config.Title.Default.AlternateTitles[0].List = config.TitleAlternateList;
+                if (config.TitleAlternateOrder is not null)
+                    config.Title.Default.AlternateTitles[0].Order = config.TitleAlternateOrder;
+                if (config.TitleAllowAny is not null)
+                    config.Title.Default.AlternateTitles[0].AllowAny = config.TitleAllowAny.Value;
+            }
+            config.TitleMainList = null;
+            config.TitleMainOrder = null;
+            config.TitleAlternateList = null;
+            config.TitleAlternateOrder = null;
+            config.TitleAllowAny = null;
+            changed = true;
+        }
+        else if (config.MainTitle is not null || config.AlternateTitles is not null) {
+            if (config.MainTitle is not null)
+                config.Title.Default.MainTitle = config.MainTitle;
+            if (config.AlternateTitles is not null)
+                config.Title.Default.AlternateTitles = config.AlternateTitles;
+            config.MainTitle = null;
+            config.AlternateTitles = null;
+            changed = true;
+        }
+        if (config.DescriptionSourceList is not null || config.DescriptionSourceOrder is not null) {
+            if (config.DescriptionSourceList is not null) {
+                config.Description.Default.List = config.DescriptionSourceList;
+                if (config.DescriptionSourceOrder is not null)
+                    config.Description.Default.Order = config.DescriptionSourceOrder;
+            }
+            config.DescriptionSourceList = null;
+            config.DescriptionSourceOrder = null;
+            changed = true;
+        }
+        if (config.SignalR_ReplaceImagesDuringRefresh is not null) {
+            if (config.SignalR_ReplaceImagesDuringRefresh.Value) {
+                config.MetadataRefresh.Collection |= MetadataRefreshField.Images;
+                config.MetadataRefresh.Movie |= MetadataRefreshField.Images;
+                config.MetadataRefresh.Series |= MetadataRefreshField.Images;
+                config.MetadataRefresh.Season |= MetadataRefreshField.Images;
+                config.MetadataRefresh.Video |= MetadataRefreshField.Images;
+                config.MetadataRefresh.Episode |= MetadataRefreshField.Images;
+            }
+            config.SignalR_ReplaceImagesDuringRefresh = null;
+            changed = true;
+        }
+        if (config.VFS_Legacy_Enabled.HasValue) {
+            if (config.VFS_Legacy_Enabled.Value)
+                config.DefaultLibraryOperationMode = Ordering.LibraryOperationMode.VFS;
+
+            config.VFS_Legacy_Enabled = null;
+            changed = true;
+        }
+
+        if (config.LegacyMediaFolders is not null) {
+            foreach (var groupedMediaFolders in config.LegacyMediaFolders.GroupBy(c => c.LibraryId)) {
+                var mediaConfig = groupedMediaFolders.FirstOrDefault(c => c.IsVirtualRoot) ?? groupedMediaFolders.First();
+                var libraryConfig = new LibraryConfiguration {
+                    Id = groupedMediaFolders.Key,
+                    Name = mediaConfig.LibraryName ?? string.Empty,
+                    IsFileEventsEnabled = mediaConfig.IsFileEventsEnabled,
+                    IsRefreshEventsEnabled = mediaConfig.IsRefreshEventsEnabled,
+                    LibraryOperationMode = mediaConfig.LegacyVirtualFileSystemEnabled.HasValue && mediaConfig.LegacyVirtualFileSystemEnabled.Value
+                        ? Ordering.LibraryOperationMode.VFS
+                        : mediaConfig.LibraryOperationMode,
+                    IterativeVfsGeneration_Enabled = mediaConfig.IterativeVfsGeneration_Enabled,
+                    IterativeVfsGeneration_ForceFullGenerationOnNextRefresh = mediaConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh,
+                    IterativeVfsGeneration_CurrentCount = mediaConfig.IterativeVfsGeneration_CurrentCount,
+                    IterativeVfsGeneration_LastGeneratedAt = mediaConfig.IterativeVfsGeneration_LastGeneratedAt,
+                    IterativeVfsGeneration_MaxCount = mediaConfig.IterativeVfsGeneration_MaxCount,
+                    IterativeVfsGeneration_NoCache = mediaConfig.IterativeVfsGeneration_NoCache,
+                };
+                config.Libraries.Add(libraryConfig);
+                foreach (var mediaFolder in groupedMediaFolders.Where(c => !c.IsVirtualRoot)) {
+                    var mediaFolderConfig = new MediaFolderConfiguration {
+                        LibraryId = groupedMediaFolders.Key,
+                        Path = mediaFolder.MediaFolderPath,
+                        ManagedFolderId = mediaFolder.ManagedFolderId,
+                        ManagedFolderName = mediaFolder.ManagedFolderName,
+                        ManagedFolderRelativePath = mediaFolder.ManagedFolderRelativePath,
+                    };
+                    config.LibraryFolders.Add(mediaFolderConfig);
+                }
+            }
+
+            config.LegacyMediaFolders = null;
+            changed = true;
+        }
+
+        if (changed)
+            SaveConfiguration(config);
+    }
+
+    public void FixupConfiguration(PluginConfiguration config) {
+        // Fix-up faulty configuration.
+        var changed = false;
+
+        // Disallow setting the default library structure to none.
+        if (config.DefaultLibraryStructure is SeriesStructureType.None) {
+            config.DefaultLibraryStructure = SeriesStructureType.AniDB_Anime;
+            changed = true;
+        }
+        // Disallow setting the default season ordering to none.
+        if (config.DefaultSeasonOrdering is Ordering.OrderType.None) {
+            config.DefaultSeasonOrdering = Ordering.OrderType.Default;
+            changed = true;
+        }
+        // Disallow setting the default specials placement to none.
+        if (config.DefaultSpecialsPlacement is Ordering.SpecialOrderType.None) {
+            config.DefaultSpecialsPlacement = Ordering.SpecialOrderType.Excluded;
+            changed = true;
+        }
+
         if (changed)
             SaveConfiguration(config);
     }
@@ -276,21 +391,18 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public static Plugin Instance { get; private set; }
 #pragma warning restore 8618
 
-    public IEnumerable<PluginPageInfo> GetPages()
-    {
+    public IEnumerable<PluginPageInfo> GetPages() {
         return
         [
             // HTML
-            new PluginPageInfo
-            {
+            new() {
                 Name = "Shoko.Settings",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Pages.Settings.html",
                 EnableInMainMenu = Configuration.Misc_ShowInMenu,
                 DisplayName = "Shoko - Settings",
                 MenuSection = "Shoko",
             },
-            new PluginPageInfo
-            {
+            new() {
                 Name = "Shoko.Utilities.Dummy",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Pages.Dummy.html",
                 DisplayName = "Shoko - Dummy",
@@ -298,18 +410,15 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             },
 
             // JS
-            new PluginPageInfo
-            {
+            new() {
                 Name = "Shoko.Common.js",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Pages.Scripts.Common.js",
             },
-            new PluginPageInfo
-            {
+            new() {
                 Name = "Shoko.Settings.js",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Pages.Scripts.Settings.js",
             },
-            new PluginPageInfo
-            {
+            new() {
                 Name = "Shoko.Utilities.Dummy.js",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Pages.Scripts.Dummy.js",
             },

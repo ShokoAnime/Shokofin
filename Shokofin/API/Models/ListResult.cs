@@ -8,8 +8,7 @@ namespace Shokofin.API.Models;
 /// match the filter and a sliced or the full list of <typeparamref name="T"/>
 /// entries.
 /// </summary>
-public class ListResult<T>
-{
+public class ListResult<T> {
     /// <summary>
     /// Total number of <typeparamref name="T"/> entries that matched the
     /// applied filter.

@@ -6,8 +6,7 @@ namespace Shokofin.Configuration;
 /// <summary>
 /// Per user configuration.
 /// </summary>
-public class UserConfiguration 
-{
+public class UserConfiguration {
     /// <summary>
     /// The Jellyfin user id this configuration is for.
     /// </summary>

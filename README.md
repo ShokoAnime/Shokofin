@@ -1,14 +1,14 @@
 # Shokofin
 
-A Jellyfin plugin to integrate [Jellyfin](https://jellyfin.org/docs/) with
-[Shoko Server](https://shokoanime.com/downloads/shoko-server/).
+A Jellyfin plugin to integrate [Jellyfin](https://jellyfin.org/) with
+[Shoko Server](https://shokoanime.com/downloads/shoko-server).
 
 ## Read this before installing
 
 **This plugin requires that you have already set up and are using Shoko Server**,
 and that the files you intend to include in Jellyfin are **indexed** (and
 optionally managed) by Shoko Server. **Otherwise, the plugin won't be able to
-provide metadata for your files**, since there is no metadata to find for them.
+provide metadata for your files**, since there is no metadata to provide for them.
 
 ### What Is Shoko?
 
@@ -22,30 +22,35 @@ your collection so let Shoko handle all the heavy lifting.
 
 Learn more about Shoko at https://shokoanime.com/.
 
+## Documentation
+
+Head over to our [documentation site](https://docs.shokoanime.com/jellyfin/installing-shokofin) for documentation that is not pure source-code.
+
 ## Install
 
-There are many ways to install the plugin, but the recommended way is to use
-the official Jellyfin repository. Alternatively, it can be installed from this
-GitHub repository, or you can build it from source.
+There are multiple ways to install the plugin, but the recommended way is to use
+the official Jellyfin repository.
 
 Below is a version compatibility matrix for which version of Shokofin is
 compatible with what.
 
-| Shokofin          | Jellyfin | Shoko Server  |
-|-------------------|----------|---------------|
+| Shokofin          | Jellyfin | Shoko Server      |
+|-------------------|----------|-------------------|
 | `0.x.x`           | `10.7`   | `4.0.0` — `4.1.2` |
 | `1.x.x`           | `10.7`   | `4.1.0` — `4.1.2` |
 | `2.x.x`           | `10.8`   | `4.1.2`           |
 | `3.x.x`           | `10.8`   | `4.2.0`           |
 | `4.0.0` — `4.1.1` | `10.9`   | `4.2.2`           |
 | `4.2.0` — `4.2.2` | `10.9`   | `4.2.2` — `5.0.0` |
-| `5.x.x`           | `10.10`  | `5.0.0`           |
-| `dev`             | `10.10`  | `dev`             |
+| `5.0.0`           | `10.10`  | `5.0.0`           |
+| `5.0.1` — `5.0.4` | `10.10`  | `5.0.0` — `5.1.0` |
+| `5.0.5` — `5.0.6` | `10.11`  | `5.1.0`           |
+| `dev`             | `10.11`  | `dev`             |
 
 ### Official Repository
 
 1. **Access Plugin Repositories:**
-   - Go to `Dashboard` -> `Plugins` -> `Repositories`.
+   - Go to `Dashboard` -> `Plugins` -> `Manage Repositories` -> `New Repository`.
 
 2. **Add New Repository:**
    - Add a new repository with the following details:
@@ -53,8 +58,9 @@ compatible with what.
      * **Repository URL:** `https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/stable/manifest.json`
 
 3. **Install Shokofin:**
-   - Go to the catalog in the plugins page.
-   - Find and install `Shoko` from the `Metadata` section.
+   - Go back to the catalog in the plugins section of the dashboard, filter to `All` or `Available` plugins,
+     then refresh the browser page to reload the plugin list.
+   - Find and install `Shoko` from the list, optionally by filtering the list by the `Anime` category.
 
 4. **Restart Jellyfin:**
    - Restart your server to apply the changes.

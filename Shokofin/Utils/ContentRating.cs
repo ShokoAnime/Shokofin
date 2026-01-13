@@ -7,22 +7,15 @@ using System.Linq;
 using Shokofin.API.Info;
 using Shokofin.API.Models;
 using Shokofin.Events.Interfaces;
-
+using Shokofin.Extensions;
 using TagWeight = Shokofin.Utils.TagFilter.TagWeight;
 
 namespace Shokofin.Utils;
 
-public static class ContentRating
-{
+public static class ContentRating {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-    public class TvContentIndicatorsAttribute : Attribute
-    {
-        public TvContentIndicator[] Values { get; init; }
-        
-        public TvContentIndicatorsAttribute(params TvContentIndicator[] values)
-        {
-            Values = values;
-        }
+    public class TvContentIndicatorsAttribute(params TvContentIndicator[] values) : Attribute {
+        public TvContentIndicator[] Values { get; init; } = values;
     }
 
     /// <summary>
@@ -156,16 +149,13 @@ public static class ContentRating
     private static ProviderName[] GetOrderedProviders()
         => Plugin.Instance.Configuration.ContentRatingOrder.Where((t) => Plugin.Instance.Configuration.ContentRatingList.Contains(t)).ToArray();
 
-#pragma warning disable IDE0060
-    public static string? GetMovieContentRating(SeasonInfo seasonInfo, EpisodeInfo episodeInfo, string? metadataCountryCode)
-#pragma warning restore IDE0060
-    {
-        // TODO: Add TMDB movie linked to episode content rating here.
+    public static string? GetContentRating(IExtendedItemInfo seasonInfo, string? metadataCountryCode) {
+        metadataCountryCode ??= "US";
         foreach (var provider in GetOrderedProviders()) {
+            var source = provider.ToString();
             var title = provider switch {
-                ProviderName.AniDB => seasonInfo.AssumedContentRating,
-                // TODO: Add TMDB series content rating here.
-                _ => null,
+                ProviderName.AniDB => seasonInfo.ContentRatings.FirstOrDefault(x => x.Country == metadataCountryCode)?.Rating,
+                _ => seasonInfo.ContentRatings.FirstOrDefault(x => x.Source == source && x.Country == metadataCountryCode)?.Rating,
             };
             if (!string.IsNullOrEmpty(title))
                 return title.Trim();
@@ -173,26 +163,9 @@ public static class ContentRating
         return null;
     }
 
-#pragma warning disable IDE0060
-    public static string? GetSeasonContentRating(SeasonInfo seasonInfo, string? metadataCountryCode)
-#pragma warning restore IDE0060
-    {
-        foreach (var provider in GetOrderedProviders()) {
-            var title = provider switch {
-                ProviderName.AniDB => seasonInfo.AssumedContentRating,
-                // TODO: Add TMDB series content rating here.
-                _ => null,
-            };
-            if (!string.IsNullOrEmpty(title))
-                return title.Trim();
-        }
-        return null;
-    }
-
-    public static string? GetShowContentRating(ShowInfo showInfo, string? metadataCountryCode)
-    {
-        var (contentRating, contentIndicators) = showInfo.SeasonOrderDictionary.Values
-            .Select(seasonInfo => GetSeasonContentRating(seasonInfo, metadataCountryCode))
+    public static string? GetCombinedAnidbContentRating(IEnumerable<SeasonInfo> seasonInfos) {
+        var (contentRating, contentIndicators) = seasonInfos
+            .Select(seasonInfo => seasonInfo.ContentRatings.FirstOrDefault(x => x.Source is "AniDB")?.Rating)
             .Where(contentRating => !string.IsNullOrEmpty(contentRating))
             .Distinct()
             .Select(text => TryConvertRatingFromText(text, out var cR, out var cI) ? (contentRating: cR, contentIndicators: cI ?? []) : (contentRating: TvRating.None, contentIndicators: []))
@@ -204,8 +177,7 @@ public static class ContentRating
         return ConvertRatingToText(contentRating, contentIndicators);
     }
 
-    public static string? GetTagBasedContentRating(IReadOnlyDictionary<string, ResolvedTag> tags)
-    {
+    public static string? GetTagBasedContentRating(IReadOnlyDictionary<string, ResolvedTag> tags) {
         // User overridden content rating.
         if (tags.TryGetValue("/custom user tags/target audience", out var tag)) {
             var audience = tag.Children.Count == 1 ? tag.Children.Values.First() : null;
@@ -295,8 +267,7 @@ public static class ContentRating
         return ConvertRatingToText(contentRating, contentIndicators);
     }
 
-    private static bool TryConvertRatingFromText(string? value, out TvRating contentRating, [NotNullWhen(true)] out HashSet<TvContentIndicator>? contentIndicators)
-    {
+    private static bool TryConvertRatingFromText(string? value, out TvRating contentRating, [NotNullWhen(true)] out HashSet<TvContentIndicator>? contentIndicators) {
         // Return early if null or empty.
         contentRating = TvRating.None;
         if (string.IsNullOrEmpty(value)) {
@@ -363,8 +334,7 @@ public static class ContentRating
     internal static T[] GetCustomAttributes<T>(this System.Reflection.FieldInfo? fieldInfo, bool inherit = false)
         => fieldInfo?.GetCustomAttributes(typeof(T), inherit) is T[] attributes ? attributes : [];
 
-    private static string? ConvertRatingToText(TvRating value, IEnumerable<TvContentIndicator>? contentIndicators)
-    {
+    private static string? ConvertRatingToText(TvRating value, IEnumerable<TvContentIndicator>? contentIndicators) {
         var field = value.GetType().GetField(value.ToString())!;
         var attributes = field.GetCustomAttributes<DescriptionAttribute>();
         if (attributes.Length is 0)

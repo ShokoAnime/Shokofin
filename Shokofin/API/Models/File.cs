@@ -4,8 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Shokofin.API.Models;
 
-public class File
-{
+public class File {
     /// <summary>
     /// The id of the <see cref="File"/>.
     /// </summary>
@@ -21,11 +20,9 @@ public class File
     public List<CrossReference> CrossReferences { get; set; } = [];
 
     /// <summary>
-    /// The calculated hashes from the <see cref="File"/>.
-    /// 
-    /// Either will all hashes be filled or none.
+    /// Indicates this file is marked as a variation in Shoko Server.
     /// </summary>
-    public HashMap Hashes { get; set; } = new();
+    public bool IsVariation { get; set; }
 
     /// <summary>
     /// All the <see cref="Location"/>s this <see cref="File"/> is present at.
@@ -55,8 +52,14 @@ public class File
     [JsonPropertyName("Imported")]
     public DateTime? ImportedAt { get; set; }
 
+    [JsonPropertyName("Release")]
+    public ReleaseInfo? Release { get; set; }
+
     [JsonPropertyName("AniDB")]
-    public AniDB? AniDBData { get; set; }
+    public ReleaseInfo? LegacyRelease {
+        get => Release;
+        set => Release = value;
+    }
 
     /// <summary>
     /// The size of the file in bytes.
@@ -68,8 +71,7 @@ public class File
     /// folder it belongs to and the relative path from the base of the import
     /// folder to where it lies.
     /// </summary>
-    public class Location
-    {
+    public class Location {
         /// <summary>
         /// File location ID.
         /// </summary>
@@ -77,14 +79,24 @@ public class File
         public int? Id { get; set; }
 
         /// <summary>
-        /// The id of the <see cref="ImportFolder"/> this <see cref="File"/>
+        /// The id of the <see cref="ManagedFolder"/> this <see cref="File"/>
         /// resides in.
         /// </summary>
         [JsonPropertyName("ImportFolderID")]
-        public int ImportFolderId { get; set; }
+        public int ImportFolderId {
+            get => ManagedFolderId;
+            set => ManagedFolderId = value;
+        }
 
         /// <summary>
-        /// The relative path from the base of the <see cref="ImportFolder"/> to
+        /// The id of the <see cref="ManagedFolder"/> this <see cref="File"/>
+        /// resides in.
+        /// </summary>
+        [JsonPropertyName("ManagedFolderID")]
+        public int ManagedFolderId { get; set; }
+
+        /// <summary>
+        /// The relative path from the base of the <see cref="ManagedFolder"/> to
         /// where the <see cref="File"/> lies.
         /// </summary>
         [JsonPropertyName("RelativePath")]
@@ -97,15 +109,13 @@ public class File
         private string? CachedPath { get; set; }
 
         /// <summary>
-        /// The relative path from the base of the <see cref="ImportFolder"/> to
+        /// The relative path from the base of the <see cref="ManagedFolder"/> to
         /// where the <see cref="File"/> lies, with a leading slash applied at
         /// the start.
         /// </summary>
         [JsonIgnore]
-        public string RelativePath
-        {
-            get
-            {
+        public string RelativePath {
+            get {
                 if (CachedPath != null)
                     return CachedPath;
                 var relativePath = InternalPath
@@ -126,106 +136,9 @@ public class File
     }
 
     /// <summary>
-    /// AniDB_File info
-    /// </summary>
-    public class AniDB
-    {
-        /// <summary>
-        /// The AniDB File ID.
-        /// </summary>
-        [JsonPropertyName("ID")]
-        public int Id { get; set; }
-
-        /// <summary>
-        /// Blu-ray, DVD, LD, TV, etc..
-        /// </summary>
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public FileSource Source { get; set; }
-
-        /// <summary>
-        /// The Release Group. This is usually set, but sometimes is set as "raw/unknown"
-        /// </summary>
-        public AniDBReleaseGroup ReleaseGroup { get; set; } = new();
-
-        /// <summary>
-        /// The file's version, Usually 1, sometimes more when there are edits released later
-        /// </summary>
-        public int Version { get; set; }
-
-        /// <summary>
-        /// The original FileName. Useful for when you obtained from a shady source or when you renamed it without thinking. 
-        /// </summary>
-        public string OriginalFileName { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Is the file marked as deprecated. Generally, yes if there's a V2, and this isn't it
-        /// </summary>
-        public bool IsDeprecated { get; set; }
-
-        /// <summary>
-        /// Mostly applicable to hentai, but on occasion a TV release is censored enough to earn this.
-        /// </summary>
-        public bool? IsCensored { get; set; }
-
-        /// <summary>
-        /// Does the file have chapters. This may be wrong, since it was only added in AVDump2 (a more recent version at that)
-        /// </summary>
-        [JsonPropertyName("Chaptered")]
-        public bool IsChaptered { get; set; }
-
-        /// <summary>
-        /// The file's release date. This is probably not filled in
-        /// </summary>
-        [JsonPropertyName("ReleaseDate")]
-        public DateTime? ReleasedAt { get; set; }
-
-        /// <summary>
-        /// When we last got data on this file
-        /// </summary>
-        [JsonPropertyName("Updated")]
-        public DateTime LastUpdatedAt { get; set; }
-    }
-
-    public class AniDBReleaseGroup
-    {
-        /// <summary>
-        /// The AniDB Release Group ID.
-        /// /// </summary>
-        [JsonPropertyName("ID")]
-        public int Id { get; set; }
-
-        /// <summary>
-        /// The release group's Name (Unlimited Translation Works)
-        /// </summary>
-        public string? Name { get; set; }
-
-        /// <summary>
-        /// The release group's Name (UTW)
-        /// </summary>
-        public string? ShortName { get; set; }
-    }
-
-    /// <summary>
-    /// The calculated hashes of the file. Either will all hashes be filled or
-    /// none.
-    /// </summary>
-    public class HashMap
-    {
-        public string ED2K { get; set; } = string.Empty;
-
-        public string SHA1 { get; set; } = string.Empty;
-
-        public string CRC32 { get; set; } = string.Empty;
-
-        public string MD5 { get; set; } = string.Empty;
-    }
-
-
-    /// <summary>
     /// User stats for the file.
     /// </summary>
-    public class UserStats
-    {
+    public class UserStats {
         /// <summary>
         /// Where to resume the next playback.
         /// </summary>
@@ -250,24 +163,8 @@ public class File
         /// <summary>
         /// True if the <see cref="UserStats"/> object is considered empty.
         /// </summary>
-        public virtual bool IsEmpty
-        {
+        public virtual bool IsEmpty {
             get => ResumePosition == null && LastWatchedAt == null && WatchedCount == 0;
         }
     }
-}
-
-[JsonConverter(typeof(JsonStringEnumConverter))]
-public enum FileSource
-{
-    Unknown = 0,
-    Other = 1,
-    TV = 2,
-    DVD = 3,
-    BluRay = 4,
-    Web = 5,
-    VHS = 6,
-    VCD = 7,
-    LaserDisc = 8,
-    Camera = 9
 }

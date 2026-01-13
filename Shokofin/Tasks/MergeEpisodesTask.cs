@@ -4,24 +4,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Model.Tasks;
 using Shokofin.MergeVersions;
-using Shokofin.Utils;
 
 namespace Shokofin.Tasks;
 
 /// <summary>
-/// Merge all episode entries with the same Shoko Episode ID set. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.
+/// Merge all episode entries with the same Shoko Episode ID set. For debugging and troubleshooting. DO NOT MANUALLY RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.
 /// </summary>
-public class MergeEpisodesTask(MergeVersionsManager userSyncManager, LibraryScanWatcher libraryScanWatcher) : IScheduledTask, IConfigurableScheduledTask
-{
-    private readonly MergeVersionsManager _mergeVersionManager = userSyncManager;
-
-    private readonly LibraryScanWatcher _libraryScanWatcher = libraryScanWatcher;
-
+public class MergeEpisodesTask(MergeVersionsManager _mergeVersionsManager) : IScheduledTask, IConfigurableScheduledTask {
     /// <inheritdoc />
     public string Name => "Merge Episodes";
 
     /// <inheritdoc />
-    public string Description => "Merge all episode entries with the same Shoko Episode ID set. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.";
+    public string Description => "Merge all episode entries with the same Shoko Episode ID set. For debugging and troubleshooting. DO NOT MANUALLY RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.";
 
     /// <inheritdoc />
     public string Category => "Shokofin";
@@ -30,10 +24,10 @@ public class MergeEpisodesTask(MergeVersionsManager userSyncManager, LibraryScan
     public string Key => "ShokoMergeEpisodes";
 
     /// <inheritdoc />
-    public bool IsHidden => !Plugin.Instance.Configuration.ExpertMode;
+    public bool IsHidden => !Plugin.Instance.Configuration.AdvancedMode;
 
     /// <inheritdoc />
-    public bool IsEnabled => Plugin.Instance.Configuration.ExpertMode;
+    public bool IsEnabled => true;
 
     /// <inheritdoc />
     public bool IsLogged => true;
@@ -43,13 +37,9 @@ public class MergeEpisodesTask(MergeVersionsManager userSyncManager, LibraryScan
         => [];
 
     /// <inheritdoc />
-    public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
-    {
-        if (_libraryScanWatcher.IsScanRunning)
-            return;
-
+    public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) {
         using (Plugin.Instance.Tracker.Enter("Merge Episodes Task")) {
-            await _mergeVersionManager.SplitAndMergeAllEpisodes(progress, cancellationToken);
+            await _mergeVersionsManager.SplitAndMergeAllEpisodes(progress, cancellationToken).ConfigureAwait(false);
         }
     }
 }

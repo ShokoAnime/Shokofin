@@ -5,10 +5,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Shokofin.Utils;
 
-public class UsageTracker
-{
+public class UsageTracker {
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
-    
+
     private readonly ILogger<UsageTracker> Logger;
 
     private readonly object LockObj = new();
@@ -21,8 +20,7 @@ public class UsageTracker
 
     public event EventHandler? Stalled;
 
-    public UsageTracker(ILogger<UsageTracker> logger)
-    {
+    public UsageTracker(ILogger<UsageTracker> logger) {
         Logger = logger;
         Timeout = DefaultTimeout;
         StalledTimer = new(DefaultTimeout.TotalMilliseconds) {
@@ -37,8 +35,7 @@ public class UsageTracker
         StalledTimer.Dispose();
     }
 
-    public void UpdateTimeout(TimeSpan timeout)
-    {
+    public void UpdateTimeout(TimeSpan timeout) {
         if (Timeout == timeout)
             return;
 
@@ -59,20 +56,17 @@ public class UsageTracker
         }
     }
 
-    private void OnTimerElapsed(object? sender, ElapsedEventArgs eventArgs)
-    {
+    private void OnTimerElapsed(object? sender, ElapsedEventArgs eventArgs) {
         Logger.LogDebug("Dispatching stalled event.");
         Stalled?.Invoke(this, new());
     }
 
-    public IDisposable Enter(string name)
-    {
+    public IDisposable Enter(string name) {
         var trackerId = Add(name);
         return new DisposableAction(() => Remove(trackerId));
     }
 
-    public Guid Add(string name)
-    {
+    public Guid Add(string name) {
         Guid trackerId = Guid.NewGuid();
         while (!CurrentTrackers.TryAdd(trackerId, name))
             trackerId = Guid.NewGuid();
@@ -88,8 +82,7 @@ public class UsageTracker
         return trackerId;
     }
 
-    public void Remove(Guid trackerId)
-    {
+    public void Remove(Guid trackerId) {
         if (CurrentTrackers.TryRemove(trackerId, out var name)) {
             Logger.LogTrace("Removed tracker from {Name}. (Id={TrackerId})", name, trackerId);
             if (CurrentTrackers.IsEmpty && !StalledTimer.Enabled) {

@@ -9,8 +9,7 @@ namespace Shokofin.Web;
 /// Responsible for tracking the base url we need for the next set of images
 /// to-be presented to a client.
 /// </summary>
-public class ImageHostUrl : IAsyncActionFilter
-{
+public class ImageHostUrl : IAsyncActionFilter {
     /// <summary>
     /// The internal base url. Will be null if the base url haven't been used
     /// yet.
@@ -33,27 +32,51 @@ public class ImageHostUrl : IAsyncActionFilter
     /// </summary>
     public static string BasePath { get => InternalBasePath ??= Plugin.Instance.BasePath; }
 
-    private readonly object LockObj = new();
+    private static Guid? _currentItemId;
+
+    public static Guid? CurrentItemId {
+        get {
+            lock (LockObj) {
+                return _currentItemId;
+            }
+        }
+    }
+
+    private static readonly object LockObj = new();
 
     private static Regex RemoteImagesRegex = new(@"/Items/(?<itemId>[0-9a-fA-F]{32})/RemoteImages$", RegexOptions.Compiled);
 
-    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
-    {
+    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next) {
         var request = context.HttpContext.Request;
         var uriBuilder = new UriBuilder(request.Scheme, request.Host.Host, request.Host.Port ?? (request.Scheme == "https" ? 443 : 80), $"{request.PathBase}{request.Path}", request.QueryString.HasValue ? request.QueryString.Value : null);
         var result = RemoteImagesRegex.Match(uriBuilder.Path);
+        var itemId = Guid.Empty;
         if (result.Success) {
+            itemId = Guid.Parse(result.Groups["itemId"].Value);
             var path = result.Length == uriBuilder.Path.Length ? "" : uriBuilder.Path[..^result.Length];
             uriBuilder.Path = "";
             uriBuilder.Query = "";
             var uri = uriBuilder.ToString();
             lock (LockObj) {
+                _currentItemId = itemId;
                 if (!string.Equals(uri, InternalBaseUrl))
                     InternalBaseUrl = uri;
                 if (!string.Equals(path, InternalBasePath))
                     InternalBasePath = path;
             }
         }
-        await next();
+
+        try {
+            await next().ConfigureAwait(false);
+        }
+        finally {
+            if (Guid.Empty != itemId && _currentItemId == itemId) {
+                lock (LockObj) {
+                    if (Guid.Empty != itemId && _currentItemId == itemId) {
+                        _currentItemId = null;
+                    }
+                }
+            }
+        }
     }
 }

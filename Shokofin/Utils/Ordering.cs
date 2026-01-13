@@ -1,32 +1,41 @@
 using System;
 using System.Linq;
+using Jellyfin.Extensions;
 using Shokofin.API.Info;
 using Shokofin.API.Models;
-
+using Shokofin.API.Models.AniDB;
+using Shokofin.Extensions;
 using ExtraType = MediaBrowser.Model.Entities.ExtraType;
 
 namespace Shokofin.Utils;
 
-public class Ordering
-{
+public class Ordering {
     /// <summary>
-    /// Library filtering mode.
+    /// Library operation mode.
     /// </summary>
-    public enum LibraryFilteringMode {
+    public enum LibraryOperationMode {
         /// <summary>
-        /// Will use either <see cref="Strict"/> or <see cref="Lax"/> depending
-        /// on which metadata providers are enabled for the library.
+        /// Will use the Virtual File System (VFS) on the library.
         /// </summary>
-        Auto = 0,
+        VFS = 0,
+
         /// <summary>
-        /// Will only allow files/folders that are recognized and it knows
-        /// should be part of the library.
+        /// Will use legacy filtering in strict mode, which will only allow
+        /// files/folders that are recognized and it knows should be part of the
+        /// library.
         /// </summary>
         Strict = 1,
+
         /// <summary>
-        /// Will permit files/folders that are not recognized to exist in the
-        /// library, but will filter out anything it knows should not be part of
-        /// the library.
+        /// Obsolete. Use <see cref="Strict"/> instead.
+        /// </summary>
+        /// TODO: Break this during the next major version of the plugin.
+        Auto = Strict,
+
+        /// <summary>
+        /// Will use legacy filtering in lax mode, which will permit
+        /// files/folders that are not recognized to exist in the library, but
+        /// will filter out anything it knows should not be part of the library.
         /// </summary>
         Lax = 2,
     }
@@ -58,6 +67,11 @@ public class Ordering
     /// </summary>
     public enum OrderType {
         /// <summary>
+        /// No ordering.
+        /// </summary>
+        None = -1,
+
+        /// <summary>
         /// Let Shoko decide the order.
         /// </summary>
         Default = 0,
@@ -80,9 +94,9 @@ public class Ordering
 
     public enum SpecialOrderType {
         /// <summary>
-        /// Use the default for the type.
+        /// Only for use with the series settings.
         /// </summary>
-        Default = 0,
+        None = -1,
 
         /// <summary>
         /// Always exclude the specials from the season.
@@ -95,17 +109,23 @@ public class Ordering
         AfterSeason = 2,
 
         /// <summary>
+        /// Obsolete. Use <see cref="Excluded" /> instead.
+        /// </summary>
+        /// TODO: Break this during the next major version of the plugin.
+        Default = Excluded,
+
+        /// <summary>
         /// Use a mix of <see cref="InBetweenSeasonByOtherData" /> and <see cref="InBetweenSeasonByAirDate" />.
         /// </summary>
         InBetweenSeasonMixed = 3,
 
         /// <summary>
-        /// Place the specials in-between normal episodes based on the time the episodes aired.
+        /// Place the specials in-between normal episodes based on when the episodes aired.
         /// </summary>
         InBetweenSeasonByAirDate = 4,
 
         /// <summary>
-        /// Place the specials in-between normal episodes based upon the data from TMDB.
+        /// Place the specials in-between normal episodes based upon data from TMDB.
         /// </summary>
         InBetweenSeasonByOtherData = 5,
     }
@@ -114,17 +134,16 @@ public class Ordering
     /// Get index number for an episode in a series.
     /// </summary>
     /// <returns>Absolute index.</returns>
-    public static int GetEpisodeNumber(ShowInfo showInfo, SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
-    {
+    public static int GetEpisodeNumber(ShowInfo showInfo, SeasonInfo seasonInfo, EpisodeInfo episodeInfo) {
         var index = 0;
         var offset = 0;
         if (seasonInfo.IsExtraEpisode(episodeInfo)) {
             var seasonIndex = showInfo.SeasonList.FindIndex(s => string.Equals(s.Id, seasonInfo.Id));
             if (seasonIndex == -1)
-                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds},Episode={episodeInfo.Id})");
+                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (MainSeason={showInfo.Id},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds},Episode={episodeInfo.Id})");
             index = seasonInfo.ExtrasList.FindIndex(e => string.Equals(e.Id, episodeInfo.Id));
             if (index == -1)
-                throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={showInfo.GroupId},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds},Episode={episodeInfo.Id})");
+                throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (MainSeason={showInfo.Id},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds},Episode={episodeInfo.Id})");
             offset = showInfo.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.ExtrasList.Count);
             return offset + index + 1;
         }
@@ -132,10 +151,10 @@ public class Ordering
         if (showInfo.IsSpecial(episodeInfo)) {
             var seasonIndex = showInfo.SeasonList.FindIndex(s => string.Equals(s.Id, seasonInfo.Id));
             if (seasonIndex == -1)
-                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (Group={showInfo.GroupId},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds},Episode={episodeInfo.Id})");
+                throw new System.IndexOutOfRangeException($"Series is not part of the provided group. (MainSeason={showInfo.Id},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds},Episode={episodeInfo.Id})");
             index = seasonInfo.SpecialsList.FindIndex(e => string.Equals(e.Id, episodeInfo.Id));
             if (index == -1)
-                throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (Group={showInfo.GroupId},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds},Episode={episodeInfo.Id})");
+                throw new System.IndexOutOfRangeException($"Episode not in the filtered specials list. (MainSeason={showInfo.Id},Series={seasonInfo.Id},ExtraSeries={seasonInfo.ExtraIds},Episode={episodeInfo.Id})");
             offset = showInfo.SeasonList.GetRange(0, seasonIndex).Aggregate(0, (count, series) => count + series.SpecialsList.Count);
             return offset + index + 1;
         }
@@ -147,17 +166,14 @@ public class Ordering
 
         // If we still cannot find the episode for whatever reason, then bail. I don't fudging know why, but I know it's not the plugin's fault.
         if (index == -1)
-            throw new IndexOutOfRangeException($"Unable to find index to use for \"{episodeInfo.Shoko.Name}\". (Group=\"{showInfo.GroupId}\",Series=\"{seasonInfo.Id}\",ExtraSeries={(seasonInfo.ExtraIds.Count > 0 ? $"[\"{seasonInfo.ExtraIds.Join("\",\"")}\"]" : "[]")},Episode={episodeInfo.Id})");
+            throw new IndexOutOfRangeException($"Unable to find index to use for \"{episodeInfo.Title}\". (MainSeason=\"{showInfo.Id}\",Series=\"{seasonInfo.Id}\",ExtraSeries={(seasonInfo.ExtraIds.Count > 0 ? $"[\"{seasonInfo.ExtraIds.Join("\",\"")}\"]" : "[]")},Episode={episodeInfo.Id})");
 
         return index + 1;
     }
 
-    public static (int?, int?, int?, bool) GetSpecialPlacement(ShowInfo showInfo, SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
-    {
-        var order = Plugin.Instance.Configuration.SpecialsPlacement;
-
+    public static (int?, int?, int?, bool) GetSpecialPlacement(ShowInfo showInfo, SeasonInfo seasonInfo, EpisodeInfo episodeInfo) {
         // Return early if we want to exclude them from the normal seasons.
-        if (order == SpecialOrderType.Excluded) {
+        if (seasonInfo.SpecialsPlacement is SpecialOrderType.Excluded) {
             // Check if this should go in the specials season.
             return (null, null, null, showInfo.IsSpecial(episodeInfo));
         }
@@ -170,7 +186,7 @@ public class Ordering
         int? airsBeforeEpisodeNumber = null;
         int? airsBeforeSeasonNumber = null;
         int? airsAfterSeasonNumber = null;
-        switch (order) {
+        switch (seasonInfo.SpecialsPlacement) {
             default:
                 airsAfterSeasonNumber = seasonNumber;
                 break;
@@ -183,7 +199,7 @@ public class Ordering
                     break;
                 }
 
-                if (seasonInfo.SpecialsAnchors.TryGetValue(episodeInfo, out var previousEpisode))
+                if (seasonInfo.SpecialsAnchors.TryGetValue(episodeInfo.Id, out var previousEpisode))
                     episodeNumber = GetEpisodeNumber(showInfo, seasonInfo, previousEpisode);
 
                 if (episodeNumber.HasValue && episodeNumber.Value < seasonInfo.EpisodeList.Count) {
@@ -208,8 +224,7 @@ public class Ordering
     /// <param name="seasonInfo"></param>
     /// <param name="episodeInfo"></param>
     /// <returns></returns>
-    public static int GetSeasonNumber(ShowInfo showInfo, SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
-    {
+    public static int GetSeasonNumber(ShowInfo showInfo, SeasonInfo seasonInfo, EpisodeInfo episodeInfo) {
         if (!showInfo.TryGetBaseSeasonNumberForSeasonInfo(seasonInfo, out var seasonNumber))
             return 0;
 
@@ -224,10 +239,8 @@ public class Ordering
     /// </summary>
     /// <param name="episode"></param>
     /// <returns></returns>
-    public static ExtraType? GetExtraType(Episode.AniDB episode)
-    {
-        switch (episode.Type)
-        {
+    public static ExtraType? GetExtraType(AnidbEpisode episode) {
+        switch (episode.Type) {
             case EpisodeType.Normal:
                 return null;
             case EpisodeType.ThemeSong:
@@ -238,30 +251,35 @@ public class Ordering
                 return ExtraType.Trailer;
             case EpisodeType.Other:
             case EpisodeType.Special: {
-                var title = Text.GetTitlesForLanguage(episode.Titles, false, "en");
+                var title = TextUtility.GetTitleForLanguage(episode.Titles, false, false, "en");
                 if (string.IsNullOrEmpty(title))
                     return null;
                 // Interview
-                if (title.Contains("interview", System.StringComparison.OrdinalIgnoreCase))
+                if (title.Contains("interview", StringComparison.OrdinalIgnoreCase))
                     return ExtraType.Interview;
                 // Cinema/theatrical intro/outro
                 if (
-                    (title.StartsWith("cinema ", System.StringComparison.OrdinalIgnoreCase) || title.StartsWith("theatrical ", System.StringComparison.OrdinalIgnoreCase)) &&
-                    (title.Contains("intro", System.StringComparison.OrdinalIgnoreCase) || title.Contains("outro", System.StringComparison.OrdinalIgnoreCase)) ||
-                    title.Contains("manners movie", System.StringComparison.OrdinalIgnoreCase)
+                    (title.StartsWith("cinema ", StringComparison.OrdinalIgnoreCase) || title.StartsWith("theatrical ", StringComparison.OrdinalIgnoreCase)) &&
+                    (title.Contains("intro", StringComparison.OrdinalIgnoreCase) || title.Contains("outro", StringComparison.OrdinalIgnoreCase)) ||
+                    title.Contains("manners movie", StringComparison.OrdinalIgnoreCase)
                 )
                     return ExtraType.Clip;
+                // Special endings for episodes
+                if (title.StartsWith("episode", StringComparison.OrdinalIgnoreCase) && title.Contains("ending"))
+                    return ExtraType.Clip;
                 // Behind the Scenes
-                if (title.Contains("behind the scenes", System.StringComparison.CurrentCultureIgnoreCase))
+                if (title.Contains("behind the scenes", StringComparison.OrdinalIgnoreCase))
                     return ExtraType.BehindTheScenes;
-                if (title.Contains("making of", System.StringComparison.CurrentCultureIgnoreCase))
+                if (title.Contains("making of", StringComparison.OrdinalIgnoreCase))
                     return ExtraType.BehindTheScenes;
-                if (title.Contains("music in", System.StringComparison.CurrentCultureIgnoreCase))
+                if (title.Contains("music in", StringComparison.OrdinalIgnoreCase))
                     return ExtraType.BehindTheScenes;
-                if (title.Contains("advance screening", System.StringComparison.CurrentCultureIgnoreCase))
+                if (title.Contains("advance screening", StringComparison.OrdinalIgnoreCase))
                     return ExtraType.BehindTheScenes;
-                if (title.Contains("premiere", System.StringComparison.CurrentCultureIgnoreCase))
+                if (title.Contains("premiere", StringComparison.OrdinalIgnoreCase))
                     return ExtraType.BehindTheScenes;
+                if (title.Contains("talk show", StringComparison.OrdinalIgnoreCase))
+                    return ExtraType.Featurette;
                 return null;
             }
             default:

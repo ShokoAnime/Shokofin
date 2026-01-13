@@ -5,8 +5,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Shokofin.SignalR;
 
-public class SignalREntryPoint : IHostedService
-{
+public class SignalREntryPoint : IHostedService {
     private readonly SignalRConnectionManager ConnectionManager;
 
     public SignalREntryPoint(SignalRConnectionManager connectionManager) => ConnectionManager = connectionManager;

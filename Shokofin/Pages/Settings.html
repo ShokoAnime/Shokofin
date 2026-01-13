@@ -2,15 +2,21 @@
     <div data-role="content">
         <div class="content-primary">
             <style>
-form:not(.expert-mode) .expert-only {
+form:not(.debug-mode) .debug-only,
+form:not(.advanced-mode) .advanced-only {
     display: none !important;
 }
 
-.expert-only.inputContainer .inputLabel::after,
-.expert-only.selectContainer .selectLabel::after,
-.expert-only.checkboxContainer .checkboxLabel::after,
-.expert-only[is="checkbox-list"] .checkboxListLabel::after,
-.expert-only[is="sortable-checkbox-list"] .checkboxListLabel::after {
+.debug-only.inputContainer .inputLabel::after,
+.debug-only.selectContainer .selectLabel::after,
+.debug-only.checkboxContainer .checkboxLabel::after,
+.debug-only[is="checkbox-list"] .checkboxListLabel::after,
+.debug-only[is="sortable-checkbox-list"] .checkboxListLabel::after,
+.advanced-only.inputContainer .inputLabel::after,
+.advanced-only.selectContainer .selectLabel::after,
+.advanced-only.checkboxContainer .checkboxLabel::after,
+.advanced-only[is="checkbox-list"] .checkboxListLabel::after,
+.advanced-only[is="sortable-checkbox-list"] .checkboxListLabel::after {
   font-size: 50%;
   color: red;
   margin-inline-start: 0.25rem;
@@ -21,7 +27,29 @@ form:not(.expert-mode) .expert-only {
   border-radius: 1rem;
   display: "inline";
 }
+.advanced-only.experimental-setting.inputContainer .inputLabel::after,
+.advanced-only.experimental-setting.selectContainer .selectLabel::after,
+.advanced-only.experimental-setting.checkboxContainer .checkboxLabel::after,
+.advanced-only.experimental-setting[is="checkbox-list"] .checkboxListLabel::after,
+.advanced-only.experimental-setting[is="sortable-checkbox-list"] .checkboxListLabel::after {
+  color: green;
+  content: "EXPERIMENTAL";
+  border-color: green;
+}
+.debug-only.inputContainer .inputLabel::after,
+.debug-only.selectContainer .selectLabel::after,
+.debug-only.checkboxContainer .checkboxLabel::after,
+.debug-only[is="checkbox-list"] .checkboxListLabel::after,
+.debug-only[is="sortable-checkbox-list"] .checkboxListLabel::after {
+  color: orange;
+  content: "DEBUG";
+  border-color: orange;
+}
 
+.emby-button.fab:disabled {
+  cursor: default;
+  opacity: .3;
+}
 </style>
             <form>
                 <div class="verticalSection verticalSection-extrabottompadding">
@@ -51,7 +79,7 @@ form:not(.expert-mode) .expert-only {
                                 <div class="fieldDescription">The password of your administrator account in Shoko.</div>
                             </div>
                             <button is="emby-button" type="submit" name="establish-connection" class="raised button-submit block emby-button">
-                                <span>Connect</span>
+                                <span>${Connect}</span>
                             </button>
                             <div class="fieldDescription">Establish a connection to Shoko using the provided credentials.</div>
                         </div>
@@ -61,7 +89,7 @@ form:not(.expert-mode) .expert-only {
                                 <div class="fieldDescription">The version of Shoko we're connected to.</div>
                             </div>
                             <button is="emby-button" type="submit" name="reset-connection" class="raised block emby-button">
-                                <span>Reset Connection</span>
+                                <span>${Disconnect}</span>
                             </button>
                             <div class="fieldDescription">Reset the connection. Be sure to stop any tasks using this plugin before you press the button.</div>
                         </div>
@@ -70,186 +98,6 @@ form:not(.expert-mode) .expert-only {
                         <legend>
                             <h3>Title Settings</h3>
                         </legend>
-                        <div id="TitleMainList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Main Title Source</h3>
-                            <div class="checkboxList paperList checkboxList-paperList">
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="Shoko_Default">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Shoko | Let Shoko decide</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
-                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB_Default">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">AniDB | Default title</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB_LibraryLanguage">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">AniDB | Follow metadata language in library</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB_CountryOfOrigin">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">AniDB | Use the language from the media's country of origin</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB_Default">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB | Default title</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB_LibraryLanguage">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB | Follow metadata language in library</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB_CountryOfOrigin">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB | Use the language from the media's country of origin</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="fieldDescription">The metadata providers to use as the source of the main title for entities, in priority order.</div>
-                        </div>
-                        <div id="TitleAlternateList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
-                            <h3 class="checkboxListLabel">Alternate/Original Title Source</h3>
-                            <div class="checkboxList paperList checkboxList-paperList">
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="Shoko_Default">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">Shoko | Let Shoko decide</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
-                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB_Default">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">AniDB | Default title</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB_LibraryLanguage">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">AniDB | Follow metadata language in library</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB_CountryOfOrigin">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">AniDB | Use the language from the media's country of origin</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB_Default">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB | Default title</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB_LibraryLanguage">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB | Follow metadata language in library</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                                <div class="listItem sortableOption">
-                                    <label class="listItemCheckboxContainer">
-                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB_CountryOfOrigin">
-                                        <span></span>
-                                    </label>
-                                    <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB | Use the language from the media's country of origin</h3>
-                                    </div>
-                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
-                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="fieldDescription">The metadata providers to use as the source of the alternate/original title for entities, in priority order.</div>
-                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="MarkSpecialsWhenGrouped" />
@@ -257,27 +105,334 @@ form:not(.expert-mode) .expert-only {
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Adds the type and number to the title of non-standard episodes such as specials. (e.g. S1)</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                        <hr class="advanced-only" />
+                        <div class="selectContainer selectContainer-withDescription advanced-only">
+                            <label class="selectLabel" for="Title_ConfigureFor">Configure settings for</label>
+                            <select is="emby-select" id="Title_ConfigureFor" name="Title_ConfigureFor" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Global Settings</option>
+                                <optgroup label="AniDB Anime Structure">
+                                    <option value="AniDBCollection" disabled>Box-Set / Collection (AniDB Anime Structure)</option>
+                                    <option value="AnidbMovie">Movie / Film (AniDB Anime Structure)</option>
+                                    <option value="AnidbAnime">Series / Show (AniDB Anime Structure)</option>
+                                    <option value="AnidbSeason">Season (AniDB Anime Structure)</option>
+                                    <option value="AnidbEpisode">Episode (AniDB Anime Structure)</option>
+                                </optgroup>
+                                <optgroup label="Shoko Group Structure">
+                                    <option value="ShokoCollection">Box-Set / Collection (Shoko Group Structure)</option>
+                                    <option value="ShokoMovie">Movie / Film (Shoko Group Structure)</option>
+                                    <option value="ShokoSeries">Series / Show (Shoko Group Structure)</option>
+                                    <option value="ShokoSeason">Season (Shoko Group Structure)</option>
+                                    <option value="ShokoEpisode">Episode (Shoko Group Structure)</option>
+                                </optgroup>
+                                <optgroup label="TheMovieDb Shows &amp; Movies Structure">
+                                    <option value="TmdbCollection">Box-Set / Collection (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbMovie">Movie / Film (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbShow">Series / Show (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbSeason">Season (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbEpisode">Episode (TheMovieDb Shows &amp; Movies Structure)</option>
+                                </optgroup>
+                            </select>
+                            <div class="fieldDescription">
+                                Determines which entity type to configure the settings for.
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="TitleAllowAny" />
-                                <span>Allow Any Title in Selected Language</span>
+                                <input is="emby-checkbox" type="checkbox" id="Title_ConfigureFor_Enabled" disabled checked />
+                                <span>Enabled</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Allows for any titles to be utilized if an official title is not present in the given language. Only applies to the AniDB title selectors above.</div>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Determines if the settings override is enabled for the selected entity type.
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="RemoveDuplicateTitles" class="emby-checkbox">
+                                <span class="checkboxLabel">Remove Duplicate Titles</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Remove duplicate titles from the list.</div>
+                        </div>
+                        <fieldset class="verticalSection verticalSection-extrabottompadding">
+                            <legend>Main Title</legend>
+                            <div id="TitleMainList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
+                                <h3 class="checkboxListLabel">Title Source</h3>
+                                <div class="checkboxList paperList checkboxList-paperList">
+                                    <div class="listItem sortableOption">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="Shoko_Default">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Shoko | Let Shoko decide</h3>
+                                        </div>
+                                        <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
+                                            <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                                        </button>
+                                    </div>
+                                    <div class="listItem sortableOption">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="AniDB_Default">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">AniDB | Default title</h3>
+                                        </div>
+                                        <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                            <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                        </button>
+                                    </div>
+                                    <div class="listItem sortableOption">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="AniDB_LibraryLanguage">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">AniDB | Follow metadata language in library</h3>
+                                        </div>
+                                        <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                            <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                        </button>
+                                    </div>
+                                    <div class="listItem sortableOption">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="AniDB_CountryOfOrigin">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">AniDB | Use the language from the media's country of origin</h3>
+                                        </div>
+                                        <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                            <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                        </button>
+                                    </div>
+                                    <div class="listItem sortableOption">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="TMDB_Default">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">TheMovieDb | Default title</h3>
+                                        </div>
+                                        <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                            <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                        </button>
+                                    </div>
+                                    <div class="listItem sortableOption">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="TMDB_LibraryLanguage">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">TheMovieDb | Follow metadata language in library</h3>
+                                        </div>
+                                        <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                            <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                        </button>
+                                    </div>
+                                    <div class="listItem sortableOption">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="TMDB_CountryOfOrigin">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">TheMovieDb | Use the language from the media's country of origin</h3>
+                                        </div>
+                                        <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                            <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="fieldDescription">The metadata providers to use as the source of the main title for entities, in priority order.</div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="TitleMainAllowAny" />
+                                    <span>Allow Any Title in Selected Language</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">Allows for any titles to be utilized if an official title is not present in the given language. Only applies to the AniDB title selectors above.</div>
+                            </div>
+                        </fieldset>
+                        <div id="TitleAlternateListContainer">
+                            <fieldset class="verticalSection verticalSection-extrabottompadding">
+                                <legend>%number_formatted%Alternate/Original Title</legend>
+                                <div id="TitleAlternateList_%number%" is="sortable-checkbox-list" style="margin-bottom: 2em;">
+                                    <h3 class="checkboxListLabel">Title Source</h3>
+                                    <div class="checkboxList paperList checkboxList-paperList">
+                                        <div class="listItem sortableOption">
+                                            <label class="listItemCheckboxContainer">
+                                                <input is="emby-checkbox" type="checkbox" data-option="Shoko_Default">
+                                                <span></span>
+                                            </label>
+                                            <div class="listItemBody">
+                                                <h3 class="listItemBodyText">Shoko | Let Shoko decide</h3>
+                                            </div>
+                                            <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
+                                                <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                        <div class="listItem sortableOption">
+                                            <label class="listItemCheckboxContainer">
+                                                <input is="emby-checkbox" type="checkbox" data-option="AniDB_Default">
+                                                <span></span>
+                                            </label>
+                                            <div class="listItemBody">
+                                                <h3 class="listItemBodyText">AniDB | Default title</h3>
+                                            </div>
+                                            <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                                <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                        <div class="listItem sortableOption">
+                                            <label class="listItemCheckboxContainer">
+                                                <input is="emby-checkbox" type="checkbox" data-option="AniDB_LibraryLanguage">
+                                                <span></span>
+                                            </label>
+                                            <div class="listItemBody">
+                                                <h3 class="listItemBodyText">AniDB | Follow metadata language in library</h3>
+                                            </div>
+                                            <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                                <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                        <div class="listItem sortableOption">
+                                            <label class="listItemCheckboxContainer">
+                                                <input is="emby-checkbox" type="checkbox" data-option="AniDB_CountryOfOrigin">
+                                                <span></span>
+                                            </label>
+                                            <div class="listItemBody">
+                                                <h3 class="listItemBodyText">AniDB | Use the language from the media's country of origin</h3>
+                                            </div>
+                                            <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                                <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                        <div class="listItem sortableOption">
+                                            <label class="listItemCheckboxContainer">
+                                                <input is="emby-checkbox" type="checkbox" data-option="TMDB_Default">
+                                                <span></span>
+                                            </label>
+                                            <div class="listItemBody">
+                                                <h3 class="listItemBodyText">TheMovieDb | Default title</h3>
+                                            </div>
+                                            <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                                <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                        <div class="listItem sortableOption">
+                                            <label class="listItemCheckboxContainer">
+                                                <input is="emby-checkbox" type="checkbox" data-option="TMDB_LibraryLanguage">
+                                                <span></span>
+                                            </label>
+                                            <div class="listItemBody">
+                                                <h3 class="listItemBodyText">TheMovieDb | Follow metadata language in library</h3>
+                                            </div>
+                                            <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                                <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                        <div class="listItem sortableOption">
+                                            <label class="listItemCheckboxContainer">
+                                                <input is="emby-checkbox" type="checkbox" data-option="TMDB_CountryOfOrigin">
+                                                <span></span>
+                                            </label>
+                                            <div class="listItemBody">
+                                                <h3 class="listItemBodyText">TheMovieDb | Use the language from the media's country of origin</h3>
+                                            </div>
+                                            <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                                <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="fieldDescription">The metadata providers to use as the source of the %number_formatted%alternate/original title for entities, in priority order.</div>
+                                </div>
+                                <div class="checkboxContainer checkboxContainer-withDescription">
+                                    <label class="emby-checkbox-label">
+                                        <input is="emby-checkbox" type="checkbox" id="TitleAlternateAllowAny_%number%" class="emby-checkbox">
+                                        <span class="checkboxLabel">Allow Any Title in Selected Language</span>
+                                    </label>
+                                    <div class="fieldDescription checkboxFieldDescription">Allows for any titles to be utilized if an official title is not present in the given language. Only applies to the AniDB title selectors above.</div>
+                                </div>
+                                <div id="TitleAlternateAddButton_%number%" class="inputContainer inputContainer-withDescription">
+                                    <button is="emby-button" type="submit" name="add-alternate-title" class="raised button-submit block emby-button">
+                                        <span>${Add}</span>
+                                    </button>
+                                    <div class="fieldDescription">This will add a new alternate/original title. You can add %remaining% more titles.</div>
+                                </div>
+                                <div id="TitleAlternateRemoveButton_%number%" class="inputContainer inputContainer-withDescription">
+                                    <button is="emby-button" type="submit" name="remove-alternate-title" data-index="%number%" class="raised button-delete block emby-button">
+                                        <span>${ButtonRemove}</span>
+                                    </button>
+                                    <div class="fieldDescription">This will remove the %number_formatted%alternate/original title.</div>
+                                </div>
+                            </fieldset>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span>${Save}</span>
                         </button>
                     </fieldset>
                     <fieldset id="Metadata_Description_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
                             <h3>Description Settings</h3>
                         </legend>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="DescriptionConversionMode">AniDB Description Conversion Mode</label>
+                            <select is="emby-select" id="DescriptionConversionMode" name="DescriptionConversionMode" class="emby-select-withcolor emby-select">
+                                <option value="Disabled">Disabled</option>
+                                <option value="PlainText">Plain Text</option>
+                                <option value="Markdown" selected>Markdown (Default)</option>
+                            </select>
+                            <div class="fieldDescription">
+                                Determines how to convert the AniDB descriptions. If disabled, the description will not be converted.
+                            </div>
+                        </div>
+                        <hr class="advanced-only" />
+                        <div class="selectContainer selectContainer-withDescription advanced-only">
+                            <label class="selectLabel" for="Description_ConfigureFor">Configure settings for</label>
+                            <select is="emby-select" id="Description_ConfigureFor" name="Description_ConfigureFor" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Global Settings</option>
+                                <optgroup label="AniDB Anime Structure">
+                                    <option value="AniDBCollection" disabled>Box-Set / Collection (AniDB Anime Structure)</option>
+                                    <option value="AnidbMovie">Movie / Film (AniDB Anime Structure)</option>
+                                    <option value="AnidbAnime">Series / Show (AniDB Anime Structure)</option>
+                                    <option value="AnidbSeason">Season (AniDB Anime Structure)</option>
+                                    <option value="AnidbEpisode">Episode (AniDB Anime Structure)</option>
+                                </optgroup>
+                                <optgroup label="Shoko Group Structure">
+                                    <option value="ShokoCollection">Box-Set / Collection (Shoko Group Structure)</option>
+                                    <option value="ShokoMovie">Movie / Film (Shoko Group Structure)</option>
+                                    <option value="ShokoSeries">Series / Show (Shoko Group Structure)</option>
+                                    <option value="ShokoSeason">Season (Shoko Group Structure)</option>
+                                    <option value="ShokoEpisode">Episode (Shoko Group Structure)</option>
+                                </optgroup>
+                                <optgroup label="TheMovieDb Shows &amp; Movies Structure">
+                                    <option value="TmdbCollection">Box-Set / Collection (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbMovie">Movie / Film (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbShow">Series / Show (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbSeason">Season (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbEpisode">Episode (TheMovieDb Shows &amp; Movies Structure)</option>
+                                </optgroup>
+                            </select>
+                            <div class="fieldDescription">
+                                Determines which entity type to configure the settings for.
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
                             <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="CleanupAniDBDescriptions" />
-                                <span>Cleanup AniDB Descriptions</span>
+                                <input is="emby-checkbox" type="checkbox" id="Description_ConfigureFor_Enabled" disabled checked />
+                                <span>Enabled</span>
                             </label>
-                            <div class="fieldDescription checkboxFieldDescription">Prettifies AniDB descriptions and convert them to markdown.</div>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Determines if the settings override is enabled for the selected entity type.
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Description_AddNotes" />
+                                <span>Add Notes</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Determines if we should add the note(s) which show up on the AniDB anime page to the description for the series and/or season entities.
+                            </div>
                         </div>
                         <div id="DescriptionSourceList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Description Source</h3>
@@ -314,7 +469,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB | Follow metadata language in library</h3>
+                                        <h3 class="listItemBodyText">TheMovieDb | Follow metadata language in library</h3>
                                     </div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
                                         <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
@@ -324,21 +479,267 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription">The metadata providers to use as the source of descriptions for entities, in priority order.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span>${Save}</span>
                         </button>
                     </fieldset>
-                    <fieldset id="Metadata_TagGenre_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
+                    <fieldset id="Metadata_Image_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Image Settings</h3>
+                        </legend>
+                        <div class="selectContainer selectContainer-withDescription advanced-only">
+                            <label class="selectLabel" for="Image_ConfigureFor">Configure settings for</label>
+                            <select is="emby-select" id="Image_ConfigureFor" name="Image_ConfigureFor" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Global Settings</option>
+                                <optgroup label="AniDB Anime Structure">
+                                    <option value="AniDBCollection" disabled>Box-Set / Collection (AniDB Anime Structure)</option>
+                                    <option value="AnidbMovie">Movie / Film (AniDB Anime Structure)</option>
+                                    <option value="AnidbAnime">Series / Show (AniDB Anime Structure)</option>
+                                    <option value="AnidbSeason">Season (AniDB Anime Structure)</option>
+                                    <option value="AnidbEpisode">Episode (AniDB Anime Structure)</option>
+                                </optgroup>
+                                <optgroup label="Shoko Group Structure">
+                                    <option value="ShokoCollection">Box-Set / Collection (Shoko Group Structure)</option>
+                                    <option value="ShokoMovie">Movie / Film (Shoko Group Structure)</option>
+                                    <option value="ShokoSeries">Series / Show (Shoko Group Structure)</option>
+                                    <option value="ShokoSeason">Season (Shoko Group Structure)</option>
+                                    <option value="ShokoEpisode">Episode (Shoko Group Structure)</option>
+                                </optgroup>
+                                <optgroup label="TheMovieDb Shows &amp; Movies Structure">
+                                    <option value="TmdbCollection">Box-Set / Collection (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbMovie">Movie / Film (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbShow">Series / Show (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbSeason">Season (TheMovieDb Shows &amp; Movies Structure)</option>
+                                    <option value="TmdbEpisode">Episode (TheMovieDb Shows &amp; Movies Structure)</option>
+                                </optgroup>
+                            </select>
+                            <div class="fieldDescription">
+                                Determines which entity type to configure the settings for. To revert back an entity type to following the global settings, disable all settings for that entity type.
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Image_ConfigureFor_Enabled" disabled checked />
+                                <span>Enabled</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Determines if the settings override is enabled for the selected entity type.
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Image_UsePreferred" />
+                                <span>Respect Preferred Image in Automatic Image Search</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Respect the 'preferred' flag sent by the server in automatic image searches.
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Image_UseCommunityRating" />
+                                <span>Use Community Ratings in Automatic Image Search</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Use the community ratings to order the images in automatic image searches.
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Image_UseDimensions" />
+                                <span>Set Image Dimensions in Automatic Image Search</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Set the image dimensions the images in automatic image searches. This will allow Jellyfin to select the "best" image to use based on the image dimensions, if a minimum dimension is specified in the settings for the library.
+                            </div>
+                        </div>
+                        <div id="Image_PosterList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Only Allow Posters By Language</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="None">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">No language / Text-less images</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
+                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Metadata">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Follow metadata language in library</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Original">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Use the language from the media's country of origin</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="English">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">English (only applies if the metadata language in the library is not English)</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">Filter the images during an automatic image search for posters to allow only the specified languages, in the specified order. If no languages are selected then no filtering will occur in the automatic image search.</div>
+                        </div>
+                        <div id="Image_LogoList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Only Allow Logos By Language</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="None">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">No language / Text-less images</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
+                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Metadata">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Follow metadata language in library</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Original">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Use the language from the media's country of origin</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="English">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">English (only applies if the metadata language in the library is not English)</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">Filter the images during an automatic image search for logos to only allow the specified languages, in the specified order. If no languages are selected then no filtering will occur in the automatic image search.</div>
+                        </div>
+                        <div id="Image_BackdropList" is="sortable-checkbox-list" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Only Allow Backdrops/Banners/Thumbnails By Language</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="None">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">No language / Text-less images</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
+                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Metadata">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Follow metadata language in library</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Original">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Use the language from the media's country of origin</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="English">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">English (only applies if the metadata language in the library is not English)</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">Filter the images during an automatic image search for backdrops/banners/thumbnails to only allow the specified languages, in the specified order. If no languages are selected then no filtering will occur in the automatic image search.</div>
+                        </div>
+                        <hr class="debug-only" />
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Image_DebugMode" />
+                                <span>Display Automatic Image Search View</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Displays the images the way Jellyfin sees it during an automatic image search, instead of the usual display with proper language and ratings for each image.
+                            </div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>${Save}</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="Metadata_TagGenre_Section" class="verticalSection verticalSection-extrabottompadding advanced-only" hidden>
                         <legend>
                             <h3>Tag & Genre Settings</h3>
                         </legend>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="HideUnverifiedTags" />
                                 <span>Ignore Unverified Tags</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Don't use any user-submitted tags that have not been verified by AniDB.</div>
                         </div>
-                        <div id="TagSources" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="TagSources" is="checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Tag Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -566,10 +967,46 @@ form:not(.expert-mode) .expert-only {
                                         <h3 class="listItemBodyText">Custom user tags</h3>
                                     </div>
                                 </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TmdbKeywords">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TheMovieDb | Keywords</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TmdbGenres">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TheMovieDb | Genres</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="FirstYearlySeason">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Yearly Season | The first yearly season for the entity</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AllYearlySeasons">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Yearly Season | All yearly seasons for the entity</h3>
+                                    </div>
+                                </div>
                             </div>
                             <div class="fieldDescription">The tag categories to use as the sources of the displayed tags for entities.</div>
                         </div>
-                        <div id="TagIncludeFilters" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="TagIncludeFilters" is="checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Tag Inclusion Filters</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -638,7 +1075,7 @@ form:not(.expert-mode) .expert-only {
                             </div>
                             <div class="fieldDescription">The inclusion filters to use for the displayed tags for entities.</div>
                         </div>
-                        <div class="selectContainer selectContainer-withDescription expert-only">
+                        <div class="selectContainer selectContainer-withDescription advanced-only">
                             <label class="selectLabel" for="TagMinimumWeight">Minimum Weight for Tags</label>
                             <select is="emby-select" id="TagMinimumWeight" name="TagMinimumWeight" class="emby-select-withcolor emby-select">
                                 <option value="Weightless" selected>All Allowed (Default)</option>
@@ -653,11 +1090,15 @@ form:not(.expert-mode) .expert-only {
                                 Choose the minimum weight a tag must have to be included with the displayed tags, not including weightless tags.
                             </div>
                         </div>
-                        <div class="inputContainer inputContainer-withDescription expert-only">
+                        <div class="inputContainer inputContainer-withDescription advanced-only">
                             <input is="emby-input" id="TagMaximumDepth" label="Maximum Depth for Tags" placeholder="0" type="number" pattern="[0-9]*" min="0" max="10" step="1">
                             <div class="fieldDescription">The maximum relative depth of a tag to be included with the displayed tags based on it's source category.</div>
                         </div>
-                        <div id="GenreSources" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
+                        <div class="inputContainer inputContainer-withDescription advanced-only">
+                            <input is="emby-input" type="text" id="TagExcludeList" label="Exclude List for Tags" />
+                            <div class="fieldDescription">A comma separated list of tags to exclude from the displayed tags.</div>
+                        </div>
+                        <div id="GenreSources" is="checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Genre Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -885,10 +1326,46 @@ form:not(.expert-mode) .expert-only {
                                         <h3 class="listItemBodyText">Custom user tags</h3>
                                     </div>
                                 </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TmdbKeywords">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TheMovieDb | Keywords</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TmdbGenres">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TheMovieDb | Genres</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="FirstYearlySeason">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Yearly Season | The first yearly season for the entity</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AllYearlySeasons">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Yearly Season | All yearly seasons for the entity</h3>
+                                    </div>
+                                </div>
                             </div>
                             <div class="fieldDescription">The tag categories to use as the sources of the displayed genres for entities.</div>
                         </div>
-                        <div id="GenreIncludeFilters" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="GenreIncludeFilters" is="checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Genre Inclusion Filters</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -957,7 +1434,7 @@ form:not(.expert-mode) .expert-only {
                             </div>
                             <div class="fieldDescription">The inclusion filters to use for the displayed genres for entities.</div>
                         </div>
-                        <div class="selectContainer selectContainer-withDescription expert-only">
+                        <div class="selectContainer selectContainer-withDescription advanced-only">
                             <label class="selectLabel" for="GenreMinimumWeight">Minimum Weight for Genres</label>
                             <select is="emby-select" id="GenreMinimumWeight" name="GenreMinimumWeight" class="emby-select-withcolor emby-select">
                                 <option value="Weightless">All Allowed</option>
@@ -972,41 +1449,30 @@ form:not(.expert-mode) .expert-only {
                                 Choose the minimum weight a tag must have to be included with the displayed genres, not including weightless tags.
                             </div>
                         </div>
-                        <div class="inputContainer inputContainer-withDescription expert-only">
+                        <div class="inputContainer inputContainer-withDescription advanced-only">
                             <input is="emby-input" id="GenreMaximumDepth" label="Maximum Depth for Genres" placeholder="1" type="number" pattern="[0-9]*" min="0" max="10" step="1">
                             <div class="fieldDescription">The maximum relative depth of a tag to be included with the displayed genres based on it's source category.</div>
                         </div>
-                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
-                        </button>
-                    </fieldset>
-                    <fieldset id="Metadata_Image_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
-                        <legend>
-                            <h3>Image Settings</h3>
-                        </legend>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="AddImageLanguageCode" />
-                                <span>Add Language Code</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Add the language code to image metadata provided to Jellyfin, which it can use to prioritize images based on a library's configured metadata language. If a library has no language set, Jellyfin will prioritize English labeled images if this option is set, and will otherwise use the first available image.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="RespectPreferredImage" />
-                                <span>Respect Preferred Image</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Respect the preferred image flag sent from server when selecting the correct image to use for the library. Setting this will also set the language code to the preferred language code for the library if "Add Language Code" is enabled, thus ensuring it is always selected for the library.</div>
+                        <div class="inputContainer inputContainer-withDescription advanced-only">
+                            <input is="emby-input" type="text" id="GenreExcludeList" label="Exclude List for Genres" />
+                            <div class="fieldDescription">A comma separated list of genres to exclude from the displayed tags.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span>${Save}</span>
                         </button>
                     </fieldset>
-                    <fieldset id="Metadata_Misc_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
+                    <fieldset id="Metadata_Misc_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
                             <h3>Miscellaneous Settings</h3>
                         </legend>
-                        <div id="ContentRatingList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Metadata_StudioOnlyAnimationWorks" />
+                                <span>Only Animation Studios</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Only select studios responsible for the animation for entities. Only applies to AniDB.</div>
+                        </div>
+                        <div id="Metadata_ContentRatingList" is="sortable-checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Content Rating Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="TMDB">
@@ -1015,7 +1481,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB | Follow country/region set in library</h3>
+                                        <h3 class="listItemBodyText">TheMovieDb | Follow country/region set in library</h3>
                                     </div>
                                     <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
                                         <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
@@ -1036,7 +1502,7 @@ form:not(.expert-mode) .expert-only {
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of content ratings for entities, in priority order.</div>
                         </div>
-                        <div id="ProductionLocationList" is="sortable-checkbox-list" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="Metadata_ProductionLocationList" is="sortable-checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Production Location Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem sortableOption" data-option="AniDB">
@@ -1057,7 +1523,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB</h3>
+                                        <h3 class="listItemBodyText">TheMovieDb</h3>
                                     </div>
                                     <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
                                         <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
@@ -1066,15 +1532,7 @@ form:not(.expert-mode) .expert-only {
                             </div>
                             <div class="fieldDescription">The metadata providers to use as the source of production locations for entities, in priority order.</div>
                         </div>
-                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
-                        </button>
-                    </fieldset>
-                    <fieldset id="Metadata_ThirdPartyIntegration_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
-                        <legend>
-                            <h3>Third Party Integration</h3>
-                        </legend>
-                        <div id="ThirdPartyIdProviderList" is="checkbox-list" style="margin-bottom: 2em;">
+                        <div id="Metadata_ThirdPartyIdProviderList" is="checkbox-list" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Add Third Party IDs</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -1083,7 +1541,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">AniDB | Series, Seasons, Episodes</h3>
+                                        <h3 class="listItemBodyText">AniDB | Series, Seasons, Episodes, Movies</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -1092,7 +1550,7 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB | Shows, Seasons, Episodes, Movies</h3>
+                                        <h3 class="listItemBodyText">TheMovieDb | Series, Episodes, Movies</h3>
                                     </div>
                                 </div>
                                 <div class="listItem">
@@ -1101,38 +1559,33 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TvDB | Shows, Episodes</h3>
+                                        <h3 class="listItemBodyText">TvDB | Series, Episodes</h3>
                                     </div>
                                 </div>
                             </div>
                             <div class="fieldDescription">Enable which third party IDs to provide for other plugins to consume with supported media items.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span>${Save}</span>
                         </button>
                     </fieldset>
                     <fieldset id="Library_Basic_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
                             <h3>Basic Settings</h3>
                         </legend>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="AutoMergeVersions" />
-                                <span>Automatically Merge Multiple Versions</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Enable to automatically merge multiple versions of the same media info a single displayed entry after a library scan or refresh. Only applies to videos with Shoko IDs set.</div>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="UseGroupsForShows" />
-                                <span>Use Groups for Shows</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="DefaultLibraryStructure">Default Library Structure Mode</label>
+                            <select is="emby-select" id="DefaultLibraryStructure" name="DefaultLibraryStructure" class="emby-select-withcolor emby-select">
+                                <option value="AniDB_Anime" selected>AniDB Anime Structure (Default)</option>
+                                <option value="Shoko_Groups">Shoko Group Structure</option>
+                                <option value="TMDB_SeriesAndMovies">TheMovieDb Shows &amp; Movies Structure</option>
+                            </select>
+                            <div class="fieldDescription">
                                 <div>
-                                    This will use Shoko's group structure to construct the shows in the libraries instead of the flat AniDB-esque structure you would otherwise see.
+                                    This setting determines which library structure to use by default for shows and movies in all plugin managed libraries. You can override the structure on a per Shoko series basis over in the Series settings tab at the top.
                                 </div>
                                 <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">Pre-requirements for use.</summary>
+                                    <summary style="margin-bottom: 0.25em">Pre-requirements for using <strong>Shoko Group structure</strong>.</summary>
                                     To make the most out of this feature you first need to configure your groups in Shoko. You can either enable auto-grouping in the settings, manually craft your own group structure, or a mix of the two where you have auto-grouping enabled but override the placement if you feel it should belong elsewhere instead. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/group-management">Shoko docs</a> on how to manage your groups.
                                 </details>
                                 <details style="margin-top: 0.5em">
@@ -1141,24 +1594,24 @@ form:not(.expert-mode) .expert-only {
                                 </details>
                             </div>
                         </div>
-                        <div id="SeasonOrderingContainer" class="selectContainer selectContainer-withDescription expert-only" hidden>
-                            <label class="selectLabel" for="SeasonOrdering">Season Ordering</label>
-                            <select is="emby-select" id="SeasonOrdering" name="SeasonOrdering" class="emby-select-withcolor emby-select" disabled>
+                        <div class="selectContainer selectContainer-withDescription advanced-only">
+                            <label class="selectLabel" for="DefaultSeasonOrdering">Default Shoko Group Structure Season Ordering</label>
+                            <select is="emby-select" id="DefaultSeasonOrdering" name="DefaultSeasonOrdering" class="emby-select-withcolor emby-select">
                                 <option value="Default" selected>Let Shoko decide (Default)</option>
                                 <option value="ReleaseDate">Order seasons by release date</option>
-                                <option value="Chronological" class="expert-only">Order seasons in chronological order (use indirect relations) (EXPERIMENTAL)</option>
-                                <option value="ChronologicalIgnoreIndirect">Order seasons in chronological order (ignore indirect relations) (EXPERIMENTAL)</option>
+                                <option value="Chronological" class="advanced-only">Order seasons in chronological order (use indirect relations) (EXPERIMENTAL)</option>
+                                <option value="ChronologicalIgnoreIndirect"  class="advanced-only">Order seasons in chronological order (ignore indirect relations) (EXPERIMENTAL)</option>
                             </select>
                             <div class="fieldDescription">Determines how to order seasons within shows when using groups for shows.</div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="SpecialsPlacement">Specials Placement Within Seasons</label>
-                            <select is="emby-select" id="SpecialsPlacement" name="SpecialsPlacement" class="emby-select-withcolor emby-select">
-                                <option value="AfterSeason">Always place specials after the normal episodes (Default)</option>
+                            <label class="selectLabel" for="DefaultSpecialsPlacement">Default Specials Placement Within Seasons</label>
+                            <select is="emby-select" id="DefaultSpecialsPlacement" name="DefaultSpecialsPlacement" class="emby-select-withcolor emby-select">
+                                <option value="Excluded" selected>Exclude specials from the seasons (Default)</option>
+                                <option value="AfterSeason">Always place specials after the normal episodes</option>
                                 <option value="InBetweenSeasonByAirDate">Use release dates to place specials</option>
-                                <option value="InBetweenSeasonByOtherData">Loosely use the TMDB data available in Shoko to place specials</option>
-                                <option value="InBetweenSeasonMixed">Either loosely use the TMDB data available in Shoko or fallback to using release dates to place specials</option>
-                                <option value="Excluded">Exclude specials from the seasons</option>
+                                <option value="InBetweenSeasonByOtherData">Loosely use the TheMovieDb data available in Shoko to place specials</option>
+                                <option value="InBetweenSeasonMixed">Either loosely use the TheMovieDb data available in Shoko or fallback to using release dates to place specials</option>
                             </select>
                             <div class="fieldDescription selectFieldDescription">Determines how specials are placed within seasons. <strong>Warning:</strong> Modifying this setting requires a recreation (read as; delete existing then create a new) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
                         </div>
@@ -1176,14 +1629,14 @@ form:not(.expert-mode) .expert-only {
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Add the metadata for missing episodes/seasons not currently present in your local collection. Display settings for each Jellyfin user will have to be adjusted to show missing episode information to make use of this feature.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="DisableFilterMovieLibraries" />
                                 <span>Disable Movie Library Filtering</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">By default we filter out anything that is not a movie in movie libraries. Enable this if you want everything to show up as movies in your movie libraries instead.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="MovieSpecialsAsExtraFeaturettes" />
                                 <span>Force Movie Special Features</span>
@@ -1191,19 +1644,26 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription checkboxFieldDescription">Append all specials in an AniDB movie series as special features for the movie(s). By default only some specials will be automatically recognized as special features, but by enabling this option you will force all specials to be used as special features. This setting applies to movie series across all library types, and will break some movie series in a show type library.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span>${Save}</span>
                         </button>
                     </fieldset>
                     <fieldset id="Library_Collection_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
                             <h3>Collection Settings</h3>
                         </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AutoReconstructCollections" />
+                                <span>Automatically Reconstruct Collections</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Automatically reconstruct collections after a library scan.</div>
+                        </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="CollectionGrouping">Collections</label>
                             <select is="emby-select" id="CollectionGrouping" name="CollectionGrouping" class="emby-select-withcolor emby-select">
                                 <option value="None" selected>Do not create collections</option>
-                                <option value="Movies">Create collections for movies based upon Shoko's series</option>
-                                <option value="Shared">Create collections for movies and shows based upon Shoko's groups and series</option>
+                                <option value="Movies">Create collections for movies</option>
+                                <option value="Shared">Create collections for movies and shows</option>
                             </select>
                             <div class="fieldDescription">
                                 <div>Determines what entities to group into native Jellyfin collections.</div>
@@ -1231,7 +1691,7 @@ form:not(.expert-mode) .expert-only {
                                 </details>
                             </div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="CollectionMinSizeOfTwo" />
                                 <span>Require Two Entries for a Collection</span>
@@ -1239,60 +1699,50 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription checkboxFieldDescription">If collections are enabled, only create a collection when the collection will contain at least two items.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span>${Save}</span>
                         </button>
                     </fieldset>
-                    <fieldset id="Library_New_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
+                    <fieldset id="Library_MediaFolder_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
-                            <h3>New Library Settings</h3>
+                            <h3>Library Settings</h3>
                         </legend>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="VFS_Enabled" />
-                                <span>Use the Virtual File System (<strong>VFS</strong>)</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">
-                                <div>Enables the use of the VFS for any new libraries managed by the plugin.</div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="DefaultLibraryOperationMode">Default Library Operation Mode</label>
+                            <select is="emby-select" id="DefaultLibraryOperationMode" name="DefaultLibraryOperationMode" class="emby-select-withcolor emby-select">
+                                <option value="VFS" selected>Virtual File System (VFS)</option>
+                                <option value="Strict">Legacy Filtering (Strict)</option>
+                                <option value="Lax">Legacy Filtering (Lax)</option>
+                            </select>
+                            <div class="fieldDescription">
+                                <div>Determines how the plugin should operate on new libraries.</div>
                                 <div id="WindowsSymLinkWarning1" hidden><strong>Warning</strong>: Windows users are required to <a href="https://learn.microsoft.com/en-us/windows/apps/get-started/developer-mode-features-and-debugging#use-regedit-to-enable-your-device" target="_blank" rel="noopener noreferrer">enable Developer Mode</a> then restart Jellyfin to be able to create symbolic links, a feature <strong>required</strong> to use the VFS.</div>
                                 <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does this mean?</summary>
-                                    Enabling this feature allows you to disregard the underlying disk file structure while automagically meeting Jellyfin's requirements for file organization. It also ensures that no unrecognized files appear in your library and allows us to fully leverage Jellyfin's native features better than we otherwise could without it. This enables us to effortlessly support trailers, special features, and theme videos for series, seasons and movies, as well as merge partial episodes into a single episode. All this is possible because we disregard the underlying disk file structure to create our own using symbolic links.
+                                    <summary style="margin-bottom: 0.25em">What does using the Virtual File System (VFS) entail?</summary>
+                                    Using the VFS allows you to disregard the underlying disk file structure while automagically meeting Jellyfin's requirements for file organization. It also ensures that no unrecognized files appear in your library and allows us to fully leverage Jellyfin's native features better than we otherwise could without it. This enables us to effortlessly support trailers, special features, and theme videos for series, seasons and movies, as well as merge partial episodes into a single episode. All this is possible because we disregard the underlying disk file structure to create our own using symbolic links.
                                     <br/>
                                     <strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
                                 </details>
-                            </div>
-                        </div>
-                        <div class="selectContainer selectContainer-withDescription">
-                            <label class="selectLabel" for="LibraryFilteringMode">Legacy Library Filtering</label>
-                            <select is="emby-select" id="LibraryFilteringMode" name="LibraryFilteringMode" class="emby-select-withcolor emby-select">
-                                <option value="Auto">Auto</option>
-                                <option value="Strict" selected>Strict</option>
-                                <option value="Lax" selected>Lax</option>
-                            </select>
-                            <div class="fieldDescription">
-                                <div>Adjust how the plugin filters out unrecognized media in your new libraries. This option only applies if the VFS is not used.</div>
                                 <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does auto filtering entail?</summary>
-                                    Auto filtering means the plugin will only filter out unrecognized media if no other metadata provider is enabled, otherwise it will leave them in the library.
+                                    <summary style="margin-bottom: 0.25em">What does using Legacy Filtering (Strict) entail?</summary>
+                                    Using legacy filtering in strict mode means the plugin will operate on your media folders as-is, but filter out any and all unrecognized media from the library.
                                 </details>
                                 <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does strict filtering entail?</summary>
-                                    Strict filtering means the plugin will filter out any and all unrecognized media from the library.
-                                </details>
-                                <details style="margin-top: 0.5em">
-                                    <summary style="margin-bottom: 0.25em">What does lax filtering entail?</summary>
-                                    Lax filtering means the plugin will not filter out anything from the library. Use this only if you're having trouble.
+                                    <summary style="margin-bottom: 0.25em">What does using Legacy Filtering (Lax) entail?</summary>
+                                    Using legacy filtering in lax mode means the plugin will operate on your media folders as-is, but it will not filter out anything from the library. Use this only if intend to mix Shoko with other metadata providers.
                                 </details>
                             </div>
                         </div>
-                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
-                        </button>
-                    </fieldset>
-                    <fieldset id="Library_Existing_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
-                        <legend>
-                            <h3>Existing Library Settings</h3>
-                        </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only experimental-setting">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_IterativeGenerationEnabled" />
+                                <span>Default Iterative VFS Generation Enabled</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enable the iterative generation of the VFS for new libraries. Only generate links in the VFS for files changed since the last check occurred.</div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription advanced-only experimental-setting">
+                            <input is="emby-input" type="number" id="VFS_IterativeGenerationMaxCount" label="Default Max Iterations Before Forced Full Generation" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" max="100" />
+                            <div class="fieldDescription">Maximum number of iterations to perform when generating the VFS for new libraries. Set to a value above 0 to enable.</div>
+                        </div>
                         <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="MediaFolderSelector">Configure settings for</label>
                             <select is="emby-select" id="MediaFolderSelector" name="MediaFolderSelector" value="" class="emby-select-withcolor emby-select">
@@ -1301,76 +1751,302 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription selectFieldDescription">Select a media folder to add or modify the media folder settings for.</div>
                         </div>
                         <div id="MediaFolderPerFolderSettingsContainer" hidden>
-                            <div id="MediaFolderImportFolderMapping" style="margin-bottom: 2em;">
-                                <h3 class="checkboxListLabel">Import Folder Mapping</h3>
-                                <div class="checkboxList paperList checkboxList-paperList">
+                            <div id="MediaFolderManagedFolderMapping" style="margin-bottom: 2em;">
+                                <div style="display: flex; align-items: center">
+                                    <h3 class="folderListLabel" style="margin: .5em 0">Managed Folder Mapping</h3>
+                                    <button is="emby-button" type="button" class="fab btnAddFolder submit emby-button" title="${Add}">
+                                        <span class="material-icons add"></span>
+                                    </button>
                                 </div>
-                                <div class="fieldDescription">The Shoko Import Folders the Media Folders are mapped to.</div>
-                            </div>
-                            <div class="checkboxContainer checkboxContainer-withDescription">
-                                <label class="emby-checkbox-label">
-                                    <input is="emby-checkbox" type="checkbox" id="MediaFolderVirtualFileSystem" />
-                                    <span>Use the Virtual File System (<strong>VFS</strong>)</span>
-                                </label>
-                                <div class="fieldDescription checkboxFieldDescription">
-                                    <div>Enables the use of the VFS for the library.</div>
-                                    <div id="WindowsSymLinkWarning2" hidden><strong>Warning</strong>: Windows users are required to <a href="https://learn.microsoft.com/en-us/windows/apps/get-started/developer-mode-features-and-debugging#use-regedit-to-enable-your-device" target="_blank" rel="noopener noreferrer">enable Developer Mode</a> then restart Jellyfin to be able to create symbolic links, a feature <strong>required</strong> to use the VFS.</div>
-                                    <details style="margin-top: 0.5em">
-                                        <summary style="margin-bottom: 0.25em">What does this mean?</summary>
-                                        Enabling this setting should in theory make it so you won't have to think about file structure incompatibilities, since it will override your existing file structure and replace it with a layer of symbolic links managed by the plugin instead of your actual file structure.
-                                        &nbsp;
-                                        <strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
-                                    </details>
+                                <div class="folderList paperList folderList-paperList">
                                 </div>
+                                <div class="fieldDescription">The Shoko Managed Folders the Media Folders are mapped to.</div>
                             </div>
                             <div class="selectContainer selectContainer-withDescription">
-                                <label class="selectLabel" for="MediaFolderLibraryFilteringMode">Legacy Library Filtering</label>
-                                <select is="emby-select" id="MediaFolderLibraryFilteringMode" name="MediaFolderLibraryFilteringMode" class="emby-select-withcolor emby-select">
-                                    <option value="Auto">Auto</option>
-                                    <option value="Strict" selected>Strict</option>
-                                    <option value="Lax" selected>Lax</option>
+                                <label class="selectLabel" for="MediaFolderLibraryOperationMode">Library Operation Mode</label>
+                                <select is="emby-select" id="MediaFolderLibraryOperationMode" name="MediaFolderLibraryOperationMode" class="emby-select-withcolor emby-select">
+                                    <option value="VFS" selected>Virtual File System (VFS)</option>
+                                    <option value="Strict">Legacy Filtering (Strict)</option>
+                                    <option value="Lax">Legacy Filtering (Lax)</option>
                                 </select>
                                 <div class="fieldDescription">
-                                    <div>Adjust how the plugin filters out unrecognized media in the library. This option only applies if the VFS is not used.</div>
+                                    <div>Determines how the plugin should operate on the selected library.</div>
+                                    <div id="WindowsSymLinkWarning2" hidden><strong>Warning</strong>: Windows users are required to <a href="https://learn.microsoft.com/en-us/windows/apps/get-started/developer-mode-features-and-debugging#use-regedit-to-enable-your-device" target="_blank" rel="noopener noreferrer">enable Developer Mode</a> then restart Jellyfin to be able to create symbolic links, a feature <strong>required</strong> to use the VFS.</div>
                                     <details style="margin-top: 0.5em">
-                                        <summary style="margin-bottom: 0.25em">What does auto filtering entail?</summary>
-                                        Auto filtering means the plugin will only filter out unrecognized media if no other metadata provider is enabled, otherwise it will leave them in the library.
+                                        <summary style="margin-bottom: 0.25em">What does using the Virtual File System (VFS) entail?</summary>
+                                        Using the VFS allows you to disregard the underlying disk file structure while automagically meeting Jellyfin's requirements for file organization. It also ensures that no unrecognized files appear in your library and allows us to fully leverage Jellyfin's native features better than we otherwise could without it. This enables us to effortlessly support trailers, special features, and theme videos for series, seasons and movies, as well as merge partial episodes into a single episode. All this is possible because we disregard the underlying disk file structure to create our own using symbolic links.
+                                        <br/>
+                                        <strong>Do not enable this for an existing library. If you do, then delete and re-create your library from scratch.</strong>
                                     </details>
                                     <details style="margin-top: 0.5em">
-                                        <summary style="margin-bottom: 0.25em">What does strict filtering entail?</summary>
-                                        Strict filtering means the plugin will filter out any and all unrecognized media from the library.
+                                        <summary style="margin-bottom: 0.25em">What does using Legacy Filtering (Strict) entail?</summary>
+                                        Using legacy filtering in strict mode means the plugin will operate on your media folders as-is, but filter out any and all unrecognized media from the library.
                                     </details>
                                     <details style="margin-top: 0.5em">
-                                        <summary style="margin-bottom: 0.25em">What does lax filtering entail?</summary>
-                                        Lax filtering means the plugin will not filter out anything from the library. Use this only if you're having trouble.
+                                        <summary style="margin-bottom: 0.25em">What does using Legacy Filtering (Lax) entail?</summary>
+                                        Using legacy filtering in lax mode means the plugin will operate on your media folders as-is, but it will not filter out anything from the library. Use this only if intend to mix Shoko with other metadata providers.
                                     </details>
                                 </div>
                             </div>
-                            <div class="inputContainer inputContainer-withDescription">
-                                <button is="emby-button" type="submit" name="remove-library" class="raised button-delete block emby-button">
-                                    <span>Remove</span>
-                                </button>
-                                <div class="fieldDescription">This will delete the saved settings and reset the mapping for the library.</div>
+                            <div class="checkboxContainer checkboxContainer-withDescription advanced-only experimental-setting">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="MediaFolderLibraryIterativeGenerationEnabled" />
+                                    <span>Iterative VFS Generation Enabled</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">Enable the iterative generation of the VFS for the existing library. Only generate links in the VFS for files changed since the last check occurred.</div>
                             </div>
-                            <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                                <span>Save</span>
-                            </button>
-                        </div>
-                    </fieldset>
-                    <fieldset id="Library_Experimental_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
-                        <legend>
-                            <h3>Experimental Settings</h3>
-                        </legend>
-                        <div class="fieldDescription verticalSection-extrabottompadding">Any features/settings in this section is still considered to be in an experimental state. <strong>You can enable them, but at the risk if them messing up your library.</strong></div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="EXPERIMENTAL_MergeSeasons" />
-                                <span>Automatically Merge Seasons</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Blur the boundaries between AniDB anime further by merging entries which could have just been a single anime entry based on name matching and a configurable merge window.</div>
+                            <div class="checkboxContainer checkboxContainer-withDescription debug-only">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="MediaFolderLibraryIterativeGenerationNoCache" />
+                                    <span>Iterative VFS Generation — Disable Caching</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">Disable the caching on the library itself, making it always iteratively re-generate the VFS for the library, and forcing all generations occurring within the library to occur.</div>
+                            </div>
+                            <div class="inputContainer inputContainer-withDescription advanced-only experimental-setting">
+                                <input is="emby-input" type="number" id="MediaFolderLibraryIterativeGenerationMaxCount" label="Max Iterations Before Forced Full Generation" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" max="100" />
+                                <div class="fieldDescription">Maximum number of iterations to perform when generating the VFS for the existing library. Set to a value above 0 to enable.</div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription advanced-only experimental-setting">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="MediaFolderLibraryForceFullGenerationOnNextRefresh" />
+                                    <span>Force Full VFS Generation on Next Library Refresh</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">Force a full generation of the VFS on the next library generation. This option will be turned off once the next generation has started.</div>
+                            </div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span>${Save}</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="Library_MultipleVersions_Section" class="verticalSection verticalSection-extrabottompadding advanced-only" hidden>
+                        <legend>
+                            <h3>Multiple Versions Settings</h3>
+                        </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AutoMergeVersions" />
+                                <span>Automatically Merge Multiple Versions</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Enable to automatically merge multiple versions of the same media info a single displayed entry after a library scan or refresh. Only applies to videos with Shoko IDs set.</div>
+                        </div>
+                        <div id="MergeVersionSortSelectorList" is="sortable-checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Multiple Versions Sort Selectors</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem sortableOption" data-option="ImportedAt">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="ImportedAt">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Imported At | Newly imported first</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Down" class="btnSortableMoveDown btnSortable">
+                                        <span class="material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption" data-option="CreatedAt">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="CreatedAt">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Created At | Newly created first</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption" data-option="Resolution">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Resolution">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Resolution | Highest resolution first</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption" data-option="ReleaseGroupName">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="ReleaseGroupName">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Release Group Name | Alphabetically sorted</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption" data-option="FileSource">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="FileSource">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">File Source | Better sources first</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption" data-option="FileVersion">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="FileVersion">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">File Version | Higher versions first</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption" data-option="RelativeDepth">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="RelativeDepth">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Relative Folder Depth | Shallower placed files first<h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="listItem sortableOption" data-option="NoVariation">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="NoVariation">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">File Variation | Non-variations first</h3>
+                                    </div>
+                                    <button type="button" is="paper-icon-button-light" title="Up" class="btnSortableMoveUp btnSortable">
+                                        <span class="material-icons keyboard_arrow_up" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">The selectors to use to sort the multiple versions of the same video in priority order when all videos are the same width. 3D videos will be prioritized over 2D videos regardless of this setting, as it is hard coded in Jellyfin to prefer 3D over 2D. And Jellyfin also sorts by video width before using the order we specify.</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>${Save}</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="Library_SeasonMerging_Section" class="verticalSection verticalSection-extrabottompadding advanced-only" hidden>
+                        <legend>
+                            <h3>Season Merging Settings</h3>
+                        </legend>
+                        <div class="fieldDescription verticalSection-extrabottompadding">Determines how the plugin handles merging one or more Shoko series into Jellyfin seasons.</div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="SeasonMerging_Enabled" />
+                                <span>Enable Season Merging</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Globally enable season merging. This will blur the boundaries between AniDB anime further by merging entries which could have just been a single anime entry based on name matching and a configurable merge window, and/or custom per Shoko series merge overrides.
+                                <br/><br/>
+                                <strong>Note</strong>: The Shoko series will need three things for season merging to be possible:
+                                <ul>
+                                    <li>It needs to have an air date set.</li>
+                                    <li>It needs to be inside the same Shoko group as the other Shoko series that it should be merged with.</li>
+                                    <li>It needs to be using <strong>Shoko Group Structure</strong>, be it explicitly or implicitly, which also applies to the other Shoko series that it should be merged with.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="SeasonMerging_AutoMerge" />
+                                <span>Automatically Merge Seasons</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">If disabled then merging will only happen when an override is set for the series in the Series settings tab, otherwise it will also happen automatically based upon the series types to merge and the merge window listed below unless an override is set.</div>
+                        </div>
+                        <div id="SeasonMerging_SeriesTypes" is="checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Series Types to Merge</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TV">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TV Series</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TVSpecial">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TV Special</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Web">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Web First Release / Original Net Animation (ONA)</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="OVA">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Original Video Animation (OVA)</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Movie">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Standalone Movie / Movie Collection</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="MusicVideo">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Standalone Music Video Release</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Other">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Misc. Other Type</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Unknown">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Type Not Determined Yet</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">Series types to attempt to automatically merge unless an override is in use. Will respect custom series type overrides.</div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription advanced-only">
+                            <input is="emby-input" type="number" id="SeasonMerging_MergeWindowInDays" label="Merge Window (days)" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" />
+                            <div class="fieldDescription">Number of days to check between the start of each Shoko series during automatic merging, inclusive. Set to 0 to allow merging regardless of release dates.</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>${Save}</span>
                         </button>
                     </fieldset>
                     <fieldset id="VFS_Basic_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
@@ -1413,45 +2089,56 @@ form:not(.expert-mode) .expert-only {
                             <div class="fieldDescription checkboxFieldDescription">Enabling this will add the standardized resolution (e.g. 480p, 1080p, 4K, etc.) to all files in the VFS if available. <strong>Warning</strong>: Though rare, we may fail to read the media info in Shoko when the files were first added (e.g. because of a corrupt file, encountering an unsupported <i>new</i> codec, etc.), then reading it later. This may lead to episode/movie entries to be "removed" and "added" as new entries the next time they are refreshed after the metadata has been added. <strong>Use at your own risk.</strong></div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span>${Save}</span>
                         </button>
                     </fieldset>
-                    <fieldset id="VFS_Location_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
+                    <fieldset id="VFS_Location_Section" class="verticalSection verticalSection-extrabottompadding advanced-only" hidden>
                         <legend>
-                            <h3>VFS Location Settings</h3>
+                            <h3>Generation Settings</h3>
                         </legend>
                         <div class="fieldDescription verticalSection-extrabottompadding">
                             Configure where to place the VFS in the file system and how to attach it to your libraries. <strong>Tweak at your own risk.</strong>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="VFS_Threads" label="VFS Threads" placeholder="0" type="number" pattern="[0-9]*" min="-1" step="1" />
+                            <div class="fieldDescription">Number of threads to concurrently generate links for the VFS. Set to -1 to to match the Jellyfin scan fanout concurrency. Set to 0 or below to use the core count.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="VFS_ResolveLinks" />
                                 <span>Resolve Links Before VFS</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">If the library contains symbolic links to media, it will follow them until a final "real" file is found and use the path of said file for the VFS.</div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
-                            <label class="emby-checkbox-label">
-                                <input is="emby-checkbox" type="checkbox" id="VFS_AttachRoot" />
-                                <span>Attach VFS to Libraries</span>
-                            </label>
-                            <div class="fieldDescription checkboxFieldDescription">Makes the VFS structure that the plugin automatically creates show up as a folder for your libraries. This allows reusing the same media folder(s) across multiple libraries without needing any other workarounds. Useful for separating movies and series into separate libraries while still using the same media folder(s) for both.</div>
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="VFS_MaxTotalExceptionsBeforeAbort" label="Max Total Exceptions Before Abort" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" max="10000" />
+                            <div class="fieldDescription">Maximum number of exceptions before aborting the VFS generation. Set to 0 to disable limit.</div>
                         </div>
-                        <div class="selectContainer selectContainer-withDescription expert-only">
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="VFS_MaxSeriesExceptionsBeforeAbort" label="Max Series Exceptions Before Abort" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" max="10000" />
+                            <div class="fieldDescription">Maximum number of series with exceptions before aborting the VFS generation. Set to 0 to disable limit.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_UseSemaphore" />
+                                <span>Use Semaphore to Limit Concurrency</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Use a semaphore instead of an action block to limit concurrency during VFS generation.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription advanced-only">
                             <label class="selectLabel" for="VFS_Location">VFS Location</label>
                             <select is="emby-select" id="VFS_Location" name="VFS_Location" class="emby-select-withcolor emby-select">
                                 <option value="Default" selected>Jellyfin Data Directory (Default)</option>
-                                <option value="Cache">Jellyfin Cache Directory</option>
                                 <option value="Custom">Custom Directory</option>
                             </select>
-                            <div class="fieldDescription">Change where the VFS structure will be placed. Changing this will cause your library to "remove" and "re-add" itself because of the path changes. You will need to manually move your VFS root if you plan to keep it when toggling this setting. Trick-play files will need to be backed-up beforehand and moved back the next library scan if you want to avoid regenerating them after you change this setting. <strong>You have been warned.</strong></div>
+                            <div class="fieldDescription">Change where the VFS structure will be placed. Changing this will cause your library to "remove" and "re-add" itself because of the path changes. You will need to manually move your VFS root if you plan to keep it when toggling this setting. Trick-play files not already moved out of the VFS by the plugin will need to be backed-up beforehand and moved back after the next library scan if you want to avoid regenerating them after you change this setting. <strong>You have been warned.</strong></div>
                         </div>
-                        <div id="VFS_CustomLocationContainer" class="inputContainer inputContainer-withDescription expert-only" hidden>
+                        <div id="VFS_CustomLocationContainer" class="inputContainer inputContainer-withDescription advanced-only" hidden>
                             <input is="emby-input" type="text" id="VFS_CustomLocation" label="Custom VFS Root Location" disabled />
                             <div class="fieldDescription">An absolute path, or a relative path from the Jellyfin Data Directory, to the custom root directory of where the VFS will be placed. You decide.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span>${Save}</span>
                         </button>
                     </fieldset>
                     <fieldset id="SignalR_Connection_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
@@ -1464,13 +2151,13 @@ form:not(.expert-mode) .expert-only {
                         </div>
                         <div id="SignalRConnectContainer" hidden>
                             <button id="SignalRConnectButton" is="emby-button" type="submit" name="signalr-connect" class="raised button-submit block emby-button" disabled>
-                                <span>Connect</span>
+                                <span>${Connect}</span>
                             </button>
                             <div class="fieldDescription">Establish a SignalR connection to Shoko.</div>
                         </div>
                         <div id="SignalRDisconnectContainer">
                             <button is="emby-button" type="submit" name="signalr-disconnect" class="raised block emby-button">
-                                <span>Disconnect</span>
+                                <span>${Disconnect}</span>
                             </button>
                             <div class="fieldDescription">Terminate the SignalR connection to Shoko.</div>
                         </div>
@@ -1488,11 +2175,11 @@ form:not(.expert-mode) .expert-only {
                                 Attempt to establish a SignalR connection to your running Shoko instance when Jellyfin starts up.
                             </div>
                         </div>
-                        <div class="inputContainer inputContainer-withDescription expert-only">
-                            <input is="emby-input" type="text" id="SignalRAutoReconnectIntervals" label="Auto Reconnect Intervals" />
-                            <div class="fieldDescription">A comma separated list of intervals given in seconds to try to reconnect to your running Shoko instance if we ever gets disconnected. The provided list will have duplicates removed and will be performed in sorted order starting from the shortest time span when reconnecting. Once the longest interval has been reached and fails to reconnect, we will stop attempting to reconnect and leave the SignalR connection in a disconnected state until it is manually or otherwise reconnected.</div>
+                        <div class="inputContainer inputContainer-withDescription advanced-only">
+                            <input is="emby-input" type="text" id="SignalRAutoReconnectIntervals" label="Auto Reconnect Intervals (seconds)" />
+                            <div class="fieldDescription">A comma separated list of intervals given in seconds to try to reconnect to your running Shoko instance if we ever gets disconnected. The last value in the list will be retried forever until a successful connection is made. Can be left empty to disable auto reconnect.</div>
                         </div>
-                        <div id="SignalREventSources" is="checkbox-list" class="expert-only" style="margin-bottom: 2em;">
+                        <div id="SignalREventSources" is="checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
                             <h3 class="checkboxListLabel">Event Sources</h3>
                             <div class="checkboxList paperList checkboxList-paperList">
                                 <div class="listItem">
@@ -1519,14 +2206,14 @@ form:not(.expert-mode) .expert-only {
                                         <span></span>
                                     </label>
                                     <div class="listItemBody">
-                                        <h3 class="listItemBodyText">TMDB</h3>
+                                        <h3 class="listItemBodyText">TheMovieDb</h3>
                                     </div>
                                 </div>
                             </div>
                             <div class="fieldDescription">Which event sources should be listened to for metadata events.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span>${Save}</span>
                         </button>
                     </fieldset>
                     <fieldset id="SignalR_Library_New_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
@@ -1552,7 +2239,7 @@ form:not(.expert-mode) .expert-only {
                             </div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span>${Save}</span>
                         </button>
                     </fieldset>
                     <fieldset id="SignalR_Library_Existing_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
@@ -1586,7 +2273,7 @@ form:not(.expert-mode) .expert-only {
                                 </div>
                             </div>
                             <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                                <span>Save</span>
+                                <span>${Save}</span>
                             </button>
                         </div>
                     </fieldset>
@@ -1661,39 +2348,312 @@ form:not(.expert-mode) .expert-only {
                             </div>
                             <div id="UserDeleteContainer" class="inputContainer inputContainer-withDescription" hidden>
                                 <button is="emby-button" type="submit" name="unlink-user" class="raised button-delete block emby-button">
-                                    <span>Remove</span>
+                                    <span>${ButtonRemove}</span>
                                 </button>
                                 <div class="fieldDescription">This will delete any saved settings for the user.</div>
                             </div>
                             <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                                <span>Save</span>
+                                <span>${Save}</span>
                             </button>
                         </div>
                     </fieldset>
-                    <fieldset id="Misc_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
+                    <fieldset id="Series_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Series Settings</h3>
+                        </legend>
+                        <div class="inputContainer inputContainer-withDescription">
+                            <input is="emby-input" type="text" id="SeriesSearch" label="Search" />
+                            <div class="fieldDescription">Search for series by title, AniDB ID or Shoko Series ID. AniDB IDs should be prefixed with 'a', e.g. 'a69', Shoko Series IDs should be prefixed with 's', e.g. 's1'.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="SeriesSelector">Configure settings for</label>
+                            <select is="emby-select" id="SeriesSelector" name="SeriesSelector" value="" class="emby-select-withcolor emby-select" disabled>
+                                <option value="">Click here to select a series</option>
+                            </select>
+                            <div class="fieldDescription selectFieldDescription">Select a series to modify the series settings for.</div>
+                        </div>
+                        <div id="SeriesSettingsContainer" hidden>
+                            <div class="selectContainer selectContainer-withDescription">
+                                <label class="selectLabel" for="SeriesType">Series Type</label>
+                                <select is="emby-select" id="SeriesType" name="SeriesType" class="emby-select-withcolor emby-select">
+                                    <option value="None" selected>Use Original Type (Default)</option>
+                                    <option value="TV">TV series</option>
+                                    <option value="TVSpecial">TV Special</option>
+                                    <option value="Web">Web First Release / Original Net Animation (ONA)</option>
+                                    <option value="Movie">Standalone Movie / Movie Collection</option>
+                                    <option value="OVA">Original Video Animation (OVA)</option>
+                                    <option value="MusicVideo">Music Video (MV)</option>
+                                </select>
+                                <div class="fieldDescription">
+                                    <div>
+                                        Override the series type for this series. Useful if you want to opt into type specific features for this series.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="selectContainer selectContainer-withDescription">
+                                <label class="selectLabel" for="SeriesLibraryStructure">Library Structure Mode</label>
+                                <select is="emby-select" id="SeriesLibraryStructure" name="SeriesLibraryStructure" class="emby-select-withcolor emby-select">
+                                    <option value="None" selected>Follow Global Settings (Default)</option>
+                                    <option value="AniDB_Anime">AniDB Anime Structure</option>
+                                    <option value="Shoko_Groups">Shoko Group Structure</option>
+                                    <option value="TMDB_SeriesAndMovies">TheMovieDb Shows &amp; Movies Structure</option>
+                                </select>
+                                <div class="fieldDescription">
+                                    <div>
+                                        This setting determines which library structure to use the Shoko series in all plugin managed libraries.
+                                    </div>
+                                    <details style="margin-top: 0.5em">
+                                        <summary style="margin-bottom: 0.25em">Pre-requirements for using <strong>Shoko Group Structure</strong>.</summary>
+                                        To make the most out of this feature you first need to configure your groups in Shoko. You can either enable auto-grouping in the settings, manually craft your own group structure, or a mix of the two where you have auto-grouping enabled but override the placement if you feel it should belong elsewhere instead. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/group-management">Shoko docs</a> on how to manage your groups.
+                                    </details>
+                                    <details style="margin-top: 0.5em">
+                                        <summary style="margin-bottom: 0.25em">Can I use this with collections?</summary>
+                                        Yes! You can use this with collections enabled, but that entails most of the time that you've configured a multi-layered structure for your groups because the deepest layer will be used for the shows while all the layers above will be used for collections. The exception to this is if you have a group which contains both movies and shows and you've enabled the option to separate movies from shows. In which case the deepest layer of groups will also be used to generate a collection for your movie(s) and show within the layer. Also note that enabling auto-grouping only gives you a single layer, and you need to use Shoko Desktop (or in the future, the Web UI) to create your nested structure. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/group-management">Shoko docs</a> on how to manage your groups.
+                                    </details>
+                                </div>
+                            </div>
+                            <div class="selectContainer selectContainer-withDescription advanced-only">
+                                <label class="selectLabel" for="SeriesSeasonOrdering">Shoko Group Structure Season Ordering</label>
+                                <select is="emby-select" id="SeriesSeasonOrdering" name="SeriesSeasonOrdering" class="emby-select-withcolor emby-select">
+                                    <option value="None">Follow Global Settings (Default)</option>
+                                    <option value="Default">Let Shoko decide</option>
+                                    <option value="ReleaseDate">Order seasons by release date</option>
+                                    <option value="Chronological" class="advanced-only">Order seasons in chronological order (use indirect relations) (EXPERIMENTAL)</option>
+                                    <option value="ChronologicalIgnoreIndirect"  class="advanced-only">Order seasons in chronological order (ignore indirect relations) (EXPERIMENTAL)</option>
+                                </select>
+                                <div class="fieldDescription">Determines how to order seasons within the show when using <strong>Shoko Group Structure</strong> and this series is the main series in the group.</div>
+                            </div>
+                            <div class="selectContainer selectContainer-withDescription">
+                                <label class="selectLabel" for="SeriesSpecialsPlacement">Specials Placement Within Seasons</label>
+                                <select is="emby-select" id="SeriesSpecialsPlacement" name="SeriesSpecialsPlacement" class="emby-select-withcolor emby-select">
+                                    <option value="None" selected>Follow Global Settings (Default)</option>
+                                    <option value="Excluded">Exclude specials from the seasons</option>
+                                    <option value="AfterSeason">Always place specials after the normal episodes</option>
+                                    <option value="InBetweenSeasonByAirDate">Use release dates to place specials</option>
+                                    <option value="InBetweenSeasonByOtherData">Loosely use the TheMovieDb data available in Shoko to place specials</option>
+                                    <option value="InBetweenSeasonMixed">Either loosely use the TheMovieDb data available in Shoko or fallback to using release dates to place specials</option>
+                                </select>
+                                <div class="fieldDescription selectFieldDescription">Determines how specials are placed within seasons. <strong>Warning:</strong> Modifying this setting requires a recreation (read as; delete existing then create a new) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
+                            </div>
+                            <div id="SeriesSeasonMergingBehavior" is="checkbox-list" class="advanced-only" style="margin-bottom: 2em;">
+                                <h3 class="checkboxListLabel">Season Merging Behavior</h3>
+                                <div class="checkboxList paperList checkboxList-paperList">
+                                    <div class="listItem">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="NoMerge">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Do Not Merge This Series With Any Other Series</h3>
+                                        </div>
+                                    </div>
+                                    <div class="listItem">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="MergeForward">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Merge With Sequel (Respects Air Date)</h3>
+                                        </div>
+                                    </div>
+                                    <div class="listItem">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="MergeBackward">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Merge With Prequel (Respects Air Date)</h3>
+                                        </div>
+                                    </div>
+                                    <div class="listItem">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="MergeWithMainStory">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Merge With Main Story</h3>
+                                        </div>
+                                    </div>
+                                    <div class="listItem">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="MergeGroupATarget">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Merge Other Series Into This Series (Merge Group A)</h3>
+                                        </div>
+                                    </div>
+                                    <div class="listItem">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="MergeGroupASource">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Merge Into Other Series (Merge Group A)</h3>
+                                        </div>
+                                    </div>
+                                    <div class="listItem">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="MergeGroupBTarget">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Merge Other Series Into This Series (Merge Group B)</h3>
+                                        </div>
+                                    </div>
+                                    <div class="listItem">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="MergeGroupBSource">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Merge Into Other Series (Merge Group B)</h3>
+                                        </div>
+                                    </div>
+                                    <div class="listItem">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="MergeGroupCTarget">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Merge Other Series Into This Series (Merge Group C)</h3>
+                                        </div>
+                                    </div>
+                                    <div class="listItem">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="MergeGroupCSource">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Merge Into Other Series (Merge Group C)</h3>
+                                        </div>
+                                    </div>
+                                    <div class="listItem">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="MergeGroupDTarget">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Merge Other Series Into This Series (Merge Group D)</h3>
+                                        </div>
+                                    </div>
+                                    <div class="listItem">
+                                        <label class="listItemCheckboxContainer">
+                                            <input is="emby-checkbox" type="checkbox" data-option="MergeGroupDSource">
+                                            <span></span>
+                                        </label>
+                                        <div class="listItemBody">
+                                            <h3 class="listItemBodyText">Merge Into Other Series (Merge Group D)</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="fieldDescription">Determines how the merging should be handled for the series. Requires the global season merging feature to be enabled for this to take effect.</div>
+                            </div>
+                            <div class="selectContainer selectContainer-withDescription">
+                                <label class="selectLabel" for="SeriesEpisodeConversion">Episode Conversion Mode</label>
+                                <select is="emby-select" id="SeriesEpisodeConversion" name="SeriesEpisodeConversion" class="emby-select-withcolor emby-select">
+                                    <option value="None" selected>No Conversion (Default)</option>
+                                    <option value="EpisodesAsSpecials">Convert Normal Episodes to Specials</option>
+                                    <option value="SpecialsAsEpisodes">Convert Specials to Normal Episodes</option>
+                                    <option value="SpecialsAsExtraFeaturettes">Convert Specials to Extra Featurettes</option>
+                                </select>
+                                <div class="fieldDescription">
+                                    <div>
+                                        Determines how episodes should be converted between episode types.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="SeriesOrderByAirdate" />
+                                    <span>Order episodes by airdate</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">
+                                    Order episodes by their airdate instead of by their original episode number. <strong>Warning</strong>: Only applied to <strong>AniDB Anime Structure</strong> and <strong>Shoko Group Structure</strong>.
+                                </div>
+                            </div>
+                            <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                                <span>${Save}</span>
+                            </button>
+                        </div>
+                    </fieldset>
+                    <fieldset id="Misc_Section" class="verticalSection verticalSection-extrabottompadding advanced-only" hidden>
                         <legend>
                             <h3>Miscellaneous Settings</h3>
                         </legend>
-                        <div class="checkboxContainer checkboxContainer-withDescription expert-only">
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="Misc_ShowInMenu" />
                                 <span>Show in Menu</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Shows a shortcut to the plugin settings in the sidebar navigation menu.</div>
                         </div>
-                        <div class="inputContainer inputContainer-withDescription expert-only">
+                        <div class="inputContainer inputContainer-withDescription advanced-only">
                             <input is="emby-input" type="text" id="IgnoredFolders" label="Ignored Folder Names" />
                             <div class="fieldDescription">A comma separated list of folder names to ignore during a library scan. Useful for skipping folders generated by a NAS or other pieces of software that access the file system where media resides. Only applicable to libraries not managed by the VFS as files not recognized by Shoko Server are already ignored.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span>${Save}</span>
                         </button>
                     </fieldset>
-                    <fieldset id="Utilities_Section" class="verticalSection verticalSection-extrabottompadding expert-only" hidden>
+                    <fieldset id="Debug_Section" class="verticalSection verticalSection-extrabottompadding debug-only" hidden>
+                        <legend>
+                            <h3>Debug Settings</h3>
+                        </legend>
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="Debug_UsageTrackerStalledTimeInSeconds" label="Usage Tracker Stall Time (seconds)" placeholder="0" type="number" pattern="[0-9]*" min="1" max="10800" step="1" />
+                            <div class="fieldDescription">Amount of seconds that needs to pass before the usage tracker considers the usage as stalled and resets it's tracking and dispatches it's stalled event.</div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="Debug_MaxInFlightRequests" label="Max In-Flight Requests" placeholder="0" type="number" pattern="[0-9]*" min="1" max="1000" step="1" />
+                            <div class="fieldDescription">Maximum number of requests of outgoing traffic at any given time.</div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="Debug_SeriesPageSize" label="Series Page Size" placeholder="0" type="number" pattern="[0-9]*" min="0" max="10000" step="1" />
+                            <div class="fieldDescription">The page size to use for series queries. Set to 0 to disable pagination.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Debug_AutoClearClientCache" />
+                                <span>Auto-Clear Client Cache</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Whether or not to automatically clear the API client cache.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Debug_AutoClearManagerCache" />
+                                <span>Auto-Clear Manager Cache</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Whether or not to automatically clear the API manager's cache.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="Debug_AutoClearVfsCache" />
+                                <span>Auto-Clear VFS Cache</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Whether or not to automatically clear the API VFS' cache.</div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="Debug_ExpirationScanFrequencyInMinutes" label="Expiration Scan Frequency (minutes)" placeholder="0" type="number" pattern="[0-9]*" min="1" max="180" step="1" />
+                            <div class="fieldDescription">The expiration scan frequency in minutes for the guarded caches.</div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="Debug_SlidingExpirationInMinutes" label="Sliding Expiration (minutes)" placeholder="0" type="number" pattern="[0-9]*" min="1" max="180" step="1" />
+                            <div class="fieldDescription">The sliding expiration in minutes for the guarded caches.</div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription debug-only">
+                            <input is="emby-input" type="number" id="Debug_AbsoluteExpirationRelativeToNowInMinutes" label="Absolute Expiration (minutes)" placeholder="0" type="number" pattern="[0-9]*" min="1" max="1440" step="1" />
+                            <div class="fieldDescription">The absolute expiration relative to now in minutes for the guarded caches.</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>${Save}</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="Utilities_Section" class="verticalSection verticalSection-extrabottompadding advanced-only" hidden>
                         <legend>
                             <h3>Utilities</h3>
                         </legend>
-                        <div id="UserDeleteContainer" class="inputContainer inputContainer-withDescription expert-only">
+                        <div id="UserDeleteContainer" class="inputContainer inputContainer-withDescription advanced-only">
                             <a is="emby-linkbutton" rel="noopener noreferrer" class="raised button-alt block emby-button link-redirection" target="_blank" href="#" data-page="Shoko.Utilities.Dummy">
                                 <span>Dummy Example</span>
                             </a>

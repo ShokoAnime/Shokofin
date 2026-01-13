@@ -1,32 +1,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using Shokofin.API.Models;
+using Shokofin.ExternalIds;
 
 namespace Shokofin.API.Info;
 
-public class FileInfo
-{
-    public string Id;
+public class FileInfo(File file, string seriesId, IReadOnlyList<(EpisodeInfo Episode, CrossReference.EpisodeCrossReferenceIDs CrossReference, string Id)> episodeList) {
+    public string Id { get; init; } = file.Id.ToString();
 
-    public string SeriesId;
+    private string? _internalId;
 
-    public MediaBrowser.Model.Entities.ExtraType? ExtraType;
+    public string InternalId => _internalId ??= ShokoInternalId.FileNamespace + Id + $"?seriesId={SeriesId}&episodeIds={string.Join(",", EpisodeList.Select(tuple => tuple.Id))}&seasonId={EpisodeList.FirstOrDefault(tuple => tuple.Episode.SeasonId != null).Episode?.SeasonId ?? string.Empty}";
 
-    public File Shoko;
+    public string SeriesId { get; init; } = seriesId;
 
-    public List<(EpisodeInfo Episode, CrossReference.EpisodeCrossReferenceIDs CrossReference, string Id)> EpisodeList;
+    public MediaBrowser.Model.Entities.ExtraType? ExtraType { get; init; } = episodeList.FirstOrDefault(tuple => tuple.Episode.ExtraType != null).Episode?.ExtraType;
 
-    public List<List<(EpisodeInfo Episode, CrossReference.EpisodeCrossReferenceIDs CrossReference, string Id)>> AlternateEpisodeLists;
+    public File Shoko { get; init; } = file;
 
-    public FileInfo(File file, List<List<(EpisodeInfo Episode, CrossReference.EpisodeCrossReferenceIDs CrossReference, string Id)>> groupedEpisodeLists, string seriesId)
-    {
-        var episodeList = groupedEpisodeLists.FirstOrDefault() ?? [];
-        var alternateEpisodeLists = groupedEpisodeLists.Count > 1 ? groupedEpisodeLists.GetRange(1, groupedEpisodeLists.Count - 1) : [];
-        Id = file.Id.ToString();
-        SeriesId = seriesId;
-        ExtraType = episodeList.FirstOrDefault(tuple => tuple.Episode.ExtraType != null).Episode?.ExtraType;
-        Shoko = file;
-        EpisodeList = episodeList;
-        AlternateEpisodeLists = alternateEpisodeLists;
-    }
+    public IReadOnlyList<(EpisodeInfo Episode, CrossReference.EpisodeCrossReferenceIDs CrossReference, string Id)> EpisodeList { get; init; } = episodeList;
 }

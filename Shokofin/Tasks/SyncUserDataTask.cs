@@ -7,10 +7,7 @@ using Shokofin.Sync;
 
 namespace Shokofin.Tasks;
 
-public class SyncUserDataTask(UserDataSyncManager userSyncManager) : IScheduledTask, IConfigurableScheduledTask
-{
-    private readonly UserDataSyncManager _userSyncManager = userSyncManager;
-
+public class SyncUserDataTask(UserDataSyncManager _userSyncManager) : IScheduledTask, IConfigurableScheduledTask {
     /// <inheritdoc />
     public string Name => "Sync User Data";
 
@@ -37,8 +34,7 @@ public class SyncUserDataTask(UserDataSyncManager userSyncManager) : IScheduledT
         => [];
 
     /// <inheritdoc />
-    public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
-    {
-        await _userSyncManager.ScanAndSync(SyncDirection.Sync, progress, cancellationToken);
+    public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) {
+        await _userSyncManager.ScanAndSync(SyncDirection.Sync, progress, cancellationToken).ConfigureAwait(false);
     }
 }

@@ -3,8 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Shokofin.API.Models;
 
-public class ApiKey
-{
+public class ApiKey {
     /// <summary>
     /// The Api Key Token.
     /// </summary>

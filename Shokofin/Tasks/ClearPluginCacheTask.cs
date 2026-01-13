@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Model.Tasks;
 using Shokofin.API;
+using Shokofin.Events;
+using Shokofin.MergeVersions;
 using Shokofin.Resolvers;
 
 namespace Shokofin.Tasks;
@@ -11,8 +13,13 @@ namespace Shokofin.Tasks;
 /// <summary>
 /// Forcefully clear the plugin cache. For debugging and troubleshooting. DO NOT RUN THIS TASK WHILE A LIBRARY SCAN IS RUNNING.
 /// </summary>
-public class ClearPluginCacheTask(ShokoAPIManager apiManager, ShokoAPIClient apiClient, VirtualFileSystemService vfsService) : IScheduledTask, IConfigurableScheduledTask
-{
+public class ClearPluginCacheTask(
+    ShokoApiManager _apiManager,
+    ShokoApiClient _apiClient,
+    VirtualFileSystemService _vfsService,
+    MergeVersionsManager _mergeVersionsManager,
+    EventDispatchService _eventDispatchService
+) : IScheduledTask, IConfigurableScheduledTask {
     /// <inheritdoc />
     public string Name => "Clear Plugin Cache";
 
@@ -26,28 +33,23 @@ public class ClearPluginCacheTask(ShokoAPIManager apiManager, ShokoAPIClient api
     public string Key => "ShokoClearPluginCache";
 
     /// <inheritdoc />
-    public bool IsHidden => !Plugin.Instance.Configuration.ExpertMode;
+    public bool IsHidden => !Plugin.Instance.Configuration.Debug.ShowInUI;
 
     /// <inheritdoc />
-    public bool IsEnabled => Plugin.Instance.Configuration.ExpertMode;
+    public bool IsEnabled => Plugin.Instance.Configuration.Debug.ShowInUI;
 
     /// <inheritdoc />
     public bool IsLogged => true;
 
-    private readonly ShokoAPIManager _apiManager = apiManager;
-
-    private readonly ShokoAPIClient _apiClient = apiClient;
-
-    private readonly VirtualFileSystemService _vfsService = vfsService;
-
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         => [];
 
-    public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
-    {
+    public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) {
         _apiClient.Clear();
         _apiManager.Clear();
         _vfsService.Clear();
+        _mergeVersionsManager.Clear();
+        _eventDispatchService.Clear();
         return Task.CompletedTask;
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Extensions;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -19,27 +20,12 @@ using EpisodeType = Shokofin.API.Models.EpisodeType;
 
 namespace Shokofin.Providers;
 
-public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHasOrder
-{
+public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<EpisodeProvider> _logger, ShokoApiManager _apiManager) : IRemoteMetadataProvider<Episode, EpisodeInfo>, IHasOrder {
     public string Name => Plugin.MetadataProviderName;
 
     public int Order => 0;
 
-    private readonly IHttpClientFactory HttpClientFactory;
-
-    private readonly ILogger<EpisodeProvider> Logger;
-
-    private readonly ShokoAPIManager ApiManager;
-
-    public EpisodeProvider(IHttpClientFactory httpClientFactory, ILogger<EpisodeProvider> logger, ShokoAPIManager apiManager)
-    {
-        HttpClientFactory = httpClientFactory;
-        Logger = logger;
-        ApiManager = apiManager;
-    }
-
-    public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken)
-    {
+    public async Task<MetadataResult<Episode>> GetMetadata(EpisodeInfo info, CancellationToken cancellationToken) {
         var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Episode \"{info.Name}\". (Path=\"{info.Path}\",IsMissingEpisode={info.IsMissingEpisode})");
         try {
             var result = new MetadataResult<Episode>();
@@ -52,47 +38,52 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
             Info.ShowInfo? showInfo = null;
             if (info.IsMissingEpisode || string.IsNullOrEmpty(info.Path)) {
                 // We're unable to fetch the latest metadata for the virtual episode.
-                if (!info.TryGetProviderId(ShokoEpisodeId.Name, out var episodeId))
+                if (!info.TryGetProviderId(ProviderNames.ShokoEpisode, out var episodeId))
                     return result;
 
-                episodeInfo = await ApiManager.GetEpisodeInfo(episodeId);
+                episodeInfo = await _apiManager.GetEpisodeInfo(episodeId).ConfigureAwait(false);
                 if (episodeInfo == null)
                     return result;
 
-                seasonInfo = await ApiManager.GetSeasonInfoForEpisode(episodeId);
+                seasonInfo = await _apiManager.GetSeasonInfoForEpisode(episodeId).ConfigureAwait(false);
                 if (seasonInfo == null)
                     return result;
 
-                showInfo = await ApiManager.GetShowInfoForSeries(seasonInfo.Id);
+                showInfo = await _apiManager.GetShowInfoBySeasonId(seasonInfo.Id).ConfigureAwait(false);
                 if (showInfo == null || showInfo.SeasonList.Count == 0)
                     return result;
             }
             else {
-                (fileInfo, seasonInfo, showInfo) = await ApiManager.GetFileInfoByPath(info.Path);
-                episodeInfo = fileInfo?.EpisodeList.FirstOrDefault().Episode;
+                (fileInfo, seasonInfo, showInfo) = await _apiManager.GetFileInfoByPath(info.Path).ConfigureAwait(false);
+                episodeInfo = fileInfo is { EpisodeList.Count: > 0 } ? fileInfo.EpisodeList[0].Episode : null;
             }
 
             // if the episode info is null then the series info and conditionally the group info is also null.
             if (episodeInfo == null || seasonInfo == null || showInfo == null) {
-                Logger.LogWarning("Unable to find episode info for path {Path}", info.Path);
+                _logger.LogWarning("Unable to find episode info for path {Path}", info.Path);
                 return result;
             }
 
             result.Item = CreateMetadata(showInfo, seasonInfo, episodeInfo, fileInfo, info.MetadataLanguage, info.MetadataCountryCode);
-            Logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Series={SeriesId},ExtraSeries={ExtraIds},Group={GroupId})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds, showInfo?.GroupId);
+            _logger.LogInformation("Found episode {EpisodeName} (File={FileId},Episode={EpisodeId},Season={SeasonId},ExtraSeasons={ExtraIds})", result.Item.Name, fileInfo?.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds);
 
             result.HasMetadata = true;
+
+            result.ResetPeople();
+            foreach (var person in episodeInfo.Staff)
+                result.AddPerson(person);
 
             return result;
         }
         catch (Exception ex) {
             if (info.IsMissingEpisode || string.IsNullOrEmpty(info.Path)) {
-                if (!info.TryGetProviderId(ShokoEpisodeId.Name, out var episodeId))
+                if (!info.TryGetProviderId(ProviderNames.ShokoEpisode, out var episodeId))
                     episodeId = null;
-                Logger.LogError(ex, "Threw unexpectedly while refreshing a missing episode; {Message} (Episode={EpisodeId})", ex.Message, episodeId);
+
+                _logger.LogError(ex, "Threw unexpectedly while refreshing a missing episode; {Message} (Episode={EpisodeId})", ex.Message, episodeId);
             }
             else {
-                Logger.LogError(ex, "Threw unexpectedly while refreshing {Path}: {Message}", info.Path, info.IsMissingEpisode);
+                _logger.LogError(ex, "Threw unexpectedly while refreshing {Path}: {Message}", info.Path, ex.Message);
             }
 
             return new MetadataResult<Episode>();
@@ -102,99 +93,94 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
         }
     }
 
-    public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Season season, Guid episodeId)
-        => CreateMetadata(group, series, episode, null, season.GetPreferredMetadataLanguage(), season.GetPreferredMetadataCountryCode(), season, episodeId);
+    public static Episode CreateMetadata(Info.ShowInfo showInfo, Info.SeasonInfo seasonInfo, Info.EpisodeInfo episodeInfo, Season season, Guid episodeId)
+        => CreateMetadata(showInfo, seasonInfo, episodeInfo, null, season.GetPreferredMetadataLanguage(), season.GetPreferredMetadataCountryCode(), season, episodeId);
 
-    public static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage, string metadataCountryCode)
-        => CreateMetadata(group, series, episode, file, metadataLanguage, metadataCountryCode, null, Guid.Empty);
+    public static Episode CreateMetadata(Info.ShowInfo showInfo, Info.SeasonInfo seasonInfo, Info.EpisodeInfo episodeInfo, Info.FileInfo? file, string metadataLanguage, string metadataCountryCode)
+        => CreateMetadata(showInfo, seasonInfo, episodeInfo, file, metadataLanguage, metadataCountryCode, null, Guid.Empty);
 
-    private static Episode CreateMetadata(Info.ShowInfo group, Info.SeasonInfo series, Info.EpisodeInfo episode, Info.FileInfo? file, string metadataLanguage, string metadataCountryCode, Season? season, Guid episodeId)
-    {
+    private static Episode CreateMetadata(Info.ShowInfo showInfo, Info.SeasonInfo seasonInfo, Info.EpisodeInfo episodeInfo, Info.FileInfo? fileInfo, string metadataLanguage, string metadataCountryCode, Season? season, Guid episodeId) {
         var config = Plugin.Instance.Configuration;
+        var episodeNumber = Ordering.GetEpisodeNumber(showInfo, seasonInfo, episodeInfo);
+        var seasonNumber = Ordering.GetSeasonNumber(showInfo, seasonInfo, episodeInfo);
+        var (airsBeforeEpisodeNumber, airsBeforeSeasonNumber, airsAfterSeasonNumber, isSpecial) = Ordering.GetSpecialPlacement(showInfo, seasonInfo, episodeInfo);
         string? displayTitle, alternateTitle, description;
-        if (file != null && file.EpisodeList.Count > 1) {
+        if (fileInfo is not null && fileInfo.EpisodeList.Count > 1) {
             var displayTitles = new List<string?>();
             var alternateTitles = new List<string?>();
-            foreach (var (episodeInfo, _, _) in file.EpisodeList) {
-                string defaultEpisodeTitle = episodeInfo.Shoko.Name;
+            foreach (var (eI, _, _) in fileInfo.EpisodeList) {
+                string defaultEpisodeTitle = eI.Title;
+                string? dTitle, aTitle;
                 if (
                     // Movies
-                    (series.Type == SeriesType.Movie && (episodeInfo.AniDB.Type == EpisodeType.Normal || episodeInfo.AniDB.Type == EpisodeType.Special)) ||
-                    // OVAs
-                    (series.AniDB.Type == SeriesType.OVA && episodeInfo.AniDB.Type == EpisodeType.Normal && episodeInfo.AniDB.EpisodeNumber == 1 && episodeInfo.Shoko.Name == "OVA")
-                ) {
-                    string defaultSeriesTitle = series.Shoko.Name;
-                    var (dTitle, aTitle) = Text.GetMovieTitles(episodeInfo, series, metadataLanguage);
-                    displayTitles.Add(dTitle);
-                    alternateTitles.Add(aTitle);
-                }
-                else {
-                    var (dTitle, aTitle) = Text.GetEpisodeTitles(episodeInfo, series, metadataLanguage);
-                    displayTitles.Add(dTitle);
-                    alternateTitles.Add(aTitle);
-                }
+                    (seasonInfo.Type == SeriesType.Movie && eI.Type is EpisodeType.Normal or EpisodeType.Special) ||
+                    // All other ignored types.
+                    (
+                        eI.Type is EpisodeType.Normal &&
+                        eI.EpisodeNumber == 1 &&
+                        eI.Titles.FirstOrDefault(title => title.Source is "AniDB" && title.LanguageCode is "en")?.Value is { } mainTitle &&
+                        TextUtility.IgnoredSubTitles.Contains(mainTitle) &&
+                        TextUtility.GetEpisodeTitles(eI, seasonInfo, metadataLanguage) is { } episodeTitles &&
+                        string.IsNullOrEmpty(episodeTitles.displayTitle)
+                    )
+                )
+                    (dTitle, aTitle) = TextUtility.GetMovieTitles(eI, seasonInfo, metadataLanguage);
+                else
+                    (dTitle, aTitle) = TextUtility.GetEpisodeTitles(eI, seasonInfo, metadataLanguage);
+
+                if (string.IsNullOrEmpty(dTitle))
+                    dTitle = eI.Type switch {
+                        EpisodeType.Special => $"Special {Ordering.GetEpisodeNumber(showInfo, seasonInfo, eI)}",
+                        _ => $"Episode {Ordering.GetEpisodeNumber(showInfo, seasonInfo, eI)}",
+                    };
+
+                displayTitles.Add(dTitle);
+                alternateTitles.Add(aTitle);
             }
-            displayTitle = Text.JoinText(displayTitles);
-            alternateTitle = Text.JoinText(alternateTitles);
-            description = Text.GetDescription(file.EpisodeList.Select(tuple => tuple.Episode), metadataLanguage);
+            displayTitle = TextUtility.JoinText(displayTitles);
+            alternateTitle = TextUtility.JoinText(alternateTitles);
+            description = TextUtility.GetEpisodeDescription(fileInfo.EpisodeList.Select(tuple => tuple.Episode), seasonInfo, metadataLanguage);
         }
         else {
-            string defaultEpisodeTitle = episode.Shoko.Name;
+            string defaultEpisodeTitle = episodeInfo.Title;
             if (
                 // Movies
-                (series.Type == SeriesType.Movie && (episode.AniDB.Type == EpisodeType.Normal || episode.AniDB.Type == EpisodeType.Special)) ||
-                // OVAs
-                (series.AniDB.Type == SeriesType.OVA && episode.AniDB.Type == EpisodeType.Normal && episode.AniDB.EpisodeNumber == 1 && episode.Shoko.Name == "OVA")
-            ) {
-                string defaultSeriesTitle = series.Shoko.Name;
-                (displayTitle, alternateTitle) = Text.GetMovieTitles(episode, series, metadataLanguage);
-            }
-            else {
-                (displayTitle, alternateTitle) = Text.GetEpisodeTitles(episode, series, metadataLanguage);
-            }
-            description = Text.GetDescription(episode, metadataLanguage);
+                (seasonInfo.Type == SeriesType.Movie && episodeInfo.Type is EpisodeType.Normal or EpisodeType.Special) ||
+                // All other ignored types.
+                (
+                    episodeInfo.Type is EpisodeType.Normal &&
+                    episodeInfo.EpisodeNumber == 1 &&
+                    episodeInfo.Titles.FirstOrDefault(title => title.Source is "AniDB" && title.LanguageCode is "en")?.Value is { } mainTitle &&
+                    TextUtility.IgnoredSubTitles.Contains(mainTitle) &&
+                    TextUtility.GetEpisodeTitles(episodeInfo, seasonInfo, metadataLanguage) is { } episodeTitles &&
+                    string.IsNullOrEmpty(episodeTitles.displayTitle)
+                )
+            )
+                (displayTitle, alternateTitle) = TextUtility.GetMovieTitles(episodeInfo, seasonInfo, metadataLanguage);
+            else
+                (displayTitle, alternateTitle) = TextUtility.GetEpisodeTitles(episodeInfo, seasonInfo, metadataLanguage);
+
+            if (string.IsNullOrEmpty(displayTitle))
+                displayTitle = episodeInfo.Type switch {
+                    EpisodeType.Special => $"Special {episodeNumber}",
+                    _ => $"Episode {episodeNumber}",
+                };
+
+            description = TextUtility.GetEpisodeDescription(episodeInfo, seasonInfo, metadataLanguage);
         }
 
-        if (config.MarkSpecialsWhenGrouped) switch (episode.AniDB.Type) {
-            case EpisodeType.Other:
-            case EpisodeType.Normal:
-                break;
-            case EpisodeType.Special: {
-                // We're guaranteed to find the index, because otherwise it would've thrown when getting the episode number.
-                var index = series.SpecialsList.FindIndex(ep => ep == episode);
-                displayTitle = $"S{index + 1} {displayTitle}";
-                alternateTitle = $"S{index + 1} {alternateTitle}";
-                break;
-            }
-            case EpisodeType.ThemeSong:
-            case EpisodeType.EndingSong:
-            case EpisodeType.OpeningSong:
-                displayTitle = $"C{episode.AniDB.EpisodeNumber} {displayTitle}";
-                alternateTitle = $"C{episode.AniDB.EpisodeNumber} {alternateTitle}";
-                break;
-            case EpisodeType.Trailer:
-                displayTitle = $"T{episode.AniDB.EpisodeNumber} {displayTitle}";
-                alternateTitle = $"T{episode.AniDB.EpisodeNumber} {alternateTitle}";
-                break;
-            case EpisodeType.Parody:
-                displayTitle = $"P{episode.AniDB.EpisodeNumber} {displayTitle}";
-                alternateTitle = $"P{episode.AniDB.EpisodeNumber} {alternateTitle}";
-                break;
-            default:
-                displayTitle = $"U{episode.AniDB.EpisodeNumber} {displayTitle}";
-                alternateTitle = $"U{episode.AniDB.EpisodeNumber} {alternateTitle}";
-                break;
+        if (isSpecial && config.MarkSpecialsWhenGrouped) {
+            // We're guaranteed to find the index, because otherwise it would've thrown when getting the episode number.
+            var index = seasonInfo.SpecialsList.FindIndex(ep => ep == episodeInfo);
+            displayTitle = $"S{index + 1} {displayTitle}";
+            alternateTitle = $"S{index + 1} {alternateTitle}";
         }
-
-        var episodeNumber = Ordering.GetEpisodeNumber(group, series, episode);
-        var seasonNumber = Ordering.GetSeasonNumber(group, series, episode);
-        var (airsBeforeEpisodeNumber, airsBeforeSeasonNumber, airsAfterSeasonNumber, isSpecial) = Ordering.GetSpecialPlacement(group, series, episode);
 
         Episode result;
-        if (season != null) {
+        if (season is not null) {
             result = new Episode {
-                Name = displayTitle,
-                OriginalTitle = alternateTitle,
+                Name = displayTitle ?? $"Episode {episodeNumber}",
+                OriginalTitle = alternateTitle ?? "",
                 IndexNumber = episodeNumber,
                 ParentIndexNumber = isSpecial ? 0 : seasonNumber,
                 AirsAfterSeasonNumber = airsAfterSeasonNumber,
@@ -205,15 +191,15 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
                 SeasonId = season.Id,
                 SeriesId = season.Series.Id,
                 Overview = description,
-                CommunityRating = episode.AniDB.Rating.Value > 0 ? episode.AniDB.Rating.ToFloat(10) : 0,
-                PremiereDate = episode.AniDB.AirDate,
+                CommunityRating = episodeInfo.CommunityRating.Value > 0 ? episodeInfo.CommunityRating.ToFloat(10) : 0,
+                PremiereDate = episodeInfo.AiredAt,
                 SeriesName = season.Series.Name,
                 SeriesPresentationUniqueKey = season.SeriesPresentationUniqueKey,
                 SeasonName = season.Name,
-                ProductionLocations = TagFilter.GetSeasonProductionLocations(series),
-                OfficialRating = ContentRating.GetSeasonContentRating(series, metadataCountryCode),
+                ProductionLocations = TagFilter.GetProductionLocations(episodeInfo),
+                OfficialRating = ContentRating.GetContentRating(episodeInfo, metadataCountryCode),
                 DateLastSaved = DateTime.UtcNow,
-                RunTimeTicks = episode.AniDB.Duration.Ticks,
+                RunTimeTicks = episodeInfo.Runtime?.Ticks,
             };
             result.PresentationUniqueKey = result.GetPresentationUniqueKey();
         }
@@ -226,43 +212,45 @@ public class EpisodeProvider: IRemoteMetadataProvider<Episode, EpisodeInfo>, IHa
                 AirsAfterSeasonNumber = airsAfterSeasonNumber,
                 AirsBeforeEpisodeNumber = airsBeforeEpisodeNumber,
                 AirsBeforeSeasonNumber = airsBeforeSeasonNumber,
-                PremiereDate = episode.AniDB.AirDate,
+                PremiereDate = episodeInfo.AiredAt,
                 Overview = description,
-                ProductionLocations = TagFilter.GetSeasonProductionLocations(series),
-                OfficialRating = ContentRating.GetSeasonContentRating(series, metadataCountryCode),
-                CustomRating = group.CustomRating,
-                CommunityRating = episode.AniDB.Rating.Value > 0 ? episode.AniDB.Rating.ToFloat(10) : 0,
+                ProductionLocations = TagFilter.GetProductionLocations(episodeInfo),
+                OfficialRating = ContentRating.GetContentRating(episodeInfo, metadataCountryCode),
+                CustomRating = showInfo.CustomRating,
+                CommunityRating = episodeInfo.CommunityRating.Value > 0 ? episodeInfo.CommunityRating.ToFloat(10) : 0,
             };
         }
 
-        if (file != null && file.EpisodeList.Count > 1) {
-            var episodeNumberEnd = episodeNumber + file.EpisodeList.Count - 1;
-            if (episodeNumberEnd != episodeNumber && episode.AniDB.EpisodeNumber != episodeNumberEnd)
+        if (fileInfo is not null && fileInfo.EpisodeList.Count > 1) {
+            var episodeNumberEnd = episodeNumber + fileInfo.EpisodeList.Count - 1;
+            if (episodeNumberEnd != episodeNumber && episodeInfo.EpisodeNumber != episodeNumberEnd)
                 result.IndexNumberEnd = episodeNumberEnd;
         }
 
-        AddProviderIds(result, episodeId: episode.Id, fileId: file?.Id, seriesId: file?.SeriesId, anidbId: episode.AniDB.Id.ToString());
+        if (fileInfo is not null) {
+            result.SetProviderId(ShokoInternalId.Name, fileInfo.InternalId);
+            result.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetFileInfoUrls(fileInfo));
+            result.SetProviderId(ProviderNames.ShokoFile, fileInfo.Id);
+            result.SetProviderId(ProviderNames.ShokoSeries, fileInfo.SeriesId);
+        }
+        else {
+            result.SetProviderId(ShokoInternalId.Name, episodeInfo.InternalId);
+            result.SetProviderId(ProviderNames.Shoko, ShokoExternalUrlHandler.GetEpisodeInfoUrls(episodeInfo));
+        }
+        result.SetProviderId(ProviderNames.ShokoEpisode, episodeInfo.Id);
+        if (config.AddAniDBId && episodeInfo.AnidbEpisodeId is { Length: > 0 } anidbEpisodeId)
+            result.SetProviderId(ProviderNames.Anidb, anidbEpisodeId);
+        if (config.AddTMDBId && episodeInfo.TmdbEpisodeId is { Length: > 0 } tmdbEpisodeId)
+            result.SetProviderId(MetadataProvider.Tmdb, tmdbEpisodeId);
+        if (config.AddTvDBId && episodeInfo.TvdbEpisodeId is { Length: > 0 } tvdbEpisodeId)
+            result.SetProviderId(MetadataProvider.Tvdb, tvdbEpisodeId);
 
         return result;
-    }
-
-    private static void AddProviderIds(IHasProviderIds item, string episodeId, string? fileId = null, string? seriesId = null, string? anidbId = null, string? tmdbId = null)
-    {
-        var config = Plugin.Instance.Configuration;
-        item.SetProviderId(ShokoEpisodeId.Name, episodeId);
-        if (!string.IsNullOrEmpty(fileId))
-            item.SetProviderId(ShokoFileId.Name, fileId);
-        if (!string.IsNullOrEmpty(seriesId))
-            item.SetProviderId(ShokoSeriesId.Name, seriesId);
-        if (config.AddAniDBId && !string.IsNullOrEmpty(anidbId) && anidbId != "0")
-            item.SetProviderId("AniDB", anidbId);
-        if (config.AddTMDBId &&!string.IsNullOrEmpty(tmdbId) && tmdbId != "0")
-            item.SetProviderId(MetadataProvider.Tmdb, tmdbId);
     }
 
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo searchInfo, CancellationToken cancellationToken)
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+        => _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }

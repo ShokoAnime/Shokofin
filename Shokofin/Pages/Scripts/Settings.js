@@ -22,9 +22,11 @@ promise.then(({
     ShokoApiClient,
     State,
     createControllerFactory,
+    escapeHtml,
+    getParentWithClass,
     handleError,
+    overrideSortableCheckboxList,
     renderCheckboxList,
-    renderReadonlyList,
     renderSortableCheckboxList,
     retrieveCheckboxList,
     retrieveSortableCheckboxList,
@@ -34,7 +36,7 @@ promise.then(({
 //#region Constants
 
 /**
- * @typedef {"Connection" | "Metadata_Title" | "Metadata_Description" | "Metadata_TagGenre" | "Metadata_Image" | "Metadata_Misc" | "Metadata_ThirdPartyIntegration" | "Library_Basic" | "Library_Collection" | "Library_New" | "Library_Existing" | "Library_Experimental" | "VFS_Basic" | "VFS_Location" | "User" | "SignalR_Connection" | "SignalR_Basic" | "SignalR_Library_New" | "SignalR_Library_Existing" | "Misc" | "Utilities"} SectionType
+ * @typedef {"Connection" | "Metadata_Title" | "Metadata_Description" | "Metadata_TagGenre" | "Metadata_Image" | "Metadata_Misc" | "Library_Basic" | "Library_Collection" | "Library_MultipleVersions" | "Library_MediaFolder" | "Library_SeasonMerging" | "VFS_Basic" | "VFS_Location" | "User" | "Series" | "SignalR_Connection" | "SignalR_Basic" | "SignalR_Library_New" | "SignalR_Library_Existing" | "Misc" | "Debug" | "Utilities"} SectionType
  */
 
 const MaxDebugPresses = 7;
@@ -49,32 +51,37 @@ const Sections = [
     "Metadata_TagGenre",
     "Metadata_Image",
     "Metadata_Misc",
-    "Metadata_ThirdPartyIntegration",
     "Library_Basic",
     "Library_Collection",
-    "Library_New",
-    "Library_Existing",
-    "Library_Experimental",
+    "Library_MultipleVersions",
+    "Library_MediaFolder",
+    "Library_SeasonMerging",
     "VFS_Basic",
     "VFS_Location",
     "User",
+    "Series",
     "SignalR_Connection",
     "SignalR_Basic",
     "SignalR_Library_New",
     "SignalR_Library_Existing",
     "Misc",
+    "Debug",
     "Utilities",
 ];
 
 const Messages = {
-    ExpertModeCountdown: "Press <count> more times to <toggle> advanced mode.",
+    ViewModeCountdown: "Press <count> more times to <toggle> view mode.",
     ExpertModeEnabled: "Advanced mode enabled.",
     ExpertModeDisabled: "Advanced mode disabled.",
+    DebugModeEnabled: "Debug mode enabled.",
+    DebugModeDisabled: "Debug mode disabled.",
     ConnectToShoko: "Please establish a connection to a running instance of Shoko Server before you continue.",
     ConnectedToShoko: "Connection established.",
     DisconnectedToShoko: "Connection has been reset.",
     InvalidCredentials: "An error occurred while trying to authenticating the user using the provided credentials.",
 };
+
+let alternateTitleListTemplate = "";
 
 //#endregion
 
@@ -88,24 +95,199 @@ createControllerFactory({
             const view = this;
             const form = view.querySelector("form");
 
-            form.querySelector("#ServerVersion").addEventListener("click", async function () {
-                if (++State.expertPresses === MaxDebugPresses) {
-                    State.expertPresses = 0;
-                    State.expertMode = !State.expertMode;
-                    const config = await toggleExpertMode(State.expertMode);
+            if (alternateTitleListTemplate === "") {
+                alternateTitleListTemplate = form.querySelector("#TitleAlternateListContainer").innerHTML;
+                form.querySelector("#TitleAlternateListContainer").innerHTML = "";
+            }
+
+            form.querySelector("#ServerVersion").addEventListener("click", async function onVersionClick() {
+                if (++State.clickCounter === MaxDebugPresses) {
+                    State.clickCounter = 0;
+                    State.advancedMode = !State.advancedMode;
+                    State.debugMode = false;
+                    // Reset the metadata views if we're disabling expert mode.
+                    if (!State.advancedMode) {
+                        State.metadata.title = "Default";
+                        State.metadata.description = "Default";
+                        State.metadata.image = "Default";
+                    }
+                    const config = await toggleExpertMode(State.advancedMode, State.debugMode);
                     await updateView(view, form, config);
                     return;
                 }
-                if (State.expertPresses >= 3)
-                    Dashboard.alert(Messages.ExpertModeCountdown.replace("<count>", MaxDebugPresses - State.expertPresses).replace("<toggle>", State.expertMode ? "disable" : "enable"));
+                if (State.clickCounter >= 3)
+                    Dashboard.alert(Messages.ViewModeCountdown.replace("<count>", MaxDebugPresses - State.clickCounter).replace("<toggle>", State.advancedMode ? "disable" : "enable"));
+            });
+
+            form.querySelector(".sectionTitleContainer > a").addEventListener("click", async function(event) {
+                if ((State.clickCounter + 1) === MaxDebugPresses) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    State.clickCounter = 0;
+                    State.advancedMode = !State.advancedMode;
+                    State.debugMode = State.advancedMode;
+                    // Reset the metadata views if we're disabling expert mode.
+                    if (!State.advancedMode) {
+                        State.metadata.title = "Default";
+                        State.metadata.description = "Default";
+                        State.metadata.image = "Default";
+                    }
+                    const config = await toggleExpertMode(State.advancedMode, State.debugMode);
+                    await updateView(view, form, config);
+                    return;
+                }
             });
 
             form.querySelector("#UserSelector").addEventListener("change", function () {
                 applyUserConfigToForm(form, this.value);
             });
 
+            form.querySelector("#SeriesSearch").addEventListener("input", function () {
+                const value = this.value.trim();
+                if (State.seriesQuery === value && State.seriesTimeout) {
+                    return;
+                }
+
+                if (State.seriesTimeout) {
+                    clearTimeout(State.seriesTimeout);
+                }
+
+                const timeout = State.seriesTimeout = setTimeout(async () => {
+                    if (State.seriesTimeout !== timeout) {
+                        return;
+                    }
+
+                    console.log("Series Search: " + value);
+                    State.seriesQuery = value;
+                    applySeriesConfigToForm(form, "");
+                    form.querySelector("#SeriesSelector").setAttribute("disabled", "");
+                    try {
+                        State.seriesList = await ShokoApiClient.getSeriesList(value);
+                    }
+                    catch (error) {
+                        console.log(error, "Got an error attempting to search for a series.");
+                        form.querySelector("#SeriesSelector").value = "";
+                        form.querySelector("#SeriesSelector").innerHTML = `<option value="">Failed to load series!</option>`;
+                        form.querySelector("#SeriesSelector").removeAttribute("disabled");
+                        return;
+                    }
+
+                    if (State.seriesTimeout !== timeout) {
+                        console.log("Returned too late for series search: " + value);
+                        return;
+                    }
+
+                    const series = State.seriesList;
+                    const seriesId = value && series.length > 0 ? series[0].Id.toString() : "";
+                    State.seriesTimeout = null;
+                    form.querySelector("#SeriesSelector").innerHTML =
+                        `<option value="">Click here to select a series</option>` +
+                        series.map((s) => `<option value="${s.Id}">${s.Title.length >= 50 ? `${s.Title.substring(0, 47)}...` : s.Title} (a${s.AnidbId})</option>`).join("");
+                    form.querySelector("#SeriesSelector").removeAttribute("disabled");
+                    form.querySelector("#SeriesSelector").value = seriesId;
+                    applySeriesConfigToForm(form, seriesId);
+                }, 250);
+            });
+
+            form.querySelector("#SeriesSelector").addEventListener("change", function () {
+                applySeriesConfigToForm(form, this.value);
+            });
+
+            form.querySelectorAll("#SeriesSeasonMergingBehavior input").forEach(input => input.addEventListener("change", onSeasonMergingBehaviorChange));
+
+            function onSeasonMergingBehaviorChange() {
+                const option = this.getAttribute("data-option");
+                const value = this.checked;
+                if (option === "NoMerge") {
+                    if (value) {
+                        form.querySelectorAll("#SeriesSeasonMergingBehavior input").forEach((input) => {
+                            if (input !== this) {
+                                input.checked = false;
+                            }
+                        });
+                    }
+                    return;
+                }
+
+                if (value) {
+                    const input = form.querySelector("#SeriesSeasonMergingBehavior input[data-option=\"NoMerge\"]");
+                    if (input.getAttribute("data-option") === "NoMerge" && input.checked) {
+                        input.checked = false;
+                    }
+                }
+
+                if (option.startsWith("MergeGroup")) {
+                    const reverse = option.slice(0, 11) + (option.slice(11) === "Target" ? "Source" : "Target");
+                    const reversedInput = form.querySelector(`#SeriesSeasonMergingBehavior input[data-option="${reverse}"]`);
+                    if (value) {
+                        reversedInput.checked = false;
+                    }
+                }
+            }
+
+            form.querySelector("#Title_ConfigureFor").addEventListener("change", function () {
+                applyTitleFormToConfig(form, State.config);
+                State.metadata.title = this.value;
+                applyConfigToForm(form, State.config);
+            });
+
+            form.querySelector("#Description_ConfigureFor").addEventListener("change", function () {
+                applyDescriptionFormToConfig(form, State.config);
+                State.metadata.description = this.value;
+                applyConfigToForm(form, State.config);
+            });
+
+            form.querySelector("#Image_ConfigureFor").addEventListener("change", function () {
+                applyImageFormToConfig(form, State.config);
+                State.metadata.image = this.value;
+                applyConfigToForm(form, State.config);
+            });
+
             form.querySelector("#MediaFolderSelector").addEventListener("change", function () {
                 applyLibraryConfigToForm(form, this.value);
+            });
+
+            form.querySelector("#MediaFolderLibraryOperationMode").addEventListener("change", function () {
+                const libraryId = form.querySelector("#MediaFolderSelector").value;
+                if (!libraryId) return;
+                const value = this.value;
+                const mediaFolders = State.config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
+                renderFolderList(form, value !== "VFS", "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
+            });
+
+            form.querySelector("#MediaFolderManagedFolderMapping .btnAddFolder").addEventListener("click", function () {
+                const libraryId = form.querySelector("#MediaFolderSelector").value;
+                if (!libraryId) return;
+                const picker = new Dashboard.DirectoryBrowser();
+                picker.show({ callback: function (path) {
+                    if (path) {
+                        addMediaFolder(form, libraryId, State.config, path);
+                    }
+                    picker.close();
+                } });
+            });
+
+            form.querySelector("#MediaFolderManagedFolderMapping .folderList").addEventListener("click",  function (e) {
+                const libraryId = form.querySelector("#MediaFolderSelector").value;
+                if (!libraryId) return;
+                const button = getParentWithClass(e.target, "listItemButton");
+                if (!button) return;
+                const name = button.getAttribute("name");
+                const listItem = getParentWithClass(button, "listItem");
+                if (!listItem || !name) return;
+                const index = parseInt(listItem.getAttribute("data-index"), 10);
+                if (Number.isNaN(index)) return;
+                switch (name) {
+                    case "search":
+                        toggleRefreshOfMediaFolder(form, libraryId, State.config, index);
+                        break;
+                    case "ignore":
+                        toggleIgnoredMediaFolder(form, libraryId, State.config, index);
+                        break;
+                    case "remove-path":
+                        removeMediaFolder(form, libraryId, State.config, index);
+                        break;
+                }
             });
 
             form.querySelector("#SignalRMediaFolderSelector").addEventListener("change", function () {
@@ -131,16 +313,6 @@ createControllerFactory({
                 }
             });
 
-            form.querySelector("#UseGroupsForShows").addEventListener("change", function () {
-                form.querySelector("#SeasonOrdering").disabled = !this.checked;
-                if (this.checked) {
-                    form.querySelector("#SeasonOrderingContainer").removeAttribute("hidden");
-                }
-                else {
-                    form.querySelector("#SeasonOrderingContainer").setAttribute("hidden", "");
-                }
-            });
-
             form.addEventListener("submit", function (event) {
                 event.preventDefault();
                 if (!event.submitter) return;
@@ -151,13 +323,18 @@ createControllerFactory({
                             .then((config) => updateView(view, form, config))
                             .catch(handleError);
                         break;
-                    case "remove-library":
-                        removeLibraryConfig(form)
+                    case "unlink-user":
+                        removeUserConfig(form)
                             .then((config) => updateView(view, form, config))
                             .catch(handleError);
                         break;
-                    case "unlink-user":
-                        removeUserConfig(form)
+                    case "remove-alternate-title":
+                        removeAlternateTitle(form, parseInt(event.submitter.dataset.index, 10))
+                            .then((config) => updateView(view, form, config))
+                            .catch(handleError);
+                        break;
+                    case "add-alternate-title":
+                        addAlternateTitle(form)
                             .then((config) => updateView(view, form, config))
                             .catch(handleError);
                         break;
@@ -222,15 +399,22 @@ createControllerFactory({
  */
 async function updateView(view, form, config) {
     State.config = config;
-    State.expertPresses = 0;
-    State.expertMode = config.ExpertMode;
+    State.clickCounter = 0;
+    State.advancedMode = config.AdvancedMode;
+    State.debugMode = config.Debug.ShowInUI;
     State.connected = Boolean(config.ApiKey);
 
-    if (State.expertMode) {
-        form.classList.add("expert-mode");
+    if (State.advancedMode) {
+        form.classList.add("advanced-mode");
     }
     else {
-        form.classList.remove("expert-mode");
+        form.classList.remove("advanced-mode");
+    }
+    if (State.debugMode) {
+        form.classList.add("debug-mode");
+    }
+    else {
+        form.classList.remove("debug-mode");
     }
 
     if (!config.CanCreateSymbolicLinks) {
@@ -291,11 +475,26 @@ async function updateView(view, form, config) {
             break;
 
         case "metadata":
-            activeSections.push("Metadata_Title", "Metadata_Description", "Metadata_TagGenre", "Metadata_Image", "Metadata_Misc", "Metadata_ThirdPartyIntegration");
+            activeSections.push("Metadata_Title", "Metadata_Description", "Metadata_TagGenre", "Metadata_Image", "Metadata_Misc");
+            if (form.querySelector("#Title_ConfigureFor").value !== State.metadata.title) {
+                form.querySelector("#Title_ConfigureFor").value = State.metadata.title;
+            }
+            if (form.querySelector("#Description_ConfigureFor").value !== State.metadata.description) {
+                form.querySelector("#Description_ConfigureFor").value = State.metadata.description;
+            }
+            if (form.querySelector("#Image_ConfigureFor").value !== State.metadata.image) {
+                form.querySelector("#Image_ConfigureFor").value = State.metadata.image;
+            }
+            if (form.querySelectorAll("#TitleAlternateListContainer > fieldset").length >= 5) {
+                form.querySelector("button[name=\"add-alternate-title\"]").setAttribute("disabled", "");
+            }
+            else {
+                form.querySelector("button[name=\"add-alternate-title\"]").removeAttribute("disabled");
+            }
             break;
 
         case "library":
-            activeSections.push("Library_Basic", "Library_Collection", "Library_New", "Library_Existing", "Library_Experimental");
+            activeSections.push("Library_Basic", "Library_Collection", "Library_MultipleVersions", "Library_MediaFolder", "Library_SeasonMerging");
 
             await applyLibraryConfigToForm(form, form.querySelector("#MediaFolderSelector").value, config);
             break;
@@ -310,6 +509,12 @@ async function updateView(view, form, config) {
             await applyUserConfigToForm(form, form.querySelector("#UserSelector").value, config);
             break;
 
+        case "series":
+            activeSections.push("Series");
+
+            await applySeriesConfigToForm(form, form.querySelector("#SeriesSelector").value, config);
+            break;
+
         case "signalr":
             activeSections.push("SignalR_Connection", "SignalR_Basic", "SignalR_Library_New", "SignalR_Library_Existing");
 
@@ -317,7 +522,7 @@ async function updateView(view, form, config) {
             break;
 
         case "misc":
-            activeSections.push("Misc");
+            activeSections.push("Misc", "Debug");
             break;
 
         case "utilities":
@@ -376,68 +581,103 @@ function updateSignalrStatus(form, status) {
 function applyFormToConfig(form, config) {
     switch (State.currentTab) {
         case "metadata": {
-            ([config.TitleMainList, config.TitleMainOrder] = retrieveSortableCheckboxList(form, "TitleMainList"));
-            ([config.TitleAlternateList, config.TitleAlternateOrder] = retrieveSortableCheckboxList(form, "TitleAlternateList"));
-            config.TitleAllowAny = form.querySelector("#TitleAllowAny").checked;
             config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
-            ([config.DescriptionSourceList, config.DescriptionSourceOrder] = retrieveSortableCheckboxList(form, "DescriptionSourceList"));
-            config.SynopsisCleanLinks = form.querySelector("#CleanupAniDBDescriptions").checked;
-            config.SynopsisCleanMultiEmptyLines = form.querySelector("#CleanupAniDBDescriptions").checked;
-            config.SynopsisCleanMiscLines = form.querySelector("#CleanupAniDBDescriptions").checked;
-            config.SynopsisRemoveSummary = form.querySelector("#CleanupAniDBDescriptions").checked;
-            config.AddImageLanguageCode = form.querySelector("#AddImageLanguageCode").checked;
-            config.RespectPreferredImage = form.querySelector("#RespectPreferredImage").checked;
+            applyTitleFormToConfig(form, config);
+
+            config.DescriptionConversionMode = form.querySelector("#DescriptionConversionMode").value;
+            applyDescriptionFormToConfig(form, config);
+
+            const tagExcludeList = filterTags(form.querySelector("#TagExcludeList").value);
+            const genreExcludeList = filterTags(form.querySelector("#GenreExcludeList").value);
             config.HideUnverifiedTags = form.querySelector("#HideUnverifiedTags").checked;
             config.TagSources = retrieveCheckboxList(form, "TagSources").join(", ");
             config.TagIncludeFilters = retrieveCheckboxList(form, "TagIncludeFilters").join(", ");
             config.TagMinimumWeight = form.querySelector("#TagMinimumWeight").value;
             config.TagMaximumDepth = parseInt(form.querySelector("#TagMaximumDepth").value, 10);
+            config.TagExcludeList = tagExcludeList;
+            form.querySelector("#TagExcludeList").value = tagExcludeList.join(", ");
+
             config.GenreSources = retrieveCheckboxList(form, "GenreSources").join(", ");
             config.GenreIncludeFilters = retrieveCheckboxList(form, "GenreIncludeFilters").join(", ");
             config.GenreMinimumWeight = form.querySelector("#GenreMinimumWeight").value;
             config.GenreMaximumDepth = parseInt(form.querySelector("#GenreMaximumDepth").value, 10);
-            ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableCheckboxList(form, "ContentRatingList"));
-            ([config.ProductionLocationList, config.ProductionLocationOrder] = retrieveSortableCheckboxList(form, "ProductionLocationList"));
-            config.ThirdPartyIdProviderList = retrieveCheckboxList(form, "ThirdPartyIdProviderList");
+            config.GenreExcludeList = genreExcludeList;
+            form.querySelector("#GenreExcludeList").value = genreExcludeList.join(", ");
+
+            config.Image.DebugMode = form.querySelector("#Image_DebugMode").checked;
+            applyImageFormToConfig(form, config);
+
+            config.Metadata_StudioOnlyAnimationWorks = form.querySelector("#Metadata_StudioOnlyAnimationWorks").checked;
+            ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableCheckboxList(form, "Metadata_ContentRatingList"));
+            ([config.ProductionLocationList, config.ProductionLocationOrder] = retrieveSortableCheckboxList(form, "Metadata_ProductionLocationList"));
+            config.ThirdPartyIdProviderList = retrieveCheckboxList(form, "Metadata_ThirdPartyIdProviderList");
             break;
         }
 
         case "library": {
-            const libraryId = form.querySelector("#MediaFolderSelector").value.split(",");
-            const mediaFolders = libraryId ? config.MediaFolders.filter((m) => m.LibraryId === libraryId) : undefined;
+            const libraryId = form.querySelector("#MediaFolderSelector").value;
+            const libraries = libraryId ? config.Libraries.filter((m) => m.Id === libraryId) : undefined;
+            const seasonMergeWindow = sanitizeNumber(form.querySelector("#SeasonMerging_MergeWindowInDays").value);
+            const vfsIterativeGenerationMaxCount = sanitizeNumber(form.querySelector("#VFS_IterativeGenerationMaxCount").value, 0, 100);
 
-            config.AutoMergeVersions = form.querySelector("#AutoMergeVersions").checked;
-            config.UseGroupsForShows = form.querySelector("#UseGroupsForShows").checked;
-            config.SeasonOrdering = form.querySelector("#SeasonOrdering").value;
+            config.DefaultLibraryStructure = form.querySelector("#DefaultLibraryStructure").value;
+            config.DefaultSeasonOrdering = form.querySelector("#DefaultSeasonOrdering").value;
             config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
             config.FilterMovieLibraries = !form.querySelector("#DisableFilterMovieLibraries").checked;
-            config.SpecialsPlacement = form.querySelector("#SpecialsPlacement").value;
+            config.DefaultSpecialsPlacement = form.querySelector("#DefaultSpecialsPlacement").value;
             config.MovieSpecialsAsExtraFeaturettes = form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked;
             config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
+            config.AutoReconstructCollections = form.querySelector("#AutoReconstructCollections").checked;
             config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
             config.CollectionMinSizeOfTwo = form.querySelector("#CollectionMinSizeOfTwo").checked;
 
-            config.VFS_Enabled = form.querySelector("#VFS_Enabled").checked;
-            config.LibraryFilteringMode = form.querySelector("#LibraryFilteringMode").value;
-            if (mediaFolders) {
-                for (const c of mediaFolders) {
-                    c.IsVirtualFileSystemEnabled = form.querySelector("#MediaFolderVirtualFileSystem").checked;
-                    c.LibraryFilteringMode = form.querySelector("#MediaFolderLibraryFilteringMode").value;
+            config.AutoMergeVersions = form.querySelector("#AutoMergeVersions").checked;
+            ([config.MergeVersionSortSelectorList, config.MergeVersionSortSelectorOrder] = retrieveSortableCheckboxList(form, "MergeVersionSortSelectorList"));
+
+            config.DefaultLibraryOperationMode = form.querySelector("#DefaultLibraryOperationMode").value;
+            config.VFS_IterativeGenerationEnabled = form.querySelector("#VFS_IterativeGenerationEnabled").checked;
+            config.VFS_IterativeGenerationMaxCount = vfsIterativeGenerationMaxCount;
+            form.querySelector("#VFS_IterativeGenerationMaxCount").value = vfsIterativeGenerationMaxCount;
+            if (libraries) {
+                for (const c of libraries) {
+                    const maxCount = sanitizeNumber(form.querySelector("#MediaFolderLibraryIterativeGenerationMaxCount").value, 0, 100);
+                    c.LibraryOperationMode = form.querySelector("#MediaFolderLibraryOperationMode").value;
+                    c.IterativeVfsGeneration_Enabled = form.querySelector("#MediaFolderLibraryIterativeGenerationEnabled").checked;
+                    c.IterativeVfsGeneration_NoCache = form.querySelector("#MediaFolderLibraryIterativeGenerationNoCache").checked;
+                    c.IterativeVfsGeneration_MaxCount = maxCount;
+                    form.querySelector("#MediaFolderLibraryIterativeGenerationMaxCount").value = maxCount;
+                    c.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh = form.querySelector("#MediaFolderLibraryForceFullGenerationOnNextRefresh").checked;
                 }
             }
+
+            config.SeasonMerging_Enabled = form.querySelector("#SeasonMerging_Enabled").checked;
+            config.SeasonMerging_DefaultBehavior = form.querySelector("#SeasonMerging_AutoMerge").checked ? "None" : "NoMerge";
+            config.SeasonMerging_SeriesTypes = retrieveCheckboxList(form, "SeasonMerging_SeriesTypes");
+            config.SeasonMerging_MergeWindowInDays = seasonMergeWindow;
+            form.querySelector("#SeasonMerging_MergeWindowInDays").value = seasonMergeWindow;
             break;
         }
 
         case "vfs": {
+            const vfsTreads = sanitizeNumber(form.querySelector("#VFS_Threads").value, -1);
+            const vfsMaxTotalExceptionsBeforeAbort = sanitizeNumber(form.querySelector("#VFS_MaxTotalExceptionsBeforeAbort").value, 0, 10_000);
+            const vfsMaxSeriesExceptionsBeforeAbort = sanitizeNumber(form.querySelector("#VFS_MaxSeriesExceptionsBeforeAbort").value, 0, 1_000);
+
             config.AddTrailers = form.querySelector("#AddTrailers").checked;
             config.AddCreditsAsThemeVideos = form.querySelector("#AddCreditsAsThemeVideos").checked;
             config.AddCreditsAsSpecialFeatures = form.querySelector("#AddCreditsAsSpecialFeatures").checked;
             config.VFS_AddReleaseGroup = form.querySelector("#VFS_AddReleaseGroup").checked;
             config.VFS_AddResolution = form.querySelector("#VFS_AddResolution").checked;
 
+            config.VFS_Threads = vfsTreads;
+            form.querySelector("#VFS_Threads").value = vfsTreads;
             config.VFS_ResolveLinks = form.querySelector("#VFS_ResolveLinks").checked;
-            config.VFS_AttachRoot = form.querySelector("#VFS_AttachRoot").checked;
+            config.VFS_MaxTotalExceptionsBeforeAbort = vfsMaxTotalExceptionsBeforeAbort;
+            form.querySelector("#VFS_MaxTotalExceptionsBeforeAbort").value = vfsMaxTotalExceptionsBeforeAbort;
+            config.VFS_MaxSeriesExceptionsBeforeAbort = vfsMaxSeriesExceptionsBeforeAbort;
+            form.querySelector("#VFS_MaxSeriesExceptionsBeforeAbort").value = vfsMaxSeriesExceptionsBeforeAbort;
+            config.VFS_UseSemaphore = form.querySelector("#VFS_UseSemaphore").checked;
             config.VFS_Location = form.querySelector("#VFS_Location").value;
             config.VFS_CustomLocation = form.querySelector("#VFS_CustomLocation").value.trim() || null;
             break;
@@ -471,7 +711,7 @@ function applyFormToConfig(form, config) {
         case "signalr": {
             const reconnectIntervals = filterReconnectIntervals(form.querySelector("#SignalRAutoReconnectIntervals").value);
             const libraryId = form.querySelector("#SignalRMediaFolderSelector").value;
-            const mediaFolders = libraryId ? config.MediaFolders.filter((m) => m.LibraryId === libraryId) : undefined;
+            const libraries = libraryId ? config.Libraries.filter((m) => m.Id === libraryId) : undefined;
 
             config.SignalR_AutoConnectEnabled = form.querySelector("#SignalRAutoConnect").checked;
             config.SignalR_AutoReconnectInSeconds = reconnectIntervals;
@@ -481,8 +721,8 @@ function applyFormToConfig(form, config) {
             config.SignalR_FileEvents = form.querySelector("#SignalRDefaultFileEvents").checked;
             config.SignalR_RefreshEnabled = form.querySelector("#SignalRDefaultRefreshEvents").checked;
 
-            if (mediaFolders) {
-                for (const c of mediaFolders) {
+            if (libraries) {
+                for (const c of libraries) {
                     c.IsFileEventsEnabled = form.querySelector("#SignalRFileEvents").checked;
                     c.IsRefreshEventsEnabled = form.querySelector("#SignalRRefreshEvents").checked;
                 }
@@ -492,16 +732,95 @@ function applyFormToConfig(form, config) {
 
         case "misc": {
             const ignoredFolders = filterIgnoredFolders(form.querySelector("#IgnoredFolders").value);
+            const stallTime = sanitizeNumber(form.querySelector("#Debug_UsageTrackerStalledTimeInSeconds").value, 1, 10800);
+            const maxRequests = sanitizeNumber(form.querySelector("#Debug_MaxInFlightRequests").value, 1, 1000);
+            const seriesPageSize = sanitizeNumber(form.querySelector("#Debug_SeriesPageSize").value, 0, 10_000);
+            const expirationScanFrequency = sanitizeNumber(form.querySelector("#Debug_ExpirationScanFrequencyInMinutes").value, 1, 180);
+            const slidingExpiration = sanitizeNumber(form.querySelector("#Debug_SlidingExpirationInMinutes").value, 1, 180);
+            const absoluteExpiration = sanitizeNumber(form.querySelector("#Debug_AbsoluteExpirationRelativeToNowInMinutes").value, 1, 1440);
 
             config.Misc_ShowInMenu = form.querySelector("#Misc_ShowInMenu").checked;
             config.IgnoredFolders = ignoredFolders;
             form.querySelector("#IgnoredFolders").value = ignoredFolders.join(", ");
 
-            config.EXPERIMENTAL_MergeSeasons = form.querySelector("#EXPERIMENTAL_MergeSeasons").checked;
+            config.Debug.UsageTrackerStalledTimeInSeconds = stallTime;
+            form.querySelector("#Debug_UsageTrackerStalledTimeInSeconds").value = config.Debug.UsageTrackerStalledTimeInSeconds;
+            config.Debug.MaxInFlightRequests = maxRequests;
+            form.querySelector("#Debug_MaxInFlightRequests").value = config.Debug.MaxInFlightRequests;
+            config.Debug.SeriesPageSize = seriesPageSize;
+            form.querySelector("#Debug_SeriesPageSize").value = config.Debug.SeriesPageSize;
+            config.Debug.AutoClearClientCache = form.querySelector("#Debug_AutoClearClientCache").checked;
+            config.Debug.AutoClearManagerCache = form.querySelector("#Debug_AutoClearManagerCache").checked;
+            config.Debug.AutoClearVfsCache = form.querySelector("#Debug_AutoClearVfsCache").checked;
+            config.Debug.ExpirationScanFrequencyInMinutes = expirationScanFrequency;
+            form.querySelector("#Debug_ExpirationScanFrequencyInMinutes").value = config.Debug.ExpirationScanFrequencyInMinutes;
+            config.Debug.SlidingExpirationInMinutes = slidingExpiration;
+            form.querySelector("#Debug_SlidingExpirationInMinutes").value = config.Debug.SlidingExpirationInMinutes;
+            config.Debug.AbsoluteExpirationRelativeToNowInMinutes = absoluteExpiration;
+            form.querySelector("#Debug_AbsoluteExpirationRelativeToNowInMinutes").value = config.Debug.AbsoluteExpirationRelativeToNowInMinutes;
             break;
         }
     }
 }
+
+/**
+ * Apply the title settings from a form to a configuration object.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ */
+function applyTitleFormToConfig(form, config) {
+    if (config.Title[State.metadata.title].Enabled !== undefined) {
+        config.Title[State.metadata.title].Enabled = form.querySelector("#Title_ConfigureFor_Enabled").checked;
+    }
+    config.Title[State.metadata.title].RemoveDuplicates = form.querySelector("#RemoveDuplicateTitles").checked;
+    ([config.Title[State.metadata.title].MainTitle.List, config.Title[State.metadata.title].MainTitle.Order] = retrieveSortableCheckboxList(form, "TitleMainList"));
+    config.Title[State.metadata.title].MainTitle.AllowAny = form.querySelector("#TitleMainAllowAny").checked;
+
+    config.Title[State.metadata.title].AlternateTitles = [];
+    const alternateTitles = form.querySelectorAll("#TitleAlternateListContainer > fieldset");
+    for (let i = 1; i <= alternateTitles.length; i++) {
+        const [list, order] = retrieveSortableCheckboxList(form, `TitleAlternateList_${i}`);
+        config.Title[State.metadata.title].AlternateTitles.push({
+            List: list,
+            Order: order,
+            AllowAny: form.querySelector(`#TitleAlternateAllowAny_${i}`).checked,
+        });
+    }
+}
+
+/**
+ * Apply the description settings from a form to a configuration object.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ */
+function applyDescriptionFormToConfig(form, config) {
+    if (config.Description[State.metadata.description].Enabled !== undefined) {
+        config.Description[State.metadata.description].Enabled = form.querySelector("#Description_ConfigureFor_Enabled").checked;
+    }
+    config.Description[State.metadata.description].AddNotes = form.querySelector("#Description_AddNotes").checked;
+    ([config.Description[State.metadata.description].List, config.Description[State.metadata.description].Order] = retrieveSortableCheckboxList(form, "DescriptionSourceList"));
+}
+
+/**
+ * Apply the image settings from a form to a configuration object.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ */
+function applyImageFormToConfig(form, config) {
+    if (config.Image[State.metadata.image].Enabled !== undefined) {
+        config.Image[State.metadata.image].Enabled = form.querySelector("#Image_ConfigureFor_Enabled").checked;
+    }
+    config.Image[State.metadata.image].UsePreferred = form.querySelector("#Image_UsePreferred").checked;
+    config.Image[State.metadata.image].UseCommunityRating = form.querySelector("#Image_UseCommunityRating").checked;
+    config.Image[State.metadata.image].UseDimensions = form.querySelector("#Image_UseDimensions").checked;
+    ([config.Image[State.metadata.image].PosterList, config.Image[State.metadata.image].PosterOrder] = retrieveSortableCheckboxList(form, "Image_PosterList"));
+    ([config.Image[State.metadata.image].LogoList, config.Image[State.metadata.image].LogoOrder] = retrieveSortableCheckboxList(form, "Image_LogoList"));
+    ([config.Image[State.metadata.image].BackdropList, config.Image[State.metadata.image].BackdropOrder] = retrieveSortableCheckboxList(form, "Image_BackdropList"));
+}
+
 
 //#endregion
 
@@ -524,71 +843,83 @@ async function applyConfigToForm(form, config) {
         }
 
         case "metadata": {
-            renderSortableCheckboxList(form, "TitleMainList", config.TitleMainList, config.TitleMainOrder);
-            renderSortableCheckboxList(form, "TitleAlternateList", config.TitleAlternateList, config.TitleAlternateOrder);
-            form.querySelector("#TitleAllowAny").checked = config.TitleAllowAny;
+            form.querySelector("#Title_ConfigureFor_Enabled").checked = config.Title[State.metadata.title].Enabled !== false;
+            form.querySelector("#Title_ConfigureFor_Enabled").disabled = config.Title[State.metadata.title].Enabled === undefined;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
-            renderSortableCheckboxList(form, "DescriptionSourceList", config.DescriptionSourceList, config.DescriptionSourceOrder);
-            form.querySelector("#CleanupAniDBDescriptions").checked = (
-                config.SynopsisCleanMultiEmptyLines ||
-                config.SynopsisCleanLinks ||
-                config.SynopsisRemoveSummary ||
-                config.SynopsisCleanMiscLines
-            );
-            form.querySelector("#AddImageLanguageCode").checked = config.AddImageLanguageCode;
-            form.querySelector("#RespectPreferredImage").checked = config.RespectPreferredImage;
+            form.querySelector("#RemoveDuplicateTitles").checked = config.Title[State.metadata.title].RemoveDuplicates;
+            renderSortableCheckboxList(form, "TitleMainList", config.Title[State.metadata.title].MainTitle.List, config.Title[State.metadata.title].MainTitle.Order);
+            form.querySelector("#TitleMainAllowAny").checked = config.Title[State.metadata.title].MainTitle.AllowAny;
+
+            const configAlternateTitles = [...config.Title[State.metadata.title].AlternateTitles];
+            if (configAlternateTitles.length === 0) {
+                configAlternateTitles.push({ List: [], Order: [], AllowAny: false });
+            }
+
+            renderAlternateTitles(form, configAlternateTitles);
+
+            form.querySelector("#Description_ConfigureFor_Enabled").checked = config.Description[State.metadata.description].Enabled !== false;
+            form.querySelector("#Description_ConfigureFor_Enabled").disabled = config.Description[State.metadata.description].Enabled === undefined;
+            form.querySelector("#Description_AddNotes").checked = config.Description[State.metadata.description].AddNotes;
+            renderSortableCheckboxList(form, "DescriptionSourceList", config.Description[State.metadata.description].List, config.Description[State.metadata.description].Order);
+            form.querySelector("#DescriptionConversionMode").value = config.DescriptionConversionMode;
+
             form.querySelector("#HideUnverifiedTags").checked = config.HideUnverifiedTags;
             renderCheckboxList(form, "TagSources", config.TagSources.split(",").map(s => s.trim()).filter(s => s));
             renderCheckboxList(form, "TagIncludeFilters", config.TagIncludeFilters.split(",").map(s => s.trim()).filter(s => s));
             form.querySelector("#TagMinimumWeight").value = config.TagMinimumWeight;
             form.querySelector("#TagMaximumDepth").value = config.TagMaximumDepth.toString();
+            form.querySelector("#TagExcludeList").value = config.TagExcludeList.join(", ");
+
             renderCheckboxList(form, "GenreSources", config.GenreSources.split(",").map(s => s.trim()).filter(s => s));
             renderCheckboxList(form, "GenreIncludeFilters", config.GenreIncludeFilters.split(",").map(s => s.trim()).filter(s => s));
             form.querySelector("#GenreMinimumWeight").value = config.GenreMinimumWeight;
             form.querySelector("#GenreMaximumDepth").value = config.GenreMaximumDepth.toString();
-            renderSortableCheckboxList(form, "ContentRatingList", config.ContentRatingList, config.ContentRatingOrder);
-            renderSortableCheckboxList(form, "ProductionLocationList", config.ProductionLocationList, config.ProductionLocationOrder);
-            renderCheckboxList(form, "ThirdPartyIdProviderList", config.ThirdPartyIdProviderList.map(s => s.trim()).filter(s => s));
+            form.querySelector("#GenreExcludeList").value = config.GenreExcludeList.join(", ");
+
+            form.querySelector("#Image_ConfigureFor_Enabled").checked = config.Image[State.metadata.image].Enabled !== false;
+            form.querySelector("#Image_ConfigureFor_Enabled").disabled = config.Image[State.metadata.image].Enabled === undefined;
+            form.querySelector("#Image_UsePreferred").checked = config.Image[State.metadata.image].UsePreferred;
+            form.querySelector("#Image_UseCommunityRating").checked = config.Image[State.metadata.image].UseCommunityRating;
+            form.querySelector("#Image_UseDimensions").checked = config.Image[State.metadata.image].UseDimensions;
+            renderSortableCheckboxList(form, "Image_PosterList", config.Image[State.metadata.image].PosterList, config.Image[State.metadata.image].PosterOrder);
+            renderSortableCheckboxList(form, "Image_LogoList", config.Image[State.metadata.image].LogoList, config.Image[State.metadata.image].LogoOrder);
+            renderSortableCheckboxList(form, "Image_BackdropList", config.Image[State.metadata.image].BackdropList, config.Image[State.metadata.image].BackdropOrder);
+            form.querySelector("#Image_DebugMode").checked = config.Image.DebugMode;
+
+            form.querySelector("#Metadata_StudioOnlyAnimationWorks").checked = config.Metadata_StudioOnlyAnimationWorks;
+            renderSortableCheckboxList(form, "Metadata_ContentRatingList", config.ContentRatingList, config.ContentRatingOrder);
+            renderSortableCheckboxList(form, "Metadata_ProductionLocationList", config.ProductionLocationList, config.ProductionLocationOrder);
+            renderCheckboxList(form, "Metadata_ThirdPartyIdProviderList", config.ThirdPartyIdProviderList.map(s => s.trim()).filter(s => s));
             break;
         }
 
         case "library": {
-            const libraries = config.MediaFolders
-                .reduce((acc, mediaFolder) => {
-                    if (mediaFolder.IsVirtualRoot)
-                        return acc;
-
-                    if (acc.find((m) => m.LibraryId === mediaFolder.LibraryId))
-                        return acc;
-
-                    acc.push(mediaFolder);
-                    return acc;
-                }, []);
-
-            form.querySelector("#AutoMergeVersions").checked = config.AutoMergeVersions || false;
-            if (form.querySelector("#UseGroupsForShows").checked = config.UseGroupsForShows) {
-                form.querySelector("#SeasonOrderingContainer").removeAttribute("hidden");
-                form.querySelector("#SeasonOrdering").disabled = false;
-            }
-            else {
-                form.querySelector("#SeasonOrderingContainer").setAttribute("hidden", "");
-                form.querySelector("#SeasonOrdering").disabled = true;
-            }
-            form.querySelector("#SeasonOrdering").value = config.SeasonOrdering;
+            form.querySelector("#DefaultLibraryStructure").value = config.DefaultLibraryStructure;
+            form.querySelector("#DefaultSeasonOrdering").value = config.DefaultSeasonOrdering;
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies;
             form.querySelector("#DisableFilterMovieLibraries").checked = !config.FilterMovieLibraries;
-            form.querySelector("#SpecialsPlacement").value = config.SpecialsPlacement === "Default" ? "AfterSeason" : config.SpecialsPlacement;
+            form.querySelector("#DefaultSpecialsPlacement").value = config.DefaultSpecialsPlacement === "Default" ? "Excluded" : config.DefaultSpecialsPlacement;
             form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked = config.MovieSpecialsAsExtraFeaturettes;
             form.querySelector("#AddMissingMetadata").checked = config.AddMissingMetadata;
 
+            form.querySelector("#AutoReconstructCollections").checked = config.AutoReconstructCollections;
             form.querySelector("#CollectionGrouping").value = config.CollectionGrouping;
             form.querySelector("#CollectionMinSizeOfTwo").checked = config.CollectionMinSizeOfTwo;
 
-            form.querySelector("#VFS_Enabled").checked = config.VFS_Enabled;
-            form.querySelector("#LibraryFilteringMode").value = config.LibraryFilteringMode;
-            form.querySelector("#MediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + libraries
-                .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}${config.ExpertMode ? ` (${library.LibraryId})` : ""}</option>`)
+            form.querySelector("#AutoMergeVersions").checked = config.AutoMergeVersions || false;
+            renderSortableCheckboxList(form, "MergeVersionSortSelectorList", config.MergeVersionSortSelectorList, config.MergeVersionSortSelectorOrder);
+
+            form.querySelector("#DefaultLibraryOperationMode").value = config.DefaultLibraryOperationMode;
+            form.querySelector("#VFS_IterativeGenerationEnabled").checked = config.VFS_IterativeGenerationEnabled;
+            form.querySelector("#VFS_IterativeGenerationMaxCount").value = config.VFS_IterativeGenerationMaxCount;
+            form.querySelector("#MediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + config.Libraries
+                .map((library) => `<option value="${library.Id}">${library.Name}${State.advancedMode ? ` (${library.Id})` : ""}</option>`)
                 .join("");
+
+            form.querySelector("#SeasonMerging_Enabled").checked = config.SeasonMerging_Enabled;
+            form.querySelector("#SeasonMerging_AutoMerge").checked = config.SeasonMerging_DefaultBehavior === "None";
+            renderCheckboxList(form, "SeasonMerging_SeriesTypes", config.SeasonMerging_SeriesTypes);
+            form.querySelector("#SeasonMerging_MergeWindowInDays").value = config.SeasonMerging_MergeWindowInDays;
             break;
         }
 
@@ -599,8 +930,11 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#VFS_AddReleaseGroup").checked = config.VFS_AddReleaseGroup;
             form.querySelector("#VFS_AddResolution").checked = config.VFS_AddResolution;
 
+            form.querySelector("#VFS_Threads").value = config.VFS_Threads;
             form.querySelector("#VFS_ResolveLinks").checked = config.VFS_ResolveLinks;
-            form.querySelector("#VFS_AttachRoot").checked = config.VFS_AttachRoot;
+            form.querySelector("#VFS_MaxTotalExceptionsBeforeAbort").value = config.VFS_MaxTotalExceptionsBeforeAbort;
+            form.querySelector("#VFS_MaxSeriesExceptionsBeforeAbort").value = config.VFS_MaxSeriesExceptionsBeforeAbort;
+            form.querySelector("#VFS_UseSemaphore").checked = config.VFS_UseSemaphore;
             form.querySelector("#VFS_Location").value = config.VFS_Location;
             form.querySelector("#VFS_CustomLocation").value = config.VFS_CustomLocation || "";
             form.querySelector("#VFS_CustomLocation").disabled = config.VFS_Location !== "Custom";
@@ -616,18 +950,6 @@ async function applyConfigToForm(form, config) {
         case "signalr": {
             Dashboard.showLoadingMsg();
             const signalrStatus = await ShokoApiClient.getSignalrStatus();
-            const libraries = config.MediaFolders
-                .reduce((acc, mediaFolder) => {
-                    if (mediaFolder.IsVirtualRoot)
-                        return acc;
-
-                    if (acc.find((m) => m.LibraryId === mediaFolder.LibraryId))
-                        return acc;
-
-                    acc.push(mediaFolder);
-                    return acc;
-                }, []);
-
             updateSignalrStatus(form, signalrStatus);
 
             form.querySelector("#SignalRAutoConnect").checked = config.SignalR_AutoConnectEnabled;
@@ -637,8 +959,8 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#SignalRDefaultFileEvents").checked = config.SignalR_FileEvents;
             form.querySelector("#SignalRDefaultRefreshEvents").checked = config.SignalR_RefreshEnabled;
 
-            form.querySelector("#SignalRMediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + libraries
-                .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}${config.ExpertMode ? ` (${library.LibraryId})` : ""}</option>`)
+            form.querySelector("#SignalRMediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + config.Libraries
+                .map((library) => `<option value="${library.Id}">${library.Name}${State.advancedMode ? ` (${library.Id})` : ""}</option>`)
                 .join("");
             break;
         }
@@ -646,7 +968,28 @@ async function applyConfigToForm(form, config) {
         case "users": {
             Dashboard.showLoadingMsg();
             const users = await ApiClient.getUsers();
-            form.querySelector("#UserSelector").innerHTML = `<option value="">Click here to select a user</option>` + users.map((user) => `<option value="${user.Id}">${user.Name}</option>`).join("");
+            form.querySelector("#UserSelector").innerHTML =
+                `<option value="">Click here to select a user</option>` +
+                users.map((user) => `<option value="${user.Id}">${user.Name}</option>`).join("");
+            break;
+        }
+
+        case "series": {
+            const series = State.seriesList || [];
+            form.querySelector("#SeriesSelector").innerHTML =
+                `<option value="">${State.seriesList ? "Click here to select a series" : "Loading series list"}</option>` +
+                series.map((s) => `<option value="${s.Id}">${s.Title.length >= 50 ? `${s.Title.substring(0, 47)}...` : s.Title} (a${s.AnidbId})</option>`).join("");
+            form.querySelector("#SeriesSearch").value = State.seriesQuery;
+            if (State.seriesList && !State.seriesTimeout) {
+                form.querySelector("#SeriesSelector").disabled = false;
+                if (State.seriesId) {
+                    form.querySelector("#SeriesSelector").value = State.seriesId;
+                    form.querySelector("#SeriesSelector").dispatchEvent(new Event("change"));
+                }
+            }
+            else {
+                form.querySelector("#SeriesSearch").dispatchEvent(new Event("input"));
+            }
             break;
         }
 
@@ -654,7 +997,15 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#Misc_ShowInMenu").checked = config.Misc_ShowInMenu;
             form.querySelector("#IgnoredFolders").value = config.IgnoredFolders.join();
 
-            form.querySelector("#EXPERIMENTAL_MergeSeasons").checked = config.EXPERIMENTAL_MergeSeasons || false;
+            form.querySelector("#Debug_UsageTrackerStalledTimeInSeconds").value = config.Debug.UsageTrackerStalledTimeInSeconds;
+            form.querySelector("#Debug_MaxInFlightRequests").value = config.Debug.MaxInFlightRequests;
+            form.querySelector("#Debug_SeriesPageSize").value = config.Debug.SeriesPageSize;
+            form.querySelector("#Debug_AutoClearClientCache").checked = config.Debug.AutoClearClientCache;
+            form.querySelector("#Debug_AutoClearManagerCache").checked = config.Debug.AutoClearManagerCache;
+            form.querySelector("#Debug_AutoClearVfsCache").checked = config.Debug.AutoClearVfsCache;
+            form.querySelector("#Debug_ExpirationScanFrequencyInMinutes").value = config.Debug.ExpirationScanFrequencyInMinutes;
+            form.querySelector("#Debug_SlidingExpirationInMinutes").value = config.Debug.SlidingExpirationInMinutes;
+            form.querySelector("#Debug_AbsoluteExpirationRelativeToNowInMinutes").value = config.Debug.AbsoluteExpirationRelativeToNowInMinutes;
             break;
         }
     }
@@ -723,6 +1074,49 @@ async function applyUserConfigToForm(form, userId, config = null) {
 }
 
 /**
+ * Load the series configuration for the given series.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {string} seriesId - The series ID.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ * @returns {Promise<void>}
+ */
+async function applySeriesConfigToForm(form, seriesId, config = null) {
+    State.seriesId = seriesId;
+    if (!seriesId) {
+        form.querySelector("#SeriesSettingsContainer").setAttribute("hidden", "");
+        return;
+    }
+
+    let shouldHide = false;
+    if (!config) {
+        if (State.config) {
+            config = State.config;
+        }
+        else {
+            Dashboard.showLoadingMsg();
+            config = await ShokoApiClient.getConfiguration();
+            shouldHide = true;
+        }
+    }
+
+    const seriesConfig = await ShokoApiClient.getSeriesConfiguration(seriesId);
+    form.querySelector("#SeriesType").value = seriesConfig.Type;
+    form.querySelector("#SeriesLibraryStructure").value = seriesConfig.StructureType;
+    form.querySelector("#SeriesSeasonOrdering").value = seriesConfig.SeasonOrdering;
+    form.querySelector("#SeriesSpecialsPlacement").value = seriesConfig.SpecialsPlacement;
+    renderCheckboxList(form, "SeriesSeasonMergingBehavior", seriesConfig.SeasonMergingBehavior.split(",").map(s => s.trim()).filter(s => s && s !== "None"));
+    form.querySelector("#SeriesEpisodeConversion").value = seriesConfig.EpisodeConversion;
+    form.querySelector("#SeriesOrderByAirdate").checked = seriesConfig.OrderByAirdate;
+
+    form.querySelector("#SeriesSettingsContainer").removeAttribute("hidden");
+
+    if (shouldHide) {
+        Dashboard.hideLoadingMsg();
+    }
+}
+
+/**
  * Load the VFS library configuration for the given library.
  *
  * @param {HTMLFormElement} form - The form element.
@@ -749,27 +1143,16 @@ async function applyLibraryConfigToForm(form, libraryId, config = null) {
         }
     }
 
-    const mediaFolders = State.config.MediaFolders.filter((c) => c.LibraryId === libraryId && !c.IsVirtualRoot);
-    if (!mediaFolders.length) {
-        renderReadonlyList(form, "MediaFolderImportFolderMapping", []);
-
-        form.querySelector("#MediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
-        if (shouldHide) {
-            Dashboard.hideLoadingMsg();
-        }
-        return;
-    }
-
-    renderReadonlyList(form, "MediaFolderImportFolderMapping", mediaFolders.map((c) =>
-        c.IsMapped
-            ? `${c.MediaFolderPath} | ${c.ImportFolderName} (${c.ImportFolderId}) ${c.ImportFolderRelativePath}`.trimEnd()
-            : `${c.MediaFolderPath} | Not Mapped`
-    ));
+    const libraryConfig = config.Libraries.find((c) => c.Id === libraryId);
+    const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
+    renderFolderList(form, libraryConfig.LibraryOperationMode !== "VFS", "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
 
     // Configure the elements within the media folder container
-    const libraryConfig = mediaFolders[0];
-    form.querySelector("#MediaFolderVirtualFileSystem").checked = libraryConfig.IsVirtualFileSystemEnabled;
-    form.querySelector("#MediaFolderLibraryFilteringMode").value = libraryConfig.LibraryFilteringMode;
+    form.querySelector("#MediaFolderLibraryOperationMode").value = libraryConfig.LibraryOperationMode;
+    form.querySelector("#MediaFolderLibraryIterativeGenerationEnabled").checked = libraryConfig.IterativeVfsGeneration_Enabled;
+    form.querySelector("#MediaFolderLibraryIterativeGenerationNoCache").checked = libraryConfig.IterativeVfsGeneration_NoCache;
+    form.querySelector("#MediaFolderLibraryIterativeGenerationMaxCount").value = libraryConfig.IterativeVfsGeneration_MaxCount;
+    form.querySelector("#MediaFolderLibraryForceFullGenerationOnNextRefresh").checked = libraryConfig.IterativeVfsGeneration_ForceFullGenerationOnNextRefresh;
 
     // Show the media folder settings now if it was previously hidden.
     form.querySelector("#MediaFolderPerFolderSettingsContainer").removeAttribute("hidden");
@@ -777,6 +1160,64 @@ async function applyLibraryConfigToForm(form, libraryId, config = null) {
     if (shouldHide) {
         Dashboard.hideLoadingMsg();
     }
+}
+
+/**
+ * Converts a media folder configuration to a stringified form for display in the UI.
+ *
+ * @param {import("./Common.js").MediaFolderConfig} c - Media Folder Configuration.
+ * @returns {[string, import("./Common.js").MediaFolderConfig]}
+ */
+function mediaFolderConfigToString(c) {
+    return [
+        (c.IsMapped
+            ? `${escapeHtml(c.Path)} | ${c.ManagedFolderName} (${c.ManagedFolderId}) ${c.ManagedFolderRelativePath}`.trimEnd()
+            : `${escapeHtml(c.Path)} | Not Mapped`
+        ) +
+        (!c.IsIgnored && c.NeedsRefresh ? " (Refresh Pending)" : "") +
+        (c.IsIgnored ? " (Ignored)" : ""),
+        c,
+    ];
+}
+
+/**
+ * Render a folder list.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {bool} disableButtons - Whether to disable the add/remove buttons.
+ * @param {string} name - The name of the selector list to render.
+ * @param {[string, import("./Common.js").MediaFolderConfig][]} entries - The entries to render
+ * @returns {void}
+ */
+function renderFolderList(form, disableButtons, name, entries) {
+    const list = form.querySelector(`#${name} .folderList`);
+    if (disableButtons) {
+        form.querySelector(`#${name} .btnAddFolder`).setAttribute("disabled", true);
+    }
+    else {
+        form.querySelector(`#${name} .btnAddFolder`).removeAttribute("disabled");
+    }
+    const listItems = entries.map(([entry, mediaFolderConfig], index) =>
+        `<div class="listItem listItem-border lnkPath" data-index="${index}">`+
+            `<div class="listItemBody"><div class="listItemBodyText" dir="ltr">${entry}</div></div>`+
+            (mediaFolderConfig.NeedsRefresh
+                ? `<button type="button" name="search" is="paper-icon-button-light"" class="listItemButton"${mediaFolderConfig.IsIgnored ? " disabled" : ""}><span class="material-icons search_off" aria-hidden="true"></span></button>`
+                : `<button type="button" name="search" is="paper-icon-button-light"" class="listItemButton"${mediaFolderConfig.IsIgnored ? " disabled" : ""}><span class="material-icons search" aria-hidden="true"></span></button>`
+            ) +
+            (mediaFolderConfig.IsIgnored
+                ? `<button type="button" name="ignore" is="paper-icon-button-light"" class="listItemButton"><span class="material-icons folder" aria-hidden="true"></span></button>`
+                : `<button type="button" name="ignore" is="paper-icon-button-light"" class="listItemButton"><span class="material-icons folder_off" aria-hidden="true"></span></button>`
+            ) +
+            `<button type="button" name="remove-path" is="paper-icon-button-light"" class="listItemButton"${disableButtons ? " disabled" : ""}><span class="material-icons remove_circle" aria-hidden="true"></span></button>`+
+        `</div>`
+    );
+    if (entries.length) {
+        list.removeAttribute("hidden");
+    }
+    else {
+        list.setAttribute("hidden", true);
+    }
+    list.innerHTML = listItems.join("");
 }
 
 /**
@@ -806,7 +1247,7 @@ async function applySignalrLibraryConfigToForm(form, libraryId, config = null) {
         }
     }
 
-    const libraryConfig = config.MediaFolders.find((c) => c.LibraryId === libraryId && !c.IsVirtualRoot);
+    const libraryConfig = config.Libraries.find((c) => c.Id === libraryId);
     if (!libraryConfig) {
         form.querySelector("#SignalRMediaFolderPerFolderSettingsContainer").setAttribute("hidden", "");
         if (shouldHide) {
@@ -825,6 +1266,93 @@ async function applySignalrLibraryConfigToForm(form, libraryId, config = null) {
     if (shouldHide) {
         Dashboard.hideLoadingMsg();
     }
+}
+
+//#endregion
+
+//#region Local Interactions
+
+/**
+ * Add a media folder to the list.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {string} libraryId - The library ID.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ * @param {string} path - The path to add.
+ * @returns {Promise<void>}
+ */
+function addMediaFolder(form, libraryId, config, path) {
+    const pathLower = path.toLowerCase();
+    if (config.LibraryFolders.filter(p => p.LibraryId === libraryId && p.Path.toLowerCase() == pathLower).length) return;
+    config.LibraryFolders.push({
+        LibraryId: libraryId,
+        Path: path,
+        IsIgnored: false,
+        IsMapped: false,
+        ManagedFolderId: 0,
+        ManagedFolderName: null,
+        ManagedFolderRelativePath: "",
+        NeedsRefresh: true,
+    });
+    const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
+    renderFolderList(form, false, "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
+}
+
+/**
+ * Remove a media folder from the list.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {string} libraryId - The library ID.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ * @param {number} index - The index to remove.
+ * @returns {Promise<void>}
+ */
+function removeMediaFolder(form, libraryId, config, index) {
+    const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
+    const toRemove = mediaFolders.splice(index, 1);
+    if (toRemove.length === 0) return;
+    const realIndex = config.LibraryFolders.indexOf(toRemove[0]);
+    config.LibraryFolders.splice(realIndex, 1);
+    renderFolderList(form, false, "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
+}
+
+/**
+ * Toggle search for a media folder in the list.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {string} libraryId - The library ID.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ * @param {number} index - The index to remove.
+ * @returns {Promise<void>}
+ */
+function toggleRefreshOfMediaFolder(form, libraryId, config, index) {
+    const libraryConfig = config.Libraries.find((c) => c.Id === libraryId);
+    if (!libraryConfig) return;
+    const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
+    const toToggle = mediaFolders[index];
+    toToggle.NeedsRefresh = !toToggle.NeedsRefresh;
+    renderFolderList(form, libraryConfig.LibraryOperationMode !== "VFS", "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
+}
+
+/**
+ * Toggle ignore a media folder in the list.
+ *
+ * @param {HTMLFormElement} form - The form element.
+ * @param {string} libraryId - The library ID.
+ * @param {import("./Common.js").PluginConfiguration} config - The plugin configuration.
+ * @param {number} index - The index to remove.
+ * @returns {Promise<void>}
+ */
+function toggleIgnoredMediaFolder(form, libraryId, config, index) {
+    const libraryConfig = config.Libraries.find((c) => c.Id === libraryId);
+    if (!libraryConfig) return;
+    const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
+    const toToggle = mediaFolders[index];
+    toToggle.IsIgnored = !toToggle.IsIgnored;
+    if (toToggle.IsIgnored && !toToggle.NeedsRefresh) {
+        toToggle.NeedsRefresh = false;
+    }
+    renderFolderList(form, libraryConfig.LibraryOperationMode !== "VFS", "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
 }
 
 //#endregion
@@ -968,6 +1496,22 @@ async function syncSettings(form, config) {
         }
     }
 
+    const seriesId = form.querySelector("#SeriesSelector").value;
+    if (seriesId) {
+        let seriesConfig = await ShokoApiClient.getSeriesConfiguration(seriesId);
+        if (seriesConfig) {
+            seriesConfig.Type = form.querySelector("#SeriesType").value;
+            seriesConfig.StructureType = form.querySelector("#SeriesLibraryStructure").value;
+            seriesConfig.SeasonOrdering = form.querySelector("#SeriesSeasonOrdering").value;
+            seriesConfig.SpecialsPlacement = form.querySelector("#SeriesSpecialsPlacement").value;
+            seriesConfig.SeasonMergingBehavior = retrieveCheckboxList(form, "SeriesSeasonMergingBehavior").join(",") || "None";
+            seriesConfig.EpisodeConversion = form.querySelector("#SeriesEpisodeConversion").value;
+            seriesConfig.OrderByAirdate = form.querySelector("#SeriesOrderByAirdate").checked;
+
+            await ShokoApiClient.updateSeriesConfiguration(seriesId, seriesConfig);
+        }
+    }
+
     config.UserList = config.UserList.filter((c) => c.Token);
 
     await ShokoApiClient.updateConfiguration(config);
@@ -1001,62 +1545,126 @@ async function removeUserConfig(form) {
 }
 
 /**
- * Remove a library from the configuration.
+ * Remove an alternate/original title from the view.
  *
  * @param {HTMLFormElement} form - The form element.
+ * @param {number} index - The index of the alternate title to remove.
  * @returns {Promise<PluginConfiguration>} The updated plugin configuration.
  */
-async function removeLibraryConfig(form) {
+async function removeAlternateTitle(form, index) {
     const config = State.config || await ShokoApiClient.getConfiguration();
-    const libraryId = form.querySelector("#MediaFolderSelector").value;
-    if (!libraryId) return config;
 
-    let index = config.MediaFolders.findIndex((m) => m.LibraryId === libraryId);
-    while (index !== -1) {
-        config.MediaFolders.splice(index, 1);
-        index = config.MediaFolders.findIndex((m) => m.LibraryId === libraryId);
+    const alternateTitles = form.querySelectorAll("#TitleAlternateListContainer > fieldset");
+    const configAlternateTitles = [];
+    let j = 0;
+    for (let i = 1; i <= alternateTitles.length; i++) {
+        const [list, order] = retrieveSortableCheckboxList(form, `TitleAlternateList_${i}`);
+        if (i !== index) {
+            configAlternateTitles[j] = { List: list, Order: order };
+            configAlternateTitles[j].AllowAny = form.querySelector(`#TitleAlternateAllowAny_${i}`).checked;
+            j++;
+        }
     }
 
+    if (configAlternateTitles.length === 0) {
+        configAlternateTitles.push({ List: [], Order: [], AllowAny: false });
+    }
 
-    const libraries = config.MediaFolders
-        .reduce((acc, mediaFolder) => {
-            if (mediaFolder.IsVirtualRoot)
-                return acc;
-
-            if (acc.find((m) => m.LibraryId === mediaFolder.LibraryId))
-                return acc;
-
-            acc.push(mediaFolder);
-            return acc;
-        }, []);
-    form.querySelector("#MediaFolderSelector").value = "";
-    form.querySelector("#MediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + libraries
-                    .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}</option>`)
-                    .join("");
-    form.querySelector("#SignalRMediaFolderSelector").innerHTML = `<option value="">Click here to select a library</option>` + libraries
-                    .map((library) => `<option value="${library.LibraryId}">${library.LibraryName}</option>`)
-                    .join("");
-
-    await ShokoApiClient.updateConfiguration(config);
-    Dashboard.processPluginConfigurationUpdateResult();
+    renderAlternateTitles(form, configAlternateTitles);
 
     return config;
 }
 
 /**
- * Toggle expert mode.
+ * Add a new alternate/original title to the view.
  *
- * @param {boolean} value - True to enable expert mode, false to disable it.
- * @returns {Promise<PluginConfiguration>} The updated plugin configuration.
+ * @param {HTMLFormElement} form - The form element.
  */
-async function toggleExpertMode(value) {
+async function addAlternateTitle(form) {
     const config = State.config || await ShokoApiClient.getConfiguration();
 
-    config.ExpertMode = value;
+    const alternateTitles = form.querySelectorAll("#TitleAlternateListContainer > fieldset");
+    if (alternateTitles.length >= 5) {
+        return config;
+    }
+
+    const configAlternateTitles = [];
+    let j = 0;
+    for (let i = 1; i <= alternateTitles.length; i++) {
+        const [list, order] = retrieveSortableCheckboxList(form, `TitleAlternateList_${i}`);
+        configAlternateTitles[j] = { List: list, Order: order };
+        configAlternateTitles[j].AllowAny = form.querySelector(`#TitleAlternateAllowAny_${i}`).checked;
+        j++;
+    }
+
+    configAlternateTitles.push({ List: [], Order: [], AllowAny: false });
+    renderAlternateTitles(form, configAlternateTitles);
+
+    return config;
+}
+
+/**
+ * Render the alternate titles.
+ *
+ * @param {HTMLFormElement} form
+ * @param {TitleConfiguration[]} configAlternateTitles
+ * @returns {void}
+ */
+function renderAlternateTitles(form, configAlternateTitles) {
+    if (form.querySelectorAll("#TitleAlternateListContainer > fieldset").length !== configAlternateTitles.length) {
+        const container = form.querySelector("#TitleAlternateListContainer");
+        container.innerHTML = "";
+        const remaining = Math.max(0, 5 - configAlternateTitles.length);
+        for (let i = 1; i <= configAlternateTitles.length; i++) {
+            const html = alternateTitleListTemplate
+                .replace(/%number%/g, i)
+                .replace(/%number_formatted%/g, configAlternateTitles.length === 1 ? "" : i === 1 ? "1st " : i === 2 ? "2nd " : i === 3 ? "3rd " : `${i}th `)
+                .replace(/%remaining%/g, remaining);
+            container.insertAdjacentHTML("beforeend", html);
+            if (i === 1) {
+                container.querySelector(`#TitleAlternateRemoveButton_${i}`).setAttribute("hidden", "");
+                if (remaining === 0) {
+                    container.querySelector(`#TitleAlternateAddButton_${i}>button`).className = "raised button-alt block emby-button";
+                    container.querySelector(`#TitleAlternateAddButton_${i}>button`).setAttribute("disabled", "");
+                }
+            }
+            else {
+                container.querySelector(`#TitleAlternateAddButton_${i}`).setAttribute("hidden", "");
+            }
+            overrideSortableCheckboxList(container.querySelector(`#TitleAlternateList_${i}`));
+        }
+    }
+    for (let i = 1; i <= configAlternateTitles.length; i++) {
+        const j = i - 1;
+        renderSortableCheckboxList(form, `TitleAlternateList_${i}`, configAlternateTitles[j].List, configAlternateTitles[j].Order);
+        form.querySelector(`#TitleAlternateAllowAny_${i}`).checked = configAlternateTitles[j].AllowAny;
+    }
+}
+
+/**
+ * Toggle expert mode.
+ *
+ * @param {boolean} expertMode - True to enable expert mode, false to disable it.
+ * @param {boolean} debugMode - True to enable debug mode, false to disable it.
+ * @returns {Promise<PluginConfiguration>} The updated plugin configuration.
+ */
+async function toggleExpertMode(expertMode = false, debugMode = false) {
+    const config = State.config || await ShokoApiClient.getConfiguration();
+    const debugChanged = config.Debug.ShowInUI !== debugMode;
+    const expertChanged = config.AdvancedMode !== expertMode;
+    if (!expertChanged && !debugChanged) return config;
+
+    config.AdvancedMode = expertMode;
+    config.Debug.ShowInUI = debugMode;
 
     await ShokoApiClient.updateConfiguration(config);
 
-    Dashboard.alert(value ? Messages.ExpertModeEnabled : Messages.ExpertModeDisabled);
+    if (debugChanged) {
+        Dashboard.alert(debugMode ? Messages.DebugModeEnabled : Messages.DebugModeDisabled);
+    }
+    else if (expertChanged) {
+        Dashboard.alert(expertMode ? Messages.ExpertModeEnabled : Messages.ExpertModeDisabled);
+    }
 
     return config;
 }
@@ -1064,6 +1672,7 @@ async function toggleExpertMode(value) {
 //#endregion
 
 //#region Helpers
+
 /**
  * Filter out duplicate values and sanitize list.
  * @param {string} value - Stringified list of values to filter.
@@ -1085,24 +1694,47 @@ function filterIgnoredFolders(value) {
 }
 
 /**
- * Filter out duplicate values and sanitize list.
+ * Filter out non-integer values and sanitize list.
  * @param {string} value - Stringified list of values to filter.
  * @returns {number[]} An array of sanitized and filtered values.
  */
 function filterReconnectIntervals(value) {
-    // We convert to a set to filter out duplicate values.
-    const filteredSet = new Set(
-        value
-            // Split the values at every comma.
-            .split(",")
-            // Sanitize inputs.
-            .map(str => parseInt(str.trim().toLowerCase(), 10))
-            .filter(int => !Number.isNaN(int)),
-    );
-
-    // Convert it back into an array.
-    return Array.from(filteredSet).sort((a, b) => a - b);
+    return value
+        .split(",")
+        .map(str => parseInt(str.trim().toLowerCase(), 10))
+        .filter(int => !Number.isNaN(int) || !Number.isInteger(int));
 }
+
+/**
+ * Filter out illegal values and convert from string to number.
+ * @param {string} raw  - Stringified value to filter.
+ * @returns {number} A sanitized and filtered value.
+ */
+function sanitizeNumber(raw, min = 0, max = Number.MAX_SAFE_INTEGER) {
+    const value = parseInt(raw.trim().toLowerCase(), 10);
+    if (Number.isNaN(value) || value < min)
+        return min;
+    if (value > max)
+        return max;
+    return value;
+}
+
+/**
+ * Filter out duplicates and sanitize list.
+ * @param {string} value - Stringified list of values to filter.
+ * @returns {string[]} An array of sanitized and filtered values.
+ */
+function filterTags(value) {
+    return Array.from(
+        new Set(
+            value
+            .split(",")
+            .map(str => str.trim().toLowerCase())
+            .filter(str => str)
+        )
+    );
+}
+
 
 //#endregion
 

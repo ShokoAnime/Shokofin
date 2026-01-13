@@ -27,7 +27,28 @@ export const Dashboard = globalThis.Dashboard;
  * @property {GenericFunction} hideLoadingMsg Hide a loading message.
  * @property {GenericFunction} processPluginConfigurationUpdateResult Process a plugin configuration update.
  * @property {DashboardNavigate} navigate Navigate to a route.
+ * @property {new() => DirectoryBrowser} DirectoryBrowser Directory Browser class. Used to create a new instance of the directory browser.
  * // TODO: Add the rest here if needed.
+ */
+
+/**
+ * @typedef {{
+ *   callback: (path: string, networkSharePath: string) => void;
+ * }} DirectoryBrowserShowOptions
+ */
+
+/**
+ * @callback DirectoryBrowserShow
+ * @param {DirectoryBrowserShowOptions} options
+ * @returns {void}
+ */
+
+/**
+ * Directory browser.
+ *
+ * @typedef {Object} DirectoryBrowser
+ * @property {DirectoryBrowserShow} show Show the directory browser.
+ * @property {GenericFunction} close Close the directory browser.
  */
 
 /**
@@ -196,6 +217,10 @@ export const LibraryMenu = globalThis.LibraryMenu;
 */
 
 /**
+* @typedef {"Disabled" | "PlainText" | "Markdown"} DescriptionConversionMode
+*/
+
+/**
 * @typedef {"Shoko_Default" | "AniDB_Default" | "AniDB_LibraryLanguage" | "AniDB_CountryOfOrigin" | "TMDB_Default" | "TMDB_LibraryLanguage" | "TMDB_CountryOfOrigin"} TitleProvider
 */
 
@@ -232,8 +257,36 @@ export const LibraryMenu = globalThis.LibraryMenu;
 */
 
 /**
-* @typedef {"Auto" | "Strict" | "Lax"} LibraryFilteringMode
+* @typedef {"VFS" | "Strict" | "Lax"} LibraryOperationMode
 */
+
+/**
+ * @typedef {"ImportedAt" | "CreatedAt" | "Resolution" | "ReleaseGroupName" | "FileSource" | "FileVersion" | "RelativeDepth" | "NoVariation"} MergeVersionSortSelector
+ */
+
+/**
+ * @typedef {"None" | "Metadata" | "Original" | "English"} ImageLanguageType
+ */
+
+/**
+ * @typedef {"Unknown" | "Other" | "TV" | "TVSpecial" | "Web" | "Movie" | "OVA" | "MusicVideo"} SeriesType
+ */
+
+/**
+ * @typedef {"AniDB_Anime" | "Shoko_Groups" | "TMDB_SeriesAndMovies"} SeriesStructureType
+ */
+
+/**
+ * @typedef {"None" | "NoMerge" | "MergeForward" | "MergeBackward" | "MergeWithMainStory" | "MergeGroupATarget" | "MergeGroupASource" | "MergeGroupBTarget" | "MergeGroupBSource" | "MergeGroupCTarget" | "MergeGroupCSource" | "MergeGroupDTarget" | "MergeGroupDSource"} SeasonMergingBehavior
+ */
+
+/**
+ * @typedef {"None" | "EpisodesAsSpecials" | "SpecialsAsEpisodes" | "SpecialsAsExtraFeaturettes"} SeriesEpisodeConversion
+ */
+
+/**
+ * @typedef {"Default" | "ShokoCollection" | "TmdbCollection" | "AnidbMovie" | "ShokoMovie" | "TmdbMovie" | "AnidbAnime" | "ShokoSeries" | "TmdbShow" | "AnidbSeason" | "ShokoSeason" | "TmdbSeason" | "AnidbEpisode" | "ShokoEpisode"} AllConfigurationTypes
+ */
 
 /**
 * @typedef {{
@@ -253,208 +306,427 @@ export const LibraryMenu = globalThis.LibraryMenu;
 */
 
 /**
-* @typedef {{
-*   LibraryId: string;
-*   LibraryName: string | null;
-*   MediaFolderId: string;
-*   MediaFolderPath: string;
-*   ImportFolderId: number;
-*   ImportFolderName: string | null;
-*   ImportFolderRelativePath: string;
-*   IsVirtualRoot: boolean;
-*   IsMapped: boolean;
-*   IsFileEventsEnabled: boolean;
-*   IsRefreshEventsEnabled: boolean;
-*   IsVirtualFileSystemEnabled: boolean;
-*   LibraryFilteringMode: LibraryFilteringMode;
-* }} MediaFolderConfig
-*/
+ * @typedef {{
+ *   Id: string;
+ *   Name: string;
+ *   IsFileEventsEnabled: boolean;
+ *   IsRefreshEventsEnabled: boolean;
+ *   LibraryOperationMode: LibraryOperationMode;
+ *   IterativeVfsGeneration_Enabled: boolean;
+ *   IterativeVfsGeneration_NoCache: boolean;
+ *   IterativeVfsGeneration_LastGeneratedAt: string | null;
+ *   IterativeVfsGeneration_CurrentCount: number;
+ *   IterativeVfsGeneration_MaxCount: number;
+ *   IterativeVfsGeneration_ForceFullGenerationOnNextRefresh: boolean;
+ * }} LibraryConfig
+ */
 
 /**
-* @typedef {{
-*   Version: string;
-*   Commit: string | null;
-*   ReleaseChannel: "Stable" | "Dev" | "Debug" | null;
-*   ReleaseDate: string | null;
-* }} ServerInformation
-*/
+ * @typedef {{
+ *   LibraryId: string;
+ *   Path: string;
+ *   ManagedFolderId: number;
+ *   ManagedFolderName: string | null;
+ *   ManagedFolderRelativePath: string;
+ *   IsIgnored: boolean;
+ *   IsMapped: boolean;
+ *   NeedsRefresh: boolean;
+ * }} MediaFolderConfig
+ */
 
 /**
-* @typedef {{
-*   CanCreateSymbolicLinks: boolean;
-*   Url: string;
-*   PublicUrl: string;
-*   ServerVersion: ServerInformation | null;
-*   Username: string;
-*   ApiKey: string;
-*   ThirdPartyIdProviderList: Except<DescriptionProvider, "Shoko">[];
-*   TitleMainOverride: boolean;
-*   TitleMainList: TitleProvider[];
-*   TitleMainOrder: TitleProvider[];
-*   TitleAlternateOverride: boolean;
-*   TitleAlternateList: TitleProvider[];
-*   TitleAlternateOrder: TitleProvider[];
-*   TitleAllowAny: boolean;
-*   MarkSpecialsWhenGrouped: boolean;
-*   DescriptionSourceOverride: boolean;
-*   DescriptionSourceList: DescriptionProvider[];
-*   DescriptionSourceOrder: DescriptionProvider[];
-*   SynopsisCleanLinks: boolean;
-*   SynopsisCleanMiscLines: boolean;
-*   SynopsisRemoveSummary: boolean;
-*   SynopsisCleanMultiEmptyLines: boolean;
-*   TagOverride: boolean;
-*   TagSources: TagSource[];
-*   TagIncludeFilters: TagIncludeFilter[];
-*   TagMinimumWeight: TagWeight;
-*   TagMaximumDepth: TagDepth;
-*   GenreOverride: boolean;
-*   GenreSources: TagSource[];
-*   GenreIncludeFilters: TagIncludeFilter[];
-*   GenreMinimumWeight: TagWeight;
-*   GenreMaximumDepth: TagDepth;
-*   HideUnverifiedTags: boolean;
-*   ContentRatingOverride: boolean;
-*   ContentRatingList: GenericProvider[];
-*   ContentRatingOrder: GenericProvider[];
-*   ProductionLocationOverride: boolean;
-*   ProductionLocationList: GenericProvider[];
-*   ProductionLocationOrder: GenericProvider[];
-*   UserList: UserConfig[];
-*   AutoMergeVersions: boolean;
-*   UseGroupsForShows: boolean;
-*   SeparateMovies: boolean;
-*   FilterMovieLibraries: boolean;
-*   MovieSpecialsAsExtraFeaturettes: boolean;
-*   AddTrailers: boolean;
-*   AddCreditsAsThemeVideos: boolean;
-*   AddCreditsAsSpecialFeatures: boolean;
-*   CollectionGrouping: CollectionCreationType;
-*   SeasonOrdering: SeasonOrderType;
-*   SpecialsPlacement: SpecialOrderType;
-*   AddMissingMetadata: boolean;
-*   IgnoredFolders: string[];
-*   VFS_Enabled: boolean;
-*   VFS_Threads: number;
-*   VFS_AddReleaseGroup: boolean;
-*   VFS_AddResolution: boolean;
-*   VFS_AttachRoot: boolean;
-*   VFS_Location: VirtualRootLocation;
-*   VFS_CustomLocation: string;
-*   LibraryFilteringMode: LibraryFilteringMode;
-*   MediaFolders: MediaFolderConfig[];
-*   SignalR_AutoConnectEnabled: boolean;
-*   SignalR_AutoReconnectInSeconds: number[];
-*   SignalR_RefreshEnabled: boolean;
-*   SignalR_FileEvents: boolean;
-*   SignalR_EventSources: GenericProvider[];
-*   Misc_ShowInMenu: boolean;
-*   EXPERIMENTAL_MergeSeasons: boolean;
-*   ExpertMode: boolean;
-* }} PluginConfiguration
-*/
+ * @typedef {{
+ *   Version: string;
+ *   Commit: string | null;
+ *   ReleaseChannel: "Stable" | "Dev" | "Debug" | null;
+ *   ReleaseDate: string | null;
+ * }} ServerInformation
+ */
+
+/**
+ * @typedef {{
+ *   List: TitleProvider[];
+ *   Order: TitleProvider[];
+ *   AllowAny: boolean;
+ * }} TitleConfiguration
+ */
+
+/**
+ * @typedef {{
+ *   RemoveDuplicates: boolean;
+ *   MainTitle: TitleConfiguration;
+ *   AlternateTitles: [TitleConfiguration, ...TitleConfiguration[]];
+ * }} TitlesConfiguration
+ */
+
+/**
+ * @typedef {TitleConfiguration & {
+ *   Enabled: boolean
+ * }} ToggleTitlesConfiguration
+ */
+
+/**
+ * @typedef {{
+ *   Default: TitlesConfiguration;
+ *   ShokoCollection: ToggleTitlesConfiguration;
+ *   TmdbCollection: ToggleTitlesConfiguration;
+ *   AnidbMovie: ToggleTitlesConfiguration;
+ *   ShokoMovie: ToggleTitlesConfiguration;
+ *   TmdbMovie: ToggleTitlesConfiguration;
+ *   AnidbAnime: ToggleTitlesConfiguration;
+ *   ShokoSeries: ToggleTitlesConfiguration;
+ *   TmdbShow: ToggleTitlesConfiguration;
+ *   AnidbSeason: ToggleTitlesConfiguration;
+ *   ShokoSeason: ToggleTitlesConfiguration;
+ *   TmdbSeason: ToggleTitlesConfiguration;
+ *   AnidbEpisode: ToggleTitlesConfiguration;
+ *   ShokoEpisode: ToggleTitlesConfiguration;
+ *}} AllTitlesConfiguration
+ */
+
+/**
+ * @typedef {{
+ *   Type: SeriesType | "None";
+ *   StructureType: SeriesStructureType | "None";
+ *   SeasonOrdering: SeasonOrderType | "None";
+ *   SpecialsPlacement: SpecialOrderType | "None";
+ *   SeasonMergingBehavior: SeasonMergingBehavior;
+ *   EpisodeConversion: SeriesEpisodeConversion;
+ *   OrderByAirdate: boolean;
+ * }} SeriesConfiguration
+ */
+
+/**
+ * @typedef {{
+ *   AddNotes: boolean;
+ *   List: DescriptionProvider[];
+ *   Order: DescriptionProvider[];
+ * }} DescriptionConfiguration
+ */
+
+/**
+ * @typedef {DescriptionConfiguration &{
+ *    Enabled: boolean;
+ * }} ToggleDescriptionConfiguration
+ */
+
+/**
+ * @typedef {{
+ *   Default: DescriptionConfiguration;
+ *   ShokoCollection: ToggleDescriptionConfiguration;
+ *   TmdbCollection: ToggleDescriptionConfiguration;
+ *   AnidbMovie: ToggleDescriptionConfiguration;
+ *   ShokoMovie: ToggleDescriptionConfiguration;
+ *   TmdbMovie: ToggleDescriptionConfiguration;
+ *   AnidbAnime: ToggleDescriptionConfiguration;
+ *   ShokoSeries: ToggleDescriptionConfiguration;
+ *   TmdbShow: ToggleDescriptionConfiguration;
+ *   AnidbSeason: ToggleDescriptionConfiguration;
+ *   ShokoSeason: ToggleDescriptionConfiguration;
+ *   TmdbSeason: ToggleDescriptionConfiguration;
+ *   AnidbEpisode: ToggleDescriptionConfiguration;
+ *   ShokoEpisode: ToggleDescriptionConfiguration;
+ * }} AllDescriptionsConfiguration
+ */
+
+/**
+ * @typedef {{
+ *   UsePreferred: boolean;
+ *   UseCommunityRating: boolean;
+ *   UseDimensions: boolean;
+ *   PosterList: ImageLanguageType[];
+ *   PosterOrder: ImageLanguageType[];
+ *   LogoList: ImageLanguageType[];
+ *   LogoOrder: ImageLanguageType[];
+ *   BackdropList: ImageLanguageType[];
+ *   BackdropOrder: ImageLanguageType[];
+ * }} ImageConfiguration
+ */
+
+/**
+ * @typedef {ImageConfiguration & {
+ *   Enabled: boolean;
+ * }} ToggleImageConfiguration
+ */
+
+/**
+ * @typedef {{
+ *   DebugMode: boolean;
+ *   Default: ImageConfiguration;
+ *   ShokoCollection: ToggleImageConfiguration;
+ *   TmdbCollection: ToggleImageConfiguration;
+ *   AnidbMovie: ToggleImageConfiguration;
+ *   ShokoMovie: ToggleImageConfiguration;
+ *   TmdbMovie: ToggleImageConfiguration;
+ *   AnidbAnime: ToggleImageConfiguration;
+ *   ShokoSeries: ToggleImageConfiguration;
+ *   TmdbShow: ToggleImageConfiguration;
+ *   AnidbSeason: ToggleImageConfiguration;
+ *   ShokoSeason: ToggleImageConfiguration;
+ *   TmdbSeason: ToggleImageConfiguration;
+ *   AnidbEpisode: ToggleImageConfiguration;
+ *   ShokoEpisode: ToggleImageConfiguration;
+ * }} AllImagesConfiguration
+ */
+
+/**
+ * @typedef {{
+ *   ShowInUI: boolean;
+ *   UsageTrackerStalledTimeInSeconds: number;
+ *   MaxInFlightRequests: number;
+ *   SeriesPageSize: number;
+ *   AutoClearClientCache: boolean;
+ *   AutoClearManagerCache: boolean;
+ *   AutoClearVfsCache: boolean;
+ *   ExpirationScanFrequencyInMinutes: number;
+ *   SlidingExpirationInMinutes: number;
+ *   AbsoluteExpirationRelativeToNowInMinutes: number;
+ * }} DebugConfiguration
+ */
+
+/**
+ * @typedef {{
+ *   CanCreateSymbolicLinks: boolean;
+ *   Url: string;
+ *   PublicUrl: string;
+ *   WebPrefix: string;
+ *   ServerVersion: ServerInformation | null;
+ *   Username: string;
+ *   ApiKey: string;
+ *   ThirdPartyIdProviderList: Except<DescriptionProvider, "Shoko">[];
+ *   Title: AllTitlesConfiguration;
+ *   MarkSpecialsWhenGrouped: boolean;
+ *   DescriptionConversionMode: DescriptionConversionMode;
+ *   Description: AllDescriptionsConfiguration;
+ *   TagSources: TagSource[];
+ *   TagIncludeFilters: TagIncludeFilter[];
+ *   TagMinimumWeight: TagWeight;
+ *   TagMaximumDepth: TagDepth;
+ *   TagExcludeList: string[];
+ *   GenreSources: TagSource[];
+ *   GenreIncludeFilters: TagIncludeFilter[];
+ *   GenreMinimumWeight: TagWeight;
+ *   GenreMaximumDepth: TagDepth;
+ *   GenreExcludeList: string[];
+ *   HideUnverifiedTags: boolean;
+ *   Metadata_StudioOnlyAnimationWorks: boolean;
+ *   ContentRatingList: GenericProvider[];
+ *   ContentRatingOrder: GenericProvider[];
+ *   ProductionLocationList: GenericProvider[];
+ *   ProductionLocationOrder: GenericProvider[];
+ *   Image: AllImagesConfiguration;
+ *   UserList: UserConfig[];
+ *   AutoMergeVersions: boolean;
+ *   MergeVersionSortSelectorList: MergeVersionSortSelector[];
+ *   MergeVersionSortSelectorOrder: MergeVersionSortSelector[];
+ *   UseGroupsForShows: boolean;
+ *   SeparateMovies: boolean;
+ *   FilterMovieLibraries: boolean;
+ *   MovieSpecialsAsExtraFeaturettes: boolean;
+ *   AddTrailers: boolean;
+ *   AddCreditsAsThemeVideos: boolean;
+ *   AddCreditsAsSpecialFeatures: boolean;
+ *   DefaultLibraryStructure: SeriesStructureType;
+ *   DefaultSeasonOrdering: SeasonOrderType;
+ *   DefaultSpecialsPlacement: SpecialOrderType;
+ *   AddMissingMetadata: boolean;
+ *   IgnoredFolders: string[];
+ *   AutoReconstructCollections: boolean;
+ *   CollectionGrouping: CollectionCreationType;
+ *   CollectionMinSizeOfTwo: boolean;
+ *   DefaultLibraryOperationMode: LibraryOperationMode;
+ *   VFS_Threads: number;
+ *   VFS_AddReleaseGroup: boolean;
+ *   VFS_AddResolution: boolean;
+ *   VFS_ResolveLinks: boolean;
+ *   VFS_MaxTotalExceptionsBeforeAbort: number;
+ *   VFS_MaxSeriesExceptionsBeforeAbort: number;
+ *   VFS_UseSemaphore: boolean;
+ *   VFS_Location: VirtualRootLocation;
+ *   VFS_CustomLocation: string;
+ *   VFS_IterativeGenerationEnabled: boolean;
+ *   VFS_IterativeGenerationMaxCount: number;
+ *   Libraries: LibraryConfig[];
+ *   LibraryFolders: MediaFolderConfig[];
+ *   SignalR_AutoConnectEnabled: boolean;
+ *   SignalR_AutoReconnectInSeconds: number[];
+ *   SignalR_RefreshEnabled: boolean;
+ *   SignalR_FileEvents: boolean;
+ *   SignalR_EventSources: GenericProvider[];
+ *   SeasonMerging_Enabled: boolean;
+ *   SeasonMerging_DefaultBehavior: SeasonMergingBehavior;
+ *   SeasonMerging_SeriesTypes: SeriesType[];
+ *   SeasonMerging_MergeWindowInDays: number;
+ *   Misc_ShowInMenu: boolean;
+ *   AdvancedMode: boolean;
+ *   Debug: DebugConfiguration;
+ * }} PluginConfiguration
+ */
+
+/**
+ * @typedef {{
+ *   Id: number;
+ *   AnidbId: number;
+ *   Title: string;
+ *   DefaultTitle: string;
+ * }} SimpleSeries
+ */
 
 /**
 * Shoko API client.
 */
 export const ShokoApiClient = {
-   /**
-    * The plugin ID.
-    *
-    * @private
-    */
-   pluginId: "5216ccbf-d24a-4eb3-8a7e-7da4230b7052",
+    /**
+     * The plugin ID.
+     *
+     * @private
+     */
+    pluginId: "5216ccbf-d24a-4eb3-8a7e-7da4230b7052",
 
-   /**
-    * Get the plugin configuration.
-    *
-    * @public
-    * @returns {Promise<PluginConfiguration>} The plugin configuration.
-    */
-   getConfiguration() {
-       return ApiClient.getPluginConfiguration(ShokoApiClient.pluginId);
-   },
+    /**
+     * Get the plugin configuration.
+     *
+     * @public
+     * @returns {Promise<PluginConfiguration>} The plugin configuration.
+     */
+    getConfiguration() {
+        return ApiClient.getPluginConfiguration(ShokoApiClient.pluginId);
+    },
 
-   /**
-    * Update the plugin configuration.
-    *
-    * @public
-    * @param {PluginConfiguration} config - The plugin configuration to update.
-    * @returns {Promise<any>} Some sort of result we don't really care about.
-    */
-   updateConfiguration(config) {
-       return ApiClient.updatePluginConfiguration(ShokoApiClient.pluginId, config);
-   },
+    /**
+     * Update the plugin configuration.
+     *
+     * @public
+     * @param {PluginConfiguration} config - The plugin configuration to update.
+     * @returns {Promise<any>} Some sort of result we don't really care about.
+     */
+    updateConfiguration(config) {
+        return ApiClient.updatePluginConfiguration(ShokoApiClient.pluginId, config);
+    },
 
-   /**
-    * Get an API key for the username and password combo. Optionally get an
-    * user key instead of a plugin key.
-    *
-    * @public
-    * @param {string} username - The username.
-    * @param {string} password - The password.
-    * @param {boolean?} userKey - Optional. Whether to get a user key or a plugin key.
-    * @returns {Promise<{ apikey: string; }>} The API key.
-    */
-   getApiKey(username, password, userKey = false) {
-       return ApiClient.fetch({
-           dataType: "json",
-           data: JSON.stringify({
-               username,
-               password,
-               userKey,
-           }),
-           headers: {
-               "Content-Type": "application/json",
-               "Accept": "application/json",
-           },
-           type: "POST",
-           url: ApiClient.getUrl("Plugin/Shokofin/Host/GetApiKey"),
-       });
-   },
+    /**
+     * Get an API key for the username and password combo. Optionally get an
+     * user key instead of a plugin key.
+     *
+     * @public
+     * @param {string} username - The username.
+     * @param {string} password - The password.
+     * @param {boolean?} userKey - Optional. Whether to get a user key or a plugin key.
+     * @returns {Promise<{ apikey: string; }>} The API key.
+     */
+    getApiKey(username, password, userKey = false) {
+        return ApiClient.fetch({
+            dataType: "json",
+            data: JSON.stringify({
+                username,
+                password,
+                userKey,
+            }),
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            type: "POST",
+            url: ApiClient.getUrl("Shokofin/Host/GetApiKey"),
+        });
+    },
 
-   /**
-    * Check the status of the SignalR connection.
-    *
-    * @private
-    * @returns {Promise<SignalRStatus>} The SignalR status.
-    */
-   getSignalrStatus() {
-       return ApiClient.fetch({
-           dataType: "json",
-           type: "GET",
-           url: ApiClient.getUrl("Plugin/Shokofin/SignalR/Status"),
-       });
-   },
+    /**
+     * Get the list of series.
+     *
+     * @public
+     * @param {string} query - The query to search for.
+     * @returns {Promise<SimpleSeries[]>} The list of series.
+     */
+    getSeriesList(query = "") {
+        return ApiClient.fetch({
+            dataType: "json",
+            type: "GET",
+            url: query.trim()
+                ? ApiClient.getUrl(`Shokofin/Utility/Series?query=${query}`)
+                : ApiClient.getUrl("Shokofin/Utility/Series"),
+        });
+    },
 
-   /**
-    * Connects to the SignalR stream on the server.
-    *
-    * @public
-    * @returns {Promise<SignalRStatus>} The SignalR status.
-    */
-   async signalrConnect() {
-       await ApiClient.fetch({
-           type: "POST",
-           url: ApiClient.getUrl("Plugin/Shokofin/SignalR/Connect"),
-       });
-       return ShokoApiClient.getSignalrStatus();
-   },
+    /**
+     * Get the configuration for a series.
+     *
+     * @public
+     * @param {string} seriesId - The series ID.
+     * @returns {Promise<SeriesConfiguration>} The API key.
+     */
+    getSeriesConfiguration(seriesId) {
+        return ApiClient.fetch({
+            dataType: "json",
+            type: "GET",
+            url: ApiClient.getUrl(`Shokofin/Utility/Series/${seriesId}/Configuration`),
+        });
+    },
 
-   /**
-    * Disconnects from the SignalR stream on the server.
-    *
-    * @public
-    * @returns {Promise<SignalRStatus>} The SignalR status.
-    */
-   async signalrDisconnect() {
-       await ApiClient.fetch({
-           type: "POST",
-           url: ApiClient.getUrl("Plugin/Shokofin/SignalR/Disconnect"),
-       });
-       return ShokoApiClient.getSignalrStatus();
-   },
+    /**
+     * Get the configuration for a series.
+     *
+     * @public
+     * @param {string} seriesId - The series ID.
+     * @param {Partial<SeriesConfiguration>} partialSeriesConfiguration - The series configuration.
+     * @returns {Promise<SeriesConfiguration>} The API key.
+     */
+    updateSeriesConfiguration(seriesId, partialSeriesConfiguration = { }) {
+        return ApiClient.fetch({
+            dataType: "json",
+            data: JSON.stringify(partialSeriesConfiguration),
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            type: "POST",
+            url: ApiClient.getUrl(`Shokofin/Utility/Series/${seriesId}/Configuration`),
+        });
+    },
+
+    /**
+     * Check the status of the SignalR connection.
+     *
+     * @private
+     * @returns {Promise<SignalRStatus>} The SignalR status.
+     */
+    getSignalrStatus() {
+        return ApiClient.fetch({
+            dataType: "json",
+            type: "GET",
+            url: ApiClient.getUrl("Shokofin/SignalR/Status"),
+        });
+    },
+
+    /**
+     * Connects to the SignalR stream on the server.
+     *
+     * @public
+     * @returns {Promise<SignalRStatus>} The SignalR status.
+     */
+    async signalrConnect() {
+        await ApiClient.fetch({
+            type: "POST",
+            url: ApiClient.getUrl("Shokofin/SignalR/Connect"),
+        });
+        return ShokoApiClient.getSignalrStatus();
+    },
+
+    /**
+     * Disconnects from the SignalR stream on the server.
+     *
+     * @public
+     * @returns {Promise<SignalRStatus>} The SignalR status.
+     */
+    async signalrDisconnect() {
+        await ApiClient.fetch({
+            type: "POST",
+            url: ApiClient.getUrl("Shokofin/SignalR/Disconnect"),
+        });
+        return ShokoApiClient.getSignalrStatus();
+    },
 };
+globalThis.ShokoApiClient = ShokoApiClient;
 
 //#endregion
 
@@ -462,21 +734,41 @@ export const ShokoApiClient = {
 
 /**
  * @type {{
-*   config: PluginConfiguration | null;
-*   currentTab: TabType;
-*   expertPresses: number;
-*   expertMode: boolean;
-*   connected: boolean;
-*   timeout: number | null;
-* }}
-*/
+ *   config: PluginConfiguration | null;
+ *   metadata: {
+ *     title: AllConfigurationTypes;
+ *     description: AllConfigurationTypes;
+ *     image: AllConfigurationTypes;
+ *   }
+ *   seriesId: string;
+ *   seriesQuery: string;
+ *   seriesList: SimpleSeries[] | null;
+ *   seriesTimeout: number | null;
+ *   currentTab: TabType;
+ *   clickCounter: number;
+ *   advancedMode: boolean;
+ *   debugMode: boolean;
+ *   connected: boolean;
+ *   timeout: number | null;
+ * }}
+ */
 export const State = window["SHOKO_STATE_OBJECT"] || (window["SHOKO_STATE_OBJECT"] = {
-   config: null,
-   currentTab: "connection",
-   expertPresses: 0,
-   expertMode: false,
-   connected: false,
-   timeout: null,
+  config: null,
+  metadata: {
+    title: "Default",
+    description: "Default",
+    image: "Default",
+  },
+  seriesId: "",
+  seriesQuery: "",
+  seriesList: null,
+  seriesTimeout: null,
+  currentTab: "connection",
+  clickCounter: 0,
+  advancedMode: false,
+  debugMode: false,
+  connected: false,
+  timeout: null,
 });
 
 //#endregion
@@ -484,7 +776,7 @@ export const State = window["SHOKO_STATE_OBJECT"] || (window["SHOKO_STATE_OBJECT
 //#region Tabs
 
 /**
- * @typedef {"connection" | "metadata" | "library" | "vfs" | "users" | "signalr" | "misc" | "utilities"} TabType
+ * @typedef {"connection" | "metadata" | "library" | "vfs" | "users" | "series" | "signalr" | "misc" | "utilities"} TabType
  */
 
 /**
@@ -494,7 +786,7 @@ export const State = window["SHOKO_STATE_OBJECT"] || (window["SHOKO_STATE_OBJECT
  * @property {string} helpHref The tab help href.
  * @property {string} name The tab name.
  * @property {boolean?} connected Optional. Whether the tab is only rendered when or when not connected.
- * @property {boolean?} expertMode Optional. Whether the tab is only rendered when in or not in expert mode.
+ * @property {boolean?} advancedMode Optional. Whether the tab is only rendered when in or not in expert mode.
  */
 
 const DefaultHelpLink = "https://docs.shokoanime.com/jellyfin/configuring-shokofin/";
@@ -538,6 +830,13 @@ const Tabs = [
         connected: true,
     },
     {
+        id: "series",
+        href: getConfigurationPageUrl("Shoko.Settings", "series"),
+        helpHref: "https://docs.shokoanime.com/jellyfin/configuring-shokofin/#series",
+        name: "Series",
+        connected: true,
+    },
+    {
         id: "signalr",
         href: getConfigurationPageUrl("Shoko.Settings", "signalr"),
         helpHref: "https://docs.shokoanime.com/jellyfin/configuring-shokofin/#signalr",
@@ -550,14 +849,15 @@ const Tabs = [
         helpHref: "https://docs.shokoanime.com/jellyfin/configuring-shokofin/#misc",
         name: "Misc",
         connected: true,
-        expertMode: true,
+        advancedMode: true,
     },
-    {
-        id: "utilities",
-        href: getConfigurationPageUrl("Shoko.Settings", "utilities"),
-        helpHref: "https://docs.shokoanime.com/jellyfin/utilities",
-        name: "Utilities",
-    },
+    // {
+    //     id: "utilities",
+    //     href: getConfigurationPageUrl("Shoko.Settings", "utilities"),
+    //     helpHref: "https://docs.shokoanime.com/jellyfin/utilities",
+    //     name: "Utilities",
+    //     advancedMode: true,
+    // },
 ];
 
 /**
@@ -571,7 +871,7 @@ export function updateTabs(view, tabName) {
         State.currentTab = tabName;
     }
 
-    const tabs = Tabs.filter(tab => tab.id === State.currentTab || (tab.connected === undefined || tab.connected === State.connected) && (tab.expertMode === undefined || tab.expertMode === State.expertMode));
+    const tabs = Tabs.filter(tab => tab.id === State.currentTab || (tab.connected === undefined || tab.connected === State.connected) && (tab.advancedMode === undefined || tab.advancedMode === State.advancedMode));
     let index = tabs.findIndex((tab => tab.id === State.currentTab));
     if (index === -1) {
         index = 0;
@@ -595,11 +895,9 @@ export function updateTabs(view, tabName) {
 
 //#region Constants
 
-
 const Messages = {
     UnableToRender: "There was an error loading the page, please refresh once to see if that will fix it, and if it doesn't, then reach out to support or debug it yourself. Your call.",
 };
-
 
 //#endregion
 
@@ -771,8 +1069,9 @@ export function setupEvents(view, events, initialTab = "connection", hide = fals
                 if (!State.config) {
                     Dashboard.showLoadingMsg();
                     State.config = await ShokoApiClient.getConfiguration();
-                    State.expertPresses = 0;
-                    State.expertMode = State.config.ExpertMode;
+                    State.clickCounter = 0;
+                    State.advancedMode = State.config.AdvancedMode;
+                    State.debugMode = State.config.Debug.ShowInUI;
                     State.connected = Boolean(State.config.ApiKey);
                 }
 
@@ -814,9 +1113,15 @@ export function setupEvents(view, events, initialTab = "connection", hide = fals
             // to another view.
             State.timeout = setTimeout(() => {
                 State.config = null;
+                State.metadata = {
+                    title: "Default",
+                    description: "Default",
+                    image: "Default",
+                };
                 State.currentTab = initialTab;
-                State.expertPresses = 0;
-                State.expertMode = false;
+                State.clickCounter = 0;
+                State.advancedMode = false;
+                State.debugMode = false;
                 State.connected = false;
                 State.timeout = null;
             }, 100);
@@ -980,26 +1285,6 @@ function overrideLink(target) {
 
 //#endregion
 
-//#region Helpers - Readonly List
-
-/**
- * Initialize a readonly list.
- *
- * @param {HTMLFormElement} form
- * @param {string} name
- * @param {string[]} entries
- * @returns {void}
- */
-export function renderReadonlyList(form, name, entries) {
-    const list = form.querySelector(`#${name} .checkboxList`);
-    const listItems = entries.map((entry) =>
-        `<div class="listItem"><div class="listItemBody"><h3 class="listItemBodyText">${entry}</h3></div></div>`
-    );
-    list.innerHTML = listItems.join("");
-}
-
-//#endregion
-
 //#region Helpers - Checkbox List
 
 /**
@@ -1010,8 +1295,7 @@ export function renderReadonlyList(form, name, entries) {
  **/
 export function renderCheckboxList(form, name, enabled) {
     for (const item of Array.from(form.querySelectorAll(`#${name}[is=\"checkbox-list\"] .listItem input[data-option]`))) {
-        if (enabled.includes(item.dataset.option))
-            item.checked = true;
+        item.checked = enabled.includes(item.dataset.option);
     }
 }
 
@@ -1074,7 +1358,7 @@ function onSortableContainerClick(event) {
  *
  * @param {HTMLDivElement} element
  */
-function overrideSortableCheckboxList(element) {
+export function overrideSortableCheckboxList(element) {
     element.addEventListener("click", onSortableContainerClick);
 }
 
@@ -1111,7 +1395,7 @@ function adjustSortableListElement(element, index) {
  * @returns {HTMLElement | null} The parent element with the given class, or
  * null if not found.
  */
-function getParentWithClass(element, className) {
+export function getParentWithClass(element, className) {
     return element.parentElement.classList.contains(className) ? element.parentElement : null;
 }
 
@@ -1139,14 +1423,16 @@ export function renderSortableCheckboxList(form, name, enabled, order) {
             isSortable,
             option: checkbox.dataset.option,
         }));
+    if (order.length === 0) {
+        order = listItems.map((item) => item.option);
+    }
     list.innerHTML = "";
     for (const option of order) {
         const { item, checkbox, isSortable } = listItems.find((item) => item.option === option) || {};
         if (!item)
             continue;
         list.append(item);
-        if (enabled.includes(option))
-            checkbox.checked = true;
+        checkbox.checked = enabled.includes(option);
         if (isSortable)
             adjustSortableListElement(item, index++);
     }
@@ -1170,6 +1456,73 @@ export function retrieveSortableCheckboxList(view, name) {
         titleElements
             .map(getValue),
     ];
+}
+
+//#endregion
+
+//#endregion
+
+//#region Modules
+
+//#region Modules - 'escape-html'
+
+// NOTE: Included a copy since we can't 'require' or 'import' the version
+// bundled with the web UI. Also modified it to fit the code style of this
+// project.
+
+/*!
+ * escape-html
+ * Copyright(c) 2012-2013 TJ Holowaychuk
+ * Copyright(c) 2015 Andreas Lubbe
+ * Copyright(c) 2015 Tiancheng "Timothy" Gu
+ * Copyright(c) 2025 Shokofin Project Contributors
+ * MIT Licensed
+ */
+const matchHtmlRegExp = /["'&<>]/;
+/**
+ * Escape special characters in the given string of html.
+ *
+ * @param  {string} string The string to escape for inserting into HTML
+ * @return {string}
+ * @public
+ */
+export function escapeHtml(string) {
+    let str = "" + string;
+    let match = matchHtmlRegExp.exec(str);
+    if (!match) return str;
+    let escape;
+    let html = "";
+    let index = 0;
+    let lastIndex = 0;
+    for (index = match.index; index < str.length; index++) {
+        switch (str.charCodeAt(index)) {
+            case 34: // "
+                escape = "&quot;";
+                break;
+            case 38: // &
+                escape = "&amp;";
+                break;
+            case 39: // '
+                escape = "&#39;";
+                break;
+            case 60: // <
+                escape = "&lt;";
+                break;
+            case 62: // >
+                escape = "&gt;";
+                break;
+            default:
+                continue;
+        }
+        if (lastIndex !== index) {
+            html += str.substring(lastIndex, index);
+        }
+        lastIndex = index + 1;
+        html += escape;
+    }
+    return lastIndex !== index
+        ? html + str.substring(lastIndex, index)
+        : html;
 }
 
 //#endregion

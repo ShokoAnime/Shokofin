@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Jellyfin.Data.Enums;
+using Shokofin.API.Converters;
 using Shokofin.Events.Interfaces;
 
 namespace Shokofin.SignalR.Models;
 
-public class EpisodeInfoUpdatedEventArgs : IMetadataUpdatedEventArgs
-{
+public class EpisodeInfoUpdatedEventArgs : IMetadataUpdatedEventArgs {
     /// <summary>
     /// The update reason.
     /// </summary>
@@ -22,8 +22,8 @@ public class EpisodeInfoUpdatedEventArgs : IMetadataUpdatedEventArgs
     /// <summary>
     /// The provided metadata episode id.
     /// </summary>
-    [JsonInclude, JsonPropertyName("EpisodeID")]
-    public int ProviderId { get; set; }
+    [JsonInclude, JsonPropertyName("EpisodeID"), JsonConverter(typeof(JsonAutoStringConverter))]
+    public string ProviderId { get; set; } = string.Empty;
 
     /// <summary>
     /// The provided metadata series id.
@@ -43,12 +43,6 @@ public class EpisodeInfoUpdatedEventArgs : IMetadataUpdatedEventArgs
     [JsonInclude, JsonPropertyName("ShokoSeriesIDs")]
     public List<int> SeriesIds { get; set; } = [];
 
-    /// <summary>
-    /// Shoko group ids affected by this update.
-    /// </summary>
-    [JsonInclude, JsonPropertyName("ShokoGroupIDs")]
-    public List<int> GroupIds { get; set; } = [];
-
     #region IMetadataUpdatedEventArgs Impl.
 
     BaseItemKind IMetadataUpdatedEventArgs.Kind => BaseItemKind.Episode;
@@ -58,8 +52,6 @@ public class EpisodeInfoUpdatedEventArgs : IMetadataUpdatedEventArgs
     IReadOnlyList<int> IMetadataUpdatedEventArgs.EpisodeIds => EpisodeIds;
 
     IReadOnlyList<int> IMetadataUpdatedEventArgs.SeriesIds => SeriesIds;
-
-    IReadOnlyList<int> IMetadataUpdatedEventArgs.GroupIds => GroupIds;
 
     #endregion
 }

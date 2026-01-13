@@ -1,6 +1,8 @@
 #! /bin/env node
-import { execSync } from "child_process";
-import process from "process";
+import { dirname, join } from "node:path";
+import { execSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import process from "node:process";
 
 // https://git-scm.com/docs/pretty-formats/2.21.0
 
@@ -30,6 +32,13 @@ const Placeholders = {
     "ce": "committer_email",
     "cI": "committer_date",
 };
+
+const mappingUrl = import.meta.url.startsWith("file:")
+    ? join(dirname(import.meta.url.slice(5)), "email-to-github.json")
+    : null;
+const emailToGithubMapping = mappingUrl && existsSync(mappingUrl)
+    ? JSON.parse(readFileSync(mappingUrl, "utf-8"))
+    : {};
 
 const commitOrder = [];
 const commits = {};
@@ -71,37 +80,42 @@ for (const [placeholder, name] of Object.entries(Placeholders)) {
 
 // Add file-level changes to each commit
 for (const commitId of commitOrder) {
-    const fileStatusOutput = execSync(`git diff --name-status ${commitId}^ ${commitId}`).toString();
-    const lineChangesOutput = execSync(`git diff --numstat ${commitId}^ ${commitId}`).toString();
+    try {
+        const fileStatusOutput = execSync(`git diff --name-status ${commitId}^ ${commitId}`).toString();
+        const lineChangesOutput = execSync(`git diff --numstat ${commitId}^ ${commitId}`).toString();
 
-    const files = [];
-    const fileStatusLines = fileStatusOutput.split(/\r\n|\r|\n/g).filter(a => a);
-    const lineChangesLines = lineChangesOutput.split(/\r\n|\r|\n/g).filter(a => a);
+        const files = [];
+        const fileStatusLines = fileStatusOutput.split(/\r\n|\r|\n/g).filter(a => a);
+        const lineChangesLines = lineChangesOutput.split(/\r\n|\r|\n/g).filter(a => a);
 
-    for (const [index, line] of fileStatusLines.entries()) {
-        const [rawStatus, path] = line.split(/\t/);
-        const status = rawStatus === "M" ?
-            "modified"
-        : rawStatus === "A" ?
-            "added"
-        : rawStatus === "D" ?
-            "deleted"
-        : rawStatus === "R" ?
-            "renamed"
-        : "untracked";
-        const lineChangeParts = lineChangesLines[index].split(/\t/);
-        const addedLines = parseInt(lineChangeParts[0] || "0", 10);
-        const removedLines = parseInt(lineChangeParts[1] || "0", 10);
+        for (const [index, line] of fileStatusLines.entries()) {
+            const [rawStatus, path] = line.split(/\t/);
+            const status = rawStatus === "M" ?
+                "modified"
+            : rawStatus === "A" ?
+                "added"
+            : rawStatus === "D" ?
+                "deleted"
+            : rawStatus === "R" ?
+                "renamed"
+            : "untracked";
+            const lineChangeParts = lineChangesLines[index].split(/\t/);
+            const addedLines = parseInt(lineChangeParts[0] || "0", 10);
+            const removedLines = parseInt(lineChangeParts[1] || "0", 10);
 
-        files.push({
-            path,
-            status,
-            addedLines,
-            removedLines,
-        });
+            files.push({
+                path,
+                status,
+                addedLines,
+                removedLines,
+            });
+        }
+
+        commits[commitId].files = files;
     }
-
-    commits[commitId].files = files;
+    catch (error) {
+        commits[commitId].files = [];
+    }
 }
 
 // Trim trailing newlines from all values in the commits object
@@ -120,8 +134,8 @@ const commitsList = commitOrder.reverse()
         commit,
         parents,
         tree,
-        subject: /^\s*\w+: /i.test(subject) ? subject.split(":").slice(1).join(":").trim() : subject.trim(),
-        type: /^\s*\w+: /i.test(subject) ?
+        subject: /^\s*\w+\s*: ?/i.test(subject) ? subject.split(":").slice(1).join(":").trim() : subject.trim(),
+        type: /^\s*\w+\s*: ?/i.test(subject) ?
                 subject.split(":")[0].toLowerCase()
             : subject.startsWith("Partially revert ") ?
                 "revert"
@@ -134,12 +148,14 @@ const commitsList = commitOrder.reverse()
         author: {
             name: author_name,
             email: author_email,
+            github: emailToGithubMapping[author_email] || null,
             date: new Date(author_date).toISOString(),
             timeZone: author_date.substring(19) === "Z" ? "+00:00" : author_date.substring(19),
         },
         committer: {
             name: committer_name,
             email: committer_email,
+            github: emailToGithubMapping[committer_email] || null,
             date: new Date(committer_date).toISOString(),
             timeZone: committer_date.substring(19) === "Z" ? "+00:00" : committer_date.substring(19),
         },
@@ -161,6 +177,11 @@ const commitsList = commitOrder.reverse()
             return subject;
         })(commit.subject),
     }))
-    .filter((commit) => !(commit.type === "misc" && (commit.subject === "update unstable manifest" || commit.subject === "Update repo manifest" || commit.subject === "Update unstable repo manifest")));
+    .filter((commit) => !(commit.type === "misc" && (commit.subject === "update unstable manifest" || commit.subject === "Update repo manifest" || commit.subject === "Update unstable repo manifest")))
+    .map((commit, index) => ({
+        ...commit,
+        simple_type: ["misc", "refactor"].includes(commit.type) ? "change" : commit.type === "chore" ? "repo" : commit.type,
+        index,
+    }));
 
 process.stdout.write(JSON.stringify(commitsList, null, 2));

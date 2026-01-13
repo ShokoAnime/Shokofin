@@ -20,15 +20,12 @@ using Shokofin.ExternalIds;
 using Shokofin.Resolvers.Models;
 using Shokofin.Utils;
 
-using ApiException = Shokofin.API.Models.ApiException;
-
 namespace Shokofin.Resolvers;
 
-public class ShokoLibraryMonitor : IHostedService
-{
+public class ShokoLibraryMonitor : IHostedService {
     private readonly ILogger<ShokoLibraryMonitor> Logger;
 
-    private readonly ShokoAPIClient ApiClient;
+    private readonly ShokoApiClient ApiClient;
 
     private readonly EventDispatchService Events;
 
@@ -56,22 +53,23 @@ public class ShokoLibraryMonitor : IHostedService
 
     public ShokoLibraryMonitor(
         ILogger<ShokoLibraryMonitor> logger,
-        ShokoAPIClient apiClient,
+        ShokoApiClient apiClient,
         EventDispatchService events,
         MediaFolderConfigurationService configurationService,
         ILibraryManager libraryManager,
         ILibraryMonitor libraryMonitor,
         LibraryScanWatcher libraryScanWatcher,
         NamingOptions namingOptions
-    )
-    {
+    ) {
         Logger = logger;
         ApiClient = apiClient;
         Events = events;
         ConfigurationService = configurationService;
-        ConfigurationService.ConfigurationAdded += OnMediaFolderConfigurationAddedOrUpdated;
-        ConfigurationService.ConfigurationUpdated += OnMediaFolderConfigurationAddedOrUpdated;
-        ConfigurationService.ConfigurationRemoved += OnMediaFolderConfigurationRemoved;
+        ConfigurationService.LibraryConfigurationAdded += OnLibraryConfigurationAddedOrChanged;
+        ConfigurationService.LibraryConfigurationChanged += OnLibraryConfigurationAddedOrChanged;
+        ConfigurationService.LibraryConfigurationRemoved += OnLibraryConfigurationRemoved;
+        ConfigurationService.MediaFolderConfigurationAdded += OnMediaFolderConfigurationAdded;
+        ConfigurationService.MediaFolderConfigurationRemoved += OnMediaFolderConfigurationRemoved;
         LibraryManager = libraryManager;
         LibraryMonitor = libraryMonitor;
         LibraryScanWatcher = libraryScanWatcher;
@@ -80,81 +78,111 @@ public class ShokoLibraryMonitor : IHostedService
         Cache = new(logger, new() { ExpirationScanFrequency = TimeSpan.FromSeconds(30) }, new() { AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(1) });
     }
 
-    ~ShokoLibraryMonitor()
-    {
-        ConfigurationService.ConfigurationAdded -= OnMediaFolderConfigurationAddedOrUpdated;
-        ConfigurationService.ConfigurationUpdated  -= OnMediaFolderConfigurationAddedOrUpdated;
-        ConfigurationService.ConfigurationRemoved -= OnMediaFolderConfigurationRemoved;
+    ~ShokoLibraryMonitor() {
+        ConfigurationService.LibraryConfigurationAdded -= OnLibraryConfigurationAddedOrChanged;
+        ConfigurationService.LibraryConfigurationChanged -= OnLibraryConfigurationAddedOrChanged;
+        ConfigurationService.LibraryConfigurationRemoved -= OnLibraryConfigurationRemoved;
+        ConfigurationService.MediaFolderConfigurationAdded -= OnMediaFolderConfigurationAdded;
+        ConfigurationService.MediaFolderConfigurationRemoved -= OnMediaFolderConfigurationRemoved;
         LibraryScanWatcher.ValueChanged -= OnLibraryScanRunningChanged;
     }
 
-    Task IHostedService.StartAsync(CancellationToken cancellationToken)
-    {
+    Task IHostedService.StartAsync(CancellationToken cancellationToken) {
         StartWatching();
         return Task.CompletedTask;
     }
 
-    Task IHostedService.StopAsync(CancellationToken cancellationToken)
-    {
+    Task IHostedService.StopAsync(CancellationToken cancellationToken) {
         StopWatching();
         return Task.CompletedTask;
     }
 
-    public void StartWatching()
-    {
+    public void StartWatching() {
         // add blockers/watchers for every media folder with VFS enabled and real time monitoring enabled.
-        foreach (var mediaConfig in Plugin.Instance.Configuration.MediaFolders.ToList()) {
-            if (LibraryManager.GetItemById(mediaConfig.MediaFolderId) is not Folder mediaFolder)
+        foreach (var libraryConfig in Plugin.Instance.Configuration.Libraries.ToList()) {
+            if (
+                !libraryConfig.IsVirtualFileSystemEnabled ||
+                LibraryManager.GetItemById(libraryConfig.Id) is not Folder libraryFolder ||
+                LibraryManager.GetLibraryOptions(libraryFolder) is not { } libraryOptions ||
+                !libraryOptions.EnableRealtimeMonitor
+            )
                 continue;
 
-            var libraryOptions = LibraryManager.GetLibraryOptions(mediaFolder);
-            if (libraryOptions != null && !mediaConfig.IsVirtualRoot && libraryOptions.EnableRealtimeMonitor && mediaConfig.IsVirtualFileSystemEnabled)
-                StartWatchingMediaFolder(mediaFolder, mediaConfig);
+            foreach (var mediaConfig in libraryConfig.MediaFolders) 
+                StartWatchingMediaFolder(mediaConfig);
         }
     }
 
-    public void StopWatching()
-    {
+    public void StopWatching() {
         foreach (var path in FileSystemWatchers.Keys.ToList())
             StopWatchingPath(path);
     }
 
-    private void OnLibraryScanRunningChanged(object? sender, bool isScanRunning)
-    {
+    private void OnLibraryScanRunningChanged(object? sender, bool isScanRunning) {
         if (isScanRunning)
             StopWatching();
         else
             StartWatching();
     }
 
-    private void OnMediaFolderConfigurationAddedOrUpdated(object? sender, MediaConfigurationChangedEventArgs eventArgs)
-    {
+    private void OnLibraryConfigurationAddedOrChanged(object? sender, LibraryConfigurationChangedEventArgs eventArgs) {
         // Don't add/remove watchers during a scan.
         if (LibraryScanWatcher.IsScanRunning)
             return;
 
-        var libraryOptions = LibraryManager.GetLibraryOptions(eventArgs.MediaFolder);
-        if (libraryOptions != null && !eventArgs.Configuration.IsVirtualRoot && libraryOptions.EnableRealtimeMonitor && eventArgs.Configuration.IsVirtualFileSystemEnabled)
-            StartWatchingMediaFolder(eventArgs.MediaFolder, eventArgs.Configuration);
+        if (
+            eventArgs.LibraryConfiguration.IsVirtualFileSystemEnabled &&
+            LibraryManager.GetItemById(eventArgs.LibraryConfiguration.Id) is Folder libraryFolder &&
+            LibraryManager.GetLibraryOptions(libraryFolder) is { } libraryOptions &&
+            libraryOptions.EnableRealtimeMonitor
+        ) {
+            foreach (var mediaConfig in eventArgs.MediaFolderConfigurations)
+                StartWatchingMediaFolder(mediaConfig);
+        }
+        else {
+            foreach (var mediaConfig in eventArgs.MediaFolderConfigurations)
+                StopWatchingPath(mediaConfig.Path);
+        }
+    }
+
+    private void OnLibraryConfigurationRemoved(object? sender, LibraryConfigurationChangedEventArgs eventArgs) {
+        // Don't add/remove watchers during a scan.
+        if (LibraryScanWatcher.IsScanRunning)
+            return;
+
+        foreach (var mediaConfig in eventArgs.MediaFolderConfigurations)
+            StopWatchingPath(mediaConfig.Path);
+    }
+
+    private void OnMediaFolderConfigurationAdded(object? sender, MediaConfigurationChangedEventArgs eventArgs) {
+        // Don't add/remove watchers during a scan.
+        if (LibraryScanWatcher.IsScanRunning)
+            return;
+
+        if (
+            eventArgs.LibraryConfiguration.IsVirtualFileSystemEnabled &&
+            LibraryManager.GetItemById(eventArgs.LibraryConfiguration.Id) is Folder libraryFolder &&
+            LibraryManager.GetLibraryOptions(libraryFolder) is { } libraryOptions &&
+            libraryOptions.EnableRealtimeMonitor
+        )
+            StartWatchingMediaFolder(eventArgs.MediaFolderConfiguration);
         else
-            StopWatchingPath(eventArgs.MediaFolder.Path);
+            StopWatchingPath(eventArgs.MediaFolderConfiguration.Path);
     }
 
-    private void OnMediaFolderConfigurationRemoved(object? sender, MediaConfigurationChangedEventArgs eventArgs)
-    {
+    private void OnMediaFolderConfigurationRemoved(object? sender, MediaConfigurationChangedEventArgs eventArgs) {
         // Don't add/remove watchers during a scan.
         if (LibraryScanWatcher.IsScanRunning)
             return;
 
-        StopWatchingPath(eventArgs.MediaFolder.Path);
+        StopWatchingPath(eventArgs.MediaFolderConfiguration.Path);
     }
 
-    private void StartWatchingMediaFolder(Folder mediaFolder, MediaFolderConfiguration config)
-    {
+    private void StartWatchingMediaFolder(MediaFolderConfiguration config) {
         // Creating a FileSystemWatcher over the LAN can take hundreds of milliseconds, so wrap it in a Task to do it in parallel.
         Task.Run(() => {
             try {
-                var watcher = new FileSystemWatcher(mediaFolder.Path, "*") {
+                var watcher = new FileSystemWatcher(config.Path, "*") {
                     IncludeSubdirectories = true,
                     InternalBufferSize = 65536,
                     NotifyFilter = NotifyFilters.CreationTime |
@@ -172,10 +200,10 @@ public class ShokoLibraryMonitor : IHostedService
                 watcher.Error += OnWatcherError;
 
                 var lease = Events.RegisterEventSubmitter();
-                if (FileSystemWatchers.TryAdd(mediaFolder.Path, new(mediaFolder, config, watcher, lease))) {
-                    LibraryMonitor.ReportFileSystemChangeBeginning(mediaFolder.Path);
+                if (FileSystemWatchers.TryAdd(config.Path, new(config, watcher, lease))) {
+                    LibraryMonitor.ReportFileSystemChangeBeginning(config.Path);
                     watcher.EnableRaisingEvents = true;
-                    Logger.LogInformation("Watching directory {Path}", mediaFolder.Path);
+                    Logger.LogInformation("Watching directory {Path}", config.Path);
                 }
                 else {
                     lease.Dispose();
@@ -183,25 +211,20 @@ public class ShokoLibraryMonitor : IHostedService
                 }
             }
             catch (Exception ex) {
-                Logger.LogError(ex, "Error watching path: {Path}", mediaFolder.Path);
+                Logger.LogError(ex, "Error watching path: {Path}", config.Path);
             }
         });
     }
 
-    private void StopWatchingPath(string path)
-    {
-        if (FileSystemWatchers.TryGetValue(path, out var watcher))
-        {
+    private void StopWatchingPath(string path) {
+        if (FileSystemWatchers.TryGetValue(path, out var watcher)) {
             DisposeWatcher(watcher.Watcher, true);
         }
     }
 
-    private void DisposeWatcher(FileSystemWatcher watcher, bool removeFromList = true)
-    {
-        try
-        {
-            using (watcher)
-            {
+    private void DisposeWatcher(FileSystemWatcher watcher, bool removeFromList = true) {
+        try {
+            using (watcher) {
                 Logger.LogInformation("Stopping directory watching for path {Path}", watcher.Path);
 
                 watcher.Created -= OnWatcherChanged;
@@ -213,8 +236,7 @@ public class ShokoLibraryMonitor : IHostedService
                 watcher.EnableRaisingEvents = false;
             }
         }
-        finally
-        {
+        finally {
             if (removeFromList && FileSystemWatchers.TryRemove(watcher.Path, out var shokoWatcher)) {
                 LibraryMonitor.ReportFileSystemChangeComplete(watcher.Path, false);
                 shokoWatcher.SubmitterLease.Dispose();
@@ -222,8 +244,7 @@ public class ShokoLibraryMonitor : IHostedService
         }
     }
 
-    private void OnWatcherError(object sender, ErrorEventArgs eventArgs)
-    {
+    private void OnWatcherError(object sender, ErrorEventArgs eventArgs) {
         var ex = eventArgs.GetException();
         if (sender is not FileSystemWatcher watcher)
             return;
@@ -233,25 +254,21 @@ public class ShokoLibraryMonitor : IHostedService
         DisposeWatcher(watcher);
     }
 
-    private void OnWatcherChanged(object? sender, FileSystemEventArgs e)
-    {
-        try
-        {
+    private void OnWatcherChanged(object? sender, FileSystemEventArgs e) {
+        try {
             if (sender is not FileSystemWatcher watcher || !FileSystemWatchers.TryGetValue(watcher.Path, out var shokoWatcher))
                 return;
             Task.Run(() => ReportFileSystemChanged(shokoWatcher.Configuration, e.ChangeType, e.FullPath));
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             Logger.LogError(ex, "Exception in ReportFileSystemChanged. Path: {FullPath}", e.FullPath);
         }
     }
 
-    public async Task ReportFileSystemChanged(MediaFolderConfiguration mediaConfig, WatcherChangeTypes changeTypes, string path)
-    {
+    public async Task ReportFileSystemChanged(MediaFolderConfiguration mediaConfig, WatcherChangeTypes changeTypes, string path) {
         Logger.LogTrace("Found potential path with change {ChangeTypes}; {Path}", changeTypes, path);
 
-        if (!path.StartsWith(mediaConfig.MediaFolderPath)) {
+        if (!path.StartsWith(mediaConfig.Path)) {
             Logger.LogTrace("Skipped path because it is not in the watched folder; {Path}", path);
             return;
         }
@@ -274,51 +291,48 @@ public class ShokoLibraryMonitor : IHostedService
             (_) => Logger.LogTrace("Skipped path because it was handled within a second ago; {Path}", path),
             async () => {
                 string? fileId = null;
-                IFileEventArgs eventArgs;
-                var reason = changeTypes is WatcherChangeTypes.Deleted ? UpdateReason.Removed : changeTypes is WatcherChangeTypes.Created ? UpdateReason.Added : UpdateReason.Updated;
-                var relativePath = path[mediaConfig.MediaFolderPath.Length..];
-                var trackerId = Plugin.Instance.Tracker.Add($"Library Monitor: Path=\"{path}\"");
-                try {
-                    var files = await ApiClient.GetFileByPath(relativePath);
-                    var file = files.FirstOrDefault(file => file.Locations.Any(location => location.ImportFolderId == mediaConfig.ImportFolderId && location.RelativePath == mediaConfig.ImportFolderRelativePath + relativePath));
-                    if (file is null) {
-                        if (reason is not UpdateReason.Removed) {
-                            Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
-                            return null;
-                        }
-                        if (LibraryManager.FindByPath(path, false) is not Video video) {
-                            Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
-                            return null;
-                        }
-                        if (!video.TryGetProviderId(ShokoFileId.Name, out fileId)) {
-                            Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
-                            return null;
-                        }
-                        // It may throw an ApiException with 404 here,
-                        file = await ApiClient.GetFile(fileId);
+                FileEventArgsStub eventArgs;
+                var reason = changeTypes is WatcherChangeTypes.Deleted ? (
+                    UpdateReason.MetadataRemoved
+                ) : changeTypes is WatcherChangeTypes.Created ? (
+                    UpdateReason.MetadataAdded
+                ) : (
+                    UpdateReason.MetadataUpdated
+                );
+                var relativePath = path[mediaConfig.Path.Length..];
+                using (Plugin.Instance.Tracker.Enter($"Library Monitor: Path=\"{path}\"")) {
+                    var files = await ApiClient.GetFileByPath(relativePath).ConfigureAwait(false);
+                    var file0 = files.FirstOrDefault(file => file.Locations.Any(location => location.ManagedFolderId == mediaConfig.ManagedFolderId && location.RelativePath == mediaConfig.ManagedFolderRelativePath + relativePath));
+                    if (file0 is not null) {
+                        var fileLocation = file0.Locations.First(location => location.ManagedFolderId == mediaConfig.ManagedFolderId && location.RelativePath == mediaConfig.ManagedFolderRelativePath + relativePath);
+                        eventArgs = new FileEventArgsStub(fileLocation, file0);
                     }
-
-                    var fileLocation = file.Locations.First(location => location.ImportFolderId == mediaConfig.ImportFolderId && location.RelativePath == mediaConfig.ImportFolderRelativePath + relativePath);
-                    eventArgs = new FileEventArgsStub(fileLocation, file);
-                }
-                // which we catch here.
-                catch (ApiException ex) when (ex.StatusCode is System.Net.HttpStatusCode.NotFound) {
-                    if (fileId is null) {
+                    else if (reason is not UpdateReason.MetadataRemoved) {
                         Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
                         return null;
                     }
-
-                    Logger.LogTrace("Failed to get file info from Shoko during a file deleted event. (File={FileId})", fileId);
-                    eventArgs = new FileEventArgsStub(int.Parse(fileId), null, mediaConfig.ImportFolderId, relativePath, []);
-                }
-                finally {
-                    Plugin.Instance.Tracker.Remove(trackerId);
+                    else if (LibraryManager.FindByPath(path, false) is not Video video) {
+                        Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
+                        return null;
+                    }
+                    else if (!video.TryGetProviderId(ProviderNames.ShokoFile, out fileId)) {
+                        Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
+                        return null;
+                    }
+                    else if (await ApiClient.GetFile(fileId).ConfigureAwait(false) is { } file1) {
+                        var fileLocation = file1.Locations.First(location => location.ManagedFolderId == mediaConfig.ManagedFolderId && location.RelativePath == mediaConfig.ManagedFolderRelativePath + relativePath);
+                        eventArgs = new FileEventArgsStub(fileLocation, file1);
+                    }
+                    else {
+                        Logger.LogTrace("Failed to get file info from Shoko during a file deleted event. (File={FileId})", fileId);
+                        eventArgs = new FileEventArgsStub(int.Parse(fileId), null, mediaConfig.ManagedFolderId, relativePath, []);
+                    }
                 }
 
                 Logger.LogDebug(
-                    "File {EventName}; {ImportFolderId} {Path} (File={FileId},Location={LocationId},CrossReferences={HasCrossReferences})",
+                    "File {EventName}; {ManagedFolderId} {Path} (File={FileId},Location={LocationId},CrossReferences={HasCrossReferences})",
                     reason,
-                    eventArgs.ImportFolderId,
+                    eventArgs.ManagedFolderId,
                     relativePath,
                     eventArgs.FileId,
                     eventArgs.FileLocationId,
@@ -334,10 +348,10 @@ public class ShokoLibraryMonitor : IHostedService
                     return null;
                 }
 
-                Events.AddFileEvent(eventArgs.FileId, reason, eventArgs.ImportFolderId, relativePath, eventArgs);
+                Events.AddFileEvent(eventArgs.FileId, reason, eventArgs.ManagedFolderId, relativePath, eventArgs);
                 return eventArgs;
             }
-        );
+        ).ConfigureAwait(false);
     }
 
     private bool IsVideoFile(string path)

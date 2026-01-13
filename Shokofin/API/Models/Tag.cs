@@ -7,8 +7,7 @@ using TagWeight = Shokofin.Utils.TagFilter.TagWeight;
 
 namespace Shokofin.API.Models;
 
-public class Tag
-{
+public class Tag {
     /// <summary>
     /// Tag id. Relative to it's source for now.
     /// </summary>
@@ -69,8 +68,7 @@ public class Tag
     public string Source { get; set; } = string.Empty;
 }
 
-public class ResolvedTag : Tag
-{
+public class ResolvedTag : Tag {
     // All the abstract tags I know about.
     private static readonly HashSet<string> AbstractTags = [
         "/content indicators",
@@ -191,8 +189,7 @@ public class ResolvedTag : Tag
 
     public IReadOnlyDictionary<string, ResolvedTag> RecursiveNamespacedChildren;
 
-    public ResolvedTag(Tag tag, ResolvedTag? parent, Func<string, int, IEnumerable<Tag>?> getChildren, string ns = "/")
-    {
+    public ResolvedTag(Tag tag, ResolvedTag? parent, Func<string, int, IEnumerable<Tag>?> getChildren, string ns = "/") {
         Id = tag.Id;
         ParentId = parent?.Id;
         Name = tag.Name;
@@ -207,9 +204,9 @@ public class ResolvedTag : Tag
         Children = (getChildren(Source, Id) ?? [])
             .DistinctBy(childTag => childTag.Name)
             .Select(childTag => new ResolvedTag(childTag, this, getChildren, FullName + "/"))
-            .ToDictionary(childTag => childTag.Name);
+            .ToDictionary(childTag => childTag.Name, StringComparer.InvariantCultureIgnoreCase);
         RecursiveNamespacedChildren = Children.Values
             .SelectMany(childTag => childTag.RecursiveNamespacedChildren.Values.Prepend(childTag))
-            .ToDictionary(childTag => childTag.FullName[FullName.Length..]);
+            .ToDictionary(childTag => childTag.FullName[FullName.Length..], StringComparer.InvariantCultureIgnoreCase);
     }
 }

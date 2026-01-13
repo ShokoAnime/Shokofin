@@ -3,8 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Shokofin.API.Models;
 
-public class Role : IEquatable<Role>
-{
+public class Role : IEquatable<Role> {
     /// <summary>
     /// Extra info about the role. For example, role can be voice actor, while role_details is Main Character
     /// </summary>
@@ -27,15 +26,14 @@ public class Role : IEquatable<Role>
 
     /// <summary>
     /// The character played, the <see cref="Role.Type"/> is of type
-    /// <see cref="CreatorRoleType.Seiyuu"/>.
+    /// <see cref="CreatorRoleType.Actor"/>.
     /// </summary>
     public Person? Character { get; set; }
 
     public override bool Equals(object? obj)
         => Equals(obj as Role);
 
-    public bool Equals(Role? other)
-    {
+    public bool Equals(Role? other) {
         if (other is null)
             return false;
 
@@ -47,20 +45,20 @@ public class Role : IEquatable<Role>
     }
 
     public override int GetHashCode()
-    {
-        var hash = 17;
+        => HashCode.Combine(Name, Type, Language, Staff, Character);
 
-        hash = hash * 31 + (Name?.GetHashCode() ?? 0);
-        hash = hash * 31 + Type.GetHashCode();
-        hash = hash * 31 + (Language?.GetHashCode() ?? 0);
-        hash = hash * 31 + Staff.GetHashCode();
-        hash = hash * 31 + (Character?.GetHashCode() ?? 0);
+    public class Person : IEquatable<Person> {
+        /// <summary>
+        /// Id of the person.
+        /// </summary>
+        [JsonPropertyName("ID")]
+        public int? Id { get; set; }
 
-        return hash;
-    }
+        /// <summary>
+        /// Whether the object is a person, company or collab. Only set for AniDB creators.
+        /// </summary>
+        public string? Type { get; set; }
 
-    public class Person : IEquatable<Person>
-    {
         /// <summary>
         /// Main Name, romanized if needed
         /// ex. John Smith
@@ -88,37 +86,32 @@ public class Role : IEquatable<Role>
         public override bool Equals(object? obj)
             => Equals(obj as Person);
 
-        public bool Equals(Person? other)
-        {
+        public bool Equals(Person? other) {
             if (other is null)
                 return false;
 
-            return string.Equals(Name, other.Name, StringComparison.Ordinal) &&
+            return Id == other.Id &&
+                string.Equals(Name, other.Name, StringComparison.Ordinal) &&
                 string.Equals(Description, other.Description, StringComparison.Ordinal) &&
                 string.Equals(AlternateName, other.AlternateName, StringComparison.Ordinal);
         }
 
         public override int GetHashCode()
-        {
-            var hash = 17;
-
-            hash = hash * 31 + (Name?.GetHashCode() ?? 0);
-            hash = hash * 31 + (AlternateName?.GetHashCode() ?? 0);
-            hash = hash * 31 + (Description?.GetHashCode() ?? 0);
-
-            return hash;
-        }
+            => HashCode.Combine(Id, Name, Description, AlternateName);
     }
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum CreatorRoleType
-{
+public enum CreatorRoleType {
     /// <summary>
     /// Voice actor or voice actress.
     /// </summary>
-    Seiyuu,
-    Actor = Seiyuu,
+    Actor,
+
+    /// <summary>
+    /// Synonym of <see cref="CreatorRoleType.Actor"/> for backwards compatibility for a few server versions.
+    /// </summary>
+    Seiyuu = Actor,
 
     /// <summary>
     /// This can be anything involved in writing the show.

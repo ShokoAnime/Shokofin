@@ -10,98 +10,87 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Providers;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
+using Shokofin.Extensions;
 using Shokofin.ExternalIds;
 using Shokofin.Utils;
 
 namespace Shokofin.Providers;
 
-public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasOrder
-{
+public class BoxSetProvider(IHttpClientFactory _httpClientFactory, ILogger<BoxSetProvider> _logger, ShokoApiManager _apiManager)
+    : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasOrder {
     public string Name => Plugin.MetadataProviderName;
 
     public int Order => -1;
 
-    private readonly IHttpClientFactory HttpClientFactory;
-
-    private readonly ILogger<BoxSetProvider> Logger;
-
-    private readonly ShokoAPIManager ApiManager;
-
-    public BoxSetProvider(IHttpClientFactory httpClientFactory, ILogger<BoxSetProvider> logger, ShokoAPIManager apiManager)
-    {
-        HttpClientFactory = httpClientFactory;
-        Logger = logger;
-        ApiManager = apiManager;
-    }
-
-    public async Task<MetadataResult<BoxSet>> GetMetadata(BoxSetInfo info, CancellationToken cancellationToken)
-    {
+    public async Task<MetadataResult<BoxSet>> GetMetadata(BoxSetInfo info, CancellationToken cancellationToken) {
         try {
             // Try to read the shoko group id
-            if (info.TryGetProviderId(ShokoCollectionGroupId.Name, out var collectionId) || info.Path.TryGetAttributeValue(ShokoCollectionGroupId.Name, out collectionId))
+            if (info.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForGroup, out var collectionId))
                 using (Plugin.Instance.Tracker.Enter($"Providing info for Collection \"{info.Name}\". (Path=\"{info.Path}\",Collection=\"{collectionId}\")"))
-                    return await GetShokoGroupMetadata(info, collectionId);
+                    return await GetShokoGroupMetadata(info, collectionId).ConfigureAwait(false);
 
             // Try to read the shoko series id
-            if (info.TryGetProviderId(ShokoCollectionSeriesId.Name, out var seriesId) || info.Path.TryGetAttributeValue(ShokoCollectionSeriesId.Name, out seriesId))
-                using (Plugin.Instance.Tracker.Enter($"Providing info for Collection \"{info.Name}\". (Path=\"{info.Path}\",Series=\"{seriesId}\")"))
-                    return await GetShokoSeriesMetadata(info, seriesId);
+            if (info.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForSeries, out var seasonId))
+                using (Plugin.Instance.Tracker.Enter($"Providing info for Collection \"{info.Name}\". (Path=\"{info.Path}\",Season=\"{seasonId}\")"))
+                    return await GetShokoSeriesMetadata(info, seasonId).ConfigureAwait(false);
 
             return new();
         }
         catch (Exception ex) {
-            Logger.LogError(ex, "Threw unexpectedly while refreshing {Path}; {Message}", info.Path, ex.Message);
+            _logger.LogError(ex, "Threw unexpectedly while refreshing {Path}; {Message}", info.Path, ex.Message);
             return new MetadataResult<BoxSet>();
         }
     }
 
-    private async Task<MetadataResult<BoxSet>> GetShokoSeriesMetadata(BoxSetInfo info, string seriesId)
-    {
+    private async Task<MetadataResult<BoxSet>> GetShokoSeriesMetadata(BoxSetInfo info, string seasonId) {
         // First try to re-use any existing series id.
         var result = new MetadataResult<BoxSet>();
-        var season = await ApiManager.GetSeasonInfoForSeries(seriesId);
-        if (season == null) {
-            Logger.LogWarning("Unable to find movie box-set info for name {Name} and path {Path}", info.Name, info.Path);
+        var seasonInfo = await _apiManager.GetSeasonInfo(seasonId).ConfigureAwait(false);
+        if (seasonInfo == null) {
+            _logger.LogWarning("Unable to find movie box-set info for name {Name} and path {Path}", info.Name, info.Path);
             return result;
         }
 
-        var (displayTitle, alternateTitle) = Text.GetSeasonTitles(season, info.MetadataLanguage);
+        var (displayTitle, alternateTitle) = TextUtility.GetCollectionTitles(seasonInfo, info.MetadataLanguage);
 
-        Logger.LogInformation("Found collection {CollectionName} (Series={SeriesId},ExtraSeries={ExtraIds})", displayTitle, season.Id, season.ExtraIds);
+        _logger.LogInformation("Found collection {CollectionName} (Season={SeasonId},ExtraSeasons={ExtraIds})", displayTitle, seasonInfo.Id, seasonInfo.ExtraIds);
 
         result.Item = new BoxSet {
             Name = displayTitle,
             OriginalTitle = alternateTitle,
-            Overview = Text.GetDescription(season, info.MetadataLanguage),
-            PremiereDate = season.AniDB.AirDate,
-            EndDate = season.AniDB.EndDate,
-            ProductionYear = season.AniDB.AirDate?.Year,
-            Tags = season.Tags.ToArray(),
-            CommunityRating = season.AniDB.Rating.ToFloat(10),
+            Overview = TextUtility.GetCollectionDescription(seasonInfo, info.MetadataLanguage),
+            PremiereDate = seasonInfo.PremiereDate,
+            EndDate = seasonInfo.EndDate,
+            ProductionYear = seasonInfo.PremiereDate?.Year,
+            Tags = seasonInfo.Tags.ToArray(),
+            CommunityRating = seasonInfo.CommunityRating.ToFloat(10),
         };
-        result.Item.SetProviderId(ShokoCollectionSeriesId.Name, season.Id);
+        result.Item.SetProviderId(ProviderNames.ShokoCollectionForSeries, seasonInfo.Id);
         result.HasMetadata = true;
 
         return result;
     }
 
-    private async Task<MetadataResult<BoxSet>> GetShokoGroupMetadata(BoxSetInfo info, string groupId)
-    {
+    private async Task<MetadataResult<BoxSet>> GetShokoGroupMetadata(BoxSetInfo info, string collectionId) {
         // Filter out all manually created collections. We don't help those.
         var result = new MetadataResult<BoxSet>();
-        var collection = await ApiManager.GetCollectionInfoForGroup(groupId);
-        if (collection == null) {
-            Logger.LogWarning("Unable to find collection info for name {Name} and path {Path}", info.Name, info.Path);
+        var collectionInfo = await _apiManager.GetCollectionInfo(collectionId).ConfigureAwait(false);
+        if (collectionInfo == null) {
+            _logger.LogWarning("Unable to find collection info for name {Name} and path {Path}", info.Name, info.Path);
             return result;
         }
 
-        Logger.LogInformation("Found collection {CollectionName} (Series={SeriesId})", collection.Name, collection.Id);
+        var (displayTitle, alternateTitle) = TextUtility.GetCollectionTitles(collectionInfo, info.MetadataLanguage);
+        displayTitle ??= collectionInfo.Title;
+
+        _logger.LogInformation("Found collection {CollectionName} (Collection={CollectionId})", displayTitle, collectionInfo.Id);
 
         result.Item = new BoxSet {
-            Name = collection.Name,
-            Overview = Text.SanitizeAnidbDescription(collection.Shoko.Description),
+            Name = displayTitle,
+            OriginalTitle = alternateTitle,
+            Overview = TextUtility.GetCollectionDescription(collectionInfo, info.MetadataLanguage),
         };
-        result.Item.SetProviderId(ShokoCollectionGroupId.Name, collection.Id);
+        result.Item.SetProviderId(ProviderNames.ShokoCollectionForGroup, collectionInfo.Id);
         result.HasMetadata = true;
 
         return result;
@@ -110,7 +99,6 @@ public class BoxSetProvider : IRemoteMetadataProvider<BoxSet, BoxSetInfo>, IHasO
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(BoxSetInfo searchInfo, CancellationToken cancellationToken)
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
-
     public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => HttpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+        => _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }

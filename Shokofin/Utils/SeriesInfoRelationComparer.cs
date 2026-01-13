@@ -6,8 +6,7 @@ using Shokofin.API.Models;
 
 namespace Shokofin.Utils;
 
-public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
-{
+public class SeriesInfoRelationComparer(bool useIndirect) : IComparer<SeasonInfo> {
     private static readonly Dictionary<RelationType, int> RelationPriority = new() {
         { RelationType.Prequel, 1 },
         { RelationType.MainStory, 2 },
@@ -24,8 +23,7 @@ public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
         { RelationType.SharedCharacters, 99 },
     };
 
-    public int Compare(SeasonInfo? a, SeasonInfo? b)
-    {
+    public int Compare(SeasonInfo? a, SeasonInfo? b) {
         // Check for `null` since `IComparer<T>` expects `T` to be nullable.
         if (a == null && b == null)
             return 0;
@@ -40,8 +38,7 @@ public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
             return directRelationComparison;
 
         // Check for indirect relations.
-        if (Plugin.Instance.Configuration.SeasonOrdering != Ordering.OrderType.ChronologicalIgnoreIndirect)
-        {
+        if (useIndirect) {
             var indirectRelationComparison = CompareIndirectRelations(a, b);
             if (indirectRelationComparison != 0)
                 return indirectRelationComparison;
@@ -49,11 +46,10 @@ public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
 
         // Fallback to checking the air dates if they're not indirectly related
         // or if they have the same relations.
-        return CompareAirDates(a.AniDB.AirDate, b.AniDB.AirDate);
+        return CompareAirDates(a.PremiereDate, b.PremiereDate);
     }
 
-    private static int CompareDirectRelations(SeasonInfo a, SeasonInfo b)
-    {
+    private static int CompareDirectRelations(SeasonInfo a, SeasonInfo b) {
         // We check from both sides because one of the entries may be outdated,
         // so the relation may only present on one of the entries.
         if (a.RelationMap.TryGetValue(b.Id, out var relationType))
@@ -72,8 +68,7 @@ public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
         return 0;
     }
 
-    private static int CompareIndirectRelations(SeasonInfo a, SeasonInfo b)
-    {
+    private static int CompareIndirectRelations(SeasonInfo a, SeasonInfo b) {
         var xRelations = a.Relations
             .Where(r => RelationPriority.ContainsKey(r.Type))
             .Select(r => r.Type)
@@ -108,7 +103,5 @@ public class SeriesInfoRelationComparer : IComparer<SeasonInfo>
     }
 
     private static int CompareAirDates(DateTime? a, DateTime? b)
-    {
-        return a.HasValue ? b.HasValue ? DateTime.Compare(a.Value, b.Value) : 1 : b.HasValue ? -1 : 0;
-    }
+        => a.HasValue ? b.HasValue ? DateTime.Compare(a.Value, b.Value) : 1 : b.HasValue ? -1 : 0;
 }

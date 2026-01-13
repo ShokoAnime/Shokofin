@@ -3,12 +3,10 @@ using System;
 
 namespace Shokofin.Utils;
 
-public class DisposableAction : IDisposable
-{
+public class DisposableAction : IDisposable {
     private readonly Action DisposeAction;
 
-    public DisposableAction(Action disposeAction)
-    {
+    public DisposableAction(Action disposeAction) {
         DisposeAction = disposeAction;
     }
 

@@ -9,18 +9,15 @@ using Shokofin.Events.Interfaces;
 
 namespace Shokofin.Utils;
 
-public static class TagFilter
-{
+public static class TagFilter {
     /// <summary>
     /// Include only the children of the selected tags.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-    public class TagSourceIncludeAttribute : Attribute
-    {
+    public class TagSourceIncludeAttribute : Attribute {
         public string[] Values { get; init; }
 
-        public TagSourceIncludeAttribute(params string[] values)
-        {
+        public TagSourceIncludeAttribute(params string[] values) {
             Values = values;
         }
     }
@@ -29,12 +26,10 @@ public static class TagFilter
     /// Include only the selected tags, but not their children.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-    public class TagSourceIncludeOnlyAttribute : Attribute
-    {
+    public class TagSourceIncludeOnlyAttribute : Attribute {
         public string[] Values { get; init; }
 
-        public TagSourceIncludeOnlyAttribute(params string[] values)
-        {
+        public TagSourceIncludeOnlyAttribute(params string[] values) {
             Values = values;
         }
     }
@@ -43,12 +38,10 @@ public static class TagFilter
     /// Exclude the selected tags and all their children.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-    public class TagSourceExcludeOnlyAttribute : Attribute
-    {
+    public class TagSourceExcludeOnlyAttribute : Attribute {
         public string[] Values { get; init; }
-        
-        public TagSourceExcludeOnlyAttribute(params string[] values)
-        {
+
+        public TagSourceExcludeOnlyAttribute(params string[] values) {
             Values = values;
         }
     }
@@ -57,12 +50,10 @@ public static class TagFilter
     /// Exclude the selected tags, but don't exclude their children.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-    public class TagSourceExcludeAttribute : Attribute
-    {
+    public class TagSourceExcludeAttribute : Attribute {
         public string[] Values { get; init; }
-        
-        public TagSourceExcludeAttribute(params string[] values)
-        {
+
+        public TagSourceExcludeAttribute(params string[] values) {
             Values = values;
         }
     }
@@ -72,7 +63,7 @@ public static class TagFilter
     /// </summary>
     [Flags]
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum TagSource {
+    public enum TagSource : ulong {
         /// <summary>
         /// The content indicators branch is intended to be a less geographically specific
         /// tool than the `age rating` used by convention, for warning about things that
@@ -289,10 +280,32 @@ public static class TagFilter
         Unsorted = 1 << 27,
 
         /// <summary>
+        /// TMDB Keywords.
+        /// </summary>
+        TmdbKeywords = 1 << 28,
+
+        /// <summary>
+        /// TMDB Genres.
+        /// </summary>
+        TmdbGenres = 1 << 29,
+
+        /// <summary>
         /// Custom user tags.
         /// </summary>
         [TagSourceInclude("/custom user tags")]
         CustomTags = 1 << 30,
+
+        /// <summary>
+        /// The first yearly season for the series.
+        /// </summary>
+        FirstYearlySeason = 1L << 31,
+
+        /// <summary>
+        /// All yearly seasons for the series, including the first. Useful
+        /// if the anime spans multiple yearly seasons. E.g. Winter 2011/12,
+        /// Spring 2012, etc..
+        /// </summary>
+        AllYearlySeasons = 1L << 32,
     }
 
     [Flags]
@@ -321,72 +334,32 @@ public static class TagFilter
     private static ProviderName[] GetOrderedProductionLocationProviders()
         => Plugin.Instance.Configuration.ProductionLocationOrder.Where((t) => Plugin.Instance.Configuration.ProductionLocationList.Contains(t)).ToArray();
 
-#pragma warning disable IDE0060
-    public static string[] GetMovieProductionLocations(SeasonInfo seasonInfo, EpisodeInfo episodeInfo)
-#pragma warning restore IDE0060
-    {
-        // TODO: Add TMDB movie linked to episode content rating here.
+    public static string[] GetProductionLocations(IExtendedItemInfo seasonInfo) {
         foreach (var provider in GetOrderedProductionLocationProviders()) {
-            var locations = provider switch {
-                ProviderName.AniDB => seasonInfo.ProductionLocations.ToArray(),
-                // TODO: Add TMDB series content rating here.
-                _ => [],
-            };
-            if (locations.Length > 0)
-                return locations;
+            if (seasonInfo.ProductionLocations.TryGetValue(provider, out var locations) && locations.Count > 0)
+                return [.. locations];
         }
         return [];
     }
 
-    public static string[] GetSeasonProductionLocations(SeasonInfo seasonInfo)
-    {
-        foreach (var provider in GetOrderedProductionLocationProviders()) {
-            var locations = provider switch {
-                ProviderName.AniDB => seasonInfo.ProductionLocations.ToArray(),
-                // TODO: Add TMDB series content rating here.
-                _ => [],
-            };
-            if (locations.Length > 0)
-                return locations;
-        }
-        return [];
-    }
-
-    public static string[] GetShowProductionLocations(ShowInfo showInfo)
-    {
-        foreach (var provider in GetOrderedProductionLocationProviders()) {
-            var title = provider switch {
-                ProviderName.AniDB => showInfo.ProductionLocations.ToArray(),
-                // TODO: Add TMDB series content rating here.
-                _ => [],
-            };
-            if (title.Length > 0)
-                return title;
-        }
-        return [];
-    }
-
-    public static string[] FilterTags(IReadOnlyDictionary<string, ResolvedTag> tags)
-    {
+    public static string[] FilterTags(IReadOnlyDictionary<string, ResolvedTag> tags) {
         var config = Plugin.Instance.Configuration;
-        return FilterInternal(tags, config.TagSources, config.TagIncludeFilters, config.TagMinimumWeight, config.TagMaximumDepth);
+        return FilterInternal(tags, config.TagSources, config.TagIncludeFilters, config.TagMinimumWeight, config.TagMaximumDepth, config.TagExcludeList);
     }
 
-    public static string[] FilterGenres(IReadOnlyDictionary<string, ResolvedTag> tags)
-    {
+    public static string[] FilterGenres(IReadOnlyDictionary<string, ResolvedTag> tags) {
         var config = Plugin.Instance.Configuration;
-        return FilterInternal(tags, config.GenreSources, config.GenreIncludeFilters, config.GenreMinimumWeight, config.GenreMaximumDepth);
+        return FilterInternal(tags, config.GenreSources, config.GenreIncludeFilters, config.GenreMinimumWeight, config.GenreMaximumDepth, config.GenreExcludeList);
     }
 
     private static readonly HashSet<TagSource> AllFlagsToUse = Enum.GetValues<TagSource>().Except([TagSource.CustomTags]).ToHashSet();
 
     private static readonly HashSet<TagSource> AllFlagsToUseForCustomTags = AllFlagsToUse.Except([TagSource.SourceMaterial, TagSource.TargetAudience]).ToHashSet();
 
-    private static string[] FilterInternal(IReadOnlyDictionary<string, ResolvedTag> tags, TagSource source, TagIncludeFilter includeFilter, TagWeight minWeight = TagWeight.Weightless, int maxDepth = 0)
-    {
+    private static string[] FilterInternal(IReadOnlyDictionary<string, ResolvedTag> tags, TagSource source, TagIncludeFilter includeFilter, TagWeight minWeight = TagWeight.Weightless, int maxDepth = 0, IReadOnlyCollection<string>? excludedTags = null) {
         var tagSet = new List<string>();
         foreach (var flag in AllFlagsToUse.Where(flag => source.HasFlag(flag)))
-            tagSet.AddRange(GetTagsFromSource(tags, flag, includeFilter, minWeight, maxDepth));
+            tagSet.AddRange(GetTagsFromSource(tags, flag, includeFilter, minWeight, maxDepth, excludedTags ?? []));
 
         if (source.HasFlag(TagSource.CustomTags) && tags.TryGetValue("/custom user tags", out var customTags)) {
             var count = tagSet.Count;
@@ -396,7 +369,7 @@ public static class TagFilter
             // If we have any children that weren't added above, then run the additional checks on them.
             if (customTags.RecursiveNamespacedChildren.Count != count)
                 foreach (var flag in AllFlagsToUseForCustomTags.Where(flag => source.HasFlag(flag)))
-                    tagSet.AddRange(GetTagsFromSource(customTags.RecursiveNamespacedChildren, flag, includeFilter, minWeight, maxDepth));
+                    tagSet.AddRange(GetTagsFromSource(customTags.RecursiveNamespacedChildren, flag, includeFilter, minWeight, maxDepth, excludedTags ?? []));
         }
 
         return tagSet
@@ -405,12 +378,11 @@ public static class TagFilter
             .ToArray();
     }
 
-    private static HashSet<string> GetTagsFromSource(IReadOnlyDictionary<string, ResolvedTag> tags, TagSource source, TagIncludeFilter includeFilter, TagWeight minWeight, int maxDepth)
-    {
+    private static HashSet<string> GetTagsFromSource(IReadOnlyDictionary<string, ResolvedTag> tags, TagSource source, TagIncludeFilter includeFilter, TagWeight minWeight, int maxDepth, IReadOnlyCollection<string> excludedTags) {
         if (source is TagSource.SourceMaterial)
             return [GetSourceMaterial(tags)];
 
-        var tagSet = new HashSet<string>();
+        var tagSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var exceptTags = new List<ResolvedTag>();
         var includeTags = new List<KeyValuePair<string, ResolvedTag>>();
         var field = source.GetType().GetField(source.ToString())!;
@@ -461,11 +433,13 @@ public static class TagFilter
             tagSet.Add(SelectTagName(tag));
         }
 
+        if (excludedTags.Count > 0)
+            tagSet.ExceptWith(excludedTags);
+
         return tagSet;
     }
 
-    private static string GetSourceMaterial(IReadOnlyDictionary<string, ResolvedTag> tags)
-    {
+    private static string GetSourceMaterial(IReadOnlyDictionary<string, ResolvedTag> tags) {
         if (!tags.TryGetValue("/source material", out var sourceMaterial) || sourceMaterial.Children.ContainsKey("Original Work"))
             return "Original Work";
 
@@ -493,8 +467,7 @@ public static class TagFilter
         };
     }
 
-    public static string[] GetProductionCountriesFromTags(IReadOnlyDictionary<string, ResolvedTag> tags)
-    {
+    public static string[] GetProductionCountriesFromTags(IReadOnlyDictionary<string, ResolvedTag> tags) {
         if (!tags.TryGetValue("/origin", out var origin))
             return [];
 

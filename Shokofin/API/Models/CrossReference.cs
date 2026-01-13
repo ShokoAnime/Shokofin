@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Shokofin.API.Models.Shoko;
 
 namespace Shokofin.API.Models;
 
-public class CrossReference
-{
+public class CrossReference {
     /// <summary>
     /// The Series IDs
     /// </summary>
@@ -20,8 +20,7 @@ public class CrossReference
     /// <summary>
     /// File episode cross-reference for a series.
     /// </summary>
-    public class EpisodeCrossReferenceIDs
-    {
+    public class EpisodeCrossReferenceIDs {
         /// <summary>
         /// The Shoko ID, if the local metadata has been created yet.
         /// </summary>
@@ -33,6 +32,14 @@ public class CrossReference
         /// </summary>
         public int AniDB { get; set; }
 
+        /// <summary>
+        /// The Movie DataBase (TMDB) Cross-Reference IDs.
+        /// </summary>
+        public ShokoEpisode.TmdbEpisodeIDs TMDB { get; set; } = new();
+
+        /// <summary>
+        /// The Release Group ID.
+        /// </summary>
         public int? ReleaseGroup { get; set; }
 
         /// <summary>
@@ -48,13 +55,12 @@ public class CrossReference
         /// <summary>
         /// Percentage file is matched to the episode.
         /// </summary>
-        public CrossReferencePercentage? Percentage { get; set; }
+        public CrossReferencePercentage Percentage { get; set; } = new();
     }
 
-    public class CrossReferencePercentage
-    {
+    public class CrossReferencePercentage {
         /// <summary>
-        /// File/episode cross-reference percentage range end.
+        /// File/episode cross-reference percentage range start.
         /// </summary>
         public int Start { get; set; }
 
@@ -78,18 +84,22 @@ public class CrossReference
     /// <summary>
     /// File series cross-reference.
     /// </summary>
-    public class SeriesCrossReferenceIDs
-    {
+    public class SeriesCrossReferenceIDs {
         /// <summary>
         /// The Shoko ID, if the local metadata has been created yet.
         /// /// </summary>
         [JsonPropertyName("ID")]
-        
+
         public int? Shoko { get; set; }
 
         /// <summary>
         /// The AniDB ID.
         /// </summary>
         public int AniDB { get; set; }
+
+        /// <summary>
+        /// The Movie DataBase (TMDB) Cross-Reference IDs.
+        /// </summary>
+        public ShokoSeries.TmdbSeriesIDs TMDB { get; set; } = new();
     }
 }

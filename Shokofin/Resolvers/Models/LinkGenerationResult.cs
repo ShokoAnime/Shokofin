@@ -5,28 +5,27 @@ using Microsoft.Extensions.Logging;
 
 namespace Shokofin.Resolvers.Models;
 
-public class LinkGenerationResult
-{
+public class LinkGenerationResult {
     private DateTime CreatedAt { get; init; } = DateTime.Now;
 
-    public ConcurrentBag<string> Paths { get; init; } = [];
+    public ConcurrentBag<string> Paths { get; set; } = [];
 
-    public ConcurrentBag<string> RemovedPaths { get; init; } = [];
+    public ConcurrentBag<string> RemovedPaths { get; set; } = [];
 
     public int Total =>
-        TotalVideos + TotalSubtitles;
+        TotalVideos + TotalExternalFiles + TotalTrickplayDirectories;
 
     public int Created =>
-        CreatedVideos + CreatedSubtitles;
+        CreatedVideos + CreatedExternalFiles + CreatedTrickplayDirectories;
 
     public int Fixed =>
-        FixedVideos + FixedSubtitles;
+        FixedVideos + FixedExternalFiles + FixedTrickplayDirectories;
 
     public int Skipped =>
-        SkippedVideos + SkippedSubtitles;
+        SkippedVideos + SkippedExternalFiles + SkippedTrickplayDirectories;
 
     public int Removed =>
-        RemovedVideos + RemovedSubtitles + RemovedNfos;
+        RemovedVideos + RemovedExternalFiles + RemovedNfos + RemovedTrickplayDirectories;
 
     public int TotalVideos =>
         CreatedVideos + FixedVideos + SkippedVideos;
@@ -39,36 +38,50 @@ public class LinkGenerationResult
 
     public int RemovedVideos { get; set; }
 
-    public int TotalSubtitles =>
-        CreatedSubtitles + FixedSubtitles + SkippedSubtitles;
+    public int TotalExternalFiles =>
+        CreatedExternalFiles + FixedExternalFiles + SkippedExternalFiles;
 
-    public int CreatedSubtitles { get; set; }
+    public int CreatedExternalFiles { get; set; }
 
-    public int FixedSubtitles { get; set; }
+    public int FixedExternalFiles { get; set; }
 
-    public int SkippedSubtitles { get; set; }
+    public int SkippedExternalFiles { get; set; }
 
-    public int RemovedSubtitles { get; set; }
+    public int RemovedExternalFiles { get; set; }
+
+    public int TotalTrickplayDirectories =>
+        CreatedTrickplayDirectories + FixedTrickplayDirectories + SkippedTrickplayDirectories;
+
+    public int CreatedTrickplayDirectories { get; set; }
+
+    public int FixedTrickplayDirectories { get; set; }
+
+    public int SkippedTrickplayDirectories { get; set; }
+
+    public int RemovedTrickplayDirectories { get; set; }
 
     public int RemovedNfos { get; set; }
 
-    public void Print(ILogger logger, string path)
-    {
+    public void Print(ILogger logger, string path) {
         var timeSpent = DateTime.Now - CreatedAt;
         logger.LogInformation(
-            "Created {CreatedTotal} ({CreatedMedia},{CreatedSubtitles}), fixed {FixedTotal} ({FixedMedia},{FixedSubtitles}), skipped {SkippedTotal} ({SkippedMedia},{SkippedSubtitles}), and removed {RemovedTotal} ({RemovedMedia},{RemovedSubtitles},{RemovedNFO}) entries in folder at {Path} in {TimeSpan} (Total={Total})",
+            "Created {CreatedTotal} ({CreatedMedia},{CreatedExternal},{CreatedTrickplay}), fixed {FixedTotal} ({FixedMedia},{FixedExternal},{FixedTrickplay}), skipped {SkippedTotal} ({SkippedMedia},{SkippedExternal},{SkippedTrickplay}), and removed {RemovedTotal} ({RemovedMedia},{RemovedExternal},{RemovedTrickplay},{RemovedNFO}) entries in folder at {Path} in {TimeSpan} (Total={Total})",
             Created,
             CreatedVideos,
-            CreatedSubtitles,
+            CreatedExternalFiles,
+            CreatedTrickplayDirectories,
             Fixed,
             FixedVideos,
-            FixedSubtitles,
+            FixedExternalFiles,
+            FixedTrickplayDirectories,
             Skipped,
             SkippedVideos,
-            SkippedSubtitles,
+            SkippedExternalFiles,
+            SkippedTrickplayDirectories,
             Removed,
             RemovedVideos,
-            RemovedSubtitles,
+            RemovedExternalFiles,
+            RemovedTrickplayDirectories,
             RemovedNfos,
             path,
             timeSpent,
@@ -76,19 +89,17 @@ public class LinkGenerationResult
         );
     }
 
-    public static LinkGenerationResult operator +(LinkGenerationResult a, LinkGenerationResult b)
-    {
+    public static LinkGenerationResult operator +(LinkGenerationResult a, LinkGenerationResult b) {
         // Re-use the same instance so the parallel execution will share the same bag.
         var paths = a.Paths;
         foreach (var path in b.Paths)
-            a.Paths.Add(path);
+            paths.Add(path);
 
         var removedPaths = a.RemovedPaths;
         foreach (var path in b.RemovedPaths)
             removedPaths.Add(path);
 
-        return new()
-        {
+        return new() {
             CreatedAt = a.CreatedAt,
             Paths = paths,
             RemovedPaths = removedPaths,
@@ -96,10 +107,14 @@ public class LinkGenerationResult
             FixedVideos = a.FixedVideos + b.FixedVideos,
             SkippedVideos = a.SkippedVideos + b.SkippedVideos,
             RemovedVideos = a.RemovedVideos + b.RemovedVideos,
-            CreatedSubtitles = a.CreatedSubtitles + b.CreatedSubtitles,
-            FixedSubtitles = a.FixedSubtitles + b.FixedSubtitles,
-            SkippedSubtitles = a.SkippedSubtitles + b.SkippedSubtitles,
-            RemovedSubtitles = a.RemovedSubtitles + b.RemovedSubtitles,
+            CreatedExternalFiles = a.CreatedExternalFiles + b.CreatedExternalFiles,
+            FixedExternalFiles = a.FixedExternalFiles + b.FixedExternalFiles,
+            SkippedExternalFiles = a.SkippedExternalFiles + b.SkippedExternalFiles,
+            RemovedExternalFiles = a.RemovedExternalFiles + b.RemovedExternalFiles,
+            CreatedTrickplayDirectories = a.CreatedTrickplayDirectories + b.CreatedTrickplayDirectories,
+            FixedTrickplayDirectories = a.FixedTrickplayDirectories + b.FixedTrickplayDirectories,
+            SkippedTrickplayDirectories = a.SkippedTrickplayDirectories + b.SkippedTrickplayDirectories,
+            RemovedTrickplayDirectories = a.RemovedTrickplayDirectories + b.RemovedTrickplayDirectories,
             RemovedNfos = a.RemovedNfos + b.RemovedNfos,
         };
     }

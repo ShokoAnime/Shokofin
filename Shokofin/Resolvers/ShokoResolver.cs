@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Emby.Naming.Common;
 using Jellyfin.Data.Enums;
@@ -14,6 +15,7 @@ using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Models;
+using Shokofin.Extensions;
 using Shokofin.ExternalIds;
 
 using File = System.IO.File;
@@ -23,17 +25,16 @@ using TvSeries = MediaBrowser.Controller.Entities.TV.Series;
 namespace Shokofin.Resolvers;
 #pragma warning disable CS8768
 
-public class ShokoResolver : IItemResolver, IMultiItemResolver
-{
+public class ShokoResolver : IItemResolver, IMultiItemResolver {
     private readonly ILogger<ShokoResolver> Logger;
 
-    private readonly IIdLookup Lookup;
+    private readonly ShokoIdLookup Lookup;
 
     private readonly ILibraryManager LibraryManager;
 
     private readonly IFileSystem FileSystem;
 
-    private readonly ShokoAPIManager ApiManager;
+    private readonly ShokoApiManager ApiManager;
 
     private readonly VirtualFileSystemService ResolveManager;
 
@@ -41,14 +42,13 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
 
     public ShokoResolver(
         ILogger<ShokoResolver> logger,
-        IIdLookup lookup,
+        ShokoIdLookup lookup,
         ILibraryManager libraryManager,
         IFileSystem fileSystem,
-        ShokoAPIManager apiManager,
+        ShokoApiManager apiManager,
         VirtualFileSystemService resolveManager,
         NamingOptions namingOptions
-    )
-    {
+    ) {
         Logger = logger;
         Lookup = lookup;
         LibraryManager = libraryManager;
@@ -58,8 +58,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
         NamingOptions = namingOptions;
     }
 
-    public async Task<BaseItem?> ResolveSingle(Folder? parent, CollectionType? collectionType, FileSystemMetadata fileInfo)
-    {
+    public async Task<BaseItem?> ResolveSingle(Folder? parent, CollectionType? collectionType, FileSystemMetadata? fileInfo, CancellationToken cancellationToken = default) {
         if (!(collectionType is CollectionType.tvshows or CollectionType.movies or null) || parent is null || fileInfo is null)
             return null;
 
@@ -80,18 +79,9 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve path \"{fileInfo.FullName}\".");
-            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName).ConfigureAwait(false);
+            var (vfsPath, shouldContinue, _, _) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName, cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
-
-            if (parent.Id == mediaFolder.Id && fileInfo.IsDirectory) {
-                if (!fileInfo.Name.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
-                    return null;
-
-                return new TvSeries() {
-                    Path = fileInfo.FullName,
-                };
-            }
 
             return null;
         }
@@ -105,39 +95,77 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
         }
     }
 
-    public async Task<MultiItemResolverResult?> ResolveMultiple(Folder? parent, CollectionType? collectionType, List<FileSystemMetadata> fileInfoList)
-    {
+    public async Task<MultiItemResolverResult> ResolveMultiple(Folder? parent, CollectionType? collectionType, List<FileSystemMetadata> fileInfoList, CancellationToken cancellationToken = default) {
         if (!(collectionType is CollectionType.tvshows or CollectionType.movies or null) || parent is null)
-            return null;
+            return new();
 
         var root = LibraryManager.RootFolder;
         if (root is null || parent == root)
-            return null;
+            return new();
 
         Guid? trackerId = null;
         try {
             if (!Lookup.IsEnabledForItem(parent))
-                return null;
+                return new();
 
             if (parent.GetTopParent() is not Folder mediaFolder)
-                return null;
+                return new();
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve children of \"{parent.Path}\". (Children={fileInfoList.Count})");
-            var (vfsPath, shouldContinue) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path).ConfigureAwait(false);
+            var (vfsPath, shouldContinue, skipValidation, paths) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path, cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
-                return null;
+                return new();
 
             // Redirect children of a VFS managed media folder to the VFS.
             if (parent.IsTopParent) {
                 var createMovies = collectionType is CollectionType.movies || (collectionType is null && Plugin.Instance.Configuration.SeparateMovies);
                 var pathsToRemoveBag = new ConcurrentBag<(string, bool)>();
-                var items = (FileSystem.DirectoryExists(vfsPath) ? FileSystem.GetDirectories(vfsPath) : [])
+                var items = fileInfoList
                     .AsParallel()
                     .SelectMany(dirInfo => {
-                        if (!dirInfo.Name.TryGetAttributeValue(ShokoSeriesId.Name, out var seriesId) || !int.TryParse(seriesId, out _))
+                        if (!dirInfo.Name.TryGetAttributeValue(ProviderNames.ShokoSeries, out var seasonId))
                             return [];
 
-                        var season = ApiManager.GetSeasonInfoForSeries(seriesId)
+                        // We have an id, but the path does not belong to the generated set of paths.
+                        var episodeId = (string?)null;
+                        if (!paths.Contains(dirInfo.FullName)) {
+                            // If we've been asked to skip validation, then just iterate it as-is, otherwise mark it for removal.
+                            if (skipValidation) {
+                                if (dirInfo.Name.TryGetAttributeValue(ProviderNames.ShokoEpisode, out episodeId)) {
+                                    if (collectionType is CollectionType.tvshows) {
+                                        pathsToRemoveBag.Add((dirInfo.FullName, true));
+                                        return [];
+                                    }
+
+                                    return FileSystem.GetFiles(dirInfo.FullName)
+                                        .AsParallel()
+                                        .Select(fileInfo => {
+                                            // Only allow the video files, since the subtitle files also have the ids set.
+                                            if (!NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(fileInfo.Name)))
+                                                return null;
+
+                                            if (!VirtualFileSystemService.TryGetIdsForPath(fileInfo.FullName, out var fileId, out var seriesId))
+                                                return null;
+
+                                            return new Movie() {
+                                                Path = fileInfo.FullName,
+                                            } as BaseItem;
+                                        })
+                                        .ToArray();
+                                }
+
+                                return [
+                                    new TvSeries() {
+                                        Path = dirInfo.FullName,
+                                    },
+                                ];
+                            }
+
+                            pathsToRemoveBag.Add((dirInfo.FullName, true));
+                            return [];
+                        }
+
+                        var season = ApiManager.GetSeasonInfo(seasonId)
                             .ConfigureAwait(false)
                             .GetAwaiter()
                             .GetResult();
@@ -146,7 +174,26 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                             return [];
                         }
 
-                        if (createMovies && (season.Type is SeriesType.Movie || collectionType is CollectionType.movies && !Plugin.Instance.Configuration.FilterMovieLibraries)) {
+                        if (dirInfo.Name.TryGetAttributeValue(ProviderNames.ShokoEpisode, out episodeId)) {
+                            var episode = ApiManager.GetEpisodeInfo(episodeId)
+                                .ConfigureAwait(false)
+                                .GetAwaiter()
+                                .GetResult();
+                            if (episode is null || !episode.IsAvailable) {
+                                pathsToRemoveBag.Add((dirInfo.FullName, true));
+                                return [];
+                            }
+
+                            if (episode.SeasonId != seasonId) {
+                                pathsToRemoveBag.Add((dirInfo.FullName, true));
+                                return [];
+                            }
+
+                            if (!(createMovies && (season.Type is SeriesType.Movie || collectionType is CollectionType.movies && !Plugin.Instance.Configuration.FilterMovieLibraries))) {
+                                pathsToRemoveBag.Add((dirInfo.FullName, true));
+                                return [];
+                            }
+
                             return FileSystem.GetFiles(dirInfo.FullName)
                                 .AsParallel()
                                 .Select(fileInfo => {
@@ -154,7 +201,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                                     if (!NamingOptions.VideoFileExtensions.Contains(Path.GetExtension(fileInfo.Name)))
                                         return null;
 
-                                    if (!VirtualFileSystemService.TryGetIdsForPath(fileInfo.FullName, out seriesId, out var fileId))
+                                    if (!VirtualFileSystemService.TryGetIdsForPath(fileInfo.FullName, out var fileId, out var seriesId))
                                         return null;
 
                                     // This will hopefully just re-use the pre-cached entries from the cache, but it may
@@ -181,13 +228,27 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                                 .ToArray();
                         }
 
+                        var show = ApiManager.GetShowInfoBySeasonId(seasonId)
+                            .ConfigureAwait(false)
+                            .GetAwaiter()
+                            .GetResult();
+                        if (show is null || !show.IsAvailable) {
+                            pathsToRemoveBag.Add((dirInfo.FullName, true));
+                            return [];
+                        }
+
+                        if (seasonId != show.Id) {
+                            pathsToRemoveBag.Add((dirInfo.FullName, true));
+                            return [];
+                        }
+
                         return [
                             new TvSeries() {
                                 Path = dirInfo.FullName,
                             },
                         ];
                     })
-                    .OfType<BaseItem>()
+                    .WhereNotNull()
                     .ToList();
 
                 if (!pathsToRemoveBag.IsEmpty) {
@@ -200,7 +261,6 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                                 Logger.LogTrace("Removing directory: {Path}", pathToRemove);
                                 Directory.Delete(pathToRemove, true);
                                 Logger.LogTrace("Removed directory: {Path}", pathToRemove);
-                                
                             }
                             else {
                                 Logger.LogTrace("Removing file: {Path}", pathToRemove);
@@ -218,15 +278,21 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
                 }
 
                 var keepFile = Path.Join(vfsPath, ".keep");
-                if (File.Exists(keepFile)) {
-                    Logger.LogTrace("Removing now unneeded keep file: {Path}", keepFile);
+                var keepFileExists = File.Exists(keepFile);
+                var isEmpty = !ResolveManager.GetFileSystemEntryPaths(vfsPath).Except([keepFile]).Any();
+                if (keepFileExists && !isEmpty) {
+                    Logger.LogTrace("Removing now unnecessary keep file: {Path}", keepFile);
                     File.Delete(keepFile);
+                }
+                else if (!keepFileExists && isEmpty) {
+                    Logger.LogTrace("Creating necessary keep file: {Path}", keepFile);
+                    File.Create(keepFile).Dispose();
                 }
 
                 return new() { Items = items, ExtraFiles = [] };
             }
 
-            return null;
+            return new();
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
@@ -242,18 +308,30 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver
 
     ResolverPriority IItemResolver.Priority => ResolverPriority.Plugin;
 
-    BaseItem? IItemResolver.ResolvePath(ItemResolveArgs args)
+    public BaseItem? ResolvePath(ItemResolveArgs args)
         => ResolveSingle(args.Parent, args.CollectionType, args.FileInfo)
             .ConfigureAwait(false)
             .GetAwaiter()
             .GetResult();
 
+    public BaseItem? ResolvePath(ItemResolveArgs args, CancellationToken cancellationToken)
+        => ResolveSingle(args.Parent, args.CollectionType, args.FileInfo, cancellationToken)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult();
+
     #endregion
-    
+
     #region IMultiItemResolver
 
-    MultiItemResolverResult? IMultiItemResolver.ResolveMultiple(Folder parent, List<FileSystemMetadata> files, CollectionType? collectionType, IDirectoryService directoryService)
+    public MultiItemResolverResult ResolveMultiple(Folder parent, List<FileSystemMetadata> files, CollectionType? collectionType, IDirectoryService directoryService)
         => ResolveMultiple(parent, collectionType, files)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult();
+
+    public MultiItemResolverResult ResolveMultiple(Folder parent, List<FileSystemMetadata> files, CollectionType? collectionType, IDirectoryService directoryService, CancellationToken cancellationToken)
+        => ResolveMultiple(parent, collectionType, files, cancellationToken)
             .ConfigureAwait(false)
             .GetAwaiter()
             .GetResult();

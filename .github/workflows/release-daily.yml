@@ -164,8 +164,11 @@ jobs:
     steps:
       - name: Notify Discord Users
         uses: tsickert/discord-webhook@v6.0.0
+        if: contains(env.DISCORD_WEBHOOK, 'https://')
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         with:
-          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          webhook-url: ${{ env.DISCORD_WEBHOOK }}
           embed-color: 9985983
           embed-timestamp: ${{ needs.current_info.outputs.date }}
           embed-author-name: Shokofin | New Dev Build

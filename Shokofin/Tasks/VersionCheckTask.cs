@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
-using Shokofin.API.Models;
+using Shokofin.Extensions;
 
 namespace Shokofin.Tasks;
 
@@ -16,14 +15,7 @@ namespace Shokofin.Tasks;
 /// Responsible for updating the known version of the remote Shoko Server
 /// instance at startup and set intervals.
 /// </summary>
-public class VersionCheckTask(ILogger<VersionCheckTask> logger, ILibraryManager libraryManager, ShokoAPIClient apiClient) : IScheduledTask, IConfigurableScheduledTask
-{
-    private readonly ILogger<VersionCheckTask> _logger = logger;
-
-    private readonly ILibraryManager _libraryManager = libraryManager;
-
-    private readonly ShokoAPIClient _apiClient = apiClient;
-
+public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager _libraryManager, ShokoApiClient _apiClient) : IScheduledTask, IConfigurableScheduledTask {
     /// <inheritdoc />
     public string Name => "Check Server Version";
 
@@ -37,13 +29,13 @@ public class VersionCheckTask(ILogger<VersionCheckTask> logger, ILibraryManager 
     public string Key => "ShokoVersionCheck";
 
     /// <inheritdoc />
-    public bool IsHidden => !Plugin.Instance.Configuration.ExpertMode;
+    public bool IsHidden => !Plugin.Instance.Configuration.AdvancedMode;
 
     /// <inheritdoc />
     public bool IsEnabled => true;
 
     /// <inheritdoc />
-    public bool IsLogged => Plugin.Instance.Configuration.ExpertMode;
+    public bool IsLogged => Plugin.Instance.Configuration.AdvancedMode;
 
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         => [
@@ -53,54 +45,76 @@ public class VersionCheckTask(ILogger<VersionCheckTask> logger, ILibraryManager 
         ];
 
     /// <inheritdoc />
-    public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
-    {
-        var updated = false;
-        var version = await _apiClient.GetVersion();
-        if (version != null && (
-            Plugin.Instance.Configuration.ServerVersion == null ||
-            !string.Equals(version.ToString(), Plugin.Instance.Configuration.ServerVersion.ToString())
-        )) {
-            _logger.LogDebug("Found new Shoko Server version; {version}", version);
-            Plugin.Instance.Configuration.ServerVersion = version;
-            updated = true;
-        }
-
-        var mediaFolders = Plugin.Instance.Configuration.MediaFolders.ToList();
-        var importFolderNameMap = await Task
-            .WhenAll(
-                mediaFolders
-                    .Select(m => m.ImportFolderId)
-                    .Distinct()
-                    .Except([0, -1])
-                    .Select(id => _apiClient.GetImportFolder(id))
-                    .ToList()
-            )
-            .ContinueWith(task => task.Result.OfType<ImportFolder>().ToDictionary(i => i.Id, i => i.Name))
-            .ConfigureAwait(false);
-        foreach (var mediaFolderConfig in mediaFolders) {
-            if (mediaFolderConfig.IsVirtualRoot)
-                continue;
-
-            if (!importFolderNameMap.TryGetValue(mediaFolderConfig.ImportFolderId, out var importFolderName))
-                importFolderName = null;
-
-            if (mediaFolderConfig.LibraryId == Guid.Empty && _libraryManager.GetItemById(mediaFolderConfig.MediaFolderId) is Folder mediaFolder &&
-                _libraryManager.GetVirtualFolders().FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path)) is { } library &&
-                Guid.TryParse(library.ItemId, out var libraryId)) {
-                _logger.LogDebug("Found new library for media folder; {LibraryName} (Library={LibraryId},MediaFolder={MediaFolderPath})", library.Name, libraryId, mediaFolder.Path);
-                mediaFolderConfig.LibraryId = libraryId;
+    public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) {
+        try {
+            var updated = false;
+            var version = await _apiClient.GetVersion().ConfigureAwait(false);
+            if (version != null && (
+                Plugin.Instance.Configuration.ServerVersion == null ||
+                !string.Equals(version.ToString(), Plugin.Instance.Configuration.ServerVersion.ToString())
+            )) {
+                _logger.LogDebug("Found new Shoko Server version; {version}", version);
+                Plugin.Instance.Configuration.ServerVersion = version;
                 updated = true;
             }
 
-            if (!string.IsNullOrEmpty(importFolderName) && !string.Equals(mediaFolderConfig.ImportFolderName, importFolderName)) {
-                _logger.LogDebug("Found new name for import folder; {name} (ImportFolder={ImportFolderId})", importFolderName, mediaFolderConfig.ImportFolderId);
-                mediaFolderConfig.ImportFolderName = importFolderName;
+            if (string.IsNullOrEmpty(Plugin.Instance.Configuration.ApiKey))
+                return;
+
+
+            var prefix = await _apiClient.GetWebPrefix().ConfigureAwait(false);
+            if (prefix != null && (
+                Plugin.Instance.Configuration.WebPrefix == null ||
+                !string.Equals(prefix, Plugin.Instance.Configuration.WebPrefix)
+            )) {
+                _logger.LogDebug("Found new Shoko Server web prefix; {prefix}", prefix);
+                Plugin.Instance.Configuration.WebPrefix = prefix;
                 updated = true;
             }
+
+            var hasPluginsExposed = await _apiClient.CheckIfPluginsExposed(cancellationToken).ConfigureAwait(false);
+            if (Plugin.Instance.Configuration.HasPluginsExposed != hasPluginsExposed) {
+                _logger.LogDebug("Plugin based API; {hasPluginsExposed}", hasPluginsExposed);
+                Plugin.Instance.Configuration.HasPluginsExposed = hasPluginsExposed;
+                updated = true;
+            }
+
+            var mediaFolders = Plugin.Instance.Configuration.LibraryFolders.ToList();
+            var managedFolderNameMap = await Task
+                .WhenAll(
+                    mediaFolders
+                        .Select(m => m.ManagedFolderId)
+                        .Distinct()
+                        .Except([0, -1])
+                        .Select(_apiClient.GetManagedFolder)
+                        .ToList()
+                )
+                .ContinueWith(task => task.Result.WhereNotNull().ToDictionary(i => i.Id, i => i.Name))
+                .ConfigureAwait(false);
+            foreach (var mediaFolderConfig in mediaFolders) {
+                if (!managedFolderNameMap.TryGetValue(mediaFolderConfig.ManagedFolderId, out var managedFolderName))
+                    managedFolderName = null;
+
+                if (Guid.Empty == mediaFolderConfig.LibraryId &&
+                    _libraryManager.GetVirtualFolders().FirstOrDefault(p => p.Locations.Contains(mediaFolderConfig.Path)) is { } library &&
+                    Guid.TryParse(library.ItemId, out var libraryId)) {
+                    _logger.LogDebug("Found new library for media folder; {LibraryName} (Library={LibraryId},MediaFolder={MediaFolderPath})", library.Name, libraryId, mediaFolderConfig.Path);
+                    mediaFolderConfig.LibraryId = libraryId;
+                    updated = true;
+                }
+
+                if (!string.IsNullOrEmpty(managedFolderName) && !string.Equals(mediaFolderConfig.ManagedFolderName, managedFolderName)) {
+                    _logger.LogDebug("Found new name for managed folder; {name} (ManagedFolder={ManagedFolderId})", managedFolderName, mediaFolderConfig.ManagedFolderId);
+                    mediaFolderConfig.ManagedFolderName = managedFolderName;
+                    updated = true;
+                }
+            }
+            if (updated) {
+                Plugin.Instance.UpdateConfiguration();
+            }
         }
-        if (updated) {
-            Plugin.Instance.UpdateConfiguration();
+        catch (Exception ex) {
+            _logger.LogError(ex, "Error while checking Shoko Server version.");
         }
     }
 }
