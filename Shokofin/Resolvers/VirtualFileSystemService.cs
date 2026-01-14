@@ -1374,9 +1374,6 @@ public class VirtualFileSystemService {
         return allKnownPaths;
     }
 
-    private static bool CompareDateTimes(DateTime first, DateTime second)
-        => TimeSpan.FromTicks(Math.Abs(first.Ticks - second.Ticks)).Seconds <= 1;
-
     #endregion
 
     #region Cleanup Structure
