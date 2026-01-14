@@ -9,6 +9,14 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.0.2",
+                "changelog": "`fix`: **Inform library monitor before generating VFS**:\n\nInform the library monitor when we're going to (re-)generate the VFS so it won't react to the changes we make, as we're already running a refresh when the generation takes place and don't want it to trigger another refresh.\n\nFixes #94. Closes #94.\n\n`chore`: **Removed unused method**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.0-dev.2/shoko_6.0.0.2.zip",
+                "checksum": "8a20f28efae9bb44acdb2e88184c0a80",
+                "timestamp": "2026-01-14T15:27:13Z"
+            },
+            {
                 "version": "6.0.0.1",
                 "changelog": "`repo`: **Synchronize 'dev' branch with 'stable' branch**.\n\n`repo`: **Update version matrix in read-me file**.",
                 "targetAbi": "10.11.0.0",
@@ -39,14 +47,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.18/shoko_5.0.6.18.zip",
                 "checksum": "4b4c1966af8bddbee3bb14fc79def009",
                 "timestamp": "2025-12-19T01:39:40Z"
-            },
-            {
-                "version": "5.0.6.17",
-                "changelog": "`feat`: **Check for `.shoko-ignore` file to ignore newly found media folders**.\n\n`chore`: **Simplify code**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.17/shoko_5.0.6.17.zip",
-                "checksum": "ad43c923df0b18d4c59c97e96147550e",
-                "timestamp": "2025-12-18T13:02:20Z"
             }
         ]
     }
