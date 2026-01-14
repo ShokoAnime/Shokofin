@@ -43,6 +43,8 @@ public class VirtualFileSystemService {
 
     private readonly ILibraryManager LibraryManager;
 
+    private readonly ILibraryMonitor LibraryMonitor;
+
     private readonly IServerConfigurationManager ConfigurationManager;
 
     private readonly ILogger<VirtualFileSystemService> Logger;
@@ -83,6 +85,7 @@ public class VirtualFileSystemService {
         MediaFolderConfigurationService configurationService,
         IProviderManager providerManager,
         ILibraryManager libraryManager,
+        ILibraryMonitor libraryMonitor,
         IServerConfigurationManager configurationManager,
         ILogger<VirtualFileSystemService> logger,
         ILocalizationManager localizationManager,
@@ -94,6 +97,7 @@ public class VirtualFileSystemService {
         ConfigurationService = configurationService;
         ProviderManager = providerManager;
         LibraryManager = libraryManager;
+        LibraryMonitor = libraryMonitor;
         ConfigurationManager = configurationManager;
         Logger = logger;
         DataCache = new(
@@ -417,6 +421,9 @@ public class VirtualFileSystemService {
                 allFiles = GetFilesForManagedFolders(mediaConfigs, fileChecker, lastGeneratedAt, knownFileSeriesBag);
             }
 
+            var pathToReport = pathToClean ?? Path.GetDirectoryName(path)!;
+            LibraryMonitor.ReportFileSystemChangeBeginning(pathToReport);
+
             // Generate any new structure in the VFS.
             var result = await GenerateStructure(collectionType, vfsPath, allFiles, cancellationToken: cancellationToken).ConfigureAwait(false);
             // Cleanup any residual entries from old structure in the VFS if interactive
@@ -447,6 +454,9 @@ public class VirtualFileSystemService {
                     result += CleanupStructure(vfsPath, pathToClean, allPaths, cancellationToken: cancellationToken);
                 }
             }
+
+            // Report the change to the library monitor.
+            LibraryMonitor.ReportFileSystemChangeComplete(pathToReport, false);
 
             // Save which paths we've already generated so we can skip generation
             // for them and their sub-paths later, and also print the result.
