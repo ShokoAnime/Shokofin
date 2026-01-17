@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.1.7",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1-dev.7) for more info.\n\n---\n\n`fix`: **Only emit media folder removed events when library config. is still available**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.7/shoko_6.0.1.7_for_10.11.0.zip",
+                "checksum": "259e34454f02a2969ee44911c36008f6",
+                "timestamp": "2026-01-17T22:24:05Z"
+            },
+            {
+                "version": "6.0.1.7",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1-dev.7) for more info.\n\n---\n\n`fix`: **Only emit media folder removed events when library config. is still available**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.7/shoko_6.0.1.7_for_10.10.0.zip",
+                "checksum": "9c5f3b1c0e2c4dae021b65cc27e35e70",
+                "timestamp": "2026-01-17T22:24:16Z"
+            },
+            {
                 "version": "6.0.1.6",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1-dev.6) for more info.\n\n---\n\n`fix`: **Simplify multi-series file checks**:\n\nSimplify the multi-series file checks to **NOT** use the API manager to inflate all the Show Info objects for **ALL** single-series IDs _and_ series IDs for multi-series files to determine if we're going to keep the file or not. Instead, revert back to the older checks where we **JUST** checked the Shoko Series IDs without involving the API manager or Show Infos.",
                 "targetAbi": "10.11.0.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.3/shoko_6.0.1.3_for_10.10.0.zip",
                 "checksum": "34adf328514b1c7a4ae97cb6bc0c4add",
                 "timestamp": "2026-01-17T02:51:42Z"
-            },
-            {
-                "version": "6.0.1.2",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1-dev.2) for more info.\n\n---\n\n`fix`: **Add back behavior to mock the mtime of symlinks for 10.10**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.2/shoko_6.0.1.2_for_10.11.0.zip",
-                "checksum": "407ac1b12bcfe20bc546f2e32b00b12b",
-                "timestamp": "2026-01-17T02:39:41Z"
-            },
-            {
-                "version": "6.0.1.1",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1-dev.1) for more info.\n\n---\n\n`repo`: **Synchronize 'dev' branch with 'stable' branch**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.1/shoko_6.0.1.1_for_10.11.0.zip",
-                "checksum": "8c5029965db653e805970a251c6706c0",
-                "timestamp": "2026-01-17T02:32:20Z"
             }
         ]
     }
