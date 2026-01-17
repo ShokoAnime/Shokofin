@@ -100,12 +100,12 @@ try:
         # read the checksum file jprm wrote
         checksum = open(zipfile + ".md5sum", "r").read().strip()[:32]
         timestamp = os.path.getmtime(zipfile)
-        new_zipfile = os.path.join(artifact_dir, f"Shoko_{version}_for_{target_abi}.zip")
+        new_zipfile = os.path.join(artifact_dir, f"shoko_{version}_for_{target_abi}.zip")
         os.rename(zipfile, new_zipfile)
         os.remove(zipfile + ".md5sum")
         os.remove(zipfile + ".meta.json")
 
-        jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{tag}/Shoko_{version}_for_{target_abi}.zip"
+        jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{tag}/shoko_{version}_for_{target_abi}.zip"
         os.system("jprm repo add --plugin-url=%s %s %s" % (jellyfin_plugin_release_url, jellyfin_repo_file, new_zipfile))
 
         repo["versions"].append(
