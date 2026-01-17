@@ -88,9 +88,10 @@ versions = []
 try:
     for framework in extract_target_framework(project_file):
         target_abi = extract_target_abi(project_file, framework)
+        target_abi_high = ".".join(target_abi.split(".")[:-1])
         artifacts = extract_packages_to_output(project_file, framework)
 
-        generated_changelog = f"Only compatible with **{".".join(target_abi.split(".")[:-1])}.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/{tag}) for more info."
+        generated_changelog = f"Only compatible with **{target_abi_high}.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/{tag}) for more info."
         if changelog:
             generated_changelog += f"\n\n---\n\n{changelog}"
 
