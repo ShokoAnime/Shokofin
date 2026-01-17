@@ -90,8 +90,12 @@ try:
         target_abi = extract_target_abi(project_file, framework)
         artifacts = extract_packages_to_output(project_file, framework)
 
+        generated_changelog = f"Only compatible with **{".".join(target_abi.split(".")[:-1])}.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/{tag}) for more info."
+        if changelog:
+            generated_changelog += f"\n\n---\n\n{changelog}"
+
         data = yaml.safe_load(build_file_contents)
-        data["changelog"] = changelog
+        data["changelog"] = generated_changelog
         data["artifacts"] = list(set(data["artifacts"] + artifacts))
         data["targetAbi"] = target_abi + ".0"
         with open(build_file, "w") as file:
@@ -112,7 +116,7 @@ try:
 
         versions.append({
             "version": version,
-            "changelog": changelog,
+            "changelog": generated_changelog,
             "targetAbi": target_abi + ".0",
             "sourceUrl": jellyfin_plugin_release_url,
             "checksum": checksum,
