@@ -10,7 +10,7 @@
         "versions": [
             {
                 "version": "6.0.1.0",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1) for more info.",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1) for more info.",
                 "targetAbi": "10.11.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1/shoko_6.0.1.0_for_10.11.0.zip",
                 "checksum": "73d691b05b8d901164fc8404a394a367",
@@ -18,7 +18,7 @@
             },
             {
                 "version": "6.0.1.0",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1) for more info.",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1) for more info.",
                 "targetAbi": "10.10.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1/shoko_6.0.1.0_for_10.10.0.zip",
                 "checksum": "1dd6ad6becbcf9a59c08cfb66c3a029d",
@@ -26,7 +26,7 @@
             },
             {
                 "version": "6.0.0.0",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.0) for more info.",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.0) for more info.",
                 "targetAbi": "10.11.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.0/shoko_6.0.0.0.zip",
                 "checksum": "48e0a6000f548dcae0ec2efc61630899",
@@ -34,7 +34,7 @@
             },
             {
                 "version": "5.0.6.0",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.6) for more info.",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.6) for more info.",
                 "targetAbi": "10.11.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6/shoko_5.0.6.0.zip",
                 "checksum": "e14dc96e9f27173327b64ccbbe5916d7",
@@ -42,7 +42,7 @@
             },
             {
                 "version": "5.0.5.0",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.5) for more info.",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.5) for more info.",
                 "targetAbi": "10.11.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.5/shoko_5.0.5.0.zip",
                 "checksum": "19db5af8b9f4ab4710aecb9d5ee80043",
@@ -50,7 +50,7 @@
             },
             {
                 "version": "5.0.4.0",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.4) for more info.",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.4) for more info.",
                 "targetAbi": "10.10.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.4/shoko_5.0.4.0.zip",
                 "checksum": "ffcd89bd992db5c32cee4fd107af4587",
@@ -58,7 +58,7 @@
             },
             {
                 "version": "5.0.3.0",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.3) for more info.",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.3) for more info.",
                 "targetAbi": "10.10.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.3/shoko_5.0.3.0.zip",
                 "checksum": "8539c95c06e3fc72b980437c30635493",
@@ -66,7 +66,7 @@
             },
             {
                 "version": "5.0.2.0",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.2) for more info.",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.2) for more info.",
                 "targetAbi": "10.10.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.2/shoko_5.0.2.0.zip",
                 "checksum": "c133a233327ec07b7ff1a1485925ef3e",
@@ -74,7 +74,7 @@
             },
             {
                 "version": "5.0.1.0",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.1) for more info.",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.1) for more info.",
                 "targetAbi": "10.10.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.1/shoko_5.0.1.0.zip",
                 "checksum": "85774b7b451cd4f8e2aaf1aa9f9def5b",
@@ -82,7 +82,7 @@
             },
             {
                 "version": "5.0.0.0",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.0) for more info.",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v5.0.0) for more info.",
                 "targetAbi": "10.10.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.0/shoko_5.0.0.0.zip",
                 "checksum": "f93033bfd1961f72e3c4d9ae8cec8d0d",
@@ -90,7 +90,7 @@
             },
             {
                 "version": "4.2.2.0",
-                "changelog": "Only compatible with **10.9.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.2.2) for more info.",
+                "changelog": "Only compatible with **10.9.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.2.2) for more info.",
                 "targetAbi": "10.9.7.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.2.2/shoko_4.2.2.0.zip",
                 "checksum": "90edc740aedb051e63b9c3de0bd53e87",
@@ -98,7 +98,7 @@
             },
             {
                 "version": "4.2.1.0",
-                "changelog": "Only compatible with **10.9.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.2.1) for more info.",
+                "changelog": "Only compatible with **10.9.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.2.1) for more info.",
                 "targetAbi": "10.9.7.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.2.1/shoko_4.2.1.0.zip",
                 "checksum": "eb5e494cd27f5fa51da107fcd484404d",
@@ -106,7 +106,7 @@
             },
             {
                 "version": "4.2.0.0",
-                "changelog": "Only compatible with **10.9.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.2.0) for more info.",
+                "changelog": "Only compatible with **10.9.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.2.0) for more info.",
                 "targetAbi": "10.9.7.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.2.0/shoko_4.2.0.0.zip",
                 "checksum": "1d65a2b1fe9d8e3f8a88cb44c530d5e3",
@@ -114,7 +114,7 @@
             },
             {
                 "version": "4.1.1.0",
-                "changelog": "Only compatible with **10.9.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.1.1) for more info.",
+                "changelog": "Only compatible with **10.9.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.1.1) for more info.",
                 "targetAbi": "10.9.7.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.1/shoko_4.1.1.0.zip",
                 "checksum": "03364768f7370f2cb2c9163e821ff077",
@@ -122,7 +122,7 @@
             },
             {
                 "version": "4.1.0.0",
-                "changelog": "Only compatible with **10.9.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.1.0) for more info.",
+                "changelog": "Only compatible with **10.9.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.1.0) for more info.",
                 "targetAbi": "10.9.7.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.1.0/shoko_4.1.0.0.zip",
                 "checksum": "b057c3f2e08be1a8148763ca549914ce",
@@ -130,7 +130,7 @@
             },
             {
                 "version": "4.0.1.0",
-                "changelog": "Only compatible with **10.9.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.0.1) for more info.",
+                "changelog": "Only compatible with **10.9.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.0.1) for more info.",
                 "targetAbi": "10.9.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.0.1/shoko_4.0.1.0.zip",
                 "checksum": "54dfe0986436216acc24f5dcec1c402f",
@@ -138,7 +138,7 @@
             },
             {
                 "version": "4.0.0.0",
-                "changelog": "Only compatible with **10.9.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.0.0) for more info.",
+                "changelog": "Only compatible with **10.9.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v4.0.0) for more info.",
                 "targetAbi": "10.9.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v4.0.0/shoko_4.0.0.0.zip",
                 "checksum": "064e34d70a74e81e45c317557e3e232d",
@@ -146,7 +146,7 @@
             },
             {
                 "version": "3.0.1.0",
-                "changelog": "Only compatible with **10.8.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/3.0.1) for more info.",
+                "changelog": "Only compatible with **10.8.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/3.0.1) for more info.",
                 "targetAbi": "10.8.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.1/shoko_3.0.1.0.zip",
                 "checksum": "8bfa1dc2c430c07c0659bbbc757dbf8e",
@@ -154,7 +154,7 @@
             },
             {
                 "version": "3.0.0.0",
-                "changelog": "Only compatible with **10.8.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/3.0.0) for more info.",
+                "changelog": "Only compatible with **10.8.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/3.0.0) for more info.",
                 "targetAbi": "10.8.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/3.0.0/shoko_3.0.0.0.zip",
                 "checksum": "c02b32abb548eb3d2153ac957ad88f80",
@@ -162,7 +162,7 @@
             },
             {
                 "version": "2.0.1.0",
-                "changelog": "Only compatible with **10.8.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/2.0.1) for more info.",
+                "changelog": "Only compatible with **10.8.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/2.0.1) for more info.",
                 "targetAbi": "10.8.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/2.0.1/shoko_2.0.1.0.zip",
                 "checksum": "f6b1520a57381f9425935b10b4048398",
@@ -170,7 +170,7 @@
             },
             {
                 "version": "1.7.3.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.7.3) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.7.3) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.7.3/shoko_1.7.3.0.zip",
                 "checksum": "4329184a94c68c621a4c944bee7d7f9d",
@@ -178,7 +178,7 @@
             },
             {
                 "version": "1.7.2.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.7.2) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.7.2) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.7.2/shoko_1.7.2.0.zip",
                 "checksum": "38dd48745750756abbe6850d5527e694",
@@ -186,7 +186,7 @@
             },
             {
                 "version": "1.7.1.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.7.1) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.7.1) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.7.1/shoko_1.7.1.0.zip",
                 "checksum": "c748f37e301aaa891da7e01842d02a87",
@@ -194,7 +194,7 @@
             },
             {
                 "version": "1.7.0.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.7.0) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.7.0) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.7.0/shoko_1.7.0.0.zip",
                 "checksum": "e6604c4c9729b2f8a82bb9d4dfb0bfab",
@@ -202,7 +202,7 @@
             },
             {
                 "version": "1.6.3.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.6.3) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.6.3) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.6.3/shoko_1.6.3.0.zip",
                 "checksum": "e4edc60e6ca8ecc9ca83627c37cb0109",
@@ -210,7 +210,7 @@
             },
             {
                 "version": "1.6.2.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.6.2) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.6.2) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.6.2/shoko_1.6.2.0.zip",
                 "checksum": "92d76c12c13245a8c67dba3b6a532471",
@@ -218,7 +218,7 @@
             },
             {
                 "version": "1.6.1.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.6.1) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.6.1) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.6.1/shoko_1.6.1.0.zip",
                 "checksum": "d574380d64ff9fcc1a532f4b4f00dd82",
@@ -226,7 +226,7 @@
             },
             {
                 "version": "1.6.0.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.6.0) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.6.0) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.6.0/shoko_1.6.0.0.zip",
                 "checksum": "18dfd06489b5c77ba7e3d310ac255a3d",
@@ -234,7 +234,7 @@
             },
             {
                 "version": "1.5.0.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.5.0) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.5.0) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.5.0/shokofin_1.5.0.0.zip",
                 "checksum": "1619ade0f980553dbc056fc414ad6243",
@@ -242,7 +242,7 @@
             },
             {
                 "version": "1.4.7.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.7) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.7) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.4.7/shokofin_1.4.7.zip",
                 "checksum": "5a9e396ac1775d61cb14796eae6e8f8a",
@@ -250,7 +250,7 @@
             },
             {
                 "version": "1.4.6.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.6) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.6) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.4.6/shokofin_1.4.6.zip",
                 "checksum": "be14a632a9ff59baccc8d78d6ca1809c",
@@ -258,7 +258,7 @@
             },
             {
                 "version": "1.4.5.1",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.5.1) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.5.1) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.4.5.1/shokofin_1.4.5.1.zip",
                 "checksum": "1a5005234208d651e194ac9987c2ddcd",
@@ -266,7 +266,7 @@
             },
             {
                 "version": "1.4.5.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.5) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.5) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.4.5/shokofin_1.4.5.zip",
                 "checksum": "ec0638fc707dfe2450dc47b3e161d042",
@@ -274,7 +274,7 @@
             },
             {
                 "version": "1.4.4.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.4) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.4) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.4.4/shokofin_1.4.4.zip",
                 "checksum": "475abde06b9f67a131bb2737d126d052",
@@ -282,7 +282,7 @@
             },
             {
                 "version": "1.4.3.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.3) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.3) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.4.3/shokofin_1.4.3.zip",
                 "checksum": "ee2b4d8b79dcd1edf524bd81e2ef7290",
@@ -290,7 +290,7 @@
             },
             {
                 "version": "1.4.2.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.2) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.2) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.4.2/shokofin_1.4.2.zip",
                 "checksum": "2b90bac9df30315240802d0aa23a706c",
@@ -298,7 +298,7 @@
             },
             {
                 "version": "1.4.1.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.1) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.1) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.4.1/shokofin_1.4.1.zip",
                 "checksum": "77bc01b63d8dde14401ba8060dd46b38",
@@ -306,7 +306,7 @@
             },
             {
                 "version": "1.4.0.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.0) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.4.0) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.4.0/shokofin_1.4.0.zip",
                 "checksum": "57e70a963ef95a8f64bdcc394685f594",
@@ -314,7 +314,7 @@
             },
             {
                 "version": "1.3.1.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.3.1) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.3.1) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.3.1/shokofin_1.3.1.zip",
                 "checksum": "135888e53f702e0b96846ca2ca7201d7",
@@ -322,7 +322,7 @@
             },
             {
                 "version": "1.3.0.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.3.0) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.3.0) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.3.0/shokofin_1.3.0.zip",
                 "checksum": "a30811e8adc9491df0aaa436d6a7cea6",
@@ -330,7 +330,7 @@
             },
             {
                 "version": "1.2.0.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.2.0) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.2.0) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.2.0/shokojellyfin_1.2.0.zip",
                 "checksum": "7e1965987f40e62f9e987c44cf98a6fe",
@@ -338,7 +338,7 @@
             },
             {
                 "version": "1.1.0.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.1.0) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.1.0) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.1.0/shokojellyfin_1.1.0.zip",
                 "checksum": "610e540182066278d816e06e8f1a01ee",
@@ -346,7 +346,7 @@
             },
             {
                 "version": "1.0.0.0",
-                "changelog": "Only compatible with **10.7.z**.\n\nSee the [changelog](https://github.com/ShokoAnime/Shokofin/releases/tag/1.0.0) for more info.",
+                "changelog": "Only compatible with **10.7.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/1.0.0) for more info.",
                 "targetAbi": "10.7.0.0",
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/1.0.0/shokojellyfin_1.0.0.zip",
                 "checksum": "184c723247ccdc4b0143dc46f5b6d50d",
