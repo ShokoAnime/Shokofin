@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFrameworks>net9.0;net8</TargetFrameworks>
         <OutputType>Library</OutputType>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -13,31 +13,40 @@
     </ItemDefinitionGroup>
 
     <!-- Jellyfin Core -->
-    <ItemGroup Condition="Exists('../../Jellyfin/MediaBrowser.Controller/MediaBrowser.Controller.csproj')">
-        <ProjectReference Include="../../Jellyfin/MediaBrowser.Controller/MediaBrowser.Controller.csproj" />
+    <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+        <PackageReference Include="Jellyfin.Controller" Version="10.11.0" TargetFramework="net9.0" />
     </ItemGroup>
-    <ItemGroup Condition="!Exists('../../Jellyfin/MediaBrowser.Controller/MediaBrowser.Controller.csproj')">
-        <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
+    <ItemGroup Condition="'$(TargetFramework)' == 'net8'">
+        <PackageReference Include="Jellyfin.Controller" Version="10.10.0" TargetFramework="net8" />
     </ItemGroup>
 
-    <!-- Shared dependencies with Jellyfin Core -->
-    <ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+        <!-- Shared dependencies with Jellyfin Core -->
         <PackageReference Include="AsyncKeyedLock" Version="7.1.7" />
         <PackageReference Include="DotNet.Glob" Version="3.1.3" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
+        <!-- Own dependencies we need to output with the package -->
+        <CommonPackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.10" TargetFramework="net9.0" />
+        <CommonPackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="9.0.10" TargetFramework="net9.0" />
+        <CommonPackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="9.0.10" TargetFramework="net9.0" />
+        <CommonPackageReference Include="System.Net.ServerSentEvents" Version="9.0.10" TargetFramework="net9.0" />
+        <PackageReference Include="@(CommonPackageReference)" />
     </ItemGroup>
 
-    <!-- Own dependencies we need to output with the package -->
-    <ItemGroup>
-        <CommonPackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.10" />
-        <CommonPackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="9.0.10" />
-        <CommonPackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="9.0.10" />
-        <CommonPackageReference Include="System.Net.ServerSentEvents" Version="9.0.10" />
+    <ItemGroup Condition="'$(TargetFramework)' == 'net8'">
+        <!-- Shared dependencies with Jellyfin Core -->
+        <PackageReference Include="AsyncKeyedLock" Version="6.4.2" />
+        <PackageReference Include="DotNet.Glob" Version="3.1.2" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+        <!-- Own dependencies we need to output with the package -->
+        <CommonPackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.7" TargetFramework="net8" />
+        <CommonPackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="8.0.7" TargetFramework="net8" />
+        <CommonPackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="8.0.7" TargetFramework="net8" />
         <PackageReference Include="@(CommonPackageReference)" />
     </ItemGroup>
 
     <!-- Code analyzers -->
-    <ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0" PrivateAssets="All" />
         <PackageReference Include="SerilogAnalyzer" Version="0.15.0" PrivateAssets="All" />
         <PackageReference Include="SmartAnalyzers.MultithreadingAnalyzer" Version="1.1.31" PrivateAssets="All" />
@@ -50,7 +59,7 @@
     </ItemGroup>
 
     <Target Name="CopyExtraOutputAssembliesToOutputPath" AfterTargets="Build">
-        <GetPublicPackageReferences TargetFramework="$(TargetFramework)" NuGetPackageRoot="$(NuGetPackageRoot)" PackageReference="@(CommonPackageReference)">
+        <GetPublicPackageReferences NuGetPackageRoot="$(NuGetPackageRoot)" PackageReference="@(CommonPackageReference)">
             <Output TaskParameter="Results" ItemName="ExtraOutputAssemblies" />
         </GetPublicPackageReferences>
         <Copy SourceFiles="@(ExtraOutputAssemblies)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
@@ -58,7 +67,6 @@
 
     <UsingTask TaskName="GetPublicPackageReferences" TaskFactory="RoslynCodeTaskFactory" AssemblyName="Microsoft.Build.Tasks.Core">
         <ParameterGroup>
-            <TargetFramework ParameterType="System.String" Required="true" />
             <NuGetPackageRoot ParameterType="System.String" Required="true" />
             <PackageReference ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
             <Results Output="true" ParameterType="Microsoft.Build.Framework.ITaskItem[]" />
@@ -75,7 +83,7 @@
                             pkg.ItemSpec.ToLowerInvariant(),
                             pkg.GetMetadata("Version"),
                             "lib",
-                            TargetFramework,
+                            pkg.GetMetadata("TargetFramework") == "net8" ? "net8.0" : pkg.GetMetadata("TargetFramework"),
                             pkg.ItemSpec + ".dll"
                         )
                     ))

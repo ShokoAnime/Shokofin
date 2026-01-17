@@ -16,5 +16,10 @@ public class AnidbCreatorId : IExternalId {
 
     public bool Supports(IHasProviderIds item) => item is Person;
 
+#if NET9_0
+#else
+    string? IExternalId.UrlFormatString => null;
+#endif 
+
     #endregion
 }
