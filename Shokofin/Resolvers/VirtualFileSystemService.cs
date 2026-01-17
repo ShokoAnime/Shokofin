@@ -1162,6 +1162,11 @@ public class VirtualFileSystemService {
                     if (!preview) {
                         Logger.LogDebug("Linking {Link} → {LinkTarget}", symbolicLink, sourceLocation);
                         File.CreateSymbolicLink(symbolicLink, sourceLocation);
+#if NET9_0
+#else
+                        // Mock the creation date to fake the "date added" order in Jellyfin.
+                        File.SetCreationTime(symbolicLink, importedAt);
+#endif
                     }
                 }
                 else {
@@ -1173,6 +1178,15 @@ public class VirtualFileSystemService {
                             if (!preview)
                                 Logger.LogWarning("Fixing broken symbolic link {Link} → {LinkTarget} (RealTarget={RealTarget})", symbolicLink, sourceLocation, nextTarget?.FullName);
                         }
+#if NET9_0
+#else
+                        var linkCreatedAt = File.GetCreationTime(symbolicLink).ToLocalTime();
+                        if (linkCreatedAt != importedAt) {
+                            shouldFix = true;
+                            if (!preview)
+                                Logger.LogWarning("Fixing broken symbolic link {Link} with incorrect creation date.", symbolicLink);
+                        }
+#endif
                     }
                     catch (Exception ex) {
                         shouldFix = true;
@@ -1184,6 +1198,11 @@ public class VirtualFileSystemService {
                         if (!preview) {
                             File.Delete(symbolicLink);
                             File.CreateSymbolicLink(symbolicLink, sourceLocation);
+#if NET9_0
+#else
+                            // Mock the creation date to fake the "date added" order in Jellyfin.
+                            File.SetCreationTime(symbolicLink, importedAt);
+#endif
                         }
                     }
                     else {
