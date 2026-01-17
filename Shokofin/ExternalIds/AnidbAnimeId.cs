@@ -16,5 +16,10 @@ public class AnidbAnimeId : IExternalId {
 
     public bool Supports(IHasProviderIds item) => item is Series or Season;
 
+#if NET9_0
+#else
+    string? IExternalId.UrlFormatString => null;
+#endif 
+
     #endregion
 }

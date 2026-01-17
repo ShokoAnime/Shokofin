@@ -1,4 +1,5 @@
-﻿import os
+﻿from datetime import datetime
+import os
 import json
 import yaml
 import argparse
@@ -10,28 +11,38 @@ def extract_target_framework(csproj_path):
     target_framework_match = re.compile(r"<TargetFramework>(.*?)<\/TargetFramework>", re.IGNORECASE).search(content)
     target_frameworks_match = re.compile(r"<TargetFrameworks>(.*?)<\/TargetFrameworks>", re.IGNORECASE).search(content)
     if target_framework_match:
-        return target_framework_match.group(1)
+        return [target_framework_match.group(1)]
     elif target_frameworks_match:
-        return target_frameworks_match.group(1).split(";")[0]  # Return the first framework
+        return target_frameworks_match.group(1).split(";")
     else:
         return None
 
-def extract_packages_to_output(csproj_path):
+def extract_packages_to_output(csproj_path, framework):
     with open(csproj_path, "r") as file:
         content = file.read()
-    # create a list of all matches for r"<PackageReference Include="([^"]*?)" Version="(?:[^"]*?)" CopyToOutput="True" />" and filter to
-    # the first group in each match
-    matches = [match.group(1) + ".dll" for match in re.finditer(r"<CommonPackageReference Include=\"([^\"]*?)\" Version=\"(?:[^\"]*?)\" />", content)]
-    return matches
+    pattern = re.compile(
+        rf'<CommonPackageReference\s+Include="([^"]+)"\s+'
+        rf'Version="[^"]+"\s+'
+        rf'TargetFramework="{re.escape(framework)}"\s*/>'
+    )
+    matches = [match.group(1) + ".dll" for match in pattern.finditer(content)]
+    return list(set(matches))
 
-def extract_target_abi(csproj_path):
+def extract_target_abi(csproj_path, framework):
     with open(csproj_path, "r") as file:
         content = file.read()
-    target_abi_match = re.compile(r"<PackageReference Include=\"Jellyfin.Controller\" Version=\"([^\"]*?)\" />", re.IGNORECASE).search(content)
-    if not target_abi_match:
-        raise Exception("Jellyfin.Controller not found in Shokofin.csproj")
-    return target_abi_match.group(1) + ".0"
-
+    pattern = re.compile(
+        rf'<PackageReference\s+Include="Jellyfin\.Controller"\s+'
+        rf'Version="([^"]+)"\s+'
+        rf'TargetFramework="{re.escape(framework)}"\s*/>',
+        re.IGNORECASE,
+    )
+    match = pattern.search(content)
+    if not match:
+        raise Exception(
+            f"Jellyfin.Controller not found for framework '{framework}' in {os.path.basename(csproj_path)}"
+        )
+    return match.group(1)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--repo", required=True)
@@ -41,7 +52,6 @@ parser.add_argument("--prerelease", default=False)
 opts = parser.parse_args()
 
 project_file = "./Shokofin/Shokofin.csproj"
-framework = extract_target_framework(project_file)
 version = opts.version
 tag = opts.tag
 prerelease = bool(opts.prerelease)
@@ -53,44 +63,87 @@ if not os.path.exists(artifact_dir):
 jellyfin_repo_file="./manifest.json"
 jellyfin_repo_url=f"https://github.com/{opts.repo}/releases/download"
 
-# Add changelog to the build yaml before we generate the release.
+# Load the build.yaml file into memory.
 build_file = "./build.yaml"
-
 with open(build_file, "r") as file:
-    data = yaml.safe_load(file)
+    build_file_contents = file.read()
+    data = yaml.safe_load(build_file_contents)
 
+# Add changelog to the build yaml before we generate the release.
 if "changelog" in data:
     if "CHANGELOG" in os.environ:
         data["changelog"] = os.environ["CHANGELOG"].strip()
     else:
         data["changelog"] = ""
+changelog = data["changelog"]
 
-if "artifacts" in data:
-    data["artifacts"].extend(extract_packages_to_output(project_file))
-else:
-    data["artifacts"] = extract_packages_to_output(project_file)
+# Load the manifest.json file into memory.
+with open(jellyfin_repo_file, "r") as file:
+    repos = json.load(file)
+    repo = repos[0]
 
-data["targetAbi"] = extract_target_abi(project_file)
+# For every found framework, generate a zip file for the target framework and ABI.
+try:
+    for framework in extract_target_framework(project_file):
+        target_abi = extract_target_abi(project_file, framework)
+        artifacts = extract_packages_to_output(project_file, framework)
 
-with open(build_file, "w") as file:
-    yaml.dump(data, file, sort_keys=False)
+        data = yaml.safe_load(build_file_contents)
+        data["changelog"] = changelog
+        data["artifacts"] = list(set(data["artifacts"] + artifacts))
+        data["targetAbi"] = target_abi + ".0"
+        with open(build_file, "w") as file:
+            yaml.dump(data, file, sort_keys=False)
 
-zipfile=os.popen("jprm --verbosity=debug plugin build \".\" --output=\"%s\" --version=\"%s\" --dotnet-framework=\"%s\"" % (artifact_dir, version, framework)).read().strip()
+        zipfile=os.popen("jprm --verbosity=debug plugin build \".\" --output=\"%s\" --version=\"%s\" --dotnet-framework=\"%s\"" % (artifact_dir, version, framework)).read().strip()
 
-jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{tag}/shoko_{version}.zip"
+        # read the checksum file jprm wrote
+        checksum = open(zipfile + ".md5sum", "r").read().strip()[:32]
+        timestamp = os.path.getmtime(zipfile)
+        new_zipfile = os.path.join(artifact_dir, f"shoko_{version}_for_{target_abi}.zip")
+        os.rename(zipfile, new_zipfile)
+        os.remove(zipfile + ".md5sum")
+        os.remove(zipfile + ".meta.json")
 
-os.system("jprm repo add --plugin-url=%s %s %s" % (jellyfin_plugin_release_url, jellyfin_repo_file, zipfile))
+        jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{tag}/shoko_{version}_for_{target_abi}.zip"
+        os.system("jprm repo add --plugin-url=%s %s %s" % (jellyfin_plugin_release_url, jellyfin_repo_file, new_zipfile))
 
-# Compact the unstable manifest after building, so it only contains the last 5 versions.
+        repo["versions"].append(
+            {
+                "version": version,
+                "changelog": changelog,
+                "targetAbi": target_abi + ".0",
+                "sourceUrl": jellyfin_plugin_release_url,
+                "checksum": checksum,
+                "timestamp": datetime.fromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            },
+        )
+finally:
+    # Restore the original build.yaml after we're done
+    with open(build_file, "w") as file:
+        file.write(build_file_contents)
+
+# Update the repository file with the newest data from the build.yaml
+if "name" in data:
+    repo["name"] = data["name"]
+if "owner" in data:
+    repo["owner"] = data["owner"]
+if "overview" in data:
+    repo["overview"] = data["overview"]
+if "description" in data:
+    repo["description"] = data["description"]
+if "category" in data:
+    repo["category"] = data["category"]
+if "imageUrl" in data:
+    repo["imageUrl"] = data["imageUrl"]
+
+# Compact the unstable manifest after building, so it only contains the last 10 versions.
 if prerelease:
-    with open(jellyfin_repo_file, "r") as file:
-        data = json.load(file)
+    if "versions" in repo and len(repo["versions"]) > 10:
+        repo["versions"] = repo["versions"][:10]
 
-    for item in data:
-        if "versions" in item and len(item["versions"]) > 5:
-            item["versions"] = item["versions"][:5]
-
-    with open(jellyfin_repo_file, "w") as file:
-        json.dump(data, file, indent=4)
+# Update the repository file
+with open(jellyfin_repo_file, "w") as file:
+    json.dump(repos, file, indent=4)
 
 print(version)
