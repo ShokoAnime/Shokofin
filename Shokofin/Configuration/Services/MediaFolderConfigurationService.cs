@@ -328,7 +328,7 @@ public class MediaFolderConfigurationService {
                     // so we need to remove it.
                     else if (!virtualFolder.Locations.Contains(mediaFolderConfig.Path)) {
                         config.LibraryFolders.Remove(mediaFolderConfig);
-                        oldFolderConfigList.Add((mediaFolderConfig.Library, mediaFolderConfig));
+                        oldFolderConfigList.Add((libraryConfig, mediaFolderConfig));
                         shouldSaveConfig = true;
                         continue;
                     }
@@ -356,7 +356,9 @@ public class MediaFolderConfigurationService {
         foreach (var mediaFolder in mediaFoldersToRemove) {
             Logger.LogTrace("Removing config for media folder at path {Path} (Library={LibraryId})", mediaFolder.Path, mediaFolder.LibraryId);
             config.LibraryFolders.Remove(mediaFolder);
-            oldFolderConfigList.Add((mediaFolder.Library, mediaFolder));
+            var libraryConfig = config.Libraries.FirstOrDefault(c => c.Id == mediaFolder.LibraryId);
+            if (libraryConfig is not null)
+                oldFolderConfigList.Add((libraryConfig, mediaFolder));
             shouldSaveConfig = true;
         }
         foreach (var library in librariesToRemove) {
