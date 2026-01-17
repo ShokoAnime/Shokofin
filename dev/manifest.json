@@ -47,6 +47,22 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.18/shoko_5.0.6.18.zip",
                 "checksum": "4b4c1966af8bddbee3bb14fc79def009",
                 "timestamp": "2025-12-19T01:39:40Z"
+            },
+            {
+                "version": "6.0.0.3",
+                "changelog": "`feat`: **Build for 10.10 & 10.11**.\n\n`fix`: **Lowercase the 'S' in 'Shoko' in the zip file name (again)**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.0-dev.3/shoko_6.0.0.3_for_10.11.0.zip",
+                "checksum": "44f465dc37d0af26f2e3e9ccd396a8ed",
+                "timestamp": "2026-01-17T02:02:06Z"
+            },
+            {
+                "version": "6.0.0.3",
+                "changelog": "`feat`: **Build for 10.10 & 10.11**.\n\n`fix`: **Lowercase the 'S' in 'Shoko' in the zip file name (again)**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.0-dev.3/shoko_6.0.0.3_for_10.10.0.zip",
+                "checksum": "4ea0d6400315610b08ceb067674a48b5",
+                "timestamp": "2026-01-17T02:02:16Z"
             }
         ]
     }
