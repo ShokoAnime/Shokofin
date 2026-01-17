@@ -50,8 +50,9 @@ public class CustomMovieProvider(ILogger<CustomMovieProvider> _logger, VirtualFi
                 return ItemUpdateType.None;
             }
 
-            // Since Jellyfin 10.11.1 onwards they've fixed it so the creation date for videos doesn't follow the symlink but instead follows the target location, so to match the older behavior to get the date to match the import date, we now make sure the creation date is set to the import date here.
             var updateType = (ItemUpdateType)0;
+#if NET9_0_OR_GREATER
+            // Since Jellyfin 10.11.1 onwards they've fixed it so the creation date for videos doesn't follow the symlink but instead follows the target location, so to match the older behavior to get the date to match the import date, we now make sure the creation date is set to the import date here.
             if (movie.TryGetFileAndSeriesId(out _, out _, vfsOnly: true)) {
                 if (await _apiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false) is { } fileInfo) {
                     var createdAt = fileInfo.Shoko.ImportedAt ?? fileInfo.Shoko.CreatedAt;
@@ -61,6 +62,7 @@ public class CustomMovieProvider(ILogger<CustomMovieProvider> _logger, VirtualFi
                     }
                 }
             }
+#endif
 
             if (Plugin.Instance.Configuration.AutoMergeVersions && !_libraryManager.IsScanRunning && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
                 _mergeVersionsManager.ScheduleSplitAndMergeMoviesByEpisodeId(episodeId);

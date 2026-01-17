@@ -34,21 +34,24 @@ the official Jellyfin repository.
 Below is a version compatibility matrix for which version of Shokofin is
 compatible with what.
 
-| Shokofin          | Jellyfin | Shoko Server      |
-|-------------------|----------|-------------------|
-| `0.x.x`           | `10.7`   | `4.0.0` — `4.1.2` |
-| `1.x.x`           | `10.7`   | `4.1.0` — `4.1.2` |
-| `2.x.x`           | `10.8`   | `4.1.2`           |
-| `3.x.x`           | `10.8`   | `4.2.0`           |
-| `4.0.0` — `4.1.1` | `10.9`   | `4.2.2`           |
-| `4.2.0` — `4.2.2` | `10.9`   | `4.2.2` — `5.0.0` |
-| `5.0.0`           | `10.10`  | `5.0.0`           |
-| `5.0.1` — `5.0.4` | `10.10`  | `5.0.0` — `5.1.0` |
-| `5.0.5` — `5.0.6` | `10.11`  | `5.1.0`           |
-| `6.0.0`           | `10.11`  | `5.2.0`           |
-| `dev`             | `10.11`  | `dev`             |
+| Shokofin          | Jellyfin          | Shoko Server      |
+|-------------------|-------------------|-------------------|
+| `0.x.x`           | `10.7`            | `4.0.0` — `4.1.2` |
+| `1.x.x`           | `10.7`            | `4.1.0` — `4.1.2` |
+| `2.x.x`           | `10.8`            | `4.1.2`           |
+| `3.x.x`           | `10.8`            | `4.2.0`           |
+| `4.0.0` — `4.1.1` | `10.9`            | `4.2.2`           |
+| `4.2.0` — `4.2.2` | `10.9`            | `4.2.2` — `5.0.0` |
+| `5.0.0`           | `10.10`           | `5.0.0`           |
+| `5.0.1` — `5.0.4` | `10.10`           | `5.0.0` — `5.1.0` |
+| `5.0.5` — `5.0.6` | `10.11`           | `5.1.0`           |
+| `6.0.0`           | `10.11`           | `5.2.0`           |
+| `6.0.1`           | `10.10` — `10.11` | `5.2.0`           |
+| `dev`             | `10.10` — `10.11` | `dev`             |
 
 ### Official Repository
+
+#### Jellyfin 10.11
 
 1. **Access Plugin Repositories:**
    - Go to `Dashboard` -> `Plugins` -> `Manage Repositories` -> `New Repository`.
@@ -65,6 +68,20 @@ compatible with what.
 
 4. **Restart Jellyfin:**
    - Restart your server to apply the changes.
+
+#### Jellyfin 10.10
+
+1. **Access Plugin Repositories:**
+   - Go to `Dashboard` -> `Plugins` -> `Catalog` -> `⚙ Gear icon`.
+
+2. **Add New Repository:**
+   - Add a new repository with the following details:
+     * **Repository Name:** `Shokofin Stable`
+     * **Repository URL:** `https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/stable/manifest.json`
+
+3. **Install Shokofin:**
+   - Go to the catalog in the plugins section of the dashboard.
+   - Find and install `Shoko` from the `Anime` section.
 
 ### Github Releases
 
@@ -182,7 +199,7 @@ compatible with what.
 
     - [X] on Movie items
 
-  - [X] Specials and extra features. 
+  - [X] Specials and extra features.
 
     - [X] Customize how Specials are placed in your library. I.e. if they are
       mapped to the normal seasons, or if they are strictly kept in season zero.

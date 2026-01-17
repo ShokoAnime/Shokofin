@@ -82,14 +82,21 @@ with open(jellyfin_repo_file, "r") as file:
     repos = json.load(file)
     repo = repos[0]
 
+versions = []
+
 # For every found framework, generate a zip file for the target framework and ABI.
 try:
     for framework in extract_target_framework(project_file):
         target_abi = extract_target_abi(project_file, framework)
+        target_abi_high = ".".join(target_abi.split(".")[:-1])
         artifacts = extract_packages_to_output(project_file, framework)
 
+        generated_changelog = f"Only compatible with **{target_abi_high}.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/{tag}) for more info."
+        if changelog:
+            generated_changelog += f"\n\n---\n\n{changelog}"
+
         data = yaml.safe_load(build_file_contents)
-        data["changelog"] = changelog
+        data["changelog"] = generated_changelog
         data["artifacts"] = list(set(data["artifacts"] + artifacts))
         data["targetAbi"] = target_abi + ".0"
         with open(build_file, "w") as file:
@@ -108,16 +115,14 @@ try:
         jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{tag}/shoko_{version}_for_{target_abi}.zip"
         os.system("jprm repo add --plugin-url=%s %s %s" % (jellyfin_plugin_release_url, jellyfin_repo_file, new_zipfile))
 
-        repo["versions"].append(
-            {
-                "version": version,
-                "changelog": changelog,
-                "targetAbi": target_abi + ".0",
-                "sourceUrl": jellyfin_plugin_release_url,
-                "checksum": checksum,
-                "timestamp": datetime.fromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            },
-        )
+        versions.append({
+            "version": version,
+            "changelog": generated_changelog,
+            "targetAbi": target_abi + ".0",
+            "sourceUrl": jellyfin_plugin_release_url,
+            "checksum": checksum,
+            "timestamp": datetime.fromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        })
 finally:
     # Restore the original build.yaml after we're done
     with open(build_file, "w") as file:
@@ -136,6 +141,8 @@ if "category" in data:
     repo["category"] = data["category"]
 if "imageUrl" in data:
     repo["imageUrl"] = data["imageUrl"]
+for version_data in reversed(versions):
+    repo["versions"].insert(0, version_data)
 
 # Compact the unstable manifest after building, so it only contains the last 10 versions.
 if prerelease:
