@@ -82,6 +82,8 @@ with open(jellyfin_repo_file, "r") as file:
     repos = json.load(file)
     repo = repos[0]
 
+versions = []
+
 # For every found framework, generate a zip file for the target framework and ABI.
 try:
     for framework in extract_target_framework(project_file):
@@ -108,16 +110,14 @@ try:
         jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{tag}/shoko_{version}_for_{target_abi}.zip"
         os.system("jprm repo add --plugin-url=%s %s %s" % (jellyfin_plugin_release_url, jellyfin_repo_file, new_zipfile))
 
-        repo["versions"].insert(0,
-            {
-                "version": version,
-                "changelog": changelog,
-                "targetAbi": target_abi + ".0",
-                "sourceUrl": jellyfin_plugin_release_url,
-                "checksum": checksum,
-                "timestamp": datetime.fromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            },
-        )
+        versions.append({
+            "version": version,
+            "changelog": changelog,
+            "targetAbi": target_abi + ".0",
+            "sourceUrl": jellyfin_plugin_release_url,
+            "checksum": checksum,
+            "timestamp": datetime.fromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        })
 finally:
     # Restore the original build.yaml after we're done
     with open(build_file, "w") as file:
@@ -136,6 +136,8 @@ if "category" in data:
     repo["category"] = data["category"]
 if "imageUrl" in data:
     repo["imageUrl"] = data["imageUrl"]
+for version_data in reversed(versions):
+    repo["versions"].insert(0, version_data)
 
 # Compact the unstable manifest after building, so it only contains the last 10 versions.
 if prerelease:
