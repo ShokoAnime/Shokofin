@@ -766,7 +766,7 @@ public class VirtualFileSystemService {
 
     private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForManagedFolders(IReadOnlyList<MediaFolderConfiguration> mediaConfigs, Func<string, bool> fileExists, DateTime? lastGeneratedAt = null, ConcurrentBag<(string, string)>? knownFileSeriesBag = null) {
         var start = DateTime.UtcNow;
-        var singleSeriesIds = new HashSet<int>();
+        var singleSeriesIds = new HashSet<string>();
         var multiSeriesFiles = new List<(API.Models.File, string)>();
         var totalSingleSeriesFiles = 0;
         var libraryId = mediaConfigs[0].LibraryId;
@@ -827,17 +827,16 @@ public class VirtualFileSystemService {
                         var seriesIds = file.CrossReferences.Where(x => x.Series.Shoko.HasValue && x.Episodes.All(e => e.Shoko.HasValue)).Select(x => x.Series.Shoko!.Value).ToHashSet();
                         if (seriesIds.Count is 1) {
                             totalSingleSeriesFiles++;
-                            singleSeriesIds.Add(seriesIds.First());
-                            foreach (var seriesId in seriesIds) {
-                                // Skip files that were generated before the last generated at time if we're doing an iterative run,
-                                // but still add it to the bag for validation of removed files.
-                                if (lastGeneratedAt.HasValue) {
-                                    knownFileSeriesBag!.Add((file.Id.ToString(), seriesId.ToString()));
-                                    if ((file.ImportedAt ?? file.CreatedAt) < lastGeneratedAt.Value)
-                                        continue;
-                                }
-                                yield return (sourceLocation, file.Id.ToString(), seriesId.ToString());
+                            var seriesId = seriesIds.First().ToString();
+                            singleSeriesIds.Add(seriesId);
+                            // Skip files that were generated before the last generated at time if we're doing an iterative run,
+                            // but still add it to the bag for validation of removed files.
+                            if (lastGeneratedAt.HasValue) {
+                                knownFileSeriesBag!.Add((file.Id.ToString(), seriesId));
+                                if ((file.ImportedAt ?? file.CreatedAt) < lastGeneratedAt.Value)
+                                    continue;
                             }
+                            yield return (sourceLocation, file.Id.ToString(), seriesId);
                         }
                         else if (seriesIds.Count > 1) {
                             multiSeriesFiles.Add((file, sourceLocation));
@@ -854,15 +853,6 @@ public class VirtualFileSystemService {
         var totalMultiSeriesFiles = 0;
         if (multiSeriesFiles.Count > 0) {
             var anidbExceptionSet = Plugin.Instance.Configuration.VFS_AlwaysIncludedAnidbIdList.ToHashSet();
-            var mappedSingleSeriesIds = singleSeriesIds
-                .SelectMany(seriesId =>
-                    ApiManager.GetShowInfosForShokoSeries(seriesId.ToString())
-                        .ConfigureAwait(false)
-                        .GetAwaiter()
-                        .GetResult()
-                        .Select(showInfo => showInfo.Id)
-                )
-                .ToHashSet();
             foreach (var (file, sourceLocation) in multiSeriesFiles) {
                 var seriesIds = file.CrossReferences
                     .Where(xref => xref.Series.Shoko.HasValue && xref.Episodes.All(e => e.Shoko.HasValue))
@@ -870,10 +860,9 @@ public class VirtualFileSystemService {
                     .Distinct()
                     .Select(tuple => (
                         tuple.seriesId,
-                        tuple.anidbId,
-                        showIds: ApiManager.GetShowInfosForShokoSeries(tuple.seriesId).ConfigureAwait(false).GetAwaiter().GetResult().Select(showInfo => showInfo.Id).ToHashSet()
+                        tuple.anidbId
                     ))
-                    .Where(tuple => tuple.showIds.Count > 0 && (mappedSingleSeriesIds.Overlaps(tuple.showIds) || anidbExceptionSet.Contains(tuple.anidbId)))
+                    .Where(tuple => singleSeriesIds.Contains(tuple.seriesId) || anidbExceptionSet.Contains(tuple.anidbId))
                     .Select(tuple => tuple.seriesId)
                     .ToList();
                 foreach (var seriesId in seriesIds) {
