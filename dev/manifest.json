@@ -63,6 +63,22 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.0-dev.3/shoko_6.0.0.3_for_10.10.0.zip",
                 "checksum": "4ea0d6400315610b08ceb067674a48b5",
                 "timestamp": "2026-01-17T02:02:16Z"
+            },
+            {
+                "version": "6.0.1.1",
+                "changelog": "`repo`: **Synchronize 'dev' branch with 'stable' branch**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.1/shoko_6.0.1.1_for_10.11.0.zip",
+                "checksum": "8c5029965db653e805970a251c6706c0",
+                "timestamp": "2026-01-17T02:32:20Z"
+            },
+            {
+                "version": "6.0.1.1",
+                "changelog": "`repo`: **Synchronize 'dev' branch with 'stable' branch**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.1/shoko_6.0.1.1_for_10.10.0.zip",
+                "checksum": "dedabed000f84d42ffe4796d0a95f142",
+                "timestamp": "2026-01-17T02:32:31Z"
             }
         ]
     }
