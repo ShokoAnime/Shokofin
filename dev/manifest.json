@@ -9,6 +9,46 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.1.2",
+                "changelog": "`fix`: **Add back behavior to mock the mtime of symlinks for 10.10**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.2/shoko_6.0.1.2_for_10.11.0.zip",
+                "checksum": "407ac1b12bcfe20bc546f2e32b00b12b",
+                "timestamp": "2026-01-17T02:39:41Z"
+            },
+            {
+                "version": "6.0.1.1",
+                "changelog": "`repo`: **Synchronize 'dev' branch with 'stable' branch**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.1/shoko_6.0.1.1_for_10.11.0.zip",
+                "checksum": "8c5029965db653e805970a251c6706c0",
+                "timestamp": "2026-01-17T02:32:20Z"
+            },
+            {
+                "version": "6.0.1.1",
+                "changelog": "`repo`: **Synchronize 'dev' branch with 'stable' branch**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.1/shoko_6.0.1.1_for_10.10.0.zip",
+                "checksum": "dedabed000f84d42ffe4796d0a95f142",
+                "timestamp": "2026-01-17T02:32:31Z"
+            },
+            {
+                "version": "6.0.0.3",
+                "changelog": "`feat`: **Build for 10.10 & 10.11**.\n\n`fix`: **Lowercase the 'S' in 'Shoko' in the zip file name (again)**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.0-dev.3/shoko_6.0.0.3_for_10.11.0.zip",
+                "checksum": "44f465dc37d0af26f2e3e9ccd396a8ed",
+                "timestamp": "2026-01-17T02:02:06Z"
+            },
+            {
+                "version": "6.0.0.3",
+                "changelog": "`feat`: **Build for 10.10 & 10.11**.\n\n`fix`: **Lowercase the 'S' in 'Shoko' in the zip file name (again)**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.0-dev.3/shoko_6.0.0.3_for_10.10.0.zip",
+                "checksum": "4ea0d6400315610b08ceb067674a48b5",
+                "timestamp": "2026-01-17T02:02:16Z"
+            },
+            {
                 "version": "6.0.0.2",
                 "changelog": "`fix`: **Inform library monitor before generating VFS**:\n\nInform the library monitor when we're going to (re-)generate the VFS so it won't react to the changes we make, as we're already running a refresh when the generation takes place and don't want it to trigger another refresh.\n\nFixes #94. Closes #94.\n\n`chore`: **Removed unused method**.",
                 "targetAbi": "10.11.0.0",
@@ -39,54 +79,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.19/shoko_5.0.6.19.zip",
                 "checksum": "afb8b922dd992c427175e8ea81b9d850",
                 "timestamp": "2026-01-09T10:40:49Z"
-            },
-            {
-                "version": "5.0.6.18",
-                "changelog": "`fix`: **Don't copy VFS season folder into video trickplay folder**:\n\nDon't copy VFS season folder into video trickplay folder when the trickplay folder exists as a non-link in both the underlying library and in the VFS.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v5.0.6-dev.18/shoko_5.0.6.18.zip",
-                "checksum": "4b4c1966af8bddbee3bb14fc79def009",
-                "timestamp": "2025-12-19T01:39:40Z"
-            },
-            {
-                "version": "6.0.0.3",
-                "changelog": "`feat`: **Build for 10.10 & 10.11**.\n\n`fix`: **Lowercase the 'S' in 'Shoko' in the zip file name (again)**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.0-dev.3/shoko_6.0.0.3_for_10.11.0.zip",
-                "checksum": "44f465dc37d0af26f2e3e9ccd396a8ed",
-                "timestamp": "2026-01-17T02:02:06Z"
-            },
-            {
-                "version": "6.0.0.3",
-                "changelog": "`feat`: **Build for 10.10 & 10.11**.\n\n`fix`: **Lowercase the 'S' in 'Shoko' in the zip file name (again)**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.0-dev.3/shoko_6.0.0.3_for_10.10.0.zip",
-                "checksum": "4ea0d6400315610b08ceb067674a48b5",
-                "timestamp": "2026-01-17T02:02:16Z"
-            },
-            {
-                "version": "6.0.1.1",
-                "changelog": "`repo`: **Synchronize 'dev' branch with 'stable' branch**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.1/shoko_6.0.1.1_for_10.11.0.zip",
-                "checksum": "8c5029965db653e805970a251c6706c0",
-                "timestamp": "2026-01-17T02:32:20Z"
-            },
-            {
-                "version": "6.0.1.1",
-                "changelog": "`repo`: **Synchronize 'dev' branch with 'stable' branch**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.1/shoko_6.0.1.1_for_10.10.0.zip",
-                "checksum": "dedabed000f84d42ffe4796d0a95f142",
-                "timestamp": "2026-01-17T02:32:31Z"
-            },
-            {
-                "version": "6.0.1.2",
-                "changelog": "`fix`: **Add back behavior to mock the mtime of symlinks for 10.10**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.2/shoko_6.0.1.2_for_10.11.0.zip",
-                "checksum": "407ac1b12bcfe20bc546f2e32b00b12b",
-                "timestamp": "2026-01-17T02:39:41Z"
             }
         ]
     }
