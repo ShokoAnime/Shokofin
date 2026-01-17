@@ -79,6 +79,14 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.1/shoko_6.0.1.1_for_10.10.0.zip",
                 "checksum": "dedabed000f84d42ffe4796d0a95f142",
                 "timestamp": "2026-01-17T02:32:31Z"
+            },
+            {
+                "version": "6.0.1.2",
+                "changelog": "`fix`: **Add back behavior to mock the mtime of symlinks for 10.10**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.2/shoko_6.0.1.2_for_10.11.0.zip",
+                "checksum": "407ac1b12bcfe20bc546f2e32b00b12b",
+                "timestamp": "2026-01-17T02:39:41Z"
             }
         ]
     }
