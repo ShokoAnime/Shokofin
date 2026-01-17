@@ -108,7 +108,7 @@ try:
         jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{tag}/shoko_{version}_for_{target_abi}.zip"
         os.system("jprm repo add --plugin-url=%s %s %s" % (jellyfin_plugin_release_url, jellyfin_repo_file, new_zipfile))
 
-        repo["versions"].append(
+        repo["versions"].insert(0,
             {
                 "version": version,
                 "changelog": changelog,
