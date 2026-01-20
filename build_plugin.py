@@ -55,6 +55,8 @@ project_file = "./Shokofin/Shokofin.csproj"
 version = opts.version
 tag = opts.tag
 prerelease = bool(opts.prerelease)
+short_version = ".".join(version.split(".")[:3])
+build_number = int(version.split(".")[-1])
 
 artifact_dir = os.path.join(os.getcwd(), "artifacts")
 if not os.path.exists(artifact_dir):
@@ -89,8 +91,13 @@ try:
     for framework in extract_target_framework(project_file):
         target_abi = extract_target_abi(project_file, framework)
         target_abi_high = ".".join(target_abi.split(".")[:-1])
+        target_abi_low = target_abi.split(".")[1]
         artifacts = extract_packages_to_output(project_file, framework)
 
+        if build_number != "0":
+            generated_version = f"{short_version}.{build_number}{target_abi_low}"
+        else:
+            generated_version = f"{short_version}.{target_abi_low}"
         generated_changelog = f"Only compatible with **{target_abi_high}.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/{tag}) for more info."
         if changelog:
             generated_changelog += f"\n\n---\n\n{changelog}"
@@ -102,21 +109,21 @@ try:
         with open(build_file, "w") as file:
             yaml.dump(data, file, sort_keys=False)
 
-        zipfile=os.popen("jprm --verbosity=debug plugin build \".\" --output=\"%s\" --version=\"%s\" --dotnet-framework=\"%s\"" % (artifact_dir, version, framework)).read().strip()
+        zipfile=os.popen("jprm --verbosity=debug plugin build \".\" --output=\"%s\" --version=\"%s\" --dotnet-framework=\"%s\"" % (artifact_dir, generated_version, framework)).read().strip()
 
         # read the checksum file jprm wrote
         checksum = open(zipfile + ".md5sum", "r").read().strip()[:32]
         timestamp = os.path.getmtime(zipfile)
-        new_zipfile = os.path.join(artifact_dir, f"shoko_{version}_for_{target_abi}.zip")
+        new_zipfile = os.path.join(artifact_dir, f"shoko_{version}_for_{target_abi_high}.zip")
         os.rename(zipfile, new_zipfile)
         os.remove(zipfile + ".md5sum")
         os.remove(zipfile + ".meta.json")
 
-        jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{tag}/shoko_{version}_for_{target_abi}.zip"
+        jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{tag}/shoko_{version}_for_{target_abi_high}.zip"
         os.system("jprm repo add --plugin-url=%s %s %s" % (jellyfin_plugin_release_url, jellyfin_repo_file, new_zipfile))
 
         versions.append({
-            "version": version,
+            "version": generated_version,
             "changelog": generated_changelog,
             "targetAbi": target_abi + ".0",
             "sourceUrl": jellyfin_plugin_release_url,
