@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.2.311",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.2-dev.3) for more info.\n\n---\n\n`fix`: **Always append notes to overview if enabled**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.2-dev.3/shoko_6.0.2.3_for_10.11.zip",
+                "checksum": "f07d0de0b8545ffd3af2efaba037e200",
+                "timestamp": "2026-01-27T18:18:35Z"
+            },
+            {
+                "version": "6.0.2.310",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.2-dev.3) for more info.\n\n---\n\n`fix`: **Always append notes to overview if enabled**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.2-dev.3/shoko_6.0.2.3_for_10.10.zip",
+                "checksum": "c1367056cf2d6e5225ca4b5f6ba11a30",
+                "timestamp": "2026-01-27T18:18:46Z"
+            },
+            {
                 "version": "6.0.2.211",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.2-dev.2) for more info.\n\n---\n\n`repo`: **Update version matrix in read-me**. (_Skip CI_)\n\n`repo`: **Update version matrix in read-me**. (_Skip CI_)\n\n`repo`: **Tweak build numbers to be unique per target ABI**.",
                 "targetAbi": "10.11.0.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.6/shoko_6.0.1.6_for_10.10.0.zip",
                 "checksum": "8d65fbd9434830d3208ead110d3cf7ec",
                 "timestamp": "2026-01-17T17:18:23Z"
-            },
-            {
-                "version": "6.0.1.5",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1-dev.5) for more info.\n\n---\n\n`fix`: **Only set the created date on episodes/movies in 10.11+**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.5/shoko_6.0.1.5_for_10.11.0.zip",
-                "checksum": "910b7571a36207b9ced8fb584e8cc37e",
-                "timestamp": "2026-01-17T13:28:44Z"
-            },
-            {
-                "version": "6.0.1.5",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1-dev.5) for more info.\n\n---\n\n`fix`: **Only set the created date on episodes/movies in 10.11+**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.5/shoko_6.0.1.5_for_10.10.0.zip",
-                "checksum": "38c25a5e7e07e06f5e62cc6e7c054759",
-                "timestamp": "2026-01-17T13:28:55Z"
             }
         ]
     }
