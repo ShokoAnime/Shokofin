@@ -79,13 +79,6 @@ if "changelog" in data:
         data["changelog"] = ""
 changelog = data["changelog"]
 
-# Load the manifest.json file into memory.
-with open(jellyfin_repo_file, "r") as file:
-    repos = json.load(file)
-    repo = repos[0]
-
-versions = []
-
 # For every found framework, generate a zip file for the target framework and ABI.
 try:
     for framework in extract_target_framework(project_file):
@@ -121,43 +114,21 @@ try:
 
         jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{tag}/shoko_{version}_for_{target_abi_high}.zip"
         os.system("jprm repo add --plugin-url=%s %s %s" % (jellyfin_plugin_release_url, jellyfin_repo_file, new_zipfile))
-
-        versions.append({
-            "version": generated_version,
-            "changelog": generated_changelog,
-            "targetAbi": target_abi + ".0",
-            "sourceUrl": jellyfin_plugin_release_url,
-            "checksum": checksum,
-            "timestamp": datetime.fromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        })
 finally:
     # Restore the original build.yaml after we're done
     with open(build_file, "w") as file:
         file.write(build_file_contents)
 
-# Update the repository file with the newest data from the build.yaml
-if "name" in data:
-    repo["name"] = data["name"]
-if "owner" in data:
-    repo["owner"] = data["owner"]
-if "overview" in data:
-    repo["overview"] = data["overview"]
-if "description" in data:
-    repo["description"] = data["description"]
-if "category" in data:
-    repo["category"] = data["category"]
-if "imageUrl" in data:
-    repo["imageUrl"] = data["imageUrl"]
-for version_data in reversed(versions):
-    repo["versions"].insert(0, version_data)
-
 # Compact the unstable manifest after building, so it only contains the last 10 versions.
 if prerelease:
+    with open(jellyfin_repo_file, "r") as file:
+        repos = json.load(file)
+        repo = repos[0]
     if "versions" in repo and len(repo["versions"]) > 10:
         repo["versions"] = repo["versions"][:10]
 
-# Update the repository file
-with open(jellyfin_repo_file, "w") as file:
-    json.dump(repos, file, indent=4)
+    # Update the repository file
+    with open(jellyfin_repo_file, "w") as file:
+        json.dump(repos, file, indent=4)
 
 print(version)
