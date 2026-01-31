@@ -327,32 +327,36 @@ public static partial class TextUtility {
                     baseInfo.Overviews.Where(o => o.Source is "TMDB" && string.Equals(o.LanguageCode, metadataLanguage, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault()?.Value,
                 _ => null
             };
-            if (!string.IsNullOrEmpty(overview)) {
-                if (config.AddNotes && baseInfo.Notes.Count == 1) {
-                    overview = overview.TrimEnd() + "\n\n";
-                    if (Plugin.Instance.Configuration.SynopsisEnableMarkdown) {
-                        overview += "**Note:** " + baseInfo.Notes[0];
-                    }
-                    else {
-                        overview += "Note: " + baseInfo.Notes[0];
-                    }
-                }
-                else if (config.AddNotes && baseInfo.Notes.Count > 1) {
-                    overview = overview.TrimEnd() + "\n\n";
-                    var count = 1;
-                    foreach (var note in baseInfo.Notes) {
-                        if (Plugin.Instance.Configuration.SynopsisEnableMarkdown) {
-                            overview += "**Note " + count++ + ":** " + note + "\n\n";
-                        }
-                        else {
-                            overview += "Note " + count++ + ": " + note + "\n\n";
-                        }
-                    }
-                }
-                return overview.Trim();
+            if (!string.IsNullOrEmpty(overview))
+                return AppendNotes(baseInfo, config, overview);
+        }
+        return AppendNotes(baseInfo, config, string.Empty);
+    }
+
+    private static string AppendNotes(IBaseItemInfo baseInfo, DescriptionConfiguration config, string overview) {
+        if (config.AddNotes && baseInfo.Notes.Count == 1) {
+            if (overview.Length > 0)
+                overview = overview.TrimEnd() + "\n\n";
+
+            if (Plugin.Instance.Configuration.SynopsisEnableMarkdown)
+                overview += "**Note:** " + baseInfo.Notes[0];
+            else
+                overview += "Note: " + baseInfo.Notes[0];
+        }
+        else if (config.AddNotes && baseInfo.Notes.Count > 1) {
+            if (overview.Length > 0)
+                overview = overview.TrimEnd() + "\n\n";
+
+            var count = 1;
+            foreach (var note in baseInfo.Notes) {
+                if (Plugin.Instance.Configuration.SynopsisEnableMarkdown)
+                    overview += "**Note " + count++ + ":** " + note + "\n\n";
+                else
+                    overview += "Note " + count++ + ": " + note + "\n\n";
             }
         }
-        return string.Empty;
+
+        return overview.Trim();
     }
 
     /// <summary>
