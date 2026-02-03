@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.3.211",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.3-dev.2) for more info.\n\n---\n\n`repo`: **Revert to previous repo adding logic**: (_Skip CI_)\n\nNow that build numbers are unique across target ABIs we don't need to take on the responsibility of updating the manifest ourselves anymore, so remove the manifest logic and revert back to letting jprm handle it for us.\n\n`fix`: **Reduce strain on upstream when creating TMDb show structure**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.3-dev.2/shoko_6.0.3.2_for_10.11.zip",
+                "checksum": "b225592d0790150d5d30b7bb50928efa",
+                "timestamp": "2026-02-03T18:50:55Z"
+            },
+            {
+                "version": "6.0.3.210",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.3-dev.2) for more info.\n\n---\n\n`repo`: **Revert to previous repo adding logic**: (_Skip CI_)\n\nNow that build numbers are unique across target ABIs we don't need to take on the responsibility of updating the manifest ourselves anymore, so remove the manifest logic and revert back to letting jprm handle it for us.\n\n`fix`: **Reduce strain on upstream when creating TMDb show structure**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.3-dev.2/shoko_6.0.3.2_for_10.10.zip",
+                "checksum": "782a0e80985705c7da0cd26169a6d52e",
+                "timestamp": "2026-02-03T18:51:06Z"
+            },
+            {
                 "version": "6.0.3.111",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.3-dev.1) for more info.\n\n---\n\n`repo`: **Synchronize 'dev' branch with 'stable' branch**.",
                 "targetAbi": "10.11.0.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.2-dev.1/shoko_6.0.2.1_for_10.10.0.zip",
                 "checksum": "6807712287081cf23d27a8d82df2071d",
                 "timestamp": "2026-01-17T23:31:12Z"
-            },
-            {
-                "version": "6.0.1.7",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1-dev.7) for more info.\n\n---\n\n`fix`: **Only emit media folder removed events when library config. is still available**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.7/shoko_6.0.1.7_for_10.11.0.zip",
-                "checksum": "259e34454f02a2969ee44911c36008f6",
-                "timestamp": "2026-01-17T22:24:05Z"
-            },
-            {
-                "version": "6.0.1.7",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.1-dev.7) for more info.\n\n---\n\n`fix`: **Only emit media folder removed events when library config. is still available**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.1-dev.7/shoko_6.0.1.7_for_10.10.0.zip",
-                "checksum": "9c5f3b1c0e2c4dae021b65cc27e35e70",
-                "timestamp": "2026-01-17T22:24:16Z"
             }
         ]
     }
