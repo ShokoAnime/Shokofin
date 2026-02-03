@@ -1816,8 +1816,12 @@ public partial class ShokoApiManager : IDisposable {
             async () => {
                 Logger.LogTrace("Creating info object for show {ShowName}. (Source=TMDB,Show={ShowId})", tmdbShow.Title, tmdbShow.Id);
                 var seasonsInShow = await ApiClient.GetTmdbSeasonsInTmdbShow(tmdbShow.Id.ToString()).ConfigureAwait(false);
-                var seasonList = (await Task.WhenAll(seasonsInShow.Select(season => CreateSeasonInfo(season, tmdbShow))).ConfigureAwait(false))
-                    .ToList();
+                var seasonList = new List<SeasonInfo>();
+                foreach (var season in seasonsInShow) {
+                    // Since this is taxing on the upstream, do it 1 season at a time.
+                    var seasonInfo = await CreateSeasonInfo(season, tmdbShow).ConfigureAwait(false);
+                    seasonList.Add(seasonInfo);
+                }
                 var showInfo = new ShowInfo(ApiClient, tmdbShow, seasonList);
 
                 foreach (var seasonInfo in seasonList)
