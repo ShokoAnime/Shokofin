@@ -1018,7 +1018,7 @@ public class VirtualFileSystemService {
         if (string.IsNullOrWhiteSpace(showName))
             showName = isMovieLibrary ? "Movie" : "Series";
         var episodeNumber = Ordering.GetEpisodeNumber(show, season, episode);
-        var episodeName = (episode.Titles.FirstOrDefault(t => t.Source is "AniDB" && t.LanguageCode == "en")?.Value ?? $"{(episode.Type is EpisodeType.Normal ? "Episode " : $"{episode.Type} ")}{episodeNumber}").ReplaceInvalidPathCharacters();
+        var episodeName = (episode.Titles.FirstOrDefault(t => t.Source is "AniDB" && t.LanguageCode == "en")?.Value ?? $"{(episode.Type is EpisodeType.Episode ? "Episode " : $"{episode.Type} ")}{episodeNumber}").ReplaceInvalidPathCharacters();
 
         // For those **really** long names we have to cut if off at some point…
         if (showName.Length >= NameCutOff)

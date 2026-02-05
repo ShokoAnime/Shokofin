@@ -241,9 +241,9 @@ public class Ordering {
     /// <returns></returns>
     public static ExtraType? GetExtraType(AnidbEpisode episode) {
         switch (episode.Type) {
-            case EpisodeType.Normal:
+            case EpisodeType.Episode:
                 return null;
-            case EpisodeType.ThemeSong:
+            case EpisodeType.Credits:
             case EpisodeType.OpeningSong:
             case EpisodeType.EndingSong:
                 return ExtraType.ThemeVideo;

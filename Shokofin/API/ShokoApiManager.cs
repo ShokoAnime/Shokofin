@@ -641,7 +641,7 @@ public partial class ShokoApiManager : IDisposable {
         return await CreateFileInfo(file, fileId, seriesId).ConfigureAwait(false);
     }
 
-    private static readonly EpisodeType[] EpisodePickOrder = [EpisodeType.Special, EpisodeType.Normal, EpisodeType.Other];
+    private static readonly EpisodeType[] EpisodePickOrder = [EpisodeType.Special, EpisodeType.Episode, EpisodeType.Other];
 
     private Task<FileInfo> CreateFileInfo(File file, string fileId, string seriesId)
         => DataCache.GetOrCreateAsync(

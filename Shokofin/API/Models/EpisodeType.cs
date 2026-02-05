@@ -17,7 +17,12 @@ public enum EpisodeType {
     /// <summary>
     /// A normal episode.
     /// </summary>
-    Normal = 1,
+    Episode = 1,
+
+    /// <summary>
+    /// A normal episode.
+    /// </summary>
+    Normal = Episode,
 
     /// <summary>
     /// A special episode.
