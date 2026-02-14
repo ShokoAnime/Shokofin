@@ -240,12 +240,21 @@ public class MediaFolderConfigurationService {
     private async Task GenerateAllConfigurations(List<VirtualFolderInfo> allVirtualFolders) {
         var filteredVirtualFolders = allVirtualFolders
             .Where(virtualFolder => {
-                if (virtualFolder is not { ItemId: not null, LibraryOptions: { } }) {
+                if (virtualFolder is not { ItemId: not null, LibraryOptions: { } } || !Guid.TryParse(virtualFolder.ItemId, out var libraryId)) {
                     Logger.LogWarning("Skipping virtual folder {Name} because it has no ItemId or LibraryOptions.", virtualFolder.Name);
                     return false;
                 }
-                return virtualFolder.CollectionType.ConvertToCollectionType() is null or CollectionType.movies or CollectionType.tvshows &&
-                    ShokoIdLookup.IsEnabledForLibraryOptions(virtualFolder.LibraryOptions);
+                if (virtualFolder.CollectionType.ConvertToCollectionType() is not (null or CollectionType.movies or CollectionType.tvshows))
+                {
+                    Logger.LogTrace("Skipping virtual folder {Name} because it is not a mixed, movie or tvshow library. (Id={LibraryId})", virtualFolder.Name, libraryId);
+                    return false;
+                }
+                if (!ShokoIdLookup.IsEnabledForLibraryOptions(virtualFolder.LibraryOptions))
+                {
+                    Logger.LogTrace("Skipping virtual folder {Name} because provider is not enabled for the library. (Id={LibraryId})", virtualFolder.Name, libraryId);
+                    return false;
+                }
+                return true;
             })
             .ToList();
         Logger.LogDebug("Found {Count} out of {TotalCount} libraries to check media folder configurations for.", filteredVirtualFolders.Count, allVirtualFolders.Count);

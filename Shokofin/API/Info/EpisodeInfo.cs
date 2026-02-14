@@ -287,7 +287,7 @@ public class EpisodeInfo : IExtendedItemInfo {
         _client = client;
         Id = IdPrefix.TmdbShow + tmdbEpisode.Id.ToString();
         SeasonId = IdPrefix.TmdbShow + tmdbEpisode.SeasonId;
-        Type = tmdbEpisode.SeasonNumber is 0 ? EpisodeType.Special : EpisodeType.Normal;
+        Type = tmdbEpisode.SeasonNumber is 0 ? EpisodeType.Special : EpisodeType.Episode;
         IsHidden = false;
         IsMainEntry = false;
         IsStandalone = false;
@@ -343,7 +343,7 @@ public class EpisodeInfo : IExtendedItemInfo {
         SeasonId = tmdbMovie.CollectionId.HasValue && Plugin.Instance.Configuration.SeparateMovies && Plugin.Instance.Configuration.CollectionGrouping is Ordering.CollectionCreationType.Movies
             ? IdPrefix.TmdbMovieCollection + tmdbMovie.CollectionId.Value.ToString()
             : IdPrefix.TmdbMovie + tmdbMovie.Id.ToString();
-        Type = EpisodeType.Normal;
+        Type = EpisodeType.Episode;
         IsHidden = false;
         IsMainEntry = false;
         IsStandalone = true;

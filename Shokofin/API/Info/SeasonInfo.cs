@@ -241,9 +241,9 @@ public class SeasonInfo : IExtendedItemInfo {
                 continue;
 
             var seriesConfiguration = seriesConfigurationMap[episode.SeasonId];
-            var episodeType = episode.Type is EpisodeType.Normal && seriesConfiguration.EpisodeConversion is SeriesEpisodeConversion.EpisodesAsSpecials ? EpisodeType.Special : episode.Type;
+            var episodeType = episode.Type is EpisodeType.Episode && seriesConfiguration.EpisodeConversion is SeriesEpisodeConversion.EpisodesAsSpecials ? EpisodeType.Special : episode.Type;
             switch (episodeType) {
-                case EpisodeType.Normal:
+                case EpisodeType.Episode:
                     episodesList.Add(episode);
                     lastNormalEpisode = index;
                     break;
@@ -269,7 +269,7 @@ public class SeasonInfo : IExtendedItemInfo {
                         else {
                             var previousEpisode = episodes
                                 .GetRange(lastNormalEpisode, index - lastNormalEpisode)
-                                .FirstOrDefault(e => e.Type is EpisodeType.Normal && seriesConfiguration.EpisodeConversion is not SeriesEpisodeConversion.EpisodesAsSpecials);
+                                .FirstOrDefault(e => e.Type is EpisodeType.Episode && seriesConfiguration.EpisodeConversion is not SeriesEpisodeConversion.EpisodesAsSpecials);
                             if (previousEpisode != null)
                                 specialsAnchorDictionary[episode.Id] = previousEpisode;
                         }

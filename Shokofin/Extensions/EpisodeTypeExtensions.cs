@@ -6,11 +6,11 @@ namespace Shokofin.Extensions;
 public static class EpisodeTypeExtensions {
     public static string ToShortString(this EpisodeType episodeType)
         => episodeType switch {
-            EpisodeType.Normal => "E",
+            EpisodeType.Episode => "E",
             EpisodeType.Special => "SP",
             EpisodeType.Trailer => "T",
             EpisodeType.Other => "O",
-            EpisodeType.ThemeSong => "C",
+            EpisodeType.Credits => "C",
             EpisodeType.Parody => "P",
             _ => "?",
         };

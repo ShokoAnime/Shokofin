@@ -17,7 +17,12 @@ public enum EpisodeType {
     /// <summary>
     /// A normal episode.
     /// </summary>
-    Normal = 1,
+    Episode = 1,
+
+    /// <summary>
+    /// A normal episode.
+    /// </summary>
+    Normal = Episode,
 
     /// <summary>
     /// A special episode.
@@ -30,9 +35,14 @@ public enum EpisodeType {
     Trailer = 4,
 
     /// <summary>
+    /// An opening song, ending song, or other type of credits.
+    /// </summary>
+    Credits = 5,
+
+    /// <summary>
     /// Either an opening-song, or an ending-song.
     /// </summary>
-    ThemeSong = 5,
+    ThemeSong = Credits,
 
     /// <summary>
     /// Intro, and/or opening-song.

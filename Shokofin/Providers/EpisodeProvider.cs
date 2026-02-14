@@ -113,10 +113,10 @@ public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<Epis
                 string? dTitle, aTitle;
                 if (
                     // Movies
-                    (seasonInfo.Type == SeriesType.Movie && eI.Type is EpisodeType.Normal or EpisodeType.Special) ||
+                    (seasonInfo.Type == SeriesType.Movie && eI.Type is EpisodeType.Episode or EpisodeType.Special) ||
                     // All other ignored types.
                     (
-                        eI.Type is EpisodeType.Normal &&
+                        eI.Type is EpisodeType.Episode &&
                         eI.EpisodeNumber == 1 &&
                         eI.Titles.FirstOrDefault(title => title.Source is "AniDB" && title.LanguageCode is "en")?.Value is { } mainTitle &&
                         TextUtility.IgnoredSubTitles.Contains(mainTitle) &&
@@ -145,10 +145,10 @@ public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<Epis
             string defaultEpisodeTitle = episodeInfo.Title;
             if (
                 // Movies
-                (seasonInfo.Type == SeriesType.Movie && episodeInfo.Type is EpisodeType.Normal or EpisodeType.Special) ||
+                (seasonInfo.Type == SeriesType.Movie && episodeInfo.Type is EpisodeType.Episode or EpisodeType.Special) ||
                 // All other ignored types.
                 (
-                    episodeInfo.Type is EpisodeType.Normal &&
+                    episodeInfo.Type is EpisodeType.Episode &&
                     episodeInfo.EpisodeNumber == 1 &&
                     episodeInfo.Titles.FirstOrDefault(title => title.Source is "AniDB" && title.LanguageCode is "en")?.Value is { } mainTitle &&
                     TextUtility.IgnoredSubTitles.Contains(mainTitle) &&
