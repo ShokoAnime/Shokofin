@@ -7,7 +7,7 @@ reduce .[] as $group (
   reduce $group[] as $commit (
     . + "## `\($group.[0].simple_type)`\n\n";
     . +
-    "- \($commit.subject). (\($commit.commit)) @\($commit.author.github) (`index: \($commit.index)`)" +
+    "- \($commit.subject). (\($commit.commit)) by @\($commit.author.github) (`index: \($commit.index)`)" +
     if $commit.isSkipCI then " (_Skip CI_)" else "" end +
 
     if $commit.body != null and $commit.body != "" then
