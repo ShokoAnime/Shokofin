@@ -9,22 +9,6 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
-                "version": "6.0.4.011",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.4) for more info.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.4/shoko_6.0.4.0_for_10.11.zip",
-                "checksum": "7ffb8811b526a4b789ff6e9bddd7b304",
-                "timestamp": "2026-02-14T00:31:26Z"
-            },
-            {
-                "version": "6.0.4.010",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.4) for more info.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.4/shoko_6.0.4.0_for_10.10.zip",
-                "checksum": "9985f397cef012143ddf779c2301c317",
-                "timestamp": "2026-02-14T00:31:36Z"
-            },
-            {
                 "version": "6.0.3.11",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.3) for more info.",
                 "targetAbi": "10.11.0.0",
