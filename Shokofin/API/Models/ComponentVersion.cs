@@ -18,15 +18,8 @@ public class ComponentVersion {
     /// <summary>
     /// Version number.
     /// </summary>
-    [DefaultValue("1.0.0.0")]
-    [XmlIgnore]
-    public Version Version { get; set; } = new("1.0.0.0");
-
-    [XmlElement("Version")]
-    public string VersionString {
-        get => Version.ToString();
-        set => Version = string.IsNullOrEmpty(value) ? new("1.0.0.0") : new(value);
-    }
+    [DefaultValue("1.0.0")]
+    public string Version { get; set; } = "1.0.0";
 
     /// <summary>
     /// Commit SHA.
