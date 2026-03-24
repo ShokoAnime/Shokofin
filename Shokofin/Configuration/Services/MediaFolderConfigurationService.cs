@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Emby.Naming.Common;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
@@ -23,6 +24,8 @@ public class MediaFolderConfigurationService {
     private readonly ILibraryManager LibraryManager;
 
     private readonly IFileSystem FileSystem;
+
+    private readonly NamingOptions NamingOptions;
 
     private readonly LibraryScanWatcher LibraryScanWatcher;
 
@@ -54,6 +57,7 @@ public class MediaFolderConfigurationService {
         ILogger<MediaFolderConfigurationService> logger,
         ILibraryManager libraryManager,
         IFileSystem fileSystem,
+        NamingOptions namingOptions,
         LibraryScanWatcher libraryScanWatcher,
         UsageTracker usageTracker,
         ShokoApiClient apiClient
@@ -61,6 +65,7 @@ public class MediaFolderConfigurationService {
         Logger = logger;
         LibraryManager = libraryManager;
         FileSystem = fileSystem;
+        NamingOptions = namingOptions;
         LibraryScanWatcher = libraryScanWatcher;
         UsageTracker = usageTracker;
         ApiClient = apiClient;
@@ -513,12 +518,16 @@ public class MediaFolderConfigurationService {
         var count = 0;
         var rootFiles = FileSystem.GetFilePaths(mediaFolder, false);
         foreach (var filePath in rootFiles) {
-            if (IgnorePatterns.ShouldIgnore(filePath))
+            if (
+                Path.GetExtension(filePath) is not { Length: > 0 } extName ||
+                !NamingOptions.VideoFileExtensions.Contains(extName, StringComparer.OrdinalIgnoreCase) ||
+                IgnorePatterns.ShouldIgnore(filePath)
+            )
                 continue;
 
             yield return filePath;
 
-            if (++count == MaxSamplePaths)
+            if (++count is MaxSamplePaths)
                 yield break;
         }
 
@@ -529,12 +538,16 @@ public class MediaFolderConfigurationService {
 
             var files = FileSystem.GetFilePaths(directoryPath, true);
             foreach (var filePath in files) {
-                if (IgnorePatterns.ShouldIgnore(filePath))
+                if (
+                    Path.GetExtension(filePath) is not { Length: > 0 } extName ||
+                    !NamingOptions.VideoFileExtensions.Contains(extName, StringComparer.OrdinalIgnoreCase) ||
+                    IgnorePatterns.ShouldIgnore(filePath)
+                )
                     continue;
 
                 yield return filePath;
 
-                if (++count == MaxSamplePaths)
+                if (++count is MaxSamplePaths)
                     yield break;
             }
         }
