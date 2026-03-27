@@ -423,17 +423,17 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, bool watched, string apiKey)
         => await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&watched={watched}", HttpMethod.Patch, apiKey).ConfigureAwait(false) is { } response &&
-            response.StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
+            response.StatusCode is HttpStatusCode.OK or HttpStatusCode.Accepted or HttpStatusCode.NoContent;
 
     public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, long progress, string apiKey)
         => await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={progress}", HttpMethod.Patch, apiKey).ConfigureAwait(false) is { } response &&
-            response.StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
+            response.StatusCode is HttpStatusCode.OK or HttpStatusCode.Accepted or HttpStatusCode.NoContent;
 
     public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, long? progress, bool watched, string apiKey)
         => !progress.HasValue
             ? await ScrobbleFile(fileId, episodeId, eventName, watched, apiKey).ConfigureAwait(false)
             : await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={progress.Value}&watched={watched}", HttpMethod.Patch, apiKey).ConfigureAwait(false) is { } response &&
-                response.StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
+                response.StatusCode is HttpStatusCode.OK or HttpStatusCode.Accepted or HttpStatusCode.NoContent;
 
     #endregion
 
