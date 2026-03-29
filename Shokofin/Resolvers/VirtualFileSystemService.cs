@@ -1134,7 +1134,7 @@ public class VirtualFileSystemService {
                 }
             }
 
-            var sourcePrefixLength = sourceLocation.Length - Path.GetExtension(sourceLocation).Length;
+            var sourcePrefixLength = Path.GetFileName(sourceLocation).Length - Path.GetExtension(sourceLocation).Length;
             var externalFiles = FindExternalFilesForPath(sourceLocation, ExternalSubtitlePathParser)
                 .Concat(FindExternalFilesForPath(sourceLocation, ExternalAudioPathParser))
                 .ToList();
@@ -1256,7 +1256,7 @@ public class VirtualFileSystemService {
                     }
                 }
 
-                LinkExternalFiles(externalFiles, symbolicLink, symbolicDirectory, sourcePrefixLength, result, preview);
+                LinkExternalFiles(sourceLocation, externalFiles, symbolicLink, symbolicDirectory, sourcePrefixLength, result, preview);
             }
 
             return result;
@@ -1273,7 +1273,7 @@ public class VirtualFileSystemService {
         if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
             return externalPaths;
 
-        var files = GetFilePaths(folderPath)
+        var files = GetFilePaths(folderPath, recursive: true)
             .Except([sourcePath])
             .ToList();
         var sourcePrefix = Path.GetFileNameWithoutExtension(sourcePath);
@@ -1311,13 +1311,22 @@ public class VirtualFileSystemService {
         }
     }
 
-    private void LinkExternalFiles(List<string> externalFiles, string symbolicLink, string symbolicDirectory, int sourcePrefixLength, LinkGenerationResult result, bool preview) {
+    private void LinkExternalFiles(string sourceLocation, List<string> externalFiles, string symbolicLink, string symbolicDirectory, int sourcePrefixLength, LinkGenerationResult result, bool preview) {
         if (externalFiles.Count == 0)
             return;
 
         var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
+        var sourceDirectory = Path.GetDirectoryName(sourceLocation)!;
         foreach (var externalSource in externalFiles) {
-            var extName = externalSource[sourcePrefixLength..];
+            var externalDirectory = Path.GetDirectoryName(externalSource)!;
+            var subdirectorySegments = Path.GetRelativePath(sourceDirectory, externalDirectory)
+                .Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries)
+                .Where(s => s is not ".")
+                .ToArray();
+            var extName = subdirectorySegments.Length > 0
+                ? $".[{string.Join("].[", subdirectorySegments)}]"
+                : string.Empty;
+            extName += Path.GetFileName(externalSource)[sourcePrefixLength..];
             var externalLink = Path.Join(symbolicDirectory, symbolicName + extName);
 
             result.Paths.Add(externalLink);
