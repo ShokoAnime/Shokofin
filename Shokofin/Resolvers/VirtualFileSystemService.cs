@@ -1320,9 +1320,7 @@ public class VirtualFileSystemService {
         foreach (var externalSource in externalFiles) {
             var externalDirectory = Path.GetDirectoryName(externalSource)!;
             var subdirectorySegments = Path.GetRelativePath(sourceDirectory, externalDirectory)
-                .Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries)
-                .Where(s => s is not ".")
-                .ToArray();
+                .Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
             var extName = subdirectorySegments.Length > 0
                 ? $".[{string.Join("].[", subdirectorySegments)}]"
                 : string.Empty;
