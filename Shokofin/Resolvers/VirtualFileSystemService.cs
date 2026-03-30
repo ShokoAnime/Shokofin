@@ -1134,7 +1134,6 @@ public class VirtualFileSystemService {
                 }
             }
 
-            var sourcePrefixLength = Path.GetFileName(sourceLocation).Length - Path.GetExtension(sourceLocation).Length;
             var externalFiles = FindExternalFilesForPath(sourceLocation, ExternalSubtitlePathParser)
                 .Concat(FindExternalFilesForPath(sourceLocation, ExternalAudioPathParser))
                 .ToList();
@@ -1256,7 +1255,7 @@ public class VirtualFileSystemService {
                     }
                 }
 
-                LinkExternalFiles(sourceLocation, externalFiles, symbolicLink, symbolicDirectory, sourcePrefixLength, result, preview);
+                LinkExternalFiles(sourceLocation, externalFiles, symbolicLink, symbolicDirectory, result, preview);
             }
 
             return result;
@@ -1311,12 +1310,13 @@ public class VirtualFileSystemService {
         }
     }
 
-    private void LinkExternalFiles(string sourceLocation, List<string> externalFiles, string symbolicLink, string symbolicDirectory, int sourcePrefixLength, LinkGenerationResult result, bool preview) {
+    private void LinkExternalFiles(string sourceLocation, List<string> externalFiles, string symbolicLink, string symbolicDirectory, LinkGenerationResult result, bool preview) {
         if (externalFiles.Count == 0)
             return;
 
         var symbolicName = Path.GetFileNameWithoutExtension(symbolicLink);
         var sourceDirectory = Path.GetDirectoryName(sourceLocation)!;
+        var sourcePrefixLength = Path.GetFileName(sourceLocation).Length - Path.GetExtension(sourceLocation).Length;
         foreach (var externalSource in externalFiles) {
             var externalDirectory = Path.GetDirectoryName(externalSource)!;
             var subdirectorySegments = Path.GetRelativePath(sourceDirectory, externalDirectory)
