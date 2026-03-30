@@ -1839,19 +1839,17 @@ public class VirtualFileSystemService {
         var bufferBlock = new BufferBlock<T>(new() { BoundedCapacity = DataflowBlockOptions.Unbounded });
         var actionBlock = new ActionBlock<T>(
             inputValue => {
-                var output = action(inputValue) ?? [];
-                var outputList = output.ToList();
-                var addedCount = outputList.Count;
-
-                if (addedCount > 0) {
-                    Interlocked.Add(ref pendingCount, addedCount);
-                    foreach (var outputAction in outputList) {
+                try {
+                    var output = action(inputValue) ?? [];
+                    foreach (var outputAction in output) {
+                        Interlocked.Increment(ref pendingCount);
                         bufferBlock.Post(outputAction);
                     }
                 }
-
-                if (Interlocked.Decrement(ref pendingCount) == 0) {
-                    bufferBlock.Complete();
+                finally {
+                    if (Interlocked.Decrement(ref pendingCount) == 0) {
+                        bufferBlock.Complete();
+                    }
                 }
             },
             new() {
