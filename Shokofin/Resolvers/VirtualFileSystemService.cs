@@ -1318,13 +1318,9 @@ public class VirtualFileSystemService {
         var sourceDirectory = Path.GetDirectoryName(sourceLocation)!;
         var sourcePrefixLength = Path.GetFileName(sourceLocation).Length - Path.GetExtension(sourceLocation).Length;
         foreach (var externalSource in externalFiles) {
-            var externalDirectory = Path.GetDirectoryName(externalSource)!;
-            var subdirectorySegments = Path.GetRelativePath(sourceDirectory, externalDirectory)
-                .Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
-            var extName = subdirectorySegments.Length > 0
-                ? $".[{string.Join("].[", subdirectorySegments)}]"
-                : string.Empty;
-            extName += Path.GetFileName(externalSource)[sourcePrefixLength..];
+            var extName = Path.GetFileName(externalSource)[sourcePrefixLength..];
+            if (Path.GetRelativePath(sourceDirectory, Path.GetDirectoryName(externalSource)!) is not "." and { Length: > 0 } relativePath)
+                extName = $".[{relativePath.Split(Path.DirectorySeparatorChar).Join("].[")}]" + extName;
             var externalLink = Path.Join(symbolicDirectory, symbolicName + extName);
 
             result.Paths.Add(externalLink);
