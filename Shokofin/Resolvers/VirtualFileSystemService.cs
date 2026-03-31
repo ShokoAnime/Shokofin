@@ -1134,9 +1134,6 @@ public class VirtualFileSystemService {
                 }
             }
 
-            var externalFiles = FindExternalFilesForPath(sourceLocation, ExternalSubtitlePathParser)
-                .Concat(FindExternalFilesForPath(sourceLocation, ExternalAudioPathParser))
-                .ToList();
             foreach (var symbolicLink in symbolicLinks) {
                 var symbolicDirectory = Path.GetDirectoryName(symbolicLink)!;
                 if (!Directory.Exists(symbolicDirectory))
@@ -1255,7 +1252,7 @@ public class VirtualFileSystemService {
                     }
                 }
 
-                LinkExternalFiles(sourceLocation, externalFiles, symbolicLink, symbolicDirectory, result, preview);
+                LinkExternalFiles(sourceLocation, symbolicLink, symbolicDirectory, result, preview);
             }
 
             return result;
@@ -1310,7 +1307,10 @@ public class VirtualFileSystemService {
         }
     }
 
-    private void LinkExternalFiles(string sourceLocation, List<string> externalFiles, string symbolicLink, string symbolicDirectory, LinkGenerationResult result, bool preview) {
+    private void LinkExternalFiles(string sourceLocation, string symbolicLink, string symbolicDirectory, LinkGenerationResult result, bool preview) {
+        var externalFiles = FindExternalFilesForPath(sourceLocation, ExternalSubtitlePathParser)
+            .Concat(FindExternalFilesForPath(sourceLocation, ExternalAudioPathParser))
+            .ToList();
         if (externalFiles.Count == 0)
             return;
 
