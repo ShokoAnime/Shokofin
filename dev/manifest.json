@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.411",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.4) for more info.\n\n---\n\n`feat`: **Add recursive sub-directory scanning for external files in VFS (#97)**:\n\nExternal subtitle and audio file discovery now searches sub-directories recursively \u2014 not just the immediate parent folder of the source file \u2014 when generating links for the VFS.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.4/shoko_6.0.5.4_for_10.11.zip",
+                "checksum": "fe79a02cf05072ab380b88ad5532a305",
+                "timestamp": "2026-03-31T16:21:34Z"
+            },
+            {
+                "version": "6.0.5.410",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.4) for more info.\n\n---\n\n`feat`: **Add recursive sub-directory scanning for external files in VFS (#97)**:\n\nExternal subtitle and audio file discovery now searches sub-directories recursively \u2014 not just the immediate parent folder of the source file \u2014 when generating links for the VFS.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.4/shoko_6.0.5.4_for_10.10.zip",
+                "checksum": "8479f0138702cc144bbfee9200b7c92f",
+                "timestamp": "2026-03-31T16:21:44Z"
+            },
+            {
                 "version": "6.0.5.311",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.3) for more info.\n\n---\n\n`fix`: **Handle accepted status code in scrobble responses**.",
                 "targetAbi": "10.11.0.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.4-dev.3/shoko_6.0.4.3_for_10.10.zip",
                 "checksum": "f505b3e7f8e95f9d854f0830e35a3739",
                 "timestamp": "2026-02-26T04:16:03Z"
-            },
-            {
-                "version": "6.0.4.211",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.4-dev.2) for more info.\n\n---\n\n`misc`: **Revert \"fix: use the provided list in resolver\"**:\n\nThis reverts commit 4524490415c41449abc16fa4d397c6ed428bc6ed because the file info list may be empty on the initial refresh, and if we're not getting a new list then we'll only operate on the snapshot of the structure before we generated any new links.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.4-dev.2/shoko_6.0.4.2_for_10.11.zip",
-                "checksum": "b7255196229347b182cb18dbc36cbe23",
-                "timestamp": "2026-02-17T19:32:35Z"
-            },
-            {
-                "version": "6.0.4.210",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.4-dev.2) for more info.\n\n---\n\n`misc`: **Revert \"fix: use the provided list in resolver\"**:\n\nThis reverts commit 4524490415c41449abc16fa4d397c6ed428bc6ed because the file info list may be empty on the initial refresh, and if we're not getting a new list then we'll only operate on the snapshot of the structure before we generated any new links.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.4-dev.2/shoko_6.0.4.2_for_10.10.zip",
-                "checksum": "ad025f2b0773769317ca1b4fac19a52e",
-                "timestamp": "2026-02-17T19:32:45Z"
             }
         ]
     }
