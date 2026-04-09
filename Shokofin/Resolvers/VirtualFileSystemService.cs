@@ -1769,10 +1769,18 @@ public class VirtualFileSystemService {
         => Directory.EnumerateFileSystemEntries(directoryPath, "*", _cachedEnumerationOptions).Any();
 
     public string[] GetFilePaths(string directoryPath, bool recursive = false, string[]? extensions = null, Func<string, bool, bool>? filter = null, CancellationToken cancellationToken = default)
-        => GetFileSystemEntryPaths(directoryPath, recursive, extensions, filter, outputFiles: true, outputDirectories: false, cancellationToken: cancellationToken);
+        => DataCache.GetOrCreate(
+            (nameof(GetFilePaths), directoryPath, recursive, extensions, filter),
+            () => GetFileSystemEntryPaths(directoryPath, recursive, extensions, filter, outputFiles: true, outputDirectories: false, cancellationToken: cancellationToken),
+            cancellationToken: cancellationToken
+        );
 
     public string[] GetFileSystemEntryPaths(string directoryPath, bool recursive = false, IEnumerable<string>? extensions = null, Func<string, bool, bool>? filter = null, CancellationToken cancellationToken = default)
-        => GetFileSystemEntryPaths(directoryPath, recursive, extensions, filter, outputFiles: true, outputDirectories: true, cancellationToken);
+        => DataCache.GetOrCreate(
+            (nameof(GetFileSystemEntryPaths), directoryPath, recursive, extensions, filter),
+            () => GetFileSystemEntryPaths(directoryPath, recursive, extensions, filter, outputFiles: true, outputDirectories: true, cancellationToken: cancellationToken),
+            cancellationToken: cancellationToken
+        );
 
     private string[] GetFileSystemEntryPaths(string directoryPath, bool recursive = false, IEnumerable<string>? extensions = null, Func<string, bool, bool>? filter = null, bool outputFiles = true, bool outputDirectories = true, CancellationToken cancellationToken = default) {
         if (!Directory.Exists(directoryPath))
