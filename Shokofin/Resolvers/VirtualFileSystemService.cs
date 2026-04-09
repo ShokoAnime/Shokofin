@@ -770,6 +770,8 @@ public class VirtualFileSystemService {
         var multiSeriesFiles = new List<(API.Models.File, string)>();
         var totalSingleSeriesFiles = 0;
         var libraryId = mediaConfigs[0].LibraryId;
+        var collectAndSort = Plugin.Instance.Configuration.VFS_CollectAndSort;
+        var collected = new List<(string sourceLocation, string fileId, string seriesId)>();
         foreach (var (managedFolderId, managedFolderSubPath, mediaFolderPaths) in mediaConfigs.ToManagedFolderList()) {
             var firstPage = ApiClient.GetFilesInManagedFolder(managedFolderId, managedFolderSubPath);
             var pageData = firstPage
@@ -836,7 +838,11 @@ public class VirtualFileSystemService {
                                 if ((file.ImportedAt ?? file.CreatedAt) < lastGeneratedAt.Value)
                                     continue;
                             }
-                            yield return (sourceLocation, file.Id.ToString(), seriesId);
+                            // If collect and sort is enabled, collect the file instead of yielding.
+                            if (collectAndSort)
+                                collected.Add((sourceLocation, file.Id.ToString(), seriesId));
+                            else
+                                yield return (sourceLocation, file.Id.ToString(), seriesId);
                         }
                         else if (seriesIds.Count > 1) {
                             multiSeriesFiles.Add((file, sourceLocation));
@@ -873,11 +879,20 @@ public class VirtualFileSystemService {
                         if ((file.ImportedAt ?? file.CreatedAt) < lastGeneratedAt.Value)
                             continue;
                     }
-                    yield return (sourceLocation, file.Id.ToString(), seriesId);
+                    // If collect and sort is enabled, collect the file instead of yielding.
+                    if (collectAndSort)
+                        collected.Add((sourceLocation, file.Id.ToString(), seriesId));
+                    else
+                        yield return (sourceLocation, file.Id.ToString(), seriesId);
                 }
                 totalMultiSeriesFiles += seriesIds.Count;
             }
         }
+
+        // If collect and sort is enabled, yield the collected files after sorting them now.
+        if (collectAndSort)
+            foreach (var (sourceLocation, fileId, seriesId) in collected.GroupBy(t => t.seriesId).OrderBy(g => g.Count()).ThenBy(g => g.Key).SelectMany(g => g))
+                yield return (sourceLocation, fileId, seriesId);
 
         var timeSpent = DateTime.UtcNow - start;
         Logger.LogDebug(

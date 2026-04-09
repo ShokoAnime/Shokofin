@@ -542,6 +542,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   VFS_MaxTotalExceptionsBeforeAbort: number;
  *   VFS_MaxSeriesExceptionsBeforeAbort: number;
  *   VFS_UseSemaphore: boolean;
+ *   VFS_CollectAndSort: boolean;
  *   VFS_Location: VirtualRootLocation;
  *   VFS_CustomLocation: string;
  *   VFS_IterativeGenerationEnabled: boolean;

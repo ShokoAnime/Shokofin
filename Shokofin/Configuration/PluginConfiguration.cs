@@ -614,6 +614,14 @@ public class PluginConfiguration : BasePluginConfiguration {
     public bool VFS_UseSemaphore { get; set; } = true;
 
     /// <summary>
+    ///   Collect and sort the file entries before emitting them, so the
+    ///   smallest series will be emitted first, and the biggest last. And every
+    ///   file for the same series will be emitted in one go, instead of
+    ///   scattered across the emitted range.
+    /// </summary>
+    public bool VFS_CollectAndSort { get; set; } = false;
+
+    /// <summary>
     /// Places the VFS in the cache directory instead of the config directory.
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]

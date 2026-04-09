@@ -2125,6 +2125,13 @@ form:not(.advanced-mode) .advanced-only {
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Use a semaphore instead of an action block to limit concurrency during VFS generation.</div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_CollectAndSort" />
+                                <span>Collect And Sort Files</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Collect all files and sort them before processing them during VFS generation. This should make the overall VFS generation faster, but will introduce a longer startup time before it starts processing the VFS entries.</div>
+                        </div>
                         <div class="selectContainer selectContainer-withDescription advanced-only">
                             <label class="selectLabel" for="VFS_Location">VFS Location</label>
                             <select is="emby-select" id="VFS_Location" name="VFS_Location" class="emby-select-withcolor emby-select">
