@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.511",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.5) for more info.\n\n---\n\n`fix`: **Add caching to file enumeration methods**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.5/shoko_6.0.5.5_for_10.11.zip",
+                "checksum": "403e5f1f2a5ed28bdc7ebd2293bb5cd8",
+                "timestamp": "2026-04-09T06:10:04Z"
+            },
+            {
+                "version": "6.0.5.510",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.5) for more info.\n\n---\n\n`fix`: **Add caching to file enumeration methods**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.5/shoko_6.0.5.5_for_10.10.zip",
+                "checksum": "67191fd326619cd79b042c9a021e5559",
+                "timestamp": "2026-04-09T06:10:14Z"
+            },
+            {
                 "version": "6.0.5.411",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.4) for more info.\n\n---\n\n`feat`: **Add recursive sub-directory scanning for external files in VFS (#97)**:\n\nExternal subtitle and audio file discovery now searches sub-directories recursively \u2014 not just the immediate parent folder of the source file \u2014 when generating links for the VFS.",
                 "targetAbi": "10.11.0.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.1/shoko_6.0.5.1_for_10.10.zip",
                 "checksum": "9398216541e2eb25ec93fa54973e7f2d",
                 "timestamp": "2026-03-22T19:58:51Z"
-            },
-            {
-                "version": "6.0.4.311",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.4-dev.3) for more info.\n\n---\n\n`fix`: **Make server version an opaque string**:\n\n\u2026to fix compatibility with latest daily servers using semver version formats for dailies.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.4-dev.3/shoko_6.0.4.3_for_10.11.zip",
-                "checksum": "505effea1d97b2f4a4fbea6fa2151489",
-                "timestamp": "2026-02-26T04:15:54Z"
-            },
-            {
-                "version": "6.0.4.310",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.4-dev.3) for more info.\n\n---\n\n`fix`: **Make server version an opaque string**:\n\n\u2026to fix compatibility with latest daily servers using semver version formats for dailies.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.4-dev.3/shoko_6.0.4.3_for_10.10.zip",
-                "checksum": "f505b3e7f8e95f9d854f0830e35a3739",
-                "timestamp": "2026-02-26T04:16:03Z"
             }
         ]
     }
