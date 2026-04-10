@@ -24,7 +24,16 @@ namespace Shokofin.Providers;
 /// about how a provider cannot also be a custom provider otherwise it won't
 /// save the metadata.
 /// </remarks>
-public class CustomMovieProvider(ILogger<CustomMovieProvider> _logger, VirtualFileSystemService _vfsService, ILibraryManager _libraryManager, ShokoIdLookup _lookup, ShokoApiManager _apiManager, MergeVersionsManager _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Movie> {
+public class CustomMovieProvider(
+    ILogger<CustomMovieProvider> _logger,
+    VirtualFileSystemService _vfsService,
+    ILibraryManager _libraryManager,
+    ShokoIdLookup _lookup,
+#if NET9_0_OR_GREATER
+    ShokoApiManager _apiManager,
+#endif
+    MergeVersionsManager 
+_mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Movie> {
     public string Name => Plugin.MetadataProviderName;
 
     public bool HasChanged(BaseItem item, IDirectoryService directoryService) {
