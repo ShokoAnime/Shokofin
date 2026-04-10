@@ -2,7 +2,6 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.Json.Serialization;
-using System.Xml.Serialization;
 using Shokofin.Extensions;
 
 namespace Shokofin.API.Models;
