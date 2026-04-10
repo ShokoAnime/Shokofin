@@ -44,8 +44,15 @@ public class CustomSeasonProvider(ILogger<CustomSeasonProvider> _logger, Virtual
 
         // Silently abort if we're unable to get the shoko series id.
         var series = season.Series;
-        if (!series.TryGetSeasonId(out var seasonId))
+        if (!_lookup.IsEnabledForItem(series) || !series.TryGetSeasonId(out var seasonId))
             return false;
+
+        using (Plugin.Instance.Tracker.Enter($"Checking for custom info for Season \"{season.Name}\". (Path=\"{season.Path}\",MainSeason=\"{seasonId}\",Season={season.IndexNumber})")) {
+            if (_vfsService.TryGetCurrentLibraryGenerationMode(series.Path, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
+                _logger.LogTrace("Skipped season during iterative generation. (MainSeason={MainSeasonId},Season={SeasonNumber})", seasonId, season.IndexNumber);
+                return false;
+            }
+        }
 
         return true;
     }

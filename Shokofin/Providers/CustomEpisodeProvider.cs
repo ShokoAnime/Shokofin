@@ -45,8 +45,15 @@ _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Episode>
             return false;
 
         // Abort if we're unable to get the shoko episode id.
-        if (!episode.TryGetProviderId(ProviderNames.ShokoEpisode, out var episodeId))
+        if (!_lookup.IsEnabledForItem(episode) || !episode.TryGetProviderId(ProviderNames.ShokoEpisode, out var episodeId))
             return false;
+
+        using (Plugin.Instance.Tracker.Enter($"Checking for custom info for Episode \"{episode.Name}\". (Path=\"{episode.Path}\")")) {
+            if (_vfsService.TryGetCurrentLibraryGenerationMode(episode.ContainingFolderPath, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
+                _logger.LogTrace("Skipped episode during iterative generation. (Episode={EpisodeId})", episodeId);
+                return false;
+            }
+        }
 
         return true;
     }

@@ -42,8 +42,15 @@ _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Movie> {
             return false;
 
         // Abort if we're unable to get the shoko episode id.
-        if (!movie.TryGetProviderId(ProviderNames.ShokoEpisode, out var episodeId))
+        if (!_lookup.IsEnabledForItem(movie) || !movie.TryGetProviderId(ProviderNames.ShokoEpisode, out var episodeId))
             return false;
+
+        using (Plugin.Instance.Tracker.Enter($"Checking for custom info for Movie \"{movie.Name}\". (Path=\"{movie.Path}\")")) {
+            if (_vfsService.TryGetCurrentLibraryGenerationMode(movie.ContainingFolderPath, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
+                _logger.LogTrace("Skipped movie during iterative generation. (Episode={EpisodeId})", episodeId);
+                return false;
+            }
+        }
 
         return true;
     }

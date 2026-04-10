@@ -40,9 +40,15 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, Virtual
             return false;
 
         // Abort if we're unable to get the shoko series id.
-        if (!series.TryGetSeasonId(out var seasonId))
+        if (!_lookup.IsEnabledForItem(series) || !series.TryGetSeasonId(out var seasonId))
             return false;
 
+        using (Plugin.Instance.Tracker.Enter($"Checking for custom info for Series \"{series.Name}\". (MainSeason=\"{seasonId}\")")) {
+            if (_vfsService.TryGetCurrentLibraryGenerationMode(series.Path, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
+                _logger.LogTrace("Skipped series during iterative generation. (MainSeason={MainSeasonId})", seasonId);
+                return false;
+            }
+        }
         return true;
     }
 
