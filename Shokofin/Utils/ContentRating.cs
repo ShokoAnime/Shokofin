@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
 using Shokofin.API.Info;
 using Shokofin.API.Models;
 using Shokofin.Events.Interfaces;
-using Shokofin.Extensions;
 using TagWeight = Shokofin.Utils.TagFilter.TagWeight;
 
 namespace Shokofin.Utils;
@@ -344,8 +344,12 @@ public static class ContentRating {
         var allowedIndicators = (field.GetCustomAttributes<TvContentIndicatorsAttribute>().FirstOrDefault()?.Values ?? [])
             .Intersect(contentIndicators ?? [])
             .ToList();
-        if (allowedIndicators.Count is > 0)
-            contentRating += $"-{allowedIndicators.Select(cI => cI.ToString()).Join("")}";
+        if (allowedIndicators.Count is > 0) {
+            var sb = new StringBuilder();
+            foreach (var indicator in allowedIndicators)
+                sb.Append(indicator.ToString());
+            contentRating = $"{contentRating}-{sb}";
+        }
 
         return contentRating;
     }

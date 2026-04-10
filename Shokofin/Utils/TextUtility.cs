@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using Shokofin.API;
 using Shokofin.API.Info;
@@ -193,18 +194,17 @@ public static partial class TextUtility {
         if (filteredList.Count == 0)
             return null;
 
-        var index = 1;
-        var outputText = filteredList[0];
-        while (index < filteredList.Count) {
-            var lastChar = outputText[^1];
-            outputText += PunctuationMarks.Contains(lastChar) ? " " : ". ";
-            outputText += filteredList[index++];
+        if (filteredList.Count == 1)
+            return filteredList[0].TrimEnd();
+
+        var sb = new StringBuilder(filteredList[0]);
+        for (var index = 1; index < filteredList.Count; index++) {
+            var lastChar = sb[^1];
+            sb.Append(PunctuationMarks.Contains(lastChar) ? " " : ". ");
+            sb.Append(filteredList[index]);
         }
 
-        if (filteredList.Count > 1)
-            outputText = outputText.TrimEnd();
-
-        return outputText;
+        return sb.ToString().TrimEnd();
     }
 
     #region Description
