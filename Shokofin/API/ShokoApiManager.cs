@@ -730,7 +730,7 @@ public partial class ShokoApiManager : IDisposable {
         // Slow path; getting the show from cache or remote and finding the default season's id.
         Logger.LogDebug("Trying to find file id using the slow path. (Path={FullPath})", path);
         try {
-            if (GetFileInfoByPath(path).ConfigureAwait(false).GetAwaiter().GetResult() is { } tuple && tuple.Item1 is not null) {
+            if (Task.Run(() => GetFileInfoByPath(path)).GetAwaiter().GetResult() is { } tuple && tuple.Item1 is not null) {
                 var (fileInfo, _, _) = tuple;
                 fileId = fileInfo.Id;
                 seriesId = fileInfo.SeriesId;
@@ -892,7 +892,7 @@ public partial class ShokoApiManager : IDisposable {
         // Slow path; getting the show from cache or remote and finding the default season's id.
         Logger.LogDebug("Trying to find episode ids using the slow path. (Path={FullPath})", path);
         try {
-            if (GetFileInfoByPath(path).ConfigureAwait(false).GetAwaiter().GetResult() is { } tuple && tuple.Item1 is not null) {
+            if (Task.Run(() => GetFileInfoByPath(path)).GetAwaiter().GetResult() is { } tuple && tuple.Item1 is not null) {
                 var (fileInfo, _, _) = tuple;
                 episodeIds = [.. fileInfo.EpisodeList.Select(episodeInfo => episodeInfo.Id)];
                 return episodeIds.Count is > 0;
@@ -919,7 +919,7 @@ public partial class ShokoApiManager : IDisposable {
         Logger.LogDebug("Trying to find episode ids using the slow path. (Series={SeriesId},File={FileId})", seriesId, fileId);
         try {
             // Slow path; getting the show from cache or remote and finding the default season's id.
-            if (GetFileInfo(fileId, seriesId).ConfigureAwait(false).GetAwaiter().GetResult() is { } fileInfo) {
+            if (Task.Run(() => GetFileInfo(fileId, seriesId)).GetAwaiter().GetResult() is { } fileInfo) {
                 episodeIds = [.. fileInfo.EpisodeList.Select(episodeInfo => episodeInfo.Id)];
                 return true;
             }
@@ -1599,7 +1599,7 @@ public partial class ShokoApiManager : IDisposable {
         // Slow path; getting the show from cache or remote and finding the season's series id.
         Logger.LogDebug("Trying to find the season's series id for {Path} using the slow path.", path);
         try {
-            if (GetSeasonInfoByPath(path).ConfigureAwait(false).GetAwaiter().GetResult() is { } seasonInfo) {
+            if (Task.Run(() => GetSeasonInfoByPath(path)).GetAwaiter().GetResult() is { } seasonInfo) {
                 seasonId = seasonInfo.Id;
                 return true;
             }
@@ -1627,7 +1627,7 @@ public partial class ShokoApiManager : IDisposable {
         try {
             switch (episodeId[0]) {
                 case IdPrefix.TmdbShow:
-                    if (ApiClient.GetTmdbSeasonForTmdbEpisode(episodeId[1..]).ConfigureAwait(false).GetAwaiter().GetResult() is not { } tmdbSeason) {
+                    if (Task.Run(() => ApiClient.GetTmdbSeasonForTmdbEpisode(episodeId[1..])).GetAwaiter().GetResult() is not { } tmdbSeason) {
                         seasonId = null;
                         return false;
                     }
@@ -1640,7 +1640,7 @@ public partial class ShokoApiManager : IDisposable {
                     return true;
 
                 default:
-                    if (ApiClient.GetShokoSeriesForShokoEpisode(episodeId).ConfigureAwait(false).GetAwaiter().GetResult() is not { } series) {
+                    if (Task.Run(() => ApiClient.GetShokoSeriesForShokoEpisode(episodeId)).GetAwaiter().GetResult() is not { } series) {
                         seasonId = null;
                         return false;
                     }
@@ -1972,7 +1972,7 @@ public partial class ShokoApiManager : IDisposable {
         // Slow path; getting the show from cache or remote and finding the show id.
         Logger.LogDebug("Trying to find the show id for season using the slow path. (Season={SeasonId})", seasonId);
         try {
-            if (GetShowInfoBySeasonId(seasonId).ConfigureAwait(false).GetAwaiter().GetResult() is { } showInfo) {
+            if (Task.Run(() => GetShowInfoBySeasonId(seasonId)).GetAwaiter().GetResult() is { } showInfo) {
                 showId = showInfo.Id;
                 return true;
             }

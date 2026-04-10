@@ -105,9 +105,9 @@ public class MergeVersionsManager {
     public async Task SplitAndMergeAllEpisodes(IProgress<double>? progress, CancellationToken? cancellationToken) {
         try {
             cancellationToken?.ThrowIfCancellationRequested();
-            if (_episodeLock.Wait(LockWaitMS) is false) {
+            if (!await _episodeLock.WaitAsync(LockWaitMS, cancellationToken ?? default).ConfigureAwait(false)) {
                 _logger.LogDebug("Episode lock is taken, waiting for our turn.");
-                _episodeLock.Wait();
+                await _episodeLock.WaitAsync(cancellationToken ?? default).ConfigureAwait(false);
             }
             cancellationToken?.ThrowIfCancellationRequested();
             _episodeIds.Clear();
@@ -125,9 +125,9 @@ public class MergeVersionsManager {
     public async Task SplitAllEpisodes(IProgress<double>? progress, CancellationToken? cancellationToken) {
         try {
             cancellationToken?.ThrowIfCancellationRequested();
-            if (_episodeLock.Wait(LockWaitMS) is false) {
+            if (!await _episodeLock.WaitAsync(LockWaitMS, cancellationToken ?? default).ConfigureAwait(false)) {
                 _logger.LogDebug("Episode lock is taken, waiting for our turn.");
-                _episodeLock.Wait();
+                await _episodeLock.WaitAsync(cancellationToken ?? default).ConfigureAwait(false);
             }
             cancellationToken?.ThrowIfCancellationRequested();
             _episodeIds.Clear();
@@ -144,9 +144,9 @@ public class MergeVersionsManager {
 
     private async Task SplitAndMergeQueuedEpisodes() {
         try {
-            if (_episodeLock.Wait(LockWaitMS) is false) {
+            if (!await _episodeLock.WaitAsync(LockWaitMS).ConfigureAwait(false)) {
                 _logger.LogDebug("Episode lock is taken, waiting for our turn.");
-                _episodeLock.Wait();
+                await _episodeLock.WaitAsync().ConfigureAwait(false);
             }
             var episodeIds = _episodeIds.ToArray();
             _episodeIds.Clear();
@@ -193,9 +193,9 @@ public class MergeVersionsManager {
     public async Task SplitAndMergeAllMovies(IProgress<double>? progress, CancellationToken? cancellationToken) {
         try {
             cancellationToken?.ThrowIfCancellationRequested();
-            if (_movieLock.Wait(LockWaitMS) is false) {
+            if (!await _movieLock.WaitAsync(LockWaitMS, cancellationToken ?? default).ConfigureAwait(false)) {
                 _logger.LogDebug("Movie lock is taken, waiting for our turn.");
-                _movieLock.Wait();
+                await _movieLock.WaitAsync(cancellationToken ?? default).ConfigureAwait(false);
             }
             cancellationToken?.ThrowIfCancellationRequested();
             var movies = GetMoviesFromLibrary();
@@ -213,9 +213,9 @@ public class MergeVersionsManager {
     public async Task SplitAllMovies(IProgress<double>? progress, CancellationToken? cancellationToken) {
         try {
             cancellationToken?.ThrowIfCancellationRequested();
-            if (_movieLock.Wait(LockWaitMS) is false) {
+            if (!await _movieLock.WaitAsync(LockWaitMS, cancellationToken ?? default).ConfigureAwait(false)) {
                 _logger.LogDebug("Movie lock is taken, waiting for our turn.");
-                _movieLock.Wait();
+                await _movieLock.WaitAsync(cancellationToken ?? default).ConfigureAwait(false);
             }
             cancellationToken?.ThrowIfCancellationRequested();
             var movies = GetMoviesFromLibrary();
@@ -232,9 +232,9 @@ public class MergeVersionsManager {
 
     private async Task SplitAndMergeQueuedMovies() {
         try {
-            if (_movieLock.Wait(LockWaitMS) is false) {
+            if (!await _movieLock.WaitAsync(LockWaitMS).ConfigureAwait(false)) {
                 _logger.LogDebug("Movie lock is taken, waiting for our turn.");
-                _movieLock.Wait();
+                await _movieLock.WaitAsync().ConfigureAwait(false);
             }
             var movieEpisodeIds = _movieIds.ToArray();
             _movieIds.Clear();

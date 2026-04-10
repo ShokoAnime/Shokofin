@@ -168,7 +168,7 @@ public class SignalRConnectionManager {
         => ResetConnectionAsync(Plugin.Instance.Configuration, true);
 
     private void ResetConnection(PluginConfiguration config, bool shouldConnect)
-        => ResetConnectionAsync(config, shouldConnect).ConfigureAwait(false).GetAwaiter().GetResult();
+        => Task.Run(() => ResetConnectionAsync(config, shouldConnect)).GetAwaiter().GetResult();
 
     private async Task ResetConnectionAsync(PluginConfiguration config, bool shouldConnect) {
         await DisconnectAsync().ConfigureAwait(false);

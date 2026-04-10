@@ -94,7 +94,7 @@ public class ShokoApiClient : IDisposable {
         if (_connectionUsable != connectionUsable) {
             _connectionUsable = connectionUsable;
             if (connectionUsable) {
-                var hasPluginsExposed = CheckIfPluginsExposed().ConfigureAwait(false).GetAwaiter().GetResult();
+                var hasPluginsExposed = Task.Run(() => CheckIfPluginsExposed()).GetAwaiter().GetResult();
                 if (hasPluginsExposed != HasPluginsExposed) {
                     HasPluginsExposed = hasPluginsExposed;
                 }
@@ -320,7 +320,8 @@ public class ShokoApiClient : IDisposable {
         if (response.StatusCode != HttpStatusCode.OK)
             return null;
 
-        var result = await JsonSerializer.DeserializeAsync<ApiKey>(response.Content.ReadAsStreamAsync().Result).ConfigureAwait(false);
+        await using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        var result = await JsonSerializer.DeserializeAsync<ApiKey>(stream).ConfigureAwait(false);
         return result;
     }
 
@@ -334,7 +335,8 @@ public class ShokoApiClient : IDisposable {
             var source = new CancellationTokenSource(TimeSpan.FromSeconds(60));
             var response = await _httpClient.GetAsync($"{apiBaseUrl}/api/v3/Init/Version", source.Token).ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.OK) {
-                var componentVersionSet = await JsonSerializer.DeserializeAsync<ComponentVersionSet>(response.Content.ReadAsStreamAsync().Result).ConfigureAwait(false);
+                await using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                var componentVersionSet = await JsonSerializer.DeserializeAsync<ComponentVersionSet>(stream).ConfigureAwait(false);
                 return componentVersionSet?.Server;
             }
         }
@@ -355,7 +357,8 @@ public class ShokoApiClient : IDisposable {
             var settingsResponse = await Get("/api/v3/Settings", HttpMethod.Get, cancellationToken: cancellationToken).ConfigureAwait(false);
             if (settingsResponse.StatusCode != HttpStatusCode.OK)
                 return null;
-            var settings = JsonNode.Parse(settingsResponse.Content.ReadAsStringAsync(cancellationToken).Result)!;
+            var settingsJson = await settingsResponse.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var settings = JsonNode.Parse(settingsJson)!;
             var value = settings["Web"]?["WebUIPrefix"]?.GetValue<string>();
             if (value is null)
                 return "webui";
