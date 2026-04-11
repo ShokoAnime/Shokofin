@@ -594,6 +594,12 @@ public class PluginConfiguration : BasePluginConfiguration {
     public bool VFS_ResolveLinks { get; set; }
 
     /// <summary>
+    /// Use the file name of the source file as the version identifier in the
+    /// UI.
+    /// </summary>
+    public bool VFS_UseSourceFileAsVersionIdentifier { get; set; } = false;
+
+    /// <summary>
     /// Maximum number of exceptions before aborting the VFS generation. Set to
     /// 0 to disable limit.
     /// </summary>

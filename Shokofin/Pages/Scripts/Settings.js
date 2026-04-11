@@ -669,6 +669,7 @@ function applyFormToConfig(form, config) {
             config.AddCreditsAsSpecialFeatures = form.querySelector("#AddCreditsAsSpecialFeatures").checked;
             config.VFS_AddReleaseGroup = form.querySelector("#VFS_AddReleaseGroup").checked;
             config.VFS_AddResolution = form.querySelector("#VFS_AddResolution").checked;
+            config.VFS_UseSourceFileAsVersionIdentifier = form.querySelector("#VFS_UseSourceFileAsVersionIdentifier").checked;
 
             config.VFS_Threads = vfsTreads;
             form.querySelector("#VFS_Threads").value = vfsTreads;
@@ -930,6 +931,7 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#AddCreditsAsSpecialFeatures").checked = config.AddCreditsAsSpecialFeatures;
             form.querySelector("#VFS_AddReleaseGroup").checked = config.VFS_AddReleaseGroup;
             form.querySelector("#VFS_AddResolution").checked = config.VFS_AddResolution;
+            form.querySelector("#VFS_UseSourceFileAsVersionIdentifier").checked = config.VFS_UseSourceFileAsVersionIdentifier;
 
             form.querySelector("#VFS_Threads").value = config.VFS_Threads;
             form.querySelector("#VFS_ResolveLinks").checked = config.VFS_ResolveLinks;

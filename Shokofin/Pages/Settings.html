@@ -2081,6 +2081,13 @@ form:not(.advanced-mode) .advanced-only {
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Add the full or short release group name to all automatically linked files in the VFS. "No Group" will be used for all manually linked files. <strong>Warning</strong>: The release group in the file name may change if the release group info is incomplete, unavailable, or otherwise updated in Shoko at a later date, and thus may cause episode/movie entries to be "removed" and "added" as new entries when that happens. <strong>Use at your own risk.</strong></div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_UseSourceFileAsVersionIdentifier" />
+                                <span>Use Source File As Version Identifier</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Use the source file name as the version identifier.</div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="VFS_AddResolution" />

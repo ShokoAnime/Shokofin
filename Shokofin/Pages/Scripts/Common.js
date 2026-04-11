@@ -539,6 +539,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   VFS_AddReleaseGroup: boolean;
  *   VFS_AddResolution: boolean;
  *   VFS_ResolveLinks: boolean;
+ *   VFS_UseSourceFileAsVersionIdentifier: boolean;
  *   VFS_MaxTotalExceptionsBeforeAbort: number;
  *   VFS_MaxSeriesExceptionsBeforeAbort: number;
  *   VFS_UseSemaphore: boolean;
