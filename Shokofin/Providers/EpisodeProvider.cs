@@ -251,6 +251,6 @@ public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<Epis
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(EpisodeInfo searchInfo, CancellationToken cancellationToken)
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
-    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
+        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken).ConfigureAwait(false);
 }

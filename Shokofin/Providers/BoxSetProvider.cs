@@ -99,6 +99,6 @@ public class BoxSetProvider(IHttpClientFactory _httpClientFactory, ILogger<BoxSe
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(BoxSetInfo searchInfo, CancellationToken cancellationToken)
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
-    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
+        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken).ConfigureAwait(false);
 }

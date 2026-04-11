@@ -78,6 +78,6 @@ public class VideoProvider(IHttpClientFactory _httpClientFactory, ILogger<VideoP
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(ItemLookupInfo searchInfo, CancellationToken cancellationToken)
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
-    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
+        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken).ConfigureAwait(false);
 }
