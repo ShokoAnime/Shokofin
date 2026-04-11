@@ -449,6 +449,8 @@ public static partial class TextUtility {
     }
 
     private static string? GetEpisodeTitleByType(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, TitleConfiguration configuration, string? metadataLanguage) {
+        var anidbTitles = new Lazy<IReadOnlyList<Title>>(() => episodeInfo.Titles.Where(t => t.Source is "AniDB").ToList());
+        var tmdbTitles = new Lazy<IReadOnlyList<Title>>(() => episodeInfo.Titles.Where(t => t.Source is "TMDB").ToList());
         foreach (var provider in configuration.GetOrderedTitleProviders()) {
             var title = provider switch {
                 TitleProvider.Shoko_Default =>
@@ -456,15 +458,15 @@ public static partial class TextUtility {
                 TitleProvider.AniDB_Default =>
                     episodeInfo.Titles.FirstOrDefault(title => title.Source is "AniDB" && title.LanguageCode is "en")?.Value,
                 TitleProvider.AniDB_LibraryLanguage =>
-                    GetTitleForLanguage(episodeInfo.Titles.Where(t => t.Source is "AniDB").ToList(), false, configuration.AllowAny, metadataLanguage),
+                    GetTitleForLanguage(anidbTitles.Value, false, configuration.AllowAny, metadataLanguage),
                 TitleProvider.AniDB_CountryOfOrigin =>
-                    GetTitleForLanguage(episodeInfo.Titles.Where(t => t.Source is "AniDB").ToList(), false, configuration.AllowAny, GuessOriginLanguage(seasonInfo)),
+                    GetTitleForLanguage(anidbTitles.Value, false, configuration.AllowAny, GuessOriginLanguage(seasonInfo)),
                 TitleProvider.TMDB_Default =>
                     episodeInfo.Titles.FirstOrDefault(title => title.Source is "TMDB" && title.LanguageCode is "en")?.Value,
                 TitleProvider.TMDB_LibraryLanguage =>
-                    GetTitleForLanguage(episodeInfo.Titles.Where(t => t.Source is "TMDB").ToList(), false, configuration.AllowAny, metadataLanguage),
+                    GetTitleForLanguage(tmdbTitles.Value, false, configuration.AllowAny, metadataLanguage),
                 TitleProvider.TMDB_CountryOfOrigin =>
-                    GetTitleForLanguage(episodeInfo.Titles.Where(t => t.Source is "TMDB").ToList(), false, configuration.AllowAny, episodeInfo.OriginalLanguageCode),
+                    GetTitleForLanguage(tmdbTitles.Value, false, configuration.AllowAny, episodeInfo.OriginalLanguageCode),
                 _ => null,
             };
             if (!string.IsNullOrEmpty(title) && !InvalidEpisodeTitleRegex().IsMatch(title))
@@ -535,22 +537,24 @@ public static partial class TextUtility {
     }
 
     private static string? GetSeriesTitleByType(IBaseItemInfo baseInfo, TitleConfiguration configuration, string? metadataLanguage) {
+        var anidbTitles = new Lazy<IReadOnlyList<Title>>(() => baseInfo.Titles.Where(t => t.Source is "AniDB").ToList());
+        var tmdbTitles = new Lazy<IReadOnlyList<Title>>(() => baseInfo.Titles.Where(t => t.Source is "TMDB").ToList());
         foreach (var provider in configuration.GetOrderedTitleProviders()) {
             var title = provider switch {
                 TitleProvider.Shoko_Default =>
                     baseInfo.Title,
                 TitleProvider.AniDB_Default =>
-                    baseInfo.Titles.Where(t => t.Source is "AniDB").FirstOrDefault(title => title.IsDefault)?.Value,
+                    anidbTitles.Value.FirstOrDefault(title => title.IsDefault)?.Value,
                 TitleProvider.AniDB_LibraryLanguage =>
-                    GetTitleForLanguage(baseInfo.Titles.Where(t => t.Source is "AniDB").ToList(), true, configuration.AllowAny, metadataLanguage),
+                    GetTitleForLanguage(anidbTitles.Value, true, configuration.AllowAny, metadataLanguage),
                 TitleProvider.AniDB_CountryOfOrigin =>
-                    GetTitleForLanguage(baseInfo.Titles.Where(t => t.Source is "AniDB").ToList(), true, configuration.AllowAny, GuessOriginLanguage(baseInfo)),
+                    GetTitleForLanguage(anidbTitles.Value, true, configuration.AllowAny, GuessOriginLanguage(baseInfo)),
                 TitleProvider.TMDB_Default =>
-                    baseInfo.Titles.Where(t => t.Source is "TMDB").FirstOrDefault(title => title.IsDefault)?.Value,
+                    tmdbTitles.Value.FirstOrDefault(title => title.IsDefault)?.Value,
                 TitleProvider.TMDB_LibraryLanguage =>
-                    GetTitleForLanguage(baseInfo.Titles.Where(t => t.Source is "TMDB").ToList(), true, configuration.AllowAny, metadataLanguage),
+                    GetTitleForLanguage(tmdbTitles.Value, true, configuration.AllowAny, metadataLanguage),
                 TitleProvider.TMDB_CountryOfOrigin =>
-                    GetTitleForLanguage(baseInfo.Titles.Where(t => t.Source is "TMDB").ToList(), true, configuration.AllowAny, baseInfo.OriginalLanguageCode),
+                    GetTitleForLanguage(tmdbTitles.Value, true, configuration.AllowAny, baseInfo.OriginalLanguageCode),
                 _ => null,
             };
             if (!string.IsNullOrEmpty(title) && !InvalidSeriesOrSeasonTitleRegex().IsMatch(title))
