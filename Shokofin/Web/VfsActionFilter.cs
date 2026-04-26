@@ -11,8 +11,8 @@ public class VfsActionFilter : IAsyncActionFilter {
         var executedResult = await next().ConfigureAwait(false);
         if (
             executedResult.Result is ObjectResult result1 &&
-            result1.Value is BaseItemDto { MediaSources.Length: > 0 } dto &&
-            dto.Path.StartsWith(Plugin.Instance.VirtualRoot) &&
+            result1.Value is BaseItemDto { MediaSources.Length: > 0, Path: { Length: > 0 } dtoPath } dto &&
+            dtoPath.StartsWith(Plugin.Instance.VirtualRoot) &&
             Plugin.Instance.Configuration.VFS_UseSourceFileAsVersionIdentifier
         ) {
             foreach (var mediaSource in dto.MediaSources) {
