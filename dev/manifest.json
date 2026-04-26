@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.811",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.8) for more info.\n\n---\n\n`fix`: **Don't attempt to apply vfs action filter on virtual items**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.8/shoko_6.0.5.8_for_10.11.zip",
+                "checksum": "76bf10d1a385a193699d52e2760b2ecd",
+                "timestamp": "2026-04-26T13:36:55Z"
+            },
+            {
+                "version": "6.0.5.810",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.8) for more info.\n\n---\n\n`fix`: **Don't attempt to apply vfs action filter on virtual items**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.8/shoko_6.0.5.8_for_10.10.zip",
+                "checksum": "db40b9d4e76224366d0f0504a29faf7d",
+                "timestamp": "2026-04-26T13:37:06Z"
+            },
+            {
                 "version": "6.0.5.711",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.7) for more info.\n\n---\n\n`chore`: **Add conditional ShokoApiManager injection in custom providers**:\n\nWrapped ShokoApiManager in a preprocessor directive to ensure it is only set for .NET 9 and later, reducing the compiler warning for .NET 8 and below.\n\n`feat`: **Skip custom info checks in iterative mode**:\n\nAdded logic to prevent processing episodes, movies, seasons, and series when the library is in iterative generation mode and items are not part of the iteration. Also made sure lookups are only performed if the provider is enabled for the specific item.\n\n`refactor`: **Avoid blocking calls in async contexts**:\n\n- Replace .ConfigureAwait(false).GetResult() with Task.Run() for sync callers\n- Replace SemaphoreSlim.Wait() with await WaitAsync() in MergeVersionManager\n- Fix .Result blocking calls on HttpContent in ShokoApiClient\n\n`chore`: **Remove unused import**.\n\n`refactor`: **Use StringBuilder for string concatenation in hot paths**:\n\n- Replace string += in JoinText loop with StringBuilder\n- Replace Select().Join() in content rating with StringBuilder loop\n\n`refactor`: **Use Lazy to defer title filtering until needed**:\n\n- Cache .Where().ToList() in Lazy for AniDB and TMDB titles\n- Avoids filtering same collection multiple times when multiple providers configured\n\n`refactor`: **Add ConfigureAwait(false) to provider GetImageResponse methods**:\n\n- Add ConfigureAwait(false) to all provider GetImageResponse methods\n- Avoids unnecessary context switches in library code\n\n`refactor`: **Make static Regex readonly in ImageHostUrl**.\n\n`feat`: **Add option to display source file names instead of vfs file names**.",
                 "targetAbi": "10.11.0.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.4/shoko_6.0.5.4_for_10.10.zip",
                 "checksum": "8479f0138702cc144bbfee9200b7c92f",
                 "timestamp": "2026-03-31T16:21:44Z"
-            },
-            {
-                "version": "6.0.5.311",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.3) for more info.\n\n---\n\n`fix`: **Handle accepted status code in scrobble responses**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.3/shoko_6.0.5.3_for_10.11.zip",
-                "checksum": "34614e15c9c432c0ee2bde3cd67eb05f",
-                "timestamp": "2026-03-27T04:00:08Z"
-            },
-            {
-                "version": "6.0.5.310",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.3) for more info.\n\n---\n\n`fix`: **Handle accepted status code in scrobble responses**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.3/shoko_6.0.5.3_for_10.10.zip",
-                "checksum": "586abe51682d3491346173965459d509",
-                "timestamp": "2026-03-27T04:00:18Z"
             }
         ]
     }
