@@ -58,11 +58,17 @@ public class Image {
     public string? LocalPath { get; set; }
 
     /// <summary>
+    /// Newer property for checking if the image is available.
+    /// </summary>
+    [JsonPropertyName("IsAvailable")]
+    public bool? IsMaybeAvailable { get; set; }
+
+    /// <summary>
     /// True if the image is available.
     /// </summary>
     [JsonIgnore]
     public virtual bool IsAvailable
-        => !string.IsNullOrEmpty(LocalPath);
+        => IsMaybeAvailable ?? !string.IsNullOrEmpty(LocalPath);
 
     /// <summary>
     /// Community rating for the image, if available.
@@ -86,7 +92,7 @@ public class Image {
         LanguageCode = image.LanguageCode;
         Width = image.Width;
         Height = image.Height;
-        LocalPath = image.LocalPath;
+        IsMaybeAvailable = image.IsAvailable;
         CommunityRating = image.CommunityRating is { } rating ? new(rating) : null;
     }
 
