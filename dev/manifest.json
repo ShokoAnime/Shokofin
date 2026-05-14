@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.911",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.9) for more info.\n\n---\n\n`feat`: **Add IsMaybeAvailable property to Image model**:\n\nAdded a new nullable boolean property `IsMaybeAvailable` to explicitly capture the `IsAvailable` field from API responses. Updated the computed `IsAvailable` property to prioritize this value, falling back to checking the `LocalPath` only when the field is absent. This ensures proper handling of explicit null values from the remote service.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.9/shoko_6.0.5.9_for_10.11.zip",
+                "checksum": "ca8f3079b33a98e13bc0a8717fd41b34",
+                "timestamp": "2026-05-14T04:06:59Z"
+            },
+            {
+                "version": "6.0.5.910",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.9) for more info.\n\n---\n\n`feat`: **Add IsMaybeAvailable property to Image model**:\n\nAdded a new nullable boolean property `IsMaybeAvailable` to explicitly capture the `IsAvailable` field from API responses. Updated the computed `IsAvailable` property to prioritize this value, falling back to checking the `LocalPath` only when the field is absent. This ensures proper handling of explicit null values from the remote service.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.9/shoko_6.0.5.9_for_10.10.zip",
+                "checksum": "821e114692992bdfa46eb16b6b57d069",
+                "timestamp": "2026-05-14T04:07:09Z"
+            },
+            {
                 "version": "6.0.5.811",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.8) for more info.\n\n---\n\n`fix`: **Don't attempt to apply vfs action filter on virtual items**.",
                 "targetAbi": "10.11.0.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.5/shoko_6.0.5.5_for_10.10.zip",
                 "checksum": "67191fd326619cd79b042c9a021e5559",
                 "timestamp": "2026-04-09T06:10:14Z"
-            },
-            {
-                "version": "6.0.5.411",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.4) for more info.\n\n---\n\n`feat`: **Add recursive sub-directory scanning for external files in VFS (#97)**:\n\nExternal subtitle and audio file discovery now searches sub-directories recursively \u2014 not just the immediate parent folder of the source file \u2014 when generating links for the VFS.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.4/shoko_6.0.5.4_for_10.11.zip",
-                "checksum": "fe79a02cf05072ab380b88ad5532a305",
-                "timestamp": "2026-03-31T16:21:34Z"
-            },
-            {
-                "version": "6.0.5.410",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.4) for more info.\n\n---\n\n`feat`: **Add recursive sub-directory scanning for external files in VFS (#97)**:\n\nExternal subtitle and audio file discovery now searches sub-directories recursively \u2014 not just the immediate parent folder of the source file \u2014 when generating links for the VFS.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.4/shoko_6.0.5.4_for_10.10.zip",
-                "checksum": "8479f0138702cc144bbfee9200b7c92f",
-                "timestamp": "2026-03-31T16:21:44Z"
             }
         ]
     }
