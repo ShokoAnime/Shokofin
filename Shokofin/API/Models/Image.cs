@@ -143,6 +143,11 @@ public enum ShokoImageType {
     /// <summary>
     ///
     /// </summary>
+    Primary = Poster,
+
+    /// <summary>
+    ///
+    /// </summary>
     Banner = 2,
 
     /// <summary>
