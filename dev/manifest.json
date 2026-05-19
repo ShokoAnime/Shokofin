@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.1011",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.10) for more info.\n\n---\n\n`fix`: **Add alias for new image type**.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.10/shoko_6.0.5.10_for_10.11.zip",
+                "checksum": "53e7fddcec026db7d20e34d3c069dddf",
+                "timestamp": "2026-05-19T19:39:56Z"
+            },
+            {
+                "version": "6.0.5.1010",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.10) for more info.\n\n---\n\n`fix`: **Add alias for new image type**.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.10/shoko_6.0.5.10_for_10.10.zip",
+                "checksum": "d3029fc5291aa608902d205bc9968f4c",
+                "timestamp": "2026-05-19T19:40:07Z"
+            },
+            {
                 "version": "6.0.5.911",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.9) for more info.\n\n---\n\n`feat`: **Add IsMaybeAvailable property to Image model**:\n\nAdded a new nullable boolean property `IsMaybeAvailable` to explicitly capture the `IsAvailable` field from API responses. Updated the computed `IsAvailable` property to prioritize this value, falling back to checking the `LocalPath` only when the field is absent. This ensures proper handling of explicit null values from the remote service.",
                 "targetAbi": "10.11.0.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.6/shoko_6.0.5.6_for_10.10.zip",
                 "checksum": "2e737ff10b65fd4f9dc19f72150329e1",
                 "timestamp": "2026-04-09T08:31:15Z"
-            },
-            {
-                "version": "6.0.5.511",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.5) for more info.\n\n---\n\n`fix`: **Add caching to file enumeration methods**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.5/shoko_6.0.5.5_for_10.11.zip",
-                "checksum": "403e5f1f2a5ed28bdc7ebd2293bb5cd8",
-                "timestamp": "2026-04-09T06:10:04Z"
-            },
-            {
-                "version": "6.0.5.510",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.5) for more info.\n\n---\n\n`fix`: **Add caching to file enumeration methods**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.5/shoko_6.0.5.5_for_10.10.zip",
-                "checksum": "67191fd326619cd79b042c9a021e5559",
-                "timestamp": "2026-04-09T06:10:14Z"
             }
         ]
     }
