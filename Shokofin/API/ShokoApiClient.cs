@@ -501,6 +501,13 @@ public class ShokoApiClient : IDisposable {
 
         // If the episode has no 'movie' images, get the series images to compensate.
         if (episodeImages.Posters.Count is 0) {
+            // Separate 'episode' thumbnails from series images if there are any.
+            if (episodeImages is { Backdrops.Count: > 0, Thumbnails.Count: 0 })
+            {
+                episodeImages.Thumbnails = episodeImages.Backdrops;
+                episodeImages.Backdrops = [];
+            }
+
             var episode1 = await GetShokoEpisode(episodeId).ConfigureAwait(false);
             var seriesImages1 = await GetImagesForShokoSeries(episode1!.IDs.ParentSeries.ToString(), cancellationToken: cancellationToken).ConfigureAwait(false) ?? new();
 
