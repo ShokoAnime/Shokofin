@@ -60,7 +60,7 @@ public class Image {
     /// <summary>
     /// Newer property for checking if the image is available.
     /// </summary>
-    [JsonPropertyName("IsAvailable")]
+    [JsonPropertyName("Available")]
     public bool? IsMaybeAvailable { get; set; }
 
     /// <summary>
