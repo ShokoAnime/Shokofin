@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.1211",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.12) for more info.\n\n---\n\n`feat`: **Add scheduled tasks for merging queued media**:\n\n- Added new scheduled task classes for episodes and movies.\n- Replaced direct task factory calls with the scheduled task calls.\n- Changed the post scan task to schedule the queued media tasks instead of the all media tasks.\n- Updated async method signatures to use default cancellation tokens and progress reporters for cleaner code.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.12/shoko_6.0.5.12_for_10.11.zip",
+                "checksum": "431cc131d211850f84816c0384f1e5fc",
+                "timestamp": "2026-05-25T13:27:39Z"
+            },
+            {
+                "version": "6.0.5.1210",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.12) for more info.\n\n---\n\n`feat`: **Add scheduled tasks for merging queued media**:\n\n- Added new scheduled task classes for episodes and movies.\n- Replaced direct task factory calls with the scheduled task calls.\n- Changed the post scan task to schedule the queued media tasks instead of the all media tasks.\n- Updated async method signatures to use default cancellation tokens and progress reporters for cleaner code.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.12/shoko_6.0.5.12_for_10.10.zip",
+                "checksum": "895561b89b64077a28ba402b455aae6f",
+                "timestamp": "2026-05-25T13:27:49Z"
+            },
+            {
                 "version": "6.0.5.1111",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.11) for more info.\n\n---\n\n`fix`: **Update json property name from `IsAvailable` to `Available`**.\n\n`fix`: **Map 'backdrops' as 'thumbnails' if no movie linked to episode**:\n\nSo we can still have the 'thumbnails' separate from the series' backdrops.",
                 "targetAbi": "10.11.0.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.8/shoko_6.0.5.8_for_10.10.zip",
                 "checksum": "db40b9d4e76224366d0f0504a29faf7d",
                 "timestamp": "2026-04-26T13:37:06Z"
-            },
-            {
-                "version": "6.0.5.711",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.7) for more info.\n\n---\n\n`chore`: **Add conditional ShokoApiManager injection in custom providers**:\n\nWrapped ShokoApiManager in a preprocessor directive to ensure it is only set for .NET 9 and later, reducing the compiler warning for .NET 8 and below.\n\n`feat`: **Skip custom info checks in iterative mode**:\n\nAdded logic to prevent processing episodes, movies, seasons, and series when the library is in iterative generation mode and items are not part of the iteration. Also made sure lookups are only performed if the provider is enabled for the specific item.\n\n`refactor`: **Avoid blocking calls in async contexts**:\n\n- Replace .ConfigureAwait(false).GetResult() with Task.Run() for sync callers\n- Replace SemaphoreSlim.Wait() with await WaitAsync() in MergeVersionManager\n- Fix .Result blocking calls on HttpContent in ShokoApiClient\n\n`chore`: **Remove unused import**.\n\n`refactor`: **Use StringBuilder for string concatenation in hot paths**:\n\n- Replace string += in JoinText loop with StringBuilder\n- Replace Select().Join() in content rating with StringBuilder loop\n\n`refactor`: **Use Lazy to defer title filtering until needed**:\n\n- Cache .Where().ToList() in Lazy for AniDB and TMDB titles\n- Avoids filtering same collection multiple times when multiple providers configured\n\n`refactor`: **Add ConfigureAwait(false) to provider GetImageResponse methods**:\n\n- Add ConfigureAwait(false) to all provider GetImageResponse methods\n- Avoids unnecessary context switches in library code\n\n`refactor`: **Make static Regex readonly in ImageHostUrl**.\n\n`feat`: **Add option to display source file names instead of vfs file names**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.7/shoko_6.0.5.7_for_10.11.zip",
-                "checksum": "c5f1a48a0fb198ee0050ff804a2ce012",
-                "timestamp": "2026-04-11T04:23:59Z"
-            },
-            {
-                "version": "6.0.5.710",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.7) for more info.\n\n---\n\n`chore`: **Add conditional ShokoApiManager injection in custom providers**:\n\nWrapped ShokoApiManager in a preprocessor directive to ensure it is only set for .NET 9 and later, reducing the compiler warning for .NET 8 and below.\n\n`feat`: **Skip custom info checks in iterative mode**:\n\nAdded logic to prevent processing episodes, movies, seasons, and series when the library is in iterative generation mode and items are not part of the iteration. Also made sure lookups are only performed if the provider is enabled for the specific item.\n\n`refactor`: **Avoid blocking calls in async contexts**:\n\n- Replace .ConfigureAwait(false).GetResult() with Task.Run() for sync callers\n- Replace SemaphoreSlim.Wait() with await WaitAsync() in MergeVersionManager\n- Fix .Result blocking calls on HttpContent in ShokoApiClient\n\n`chore`: **Remove unused import**.\n\n`refactor`: **Use StringBuilder for string concatenation in hot paths**:\n\n- Replace string += in JoinText loop with StringBuilder\n- Replace Select().Join() in content rating with StringBuilder loop\n\n`refactor`: **Use Lazy to defer title filtering until needed**:\n\n- Cache .Where().ToList() in Lazy for AniDB and TMDB titles\n- Avoids filtering same collection multiple times when multiple providers configured\n\n`refactor`: **Add ConfigureAwait(false) to provider GetImageResponse methods**:\n\n- Add ConfigureAwait(false) to all provider GetImageResponse methods\n- Avoids unnecessary context switches in library code\n\n`refactor`: **Make static Regex readonly in ImageHostUrl**.\n\n`feat`: **Add option to display source file names instead of vfs file names**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.7/shoko_6.0.5.7_for_10.10.zip",
-                "checksum": "865770afd78c759ca8192f44ace701bf",
-                "timestamp": "2026-04-11T04:24:09Z"
             }
         ]
     }
