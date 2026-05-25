@@ -13,8 +13,8 @@ public class PostScanTask(ITaskManager taskManager) : ILibraryPostScanTask {
             taskManager.CancelIfRunningAndQueue<ReconstructCollectionsTask>();
         }
         if (Plugin.Instance.Configuration.AutoMergeVersions) {
-            taskManager.CancelIfRunningAndQueue<MergeMoviesTask>();
-            taskManager.CancelIfRunningAndQueue<MergeEpisodesTask>();
+            taskManager.CancelIfRunningAndQueue<MergeQueuedMoviesTask>();
+            taskManager.CancelIfRunningAndQueue<MergeQueuedEpisodesTask>();
         }
         return Task.CompletedTask;
     }

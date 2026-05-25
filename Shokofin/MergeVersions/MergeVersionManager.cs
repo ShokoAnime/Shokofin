@@ -13,10 +13,12 @@ using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Extensions;
 using Shokofin.ExternalIds;
+using Shokofin.Tasks;
 using Shokofin.Utils;
 
 using FileInfo = Shokofin.API.Info.FileInfo;
@@ -49,6 +51,11 @@ public class MergeVersionsManager {
     private readonly ILibraryManager _libraryManager;
 
     /// <summary>
+    /// Task manager. Used to schedule background tasks.
+    /// </summary>
+    private readonly ITaskManager _taskManager;
+
+    /// <summary>
     /// Shoko ID Lookup. Used to check if the plugin is enabled for the videos.
     /// </summary>
     private readonly ShokoIdLookup _lookup;
@@ -64,9 +71,10 @@ public class MergeVersionsManager {
     /// </summary>
     private readonly UsageTracker _usageTracker;
 
-    public MergeVersionsManager(ILogger<MergeVersionsManager> logger, ILibraryManager libraryManager, ShokoIdLookup lookup, ShokoApiManager apiManager, UsageTracker usageTracker) {
+    public MergeVersionsManager(ILogger<MergeVersionsManager> logger, ILibraryManager libraryManager, ITaskManager taskManager, ShokoIdLookup lookup, ShokoApiManager apiManager, UsageTracker usageTracker) {
         _logger = logger;
         _libraryManager = libraryManager;
+        _taskManager = taskManager;
         _lookup = lookup;
         _apiManager = apiManager;
         _usageTracker = usageTracker;
@@ -82,9 +90,8 @@ public class MergeVersionsManager {
     }
 
     public void Clear() {
-        _logger.LogDebug("Clearing data…");
-        Task.Factory.StartNew(SplitAndMergeQueuedEpisodes, TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach);
-        Task.Factory.StartNew(SplitAndMergeQueuedMovies, TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach);
+        _taskManager.QueueIfNotRunning<MergeQueuedEpisodesTask>();
+        _taskManager.QueueIfNotRunning<MergeQueuedMoviesTask>();
     }
 
     #region Episodes
@@ -102,17 +109,18 @@ public class MergeVersionsManager {
     /// </summary>
     private readonly ConcurrentBag<string> _episodeIds = [];
 
-    public async Task SplitAndMergeAllEpisodes(IProgress<double>? progress, CancellationToken? cancellationToken) {
+    public async Task SplitAndMergeAllEpisodes(IProgress<double>? progress = null, CancellationToken cancellationToken = default) {
         try {
-            cancellationToken?.ThrowIfCancellationRequested();
-            if (!await _episodeLock.WaitAsync(LockWaitMS, cancellationToken ?? default).ConfigureAwait(false)) {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!await _episodeLock.WaitAsync(LockWaitMS, cancellationToken).ConfigureAwait(false)) {
                 _logger.LogDebug("Episode lock is taken, waiting for our turn.");
-                await _episodeLock.WaitAsync(cancellationToken ?? default).ConfigureAwait(false);
+                await _episodeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
-            cancellationToken?.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
             _episodeIds.Clear();
             var episodes = GetEpisodesFromLibrary();
             _logger.LogDebug("Checking {Count} episodes if they need to be split or merged.", episodes.Count);
+            progress ??= new Progress<double>(report => _logger.LogDebug("Episode Progress: {Progress}", report));
             await SplitAndMergeVideos(episodes, progress, cancellationToken).ConfigureAwait(false);
             _logger.LogDebug("Finished checking {Count} episodes if they need to be split or merged.", episodes.Count);
             progress?.Report(100d);
@@ -122,17 +130,18 @@ public class MergeVersionsManager {
         }
     }
 
-    public async Task SplitAllEpisodes(IProgress<double>? progress, CancellationToken? cancellationToken) {
+    public async Task SplitAllEpisodes(IProgress<double>? progress = null, CancellationToken cancellationToken = default) {
         try {
-            cancellationToken?.ThrowIfCancellationRequested();
-            if (!await _episodeLock.WaitAsync(LockWaitMS, cancellationToken ?? default).ConfigureAwait(false)) {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!await _episodeLock.WaitAsync(LockWaitMS, cancellationToken).ConfigureAwait(false)) {
                 _logger.LogDebug("Episode lock is taken, waiting for our turn.");
-                await _episodeLock.WaitAsync(cancellationToken ?? default).ConfigureAwait(false);
+                await _episodeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
-            cancellationToken?.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
             _episodeIds.Clear();
             var episodes = GetEpisodesFromLibrary();
             _logger.LogDebug("Checking {Count} episodes if they need to be split.", episodes.Count);
+            progress ??= new Progress<double>(report => _logger.LogDebug("Episode Progress: {Progress}", report));
             await SplitVideos(episodes, progress, cancellationToken).ConfigureAwait(false);
             _logger.LogDebug("Finished checking {Count} episodes if they need to be split.", episodes.Count);
             progress?.Report(100d);
@@ -142,12 +151,14 @@ public class MergeVersionsManager {
         }
     }
 
-    private async Task SplitAndMergeQueuedEpisodes() {
+    public async Task SplitAndMergeQueuedEpisodes(IProgress<double>? progress = null, CancellationToken cancellationToken = default) {
         try {
-            if (!await _episodeLock.WaitAsync(LockWaitMS).ConfigureAwait(false)) {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!await _episodeLock.WaitAsync(LockWaitMS, cancellationToken).ConfigureAwait(false)) {
                 _logger.LogDebug("Episode lock is taken, waiting for our turn.");
-                await _episodeLock.WaitAsync().ConfigureAwait(false);
+                await _episodeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
+            cancellationToken.ThrowIfCancellationRequested();
             var episodeIds = _episodeIds.ToArray();
             _episodeIds.Clear();
             if (episodeIds.Length is 0)
@@ -157,8 +168,8 @@ public class MergeVersionsManager {
                 .SelectMany(GetEpisodesFromLibrary)
                 .ToList();
             _logger.LogDebug("Checking {Count} episodes if they need to be split or merged.", episodes.Count);
-            IProgress<double> progress = new Progress<double>(report => _logger.LogDebug("Episode Progress: {Progress}", report));
-            await SplitAndMergeVideos(episodes, progress).ConfigureAwait(false);
+            progress ??= new Progress<double>(report => _logger.LogDebug("Episode Progress: {Progress}", report));
+            await SplitAndMergeVideos(episodes, progress, cancellationToken).ConfigureAwait(false);
             _logger.LogDebug("Finished checking {Count} episodes if they need to be split or merged.", episodes.Count);
             progress.Report(100d);
         }
@@ -190,17 +201,18 @@ public class MergeVersionsManager {
     /// </summary>
     private readonly ConcurrentBag<string> _movieIds = [];
 
-    public async Task SplitAndMergeAllMovies(IProgress<double>? progress, CancellationToken? cancellationToken) {
+    public async Task SplitAndMergeAllMovies(IProgress<double>? progress = null, CancellationToken cancellationToken = default) {
         try {
-            cancellationToken?.ThrowIfCancellationRequested();
-            if (!await _movieLock.WaitAsync(LockWaitMS, cancellationToken ?? default).ConfigureAwait(false)) {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!await _movieLock.WaitAsync(LockWaitMS, cancellationToken).ConfigureAwait(false)) {
                 _logger.LogDebug("Movie lock is taken, waiting for our turn.");
-                await _movieLock.WaitAsync(cancellationToken ?? default).ConfigureAwait(false);
+                await _movieLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
-            cancellationToken?.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
             var movies = GetMoviesFromLibrary();
             _movieIds.Clear();
             _logger.LogDebug("Checking {Count} movies if they need to be split or merged.", movies.Count);
+            progress ??= new Progress<double>(report => _logger.LogDebug("Movie Progress: {Progress:0.00F}%", report));
             await SplitAndMergeVideos(movies, progress, cancellationToken).ConfigureAwait(false);
             _logger.LogDebug("Finished checking {Count} movies if they need to be split or merged.", movies.Count);
             progress?.Report(100d);
@@ -210,17 +222,18 @@ public class MergeVersionsManager {
         }
     }
 
-    public async Task SplitAllMovies(IProgress<double>? progress, CancellationToken? cancellationToken) {
+    public async Task SplitAllMovies(IProgress<double>? progress = null, CancellationToken cancellationToken = default) {
         try {
-            cancellationToken?.ThrowIfCancellationRequested();
-            if (!await _movieLock.WaitAsync(LockWaitMS, cancellationToken ?? default).ConfigureAwait(false)) {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!await _movieLock.WaitAsync(LockWaitMS, cancellationToken).ConfigureAwait(false)) {
                 _logger.LogDebug("Movie lock is taken, waiting for our turn.");
-                await _movieLock.WaitAsync(cancellationToken ?? default).ConfigureAwait(false);
+                await _movieLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
-            cancellationToken?.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
             var movies = GetMoviesFromLibrary();
             _movieIds.Clear();
             _logger.LogDebug("Checking {Count} movies if they need to be split.", movies.Count);
+            progress ??= new Progress<double>(report => _logger.LogDebug("Movie Progress: {Progress:0.00F}%", report));
             await SplitVideos(GetMoviesFromLibrary(), progress, cancellationToken).ConfigureAwait(false);
             _logger.LogDebug("Finished checking {Count} movies if they need to be split.", movies.Count);
             progress?.Report(100d);
@@ -230,12 +243,14 @@ public class MergeVersionsManager {
         }
     }
 
-    private async Task SplitAndMergeQueuedMovies() {
+    public async Task SplitAndMergeQueuedMovies(IProgress<double>? progress = null, CancellationToken cancellationToken = default) {
         try {
-            if (!await _movieLock.WaitAsync(LockWaitMS).ConfigureAwait(false)) {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!await _movieLock.WaitAsync(LockWaitMS, cancellationToken).ConfigureAwait(false)) {
                 _logger.LogDebug("Movie lock is taken, waiting for our turn.");
-                await _movieLock.WaitAsync().ConfigureAwait(false);
+                await _movieLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             }
+            cancellationToken.ThrowIfCancellationRequested();
             var movieEpisodeIds = _movieIds.ToArray();
             _movieIds.Clear();
             if (movieEpisodeIds.Length is 0)
@@ -245,8 +260,8 @@ public class MergeVersionsManager {
                 .SelectMany(GetMoviesFromLibrary)
                 .ToList();
             _logger.LogDebug("Checking {Count} movies if they need to be split or merged.", movies.Count);
-            IProgress<double> progress = new Progress<double>(report => _logger.LogDebug("Movie Progress: {Progress:0.00F}%", report));
-            await SplitAndMergeVideos(movies, progress).ConfigureAwait(false);
+            progress ??= new Progress<double>(report => _logger.LogDebug("Movie Progress: {Progress:0.00F}%", report));
+            await SplitAndMergeVideos(movies, progress, cancellationToken).ConfigureAwait(false);
             _logger.LogDebug("Finished checking {Count} movies if they need to be split or merged.", movies.Count);
             progress.Report(100d);
         }
