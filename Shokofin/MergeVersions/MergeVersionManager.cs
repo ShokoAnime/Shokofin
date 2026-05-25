@@ -90,8 +90,10 @@ public class MergeVersionsManager {
     }
 
     public void Clear() {
-        _taskManager.QueueIfNotRunning<MergeQueuedEpisodesTask>();
-        _taskManager.QueueIfNotRunning<MergeQueuedMoviesTask>();
+        if (_episodeIds.Count > 0)
+            _taskManager.QueueIfNotRunning<MergeQueuedEpisodesTask>();
+        if (_movieIds.Count > 0)
+            _taskManager.QueueIfNotRunning<MergeQueuedMoviesTask>();
     }
 
     #region Episodes
