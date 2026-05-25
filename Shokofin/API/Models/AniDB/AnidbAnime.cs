@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Shokofin.API.Converters;
 
 namespace Shokofin.API.Models.AniDB;
 
@@ -91,33 +92,15 @@ public class AnidbAnimeWithDate : AnidbAnime {
     /// </summary>
     public new int EpisodeCount { get; set; }
 
-    [JsonIgnore]
-    private DateTime? InternalAirDate { get; set; } = null;
-
     /// <summary>
     /// Air date (2013-02-27). Anything without an air date is going to be missing a lot of info.
     /// </summary>
-    public DateTime? AirDate {
-        get {
-            return InternalAirDate;
-        }
-        set {
-            InternalAirDate = value.HasValue && (value.Value == DateTime.UnixEpoch || value.Value == DateTime.MinValue || value.Value == DateTime.MaxValue) ? null : value;
-        }
-    }
-
-    [JsonIgnore]
-    private DateTime? InternalEndDate { get; set; } = null;
+    [JsonConverter(typeof(JsonPartialDateTimeConverter))]
+    public DateTime? AirDate { get; set; }
 
     /// <summary>
     /// End date, can be omitted. Omitted means that it's still airing (2013-02-27)
     /// </summary>
-    public DateTime? EndDate {
-        get {
-            return InternalEndDate;
-        }
-        set {
-            InternalEndDate = value.HasValue && (value.Value == DateTime.UnixEpoch || value.Value == DateTime.MinValue || value.Value == DateTime.MaxValue) ? null : value;
-        }
-    }
+    [JsonConverter(typeof(JsonPartialDateTimeConverter))]
+    public DateTime? EndDate { get; set; }
 }
