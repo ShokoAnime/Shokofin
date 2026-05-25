@@ -1565,6 +1565,59 @@ form:not(.advanced-mode) .advanced-only {
                             </div>
                             <div class="fieldDescription">Enable which third party IDs to provide for other plugins to consume with supported media items.</div>
                         </div>
+                        <div id="Metadata_ThirdPartyDisplayLinkList" is="checkbox-list" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Enabled Display Providers for Third Party Links</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Shoko">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Shoko | Series, Episodes</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB | Series, Episodes, Movies</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TheMovieDb | Series, Episodes, Movies</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TvDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TvDB | Series, Episodes</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">Which third party display providers to show links for in the UI.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddExtraInfoToLinkName" />
+                                <span>Add Extra Info to Link Name</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add extra info such as the series id to the link name for the external links shown in the UI.</div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription">
+                            <input is="emby-input" type="number" id="MaxLinksPerTypeToShow" label="Max Links Per Type to Show" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" />
+                            <div class="fieldDescription">Maximum number of links to show per provider type. Set to 0 to show all links.</div>
+                        </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>${Save}</span>
                         </button>

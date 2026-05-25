@@ -611,6 +611,10 @@ function applyFormToConfig(form, config) {
             ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableCheckboxList(form, "Metadata_ContentRatingList"));
             ([config.ProductionLocationList, config.ProductionLocationOrder] = retrieveSortableCheckboxList(form, "Metadata_ProductionLocationList"));
             config.ThirdPartyIdProviderList = retrieveCheckboxList(form, "Metadata_ThirdPartyIdProviderList");
+            config.ThirdPartyDisplayLinkList = retrieveCheckboxList(form, "Metadata_ThirdPartyDisplayLinkList");
+            config.AddExtraInfoToLinkName = form.querySelector("#AddExtraInfoToLinkName").checked;
+            config.MaxLinksPerTypeToShow = sanitizeNumber(form.querySelector("#MaxLinksPerTypeToShow").value, 0);
+            form.querySelector("#MaxLinksPerTypeToShow").value = config.MaxLinksPerTypeToShow;
             break;
         }
 
@@ -892,6 +896,9 @@ async function applyConfigToForm(form, config) {
             renderSortableCheckboxList(form, "Metadata_ContentRatingList", config.ContentRatingList, config.ContentRatingOrder);
             renderSortableCheckboxList(form, "Metadata_ProductionLocationList", config.ProductionLocationList, config.ProductionLocationOrder);
             renderCheckboxList(form, "Metadata_ThirdPartyIdProviderList", config.ThirdPartyIdProviderList.map(s => s.trim()).filter(s => s));
+            renderCheckboxList(form, "Metadata_ThirdPartyDisplayLinkList", (config.ThirdPartyDisplayLinkList || []).map(s => s.trim()).filter(s => s));
+            form.querySelector("#AddExtraInfoToLinkName").checked = config.AddExtraInfoToLinkName;
+            form.querySelector("#MaxLinksPerTypeToShow").value = config.MaxLinksPerTypeToShow;
             break;
         }
 

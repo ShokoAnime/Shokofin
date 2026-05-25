@@ -140,6 +140,29 @@ public class PluginConfiguration : BasePluginConfiguration {
     [JsonIgnore]
     public bool AddTvDBId { get; set; }
 
+    /// <summary>
+    /// Add extra info such as the series id to the link name for the external
+    /// links shown in the UI.
+    /// </summary>
+    public bool AddExtraInfoToLinkName { get; set; } = true;
+
+    /// <summary>
+    /// Maximum number of links to show per provider type. Set to 0 to show all
+    /// links.
+    /// </summary>
+    [Range(0, int.MaxValue, ErrorMessage = "Must be a positive number")]
+    public int MaxLinksPerTypeToShow { get; set; } = 0;
+
+    /// <summary>
+    /// Which third party display providers to show links for in the UI.
+    /// </summary>
+    public DescriptionProvider[] ThirdPartyDisplayLinkList { get; set; } = [
+        DescriptionProvider.Shoko,
+        DescriptionProvider.AniDB,
+        DescriptionProvider.TvDB,
+        DescriptionProvider.TMDB,
+    ];
+
     #endregion
 
     #region Metadata
