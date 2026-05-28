@@ -23,7 +23,7 @@ public class MovieProvider(IHttpClientFactory _httpClientFactory, ILogger<MovieP
         var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Movie \"{info.Name}\". (Path=\"{info.Path}\")");
         try {
             var result = new MetadataResult<Movie>();
-            var (fileInfo, seasonInfo, _) = await _apiManager.GetFileInfoByPath(info.Path).ConfigureAwait(false);
+            var (fileInfo, seasonInfo, _) = await _apiManager.GetFileInfoByPath(info.Path);
             var episodeInfo = fileInfo is { EpisodeList.Count: > 0 } ? fileInfo.EpisodeList[0].Episode : null;
             if (fileInfo == null || episodeInfo == null || seasonInfo == null) {
                 _logger.LogWarning("Unable to find movie info for path {Path}", info.Path);
@@ -89,5 +89,5 @@ public class MovieProvider(IHttpClientFactory _httpClientFactory, ILogger<MovieP
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken).ConfigureAwait(false);
+        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }

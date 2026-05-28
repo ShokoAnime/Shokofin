@@ -74,7 +74,7 @@ _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Episode>
 #if NET9_0_OR_GREATER
             // Since Jellyfin 10.11.1 onwards they've fixed it so the creation date for videos doesn't follow the symlink but instead follows the target location, so to match the older behavior to get the date to match the import date, we now make sure the creation date is set to the import date here.
             if (episode.TryGetFileAndSeriesId(out var fileId, out var seriesId, vfsOnly: true)) {
-                if (await _apiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false) is { } fileInfo) {
+                if (await _apiManager.GetFileInfo(fileId, seriesId) is { } fileInfo) {
                     var createdAt = fileInfo.Shoko.ImportedAt ?? fileInfo.Shoko.CreatedAt;
                     if (episode.DateCreated != createdAt) {
                         episode.DateCreated = createdAt;

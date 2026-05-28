@@ -27,12 +27,12 @@ public class BoxSetProvider(IHttpClientFactory _httpClientFactory, ILogger<BoxSe
             // Try to read the shoko group id
             if (info.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForGroup, out var collectionId))
                 using (Plugin.Instance.Tracker.Enter($"Providing info for Collection \"{info.Name}\". (Path=\"{info.Path}\",Collection=\"{collectionId}\")"))
-                    return await GetShokoGroupMetadata(info, collectionId).ConfigureAwait(false);
+                    return await GetShokoGroupMetadata(info, collectionId);
 
             // Try to read the shoko series id
             if (info.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForSeries, out var seasonId))
                 using (Plugin.Instance.Tracker.Enter($"Providing info for Collection \"{info.Name}\". (Path=\"{info.Path}\",Season=\"{seasonId}\")"))
-                    return await GetShokoSeriesMetadata(info, seasonId).ConfigureAwait(false);
+                    return await GetShokoSeriesMetadata(info, seasonId);
 
             return new();
         }
@@ -45,7 +45,7 @@ public class BoxSetProvider(IHttpClientFactory _httpClientFactory, ILogger<BoxSe
     private async Task<MetadataResult<BoxSet>> GetShokoSeriesMetadata(BoxSetInfo info, string seasonId) {
         // First try to re-use any existing series id.
         var result = new MetadataResult<BoxSet>();
-        var seasonInfo = await _apiManager.GetSeasonInfo(seasonId).ConfigureAwait(false);
+        var seasonInfo = await _apiManager.GetSeasonInfo(seasonId);
         if (seasonInfo == null) {
             _logger.LogWarning("Unable to find movie box-set info for name {Name} and path {Path}", info.Name, info.Path);
             return result;
@@ -74,7 +74,7 @@ public class BoxSetProvider(IHttpClientFactory _httpClientFactory, ILogger<BoxSe
     private async Task<MetadataResult<BoxSet>> GetShokoGroupMetadata(BoxSetInfo info, string collectionId) {
         // Filter out all manually created collections. We don't help those.
         var result = new MetadataResult<BoxSet>();
-        var collectionInfo = await _apiManager.GetCollectionInfo(collectionId).ConfigureAwait(false);
+        var collectionInfo = await _apiManager.GetCollectionInfo(collectionId);
         if (collectionInfo == null) {
             _logger.LogWarning("Unable to find collection info for name {Name} and path {Path}", info.Name, info.Path);
             return result;
@@ -100,5 +100,5 @@ public class BoxSetProvider(IHttpClientFactory _httpClientFactory, ILogger<BoxSe
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken).ConfigureAwait(false);
+        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }

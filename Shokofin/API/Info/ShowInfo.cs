@@ -608,12 +608,12 @@ public class ShowInfo : IExtendedItemInfo {
 
     public async Task<Images> GetImages(CancellationToken cancellationToken)
         => Id[0] switch {
-                IdPrefix.TmdbShow => await _client.GetImagesForTmdbShow(TmdbShowId!, cancellationToken).ConfigureAwait(false),
+                IdPrefix.TmdbShow => await _client.GetImagesForTmdbShow(TmdbShowId!, cancellationToken),
                 IdPrefix.TmdbMovie => !string.IsNullOrEmpty(TmdbMovieCollectionId)
-                    ? await _client.GetImagesForTmdbMovieCollection(TmdbMovieCollectionId, cancellationToken).ConfigureAwait(false)
-                    : await _client.GetImagesForTmdbMovie(Id[1..], cancellationToken).ConfigureAwait(false),
-                IdPrefix.TmdbMovieCollection => await _client.GetImagesForTmdbMovieCollection(Id[1..], cancellationToken).ConfigureAwait(false),
-                _ => await _client.GetImagesForShokoSeries(Id, cancellationToken).ConfigureAwait(false),
+                    ? await _client.GetImagesForTmdbMovieCollection(TmdbMovieCollectionId, cancellationToken)
+                    : await _client.GetImagesForTmdbMovie(Id[1..], cancellationToken),
+                IdPrefix.TmdbMovieCollection => await _client.GetImagesForTmdbMovieCollection(Id[1..], cancellationToken),
+                _ => await _client.GetImagesForShokoSeries(Id, cancellationToken),
             } ?? new();
 
     public bool IsSpecial(EpisodeInfo episodeInfo)

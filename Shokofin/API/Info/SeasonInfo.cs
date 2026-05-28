@@ -655,10 +655,10 @@ public class SeasonInfo : IExtendedItemInfo {
         var list = new List<(File file, string seriesId, HashSet<string> episodeIds)>();
         if (StructureType is SeriesStructureType.TMDB_SeriesAndMovies) {
             if (Id[0] is IdPrefix.TmdbShow) {
-                var episodes = (await _client.GetTmdbEpisodesInTmdbSeason(Id[1..]).ConfigureAwait(false))
+                var episodes = (await _client.GetTmdbEpisodesInTmdbSeason(Id[1..]))
                     .Select(e => e.Id)
                     .ToHashSet();
-                var files = await _client.GetFilesForTmdbSeason(Id[1..]).ConfigureAwait(false);
+                var files = await _client.GetFilesForTmdbSeason(Id[1..]);
                 foreach (var file in files) {
                     if (file.CrossReferences.Where(x => x.Series.Shoko.HasValue && x.Episodes.Any(e => e.Shoko.HasValue && episodes.Overlaps(e.TMDB.Episode))).ToList() is not { Count: > 0 } xrefList)
                         continue;
@@ -675,7 +675,7 @@ public class SeasonInfo : IExtendedItemInfo {
                 }
             }
             else if (Id[0] is IdPrefix.TmdbMovie) {
-                var files = await _client.GetFilesForTmdbMovie(Id[1..]).ConfigureAwait(false);
+                var files = await _client.GetFilesForTmdbMovie(Id[1..]);
                 var movieId = int.Parse(Id[1..]);
                 foreach (var file in files) {
                     if (file.CrossReferences.FirstOrDefault(x => x.Series.Shoko.HasValue && x.Episodes.Any(e => e.Shoko.HasValue && e.TMDB.Movie.Contains(movieId))) is not { } xref)
@@ -685,11 +685,11 @@ public class SeasonInfo : IExtendedItemInfo {
                 }
             }
             else if (Id[0] is IdPrefix.TmdbMovieCollection) {
-                var movies = (await _client.GetTmdbMoviesInMovieCollection(Id[1..]).ConfigureAwait(false))
+                var movies = (await _client.GetTmdbMoviesInMovieCollection(Id[1..]))
                     .Select(m => m.Id)
                     .ToHashSet();
                 foreach (var episodeInfo in EpisodeList) {
-                    var episodeFiles = await _client.GetFilesForTmdbMovie(episodeInfo.Id[1..]).ConfigureAwait(false);
+                    var episodeFiles = await _client.GetFilesForTmdbMovie(episodeInfo.Id[1..]);
                     var movieId = int.Parse(episodeInfo.Id[1..]);
                     foreach (var file in episodeFiles) {
                         if (file.CrossReferences.FirstOrDefault(x => x.Series.Shoko.HasValue && x.Episodes.Any(e => e.Shoko.HasValue && e.TMDB.Movie.Contains(movieId))) is not { } xref)
@@ -702,7 +702,7 @@ public class SeasonInfo : IExtendedItemInfo {
         }
         else {
             list.AddRange(
-                (await _client.GetFilesForShokoSeries(Id).ConfigureAwait(false))
+                (await _client.GetFilesForShokoSeries(Id))
                     .Select(file => (
                         file,
                         Id,
@@ -711,7 +711,7 @@ public class SeasonInfo : IExtendedItemInfo {
             );
             foreach (var extraId in ExtraIds)
                 list.AddRange(
-                    (await _client.GetFilesForShokoSeries(extraId).ConfigureAwait(false))
+                    (await _client.GetFilesForShokoSeries(extraId))
                         .Select(file => (
                             file,
                             extraId,
@@ -725,10 +725,10 @@ public class SeasonInfo : IExtendedItemInfo {
 
     public async Task<Images> GetImages(CancellationToken cancellationToken)
         => Id[0] switch {
-                IdPrefix.TmdbShow => await _client.GetImagesForTmdbSeason(Id[1..], cancellationToken).ConfigureAwait(false),
-                IdPrefix.TmdbMovie => await _client.GetImagesForTmdbMovie(Id[1..], cancellationToken).ConfigureAwait(false),
-                IdPrefix.TmdbMovieCollection => await _client.GetImagesForTmdbMovieCollection(Id[1..], cancellationToken).ConfigureAwait(false),
-                _ => await _client.GetImagesForShokoSeries(Id, cancellationToken).ConfigureAwait(false),
+                IdPrefix.TmdbShow => await _client.GetImagesForTmdbSeason(Id[1..], cancellationToken),
+                IdPrefix.TmdbMovie => await _client.GetImagesForTmdbMovie(Id[1..], cancellationToken),
+                IdPrefix.TmdbMovieCollection => await _client.GetImagesForTmdbMovieCollection(Id[1..], cancellationToken),
+                _ => await _client.GetImagesForShokoSeries(Id, cancellationToken),
             } ?? new();
 
     public bool IsExtraEpisode(EpisodeInfo? episodeInfo)

@@ -384,9 +384,9 @@ public class EpisodeInfo : IExtendedItemInfo {
 
     public async Task<EpisodeImages> GetImages(CancellationToken cancellationToken)
         => Id[0] switch {
-            IdPrefix.TmdbShow => await _client.GetImagesForTmdbEpisode(Id[1..], cancellationToken).ConfigureAwait(false),
-            IdPrefix.TmdbMovie => await _client.GetImagesForTmdbMovie(Id[1..], cancellationToken).ConfigureAwait(false),
-            _ => await _client.GetImagesForShokoEpisode(Id, cancellationToken).ConfigureAwait(false),
+            IdPrefix.TmdbShow => await _client.GetImagesForTmdbEpisode(Id[1..], cancellationToken),
+            IdPrefix.TmdbMovie => await _client.GetImagesForTmdbMovie(Id[1..], cancellationToken),
+            _ => await _client.GetImagesForShokoEpisode(Id, cancellationToken),
         } ?? new();
 
     private static string? GetImagePath(Image image)

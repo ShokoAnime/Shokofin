@@ -43,7 +43,7 @@ public class SplitMoviesTask(MergeVersionsManager _mergeVersionsManager, Library
             return;
 
         using (Plugin.Instance.Tracker.Enter("Merge Movies Task")) {
-            await _mergeVersionsManager.SplitAllMovies(progress, cancellationToken).ConfigureAwait(false);
+            await _mergeVersionsManager.SplitAllMovies(progress, cancellationToken);
         }
     }
 }

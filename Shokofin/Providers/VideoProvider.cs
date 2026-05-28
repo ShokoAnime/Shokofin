@@ -30,7 +30,7 @@ public class VideoProvider(IHttpClientFactory _httpClientFactory, ILogger<VideoP
 
         var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Video \"{info.Name}\". (Path=\"{info.Path}\")");
         try {
-            var (fileInfo, seasonInfo, showInfo) = await _apiManager.GetFileInfoByPath(info.Path).ConfigureAwait(false);
+            var (fileInfo, seasonInfo, showInfo) = await _apiManager.GetFileInfoByPath(info.Path);
             var episodeInfo = fileInfo is { EpisodeList.Count: > 0 } ? fileInfo.EpisodeList[0].Episode : null;
             if (fileInfo == null || episodeInfo == null || seasonInfo == null || showInfo == null) {
                 _logger.LogWarning("Unable to find episode info for path {Path}", info.Path);
@@ -79,5 +79,5 @@ public class VideoProvider(IHttpClientFactory _httpClientFactory, ILogger<VideoP
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken).ConfigureAwait(false);
+        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }

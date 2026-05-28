@@ -39,7 +39,7 @@ public class MergeQueuedMoviesTask(MergeVersionsManager _mergeVersionsManager) :
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) {
         using (Plugin.Instance.Tracker.Enter("Merge Queued Movies Task")) {
-            await _mergeVersionsManager.SplitAndMergeQueuedMovies(progress, cancellationToken).ConfigureAwait(false);
+            await _mergeVersionsManager.SplitAndMergeQueuedMovies(progress, cancellationToken);
         }
     }
 }

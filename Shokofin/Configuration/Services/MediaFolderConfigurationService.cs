@@ -101,7 +101,7 @@ public class MediaFolderConfigurationService {
     }
 
     private async Task EditLibraries(bool shouldScheduleLibraryScan) {
-        await LockObj.WaitAsync().ConfigureAwait(false);
+        await LockObj.WaitAsync();
         try {
             CachedVirtualFolders = null;
             ShouldGenerateAllConfigurations = true;
@@ -127,7 +127,7 @@ public class MediaFolderConfigurationService {
                     LibraryManager.RemoveMediaPath(libraryName, new(vfsPath));
             }
             if (shouldScheduleLibraryScan)
-                await LibraryManager.ValidateMediaLibrary(new Progress<double>(), CancellationToken.None).ConfigureAwait(false);
+                await LibraryManager.ValidateMediaLibrary(new Progress<double>(), CancellationToken.None);
         }
         finally {
             LockObj.Release();
@@ -150,10 +150,10 @@ public class MediaFolderConfigurationService {
     private async void OnLibraryManagerItemRemoved(object? sender, ItemChangeEventArgs e) {
         var root = LibraryManager.RootFolder;
         if (e.Item != null && root != null && e.Item != root && e.Item is Folder folder && folder.ParentId == Guid.Empty  && !string.IsNullOrEmpty(folder.Path) && !folder.Path.StartsWith(root.Path)) {
-            await LockObj.WaitAsync().ConfigureAwait(false);
+            await LockObj.WaitAsync();
             try {
                 ShouldGenerateAllConfigurations = false;
-                await GenerateAllConfigurations(GetVirtualFolders()).ConfigureAwait(false);
+                await GenerateAllConfigurations(GetVirtualFolders());
             }
             finally {
                 LockObj.Release();
@@ -166,12 +166,12 @@ public class MediaFolderConfigurationService {
     #region Media Folder Mapping
 
     public async Task<IReadOnlyList<(string vfsPath, CollectionType? collectionType, IReadOnlyList<MediaFolderConfiguration> mediaList)>> GetAvailableMediaFoldersForLibraries(Func<MediaFolderConfiguration, bool>? filter = null) {
-        await LockObj.WaitAsync().ConfigureAwait(false);
+        await LockObj.WaitAsync();
         try {
             var virtualFolders = GetVirtualFolders();
             if (ShouldGenerateAllConfigurations) {
                 ShouldGenerateAllConfigurations = false;
-                await GenerateAllConfigurations(virtualFolders).ConfigureAwait(false);
+                await GenerateAllConfigurations(virtualFolders);
             }
 
             return Plugin.Instance.Configuration.LibraryFolders
@@ -197,8 +197,8 @@ public class MediaFolderConfigurationService {
     }
 
     public async Task<(LibraryConfiguration? vfsRootConfig, IReadOnlyList<MediaFolderConfiguration> mediaList, bool skipGeneration)> GetMediaFoldersForLibraryInVFS(Folder mediaFolder, CollectionType? collectionType) {
-        var (libraryConfig, mediaFolderConfig) = await GetOrCreateConfigurationForMediaFolder(mediaFolder, collectionType).ConfigureAwait(false);
-        await LockObj.WaitAsync().ConfigureAwait(false);
+        var (libraryConfig, mediaFolderConfig) = await GetOrCreateConfigurationForMediaFolder(mediaFolder, collectionType);
+        await LockObj.WaitAsync();
         try {
             var skipGeneration = LibraryEdits.Count is > 0 && LibraryManager.IsScanRunning;
             if (libraryConfig is null || !libraryConfig.IsVirtualFileSystemEnabled || mediaFolderConfig is not null)
@@ -214,7 +214,7 @@ public class MediaFolderConfigurationService {
     }
 
     public async Task<(LibraryConfiguration? libraryConfiguration, MediaFolderConfiguration? mediaFolderConfiguration)> GetOrCreateConfigurationForMediaFolder(Folder mediaFolder, CollectionType? collectionType = CollectionType.unknown) {
-        await LockObj.WaitAsync().ConfigureAwait(false);
+        await LockObj.WaitAsync();
         try {
             var allVirtualFolders = GetVirtualFolders();
             if (allVirtualFolders.FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path) && (collectionType is CollectionType.unknown || p.CollectionType.ConvertToCollectionType() == collectionType)) is not { } library)
@@ -225,7 +225,7 @@ public class MediaFolderConfigurationService {
 
             if (ShouldGenerateAllConfigurations) {
                 ShouldGenerateAllConfigurations = false;
-                await GenerateAllConfigurations(allVirtualFolders).ConfigureAwait(false);
+                await GenerateAllConfigurations(allVirtualFolders);
             }
 
             if (Plugin.Instance.Configuration.Libraries.FirstOrDefault(lib => lib.IsVirtualFileSystemEnabled && lib.VirtualRoot == mediaFolder.Path) is { } libraryConfig) {
@@ -318,7 +318,7 @@ public class MediaFolderConfigurationService {
                 }
                 // Add config if needed.
                 if (libraryConfig.MediaFolders.FirstOrDefault(mf => mf.Path == mediaFolderPath) is not { } mediaFolderConfig) {
-                    mediaFolderConfig = await CreateConfigurationForPath(libraryId, mediaFolderPath).ConfigureAwait(false);
+                    mediaFolderConfig = await CreateConfigurationForPath(libraryId, mediaFolderPath);
                     config.LibraryFolders.Add(mediaFolderConfig);
                     newFolderConfigList.Add((libraryConfig, mediaFolderConfig));
                     shouldSaveConfig = true;
@@ -354,7 +354,7 @@ public class MediaFolderConfigurationService {
                 }
                 // Refresh config if needed.
                 if (!mediaFolderConfig.IsIgnored && mediaFolderConfig.NeedsRefresh) {
-                    var newMediaFolderConfig = await CreateConfigurationForPath(libraryId, mediaFolderConfig.Path).ConfigureAwait(false);
+                    var newMediaFolderConfig = await CreateConfigurationForPath(libraryId, mediaFolderConfig.Path);
                     mediaFolderConfig.MergeWith(newMediaFolderConfig);
                     mediaFolderConfig.NeedsRefresh = false;
                     shouldSaveConfig = true;
@@ -442,7 +442,7 @@ public class MediaFolderConfigurationService {
         foreach (var path in samplePaths) {
             attempts++;
             var partialPath = path[mediaFolderPath.Length..];
-            var files = await ApiClient.GetFileByPath(partialPath).ConfigureAwait(false);
+            var files = await ApiClient.GetFileByPath(partialPath);
             var file = files.Count > 0 ? files[0] : null;
             if (file is null)
                 continue;
@@ -471,7 +471,7 @@ public class MediaFolderConfigurationService {
         }
 
         try {
-            var managedFolder = await ApiClient.GetManagedFolder(mediaFolderConfig.ManagedFolderId).ConfigureAwait(false);
+            var managedFolder = await ApiClient.GetManagedFolder(mediaFolderConfig.ManagedFolderId);
             if (managedFolder != null)
                 mediaFolderConfig.ManagedFolderName = managedFolder.Name;
         }

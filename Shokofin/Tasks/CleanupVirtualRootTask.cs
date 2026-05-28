@@ -66,7 +66,7 @@ public class CleanupVirtualRootTask(
 
         var id = _usageTracker.Add("Clean up Virtual File System Roots");
         try {
-            var mediaFolders = (await _configurationService.GetAvailableMediaFoldersForLibraries().ConfigureAwait(false))
+            var mediaFolders = (await _configurationService.GetAvailableMediaFoldersForLibraries())
                 .SelectMany(x => x.mediaList)
                 .ToList();
             var start = DateTime.Now;

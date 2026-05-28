@@ -39,7 +39,7 @@ public class MergeMoviesTask(MergeVersionsManager _mergeVersionsManager) : ISche
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) {
         using (Plugin.Instance.Tracker.Enter("Merge Movies Task")) {
-            await _mergeVersionsManager.SplitAndMergeAllMovies(progress, cancellationToken).ConfigureAwait(false);
+            await _mergeVersionsManager.SplitAndMergeAllMovies(progress, cancellationToken);
         }
     }
 }

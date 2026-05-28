@@ -48,7 +48,7 @@ public partial class ShokofinUtilityController(
     public async Task<ActionResult<VfsLibraryPreview>> PreviewVFS(Guid libraryId) {
         var trackerId = Plugin.Instance.Tracker.Add("Preview VFS");
         try {
-            var (filesBefore, filesAfter, virtualFolder, result, vfsPath) = await virtualFileSystemService.PreviewChangesForLibrary(libraryId, HttpContext.RequestAborted).ConfigureAwait(false);
+            var (filesBefore, filesAfter, virtualFolder, result, vfsPath) = await virtualFileSystemService.PreviewChangesForLibrary(libraryId, HttpContext.RequestAborted);
             if (virtualFolder is null)
                 return NotFound("Unable to find library with the given id.");
 
@@ -80,15 +80,15 @@ public partial class ShokofinUtilityController(
                         .Where(s => isShoko ? s.Id == id : s.AnidbId == id)
                         .ToList();
 
-                var result = await (isShoko ? GetSeriesByShokoSeriesId(id) : GetSeriesByAnidbId(id)).ConfigureAwait(false);
+                var result = await (isShoko ? GetSeriesByShokoSeriesId(id) : GetSeriesByAnidbId(id));
                 return new(result is not null ? [result] : []);
             }
 
-            list = await GetSeriesListWithQueryInternal(query).ConfigureAwait(false);
+            list = await GetSeriesListWithQueryInternal(query);
             return new(list);
         }
 
-        list = await GetSeriesListInternal().ConfigureAwait(false);
+        list = await GetSeriesListInternal();
         return new(list);
     }
 
@@ -96,7 +96,7 @@ public partial class ShokofinUtilityController(
         var simpleList = new List<SimpleSeries>();
         var trackerId = Plugin.Instance.Tracker.Add($"Get Simple Series List with Query: {query}");
         try {
-            var listResult = await apiClient.GetAllAnidbAnime(query, pageSize: 0).ConfigureAwait(false);
+            var listResult = await apiClient.GetAllAnidbAnime(query, pageSize: 0);
             foreach (var anime in listResult.List) {
                 simpleList.Add(new() {
                     Id = anime.ShokoId!.Value,
@@ -118,7 +118,7 @@ public partial class ShokofinUtilityController(
             var simpleList = new List<SimpleSeries>();
             var trackerId = Plugin.Instance.Tracker.Add($"Get Simple Series List");
             try {
-                var listResult = await apiClient.GetAllAnidbAnime(pageSize: 0).ConfigureAwait(false);
+                var listResult = await apiClient.GetAllAnidbAnime(pageSize: 0);
                 foreach (var anime in listResult.List) {
                     simpleList.Add(new() {
                         Id = anime.ShokoId!.Value,
@@ -137,7 +137,7 @@ public partial class ShokofinUtilityController(
 
     private async Task<SimpleSeries?> GetSeriesByShokoSeriesId(int seriesId) {
         using (Plugin.Instance.Tracker.Enter($"Get Series by Shoko Series ID {seriesId}")) {
-            if (await apiClient.GetShokoSeries(seriesId.ToString()).ConfigureAwait(false) is not { } shokoSeries)
+            if (await apiClient.GetShokoSeries(seriesId.ToString()) is not { } shokoSeries)
                 return null;
             return new() {
                 Id = shokoSeries.IDs.Shoko,
@@ -150,7 +150,7 @@ public partial class ShokofinUtilityController(
 
     private async Task<SimpleSeries?> GetSeriesByAnidbId(int anidbId) {
         using (Plugin.Instance.Tracker.Enter($"Get Series by Anidb ID {anidbId}")) {
-            if (await apiClient.GetShokoSeriesForAnidbAnime(anidbId.ToString()).ConfigureAwait(false) is not { } shokoSeries)
+            if (await apiClient.GetShokoSeriesForAnidbAnime(anidbId.ToString()) is not { } shokoSeries)
                 return null;
             return new() {
                 Id = shokoSeries.IDs.Shoko,
@@ -175,7 +175,7 @@ public partial class ShokofinUtilityController(
     ) {
         var trackerId = Plugin.Instance.Tracker.Add($"Get Series Configuration for {seriesId}");
         try {
-            var config = await seriesConfigurationService.GetSeriesConfigurationForId(seriesId).ConfigureAwait(false);
+            var config = await seriesConfigurationService.GetSeriesConfigurationForId(seriesId);
             if (config is null)
                 return NotFound("Unable to find series with the given id.");
 
@@ -199,7 +199,7 @@ public partial class ShokofinUtilityController(
     ) {
         var trackerId = Plugin.Instance.Tracker.Add($"Update Series Configuration for {seriesId} (Add)");
         try {
-            return await seriesConfigurationService.UpdateSeriesConfigurationForId(seriesId, seriesConfiguration).ConfigureAwait(false);
+            return await seriesConfigurationService.UpdateSeriesConfigurationForId(seriesId, seriesConfiguration);
         }
         finally {
             Plugin.Instance.Tracker.Remove(trackerId);
@@ -219,7 +219,7 @@ public partial class ShokofinUtilityController(
     ) {
         var trackerId = Plugin.Instance.Tracker.Add($"Update Series Configuration for {seriesId} (Replace)");
         try {
-            return await seriesConfigurationService.UpdateSeriesConfigurationForId(seriesId, seriesConfiguration).ConfigureAwait(false);
+            return await seriesConfigurationService.UpdateSeriesConfigurationForId(seriesId, seriesConfiguration);
         }
         finally {
             Plugin.Instance.Tracker.Remove(trackerId);
@@ -230,7 +230,7 @@ public partial class ShokofinUtilityController(
     public async Task<IReadOnlyList<ShowInfo>> GetShowInfoForSeriesId([FromRoute, Range(1, int.MaxValue)] int seriesId) {
         var trackerId = Plugin.Instance.Tracker.Add($"Get Show Info for {seriesId}");
         try {
-            var showInfo = await apiManager.GetShowInfosForShokoSeries(seriesId.ToString()).ConfigureAwait(false);
+            var showInfo = await apiManager.GetShowInfosForShokoSeries(seriesId.ToString());
             return showInfo;
         }
         finally {

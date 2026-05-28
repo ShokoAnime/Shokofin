@@ -16,7 +16,7 @@ public static class ImageUtility {
     #region Episode
 
     public static async Task<IReadOnlyCollection<RemoteImageInfo>> GetEpisodeImages(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, string? metadataLanguage, bool displayMode, CancellationToken cancellationToken) {
-        var images = await episodeInfo.GetImages(cancellationToken).ConfigureAwait(false);
+        var images = await episodeInfo.GetImages(cancellationToken);
         var originLanguages = TextUtility.GuessOriginLanguage(seasonInfo);
         var config = seasonInfo.StructureType switch {
             SeriesStructureType.AniDB_Anime => Plugin.Instance.Configuration.Image.AnidbEpisode.Enabled ? (
@@ -44,7 +44,7 @@ public static class ImageUtility {
     #region Season
 
     public static async Task<IReadOnlyCollection<RemoteImageInfo>> GetSeasonImages(SeasonInfo seasonInfo, string? metadataLanguage, bool displayMode, CancellationToken cancellationToken) {
-        var images = await seasonInfo.GetImages(cancellationToken).ConfigureAwait(false);
+        var images = await seasonInfo.GetImages(cancellationToken);
         var originLanguages = TextUtility.GuessOriginLanguage(seasonInfo);
         var config = seasonInfo.StructureType switch {
             SeriesStructureType.AniDB_Anime => Plugin.Instance.Configuration.Image.AnidbSeason.Enabled ? (
@@ -72,12 +72,12 @@ public static class ImageUtility {
     #region Show
 
     public static async Task<IReadOnlyCollection<RemoteImageInfo>> GetShowImages(ShowInfo showInfo, string? metadataLanguage, bool displayMode, CancellationToken cancellationToken) {
-        var imagesList = new List<API.Models.Images> { await showInfo.GetImages(cancellationToken).ConfigureAwait(false) };
+        var imagesList = new List<API.Models.Images> { await showInfo.GetImages(cancellationToken) };
 
         // Also attach any images linked to the "seasons" if it's not a standalone series.
         if (!showInfo.IsStandalone) {
             foreach (var seasonInfo in showInfo.SeasonList) {
-                imagesList.Add(await seasonInfo.GetImages(cancellationToken).ConfigureAwait(false));
+                imagesList.Add(await seasonInfo.GetImages(cancellationToken));
             }
         }
 
@@ -124,7 +124,7 @@ public static class ImageUtility {
     #region Movie
 
     public static async Task<IReadOnlyCollection<RemoteImageInfo>> GetMovieImages(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, string? metadataLanguage, bool displayMode, CancellationToken cancellationToken) {
-        var images = await episodeInfo.GetImages(cancellationToken).ConfigureAwait(false);
+        var images = await episodeInfo.GetImages(cancellationToken);
         var originLanguages = TextUtility.GuessOriginLanguage(seasonInfo);
         var config = seasonInfo.StructureType switch {
             SeriesStructureType.AniDB_Anime => Plugin.Instance.Configuration.Image.AnidbSeason.Enabled ? (
@@ -152,7 +152,7 @@ public static class ImageUtility {
     #region Collection
 
     public static async Task<IReadOnlyCollection<RemoteImageInfo>> GetCollectionImages(SeasonInfo seasonInfo, string? metadataLanguage, bool displayMode, CancellationToken cancellationToken) {
-        var images = await seasonInfo.GetImages(cancellationToken).ConfigureAwait(false);
+        var images = await seasonInfo.GetImages(cancellationToken);
         var originLanguages = TextUtility.GuessOriginLanguage(seasonInfo);
         var config = seasonInfo.StructureType switch {
             SeriesStructureType.TMDB_SeriesAndMovies => Plugin.Instance.Configuration.Image.TmdbCollection.Enabled ? (
@@ -171,7 +171,7 @@ public static class ImageUtility {
     }
 
     public static async Task<IReadOnlyCollection<RemoteImageInfo>> GetCollectionImages(ShowInfo showInfo, string? metadataLanguage, bool displayMode, CancellationToken cancellationToken) {
-        var images = await showInfo.GetImages(cancellationToken).ConfigureAwait(false);
+        var images = await showInfo.GetImages(cancellationToken);
         var originLanguages = TextUtility.GuessOriginLanguage(showInfo.DefaultSeason);
         var config =  Plugin.Instance.Configuration.Image.ShokoCollection.Enabled ? (
             Plugin.Instance.Configuration.Image.ShokoCollection

@@ -30,7 +30,7 @@ public class TrailerProvider(IHttpClientFactory _httpClientFactory, ILogger<Trai
 
         var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Trailer \"{info.Name}\". (Path=\"{info.Path}\")");
         try {
-            var (fileInfo, seasonInfo, showInfo) = await _apiManager.GetFileInfoByPath(info.Path).ConfigureAwait(false);
+            var (fileInfo, seasonInfo, showInfo) = await _apiManager.GetFileInfoByPath(info.Path);
             var episodeInfo = fileInfo is { EpisodeList.Count: > 0 } ? fileInfo.EpisodeList[0].Episode : null;
             if (fileInfo == null || episodeInfo == null || seasonInfo == null || showInfo == null) {
                 _logger.LogWarning("Unable to find episode info for path {Path}", info.Path);
@@ -75,5 +75,5 @@ public class TrailerProvider(IHttpClientFactory _httpClientFactory, ILogger<Trai
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken).ConfigureAwait(false);
+        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }

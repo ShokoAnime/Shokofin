@@ -278,7 +278,7 @@ public class ShokoLibraryMonitor : IHostedService {
             return;
         }
 
-        await Task.Delay(MagicalDelay).ConfigureAwait(false);
+        await Task.Delay(MagicalDelay);
 
         if (changeTypes is not WatcherChangeTypes.Deleted && !File.Exists(path)) {
             Logger.LogTrace("Skipped path because it is disappeared after awhile before we could process it; {Path}", path);
@@ -301,7 +301,7 @@ public class ShokoLibraryMonitor : IHostedService {
                 );
                 var relativePath = path[mediaConfig.Path.Length..];
                 using (Plugin.Instance.Tracker.Enter($"Library Monitor: Path=\"{path}\"")) {
-                    var files = await ApiClient.GetFileByPath(relativePath).ConfigureAwait(false);
+                    var files = await ApiClient.GetFileByPath(relativePath);
                     var file0 = files.FirstOrDefault(file => file.Locations.Any(location => location.ManagedFolderId == mediaConfig.ManagedFolderId && location.RelativePath == mediaConfig.ManagedFolderRelativePath + relativePath));
                     if (file0 is not null) {
                         var fileLocation = file0.Locations.First(location => location.ManagedFolderId == mediaConfig.ManagedFolderId && location.RelativePath == mediaConfig.ManagedFolderRelativePath + relativePath);
@@ -319,7 +319,7 @@ public class ShokoLibraryMonitor : IHostedService {
                         Logger.LogTrace("Skipped path because it is not a shoko managed file; {Path}", path);
                         return null;
                     }
-                    else if (await ApiClient.GetFile(fileId).ConfigureAwait(false) is { } file1) {
+                    else if (await ApiClient.GetFile(fileId) is { } file1) {
                         var fileLocation = file1.Locations.First(location => location.ManagedFolderId == mediaConfig.ManagedFolderId && location.RelativePath == mediaConfig.ManagedFolderRelativePath + relativePath);
                         eventArgs = new FileEventArgsStub(fileLocation, file1);
                     }
@@ -351,7 +351,7 @@ public class ShokoLibraryMonitor : IHostedService {
                 Events.AddFileEvent(eventArgs.FileId, reason, eventArgs.ManagedFolderId, relativePath, eventArgs);
                 return eventArgs;
             }
-        ).ConfigureAwait(false);
+        );
     }
 
     private bool IsVideoFile(string path)

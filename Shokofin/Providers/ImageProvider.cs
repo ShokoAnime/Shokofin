@@ -33,22 +33,22 @@ public class ImageProvider(IHttpClientFactory _httpClientFactory, ILogger<ImageP
         try {
             switch (item) {
                 case Episode episode: {
-                    var (fileInfo, seasonInfo, _) = await _apiManager.GetFileInfoByPath(episode.Path).ConfigureAwait(false);
+                    var (fileInfo, seasonInfo, _) = await _apiManager.GetFileInfoByPath(episode.Path);
                     if (fileInfo is not { EpisodeList.Count: > 0 } || seasonInfo is null)
                         break;
 
                     var episodeInfo = fileInfo.EpisodeList[0].Episode;
-                    var images = await ImageUtility.GetEpisodeImages(episodeInfo, seasonInfo, metadataLanguage, displayMode, cancellationToken).ConfigureAwait(false);
+                    var images = await ImageUtility.GetEpisodeImages(episodeInfo, seasonInfo, metadataLanguage, displayMode, cancellationToken);
                     list.AddRange(images);
 
                     _logger.LogInformation("Getting {Count} images for episode {EpisodeName} (Episode={EpisodeId},Language={MetadataLanguage})", list.Count, episode.Name, episodeInfo.Id, metadataLanguage);
                     break;
                 }
                 case Series series: {
-                    if (!_lookup.TryGetSeasonIdFor(series, out var seasonId) || await _apiManager.GetShowInfoBySeasonId(seasonId).ConfigureAwait(false) is not { } showInfo)
+                    if (!_lookup.TryGetSeasonIdFor(series, out var seasonId) || await _apiManager.GetShowInfoBySeasonId(seasonId) is not { } showInfo)
                         break;
 
-                    var images = await ImageUtility.GetShowImages(showInfo, metadataLanguage, displayMode, cancellationToken).ConfigureAwait(false);
+                    var images = await ImageUtility.GetShowImages(showInfo, metadataLanguage, displayMode, cancellationToken);
                     list.AddRange(images);
 
                     _logger.LogInformation("Getting {Count} images for series {SeriesName} (MainSeason={MainSeasonId},Language={MetadataLanguage})", list.Count, series.Name, seasonId, metadataLanguage);
@@ -56,25 +56,25 @@ public class ImageProvider(IHttpClientFactory _httpClientFactory, ILogger<ImageP
                 }
                 // Per a user request, we'll allow getting images for the "Specials" season when the client requests them.
                 case Season { IndexNumber: 0 } season when isRequest: {
-                    return await GetImages(season.Series, cancellationToken).ConfigureAwait(false);
+                    return await GetImages(season.Series, cancellationToken);
                 }
                 case Season { IndexNumber: > 0 } season: {
-                    if (!_lookup.TryGetSeasonIdFor(season, out var seasonId) || await _apiManager.GetSeasonInfo(seasonId).ConfigureAwait(false) is not { } seasonInfo)
+                    if (!_lookup.TryGetSeasonIdFor(season, out var seasonId) || await _apiManager.GetSeasonInfo(seasonId) is not { } seasonInfo)
                         break;
 
-                    var images = await ImageUtility.GetSeasonImages(seasonInfo, metadataLanguage, displayMode, cancellationToken).ConfigureAwait(false);
+                    var images = await ImageUtility.GetSeasonImages(seasonInfo, metadataLanguage, displayMode, cancellationToken);
                     list.AddRange(images);
 
                     _logger.LogInformation("Getting {Count} images for season {SeasonNumber} in {SeriesName} (Season={SeasonId},Language={MetadataLanguage})", list.Count, season.IndexNumber, season.SeriesName, seasonId, metadataLanguage);
                     break;
                 }
                 case Movie movie: {
-                    var (fileInfo, seasonInfo, _) = await _apiManager.GetFileInfoByPath(movie.Path).ConfigureAwait(false);
+                    var (fileInfo, seasonInfo, _) = await _apiManager.GetFileInfoByPath(movie.Path);
                     if (fileInfo is not { EpisodeList.Count: > 0 } || seasonInfo is null)
                         break;
 
                     var episodeInfo = fileInfo.EpisodeList[0].Episode;
-                    var images = await ImageUtility.GetMovieImages(episodeInfo, seasonInfo, metadataLanguage, displayMode, cancellationToken).ConfigureAwait(false);
+                    var images = await ImageUtility.GetMovieImages(episodeInfo, seasonInfo, metadataLanguage, displayMode, cancellationToken);
                     list.AddRange(images);
 
                     _logger.LogInformation("Getting {Count} images for movie {MovieName} (Episode={EpisodeId},Language={MetadataLanguage})", list.Count, movie.Name, episodeInfo.Id, metadataLanguage);
@@ -83,21 +83,21 @@ public class ImageProvider(IHttpClientFactory _httpClientFactory, ILogger<ImageP
                 case BoxSet collection: {
                     string? collectionId = null;
                     if (collection.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForSeries, out var seasonId)) {
-                        if (await _apiManager.GetSeasonInfo(seasonId).ConfigureAwait(false) is not { } seasonInfo)
+                        if (await _apiManager.GetSeasonInfo(seasonId) is not { } seasonInfo)
                             break;
 
-                        var images = await ImageUtility.GetCollectionImages(seasonInfo, metadataLanguage, displayMode, cancellationToken).ConfigureAwait(false);
+                        var images = await ImageUtility.GetCollectionImages(seasonInfo, metadataLanguage, displayMode, cancellationToken);
                         list.AddRange(images);
                     }
                     else if (collection.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForGroup, out collectionId)) {
                         if (
-                            await _apiManager.GetCollectionInfo(collectionId).ConfigureAwait(false) is not { } collectionInfo ||
+                            await _apiManager.GetCollectionInfo(collectionId) is not { } collectionInfo ||
                             string.IsNullOrEmpty(collectionInfo.MainSeasonId) ||
-                            await _apiManager.GetShowInfoBySeasonId(collectionInfo.MainSeasonId).ConfigureAwait(false) is not { } showInfo
+                            await _apiManager.GetShowInfoBySeasonId(collectionInfo.MainSeasonId) is not { } showInfo
                         )
                             break;
 
-                        var images = await ImageUtility.GetCollectionImages(showInfo, metadataLanguage, displayMode, cancellationToken).ConfigureAwait(false);
+                        var images = await ImageUtility.GetCollectionImages(showInfo, metadataLanguage, displayMode, cancellationToken);
                         list.AddRange(images);
                     }
 
@@ -127,7 +127,7 @@ public class ImageProvider(IHttpClientFactory _httpClientFactory, ILogger<ImageP
         if (index is -1)
             return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
         url = $"{Plugin.Instance.Configuration.Url}/api/v3{url[(index + 13)..]}";
-        return await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken).ConfigureAwait(false);
+        return await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
     }
 }
 

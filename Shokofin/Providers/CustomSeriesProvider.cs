@@ -65,7 +65,7 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, Virtual
             }
 
             // Provide metadata for a series using Shoko's Group feature
-            var showInfo = await _apiManager.GetShowInfoBySeasonId(seasonId).ConfigureAwait(false);
+            var showInfo = await _apiManager.GetShowInfoBySeasonId(seasonId);
             if (showInfo == null || showInfo.SeasonList.Count == 0) {
                 _logger.LogWarning("Unable to find show info for series. (MainSeason={MainSeasonId})", seasonId);
                 return ItemUpdateType.None;
@@ -114,7 +114,7 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, Virtual
                         _logger.LogInformation("Updating parent of physical episode {EpisodeNumber} {EpisodeName} in Season {SeasonNumber} for {SeriesName} (MainSeason={MainSeasonId})", episode.IndexNumber, episode.Name, season.IndexNumber, series.Name, seasonId);
                         episode.SetParent(mainSeason);
                     }
-                    await _libraryManager.UpdateItemsAsync(episodes, mainSeason, ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
+                    await _libraryManager.UpdateItemsAsync(episodes, mainSeason, ItemUpdateType.MetadataEdit, CancellationToken.None);
                 }
 
                 _logger.LogDebug("Removing extra Season {SeasonNumber} for Series {SeriesName} (MainSeason={MainSeasonId})", season.IndexNumber!.Value, series.Name, seasonId);
@@ -157,7 +157,7 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, Virtual
                 // Add missing episodes.
                 if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
                     foreach (var seasonInfo in showInfo.SeasonList) {
-                        foreach (var episodeId in await _apiManager.GetLocalEpisodeIdsForSeason(seasonInfo).ConfigureAwait(false))
+                        foreach (var episodeId in await _apiManager.GetLocalEpisodeIdsForSeason(seasonInfo))
                             existingEpisodes.Add(episodeId);
 
                         foreach (var episodeInfo in seasonInfo.SpecialsList) {
@@ -213,7 +213,7 @@ public class CustomSeriesProvider(ILogger<CustomSeriesProvider> _logger, Virtual
 
                 // Add missing episodes.
                 if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
-                    foreach (var episodeId in await _apiManager.GetLocalEpisodeIdsForSeason(seasonInfo).ConfigureAwait(false))
+                    foreach (var episodeId in await _apiManager.GetLocalEpisodeIdsForSeason(seasonInfo))
                         existingEpisodes.Add(episodeId);
 
                     foreach (var episodeInfo in episodeList) {

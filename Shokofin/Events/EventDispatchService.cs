@@ -212,8 +212,8 @@ public class EventDispatchService {
 
             // Something was added or updated.
             var locationsToNotify = new List<string>();
-            var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences)).ConfigureAwait(false);
-            var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => c.Library.IsFileEventsEnabled).ConfigureAwait(false);
+            var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
+            var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => c.Library.IsFileEventsEnabled);
             var (reason, managedFolderId, relativePath, lastEvent) = changes.Last();
             if (reason is not UpdateReason.MetadataRemoved) {
                 Logger.LogTrace("Processing file changed. (File={FileId})", fileId);
@@ -232,7 +232,7 @@ public class EventDispatchService {
 
                             var result = new LinkGenerationResult();
                             var topFolders = new HashSet<string>();
-                            var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
+                            var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId.ToString(), seriesId))))
                                 .Where(tuple => tuple.symbolicLinks.Length > 0 && tuple.importedAt.HasValue)
                                 .ToList();
                             foreach (var (symLinks, importDate) in vfsLocations) {
@@ -301,9 +301,9 @@ public class EventDispatchService {
                             var result = new LinkGenerationResult();
                             var vfsSymbolicLinks = new HashSet<string>();
                             var topFolders = new HashSet<string>();
-                            var newSourceLocation = await GetNewSourceLocation(managedFolderId, managedFolderSubPath, fileId, relativePath, mediaFolderPath).ConfigureAwait(false);
+                            var newSourceLocation = await GetNewSourceLocation(managedFolderId, managedFolderSubPath, fileId, relativePath, mediaFolderPath);
                             if (!string.IsNullOrEmpty(newSourceLocation)) {
-                                var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(collectionType, vfsPath, newSourceLocation, fileId.ToString(), seriesId))).ConfigureAwait(false))
+                                var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(collectionType, vfsPath, newSourceLocation, fileId.ToString(), seriesId))))
                                 .Where(tuple => tuple.symbolicLinks.Length > 0 && tuple.importedAt.HasValue)
                                     .ToList();
                                 foreach (var (symLinks, importDate) in vfsLocations) {
@@ -376,7 +376,7 @@ public class EventDispatchService {
                 .ToHashSet();
         }
         else {
-            var file = await ApiClient.GetFile(fileId.ToString()).ConfigureAwait(false);
+            var file = await ApiClient.GetFile(fileId.ToString());
             if (file is null)
                 return new HashSet<string>();
 
@@ -391,13 +391,13 @@ public class EventDispatchService {
 
         var filteredSeriesIds = new HashSet<string>();
         foreach (var seriesId in seriesIds) {
-            var (primaryId, extraIds) = await ApiManager.GetSeriesIdsForShokoSeries(seriesId).ConfigureAwait(false);
-            if (await ApiManager.GetPathSetForSeries(primaryId).ConfigureAwait(false) is { Count: > 0 }) {
+            var (primaryId, extraIds) = await ApiManager.GetSeriesIdsForShokoSeries(seriesId);
+            if (await ApiManager.GetPathSetForSeries(primaryId) is { Count: > 0 }) {
                 filteredSeriesIds.Add(seriesId);
             }
             else if (extraIds.Count > 0) {
                 foreach (var extraId in extraIds) {
-                    if (await ApiManager.GetPathSetForSeries(extraId).ConfigureAwait(false) is { Count: > 0 }) {
+                    if (await ApiManager.GetPathSetForSeries(extraId) is { Count: > 0 }) {
                         filteredSeriesIds.Add(seriesId);
                         break;
                     }
@@ -413,7 +413,7 @@ public class EventDispatchService {
 
     private async Task<string?> GetNewSourceLocation(int managedFolderId, string managedFolderSubPath, int fileId, string relativePath, string mediaFolderPath) {
         // Check if the file still exists, and if it has any other locations we can use.
-        var file = await ApiClient.GetFile(fileId.ToString()).ConfigureAwait(false);
+        var file = await ApiClient.GetFile(fileId.ToString());
         if (file is null)
             return null;
 
@@ -479,7 +479,7 @@ public class EventDispatchService {
                 tasks.Add(ProcessImageUpdateEvents(metadataId, imageEvents));
             if (events.Where(e => e.IsMetadataUpdate).ToList() is { Count: > 0 } metadataEvents)
                 tasks.Add(ProcessMetadataUpdateEvents(metadataId, metadataEvents));
-            await Task.WhenAll(tasks).ConfigureAwait(false);
+            await Task.WhenAll(tasks);
         }
         finally {
             Plugin.Instance.Tracker.Remove(trackerId);
@@ -497,7 +497,7 @@ public class EventDispatchService {
             var seasonInfoDict = new Dictionary<string, SeasonInfo>();
             var seriesIdDict = new Dictionary<int, string[]>();
             foreach (var seriesId in allSeriesIds) {
-                var seasonInfoList = await ApiManager.GetSeasonInfosForShokoSeries(seriesId.ToString()).ConfigureAwait(false);
+                var seasonInfoList = await ApiManager.GetSeasonInfosForShokoSeries(seriesId.ToString());
                 foreach (var seasonInfo in seasonInfoList) {
                     seasonInfoDict.Add(seasonInfo.Id, seasonInfo);
                 }
@@ -509,7 +509,7 @@ public class EventDispatchService {
                 return;
             }
 
-            var showInfoList = (await Task.WhenAll(seasonInfoDict.Values.Select(s => ApiManager.GetShowInfoBySeasonId(s.Id))).ConfigureAwait(false))
+            var showInfoList = (await Task.WhenAll(seasonInfoDict.Values.Select(s => ApiManager.GetShowInfoBySeasonId(s.Id))))
                 .WhereNotNull()
                 .DistinctBy(s => s.Id)
                 .ToList();
@@ -523,10 +523,10 @@ public class EventDispatchService {
             var updateCount = 0;
             var refreshFieldsMask = MetadataRefreshField.Images | MetadataRefreshField.PreferredImages;
             foreach (var showInfo in showInfoList)
-                updateCount += await ProcessSeriesEvents(showInfo, changes, seriesIdDict, refreshFieldsMask).ConfigureAwait(false);
+                updateCount += await ProcessSeriesEvents(showInfo, changes, seriesIdDict, refreshFieldsMask);
 
             foreach (var seasonInfo in seasonInfoDict.Values)
-                updateCount += await ProcessMovieEvents(seasonInfo, changes, refreshFieldsMask).ConfigureAwait(false);
+                updateCount += await ProcessMovieEvents(seasonInfo, changes, refreshFieldsMask);
 
             Logger.LogInformation("Scheduled {UpdateCount} image updates for {EventCount} image change events. (Metadata={ProviderUniqueId})", updateCount, changes.Count, metadataId);
         }
@@ -551,7 +551,7 @@ public class EventDispatchService {
             var seasonInfoDict = new Dictionary<string, SeasonInfo>();
             var seriesIdDict = new Dictionary<int, string[]>();
             foreach (var seriesId in allSeriesIds) {
-                var seasonInfoList = await ApiManager.GetSeasonInfosForShokoSeries(seriesId.ToString()).ConfigureAwait(false);
+                var seasonInfoList = await ApiManager.GetSeasonInfosForShokoSeries(seriesId.ToString());
                 foreach (var seasonInfo in seasonInfoList) {
                     seasonInfoDict.Add(seasonInfo.Id, seasonInfo);
                 }
@@ -563,7 +563,7 @@ public class EventDispatchService {
                 return;
             }
 
-            var showInfoList = (await Task.WhenAll(seasonInfoDict.Values.Select(s => ApiManager.GetShowInfoBySeasonId(s.Id))).ConfigureAwait(false))
+            var showInfoList = (await Task.WhenAll(seasonInfoDict.Values.Select(s => ApiManager.GetShowInfoBySeasonId(s.Id))))
                 .WhereNotNull()
                 .DistinctBy(s => s.Id)
                 .ToList();
@@ -577,10 +577,10 @@ public class EventDispatchService {
             var updateCount = 0;
             var refreshFieldsMask = ~(MetadataRefreshField.Images | MetadataRefreshField.PreferredImages);
             foreach (var showInfo in showInfoList)
-                updateCount += await ProcessSeriesEvents(showInfo, changes, seriesIdDict, refreshFieldsMask).ConfigureAwait(false);
+                updateCount += await ProcessSeriesEvents(showInfo, changes, seriesIdDict, refreshFieldsMask);
 
             foreach (var seasonInfo in seasonInfoDict.Values)
-                updateCount += await ProcessMovieEvents(seasonInfo, changes, refreshFieldsMask).ConfigureAwait(false);
+                updateCount += await ProcessMovieEvents(seasonInfo, changes, refreshFieldsMask);
 
             Logger.LogInformation("Scheduled {UpdateCount} metadata updates for {EventCount} metadata change events. (Metadata={ProviderUniqueId})", updateCount, changes.Count, metadataId);
         }
@@ -610,7 +610,7 @@ public class EventDispatchService {
                 }
 
                 Logger.LogInformation("Refreshing show {ShowName}. (Show={ShowId},Series={SeriesId})", show.Name, show.Id, showInfo.Id);
-                await MetadataRefreshService.RefreshSeries(show, refreshFieldsMask).ConfigureAwait(false);
+                await MetadataRefreshService.RefreshSeries(show, refreshFieldsMask);
                 updateCount++;
             }
         }
@@ -655,7 +655,7 @@ public class EventDispatchService {
                     }
 
                     Logger.LogInformation("Refreshing season {SeasonName}. (TvSeason={SeasonId},Season={SeasonId},ExtraSeries={ExtraIds})", season.Name, season.Id, seasonInfo.Id, seasonInfo.ExtraIds);
-                    await MetadataRefreshService.RefreshSeason(season, refreshFieldsMask).ConfigureAwait(false);
+                    await MetadataRefreshService.RefreshSeason(season, refreshFieldsMask);
                     updateCount++;
                 }
             }
@@ -694,7 +694,7 @@ public class EventDispatchService {
                     }
 
                     Logger.LogInformation("Refreshing episode {EpisodeName}. (Episode={EpisodeId},Episode={EpisodeId},Season={SeasonId})", episode.Name, episode.Id, episodeInfo.Id, episodeInfo.SeasonId);
-                    await MetadataRefreshService.RefreshEpisode(episode, refreshFieldsMask).ConfigureAwait(false);
+                    await MetadataRefreshService.RefreshEpisode(episode, refreshFieldsMask);
                     updateCount++;
                 }
             }
@@ -736,7 +736,7 @@ public class EventDispatchService {
                 }
 
                 Logger.LogInformation("Refreshing movie {MovieName}. (Movie={MovieId},Episode={EpisodeId},Season={SeasonId},ExtraSeasons={ExtraIds})", movie.Name, movie.Id, episodeInfo.Id, seasonInfo.Id, seasonInfo.ExtraIds);
-                await MetadataRefreshService.RefreshMovie(movie, refreshFieldsMask).ConfigureAwait(false);
+                await MetadataRefreshService.RefreshMovie(movie, refreshFieldsMask);
                 updateCount++;
             }
         }

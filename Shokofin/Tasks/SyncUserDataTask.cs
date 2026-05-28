@@ -35,6 +35,6 @@ public class SyncUserDataTask(UserDataSyncManager _userSyncManager) : IScheduled
 
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) {
-        await _userSyncManager.ScanAndSync(SyncDirection.Sync, progress, cancellationToken).ConfigureAwait(false);
+        await _userSyncManager.ScanAndSync(SyncDirection.Sync, progress, cancellationToken);
     }
 }

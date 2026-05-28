@@ -8,7 +8,7 @@ namespace Shokofin.Web;
 
 public class VfsActionFilter : IAsyncActionFilter {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next) {
-        var executedResult = await next().ConfigureAwait(false);
+        var executedResult = await next();
         if (
             executedResult.Result is ObjectResult result1 &&
             result1.Value is BaseItemDto { MediaSources.Length: > 0, Path: { Length: > 0 } dtoPath } dto &&

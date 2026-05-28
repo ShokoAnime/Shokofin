@@ -164,7 +164,7 @@ public class VirtualFileSystemService {
             return ([], [], selectedFolder, null, string.Empty);
 
         var collectionType = selectedFolder.CollectionType.ConvertToCollectionType();
-        var (libraryConfig, mediaConfigs, _) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType).ConfigureAwait(false);
+        var (libraryConfig, mediaConfigs, _) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType);
         if (libraryConfig is null || mediaConfigs.Count is 0)
             return ([], [], selectedFolder, null, string.Empty);
 
@@ -179,7 +179,7 @@ public class VirtualFileSystemService {
                 return (existingPaths, [], selectedFolder, new(), vfsPath);
 
             var allFiles = GetFilesForManagedFolders(mediaConfigs, fileChecker);
-            var result = await GenerateStructure(collectionType, vfsPath, allFiles, preview: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var result = await GenerateStructure(collectionType, vfsPath, allFiles, preview: true, cancellationToken: cancellationToken);
             result += CleanupStructure(vfsPath, vfsPath, result.Paths.ToArray(), preview: true, cancellationToken: cancellationToken);
 
             // Alter the paths to match the new structure.
@@ -189,7 +189,7 @@ public class VirtualFileSystemService {
                 .ToHashSet();
 
             return (existingPaths, alteredPaths, selectedFolder, result, vfsPath);
-        }, cancellationToken: cancellationToken).ConfigureAwait(false);
+        }, cancellationToken: cancellationToken);
     }
 
     #endregion
@@ -238,7 +238,7 @@ public class VirtualFileSystemService {
     /// <param name="path">The file or folder within the media folder to generate a structure for.</param>
     /// <returns>The VFS path, if it succeeded.</returns>
     public async Task<(string? vfsPath, bool shouldContinue, bool skipValidation, HashSet<string> alteredPaths)> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path, CancellationToken cancellationToken = default) {
-        var (libraryConfig, mediaConfigs, skipGeneration) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType).ConfigureAwait(false);
+        var (libraryConfig, mediaConfigs, skipGeneration) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType);
         if (libraryConfig is null || mediaConfigs.Count is 0)
             return (null, false, false, []);
 
@@ -425,7 +425,7 @@ public class VirtualFileSystemService {
             LibraryMonitor.ReportFileSystemChangeBeginning(pathToReport);
 
             // Generate any new structure in the VFS.
-            var result = await GenerateStructure(collectionType, vfsPath, allFiles, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var result = await GenerateStructure(collectionType, vfsPath, allFiles, cancellationToken: cancellationToken);
             // Cleanup any residual entries from old structure in the VFS if interactive
             // generation is disabled, or if it's enabled and we generated something new.
             if (!string.IsNullOrEmpty(pathToClean)) {
@@ -463,7 +463,7 @@ public class VirtualFileSystemService {
             result.Print(Logger, path);
 
             return (AddParentDirectories(vfsPath, result.Paths.ToArray()), lastGeneratedAt.HasValue);
-        }, cancellationToken).ConfigureAwait(false);
+        }, cancellationToken);
 
         return (
             tuple.alteredPaths is not null ? vfsPath : null,
@@ -535,7 +535,7 @@ public class VirtualFileSystemService {
         var totalFiles = 0;
         var start = DateTime.UtcNow;
         var file = ApiClient.GetFile(fileId)
-            .ConfigureAwait(false)
+            
             .GetAwaiter()
             .GetResult();
         if (file is null || !file.CrossReferences.Any(xref => xref.Series.ToString() == seriesId))
@@ -586,7 +586,7 @@ public class VirtualFileSystemService {
         var start = DateTime.UtcNow;
         var totalFiles = 0;
         var seasonInfo = ApiManager.GetSeasonInfoForEpisode(episodeId)
-            .ConfigureAwait(false)
+            
             .GetAwaiter()
             .GetResult();
         if (seasonInfo is null)
@@ -603,7 +603,7 @@ public class VirtualFileSystemService {
 
         var episodeIds = seasonInfo.ExtrasList.Select(episode => episode.Id).Append(episodeId).ToHashSet();
         var files = seasonInfo.GetFiles()
-            .ConfigureAwait(false)
+            
             .GetAwaiter()
             .GetResult();
         var fileLocations = files
@@ -644,7 +644,7 @@ public class VirtualFileSystemService {
 
     private IEnumerable<(string sourceLocation, string fileId, string seriesId)> GetFilesForShow(string seasonId, int? seasonNumber, IReadOnlyList<MediaFolderConfiguration> mediaConfigs, Func<string, bool> fileExists) {
         var start = DateTime.UtcNow;
-        var showInfo = ApiManager.GetShowInfoBySeasonId(seasonId).ConfigureAwait(false).GetAwaiter().GetResult();
+        var showInfo = ApiManager.GetShowInfoBySeasonId(seasonId).GetAwaiter().GetResult();
         if (showInfo is null)
             yield break;
         Logger.LogDebug(
@@ -663,7 +663,7 @@ public class VirtualFileSystemService {
             if (seasonNumber.Value is 0) {
                 foreach (var seasonInfo in showInfo.SeasonList) {
                     var episodeIds = seasonInfo.SpecialsList.Select(episode => episode.Id).ToHashSet();
-                    var files = seasonInfo.GetFiles().ConfigureAwait(false).GetAwaiter().GetResult();
+                    var files = seasonInfo.GetFiles().GetAwaiter().GetResult();
                     var fileLocations = files
                         .Where(tuple => tuple.episodeIds.Overlaps(episodeIds))
                         .SelectMany(tuple => tuple.file.Locations.Select(location => (tuple.file, tuple.seriesId, location)))
@@ -696,7 +696,7 @@ public class VirtualFileSystemService {
                     var baseNumber = showInfo.GetBaseSeasonNumberForSeasonInfo(seasonInfo);
                     var offset = seasonNumber.Value - baseNumber;
                     var episodeIds = (offset is 0 ? seasonInfo.EpisodeList.Concat(seasonInfo.ExtrasList) : seasonInfo.AlternateEpisodesList).Select(episode => episode.Id).ToHashSet();
-                    var files = seasonInfo.GetFiles().ConfigureAwait(false).GetAwaiter().GetResult();
+                    var files = seasonInfo.GetFiles().GetAwaiter().GetResult();
                     var fileLocations = files
                         .Where(tuple => tuple.episodeIds.Overlaps(episodeIds))
                         .SelectMany(tuple => tuple.file.Locations.Select(location => (tuple.file, tuple.seriesId, location)))
@@ -726,7 +726,7 @@ public class VirtualFileSystemService {
         // Return all files for the show.
         else {
             foreach (var seasonInfo in showInfo.SeasonList) {
-                var files = seasonInfo.GetFiles().ConfigureAwait(false).GetAwaiter().GetResult();
+                var files = seasonInfo.GetFiles().GetAwaiter().GetResult();
                 var fileLocations = files
                     .SelectMany(tuple => tuple.file.Locations.Select(location => (tuple.file, tuple.seriesId, location)))
                     .ToList();
@@ -775,7 +775,7 @@ public class VirtualFileSystemService {
         foreach (var (managedFolderId, managedFolderSubPath, mediaFolderPaths) in mediaConfigs.ToManagedFolderList()) {
             var firstPage = ApiClient.GetFilesInManagedFolder(managedFolderId, managedFolderSubPath);
             var pageData = firstPage
-                .ConfigureAwait(false)
+                
                 .GetAwaiter()
                 .GetResult();
             var totalPages = pageData.List.Count == pageData.Total ? 1 : (int)Math.Ceiling((float)pageData.Total / pageData.List.Count);
@@ -797,7 +797,7 @@ public class VirtualFileSystemService {
                 pages.Add(GetManagedFolderFilesPage(managedFolderId, managedFolderSubPath, page, semaphore));
 
             do {
-                var task = Task.WhenAny(pages).ConfigureAwait(false).GetAwaiter().GetResult();
+                var task = Task.WhenAny(pages).GetAwaiter().GetResult();
                 pages.Remove(task);
                 semaphore.Release();
                 pageData = task.Result;
@@ -907,8 +907,8 @@ public class VirtualFileSystemService {
     }
 
     private async Task<ListResult<API.Models.File>> GetManagedFolderFilesPage(int managedFolderId, string managedFolderSubPath, int page, SemaphoreSlim semaphore) {
-        await semaphore.WaitAsync().ConfigureAwait(false);
-        return await ApiClient.GetFilesInManagedFolder(managedFolderId, managedFolderSubPath, page).ConfigureAwait(false);
+        await semaphore.WaitAsync();
+        return await ApiClient.GetFilesInManagedFolder(managedFolderId, managedFolderSubPath, page);
     }
 
     private async Task<LinkGenerationResult> GenerateStructure(CollectionType? collectionType, string vfsPath, IEnumerable<(string sourceLocation, string fileId, string seriesId)> allFiles, bool preview = false, CancellationToken cancellationToken = default) {
@@ -921,7 +921,7 @@ public class VirtualFileSystemService {
         if (Plugin.Instance.Configuration.VFS_UseSemaphore) {
             var semaphore = new SemaphoreSlim(GetThreadCount());
             await Task.WhenAll(allFiles.Select(async (tuple) => {
-                await semaphore.WaitAsync().ConfigureAwait(false);
+                await semaphore.WaitAsync();
                 var (sourceLocation, fileId, seriesId) = tuple;
 
                 try {
@@ -932,7 +932,7 @@ public class VirtualFileSystemService {
 
                     Logger.LogTrace("Generating links for {Path} (File={FileId},Series={SeriesId})", sourceLocation, fileId, seriesId);
 
-                    var (symbolicLinks, importedAt) = await GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId, seriesId).ConfigureAwait(false);
+                    var (symbolicLinks, importedAt) = await GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId, seriesId);
                     if (symbolicLinks.Length == 0 || !importedAt.HasValue)
                         return;
 
@@ -957,7 +957,7 @@ public class VirtualFileSystemService {
                 finally {
                     semaphore.Release();
                 }
-            })).ConfigureAwait(false);
+            }));
         }
         else {
             await Parallelize(allFiles, async tuple => {
@@ -968,7 +968,7 @@ public class VirtualFileSystemService {
                         return;
                     }
                     Logger.LogTrace("Generating links for {Path} (File={FileId},Series={SeriesId})", sourceLocation, fileId, seriesId);
-                    var (symbolicLinks, importedAt) = await GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId, seriesId).ConfigureAwait(false);
+                    var (symbolicLinks, importedAt) = await GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId, seriesId);
                     if (symbolicLinks.Length == 0 || !importedAt.HasValue)
                         return;
                     var subResult = GenerateSymbolicLinks(vfsPath, sourceLocation, symbolicLinks, importedAt.Value, preview);
@@ -988,7 +988,7 @@ public class VirtualFileSystemService {
                         }
                     }
                 }
-            }, cancelTokenSource.Token).ConfigureAwait(false);
+            }, cancelTokenSource.Token);
         }
         cancellationToken.ThrowIfCancellationRequested();
         // Throw an `AggregateException` if any series exceeded the maximum number of exceptions, or if the total number of exceptions exceeded the maximum allowed. Additionally,
@@ -1002,7 +1002,7 @@ public class VirtualFileSystemService {
     }
 
     public async Task<(string[] symbolicLinks, DateTime? importedAt)> GenerateLocationsForFile(CollectionType? collectionType, string vfsPath, string sourceLocation, string fileId, string seriesId) {
-        var file = await ApiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false);
+        var file = await ApiManager.GetFileInfo(fileId, seriesId);
         if (file is null)
             return ([], null);
 
@@ -1010,7 +1010,7 @@ public class VirtualFileSystemService {
             return ([], null);
 
         var (episode, episodeXref, _) = file.EpisodeList[0];
-        var season = await ApiManager.GetSeasonInfo(episode.SeasonId).ConfigureAwait(false);
+        var season = await ApiManager.GetSeasonInfo(episode.SeasonId);
         if (season is null)
             return ([], null);
 
@@ -1025,7 +1025,7 @@ public class VirtualFileSystemService {
         if (shouldAbort)
             return ([], null);
 
-        var show = await ApiManager.GetShowInfoBySeasonId(season.Id).ConfigureAwait(false);
+        var show = await ApiManager.GetShowInfoBySeasonId(season.Id);
         if (show is null)
             return ([], null);
 
@@ -1096,7 +1096,7 @@ public class VirtualFileSystemService {
                 episodeName = $"{showName} S{(isSpecial ? 0 : seasonNumber).ToString().PadLeft(2, '0')}E{episodeNumber.ToString().PadLeft(show.EpisodePadding, '0')}";
                 if (episodeXref.Percentage.Group is not 1) {
                     var list = episode.CrossReferences.Where(xref => xref.ReleaseGroup == episodeXref.ReleaseGroup && xref.Percentage.Group == episodeXref.Percentage.Group).ToList();
-                    var files = (await Task.WhenAll(list.Select(xref => ApiClient.GetFileByEd2kAndFileSize(xref.ED2K, xref.FileSize))).ConfigureAwait(false))
+                    var files = (await Task.WhenAll(list.Select(xref => ApiClient.GetFileByEd2kAndFileSize(xref.ED2K, xref.FileSize))))
                         .WhereNotNull()
                         .ToList();
                     if (files.Count != list.Count)

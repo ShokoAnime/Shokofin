@@ -92,7 +92,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule {
             var (mediaFolder, partialPath) = ApiManager.FindMediaFolder(fullPath, parent);
 
             // Ignore any media folders that aren't mapped to shoko.
-            var (libraryConfig, mediaFolderConfig) = await ConfigurationService.GetOrCreateConfigurationForMediaFolder(mediaFolder).ConfigureAwait(false);
+            var (libraryConfig, mediaFolderConfig) = await ConfigurationService.GetOrCreateConfigurationForMediaFolder(mediaFolder);
             if (libraryConfig is null || mediaFolderConfig is null || !mediaFolderConfig.IsMapped) {
                 Logger.LogDebug("Skipped media folder for path {Path} (MediaFolder={MediaFolderId})", fileInfo.FullName, mediaFolder.Id);
                 return false;
@@ -108,9 +108,9 @@ public class ShokoIgnoreRule : IResolverIgnoreRule {
             var shouldIgnore = libraryConfig.LibraryOperationMode is not Ordering.LibraryOperationMode.Lax;
             var collectionType = LibraryManager.GetInheritedContentType(mediaFolder);
             if (fileInfo.IsDirectory)
-                return await ShouldFilterDirectory(partialPath, fullPath, collectionType, shouldIgnore).ConfigureAwait(false);
+                return await ShouldFilterDirectory(partialPath, fullPath, collectionType, shouldIgnore);
 
-            return await ShouldFilterFile(partialPath, fullPath, shouldIgnore).ConfigureAwait(false);
+            return await ShouldFilterFile(partialPath, fullPath, shouldIgnore);
         }
         catch (Exception ex) {
             Logger.LogError(ex, "Threw unexpectedly; {Message}", ex.Message);
@@ -123,7 +123,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule {
     }
 
     private async Task<bool> ShouldFilterDirectory(string partialPath, string fullPath, CollectionType? collectionType, bool shouldIgnore) {
-        var season = await ApiManager.GetSeasonInfoByPath(fullPath).ConfigureAwait(false);
+        var season = await ApiManager.GetSeasonInfoByPath(fullPath);
 
         // We inform/warn here since we enabled the provider in our library, but we can't find a match for the given folder path.
         if (season == null) {
@@ -133,7 +133,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule {
                     var entries = FileSystem.GetDirectories(fullPath, false).ToList();
                     Logger.LogDebug("Unable to find shoko series for {Path}, trying {DirCount} sub-directories.", partialPath, entries.Count);
                     foreach (var entry in entries) {
-                        season = await ApiManager.GetSeasonInfoByPath(entry.FullName).ConfigureAwait(false);
+                        season = await ApiManager.GetSeasonInfoByPath(entry.FullName);
                         if (season is not null) {
                             Logger.LogDebug("Found shoko series {SeriesName} for sub-directory of path {Path} (Season={SeasonId},ExtraSeries={ExtraIds})", season.Title, partialPath, season.Id, season.ExtraIds);
                             break;
@@ -168,7 +168,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule {
                 break;
         }
 
-        var show = await ApiManager.GetShowInfoBySeasonId(season.Id).ConfigureAwait(false)!;
+        var show = await ApiManager.GetShowInfoBySeasonId(season.Id)!;
         if (show is null) {
             if (shouldIgnore)
                 Logger.LogInformation("Ignored unknown folder at path {Path}", partialPath);
@@ -190,7 +190,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule {
     }
 
     private async Task<bool> ShouldFilterFile(string partialPath, string fullPath, bool shouldIgnore) {
-        var (file, season, show) = await ApiManager.GetFileInfoByPath(fullPath).ConfigureAwait(false);
+        var (file, season, show) = await ApiManager.GetFileInfoByPath(fullPath);
 
         // We inform/warn here since we enabled the provider in our library, but we can't find a match for the given file path.
         if (file is null || season is null || show is null) {
@@ -223,7 +223,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule {
 
     bool IResolverIgnoreRule.ShouldIgnore(FileSystemMetadata fileInfo, BaseItem? parent)
         => ShouldFilterItem(parent as Folder, fileInfo)
-            .ConfigureAwait(false)
+            
             .GetAwaiter()
             .GetResult();
 

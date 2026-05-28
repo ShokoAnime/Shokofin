@@ -67,7 +67,7 @@ public class ImageHostUrl : IAsyncActionFilter {
         }
 
         try {
-            await next().ConfigureAwait(false);
+            await next();
         }
         finally {
             if (Guid.Empty != itemId && _currentItemId == itemId) {

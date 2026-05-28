@@ -37,7 +37,7 @@ public class ShokofinHostController(ILogger<ShokofinHostController> logger, Shok
     public async Task<ActionResult<ComponentVersion>> GetVersionAsync() {
         try {
             Logger.LogDebug("Trying to get version from the remote Shoko server.");
-            var version = await APIClient.GetVersion().ConfigureAwait(false);
+            var version = await APIClient.GetVersion();
             if (version == null) {
                 Logger.LogDebug("Failed to get version from the remote Shoko server.");
                 return StatusCode(StatusCodes.Status502BadGateway);
@@ -56,7 +56,7 @@ public class ShokofinHostController(ILogger<ShokofinHostController> logger, Shok
     public async Task<ActionResult<ApiKey>> GetApiKeyAsync([FromBody] ApiLoginRequest body) {
         try {
             Logger.LogDebug("Trying to create an API-key for user {Username}.", body.Username);
-            var apiKey = await APIClient.GetApiKey(body.Username, body.Password, body.UserKey).ConfigureAwait(false);
+            var apiKey = await APIClient.GetApiKey(body.Username, body.Password, body.UserKey);
             if (apiKey == null) {
                 Logger.LogDebug("Failed to create an API-key for user {Username} — invalid credentials received.", body.Username);
                 return StatusCode(StatusCodes.Status401Unauthorized);
@@ -82,12 +82,12 @@ public class ShokofinHostController(ILogger<ShokofinHostController> logger, Shok
     [HttpHead("Image/{ImageSource}/{ImageType}/{ImageId}")]
     public async Task<ActionResult> GetImageAsync([FromRoute] ImageSource imageSource, [FromRoute] ShokoImageType imageType, [FromRoute, Range(1, int.MaxValue)] int imageId
     ) {
-        var response = await APIClient.GetImageAsync(imageSource, imageType, imageId).ConfigureAwait(false);
+        var response = await APIClient.GetImageAsync(imageSource, imageType, imageId);
         if (response.StatusCode is System.Net.HttpStatusCode.NotFound)
             return NotFound();
         if (response.StatusCode is not System.Net.HttpStatusCode.OK)
             return StatusCode((int)response.StatusCode);
-        var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+        var stream = await response.Content.ReadAsStreamAsync();
         var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/ocelot-stream";
         return File(stream, contentType);
     }

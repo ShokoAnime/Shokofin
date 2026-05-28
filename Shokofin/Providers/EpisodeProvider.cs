@@ -41,20 +41,20 @@ public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<Epis
                 if (!info.TryGetProviderId(ProviderNames.ShokoEpisode, out var episodeId))
                     return result;
 
-                episodeInfo = await _apiManager.GetEpisodeInfo(episodeId).ConfigureAwait(false);
+                episodeInfo = await _apiManager.GetEpisodeInfo(episodeId);
                 if (episodeInfo == null)
                     return result;
 
-                seasonInfo = await _apiManager.GetSeasonInfoForEpisode(episodeId).ConfigureAwait(false);
+                seasonInfo = await _apiManager.GetSeasonInfoForEpisode(episodeId);
                 if (seasonInfo == null)
                     return result;
 
-                showInfo = await _apiManager.GetShowInfoBySeasonId(seasonInfo.Id).ConfigureAwait(false);
+                showInfo = await _apiManager.GetShowInfoBySeasonId(seasonInfo.Id);
                 if (showInfo == null || showInfo.SeasonList.Count == 0)
                     return result;
             }
             else {
-                (fileInfo, seasonInfo, showInfo) = await _apiManager.GetFileInfoByPath(info.Path).ConfigureAwait(false);
+                (fileInfo, seasonInfo, showInfo) = await _apiManager.GetFileInfoByPath(info.Path);
                 episodeInfo = fileInfo is { EpisodeList.Count: > 0 } ? fileInfo.EpisodeList[0].Episode : null;
             }
 
@@ -252,5 +252,5 @@ public class EpisodeProvider(IHttpClientFactory _httpClientFactory, ILogger<Epis
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken).ConfigureAwait(false);
+        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }

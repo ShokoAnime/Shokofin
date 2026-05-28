@@ -76,7 +76,7 @@ public class CustomSeasonProvider(ILogger<CustomSeasonProvider> _logger, Virtual
             }
 
             // Loudly abort if the show metadata doesn't exist.
-            var showInfo = await _apiManager.GetShowInfoBySeasonId(seasonId).ConfigureAwait(false);
+            var showInfo = await _apiManager.GetShowInfoBySeasonId(seasonId);
             if (showInfo == null || showInfo.SeasonList.Count == 0) {
                 _logger.LogWarning("Unable to find show info for season. (MainSeason={MainSeasonId},Season={SeasonNumber})", seasonId, seasonNumber);
                 return ItemUpdateType.None;
@@ -115,7 +115,7 @@ public class CustomSeasonProvider(ILogger<CustomSeasonProvider> _logger, Virtual
                 // Add missing episodes.
                 if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
                     foreach (var sI in showInfo.SeasonList) {
-                        foreach (var episodeId in await _apiManager.GetLocalEpisodeIdsForSeason(sI).ConfigureAwait(false))
+                        foreach (var episodeId in await _apiManager.GetLocalEpisodeIdsForSeason(sI))
                             existingEpisodes.Add(episodeId);
 
                         foreach (var episodeInfo in sI.SpecialsList) {
@@ -169,7 +169,7 @@ public class CustomSeasonProvider(ILogger<CustomSeasonProvider> _logger, Virtual
 
                 // Add missing episodes.
                 if (ShouldAddMetadata && options.MetadataRefreshMode != MetadataRefreshMode.ValidationOnly) {
-                    foreach (var episodeId in await _apiManager.GetLocalEpisodeIdsForSeason(seasonInfo).ConfigureAwait(false))
+                    foreach (var episodeId in await _apiManager.GetLocalEpisodeIdsForSeason(seasonInfo))
                         existingEpisodes.Add(episodeId);
 
                     foreach (var episodeInfo in episodeList) {

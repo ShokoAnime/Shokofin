@@ -26,13 +26,13 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
         var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Series \"{info.Name}\". (Path=\"{info.Path}\")");
         try {
             var result = new MetadataResult<Series>();
-            var showInfo = await _apiManager.GetShowInfoByPath(info.Path).ConfigureAwait(false);
+            var showInfo = await _apiManager.GetShowInfoByPath(info.Path);
             if (showInfo == null) {
                 try {
                     // Look for the "season" directories to probe for the group information
                     var entries = _fileSystem.GetDirectories(info.Path, false);
                     foreach (var entry in entries) {
-                        showInfo = await _apiManager.GetShowInfoByPath(entry.FullName).ConfigureAwait(false);
+                        showInfo = await _apiManager.GetShowInfoByPath(entry.FullName);
                         if (showInfo is not null)
                             break;
                     }
@@ -105,5 +105,5 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
     public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken).ConfigureAwait(false);
+        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }

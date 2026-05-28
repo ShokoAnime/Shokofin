@@ -113,17 +113,17 @@ public class SignalRConnectionManager {
         try {
             Logger.LogInformation("Connecting to Shoko Server.");
 
-            await connection.StartAsync().ConfigureAwait(false);
+            await connection.StartAsync();
 
             Logger.LogInformation("Connected to Shoko Server.");
         }
         catch (HttpRequestException ex) when (ex is { HttpRequestError: HttpRequestError.ConnectionError, InnerException: SocketException { SocketErrorCode: SocketError.ConnectionRefused } }) {
             Logger.LogWarning("Unable to connect to Shoko Server due to a connection error. Please reconnect manually.");
-            await DisconnectAsync().ConfigureAwait(false);
+            await DisconnectAsync();
         }
         catch (Exception ex) {
             Logger.LogError(ex, "An unexpected error occurred while attempting to connect to Shoko Server. Please reconnect manually.");
-            await DisconnectAsync().ConfigureAwait(false);
+            await DisconnectAsync();
         }
     }
 
@@ -154,9 +154,9 @@ public class SignalRConnectionManager {
         Connection = null;
 
         if (connection.State != HubConnectionState.Disconnected)
-            await connection.StopAsync().ConfigureAwait(false);
+            await connection.StopAsync();
 
-        await connection.DisposeAsync().ConfigureAwait(false);
+        await connection.DisposeAsync();
 
         if (EventSubmitterLease is not null) {
             EventSubmitterLease.Dispose();
@@ -171,9 +171,9 @@ public class SignalRConnectionManager {
         => Task.Run(() => ResetConnectionAsync(config, shouldConnect)).GetAwaiter().GetResult();
 
     private async Task ResetConnectionAsync(PluginConfiguration config, bool shouldConnect) {
-        await DisconnectAsync().ConfigureAwait(false);
+        await DisconnectAsync();
         if (shouldConnect)
-            await ConnectAsync(config).ConfigureAwait(false);
+            await ConnectAsync(config);
     }
 
     public async Task RunAsync() {
@@ -181,12 +181,12 @@ public class SignalRConnectionManager {
         CachedKey = ConstructKey(config);
         Plugin.Instance.ConfigurationChanged += OnConfigurationChanged;
 
-        await ResetConnectionAsync(config, config.SignalR_AutoConnectEnabled).ConfigureAwait(false);
+        await ResetConnectionAsync(config, config.SignalR_AutoConnectEnabled);
     }
 
     public async Task StopAsync() {
         Plugin.Instance.ConfigurationChanged -= OnConfigurationChanged;
-        await DisconnectAsync().ConfigureAwait(false);
+        await DisconnectAsync();
     }
 
     private void OnConfigurationChanged(object? sender, PluginConfiguration config) {
@@ -233,7 +233,7 @@ public class SignalRConnectionManager {
     }
 
     private async Task OnReleaseSaved(IReleaseSavedEventArgs eventArgs0) {
-        if (await ApiClient.GetFile(eventArgs0.FileId.ToString()).ConfigureAwait(false) is not { } file) {
+        if (await ApiClient.GetFile(eventArgs0.FileId.ToString()) is not { } file) {
             Logger.LogDebug("File not found; {VideoId}", eventArgs0.FileId);
             return;
         }

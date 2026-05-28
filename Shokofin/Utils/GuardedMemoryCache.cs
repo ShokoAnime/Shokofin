@@ -142,7 +142,7 @@ internal class GuardedMemoryCache : IDisposable, IMemoryCache {
         }
 
         try {
-            using (await Semaphores.LockAsync(key, cancellationToken).ConfigureAwait(false)) {
+            using (await Semaphores.LockAsync(key, cancellationToken)) {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 if (TryGetValue(key, out value)) {
@@ -155,7 +155,7 @@ internal class GuardedMemoryCache : IDisposable, IMemoryCache {
                 if (createOptions != null)
                     entry.SetOptions(createOptions);
 
-                value = await createFactory().ConfigureAwait(false);
+                value = await createFactory();
                 entry.Value = value;
                 return value;
             }
@@ -189,7 +189,7 @@ internal class GuardedMemoryCache : IDisposable, IMemoryCache {
         }
 
         try {
-            using (await Semaphores.LockAsync(key, cancellationToken).ConfigureAwait(false)) {
+            using (await Semaphores.LockAsync(key, cancellationToken)) {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 if (TryGetValue(key, out value)) {
@@ -198,7 +198,7 @@ internal class GuardedMemoryCache : IDisposable, IMemoryCache {
                 }
 
                 var createOptions = CreateNewOptions();
-                value = await createFactory(createOptions).ConfigureAwait(false);
+                value = await createFactory(createOptions);
                 if (!createOptions.NoCache) {
                     using var entry = Cache.CreateEntry(key);
                     entry.SetOptions(createOptions);
@@ -318,7 +318,7 @@ internal class GuardedMemoryCache : IDisposable, IMemoryCache {
             return value;
 
         try {
-            using (await Semaphores.LockAsync(key, cancellationToken).ConfigureAwait(false)) {
+            using (await Semaphores.LockAsync(key, cancellationToken)) {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 if (TryGetValue(key, out value))
@@ -329,7 +329,7 @@ internal class GuardedMemoryCache : IDisposable, IMemoryCache {
                 if (createOptions != null)
                     entry.SetOptions(createOptions);
 
-                value = await createFactory().ConfigureAwait(false);
+                value = await createFactory();
                 entry.Value = value;
                 return value;
             }
@@ -360,14 +360,14 @@ internal class GuardedMemoryCache : IDisposable, IMemoryCache {
             return value;
 
         try {
-            using (await Semaphores.LockAsync(key, cancellationToken).ConfigureAwait(false)) {
+            using (await Semaphores.LockAsync(key, cancellationToken)) {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 if (TryGetValue(key, out value))
                     return value;
 
                 var createOptions = CreateNewOptions();
-                value = await createFactory(createOptions).ConfigureAwait(false);
+                value = await createFactory(createOptions);
                 if (!createOptions.NoCache) {
                     using var entry = Cache.CreateEntry(key);
                     entry.SetOptions(createOptions);

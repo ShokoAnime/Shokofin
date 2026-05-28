@@ -36,13 +36,13 @@ public class CollectionManager(
             if (_libraryManager.GetVirtualFolders().Count is 0) return;
             switch (Plugin.Instance.Configuration.CollectionGrouping) {
                 default:
-                    await CleanupAll(progress, cancellationToken).ConfigureAwait(false);
+                    await CleanupAll(progress, cancellationToken);
                     break;
                 case Ordering.CollectionCreationType.Movies:
-                    await ReconstructMovieSeriesCollections(progress, cancellationToken).ConfigureAwait(false);
+                    await ReconstructMovieSeriesCollections(progress, cancellationToken);
                     break;
                 case Ordering.CollectionCreationType.Shared:
-                    await ReconstructSharedCollections(progress, cancellationToken).ConfigureAwait(false);
+                    await ReconstructSharedCollections(progress, cancellationToken);
                     break;
             }
         }
@@ -55,14 +55,14 @@ public class CollectionManager(
 
     private async Task ReconstructMovieSeriesCollections(IProgress<double> progress, CancellationToken cancellationToken) {
         _logger.LogTrace("Ensuring collection root exists…");
-        var collectionRoot = (await GetCollectionsFolder(true).ConfigureAwait(false))!;
+        var collectionRoot = (await GetCollectionsFolder(true))!;
 
         var timeStarted = DateTime.Now;
 
         _logger.LogTrace("Cleaning up movies and invalid collections…");
 
         // Clean up movies and unneeded group collections.
-        await CleanupMovies().ConfigureAwait(false);
+        await CleanupMovies();
         CleanupGroupCollections();
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -78,7 +78,7 @@ public class CollectionManager(
             if (!_lookup.TryGetEpisodeIdsFor(movie, out var episodeIds))
                 continue;
 
-            var (fileInfo, seasonInfo, showInfo) = await _apiManager.GetFileInfoByPath(movie.Path).ConfigureAwait(false);
+            var (fileInfo, seasonInfo, showInfo) = await _apiManager.GetFileInfoByPath(movie.Path);
             if (fileInfo == null || seasonInfo == null || showInfo == null)
                 continue;
 
@@ -133,7 +133,7 @@ public class CollectionManager(
             if (parentDict.TryGetValue(collection.Id, out var parents)) {
                 foreach (var parentId in parents) {
                     if (!toRemove.ContainsKey(parentId) && collection.ParentId != parentId)
-                        await _collection.RemoveFromCollectionAsync(parentId, [id]).ConfigureAwait(false);
+                        await _collection.RemoveFromCollectionAsync(parentId, [id]);
                 }
             }
 
@@ -153,7 +153,7 @@ public class CollectionManager(
             var collection = await _collection.CreateCollectionAsync(new() {
                 Name = $"{seasonInfo.Title.ForceASCII()} [{ProviderNames.ShokoCollectionForSeries}={missingId}]",
                 ProviderIds = new() { { ProviderNames.ShokoCollectionForSeries, missingId } },
-            }).ConfigureAwait(false);
+            });
 
             childDict.Add(collection.Id, []);
             toCheck.Add(missingId, collection);
@@ -180,7 +180,7 @@ public class CollectionManager(
                 updated = true;
             }
             if (updated) {
-                await collection.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken).ConfigureAwait(false);
+                await collection.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken);
                 fixedCollections++;
             }
 
@@ -206,9 +206,9 @@ public class CollectionManager(
                 .Select(movie => movie.Id)
                 .ToList();
             if (missingMovies.Count > 0)
-                await _collection.AddToCollectionAsync(collection.Id, missingMovies).ConfigureAwait(false);
+                await _collection.AddToCollectionAsync(collection.Id, missingMovies);
             if (unwantedMovies.Count > 0)
-                await _collection.RemoveFromCollectionAsync(collection.Id, unwantedMovies).ConfigureAwait(false);
+                await _collection.RemoveFromCollectionAsync(collection.Id, unwantedMovies);
 
             totalChildren += expectedMovies.Count;
             addedChildren += missingMovies.Count;
@@ -241,14 +241,14 @@ public class CollectionManager(
 
     private async Task ReconstructSharedCollections(IProgress<double> progress, CancellationToken cancellationToken) {
         _logger.LogTrace("Ensuring collection root exists…");
-        var collectionRoot = (await GetCollectionsFolder(true).ConfigureAwait(false))!;
+        var collectionRoot = (await GetCollectionsFolder(true))!;
 
         var timeStarted = DateTime.Now;
 
         _logger.LogTrace("Cleaning up movies and invalid collections…");
 
         // Clean up movies and unneeded series collections.
-        await CleanupMovies().ConfigureAwait(false);
+        await CleanupMovies();
         CleanupSeriesCollections();
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -262,7 +262,7 @@ public class CollectionManager(
         // Create a tree-map of how it's supposed to be.
         var movieDict = new Dictionary<Movie, (FileInfo fileInfo, SeasonInfo seasonInfo, ShowInfo showInfo)>();
         foreach (var movie in movies) {
-            var (fileInfo, seasonInfo, showInfo) = await _apiManager.GetFileInfoByPath(movie.Path).ConfigureAwait(false);
+            var (fileInfo, seasonInfo, showInfo) = await _apiManager.GetFileInfoByPath(movie.Path);
             if (fileInfo == null || seasonInfo == null || showInfo == null)
                 continue;
 
@@ -277,7 +277,7 @@ public class CollectionManager(
             if (!_lookup.TryGetSeasonIdFor(show, out var seasonId))
                 continue;
 
-            var showInfo = await _apiManager.GetShowInfoBySeasonId(seasonId).ConfigureAwait(false);
+            var showInfo = await _apiManager.GetShowInfoBySeasonId(seasonId);
             if (showInfo == null)
                 continue;
 
@@ -313,7 +313,7 @@ public class CollectionManager(
                     .SelectMany(groupBy => groupBy)
                     .ToDictionary(c => c.collectionInfo!.Id, c => c.collectionInfo!)
             )
-            .ConfigureAwait(false);
+            ;
         var finalGroups = new Dictionary<string, CollectionInfo>();
         foreach (var initialGroup in groupsDict.Values) {
             var currentGroup = initialGroup;
@@ -325,7 +325,7 @@ public class CollectionManager(
                 continue;
 
             while (!currentGroup.IsTopLevel && !finalGroups.ContainsKey(currentGroup.ParentId!)) {
-                currentGroup = await _apiManager.GetCollectionInfo(currentGroup.ParentId!).ConfigureAwait(false);
+                currentGroup = await _apiManager.GetCollectionInfo(currentGroup.ParentId!);
                 if (currentGroup == null)
                     break;
                 finalGroups.Add(currentGroup.Id, currentGroup);
@@ -374,7 +374,7 @@ public class CollectionManager(
             if (parentDict.TryGetValue(collection.Id, out var parents)) {
                 foreach (var parentId in parents) {
                     if (!toRemove.ContainsKey(parentId) && collection.ParentId != parentId)
-                        await _collection.RemoveFromCollectionAsync(parentId, [id]).ConfigureAwait(false);
+                        await _collection.RemoveFromCollectionAsync(parentId, [id]);
                 }
             }
 
@@ -403,7 +403,7 @@ public class CollectionManager(
             var collection = await _collection.CreateCollectionAsync(new() {
                 Name = $"{collectionInfo.Title.ForceASCII()} [{ProviderNames.ShokoCollectionForGroup}={missingId}]",
                 ProviderIds = new() { { ProviderNames.ShokoCollectionForGroup, missingId } },
-            }).ConfigureAwait(false);
+            });
 
             childDict.Add(collection.Id, []);
             toCheck.Add(missingId, collection);
@@ -430,7 +430,7 @@ public class CollectionManager(
                 updated = true;
             }
             if (updated) {
-                await collection.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken).ConfigureAwait(false);
+                await collection.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken);
                 fixedCollections++;
             }
 
@@ -486,9 +486,9 @@ public class CollectionManager(
                 .Select(movie => movie.Id)
                 .ToList();
             if (missingChildren.Count > 0)
-                await _collection.AddToCollectionAsync(collection.Id, missingChildren).ConfigureAwait(false);
+                await _collection.AddToCollectionAsync(collection.Id, missingChildren);
             if (unwantedChildren.Count > 0)
-                await _collection.RemoveFromCollectionAsync(collection.Id, unwantedChildren).ConfigureAwait(false);
+                await _collection.RemoveFromCollectionAsync(collection.Id, unwantedChildren);
 
             totalChildren += expectedCollections.Count + expectedShows.Count + expectedMovies.Count;
             addedChildren += missingChildren.Count;
@@ -521,7 +521,7 @@ public class CollectionManager(
     #region Cleanup Helpers
 
     private async Task CleanupAll(IProgress<double> progress, CancellationToken cancellationToken) {
-        await CleanupMovies().ConfigureAwait(false);
+        await CleanupMovies();
         cancellationToken.ThrowIfCancellationRequested();
 
         CleanupSeriesCollections();
@@ -547,7 +547,7 @@ public class CollectionManager(
 
             _logger.LogTrace("Removing movie {MovieName} from collection {CollectionName}. (Episode={EpisodeId},Season={SeasonId})", movie.Name, movie.CollectionName, episodeIds[0], seasonId);
             movie.CollectionName = string.Empty;
-            await _libraryManager.UpdateItemAsync(movie, movie.GetParent(), ItemUpdateType.None, CancellationToken.None).ConfigureAwait(false);
+            await _libraryManager.UpdateItemAsync(movie, movie.GetParent(), ItemUpdateType.None, CancellationToken.None);
         }
     }
 
