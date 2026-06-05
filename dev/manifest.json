@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.1811",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.18) for more info.\n\n---\n\n`fix`: **Use MetadataProvider.Tmdb instead of ProviderNames.Tmdb**:\n\nFixes ShokoAnime/Shokofin#100",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.18/shoko_6.0.5.18_for_10.11.zip",
+                "checksum": "669c4a739a7fc8fbaa4e7852008ab415",
+                "timestamp": "2026-06-05T22:52:40Z"
+            },
+            {
+                "version": "6.0.5.1810",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.18) for more info.\n\n---\n\n`fix`: **Use MetadataProvider.Tmdb instead of ProviderNames.Tmdb**:\n\nFixes ShokoAnime/Shokofin#100",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.18/shoko_6.0.5.18_for_10.10.zip",
+                "checksum": "52e114ed51733e1496198ba47f52e2b5",
+                "timestamp": "2026-06-05T22:52:51Z"
+            },
+            {
                 "version": "6.0.5.1711",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.17) for more info.\n\n---\n\n`fix`: **Fix(settings): update dead group-management docs link**:\n\nOld URL returned 404. New URL points to collection#group-page.\nAlso add target=\"_blank\" so links open in new tab and don't lose\nunsaved config changes.\n\nCloses ShokoAnime/Shokofin#99",
                 "targetAbi": "10.11.0.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.14/shoko_6.0.5.14_for_10.10.zip",
                 "checksum": "2b079b254db8db5a29db019a49e18e44",
                 "timestamp": "2026-05-25T14:56:38Z"
-            },
-            {
-                "version": "6.0.5.1311",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.13) for more info.\n\n---\n\n`feat`: **Add third-party display link settings**:\n\nAdded configuration options to control which third-party providers display links in the user interface. Introduced settings to limit the maximum number of links shown per provider type and an option to include extra identifier information in link names. Updated the settings page UI and frontend logic to support these new configurations.\n\n`refactor`: **Add json converter for partial date support**:\n\nAdded `JsonPartialDateTimeConverter` to parse flexible date formats. Replaced manual validation in `AirDate` and `EndDate` properties to centralize logic and reduce boilerplate.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.13/shoko_6.0.5.13_for_10.11.zip",
-                "checksum": "9b21667881f2c8e2b073fe675d62fb0f",
-                "timestamp": "2026-05-25T14:54:32Z"
-            },
-            {
-                "version": "6.0.5.1310",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.13) for more info.\n\n---\n\n`feat`: **Add third-party display link settings**:\n\nAdded configuration options to control which third-party providers display links in the user interface. Introduced settings to limit the maximum number of links shown per provider type and an option to include extra identifier information in link names. Updated the settings page UI and frontend logic to support these new configurations.\n\n`refactor`: **Add json converter for partial date support**:\n\nAdded `JsonPartialDateTimeConverter` to parse flexible date formats. Replaced manual validation in `AirDate` and `EndDate` properties to centralize logic and reduce boilerplate.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.13/shoko_6.0.5.13_for_10.10.zip",
-                "checksum": "0db358a85c1cc16fbdb33c6d3bad7d32",
-                "timestamp": "2026-05-25T14:54:43Z"
             }
         ]
     }
