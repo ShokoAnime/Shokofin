@@ -63,6 +63,26 @@ public class Ordering {
     }
 
     /// <summary>
+    /// Helps determine what the user wants to group into playlists.
+    /// </summary>
+    public enum PlaylistCreationType {
+        /// <summary>
+        /// No grouping. No playlists will be created.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// Only create playlists for groups that contain both series and movies.
+        /// </summary>
+        GroupWithMixedContent = 1,
+
+        /// <summary>
+        /// Create playlists for all groups.
+        /// </summary>
+        Grouped = 2,
+    }
+
+    /// <summary>
     /// Season or movie ordering when grouping series/box-sets using Shoko's groups.
     /// </summary>
     public enum OrderType {

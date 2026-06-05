@@ -21,4 +21,9 @@ public struct ProviderNames {
     public const string ShokoCollectionForGroup = "ShokoGroup";
 
     public const string ShokoCollectionForSeries = "ShokoSeries";
+
+    /// <summary>
+    /// Provider ID stored on playlists to identify them as Shoko-generated.
+    /// </summary>
+    public const string ShokoPlaylistForGroup = "ShokoPlaylistGroup";
 }

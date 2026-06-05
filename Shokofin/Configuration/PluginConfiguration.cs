@@ -576,6 +576,15 @@ public class PluginConfiguration : BasePluginConfiguration {
 
     #endregion
 
+    #region Playlist
+
+    /// <summary>
+    /// All playlist related configuration.
+    /// </summary>
+    public PlaylistConfiguration Playlist { get; set; } = new();
+
+    #endregion
+
     #region Virtual File System (VFS)
 
     /// <summary>

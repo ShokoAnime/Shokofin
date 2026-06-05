@@ -36,7 +36,7 @@ promise.then(({
 //#region Constants
 
 /**
- * @typedef {"Connection" | "Metadata_Title" | "Metadata_Description" | "Metadata_TagGenre" | "Metadata_Image" | "Metadata_Misc" | "Library_Basic" | "Library_Collection" | "Library_MultipleVersions" | "Library_MediaFolder" | "Library_SeasonMerging" | "VFS_Basic" | "VFS_Location" | "User" | "Series" | "SignalR_Connection" | "SignalR_Basic" | "SignalR_Library_New" | "SignalR_Library_Existing" | "Misc" | "Debug" | "Utilities"} SectionType
+ * @typedef {"Connection" | "Metadata_Title" | "Metadata_Description" | "Metadata_TagGenre" | "Metadata_Image" | "Metadata_Misc" | "Library_Basic" | "Library_Collection" | "Library_Playlist" | "Library_MultipleVersions" | "Library_MediaFolder" | "Library_SeasonMerging" | "VFS_Basic" | "VFS_Location" | "User" | "Series" | "SignalR_Connection" | "SignalR_Basic" | "SignalR_Library_New" | "SignalR_Library_Existing" | "Misc" | "Debug" | "Utilities"} SectionType
  */
 
 const MaxDebugPresses = 7;
@@ -53,6 +53,7 @@ const Sections = [
     "Metadata_Misc",
     "Library_Basic",
     "Library_Collection",
+    "Library_Playlist",
     "Library_MultipleVersions",
     "Library_MediaFolder",
     "Library_SeasonMerging",
@@ -494,7 +495,7 @@ async function updateView(view, form, config) {
             break;
 
         case "library":
-            activeSections.push("Library_Basic", "Library_Collection", "Library_MultipleVersions", "Library_MediaFolder", "Library_SeasonMerging");
+            activeSections.push("Library_Basic", "Library_Collection", "Library_Playlist", "Library_MultipleVersions", "Library_MediaFolder", "Library_SeasonMerging");
 
             await applyLibraryConfigToForm(form, form.querySelector("#MediaFolderSelector").value, config);
             break;
@@ -635,6 +636,12 @@ function applyFormToConfig(form, config) {
             config.AutoReconstructCollections = form.querySelector("#AutoReconstructCollections").checked;
             config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
             config.CollectionMinSizeOfTwo = form.querySelector("#CollectionMinSizeOfTwo").checked;
+
+            config.Playlist.AutoReconstruct = form.querySelector("#PlaylistAutoReconstruct").checked;
+            config.Playlist.Grouping = form.querySelector("#PlaylistGrouping").value;
+            config.Playlist.MinSizeOfTwo = form.querySelector("#PlaylistMinSizeOfTwo").checked;
+            config.Playlist.Ordering = form.querySelector("#PlaylistOrdering").value;
+            config.Playlist.SpecialsPlacement = form.querySelector("#PlaylistSpecialsPlacement").value;
 
             config.AutoMergeVersions = form.querySelector("#AutoMergeVersions").checked;
             ([config.MergeVersionSortSelectorList, config.MergeVersionSortSelectorOrder] = retrieveSortableCheckboxList(form, "MergeVersionSortSelectorList"));
@@ -914,6 +921,12 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#AutoReconstructCollections").checked = config.AutoReconstructCollections;
             form.querySelector("#CollectionGrouping").value = config.CollectionGrouping;
             form.querySelector("#CollectionMinSizeOfTwo").checked = config.CollectionMinSizeOfTwo;
+
+            form.querySelector("#PlaylistAutoReconstruct").checked = config.Playlist.AutoReconstruct;
+            form.querySelector("#PlaylistGrouping").value = config.Playlist.Grouping;
+            form.querySelector("#PlaylistMinSizeOfTwo").checked = config.Playlist.MinSizeOfTwo;
+            form.querySelector("#PlaylistOrdering").value = config.Playlist.Ordering;
+            form.querySelector("#PlaylistSpecialsPlacement").value = config.Playlist.SpecialsPlacement === "Default" ? "Excluded" : config.Playlist.SpecialsPlacement;
 
             form.querySelector("#AutoMergeVersions").checked = config.AutoMergeVersions || false;
             renderSortableCheckboxList(form, "MergeVersionSortSelectorList", config.MergeVersionSortSelectorList, config.MergeVersionSortSelectorOrder);

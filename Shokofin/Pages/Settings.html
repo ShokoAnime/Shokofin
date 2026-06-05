@@ -1755,6 +1755,58 @@ form:not(.advanced-mode) .advanced-only {
                             <span>${Save}</span>
                         </button>
                     </fieldset>
+                    <fieldset id="Library_Playlist_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Playlist Settings</h3>
+                        </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="PlaylistAutoReconstruct" />
+                                <span>Automatically Reconstruct Playlists</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Automatically reconstruct playlists after a library scan.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="PlaylistGrouping">Playlists</label>
+                            <select is="emby-select" id="PlaylistGrouping" name="PlaylistGrouping" class="emby-select-withcolor emby-select">
+                                <option value="None">Do not create playlists</option>
+                                <option value="GroupWithMixedContent" selected>Create playlists for groups with mixed content (series & movies)</option>
+                                <option value="Grouped">Create playlists for all groups</option>
+                            </select>
+                            <div class="fieldDescription">Determines what Shoko groups to create native Jellyfin playlists for.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="PlaylistMinSizeOfTwo" />
+                                <span>Require Two Entries for a Playlist</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">If playlists are enabled, only create a playlist when it will contain at least two items.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="PlaylistOrdering">Playlist Ordering</label>
+                            <select is="emby-select" id="PlaylistOrdering" name="PlaylistOrdering" class="emby-select-withcolor emby-select">
+                                <option value="Default" selected>Let Shoko decide (Default)</option>
+                                <option value="ReleaseDate">Order by release date</option>
+                                <option value="Chronological" class="advanced-only">Order in chronological order (use indirect relations) (EXPERIMENTAL)</option>
+                                <option value="ChronologicalIgnoreIndirect" class="advanced-only">Order in chronological order (ignore indirect relations) (EXPERIMENTAL)</option>
+                            </select>
+                            <div class="fieldDescription">Determines how to order items within playlists.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="PlaylistSpecialsPlacement">Playlist Specials Placement</label>
+                            <select is="emby-select" id="PlaylistSpecialsPlacement" name="PlaylistSpecialsPlacement" class="emby-select-withcolor emby-select">
+                                <option value="Excluded" selected>Exclude specials from the playlist</option>
+                                <option value="AfterSeason">Always place specials after the normal episodes</option>
+                                <option value="InBetweenSeasonByAirDate">Use release dates to place specials</option>
+                                <option value="InBetweenSeasonByOtherData">Loosely use the TheMovieDb data available in Shoko to place specials</option>
+                                <option value="InBetweenSeasonMixed">Either loosely use the TheMovieDb data available in Shoko or fallback to using release dates to place specials</option>
+                            </select>
+                            <div class="fieldDescription">Determines how specials are placed within playlists.</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>${Save}</span>
+                        </button>
+                    </fieldset>
                     <fieldset id="Library_MediaFolder_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
                         <legend>
                             <h3>Library Settings</h3>
