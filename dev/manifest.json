@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.1711",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.17) for more info.\n\n---\n\n`fix`: **Fix(settings): update dead group-management docs link**:\n\nOld URL returned 404. New URL points to collection#group-page.\nAlso add target=\"_blank\" so links open in new tab and don't lose\nunsaved config changes.\n\nCloses ShokoAnime/Shokofin#99",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.17/shoko_6.0.5.17_for_10.11.zip",
+                "checksum": "b613da615ac1b16f18f61bbbcdb5b991",
+                "timestamp": "2026-06-05T21:56:14Z"
+            },
+            {
+                "version": "6.0.5.1710",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.17) for more info.\n\n---\n\n`fix`: **Fix(settings): update dead group-management docs link**:\n\nOld URL returned 404. New URL points to collection#group-page.\nAlso add target=\"_blank\" so links open in new tab and don't lose\nunsaved config changes.\n\nCloses ShokoAnime/Shokofin#99",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.17/shoko_6.0.5.17_for_10.10.zip",
+                "checksum": "6afa915bb68b8b089a6da3a390c75b72",
+                "timestamp": "2026-06-05T21:56:21Z"
+            },
+            {
                 "version": "6.0.5.1611",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.16) for more info.\n\n---\n\n`chore`: **Remove all ConfigureAwait(false) calls**.",
                 "targetAbi": "10.11.0.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.13/shoko_6.0.5.13_for_10.10.zip",
                 "checksum": "0db358a85c1cc16fbdb33c6d3bad7d32",
                 "timestamp": "2026-05-25T14:54:43Z"
-            },
-            {
-                "version": "6.0.5.1211",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.12) for more info.\n\n---\n\n`feat`: **Add scheduled tasks for merging queued media**:\n\n- Added new scheduled task classes for episodes and movies.\n- Replaced direct task factory calls with the scheduled task calls.\n- Changed the post scan task to schedule the queued media tasks instead of the all media tasks.\n- Updated async method signatures to use default cancellation tokens and progress reporters for cleaner code.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.12/shoko_6.0.5.12_for_10.11.zip",
-                "checksum": "431cc131d211850f84816c0384f1e5fc",
-                "timestamp": "2026-05-25T13:27:39Z"
-            },
-            {
-                "version": "6.0.5.1210",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.12) for more info.\n\n---\n\n`feat`: **Add scheduled tasks for merging queued media**:\n\n- Added new scheduled task classes for episodes and movies.\n- Replaced direct task factory calls with the scheduled task calls.\n- Changed the post scan task to schedule the queued media tasks instead of the all media tasks.\n- Updated async method signatures to use default cancellation tokens and progress reporters for cleaner code.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.12/shoko_6.0.5.12_for_10.10.zip",
-                "checksum": "895561b89b64077a28ba402b455aae6f",
-                "timestamp": "2026-05-25T13:27:49Z"
             }
         ]
     }
