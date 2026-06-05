@@ -84,7 +84,7 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
             if (config.AddAniDBId && showInfo.AnidbAnimeId is { Length: > 0 } anidbAnimeId)
                 result.Item.SetProviderId(ProviderNames.Anidb, anidbAnimeId);
             if (config.AddTMDBId && showInfo.TmdbShowId is { Length: > 0 } tmdbShowId)
-                result.Item.SetProviderId(ProviderNames.Tmdb, tmdbShowId);
+                result.Item.SetProviderId(MetadataProvider.Tmdb, tmdbShowId);
             if (config.AddTvDBId && showInfo.TvdbShowId is { Length: > 0 } tvdbShowId)
                 result.Item.SetProviderId(MetadataProvider.Tvdb, tvdbShowId);
 
