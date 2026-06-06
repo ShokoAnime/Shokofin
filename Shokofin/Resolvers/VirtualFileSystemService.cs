@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks.Dataflow;
 using Emby.Naming.Common;
 using Emby.Naming.ExternalFiles;
@@ -21,6 +22,7 @@ using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Models;
 using Shokofin.Configuration;
+using Shokofin.Database;
 using Shokofin.Extensions;
 using Shokofin.ExternalIds;
 using Shokofin.Resolvers.Models;
@@ -50,6 +52,8 @@ public class VirtualFileSystemService {
     private readonly ILogger<VirtualFileSystemService> Logger;
 
     private readonly MediaFolderConfigurationService ConfigurationService;
+
+    private readonly UserDataMigrationService UserDataMigrationService;
 
     private readonly NamingOptions NamingOptions;
 
@@ -89,6 +93,7 @@ public class VirtualFileSystemService {
         IServerConfigurationManager configurationManager,
         ILogger<VirtualFileSystemService> logger,
         ILocalizationManager localizationManager,
+        UserDataMigrationService userDataMigrationService,
         NamingOptions namingOptions
     ) {
         ApiManager = apiManager;
@@ -100,6 +105,7 @@ public class VirtualFileSystemService {
         LibraryMonitor = libraryMonitor;
         ConfigurationManager = configurationManager;
         Logger = logger;
+        UserDataMigrationService = userDataMigrationService;
         DataCache = new(
             logger,
             new() { ExpirationScanFrequency = Plugin.Instance.Configuration.Debug.ExpirationScanFrequency },
@@ -426,6 +432,23 @@ public class VirtualFileSystemService {
 
             // Generate any new structure in the VFS.
             var result = await GenerateStructure(collectionType, vfsPath, allFiles, cancellationToken: cancellationToken);
+
+            // Detect path changes and migrate user data to new paths before
+            // cleaning up the old structure.
+            if (!string.IsNullOrEmpty(pathToClean)) {
+                var oldPaths = GetFilePaths(
+                    pathToClean,
+                    recursive: true,
+                    extensions: NamingOptions.VideoFileExtensions,
+                    cancellationToken: cancellationToken
+                ).ToHashSet();
+                var oldToNewPathMap = BuildPathChangeMap(vfsPath, oldPaths, result.Paths.ToArray());
+                if (oldToNewPathMap.Count > 0) {
+                    Logger.LogInformation("Detected {Count} VFS path changes, migrating user data…", oldToNewPathMap.Count);
+                    UserDataMigrationService.MigratePaths(oldToNewPathMap);
+                }
+            }
+
             // Cleanup any residual entries from old structure in the VFS if interactive
             // generation is disabled, or if it's enabled and we generated something new.
             if (!string.IsNullOrEmpty(pathToClean)) {
@@ -1772,6 +1795,64 @@ public class VirtualFileSystemService {
         }
 
         return true;
+    }
+
+    private static Dictionary<string, PathChangeInfo> BuildPathChangeMap(string vfsPath, HashSet<string> oldPaths, string[] newPaths) {
+        // Build index of new paths by composite key (fileId:filenameSeriesId)
+        var newPathsByKey = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var newPath in newPaths) {
+            if (TryGetIdsForPath(newPath, out var fileId, out var seriesId))
+                newPathsByKey.TryAdd($"{fileId}:{seriesId}", newPath);
+        }
+
+        var changes = new Dictionary<string, PathChangeInfo>(StringComparer.Ordinal);
+        foreach (var oldPath in oldPaths) {
+            if (!TryGetIdsForPath(oldPath, out var fileId, out var seriesId))
+                continue;
+
+            var key = $"{fileId}:{seriesId}";
+            if (!newPathsByKey.TryGetValue(key, out var newPath) ||
+                string.Equals(oldPath, newPath, StringComparison.Ordinal))
+                continue;
+
+            // Extract show folder name (first segment after vfsRoot/libraryId)
+            var parts = oldPath[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
+            if (parts.Length < 2)
+                continue;
+
+            var showFolder = parts[0];
+            if (!showFolder.TryGetAttributeValue(ProviderNames.ShokoSeries, out var showId))
+                continue;
+
+            // Parse new path for new show ID
+            var newParts = newPath[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar);
+            var newShowFolder = newParts[0];
+            if (!newShowFolder.TryGetAttributeValue(ProviderNames.ShokoSeries, out var newShowId))
+                continue;
+
+            // Detect movie (show folder has ShokoEpisode attribute)
+            var isMovie = showFolder.TryGetAttributeValue(ProviderNames.ShokoEpisode, out var episodeId);
+
+            var season = 0;
+            var episode = 0;
+            if (!isMovie) {
+                // Extract S/E from filename before first bracket
+                var fileName = Path.GetFileNameWithoutExtension(oldPath);
+                var namePart = fileName.Split('[', StringSplitOptions.TrimEntries)[0];
+                var match = Regex.Match(namePart, @"S(\d+)E(\d+)", RegexOptions.IgnoreCase);
+                if (match.Success) {
+                    int.TryParse(match.Groups[1].Value, out season);
+                    int.TryParse(match.Groups[2].Value, out episode);
+                }
+            }
+
+            changes.TryAdd(key, new(
+                oldPath, newPath, key, isMovie, showId, newShowId, episodeId,
+                season, episode, fileId, seriesId
+            ));
+        }
+
+        return changes;
     }
 
     #endregion

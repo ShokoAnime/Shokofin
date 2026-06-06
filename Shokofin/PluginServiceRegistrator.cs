@@ -23,6 +23,8 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator {
         serviceCollection.AddSingleton<Events.MetadataRefreshService>();
         serviceCollection.AddSingleton<Events.EventDispatchService>();
         serviceCollection.AddSingleton<SignalR.SignalRConnectionManager>();
+        serviceCollection.AddSingleton<Database.UserDataRepositoryService>();
+        serviceCollection.AddSingleton<Database.UserDataMigrationService>();
         serviceCollection.AddHostedService<SignalR.SignalREntryPoint>();
         serviceCollection.AddHostedService<Resolvers.ShokoLibraryMonitor>();
         serviceCollection.AddControllers(options => {

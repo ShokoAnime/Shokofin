@@ -15,9 +15,11 @@
     <!-- Jellyfin Core -->
     <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
         <PackageReference Include="Jellyfin.Controller" Version="10.11.0" TargetFramework="net9.0" />
+        <PackageReference Include="Jellyfin.Database.Implementations" Version="10.11.0" TargetFramework="net9.0" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net8'">
         <PackageReference Include="Jellyfin.Controller" Version="10.10.0" TargetFramework="net8" />
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.11" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
