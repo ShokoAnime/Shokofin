@@ -191,6 +191,11 @@ public class SeriesConfigurationService(ILogger<SeriesConfigurationService> logg
             Name = "Shokofin/Order by AirDate",
             Description = $"Order episodes by air date instead of episode number in Jellyfin. {ManagedBy}",
         },
+
+        new() {
+            Name = "Shokofin/Include in Playlists",
+            Description = $"Always include this series in automatic playlist generation in Jellyfin. {ManagedBy}",
+        },
     ];
 
     private Task<IReadOnlyDictionary<string, int>> CreatOrGetRequiredTags()
@@ -258,6 +263,8 @@ public class SeriesConfigurationService(ILogger<SeriesConfigurationService> logg
             config.EpisodeConversion = seriesConfiguration.EpisodeConversion.Value;
         if (seriesConfiguration.OrderByAirdate is not null)
             config.OrderByAirdate = seriesConfiguration.OrderByAirdate.Value;
+        if (seriesConfiguration.PlaylistInclude is not null)
+            config.PlaylistInclude = seriesConfiguration.PlaylistInclude.Value;
 
         return await UpdateSeriesConfigurationForId(shokoSeriesId, config);
     }
@@ -445,6 +452,13 @@ public class SeriesConfigurationService(ILogger<SeriesConfigurationService> logg
         }
         else {
             toRemoveSet.Add(knownTagDict["/shokofin/order by airdate"]);
+        }
+
+        if (seriesConfiguration.PlaylistInclude) {
+            toAddSet.Add(knownTagDict["/shokofin/include in playlists"]);
+        }
+        else {
+            toRemoveSet.Add(knownTagDict["/shokofin/include in playlists"]);
         }
 
         toAddSet.ExceptWith(currentTagSet);

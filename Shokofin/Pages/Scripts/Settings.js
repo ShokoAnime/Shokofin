@@ -642,6 +642,7 @@ function applyFormToConfig(form, config) {
             config.Playlist.MinSizeOfTwo = form.querySelector("#PlaylistMinSizeOfTwo").checked;
             config.Playlist.Ordering = form.querySelector("#PlaylistOrdering").value;
             config.Playlist.SpecialsPlacement = form.querySelector("#PlaylistSpecialsPlacement").value;
+            config.Playlist.TagFilter = form.querySelector("#PlaylistTagFilter").value;
 
             config.AutoMergeVersions = form.querySelector("#AutoMergeVersions").checked;
             ([config.MergeVersionSortSelectorList, config.MergeVersionSortSelectorOrder] = retrieveSortableCheckboxList(form, "MergeVersionSortSelectorList"));
@@ -927,6 +928,7 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#PlaylistMinSizeOfTwo").checked = config.Playlist.MinSizeOfTwo;
             form.querySelector("#PlaylistOrdering").value = config.Playlist.Ordering;
             form.querySelector("#PlaylistSpecialsPlacement").value = config.Playlist.SpecialsPlacement === "Default" ? "Excluded" : config.Playlist.SpecialsPlacement;
+            form.querySelector("#PlaylistTagFilter").value = config.Playlist.TagFilter;
 
             form.querySelector("#AutoMergeVersions").checked = config.AutoMergeVersions || false;
             renderSortableCheckboxList(form, "MergeVersionSortSelectorList", config.MergeVersionSortSelectorList, config.MergeVersionSortSelectorOrder);
@@ -1132,6 +1134,7 @@ async function applySeriesConfigToForm(form, seriesId, config = null) {
     renderCheckboxList(form, "SeriesSeasonMergingBehavior", seriesConfig.SeasonMergingBehavior.split(",").map(s => s.trim()).filter(s => s && s !== "None"));
     form.querySelector("#SeriesEpisodeConversion").value = seriesConfig.EpisodeConversion;
     form.querySelector("#SeriesOrderByAirdate").checked = seriesConfig.OrderByAirdate;
+    form.querySelector("#SeriesPlaylistInclude").checked = seriesConfig.PlaylistInclude;
 
     form.querySelector("#SeriesSettingsContainer").removeAttribute("hidden");
 
@@ -1531,6 +1534,7 @@ async function syncSettings(form, config) {
             seriesConfig.SeasonMergingBehavior = retrieveCheckboxList(form, "SeriesSeasonMergingBehavior").join(",") || "None";
             seriesConfig.EpisodeConversion = form.querySelector("#SeriesEpisodeConversion").value;
             seriesConfig.OrderByAirdate = form.querySelector("#SeriesOrderByAirdate").checked;
+            seriesConfig.PlaylistInclude = form.querySelector("#SeriesPlaylistInclude").checked;
 
             await ShokoApiClient.updateSeriesConfiguration(seriesId, seriesConfig);
         }

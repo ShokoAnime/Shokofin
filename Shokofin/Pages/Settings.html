@@ -1783,6 +1783,15 @@ form:not(.advanced-mode) .advanced-only {
                             <div class="fieldDescription checkboxFieldDescription">If playlists are enabled, only create a playlist when it will contain at least two items.</div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="PlaylistTagFilter">Per-Series Tag Filter</label>
+                            <select is="emby-select" id="PlaylistTagFilter" name="PlaylistTagFilter" class="emby-select-withcolor emby-select">
+                                <option value="None" selected>Ignore per-series tags (Default)</option>
+                                <option value="AnySeriesTagged">Require at least one tagged series per group</option>
+                                <option value="AllSeriesTagged">Require all series in a group to be tagged</option>
+                            </select>
+                            <div class="fieldDescription">When set, only groups meeting the tag requirement will get a playlist. Tag series in the Series Settings tab.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
                             <label class="selectLabel" for="PlaylistOrdering">Playlist Ordering</label>
                             <select is="emby-select" id="PlaylistOrdering" name="PlaylistOrdering" class="emby-select-withcolor emby-select">
                                 <option value="Default" selected>Let Shoko decide (Default)</option>
@@ -2690,6 +2699,13 @@ form:not(.advanced-mode) .advanced-only {
                                 <div class="fieldDescription checkboxFieldDescription">
                                     Order episodes by their airdate instead of by their original episode number. <strong>Warning</strong>: Only applied to <strong>AniDB Anime Structure</strong> and <strong>Shoko Group Structure</strong>.
                                 </div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="SeriesPlaylistInclude" />
+                                    <span>Include in Playlists</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">Always include this series in automatic playlist generation.</div>
                             </div>
                             <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                                 <span>${Save}</span>

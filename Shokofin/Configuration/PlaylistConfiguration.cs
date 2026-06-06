@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using OrderType = Shokofin.Utils.Ordering.OrderType;
 using PlaylistCreationType = Shokofin.Utils.Ordering.PlaylistCreationType;
+using PlaylistTagFilter = Shokofin.Utils.Ordering.PlaylistTagFilter;
 using SpecialOrderType = Shokofin.Utils.Ordering.SpecialOrderType;
 
 namespace Shokofin.Configuration;
@@ -37,4 +38,11 @@ public class PlaylistConfiguration {
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public SpecialOrderType SpecialsPlacement { get; set; } = SpecialOrderType.InBetweenSeasonByAirDate;
+
+    /// <summary>
+    /// How to evaluate per-series playlist tags when deciding whether
+    /// to create a playlist for a group.
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public PlaylistTagFilter TagFilter { get; set; } = PlaylistTagFilter.None;
 }

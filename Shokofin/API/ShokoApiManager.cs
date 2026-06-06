@@ -245,6 +245,9 @@ public partial class ShokoApiManager : IDisposable {
             if (tags.ContainsKey("/order by airdate"))
                 seriesSettings.OrderByAirdate = true;
 
+            if (tags.ContainsKey("/include in playlists"))
+                seriesSettings.PlaylistInclude = true;
+
             return seriesSettings;
         });
 

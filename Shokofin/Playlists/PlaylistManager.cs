@@ -141,7 +141,7 @@ public class PlaylistManager(
             if (collectionInfo == null)
                 continue;
 
-            if (!GroupQualifies(collectionInfo))
+            if (!await GroupQualifies(collectionInfo))
                 continue;
 
             finalGroups.TryAdd(collectionInfo.TopLevelId, collectionInfo);
@@ -279,14 +279,66 @@ public class PlaylistManager(
     /// <summary>
     /// Determine if a group qualifies for playlist creation based on the current config.
     /// </summary>
-    private bool GroupQualifies(CollectionInfo info) {
+    private async Task<bool> GroupQualifies(CollectionInfo info) {
         var config = Config;
 
-        return config.Grouping switch {
+        if (config.Grouping switch {
             Ordering.PlaylistCreationType.Grouped => CountItemsInCollection(info) > (config.MinSizeOfTwo ? 1 : 0),
             Ordering.PlaylistCreationType.GroupWithMixedContent => HasMixedContent(info) && CountItemsInCollection(info) > (config.MinSizeOfTwo ? 1 : 0),
             _ => false,
+        }) {
+            return await PassesTagFilter(info);
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Check if the group passes the per-series tag filter, if active.
+    /// </summary>
+    private async Task<bool> PassesTagFilter(CollectionInfo info) {
+        var filter = Config.TagFilter;
+        if (filter is Ordering.PlaylistTagFilter.None)
+            return true;
+
+        var shokoSeriesIds = CollectShokoSeriesIds(info);
+        if (shokoSeriesIds.Count == 0)
+            return filter is Ordering.PlaylistTagFilter.AllSeriesTagged;
+
+        var taggedCount = 0;
+        foreach (var seriesId in shokoSeriesIds) {
+            var seriesConfig = await _apiManager.GetInternalSeriesConfiguration(seriesId);
+            if (seriesConfig.PlaylistInclude)
+                taggedCount++;
+        }
+
+        return filter switch {
+            Ordering.PlaylistTagFilter.AnySeriesTagged => taggedCount > 0,
+            Ordering.PlaylistTagFilter.AllSeriesTagged => taggedCount == shokoSeriesIds.Count,
+            _ => true,
         };
+    }
+
+    /// <summary>
+    /// Collect all Shoko series IDs from a collection recursively.
+    /// </summary>
+    private static HashSet<string> CollectShokoSeriesIds(CollectionInfo info) {
+        var ids = new HashSet<string>();
+
+        foreach (var show in info.Shows)
+            foreach (var season in show.SeasonList)
+                foreach (var shokoSeries in season.ShokoSeries)
+                    ids.Add(shokoSeries.ShokoSeriesId);
+
+        foreach (var movie in info.Movies)
+            foreach (var season in movie.SeasonList)
+                foreach (var shokoSeries in season.ShokoSeries)
+                    ids.Add(shokoSeries.ShokoSeriesId);
+
+        foreach (var sub in info.SubCollections)
+            ids.UnionWith(CollectShokoSeriesIds(sub));
+
+        return ids;
     }
 
     /// <summary>

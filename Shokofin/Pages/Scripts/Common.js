@@ -249,6 +249,10 @@ export const LibraryMenu = globalThis.LibraryMenu;
  */
 
 /**
+ * @typedef {"None" | "AnySeriesTagged" | "AllSeriesTagged"} PlaylistTagFilter
+ */
+
+/**
  * @typedef {"Default" | "ReleaseDate" | "Chronological" | "ChronologicalIgnoreIndirect"} SeasonOrderType
  */
 
@@ -397,6 +401,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   SeasonMergingBehavior: SeasonMergingBehavior;
  *   EpisodeConversion: SeriesEpisodeConversion;
  *   OrderByAirdate: boolean;
+ *   PlaylistInclude: boolean;
  * }} SeriesConfiguration
  */
 
@@ -495,6 +500,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   MinSizeOfTwo: boolean;
  *   Ordering: SeasonOrderType;
  *   SpecialsPlacement: SpecialOrderType;
+ *   TagFilter: PlaylistTagFilter;
  * }} PlaylistConfiguration
  */
 

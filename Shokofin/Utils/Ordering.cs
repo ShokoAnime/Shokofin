@@ -83,6 +83,29 @@ public class Ordering {
     }
 
     /// <summary>
+    /// Determines how per-series playlist tags are evaluated when deciding
+    /// whether to create a playlist for a group.
+    /// </summary>
+    public enum PlaylistTagFilter {
+        /// <summary>
+        /// Ignore per-series tags. Use the global grouping config as-is.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// Only create a playlist for a group if at least one series in
+        /// the group has the playlist include tag set.
+        /// </summary>
+        AnySeriesTagged = 1,
+
+        /// <summary>
+        /// Only create a playlist for a group if all series in the group
+        /// have the playlist include tag set.
+        /// </summary>
+        AllSeriesTagged = 2,
+    }
+
+    /// <summary>
     /// Season or movie ordering when grouping series/box-sets using Shoko's groups.
     /// </summary>
     public enum OrderType {
