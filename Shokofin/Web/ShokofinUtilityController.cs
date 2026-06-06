@@ -69,10 +69,8 @@ public partial class ShokofinUtilityController(
         [FromQuery] string? query = null
     ) {
         IReadOnlyList<SimpleSeries>? list;
-        if (!string.IsNullOrWhiteSpace(query))
-        {
-            if (IdRegex().Match(query) is { Success: true } match)
-            {
+        if (!string.IsNullOrWhiteSpace(query)) {
+            if (IdRegex().Match(query) is { Success: true } match) {
                 var id = int.Parse(match.Groups["id"].Value);
                 var isShoko = match.Groups["type"].Value is "s";
                 if (Cache.TryGetValue("SeriesList", out list))

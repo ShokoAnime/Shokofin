@@ -351,8 +351,7 @@ public class ShokoApiClient : IDisposable {
     public async Task<bool> CheckIfPluginsExposed(CancellationToken cancellationToken = default)
         => (await Get($"/api/v3/Plugin", HttpMethod.Get, cancellationToken: cancellationToken)) is { StatusCode: HttpStatusCode.OK };
 
-    public async Task<string?> GetWebPrefix(CancellationToken cancellationToken = default)
-    {
+    public async Task<string?> GetWebPrefix(CancellationToken cancellationToken = default) {
         try {
             var settingsResponse = await Get("/api/v3/Settings", HttpMethod.Get, cancellationToken: cancellationToken);
             if (settingsResponse.StatusCode != HttpStatusCode.OK)
@@ -502,8 +501,7 @@ public class ShokoApiClient : IDisposable {
         // If the episode has no 'movie' images, get the series images to compensate.
         if (episodeImages.Posters.Count is 0) {
             // Separate 'episode' thumbnails from series images if there are any.
-            if (episodeImages is { Backdrops.Count: > 0, Thumbnails.Count: 0 })
-            {
+            if (episodeImages is { Backdrops.Count: > 0, Thumbnails.Count: 0 }) {
                 episodeImages.Thumbnails = episodeImages.Backdrops;
                 episodeImages.Backdrops = [];
             }

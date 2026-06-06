@@ -249,13 +249,11 @@ public class MediaFolderConfigurationService {
                     Logger.LogWarning("Skipping virtual folder {Name} because it has no ItemId or LibraryOptions.", virtualFolder.Name);
                     return false;
                 }
-                if (virtualFolder.CollectionType.ConvertToCollectionType() is not (null or CollectionType.movies or CollectionType.tvshows))
-                {
+                if (virtualFolder.CollectionType.ConvertToCollectionType() is not (null or CollectionType.movies or CollectionType.tvshows)) {
                     Logger.LogTrace("Skipping virtual folder {Name} because it is not a mixed, movie or tvshow library. (Id={LibraryId})", virtualFolder.Name, libraryId);
                     return false;
                 }
-                if (!ShokoIdLookup.IsEnabledForLibraryOptions(virtualFolder.LibraryOptions))
-                {
+                if (!ShokoIdLookup.IsEnabledForLibraryOptions(virtualFolder.LibraryOptions)) {
                     Logger.LogTrace("Skipping virtual folder {Name} because provider is not enabled for the library. (Id={LibraryId})", virtualFolder.Name, libraryId);
                     return false;
                 }

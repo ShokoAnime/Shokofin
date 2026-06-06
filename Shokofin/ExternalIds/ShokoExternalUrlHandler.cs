@@ -26,8 +26,7 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
     string IExternalUrlProvider.Name => _nextNames.TryDequeue(out var name) ? name : "Shoko";
 
     /// <inheritdoc/>
-    IEnumerable<string> IExternalUrlProvider.GetExternalUrls(BaseItem item)
-    {
+    IEnumerable<string> IExternalUrlProvider.GetExternalUrls(BaseItem item) {
         if (!lookup.IsEnabledForItem(item))
             yield break;
 
@@ -78,16 +77,14 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
 
     #region Inflate / Deflate
 
-    private static byte[] Deflate(byte[] data)
-    {
+    private static byte[] Deflate(byte[] data) {
         using var ms = new MemoryStream();
         using (var ds = new DeflateStream(ms, CompressionLevel.SmallestSize, true))
             ds.Write(data, 0, data.Length);
         return ms.ToArray();
     }
 
-    private static byte[] Inflate(byte[] compressed)
-    {
+    private static byte[] Inflate(byte[] compressed) {
         using var input = new MemoryStream(compressed);
         using var ds = new DeflateStream(input, CompressionMode.Decompress);
         using var output = new MemoryStream();
@@ -109,8 +106,7 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
 
         var config = Plugin.Instance.Configuration;
         var shokoUrl = config.WebUrl;
-        var counters = new Dictionary<string, int>()
-        {
+        var counters = new Dictionary<string, int>() {
             { ProviderNames.Shoko, 0 },
             { ProviderNames.Anidb, 0 },
             { ProviderNames.Tmdb, 0 },
@@ -178,8 +174,7 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
     }
 
     public static string GetFileInfoUrls(API.Info.FileInfo fileInfo) {
-        var result = new List<(string ProviderName, string Extras, string UrlPathname)>
-        {
+        var result = new List<(string ProviderName, string Extras, string UrlPathname)> {
             (
                 ProviderNames.Shoko,
                 $"(f{fileInfo.Id}) (s{fileInfo.SeriesId})",

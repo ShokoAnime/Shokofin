@@ -16,8 +16,7 @@ public class YearlySeason : IComparable<YearlySeason>, IEquatable<YearlySeason> 
     [JsonPropertyName("AnimeSeason"), JsonConverter(typeof(JsonStringEnumConverter))]
     public YearlySeasonName Season { get; set; }
 
-    public int CompareTo(YearlySeason? other)
-    {
+    public int CompareTo(YearlySeason? other) {
         if (other is null) return 1;
         var value = Year.CompareTo(other.Year);
         if (value == 0)

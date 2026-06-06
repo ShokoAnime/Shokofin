@@ -79,8 +79,7 @@ public class CollectionInfo(ShokoGroup group, string? mainSeasonId, List<ShowInf
     /// </summary>
     public IReadOnlyList<CollectionInfo> SubCollections { get; init; } = subCollections;
 
-    public CollectionInfo(ShokoGroup group, ShokoSeries series, string? mainSeasonId, List<ShowInfo> shows, List<CollectionInfo> subCollections) : this(group, mainSeasonId, shows, subCollections)
-    {
+    public CollectionInfo(ShokoGroup group, ShokoSeries series, string? mainSeasonId, List<ShowInfo> shows, List<CollectionInfo> subCollections) : this(group, mainSeasonId, shows, subCollections) {
         Title = series.Name;
         Titles = series.AniDB.Titles;
         Overview = series.Description == series.AniDB.Description

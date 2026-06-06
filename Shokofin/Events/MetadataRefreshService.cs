@@ -561,8 +561,7 @@ public class MetadataRefreshService {
             .Cast<Episode>()
             .ToList();
 
-    private Func<BaseItem, bool> FilterBaseItem(MetadataRefreshConfiguration config)
-    {
+    private Func<BaseItem, bool> FilterBaseItem(MetadataRefreshConfiguration config) {
         var updateUnaired = config.UpdateUnaired;
         var upperThreshold = config.UpdateUnaired ? (DateTime?)null : DateTime.UtcNow;
         var lowerThreshold = config.AutoRefreshRangeInDays > 0 ? DateTime.UtcNow.AddDays(-config.AutoRefreshRangeInDays) : (DateTime?)null;
