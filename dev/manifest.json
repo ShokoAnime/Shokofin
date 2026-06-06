@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.1911",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.19) for more info.\n\n---\n\n`feat`: **Add playlist generation for series+movie combinations**:\n\nAdds a new Playlist section to the plugin configuration on a dedicated\nconfig class, with toggles for auto-reconstruction, grouping strategy,\nminimum size, ordering, and specials placement. The core logic discovers\nShoko groups that contain mixed content (both series and movies), builds\na flat list of episodes and movies ordered by air date, and creates\npersistent native Jellyfin playlists via the IPlaylistManager API.\nExisting playlists are tracked by provider ID for incremental updates and\ncleanup on config changes. Frontend settings UI added alongside the\nbackend implementation.\n\nCloses ShokoAnime/Shokofin#47\n\n`chore`: **Correct bracket placement**.\n\n`feat`: **Migrate user data on VFS path changes**:\n\nMigrated user data between old and new VFS entries when group recreation\nor season renumbering causes path changes. Added a repository service with\nversion-aware direct DB access (SQLite for 10.10, EF Core for 10.11) and a\nmigration service that constructs keys from parsed VFS path data. Movies\nwith GUID-derived keys are migrated to the new GUID; TMDB/IMDB keys are\nstable and skipped. Matched old-to-new paths by composite\n(fileId:filenameSeriesId) key with no Shoko API calls.\n\n`feat`: **Add per-series playlist include tag and tag filter mode**:\n\nAdded a new Shokofin/Include in Playlists custom tag that can be applied\nto individual series via the Series Settings tab. A new TagFilter setting\non the Playlist config controls how these tags are evaluated:\n- None (default): ignore tags, use global grouping config\n- AnySeriesTagged: only create a playlist if at least one series in the\n  group has the tag\n- AllSeriesTagged: only create a playlist if every series in the group\n  has the tag\n\nThis lets users opt-in specific franchises (e.g. Evangelion) without\ncreating playlists for their entire 16k series library.",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.19/shoko_6.0.5.19_for_10.11.zip",
+                "checksum": "2fe10d2d2aaa544c364bf35dbeed2132",
+                "timestamp": "2026-06-06T02:19:48Z"
+            },
+            {
+                "version": "6.0.5.1910",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.19) for more info.\n\n---\n\n`feat`: **Add playlist generation for series+movie combinations**:\n\nAdds a new Playlist section to the plugin configuration on a dedicated\nconfig class, with toggles for auto-reconstruction, grouping strategy,\nminimum size, ordering, and specials placement. The core logic discovers\nShoko groups that contain mixed content (both series and movies), builds\na flat list of episodes and movies ordered by air date, and creates\npersistent native Jellyfin playlists via the IPlaylistManager API.\nExisting playlists are tracked by provider ID for incremental updates and\ncleanup on config changes. Frontend settings UI added alongside the\nbackend implementation.\n\nCloses ShokoAnime/Shokofin#47\n\n`chore`: **Correct bracket placement**.\n\n`feat`: **Migrate user data on VFS path changes**:\n\nMigrated user data between old and new VFS entries when group recreation\nor season renumbering causes path changes. Added a repository service with\nversion-aware direct DB access (SQLite for 10.10, EF Core for 10.11) and a\nmigration service that constructs keys from parsed VFS path data. Movies\nwith GUID-derived keys are migrated to the new GUID; TMDB/IMDB keys are\nstable and skipped. Matched old-to-new paths by composite\n(fileId:filenameSeriesId) key with no Shoko API calls.\n\n`feat`: **Add per-series playlist include tag and tag filter mode**:\n\nAdded a new Shokofin/Include in Playlists custom tag that can be applied\nto individual series via the Series Settings tab. A new TagFilter setting\non the Playlist config controls how these tags are evaluated:\n- None (default): ignore tags, use global grouping config\n- AnySeriesTagged: only create a playlist if at least one series in the\n  group has the tag\n- AllSeriesTagged: only create a playlist if every series in the group\n  has the tag\n\nThis lets users opt-in specific franchises (e.g. Evangelion) without\ncreating playlists for their entire 16k series library.",
+                "targetAbi": "10.10.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.19/shoko_6.0.5.19_for_10.10.zip",
+                "checksum": "5de148f2885c39d124c4db5003fbf81a",
+                "timestamp": "2026-06-06T02:19:58Z"
+            },
+            {
                 "version": "6.0.5.1811",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.18) for more info.\n\n---\n\n`fix`: **Use MetadataProvider.Tmdb instead of ProviderNames.Tmdb**:\n\nFixes ShokoAnime/Shokofin#100",
                 "targetAbi": "10.11.0.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.15/shoko_6.0.5.15_for_10.10.zip",
                 "checksum": "e375800713c16789ce608bae94ab6a7c",
                 "timestamp": "2026-05-25T15:44:27Z"
-            },
-            {
-                "version": "6.0.5.1411",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.14) for more info.\n\n---\n\n`fix`: **Conditionally run merge jobs**.",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.14/shoko_6.0.5.14_for_10.11.zip",
-                "checksum": "c937a59345be1dc288de7576343b340d",
-                "timestamp": "2026-05-25T14:56:27Z"
-            },
-            {
-                "version": "6.0.5.1410",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.14) for more info.\n\n---\n\n`fix`: **Conditionally run merge jobs**.",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.14/shoko_6.0.5.14_for_10.10.zip",
-                "checksum": "2b079b254db8db5a29db019a49e18e44",
-                "timestamp": "2026-05-25T14:56:38Z"
             }
         ]
     }
