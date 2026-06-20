@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
@@ -87,7 +88,12 @@ public class UserDataMigrationService(
 
     private bool MigratePerUser(string oldKey, string newKey, Guid oldItemId, Guid newItemId) {
         var anyMigrated = false;
-        foreach (var user in _userManager.Users) {
+        #if NET9_0
+        var users = _userManager.GetUsers().ToList();
+        #else
+        var users = _userManager.Users.ToList();
+        #endif
+        foreach (var user in users) {
             var oldData = _repository.GetUserDataByKey(oldKey, user);
             if (oldData is null)
                 continue;

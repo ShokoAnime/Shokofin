@@ -189,7 +189,12 @@ public class PlaylistManager(
         progress.Report(70);
 
         // Create new playlists
-        var firstUser = _userManager.Users.FirstOrDefault();
+        #if NET9_0
+        var users = _userManager.GetUsers().ToList();
+        #else
+        var users = _userManager.Users.ToList();
+        #endif
+        var firstUser = users.FirstOrDefault();
         if (firstUser == null) {
             _logger.LogWarning("No users found, skipping playlist creation.");
             return;
