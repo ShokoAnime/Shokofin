@@ -481,7 +481,7 @@ public class UserDataSyncManager {
                     if (!userConfig.SyncUserDataOnImport)
                         continue;
 
-                    SyncVideo(video, userConfig, SyncDirection.Import, fileId, seriesId);
+                    _ = SyncVideo(video, userConfig, SyncDirection.Import, fileId, seriesId);
                 }
                 break;
             }
