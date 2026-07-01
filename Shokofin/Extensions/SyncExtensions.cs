@@ -74,7 +74,7 @@ public static class SyncExtensions {
         userData.Played = userStats.LastWatchedAt.HasValue;
         userData.PlayCount = userStats.WatchedCount;
         userData.PlaybackPositionTicks = userStats.ResumePosition?.Ticks ?? 0;
-        userData.LastPlayedDate = userStats.ResumePosition.HasValue ? userStats.LastUpdatedAt : userStats.LastWatchedAt ?? userStats.LastUpdatedAt;
+        userData.LastPlayedDate = userStats.LastWatchedAt ?? (userStats.ResumePosition.HasValue ? userStats.LastUpdatedAt : null);
         return userData;
     }
 
@@ -84,6 +84,6 @@ public static class SyncExtensions {
             Played = userStats.LastWatchedAt.HasValue,
             PlayCount = userStats.WatchedCount,
             PlaybackPositionTicks = userStats.ResumePosition?.Ticks ?? 0,
-            LastPlayedDate = userStats.ResumePosition.HasValue ? userStats.LastUpdatedAt : userStats.LastWatchedAt ?? userStats.LastUpdatedAt,
+            LastPlayedDate = userStats.LastWatchedAt ?? (userStats.ResumePosition.HasValue ? userStats.LastUpdatedAt : null),
         };
 }
