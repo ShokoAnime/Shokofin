@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.2211",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.22) for more info.\n\n---\n\n`fix`: **Fix api call path for tmdb movie & season (#102)**.",
+                "targetAbi": "10.11.11.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.22/shoko_6.0.5.22_for_10.11.zip",
+                "checksum": "7234c1d53372cee205080b5215b68c41",
+                "timestamp": "2026-07-16T14:57:37Z"
+            },
+            {
+                "version": "6.0.5.2210",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.22) for more info.\n\n---\n\n`fix`: **Fix api call path for tmdb movie & season (#102)**.",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.22/shoko_6.0.5.22_for_10.10.zip",
+                "checksum": "78f9af109809950ff0c0d6113b0c4560",
+                "timestamp": "2026-07-16T14:57:48Z"
+            },
+            {
                 "version": "6.0.5.2111",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.21) for more info.\n\n---\n\n`repo`: **Update version matrix in read-me**. (_Skip CI_)\n\n`fix`: **Fix user watch state syncing logic (#101)**:\n\nThis fixes an issue that became noticable on Jellyfin 10.11 where\ncriteria as to what appears in Next Up. Series that have been marked as\nwatched and then completely marked as unwatched for a user whose watch\nstate is synced to Shoko would have S01E01 of the offending series show\nup in Next Up upon a resync due to userData.LastPlayedDate being set to\nLastUpdateAt which always exists.",
                 "targetAbi": "10.11.11.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.18/shoko_6.0.5.18_for_10.10.zip",
                 "checksum": "52e114ed51733e1496198ba47f52e2b5",
                 "timestamp": "2026-06-05T22:52:51Z"
-            },
-            {
-                "version": "6.0.5.1711",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.17) for more info.\n\n---\n\n`fix`: **Fix(settings): update dead group-management docs link**:\n\nOld URL returned 404. New URL points to collection#group-page.\nAlso add target=\"_blank\" so links open in new tab and don't lose\nunsaved config changes.\n\nCloses ShokoAnime/Shokofin#99",
-                "targetAbi": "10.11.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.17/shoko_6.0.5.17_for_10.11.zip",
-                "checksum": "b613da615ac1b16f18f61bbbcdb5b991",
-                "timestamp": "2026-06-05T21:56:14Z"
-            },
-            {
-                "version": "6.0.5.1710",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.17) for more info.\n\n---\n\n`fix`: **Fix(settings): update dead group-management docs link**:\n\nOld URL returned 404. New URL points to collection#group-page.\nAlso add target=\"_blank\" so links open in new tab and don't lose\nunsaved config changes.\n\nCloses ShokoAnime/Shokofin#99",
-                "targetAbi": "10.10.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.17/shoko_6.0.5.17_for_10.10.zip",
-                "checksum": "6afa915bb68b8b089a6da3a390c75b72",
-                "timestamp": "2026-06-05T21:56:21Z"
             }
         ]
     }
