@@ -686,8 +686,8 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<IReadOnlyList<File>> GetFilesForTmdbSeason(string seasonId)
         => HasPluginsExposed
-            ? (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/File?pageSize=0&include=XRefs,ReleaseInfo", skipCache: true))?.List ?? []
-            : (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB", skipCache: true))?.List ?? [];
+            ? (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/Shoko/File?pageSize=0&include=XRefs,ReleaseInfo", skipCache: true))?.List ?? []
+            : (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/Shoko/File?pageSize=0&include=XRefs&includeDataFrom=AniDB", skipCache: true))?.List ?? [];
 
     #endregion
 
@@ -717,8 +717,8 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<IReadOnlyList<File>> GetFilesForTmdbMovie(string movieId)
         => HasPluginsExposed
-            ? (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/File?pageSize=0&include=XRefs,ReleaseInfo", skipCache: true))?.List ?? []
-            : (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB", skipCache: true))?.List ?? [];
+            ? (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/Shoko/File?pageSize=0&include=XRefs,ReleaseInfo", skipCache: true))?.List ?? []
+            : (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/Shoko/File?pageSize=0&include=XRefs&includeDataFrom=AniDB", skipCache: true))?.List ?? [];
 
     public async Task<IReadOnlyList<TmdbMovieCrossReference>> GetTmdbCrossReferencesForTmdbMovie(string showId)
         => await GetOrNull<IReadOnlyList<TmdbMovieCrossReference>>($"/api/v3/TMDB/Movie/{showId}/CrossReferences") ?? [];
