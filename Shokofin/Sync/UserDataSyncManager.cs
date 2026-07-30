@@ -648,15 +648,7 @@ public class UserDataSyncManager {
                     // Abort since there are no remote stats to import.
                     if (remoteUserStats == null)
                         break;
-                    // Re-read local stats in case Jellyfin's ReattachUserDataAsync
-                    // populated the UserData rows while we were waiting on the
-                    // Shoko API call. If the reattachment already wrote rows for
-                    // this item, a blind SaveUserData would race it and trigger
-                    // a UNIQUE CONSTRAINT violation on (ItemId, UserId, CustomDataKey).
-                    if (localUserStats == null)
-                        localUserStats = UserDataManager.GetUserData(user, video);
-
-                    // Create a new local stats entry if there is still no local entry.
+                    // Create a new local stats entry if there is no local entry.
                     if (localUserStats == null) {
                         UserDataManager.SaveUserData(user, video, localUserStats = remoteUserStats.ToUserData(video), UserDataSaveReason.Import, CancellationToken.None);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, seriesId);

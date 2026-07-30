@@ -19,6 +19,12 @@ public class UserDataRepositoryService
 #if NET9_0
     private readonly IDbContextFactory<JellyfinDbContext> _dbContextFactory;
 
+    /// <summary>
+    /// The sentinel GUID Jellyfin uses as a placeholder for detached UserData rows.
+    /// Must match BaseItemRepository.PlaceholderId.
+    /// </summary>
+    private static readonly Guid PlaceholderId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+
     public UserDataRepositoryService(
         IDbContextFactory<JellyfinDbContext> dbContextFactory) {
         _dbContextFactory = dbContextFactory;
@@ -103,6 +109,16 @@ public class UserDataRepositoryService
             existing.Likes = data.Likes;
         }
         else {
+            // Delete any placeholder row that shares the same (UserId, CustomDataKey).
+            // Without this, Jellyfin's ReattachUserDataAsync will attempt to move the
+            // placeholder row to this ItemId and hit a UNIQUE CONSTRAINT violation
+            // because our row already occupies that (ItemId, UserId, CustomDataKey) slot.
+            // This mirrors what Jellyfin itself does for the tombstone path in
+            // BaseItemRepository (commit 482271c / PR #14475).
+            context.UserData
+                .Where(e => e.ItemId == PlaceholderId && e.UserId == user.Id && e.CustomDataKey == key)
+                .ExecuteDelete();
+
             var entry = new UserData {
                 CustomDataKey = key,
                 ItemId = newItemId,
