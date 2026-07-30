@@ -19,6 +19,12 @@ public class UserDataRepositoryService
 #if NET9_0
     private readonly IDbContextFactory<JellyfinDbContext> _dbContextFactory;
 
+    /// <summary>
+    /// The sentinel GUID Jellyfin uses as a placeholder for detached UserData rows.
+    /// Must match BaseItemRepository.PlaceholderId.
+    /// </summary>
+    private static readonly Guid PlaceholderId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+
     public UserDataRepositoryService(
         IDbContextFactory<JellyfinDbContext> dbContextFactory) {
         _dbContextFactory = dbContextFactory;
@@ -84,24 +90,54 @@ public class UserDataRepositoryService
     public void SaveUserDataForNewKey(string key, UserItemData data, User user, Guid newItemId) {
 #if NET9_0
         using var context = _dbContextFactory.CreateDbContext();
-        var entry = new UserData {
-            CustomDataKey = key,
-            ItemId = newItemId,
-            UserId = user.Id,
-            Item = null!,
-            User = null!,
-            RetentionDate = null,
-            Rating = data.Rating,
-            PlaybackPositionTicks = data.PlaybackPositionTicks,
-            PlayCount = data.PlayCount,
-            IsFavorite = data.IsFavorite,
-            LastPlayedDate = data.LastPlayedDate,
-            Played = data.Played,
-            AudioStreamIndex = data.AudioStreamIndex,
-            SubtitleStreamIndex = data.SubtitleStreamIndex,
-            Likes = data.Likes,
-        };
-        context.UserData.Add(entry);
+
+        // If a row already exists for this (ItemId, UserId, CustomDataKey) composite key,
+        // update it in place. Otherwise Jellyfin's ReattachUserDataAsync will attempt to
+        // move placeholder rows to the same key and hit a UNIQUE CONSTRAINT violation.
+        var existing = context.UserData
+            .FirstOrDefault(e => e.ItemId == newItemId && e.UserId == user.Id && e.CustomDataKey == key);
+
+        if (existing is not null) {
+            existing.Rating = data.Rating;
+            existing.PlaybackPositionTicks = data.PlaybackPositionTicks;
+            existing.PlayCount = data.PlayCount;
+            existing.IsFavorite = data.IsFavorite;
+            existing.LastPlayedDate = data.LastPlayedDate;
+            existing.Played = data.Played;
+            existing.AudioStreamIndex = data.AudioStreamIndex;
+            existing.SubtitleStreamIndex = data.SubtitleStreamIndex;
+            existing.Likes = data.Likes;
+        }
+        else {
+            // Delete any placeholder row that shares the same (UserId, CustomDataKey).
+            // Without this, Jellyfin's ReattachUserDataAsync will attempt to move the
+            // placeholder row to this ItemId and hit a UNIQUE CONSTRAINT violation
+            // because our row already occupies that (ItemId, UserId, CustomDataKey) slot.
+            // This mirrors what Jellyfin itself does for the tombstone path in
+            // BaseItemRepository (commit 482271c / PR #14475).
+            context.UserData
+                .Where(e => e.ItemId == PlaceholderId && e.UserId == user.Id && e.CustomDataKey == key)
+                .ExecuteDelete();
+
+            var entry = new UserData {
+                CustomDataKey = key,
+                ItemId = newItemId,
+                UserId = user.Id,
+                Item = null!,
+                User = null!,
+                RetentionDate = null,
+                Rating = data.Rating,
+                PlaybackPositionTicks = data.PlaybackPositionTicks,
+                PlayCount = data.PlayCount,
+                IsFavorite = data.IsFavorite,
+                LastPlayedDate = data.LastPlayedDate,
+                Played = data.Played,
+                AudioStreamIndex = data.AudioStreamIndex,
+                SubtitleStreamIndex = data.SubtitleStreamIndex,
+                Likes = data.Likes,
+            };
+            context.UserData.Add(entry);
+        }
         context.SaveChanges();
 #else
         using var connection = new SqliteConnection($"Data Source={_dbPath}");
