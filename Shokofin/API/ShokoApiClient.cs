@@ -372,7 +372,7 @@ public class ShokoApiClient : IDisposable {
 
     #region Image
 
-    public Task<HttpResponseMessage> GetImageAsync(ImageSource imageSource, ShokoImageType imageType, int imageId)
+    public Task<HttpResponseMessage> GetImageAsync(string imageSource, ShokoImageType imageType, int imageId)
         => Get($"/api/v3/Image/{imageSource}/{imageType}/{imageId}", HttpMethod.Get, null, true);
 
     #endregion

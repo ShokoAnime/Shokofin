@@ -7,7 +7,7 @@ public class Image {
     /// <summary>
     /// AniDB, TMDB, etc.
     /// </summary>
-    public ImageSource Source { get; set; } = ImageSource.AniDB;
+    public string Source { get; set; } = "AniDB";
 
     /// <summary>
     /// Poster, Banner, etc.

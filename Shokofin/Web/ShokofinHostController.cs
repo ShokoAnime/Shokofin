@@ -80,7 +80,7 @@ public class ShokofinHostController(ILogger<ShokofinHostController> logger, Shok
     [ProducesResponseType(404)]
     [HttpGet("Image/{ImageSource}/{ImageType}/{ImageId}")]
     [HttpHead("Image/{ImageSource}/{ImageType}/{ImageId}")]
-    public async Task<ActionResult> GetImageAsync([FromRoute] ImageSource imageSource, [FromRoute] ShokoImageType imageType, [FromRoute, Range(1, int.MaxValue)] int imageId
+    public async Task<ActionResult> GetImageAsync([FromRoute] string imageSource, [FromRoute] ShokoImageType imageType, [FromRoute, Range(1, int.MaxValue)] int imageId
     ) {
         var response = await APIClient.GetImageAsync(imageSource, imageType, imageId);
         if (response.StatusCode is System.Net.HttpStatusCode.NotFound)
