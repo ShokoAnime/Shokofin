@@ -48,6 +48,16 @@ public class ImageProvider(IHttpClientFactory _httpClientFactory, ILogger<ImageP
                     if (!_lookup.TryGetSeasonIdFor(series, out var seasonId) || await _apiManager.GetShowInfoBySeasonId(seasonId) is not { } showInfo)
                         break;
 
+                    // If using Shoko titles/images for TMDB structure is enabled,
+                    // find the main shoko series for this show and use it to generate images.
+                    if (
+                        showInfo.DefaultSeason.StructureType == Configuration.SeriesStructureType.TMDB_SeriesAndMovies &&
+                        Plugin.Instance.Configuration.TmdbStructureUseShokoMetadata
+                    ) {
+                        var overrideShowInfo = await _apiManager.GetMainShokoSeriesShowInfo(showInfo.ShokoSeriesId);
+                        showInfo = overrideShowInfo ?? showInfo;
+                    }
+
                     var images = await ImageUtility.GetShowImages(showInfo, metadataLanguage, displayMode, cancellationToken);
                     list.AddRange(images);
 

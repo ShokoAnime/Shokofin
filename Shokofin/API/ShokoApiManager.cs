@@ -1757,6 +1757,17 @@ public partial class ShokoApiManager : IDisposable {
             .ToList();
     }
 
+    public async Task<ShowInfo?> GetMainShokoSeriesShowInfo(string? seasonId) {
+        if (string.IsNullOrEmpty(seasonId))
+            return null;
+
+        var group = await ApiClient.GetShokoGroupForShokoSeries(seasonId);
+        if (group == null || group.IDs.MainSeries <= 0)
+            return await GetShowInfoBySeasonId(seasonId);
+
+        return await GetShowInfoBySeasonId(group.IDs.MainSeries.ToString());
+    }
+
     public async Task<ShowInfo?> GetShowInfoBySeasonId(string seasonId) {
         if (string.IsNullOrEmpty(seasonId))
             return null;

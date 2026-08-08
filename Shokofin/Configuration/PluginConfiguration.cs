@@ -498,6 +498,12 @@ public class PluginConfiguration : BasePluginConfiguration {
     public bool FilterMovieLibraries { get; set; }
 
     /// <summary>
+    /// Use Shoko titles and images for top level series when
+    /// using TMDB series structure.
+    /// </summary>
+    public bool TmdbStructureUseShokoMetadata { get; set; }
+
+    /// <summary>
     /// Append all specials in AniDB movie series as special features for
     /// the movies.
     /// </summary>

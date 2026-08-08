@@ -46,7 +46,17 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
                 }
             }
 
-            var (displayTitle, alternateTitle) = TextUtility.GetShowTitles(showInfo, info.MetadataLanguage);
+            // If using Shoko titles/images for TMDB structure is enabled,
+            // find the main shoko series for this show and use it to generate titles.
+            API.Info.ShowInfo? titleOverrideShowInfo = null;
+            if (
+                showInfo.DefaultSeason.StructureType == Configuration.SeriesStructureType.TMDB_SeriesAndMovies &&
+                Plugin.Instance.Configuration.TmdbStructureUseShokoMetadata
+            ) {
+                titleOverrideShowInfo = await _apiManager.GetMainShokoSeriesShowInfo(showInfo.ShokoSeriesId);
+            }
+
+            var (displayTitle, alternateTitle) = TextUtility.GetShowTitles(titleOverrideShowInfo ?? showInfo, info.MetadataLanguage);
             if (string.IsNullOrEmpty(displayTitle))
                 displayTitle = showInfo.Title;
 
