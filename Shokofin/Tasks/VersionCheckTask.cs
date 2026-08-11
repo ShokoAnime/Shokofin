@@ -40,7 +40,7 @@ public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         => [
             new() {
-#if NET9_0
+#if NET9_0_OR_GREATER
                 Type = TaskTriggerInfoType.StartupTrigger,
 #else
                 Type = TaskTriggerInfo.TriggerStartup,

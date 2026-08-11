@@ -48,7 +48,7 @@ compatible with what.
 | `6.0.0`           | `10.11`           | `5.2.0` — `5.2.5` |
 | `6.0.1` — `6.0.3` | `10.10` — `10.11` | `5.2.0` — `5.3.0` |
 | `6.0.4` — `6.0.5` | `10.10` — `10.11` | `5.2.0` — `5.3.3` |
-| `dev`             | `10.10` — `10.11` | `dev`             |
+| `dev`             | `10.10` — `12.x`  | `dev`             |
 
 ### Official Repository
 
@@ -106,8 +106,8 @@ compatible with what.
 1. **Clone or Download the Repository:**
    - Clone or download the repository from GitHub.
 
-2. **Set Up .NET Core SDK:**
-   - Make sure you have the .NET Core SDK installed on your computer.
+2. **Set Up .NET SDK:**
+   - Make sure you have the .NET 10 SDK installed on your computer.
 
 3. **Build the Plugin:**
    - Open a terminal and navigate to the repository directory.
@@ -115,10 +115,12 @@ compatible with what.
 
      ```sh
      $ dotnet restore Shokofin/Shokofin.csproj
-     $ dotnet publish -c Release Shokofin/Shokofin.csproj
+     $ dotnet publish -c Release -f net10.0 Shokofin/Shokofin.csproj
      ```
 4. **Copy Built Files:**
-   - After building, go to the `bin/Release/net9.0/` directory.
+   - Replace `net10.0` in the command with the framework matching your server,
+     if needed. Use `net10.0` for Jellyfin 12, `net9.0` for Jellyfin 10.11, or
+     `net8` for Jellyfin 10.10, then open that directory under `bin/Release/`.
    - Copy all `.dll` files to a folder named `Shoko`.
    - Place this `Shoko` folder in the `plugins` directory of your Jellyfin
      program data directory or inside the portable install directory. For help

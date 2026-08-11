@@ -2,7 +2,7 @@ using System;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 
-#if NET9_0
+#if NET9_0_OR_GREATER
 using System.Linq;
 using Jellyfin.Database.Implementations;
 using Jellyfin.Database.Implementations.Entities;
@@ -16,7 +16,7 @@ namespace Shokofin.Database;
 
 public class UserDataRepositoryService
 {
-#if NET9_0
+#if NET9_0_OR_GREATER
     private readonly IDbContextFactory<JellyfinDbContext> _dbContextFactory;
 
     /// <summary>
@@ -39,7 +39,7 @@ public class UserDataRepositoryService
 #endif
 
     public UserItemData? GetUserDataByKey(string key, User user) {
-#if NET9_0
+#if NET9_0_OR_GREATER
         using var context = _dbContextFactory.CreateDbContext();
         var entry = context.UserData
             .AsNoTracking()
@@ -88,7 +88,7 @@ public class UserDataRepositoryService
     }
 
     public void SaveUserDataForNewKey(string key, UserItemData data, User user, Guid newItemId) {
-#if NET9_0
+#if NET9_0_OR_GREATER
         using var context = _dbContextFactory.CreateDbContext();
 
         // If a row already exists for this (ItemId, UserId, CustomDataKey) composite key,
@@ -162,7 +162,7 @@ public class UserDataRepositoryService
     }
 
     public void DeleteUserDataByKey(string key, User user, Guid oldItemId) {
-#if NET9_0
+#if NET9_0_OR_GREATER
         using var context = _dbContextFactory.CreateDbContext();
         context.UserData
             .Where(e => e.ItemId == oldItemId && e.UserId == user.Id && e.CustomDataKey == key)

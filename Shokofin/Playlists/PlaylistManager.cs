@@ -189,7 +189,7 @@ public class PlaylistManager(
         progress.Report(70);
 
         // Create new playlists
-        #if NET9_0
+        #if NET9_0_OR_GREATER
         var users = _userManager.GetUsers().ToList();
         #else
         var users = _userManager.Users.ToList();
@@ -253,7 +253,11 @@ public class PlaylistManager(
                 .ToList()!;
 
             if (toAdd.Count > 0) {
+#if NET10_0_OR_GREATER
+                await _playlist.AddItemToPlaylistAsync(existingPlaylist.Id, toAdd, null, firstUser.Id);
+#else
                 await _playlist.AddItemToPlaylistAsync(existingPlaylist.Id, toAdd, firstUser.Id);
+#endif
                 needsUpdate = true;
             }
 
