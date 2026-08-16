@@ -234,9 +234,9 @@ public static class ImageUtility {
             orderedImages.Count == 0 &&
             orderedTypes.Count > 0 &&
             imageType is ImageType.Primary &&
-            images.Any(image => image is { Source: "AniDB", Type: API.Models.ShokoImageType.Poster, IsAvailable: true })
+            images.Any(image => image is { Source: "AniDB", Type: "Poster" or "Primary", IsAvailable: true })
         )
-            orderedImages = [(images.First(image => image is { Source: "AniDB", Type: API.Models.ShokoImageType.Poster, IsAvailable: true }), ImageLanguageType.None)];
+            orderedImages = [(images.First(image => image is { Source: "AniDB", Type: "Poster" or "Primary", IsAvailable: true }), ImageLanguageType.None)];
 
         var index = orderedImages.Count - 1;
         var useDimensions = config.UseDimensions;
