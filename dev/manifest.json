@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.2511",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.25) for more info.\n\n---\n\n`feat`: **Add support for shoko image guids**.\n\n`fix`: **Disable playlist grouping by default**.",
+                "targetAbi": "10.11.11.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.25/shoko_6.0.5.25_for_10.11.zip",
+                "checksum": "8534101c31058e55ea9f5cabfdade5dc",
+                "timestamp": "2026-08-16T12:08:01Z"
+            },
+            {
+                "version": "6.0.5.2510",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.25) for more info.\n\n---\n\n`feat`: **Add support for shoko image guids**.\n\n`fix`: **Disable playlist grouping by default**.",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.25/shoko_6.0.5.25_for_10.10.zip",
+                "checksum": "887e62b5b8ad6be492e28c969724343f",
+                "timestamp": "2026-08-16T12:08:10Z"
+            },
+            {
                 "version": "6.0.5.2411",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.24) for more info.\n\n---\n\n`fix`: **Use string for image source**:\n\nEnum can't represent all sources currently returned by the API across stable and dev. Instead of adding the new sources which exist in dev but not in stable, we're converting it to a string since we're just passing it along internally and back to the server anyways.",
                 "targetAbi": "10.11.11.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.21/shoko_6.0.5.21_for_10.10.zip",
                 "checksum": "8f2dfad05a7c520c4ea26d3820edc0e0",
                 "timestamp": "2026-07-01T05:19:14Z"
-            },
-            {
-                "version": "6.0.5.2011",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.20) for more info.\n\n---\n\n`misc`: **Bump jellyfin core versions**.\n\n`misc`: **Bump jellyfin core versions (take 2)**.\n\n`fix`: **Correct get users usage for jellyfin >10.11.9 on the 10.11 side**.\n\n`misc`: **Tell compiler it's fine to not await the sync**.",
-                "targetAbi": "10.11.11.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.20/shoko_6.0.5.20_for_10.11.zip",
-                "checksum": "2019a1a3e24fb72188202a843984a390",
-                "timestamp": "2026-06-20T00:25:20Z"
-            },
-            {
-                "version": "6.0.5.2010",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.20) for more info.\n\n---\n\n`misc`: **Bump jellyfin core versions**.\n\n`misc`: **Bump jellyfin core versions (take 2)**.\n\n`fix`: **Correct get users usage for jellyfin >10.11.9 on the 10.11 side**.\n\n`misc`: **Tell compiler it's fine to not await the sync**.",
-                "targetAbi": "10.10.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.20/shoko_6.0.5.20_for_10.10.zip",
-                "checksum": "da86a15f196607b1b14e9687be37afdc",
-                "timestamp": "2026-06-20T00:25:31Z"
             }
         ]
     }
