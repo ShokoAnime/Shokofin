@@ -19,7 +19,7 @@ public class PlaylistConfiguration {
     /// Determines how playlists are created.
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public PlaylistCreationType Grouping { get; set; } = PlaylistCreationType.GroupWithMixedContent;
+    public PlaylistCreationType Grouping { get; set; } = PlaylistCreationType.None;
 
     /// <summary>
     /// Add a minimum requirement of two entries in a group before
