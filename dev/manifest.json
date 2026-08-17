@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.2611",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.26) for more info.\n\n---\n\n`fix`: **Use Shoko UID for image URLs (#109)**.",
+                "targetAbi": "10.11.11.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.26/shoko_6.0.5.26_for_10.11.zip",
+                "checksum": "f81a12255befae8d609ce679a44230f3",
+                "timestamp": "2026-08-17T04:11:24Z"
+            },
+            {
+                "version": "6.0.5.2610",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.26) for more info.\n\n---\n\n`fix`: **Use Shoko UID for image URLs (#109)**.",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.26/shoko_6.0.5.26_for_10.10.zip",
+                "checksum": "a5c0f3be0dd598e5d6b5cc11ef4fbbc2",
+                "timestamp": "2026-08-17T04:11:34Z"
+            },
+            {
                 "version": "6.0.5.2511",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.25) for more info.\n\n---\n\n`feat`: **Add support for shoko image guids**.\n\n`fix`: **Disable playlist grouping by default**.",
                 "targetAbi": "10.11.11.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.22/shoko_6.0.5.22_for_10.10.zip",
                 "checksum": "78f9af109809950ff0c0d6113b0c4560",
                 "timestamp": "2026-07-16T14:57:48Z"
-            },
-            {
-                "version": "6.0.5.2111",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.21) for more info.\n\n---\n\n`repo`: **Update version matrix in read-me**. (_Skip CI_)\n\n`fix`: **Fix user watch state syncing logic (#101)**:\n\nThis fixes an issue that became noticable on Jellyfin 10.11 where\ncriteria as to what appears in Next Up. Series that have been marked as\nwatched and then completely marked as unwatched for a user whose watch\nstate is synced to Shoko would have S01E01 of the offending series show\nup in Next Up upon a resync due to userData.LastPlayedDate being set to\nLastUpdateAt which always exists.",
-                "targetAbi": "10.11.11.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.21/shoko_6.0.5.21_for_10.11.zip",
-                "checksum": "6713b052423c0c91499bcfd19379c331",
-                "timestamp": "2026-07-01T05:19:02Z"
-            },
-            {
-                "version": "6.0.5.2110",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.21) for more info.\n\n---\n\n`repo`: **Update version matrix in read-me**. (_Skip CI_)\n\n`fix`: **Fix user watch state syncing logic (#101)**:\n\nThis fixes an issue that became noticable on Jellyfin 10.11 where\ncriteria as to what appears in Next Up. Series that have been marked as\nwatched and then completely marked as unwatched for a user whose watch\nstate is synced to Shoko would have S01E01 of the offending series show\nup in Next Up upon a resync due to userData.LastPlayedDate being set to\nLastUpdateAt which always exists.",
-                "targetAbi": "10.10.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.21/shoko_6.0.5.21_for_10.10.zip",
-                "checksum": "8f2dfad05a7c520c4ea26d3820edc0e0",
-                "timestamp": "2026-07-01T05:19:14Z"
             }
         ]
     }
