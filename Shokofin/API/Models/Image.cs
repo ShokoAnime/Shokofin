@@ -7,7 +7,7 @@ public class Image {
     /// <summary>
     ///   The unique image id to use when identifying the image upstream.
     /// </summary>
-    private string UniqueImageId => OID.HasValue ? OID.Value.ToString("D") : $"{Source}/{Type}/{ID}"; 
+    private string UniqueImageId => UID.HasValue ? UID.Value.ToString("D") : $"{Source}/{Type}/{ID}";
 
     /// <summary>
     /// AniDB, TMDB, etc.
@@ -28,7 +28,7 @@ public class Image {
     /// <summary>
     /// The image's GUID, for newer versions of Shoko.
     /// </summary>
-    public Guid? OID { get; set; }
+    public Guid? UID { get; set; }
 
     /// <summary>
     /// True if the image is marked as the preferred for the given shoko image
@@ -96,7 +96,7 @@ public class Image {
         Source = image.Source;
         Type = image.Type;
         ID = image.ID;
-        OID = image.OID;
+        UID = image.UID;
         IsPreferred = image.IsPreferred;
         IsDisabled = image.IsDisabled;
         LanguageCode = image.LanguageCode;
