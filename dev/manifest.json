@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.2711",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.27) for more info.\n\n---\n\n`misc`: **Add setting to use Shoko titles/images for series when using TMDb structure (#107)**:\n\nWhen using TMDb structure, Shokofin currently forces all metadata to come from TMDb. This commit adds a setting to enable fetching series titles and images using the Shoko series corresponding to the show's main series.\n\nThis change only applies to the top-level series thats displayed in the jellyfin library. Season titles and images are not affected and still pull from TMDb. Movies are not affected by this.",
+                "targetAbi": "10.11.11.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.27/shoko_6.0.5.27_for_10.11.zip",
+                "checksum": "634a8044a3dfab9830ca34a969a6ef05",
+                "timestamp": "2026-08-19T08:46:57Z"
+            },
+            {
+                "version": "6.0.5.2710",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.27) for more info.\n\n---\n\n`misc`: **Add setting to use Shoko titles/images for series when using TMDb structure (#107)**:\n\nWhen using TMDb structure, Shokofin currently forces all metadata to come from TMDb. This commit adds a setting to enable fetching series titles and images using the Shoko series corresponding to the show's main series.\n\nThis change only applies to the top-level series thats displayed in the jellyfin library. Season titles and images are not affected and still pull from TMDb. Movies are not affected by this.",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.27/shoko_6.0.5.27_for_10.10.zip",
+                "checksum": "178b18dc72749327903b8be886d61fce",
+                "timestamp": "2026-08-19T08:47:04Z"
+            },
+            {
                 "version": "6.0.5.2611",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.26) for more info.\n\n---\n\n`fix`: **Use Shoko UID for image URLs (#109)**.",
                 "targetAbi": "10.11.11.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.23/shoko_6.0.5.23_for_10.10.zip",
                 "checksum": "3d14a03b22ce8f745611fb46840e6a5b",
                 "timestamp": "2026-07-30T02:56:00Z"
-            },
-            {
-                "version": "6.0.5.2211",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.22) for more info.\n\n---\n\n`fix`: **Fix api call path for tmdb movie & season (#102)**.",
-                "targetAbi": "10.11.11.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.22/shoko_6.0.5.22_for_10.11.zip",
-                "checksum": "7234c1d53372cee205080b5215b68c41",
-                "timestamp": "2026-07-16T14:57:37Z"
-            },
-            {
-                "version": "6.0.5.2210",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.22) for more info.\n\n---\n\n`fix`: **Fix api call path for tmdb movie & season (#102)**.",
-                "targetAbi": "10.10.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.22/shoko_6.0.5.22_for_10.10.zip",
-                "checksum": "78f9af109809950ff0c0d6113b0c4560",
-                "timestamp": "2026-07-16T14:57:48Z"
             }
         ]
     }
