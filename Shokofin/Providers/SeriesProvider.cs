@@ -50,7 +50,7 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
             // find the main shoko series for this show and use it to generate titles.
             API.Info.ShowInfo? titleOverrideShowInfo = null;
             if (
-                showInfo.DefaultSeason.StructureType == Configuration.SeriesStructureType.TMDB_SeriesAndMovies &&
+                showInfo.DefaultSeason.StructureType is Configuration.SeriesStructureType.TMDB_SeriesAndMovies &&
                 Plugin.Instance.Configuration.TmdbStructureUseShokoMetadata
             ) {
                 titleOverrideShowInfo = await _apiManager.GetMainShokoSeriesShowInfo(showInfo.ShokoSeriesId);

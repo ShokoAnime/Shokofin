@@ -51,7 +51,7 @@ public class ImageProvider(IHttpClientFactory _httpClientFactory, ILogger<ImageP
                     // If using Shoko titles/images for TMDB structure is enabled,
                     // find the main shoko series for this show and use it to generate images.
                     if (
-                        showInfo.DefaultSeason.StructureType == Configuration.SeriesStructureType.TMDB_SeriesAndMovies &&
+                        showInfo.DefaultSeason.StructureType is Configuration.SeriesStructureType.TMDB_SeriesAndMovies &&
                         Plugin.Instance.Configuration.TmdbStructureUseShokoMetadata
                     ) {
                         var overrideShowInfo = await _apiManager.GetMainShokoSeriesShowInfo(showInfo.ShokoSeriesId);
