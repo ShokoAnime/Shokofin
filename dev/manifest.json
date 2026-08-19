@@ -9,6 +9,22 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.2811",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.28) for more info.\n\n---\n\n`feat`: **Add Jellyfin 12 compatibility (#110)**:\n\nAdds Jellyfin 12.0 support while still supporting Jellyfin 10.10 and 10.11.\n\n- Adds the `net10.0` target using the Jellyfin `12.0.0-rc5` packages.\n- Updates alternate-version and playlist handling for the Jellyfin 12 APIs.\n- Produces separate packages for Jellyfin 10.10, 10.11, and 12.\n- Hardens the multi-target release workflow.\n\nAll three targets build and package fine. I have been using this branch on Jellyfin 12 RC5 since its release without any problems.\n\nCloses #108",
+                "targetAbi": "10.11.11.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.28/shoko_6.0.5.28_for_10.11.zip",
+                "checksum": "ed7a729c491b63cd4a8c92a538f241aa",
+                "timestamp": "2026-08-19T08:54:48Z"
+            },
+            {
+                "version": "6.0.5.2810",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.28) for more info.\n\n---\n\n`feat`: **Add Jellyfin 12 compatibility (#110)**:\n\nAdds Jellyfin 12.0 support while still supporting Jellyfin 10.10 and 10.11.\n\n- Adds the `net10.0` target using the Jellyfin `12.0.0-rc5` packages.\n- Updates alternate-version and playlist handling for the Jellyfin 12 APIs.\n- Produces separate packages for Jellyfin 10.10, 10.11, and 12.\n- Hardens the multi-target release workflow.\n\nAll three targets build and package fine. I have been using this branch on Jellyfin 12 RC5 since its release without any problems.\n\nCloses #108",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.28/shoko_6.0.5.28_for_10.10.zip",
+                "checksum": "4411c0c03775cafd5224bc2f6add7ca2",
+                "timestamp": "2026-08-19T08:54:55Z"
+            },
+            {
                 "version": "6.0.5.2711",
                 "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.27) for more info.\n\n---\n\n`misc`: **Add setting to use Shoko titles/images for series when using TMDb structure (#107)**:\n\nWhen using TMDb structure, Shokofin currently forces all metadata to come from TMDb. This commit adds a setting to enable fetching series titles and images using the Shoko series corresponding to the show's main series.\n\nThis change only applies to the top-level series thats displayed in the jellyfin library. Season titles and images are not affected and still pull from TMDb. Movies are not affected by this.",
                 "targetAbi": "10.11.11.0",
@@ -71,22 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.24/shoko_6.0.5.24_for_10.10.zip",
                 "checksum": "0f0f7cc19e947e351453c4f9cc633fa0",
                 "timestamp": "2026-08-06T22:58:37Z"
-            },
-            {
-                "version": "6.0.5.2311",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.23) for more info.\n\n---\n\n`misc`: **Jf 10.11 userdata insertion guard (#106)**:\n\nSaveUserDataForNewKey previously did a blind insert of the migrated UserData row, which would collide with Jellyfin's ReattachUserDataAsync when it tried to move tombstoned placeholder rows to the same (ItemId, UserId, CustomDataKey) slot.\n\nThis fix now deletes any conflicting placeholder row before inserting, so the reattachment has nothing to move. It also checks whether the destination already has a row and updates in place, handling the reverse case where the reattachment wins the race.",
-                "targetAbi": "10.11.11.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.23/shoko_6.0.5.23_for_10.11.zip",
-                "checksum": "7c74ba6e6ea7c13cb7fe95e430217fa1",
-                "timestamp": "2026-07-30T02:55:49Z"
-            },
-            {
-                "version": "6.0.5.2310",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.23) for more info.\n\n---\n\n`misc`: **Jf 10.11 userdata insertion guard (#106)**:\n\nSaveUserDataForNewKey previously did a blind insert of the migrated UserData row, which would collide with Jellyfin's ReattachUserDataAsync when it tried to move tombstoned placeholder rows to the same (ItemId, UserId, CustomDataKey) slot.\n\nThis fix now deletes any conflicting placeholder row before inserting, so the reattachment has nothing to move. It also checks whether the destination already has a row and updates in place, handling the reverse case where the reattachment wins the race.",
-                "targetAbi": "10.10.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.23/shoko_6.0.5.23_for_10.10.zip",
-                "checksum": "3d14a03b22ce8f745611fb46840e6a5b",
-                "timestamp": "2026-07-30T02:56:00Z"
             }
         ]
     }
