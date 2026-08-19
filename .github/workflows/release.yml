@@ -72,11 +72,7 @@ jobs:
         run: python -m pip install jprm
 
       - name: Run JPRM
-        env:
-          REPOSITORY_NAME: ${{ github.repository }}
-          RELEASE_VERSION: ${{ needs.current_info.outputs.version }}
-          RELEASE_TAG: ${{ needs.current_info.outputs.tag }}
-        run: python build_plugin.py --repo "$REPOSITORY_NAME" --version="$RELEASE_VERSION" --tag="$RELEASE_TAG"
+        run: python build_plugin.py --repo ${{ github.repository }} --version=${{ needs.current_info.outputs.version }} --tag=${{ needs.current_info.outputs.tag }}
 
       - name: Change to Metadata Branch
         run: |

@@ -67,12 +67,10 @@ jobs:
           PREVIOUS_COMMIT: ${{ steps.previous_release_info.outputs.commit }}
           NEXT_COMMIT: ${{ github.sha }}
         run: |
-          delimiter=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          {
-            printf 'CHANGELOG<<%s\n' "$delimiter"
-            node .github/workflows/git-log-json.mjs "${PREVIOUS_COMMIT}..${NEXT_COMMIT}" | jq -r '.[] | "\n`\(.type)`: **\(.subject)**" + if .body != null and .body != "" then if .isSkipCI then ": (_Skip CI_)\n\n\(.body)" else ":\n\n\(.body)" end else if .isSkipCI then ". (_Skip CI_)" else "." end end'
-            printf '\n%s\n' "$delimiter"
-          } >> "$GITHUB_OUTPUT"
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "CHANGELOG<<$EOF" >> "$GITHUB_OUTPUT"
+          node .github/workflows/git-log-json.mjs $PREVIOUS_COMMIT..$NEXT_COMMIT | jq -r '.[] | "\n`\(.type)`: **\(.subject)**" + if .body != null and .body != "" then if .isSkipCI then ": (_Skip CI_)\n\n\(.body)" else ":\n\n\(.body)" end else if .isSkipCI then ". (_Skip CI_)" else "." end end' >> "$GITHUB_OUTPUT"
+          echo -e "\n$EOF" >> "$GITHUB_OUTPUT"
 
   build_plugin:
     runs-on: ubuntu-latest
@@ -116,10 +114,7 @@ jobs:
       - name: Run JPRM
         env:
           CHANGELOG: ${{ needs.current_info.outputs.changelog }}
-          REPOSITORY_NAME: ${{ github.repository }}
-          RELEASE_VERSION: ${{ needs.current_info.outputs.version }}
-          RELEASE_TAG: ${{ needs.current_info.outputs.tag }}
-        run: python build_plugin.py --repo "$REPOSITORY_NAME" --version="$RELEASE_VERSION" --tag="$RELEASE_TAG" --prerelease
+        run: python build_plugin.py --repo ${{ github.repository }} --version=${{ needs.current_info.outputs.version }} --tag=${{ needs.current_info.outputs.tag }} --prerelease
 
       - name: Change to Metadata Branch
         run: |
