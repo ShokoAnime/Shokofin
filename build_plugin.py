@@ -43,18 +43,7 @@ def extract_target_abi(csproj_path, framework):
         raise Exception(
             f"Jellyfin.Controller not found for framework '{framework}' in {os.path.basename(csproj_path)}"
         )
-    version = match.group(1)
-    property_match = re.fullmatch(r"\$\(([^)]+)\)", version)
-    if property_match:
-        value_match = re.search(
-            rf"<{re.escape(property_match.group(1))}[^>]*>([^<]+)</{re.escape(property_match.group(1))}>",
-            content,
-            re.IGNORECASE,
-        )
-        if not value_match:
-            raise Exception(f"MSBuild property '{property_match.group(1)}' not found")
-        version = value_match.group(1).strip()
-    return version
+    return match.group(1).split("-")[0]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--repo", required=True)
@@ -96,9 +85,8 @@ changelog = data["changelog"]
 try:
     for framework in extract_target_framework(project_file):
         target_abi = extract_target_abi(project_file, framework)
-        target_abi_version = target_abi.split("-")[0]
-        target_abi_high = ".".join(target_abi_version.split(".")[:-1])
-        target_abi_low = target_abi_version.split(".")[1]
+        target_abi_high = ".".join(target_abi.split(".")[:-1])
+        target_abi_low = target_abi.split(".")[1]
         artifacts = extract_packages_to_output(project_file, framework)
 
         if build_number != 0:
@@ -112,7 +100,7 @@ try:
         data = yaml.safe_load(build_file_contents)
         data["changelog"] = generated_changelog
         data["artifacts"] = list(dict.fromkeys(data["artifacts"] + artifacts))
-        data["targetAbi"] = target_abi_version + ".0"
+        data["targetAbi"] = target_abi + ".0"
         with open(build_file, "w") as file:
             yaml.dump(data, file, sort_keys=False)
 
