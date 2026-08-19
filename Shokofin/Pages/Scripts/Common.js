@@ -545,6 +545,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   UseGroupsForShows: boolean;
  *   SeparateMovies: boolean;
  *   FilterMovieLibraries: boolean;
+ *   TmdbStructureUseShokoMetadata: boolean;
  *   MovieSpecialsAsExtraFeaturettes: boolean;
  *   AddTrailers: boolean;
  *   AddCreditsAsThemeVideos: boolean;

@@ -630,6 +630,7 @@ function applyFormToConfig(form, config) {
             config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
             config.FilterMovieLibraries = !form.querySelector("#DisableFilterMovieLibraries").checked;
             config.DefaultSpecialsPlacement = form.querySelector("#DefaultSpecialsPlacement").value;
+            config.TmdbStructureUseShokoMetadata = form.querySelector("#TmdbStructureUseShokoMetadata").checked;
             config.MovieSpecialsAsExtraFeaturettes = form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked;
             config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
@@ -916,6 +917,7 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies;
             form.querySelector("#DisableFilterMovieLibraries").checked = !config.FilterMovieLibraries;
             form.querySelector("#DefaultSpecialsPlacement").value = config.DefaultSpecialsPlacement === "Default" ? "Excluded" : config.DefaultSpecialsPlacement;
+            form.querySelector("#TmdbStructureUseShokoMetadata").checked = config.TmdbStructureUseShokoMetadata;
             form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked = config.MovieSpecialsAsExtraFeaturettes;
             form.querySelector("#AddMissingMetadata").checked = config.AddMissingMetadata;
 

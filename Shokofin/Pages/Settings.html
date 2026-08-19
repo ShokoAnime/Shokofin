@@ -1691,6 +1691,13 @@ form:not(.advanced-mode) .advanced-only {
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
                             <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="TmdbStructureUseShokoMetadata" />
+                                <span>Use Shoko Series Titles/Images with Tmdb Structure</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Using 'TheMovieDb Shows &amp; Movie Structure' normally forces the plugin to use TheMovieDb as the source for all series metadata. Enable this setting to use Shoko as the source of series titles and images. This option only applies to the top level series displayed in your library. Season and episode titles/images are still sourced from TheMovieDb. This setting has no effect on any series not using TheMovieDb structure.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="MovieSpecialsAsExtraFeaturettes" />
                                 <span>Force Movie Special Features</span>
                             </label>
