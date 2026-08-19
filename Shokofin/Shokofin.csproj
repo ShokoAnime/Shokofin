@@ -3,7 +3,6 @@
         <TargetFrameworks>net10.0;net9.0;net8</TargetFrameworks>
         <OutputType>Library</OutputType>
         <Nullable>enable</Nullable>
-        <Jellyfin12Version Condition="'$(Jellyfin12Version)' == ''">12.0.0-rc5</Jellyfin12Version>
     </PropertyGroup>
 
     <!-- Exclude all DLLs from referenced projects by default -->
@@ -15,7 +14,7 @@
 
     <!-- Jellyfin Core -->
     <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
-        <PackageReference Include="Jellyfin.Controller" Version="$(Jellyfin12Version)" TargetFramework="net10.0" />
+        <PackageReference Include="Jellyfin.Controller" Version="12.0.0-rc5" TargetFramework="net10.0" />
     </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
         <PackageReference Include="Jellyfin.Controller" Version="10.11.11" TargetFramework="net9.0" />
@@ -26,7 +25,7 @@
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
         <!-- Shared dependencies with Jellyfin Core -->
-        <PackageReference Include="Jellyfin.Database.Implementations" Version="$(Jellyfin12Version)" TargetFramework="net10.0" />
+        <PackageReference Include="Jellyfin.Database.Implementations" Version="12.0.0-rc5" TargetFramework="net10.0" />
         <PackageReference Include="AsyncKeyedLock" Version="8.0.2" />
         <PackageReference Include="DotNet.Glob" Version="3.1.3" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.10" />
@@ -34,7 +33,6 @@
         <CommonPackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.10" TargetFramework="net10.0" />
         <CommonPackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="10.0.10" TargetFramework="net10.0" />
         <CommonPackageReference Include="Microsoft.AspNetCore.Http.Connections.Client" Version="10.0.10" TargetFramework="net10.0" />
-        <CommonPackageReference Include="System.Net.ServerSentEvents" Version="10.0.10" TargetFramework="net10.0" />
         <PackageReference Include="@(CommonPackageReference)" />
     </ItemGroup>
 
@@ -67,7 +65,7 @@
 
     <!-- Code analyzers -->
     <ItemGroup Condition="'$(TargetFramework)' == 'net9.0' Or '$(TargetFramework)' == 'net10.0'">
-        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="9.0.0" PrivateAssets="All" />
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.302" PrivateAssets="All" />
         <PackageReference Include="SerilogAnalyzer" Version="0.15.0" PrivateAssets="All" />
         <PackageReference Include="SmartAnalyzers.MultithreadingAnalyzer" Version="1.1.31" PrivateAssets="All" />
     </ItemGroup>
@@ -83,13 +81,6 @@
             <Output TaskParameter="Results" ItemName="ExtraOutputAssemblies" />
         </GetPublicPackageReferences>
         <Copy SourceFiles="@(ExtraOutputAssemblies)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
-    </Target>
-
-    <Target Name="CopyExtraOutputAssembliesToPublishDirectory" AfterTargets="Publish">
-        <GetPublicPackageReferences NuGetPackageRoot="$(NuGetPackageRoot)" PackageReference="@(CommonPackageReference)">
-            <Output TaskParameter="Results" ItemName="ExtraPublishAssemblies" />
-        </GetPublicPackageReferences>
-        <Copy SourceFiles="@(ExtraPublishAssemblies)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
     </Target>
 
     <UsingTask TaskName="GetPublicPackageReferences" TaskFactory="RoslynCodeTaskFactory" AssemblyName="Microsoft.Build.Tasks.Core">

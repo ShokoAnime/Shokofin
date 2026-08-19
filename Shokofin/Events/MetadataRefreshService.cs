@@ -14,6 +14,7 @@ using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
+using Shokofin.Extensions;
 using Shokofin.ExternalIds;
 using Shokofin.Providers;
 
@@ -270,13 +271,8 @@ public class MetadataRefreshService {
     }
 
     private IEnumerable<Video> GetAlternateVersions(Video video) {
-#if NET10_0_OR_GREATER
-        var linkedVersions = _libraryManager.GetLinkedAlternateVersions(video);
-        var localVersionIds = _libraryManager.GetLocalAlternateVersionIds(video);
-#else
         var linkedVersions = video.GetLinkedAlternateVersions();
         var localVersionIds = video.GetLocalAlternateVersionIds();
-#endif
         return linkedVersions.Concat(localVersionIds
             .Select(id => _libraryManager.GetItemById<Video>(id))
             .OfType<Video>());
