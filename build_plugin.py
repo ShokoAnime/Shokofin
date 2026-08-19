@@ -85,15 +85,20 @@ changelog = data["changelog"]
 try:
     for framework in extract_target_framework(project_file):
         target_abi = extract_target_abi(project_file, framework)
-        target_abi_high = ".".join(target_abi.split(".")[:-1])
-        target_abi_low = target_abi.split(".")[1]
+        target_abi_parts = target_abi.split(".")
+        if target_abi_parts[0] == "10":
+            target_abi_high = ".".join(target_abi_parts[:2]) + ".z"
+            target_abi_low = target_abi_parts[1]
+        else:
+            target_abi_high = target_abi_parts[0] + ".y.z"
+            target_abi_low = target_abi_parts[0]
         artifacts = extract_packages_to_output(project_file, framework)
 
         if build_number != 0:
             generated_version = f"{short_version}.{build_number}{target_abi_low}"
         else:
             generated_version = f"{short_version}.{target_abi_low}"
-        generated_changelog = f"Only compatible with **{target_abi_high}.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/{tag}) for more info."
+        generated_changelog = f"Only compatible with **{target_abi_high}**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/{tag}) for more info."
         if changelog:
             generated_changelog += f"\n\n---\n\n{changelog}"
 
