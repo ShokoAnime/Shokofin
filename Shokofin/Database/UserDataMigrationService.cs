@@ -88,7 +88,7 @@ public class UserDataMigrationService(
 
     private bool MigratePerUser(string oldKey, string newKey, Guid oldItemId, Guid newItemId) {
         var anyMigrated = false;
-        #if NET9_0
+        #if NET9_0_OR_GREATER
         var users = _userManager.GetUsers().ToList();
         #else
         var users = _userManager.Users.ToList();

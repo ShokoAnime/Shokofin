@@ -14,6 +14,7 @@ using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
+using Shokofin.Extensions;
 using Shokofin.ExternalIds;
 using Shokofin.Providers;
 
@@ -87,10 +88,7 @@ public class MetadataRefreshService {
                 return updated;
 
             if (refreshFields.HasFlag(MetadataRefreshField.OwnedItems)) {
-                var extras = boxSet.ExtraIds
-                    .Select(extraId => _libraryManager.GetItemById<Video>(extraId)!)
-                    .Where(i => i is not null)
-                    .ToArray();
+                var extras = boxSet.GetExtras().OfType<Video>().ToArray();
                 foreach (var extra in extras)
                     updated = await RefreshVideo(extra, refreshFieldsMask, cancellationToken) || updated;
             }
@@ -117,32 +115,15 @@ public class MetadataRefreshService {
                 return updated;
 
             if (refreshFields.HasFlag(MetadataRefreshField.OwnedItems)) {
-                var extras = movie.ExtraIds
-                    .Select(extraId => _libraryManager.GetItemById<Video>(extraId)!)
-                    .Where(i => i is not null)
-                    .ToArray();
+                var extras = movie.GetExtras().OfType<Video>().ToArray();
                 foreach (var extra in extras)
                     updated = await RefreshVideo(extra, refreshFieldsMask, cancellationToken) || updated;
             }
 
             _customMovieProvider ??= _applicationHost.GetExports<CustomMovieProvider>().First();
             updated = await RefreshBaseItem(movie, metadata, metadataResult, refreshFields, _customMovieProvider, cancellationToken) || updated;
-            if (movie.LinkedAlternateVersions.Length > 0) {
-                foreach (var part in movie.LinkedAlternateVersions) {
-                    if (_libraryManager.FindByPath(part.Path, isFolder: false) is not Video video)
-                        continue;
-
-                    updated = await RefreshVideo(video, refreshFieldsMask, cancellationToken) || updated;
-                }
-            }
-            if (movie.LocalAlternateVersions.Length > 0) {
-                foreach (var part in movie.LocalAlternateVersions) {
-                    if (_libraryManager.FindByPath(part, isFolder: false) is not Video video)
-                        continue;
-
-                    updated = await RefreshVideo(video, refreshFieldsMask, cancellationToken) || updated;
-                }
-            }
+            foreach (var video in GetAlternateVersions(movie))
+                updated = await RefreshVideo(video, refreshFieldsMask, cancellationToken) || updated;
             return updated;
         });
     }
@@ -166,10 +147,7 @@ public class MetadataRefreshService {
             updated = await RefreshBaseItem(series, metadata, metadataResult, refreshFields, _customSeriesProvider, cancellationToken) || updated;
 
             if (refreshFields.HasFlag(MetadataRefreshField.OwnedItems)) {
-                var extras = series.ExtraIds
-                    .Select(extraId => _libraryManager.GetItemById<Video>(extraId)!)
-                    .Where(i => i is not null)
-                    .ToArray();
+                var extras = series.GetExtras().OfType<Video>().ToArray();
                 foreach (var extra in extras)
                     updated = await RefreshVideo(extra, refreshFieldsMask, cancellationToken) || updated;
             }
@@ -206,10 +184,7 @@ public class MetadataRefreshService {
             updated = await RefreshBaseItem(season, metadata, metadataResult, refreshFields, _customSeasonProvider, cancellationToken) || updated;
 
             if (refreshFields.HasFlag(MetadataRefreshField.OwnedItems)) {
-                var extras = season.ExtraIds
-                    .Select(extraId => _libraryManager.GetItemById<Video>(extraId)!)
-                    .Where(i => i is not null)
-                    .ToArray();
+                var extras = season.GetExtras().OfType<Video>().ToArray();
                 foreach (var extra in extras)
                     updated = await RefreshVideo(extra, refreshFieldsMask, cancellationToken) || updated;
             }
@@ -250,31 +225,13 @@ public class MetadataRefreshService {
             }
 
             if (refreshFields.HasFlag(MetadataRefreshField.OwnedItems)) {
-                var extras = episode.ExtraIds
-                    .Select(extraId => _libraryManager.GetItemById<Video>(extraId)!)
-                    .Where(i => i is not null)
-                    .ToArray();
+                var extras = episode.GetExtras().OfType<Video>().ToArray();
                 foreach (var extra in extras)
                     updated = await RefreshVideo(extra, refreshFieldsMask, cancellationToken) || updated;
             }
 
-            if (episode.LinkedAlternateVersions.Length > 0) {
-                foreach (var part in episode.LinkedAlternateVersions) {
-                    if (_libraryManager.FindByPath(part.Path, isFolder: false) is not Video video)
-                        continue;
-
-                    updated = await RefreshVideo(video, refreshFieldsMask, cancellationToken) || updated;
-                }
-            }
-
-            if (episode.LocalAlternateVersions.Length > 0) {
-                foreach (var part in episode.LocalAlternateVersions) {
-                    if (_libraryManager.FindByPath(part, isFolder: false) is not Video video)
-                        continue;
-
-                    updated = await RefreshVideo(video, refreshFieldsMask, cancellationToken) || updated;
-                }
-            }
+            foreach (var video in GetAlternateVersions(episode))
+                updated = await RefreshVideo(video, refreshFieldsMask, cancellationToken) || updated;
             return updated;
         });
     }
@@ -311,6 +268,14 @@ public class MetadataRefreshService {
             }
             return updated;
         });
+    }
+
+    private IEnumerable<Video> GetAlternateVersions(Video video) {
+        var linkedVersions = video.GetLinkedAlternateVersions();
+        var localVersionIds = video.GetLocalAlternateVersionIds();
+        return linkedVersions.Concat(localVersionIds
+            .Select(id => _libraryManager.GetItemById<Video>(id))
+            .OfType<Video>());
     }
 
     private async Task<bool> RefreshInternal(BaseItem item, MetadataRefreshField refreshFields, Func<Task<bool>> refreshLambda) {

@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout master
-        uses: actions/checkout@master
+        uses: actions/checkout@v7
         with:
           ref: "${{ github.ref }}"
           fetch-depth: 0 # This is set to download the full git history for the repo
@@ -55,7 +55,7 @@ jobs:
 
       - id: commit_info
         name: Shorten Commit Hash
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             const sha = context.sha.substring(0, 7);
@@ -82,7 +82,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
           fetch-depth: 0 # This is set to download the full git history for the repo
@@ -96,15 +96,15 @@ jobs:
           rmdir dev;
 
       - name: Setup .Net
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
 
       - name: Restore Nuget Packages
         run: dotnet restore Shokofin/Shokofin.csproj
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v7
         with:
           python-version: 3.8
 
@@ -114,7 +114,7 @@ jobs:
       - name: Run JPRM
         env:
           CHANGELOG: ${{ needs.current_info.outputs.changelog }}
-        run: python build_plugin.py --repo ${{ github.repository }} --version=${{ needs.current_info.outputs.version }} --tag=${{ needs.current_info.outputs.tag }} --prerelease=True
+        run: python build_plugin.py --repo ${{ github.repository }} --version=${{ needs.current_info.outputs.version }} --tag=${{ needs.current_info.outputs.tag }} --prerelease
 
       - name: Change to Metadata Branch
         run: |
@@ -128,7 +128,7 @@ jobs:
           git reset;
 
       - name: Create Pre-Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           files: ./artifacts/shoko_*.zip
           name: "Shokofin Dev ${{ needs.current_info.outputs.version }}"
