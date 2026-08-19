@@ -45,6 +45,11 @@ def extract_target_abi(csproj_path, framework):
         )
     return match.group(1).split("-")[0]
 
+def get_target_version_suffix(target_abi):
+    major, minor = (int(part) for part in target_abi.split(".")[:2])
+    # Jellyfin 10 release lines use the minor version; Jellyfin 12+ use the major version.
+    return minor if major == 10 else major
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--repo", required=True)
 parser.add_argument("--version", required=True)
@@ -86,13 +91,13 @@ try:
     for framework in extract_target_framework(project_file):
         target_abi = extract_target_abi(project_file, framework)
         target_abi_high = ".".join(target_abi.split(".")[:-1])
-        target_abi_low = target_abi.split(".")[1]
+        target_version_suffix = get_target_version_suffix(target_abi)
         artifacts = extract_packages_to_output(project_file, framework)
 
         if build_number != 0:
-            generated_version = f"{short_version}.{build_number}{target_abi_low}"
+            generated_version = f"{short_version}.{build_number}{target_version_suffix}"
         else:
-            generated_version = f"{short_version}.{target_abi_low}"
+            generated_version = f"{short_version}.{target_version_suffix}"
         generated_changelog = f"Only compatible with **{target_abi_high}.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/{tag}) for more info."
         if changelog:
             generated_changelog += f"\n\n---\n\n{changelog}"
