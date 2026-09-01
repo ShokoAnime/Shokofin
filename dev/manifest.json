@@ -9,6 +9,30 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.3012",
+                "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.30) for more info.\n\n---\n\n`feat`: **Add setting to always use episode title as movie title for TMDB movies**:\n\nAdded a new opt-in _advanced_ setting which, when enabled, uses the episode-level title as-is for Shoko/AniDB \"movies\" that have one or more TMDB movie links, instead of composing the title as \"<series title>: <episode title>\". Also added some deduplication logic for movie titles when the season-level and episode-level titles resolve to the same text, case-insensitively.\n\nIt is not hooked up exactly as suggested in the issue because the \"<series title>: <episode title>\" rule predates the more \"proper\" TMDB title support and was originally meant for when we only had AniDB titles, where the movie title was split across the AniDB anime and AniDB episode. That rule remains the default and still applies for entries without a TMDB movie link, so existing setups are unaffected. The new behavior only kicks in when the setting is enabled and the entry is a movie or entity that carries at least one TMDB movie link; the rest is up to the user, since their title settings need to resolve the episode-level title the way they want it to, e.g. by configuring the Shoko group \"Movie / Film\" title settings.\n\nCloses #112",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.30/shoko_6.0.5.30_for_12.y.z.zip",
+                "checksum": "e7c17f4072d6625ab0f27d1fef86168a",
+                "timestamp": "2026-09-01T02:05:42Z"
+            },
+            {
+                "version": "6.0.5.3011",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.30) for more info.\n\n---\n\n`feat`: **Add setting to always use episode title as movie title for TMDB movies**:\n\nAdded a new opt-in _advanced_ setting which, when enabled, uses the episode-level title as-is for Shoko/AniDB \"movies\" that have one or more TMDB movie links, instead of composing the title as \"<series title>: <episode title>\". Also added some deduplication logic for movie titles when the season-level and episode-level titles resolve to the same text, case-insensitively.\n\nIt is not hooked up exactly as suggested in the issue because the \"<series title>: <episode title>\" rule predates the more \"proper\" TMDB title support and was originally meant for when we only had AniDB titles, where the movie title was split across the AniDB anime and AniDB episode. That rule remains the default and still applies for entries without a TMDB movie link, so existing setups are unaffected. The new behavior only kicks in when the setting is enabled and the entry is a movie or entity that carries at least one TMDB movie link; the rest is up to the user, since their title settings need to resolve the episode-level title the way they want it to, e.g. by configuring the Shoko group \"Movie / Film\" title settings.\n\nCloses #112",
+                "targetAbi": "10.11.11.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.30/shoko_6.0.5.30_for_10.11.z.zip",
+                "checksum": "3907c7e846c2d74d8662cd1377100d33",
+                "timestamp": "2026-09-01T02:05:57Z"
+            },
+            {
+                "version": "6.0.5.3010",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.30) for more info.\n\n---\n\n`feat`: **Add setting to always use episode title as movie title for TMDB movies**:\n\nAdded a new opt-in _advanced_ setting which, when enabled, uses the episode-level title as-is for Shoko/AniDB \"movies\" that have one or more TMDB movie links, instead of composing the title as \"<series title>: <episode title>\". Also added some deduplication logic for movie titles when the season-level and episode-level titles resolve to the same text, case-insensitively.\n\nIt is not hooked up exactly as suggested in the issue because the \"<series title>: <episode title>\" rule predates the more \"proper\" TMDB title support and was originally meant for when we only had AniDB titles, where the movie title was split across the AniDB anime and AniDB episode. That rule remains the default and still applies for entries without a TMDB movie link, so existing setups are unaffected. The new behavior only kicks in when the setting is enabled and the entry is a movie or entity that carries at least one TMDB movie link; the rest is up to the user, since their title settings need to resolve the episode-level title the way they want it to, e.g. by configuring the Shoko group \"Movie / Film\" title settings.\n\nCloses #112",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.30/shoko_6.0.5.30_for_10.10.z.zip",
+                "checksum": "9574db250a5eee1b615b796903153d16",
+                "timestamp": "2026-09-01T02:06:07Z"
+            },
+            {
                 "version": "6.0.5.2912",
                 "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.29) for more info.\n\n---\n\n`fix`: **Correct target abi high/low**:\n\nCloses #111",
                 "targetAbi": "12.0.0.0",
@@ -63,30 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.27/shoko_6.0.5.27_for_10.10.zip",
                 "checksum": "178b18dc72749327903b8be886d61fce",
                 "timestamp": "2026-08-19T08:47:04Z"
-            },
-            {
-                "version": "6.0.5.2611",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.26) for more info.\n\n---\n\n`fix`: **Use Shoko UID for image URLs (#109)**.",
-                "targetAbi": "10.11.11.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.26/shoko_6.0.5.26_for_10.11.zip",
-                "checksum": "f81a12255befae8d609ce679a44230f3",
-                "timestamp": "2026-08-17T04:11:24Z"
-            },
-            {
-                "version": "6.0.5.2610",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.26) for more info.\n\n---\n\n`fix`: **Use Shoko UID for image URLs (#109)**.",
-                "targetAbi": "10.10.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.26/shoko_6.0.5.26_for_10.10.zip",
-                "checksum": "a5c0f3be0dd598e5d6b5cc11ef4fbbc2",
-                "timestamp": "2026-08-17T04:11:34Z"
-            },
-            {
-                "version": "6.0.5.2511",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.25) for more info.\n\n---\n\n`feat`: **Add support for shoko image guids**.\n\n`fix`: **Disable playlist grouping by default**.",
-                "targetAbi": "10.11.11.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.25/shoko_6.0.5.25_for_10.11.zip",
-                "checksum": "8534101c31058e55ea9f5cabfdade5dc",
-                "timestamp": "2026-08-16T12:08:01Z"
             }
         ]
     }
