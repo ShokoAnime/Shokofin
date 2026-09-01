@@ -519,6 +519,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   ThirdPartyIdProviderList: Except<DescriptionProvider, "Shoko">[];
  *   Title: AllTitlesConfiguration;
  *   MarkSpecialsWhenGrouped: boolean;
+ *   AlwaysUseEpisodeTitleForTmdbMovies: boolean;
  *   DescriptionConversionMode: DescriptionConversionMode;
  *   Description: AllDescriptionsConfiguration;
  *   TagSources: TagSource[];

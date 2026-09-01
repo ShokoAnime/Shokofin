@@ -592,10 +592,18 @@ public static partial class TextUtility {
         var mainTitle = GetSeriesTitleByType(seasonInfo, configuration, metadataLanguage);
         var subTitle = GetEpisodeTitleByType(episodeInfo, seasonInfo, configuration, metadataLanguage);
 
+        if (string.Equals(mainTitle, subTitle, StringComparison.OrdinalIgnoreCase))
+            return mainTitle?.Trim();
+
+        if (Plugin.Instance.Configuration.AlwaysUseEpisodeTitleForTmdbMovies && episodeInfo.TmdbMovies is { Length: > 0 })
+            return subTitle ?? mainTitle;
+
         if (!string.IsNullOrEmpty(subTitle))
             return $"{mainTitle}: {subTitle}".Trim();
-        else if (episodeInfo.EpisodeNumber > 1)
+
+        if (episodeInfo.EpisodeNumber > 1)
             return $"{mainTitle} {NumericToRoman(episodeInfo.EpisodeNumber)}".Trim();
+
         return mainTitle?.Trim();
     }
 

@@ -105,6 +105,13 @@ form:not(.advanced-mode) .advanced-only {
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Adds the type and number to the title of non-standard episodes such as specials. (e.g. S1)</div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AlwaysUseEpisodeTitleForTmdbMovies" />
+                                <span>Always Use Episode Title for TheMovieDb Movies</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">When enabled, entries with a linked TheMovieDb movie use the episode title as-is instead of composing the title as &quot;Series: Episode&quot;. The title settings may need to be tweaked accordingly for this to function properly; you can configure the Shoko group &quot;Movie / Film&quot; title settings when advanced mode is enabled.</div>
+                        </div>
                         <hr class="advanced-only" />
                         <div class="selectContainer selectContainer-withDescription advanced-only">
                             <label class="selectLabel" for="Title_ConfigureFor">Configure settings for</label>

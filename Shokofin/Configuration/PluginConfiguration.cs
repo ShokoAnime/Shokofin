@@ -224,6 +224,12 @@ public class PluginConfiguration : BasePluginConfiguration {
     public bool MarkSpecialsWhenGrouped { get; set; }
 
     /// <summary>
+    /// Use the episode title as-is for the movie title when the entry has a
+    /// linked TMDB movie, instead of composing the title as "Series: Episode".
+    /// </summary>
+    public bool AlwaysUseEpisodeTitleForTmdbMovies { get; set; }
+
+    /// <summary>
     /// The new description configuration.
     /// </summary>
     public AllDescriptionsConfiguration Description { get; set; }
