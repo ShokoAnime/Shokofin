@@ -1550,6 +1550,7 @@ public partial class ShokoApiManager : IDisposable {
                                 currentDate = sequelDate;
                                 currentRelations = await ApiClient.GetRelationsForShokoSeries(sequelSeries.Id);
                                 currentConfig = sequelConfig;
+                                relationOffset = 0;
                                 goto continueSequelWhileLoop;
                             }
 
@@ -1565,6 +1566,7 @@ public partial class ShokoApiManager : IDisposable {
                                 currentDate = sequelDate;
                                 currentRelations = await ApiClient.GetRelationsForShokoSeries(sequelSeries.Id);
                                 currentConfig = sequelConfig;
+                                relationOffset = 0;
                                 goto continueSequelWhileLoop;
                             }
                         }
