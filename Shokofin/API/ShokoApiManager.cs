@@ -1576,6 +1576,15 @@ public partial class ShokoApiManager : IDisposable {
                 }
 
                 logAndReturn:
+                if (!(primaryId == series.Id || extraIds.Contains(series.Id))) {
+                    Logger.LogWarning(
+                        "The shoko series was not part of the linked series list. Resetting series. (Series={SeriesId},Primary={PrimaryId},ExtraSeries={ExtraIds})",
+                        series.Id,
+                        primaryId,
+                        extraIds
+                    );
+                    (primaryId, extraIds) = (series.Id, []);
+                }
                 Logger.LogTrace("Created new series-to-season mapping for series. (Series={SeriesId},Primary={PrimaryId},ExtraSeries={ExtraIds})", series.Id, primaryId, extraIds);
 
                 return (primaryId, extraIds);
