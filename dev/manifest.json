@@ -9,6 +9,30 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.3212",
+                "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.32) for more info.\n\n---\n\n`fix`: **Correct season merge forward traversal**.\n\n`fix`: **Reset series when it is not part of the linked series list**.",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.32/shoko_6.0.5.32_for_12.y.z.zip",
+                "checksum": "083566e4f75c4b71a1af9998cbe4a41c",
+                "timestamp": "2026-09-11T00:56:23Z"
+            },
+            {
+                "version": "6.0.5.3211",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.32) for more info.\n\n---\n\n`fix`: **Correct season merge forward traversal**.\n\n`fix`: **Reset series when it is not part of the linked series list**.",
+                "targetAbi": "10.11.11.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.32/shoko_6.0.5.32_for_10.11.z.zip",
+                "checksum": "90ce52614c3e71ea3e1d35cff46577e4",
+                "timestamp": "2026-09-11T00:56:31Z"
+            },
+            {
+                "version": "6.0.5.3210",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.32) for more info.\n\n---\n\n`fix`: **Correct season merge forward traversal**.\n\n`fix`: **Reset series when it is not part of the linked series list**.",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.32/shoko_6.0.5.32_for_10.10.z.zip",
+                "checksum": "086cd955fb271cf651cbaab922c9f659",
+                "timestamp": "2026-09-11T00:56:40Z"
+            },
+            {
                 "version": "6.0.5.3112",
                 "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.31) for more info.\n\n---\n\n`misc`: **Bump Jellyfin.Controller from 12.0.0-rc5 to 12.0.0**.\n\n`misc`: **Bump Jellyfin.Controller from 12.0.0-rc5 to 12.0.0 (take 2)**.",
                 "targetAbi": "12.0.0.0",
@@ -63,30 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.29/shoko_6.0.5.29_for_12.y.z.zip",
                 "checksum": "5b429e656e9eb9abcfb6b9ae0f27e90b",
                 "timestamp": "2026-08-19T18:28:08Z"
-            },
-            {
-                "version": "6.0.5.2911",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.29) for more info.\n\n---\n\n`fix`: **Correct target abi high/low**:\n\nCloses #111",
-                "targetAbi": "10.11.11.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.29/shoko_6.0.5.29_for_10.11.z.zip",
-                "checksum": "655705e8e128830d8a7701fd363ff21f",
-                "timestamp": "2026-08-19T18:28:19Z"
-            },
-            {
-                "version": "6.0.5.2910",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.29) for more info.\n\n---\n\n`fix`: **Correct target abi high/low**:\n\nCloses #111",
-                "targetAbi": "10.10.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.29/shoko_6.0.5.29_for_10.10.z.zip",
-                "checksum": "c91ce90dbdf0963e7022df6908b17585",
-                "timestamp": "2026-08-19T18:28:31Z"
-            },
-            {
-                "version": "6.0.5.2811",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.28) for more info.\n\n---\n\n`feat`: **Add Jellyfin 12 compatibility (#110)**:\n\nAdds Jellyfin 12.0 support while still supporting Jellyfin 10.10 and 10.11.\n\n- Adds the `net10.0` target using the Jellyfin `12.0.0-rc5` packages.\n- Updates alternate-version and playlist handling for the Jellyfin 12 APIs.\n- Produces separate packages for Jellyfin 10.10, 10.11, and 12.\n- Hardens the multi-target release workflow.\n\nAll three targets build and package fine. I have been using this branch on Jellyfin 12 RC5 since its release without any problems.\n\nCloses #108",
-                "targetAbi": "10.11.11.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.28/shoko_6.0.5.28_for_10.11.zip",
-                "checksum": "ed7a729c491b63cd4a8c92a538f241aa",
-                "timestamp": "2026-08-19T08:54:48Z"
             }
         ]
     }
