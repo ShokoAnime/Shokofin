@@ -284,13 +284,31 @@ public static partial class TextUtility {
     #region Description | Movie
 
     public static string GetMovieDescription(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, string? metadataLanguage) {
+        var config = seasonInfo.StructureType switch {
+            SeriesStructureType.AniDB_Anime => Plugin.Instance.Configuration.Description.AnidbMovie.Enabled ? (
+                Plugin.Instance.Configuration.Description.AnidbMovie
+            ) : (
+                Plugin.Instance.Configuration.Description.Default
+            ),
+            SeriesStructureType.TMDB_SeriesAndMovies => Plugin.Instance.Configuration.Description.TmdbMovie.Enabled ? (
+                Plugin.Instance.Configuration.Description.TmdbMovie
+            ) : (
+                Plugin.Instance.Configuration.Description.Default
+            ),
+            _ => Plugin.Instance.Configuration.Description.ShokoMovie.Enabled ? (
+                Plugin.Instance.Configuration.Description.ShokoMovie
+            ) : (
+                Plugin.Instance.Configuration.Description.Default
+            ),
+        };
+
         // TMDB movies have a proper "episode" description.
         if (episodeInfo.Id[0] is IdPrefix.TmdbMovie)
-            return GetEpisodeDescription(episodeInfo, seasonInfo, metadataLanguage);
+            return GetDescription(episodeInfo, config, metadataLanguage);
 
         return seasonInfo.IsMultiEntry && !episodeInfo.IsMainEntry
-            ? GetEpisodeDescription(episodeInfo, seasonInfo, metadataLanguage)
-            : GetSeasonDescription(seasonInfo, metadataLanguage);
+            ? GetDescription(episodeInfo, config, metadataLanguage)
+            : GetDescription(seasonInfo, config, metadataLanguage);
     }
 
     #endregion
@@ -569,14 +587,14 @@ public static partial class TextUtility {
 
     public static (string? displayTitle, string? alternateTitle) GetMovieTitles(EpisodeInfo episodeInfo, SeasonInfo seasonInfo, string? metadataLanguage) {
         var config = seasonInfo.StructureType switch {
-            SeriesStructureType.AniDB_Anime => Plugin.Instance.Configuration.Title.AnidbSeason.Enabled
-                ? Plugin.Instance.Configuration.Title.AnidbSeason
+            SeriesStructureType.AniDB_Anime => Plugin.Instance.Configuration.Title.AnidbMovie.Enabled
+                ? Plugin.Instance.Configuration.Title.AnidbMovie
                 : Plugin.Instance.Configuration.Title.Default,
-            SeriesStructureType.TMDB_SeriesAndMovies => Plugin.Instance.Configuration.Title.TmdbSeason.Enabled
-                ? Plugin.Instance.Configuration.Title.TmdbSeason
+            SeriesStructureType.TMDB_SeriesAndMovies => Plugin.Instance.Configuration.Title.TmdbMovie.Enabled
+                ? Plugin.Instance.Configuration.Title.TmdbMovie
                 : Plugin.Instance.Configuration.Title.Default,
-            _ => Plugin.Instance.Configuration.Title.ShokoSeason.Enabled
-                ? Plugin.Instance.Configuration.Title.ShokoSeason
+            _ => Plugin.Instance.Configuration.Title.ShokoMovie.Enabled
+                ? Plugin.Instance.Configuration.Title.ShokoMovie
                 : Plugin.Instance.Configuration.Title.Default,
         };
         var displayTitle = GetMovieTitleByType(episodeInfo, seasonInfo, config.MainTitle, metadataLanguage);

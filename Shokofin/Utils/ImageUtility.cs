@@ -127,18 +127,18 @@ public static class ImageUtility {
         var images = await episodeInfo.GetImages(cancellationToken);
         var originLanguages = TextUtility.GuessOriginLanguage(seasonInfo);
         var config = seasonInfo.StructureType switch {
-            SeriesStructureType.AniDB_Anime => Plugin.Instance.Configuration.Image.AnidbSeason.Enabled ? (
-                Plugin.Instance.Configuration.Image.AnidbSeason
+            SeriesStructureType.AniDB_Anime => Plugin.Instance.Configuration.Image.AnidbMovie.Enabled ? (
+                Plugin.Instance.Configuration.Image.AnidbMovie
             ) : (
                 Plugin.Instance.Configuration.Image.Default
             ),
-            SeriesStructureType.TMDB_SeriesAndMovies => Plugin.Instance.Configuration.Image.TmdbSeason.Enabled ? (
-                Plugin.Instance.Configuration.Image.TmdbSeason
+            SeriesStructureType.TMDB_SeriesAndMovies => Plugin.Instance.Configuration.Image.TmdbMovie.Enabled ? (
+                Plugin.Instance.Configuration.Image.TmdbMovie
             ) : (
                 Plugin.Instance.Configuration.Image.Default
             ),
-            _ => Plugin.Instance.Configuration.Image.ShokoSeason.Enabled ? (
-                Plugin.Instance.Configuration.Image.ShokoSeason
+            _ => Plugin.Instance.Configuration.Image.ShokoMovie.Enabled ? (
+                Plugin.Instance.Configuration.Image.ShokoMovie
             ) : (
                 Plugin.Instance.Configuration.Image.Default
             ),
