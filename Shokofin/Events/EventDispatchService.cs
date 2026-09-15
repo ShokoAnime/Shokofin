@@ -486,10 +486,46 @@ public class EventDispatchService {
         }
     }
 
+    /// <summary>
+    /// Gets the top parent (physical folder) ids for the Jellyfin libraries which have metadata refresh events
+    /// enabled, suitable for use as <see cref="InternalItemsQuery.TopParentIds"/>.
+    /// </summary>
+    /// <remarks>
+    /// Used to make sure metadata events only refresh items belonging to libraries with the
+    /// "Metadata Events" setting enabled, mirroring how file events are filtered by
+    /// <see cref="LibraryConfiguration.IsFileEventsEnabled"/>.
+    /// </remarks>
+    /// <remarks>
+    /// <see cref="MediaFolderConfiguration.LibraryId"/>/<see cref="LibraryConfiguration.Id"/> is the id of the
+    /// library itself (a <see cref="CollectionFolder"/>), which is *not* what <c>TopParentIds</c> matches against.
+    /// We need to resolve each enabled library to its physical folder ids instead — the same translation Jellyfin
+    /// itself performs for library-scoped queries (see <c>LibraryManager.GetTopParentIdsForQuery</c>). This works
+    /// the same for VFS libraries, whose only physical folder is normally the generated VFS root (plus any ignored
+    /// real media folders), and for legacy libraries, whose physical folders are the real media folders.
+    /// </remarks>
+    private async Task<Guid[]> GetTopParentIdsForLibrariesWithRefreshEventsEnabled() {
+        var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => c.Library.IsRefreshEventsEnabled);
+        return libraries
+            .SelectMany(tuple => tuple.mediaList)
+            .Select(mediaFolder => mediaFolder.LibraryId)
+            .Distinct()
+            .Select(libraryId => LibraryManager.GetItemById(libraryId) as CollectionFolder)
+            .WhereNotNull()
+            .SelectMany(collectionFolder => collectionFolder.PhysicalFolderIds)
+            .Distinct()
+            .ToArray();
+    }
+
     private async Task ProcessImageUpdateEvents(string metadataId, List<IMetadataUpdatedEventArgs> changes) {
         try {
             if (!changes.Any(e => e.Kind is BaseItemKind.Episode or BaseItemKind.Movie && e.EpisodeIds.Count > 0 || e.Kind is BaseItemKind.Series && e.SeriesIds.Count > 0)) {
                 Logger.LogDebug("Skipped processing {EventCount} image change events because no series or episode ids to use. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
+                return;
+            }
+
+            var topParentIds = await GetTopParentIdsForLibrariesWithRefreshEventsEnabled();
+            if (topParentIds.Length is 0) {
+                Logger.LogDebug("Skipped processing {EventCount} image change events because no libraries have refresh events enabled. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
                 return;
             }
 
@@ -523,10 +559,10 @@ public class EventDispatchService {
             var updateCount = 0;
             var refreshFieldsMask = MetadataRefreshField.Images | MetadataRefreshField.PreferredImages;
             foreach (var showInfo in showInfoList)
-                updateCount += await ProcessSeriesEvents(showInfo, changes, seriesIdDict, refreshFieldsMask);
+                updateCount += await ProcessSeriesEvents(showInfo, changes, seriesIdDict, refreshFieldsMask, topParentIds);
 
             foreach (var seasonInfo in seasonInfoDict.Values)
-                updateCount += await ProcessMovieEvents(seasonInfo, changes, refreshFieldsMask);
+                updateCount += await ProcessMovieEvents(seasonInfo, changes, refreshFieldsMask, topParentIds);
 
             Logger.LogInformation("Scheduled {UpdateCount} image updates for {EventCount} image change events. (Metadata={ProviderUniqueId})", updateCount, changes.Count, metadataId);
         }
@@ -544,6 +580,12 @@ public class EventDispatchService {
 
             if (!changes.Any(e => e.Kind is BaseItemKind.Episode or BaseItemKind.Movie && e.EpisodeIds.Count > 0 || e.Kind is BaseItemKind.Series && e.SeriesIds.Count > 0)) {
                 Logger.LogDebug("Skipped processing {EventCount} metadata change events because no series or episode ids to use. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
+                return;
+            }
+
+            var topParentIds = await GetTopParentIdsForLibrariesWithRefreshEventsEnabled();
+            if (topParentIds.Length is 0) {
+                Logger.LogDebug("Skipped processing {EventCount} metadata change events because no libraries have refresh events enabled. (Metadata={ProviderUniqueId})", changes.Count, metadataId);
                 return;
             }
 
@@ -577,10 +619,10 @@ public class EventDispatchService {
             var updateCount = 0;
             var refreshFieldsMask = ~(MetadataRefreshField.Images | MetadataRefreshField.PreferredImages);
             foreach (var showInfo in showInfoList)
-                updateCount += await ProcessSeriesEvents(showInfo, changes, seriesIdDict, refreshFieldsMask);
+                updateCount += await ProcessSeriesEvents(showInfo, changes, seriesIdDict, refreshFieldsMask, topParentIds);
 
             foreach (var seasonInfo in seasonInfoDict.Values)
-                updateCount += await ProcessMovieEvents(seasonInfo, changes, refreshFieldsMask);
+                updateCount += await ProcessMovieEvents(seasonInfo, changes, refreshFieldsMask, topParentIds);
 
             Logger.LogInformation("Scheduled {UpdateCount} metadata updates for {EventCount} metadata change events. (Metadata={ProviderUniqueId})", updateCount, changes.Count, metadataId);
         }
@@ -589,7 +631,7 @@ public class EventDispatchService {
         }
     }
 
-    private async Task<int> ProcessSeriesEvents(ShowInfo showInfo, List<IMetadataUpdatedEventArgs> changes, IReadOnlyDictionary<int, string[]> seriesIdDict, MetadataRefreshField refreshFieldsMask) {
+    private async Task<int> ProcessSeriesEvents(ShowInfo showInfo, List<IMetadataUpdatedEventArgs> changes, IReadOnlyDictionary<int, string[]> seriesIdDict, MetadataRefreshField refreshFieldsMask, Guid[] topParentIds) {
         // Update the series if we got a series event.
         var updateCount = 0;
         if (changes.Find(e => e.Kind is BaseItemKind.Series) is not null) {
@@ -598,6 +640,7 @@ public class EventDispatchService {
                     IncludeItemTypes = [BaseItemKind.Series],
                     SourceTypes = [SourceType.Library],
                     HasAnyProviderId = new Dictionary<string, string> { { ShokoInternalId.Name, showInfo.InternalId } },
+                    TopParentIds = topParentIds,
                     DtoOptions = new(true),
                 })
                 .DistinctBy(s => s.Id)
@@ -637,6 +680,7 @@ public class EventDispatchService {
                         IncludeItemTypes = [BaseItemKind.Season],
                         SourceTypes = [SourceType.Library],
                         HasAnyProviderId = new Dictionary<string, string> { { ShokoInternalId.Name, seasonInfo.InternalId } },
+                        TopParentIds = topParentIds,
                         DtoOptions = new(true),
                     })
                     .DistinctBy(s => s.Id)
@@ -670,6 +714,7 @@ public class EventDispatchService {
                         IncludeItemTypes = [BaseItemKind.Episode],
                         SourceTypes = [SourceType.Library],
                         HasAnyProviderId = new Dictionary<string, string> { { ProviderNames.ShokoEpisode, episodeInfo.Id } },
+                        TopParentIds = topParentIds,
                         DtoOptions = new(true),
                     })
                     .DistinctBy(e => e.Id)
@@ -702,7 +747,7 @@ public class EventDispatchService {
         return updateCount;
     }
 
-    private async Task<int> ProcessMovieEvents(SeasonInfo seasonInfo, List<IMetadataUpdatedEventArgs> changes, MetadataRefreshField refreshFieldsMask) {
+    private async Task<int> ProcessMovieEvents(SeasonInfo seasonInfo, List<IMetadataUpdatedEventArgs> changes, MetadataRefreshField refreshFieldsMask, Guid[] topParentIds) {
         // Find movies and refresh them.
         var updateCount = 0;
         var episodeIds = changes
@@ -724,6 +769,7 @@ public class EventDispatchService {
                     IncludeItemTypes = [BaseItemKind.Movie],
                     SourceTypes = [SourceType.Library],
                     HasAnyProviderId = new Dictionary<string, string> { { ProviderNames.ShokoEpisode, episodeInfo.Id } },
+                    TopParentIds = topParentIds,
                     DtoOptions = new(true),
                 })
                 .DistinctBy(e => e.Id)
