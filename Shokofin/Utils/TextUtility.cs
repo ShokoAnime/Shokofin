@@ -443,7 +443,7 @@ public static partial class TextUtility {
                 : Plugin.Instance.Configuration.Title.Default,
         };
         var displayTitle = GetEpisodeTitleByType(episodeInfo, seasonInfo, config.MainTitle, metadataLanguage);
-        var alternateTitle = JoinTitles(config.AlternateTitles.Select(t => GetEpisodeTitleByType(episodeInfo, seasonInfo, t, metadataLanguage)), displayTitle, !config.RemoveDuplicates);
+        var alternateTitle = JoinTitles(config.AlternateTitles.Select(t => GetEpisodeTitleByType(episodeInfo, seasonInfo, t, metadataLanguage)), displayTitle, config.RemoveDuplicates);
 
         return (displayTitle, alternateTitle);
     }
@@ -493,7 +493,7 @@ public static partial class TextUtility {
                 : Plugin.Instance.Configuration.Title.Default,
         };
         var displayTitle = GetSeriesTitleByType(seasonInfo, config.MainTitle, metadataLanguage);
-        var alternateTitle = JoinTitles(config.AlternateTitles.Select(t => GetSeriesTitleByType(seasonInfo, t, metadataLanguage)), displayTitle, !config.RemoveDuplicates);
+        var alternateTitle = JoinTitles(config.AlternateTitles.Select(t => GetSeriesTitleByType(seasonInfo, t, metadataLanguage)), displayTitle, config.RemoveDuplicates);
         if (baseSeasonOffset > 0) {
             string type = string.Empty;
             switch (baseSeasonOffset) {
@@ -531,7 +531,7 @@ public static partial class TextUtility {
                 : Plugin.Instance.Configuration.Title.Default,
         };
         var displayTitle = GetSeriesTitleByType(showInfo, config.MainTitle, metadataLanguage);
-        var alternateTitle = JoinTitles(config.AlternateTitles.Select(t => GetSeriesTitleByType(showInfo, t, metadataLanguage)), displayTitle, !config.RemoveDuplicates);
+        var alternateTitle = JoinTitles(config.AlternateTitles.Select(t => GetSeriesTitleByType(showInfo, t, metadataLanguage)), displayTitle, config.RemoveDuplicates);
 
         return (displayTitle, alternateTitle);
     }
@@ -580,7 +580,7 @@ public static partial class TextUtility {
                 : Plugin.Instance.Configuration.Title.Default,
         };
         var displayTitle = GetMovieTitleByType(episodeInfo, seasonInfo, config.MainTitle, metadataLanguage);
-        var alternateTitle = JoinTitles(config.AlternateTitles.Select(t => GetMovieTitleByType(episodeInfo, seasonInfo, t, metadataLanguage)), displayTitle, !config.RemoveDuplicates);
+        var alternateTitle = JoinTitles(config.AlternateTitles.Select(t => GetMovieTitleByType(episodeInfo, seasonInfo, t, metadataLanguage)), displayTitle, config.RemoveDuplicates);
 
         return (displayTitle, alternateTitle);
     }
@@ -621,7 +621,7 @@ public static partial class TextUtility {
                 : Plugin.Instance.Configuration.Title.Default,
         };
         var displayTitle = GetSeriesTitleByType(seasonInfo, config.MainTitle, metadataLanguage);
-        var alternateTitle = JoinTitles(config.AlternateTitles.Select(t => GetSeriesTitleByType(seasonInfo, t, metadataLanguage)), displayTitle, !config.RemoveDuplicates);
+        var alternateTitle = JoinTitles(config.AlternateTitles.Select(t => GetSeriesTitleByType(seasonInfo, t, metadataLanguage)), displayTitle, config.RemoveDuplicates);
 
         return (displayTitle, alternateTitle);
     }
@@ -631,7 +631,7 @@ public static partial class TextUtility {
             ? Plugin.Instance.Configuration.Title.ShokoCollection
             : Plugin.Instance.Configuration.Title.Default;
         var displayTitle = GetSeriesTitleByType(collectionInfo, config.MainTitle, metadataLanguage);
-        var alternateTitle = JoinTitles(config.AlternateTitles.Select(t => GetSeriesTitleByType(collectionInfo, t, metadataLanguage)), displayTitle, !config.RemoveDuplicates);
+        var alternateTitle = JoinTitles(config.AlternateTitles.Select(t => GetSeriesTitleByType(collectionInfo, t, metadataLanguage)), displayTitle, config.RemoveDuplicates);
 
         return (displayTitle, alternateTitle);
     }
