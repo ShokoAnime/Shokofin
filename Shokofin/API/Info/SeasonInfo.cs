@@ -640,13 +640,13 @@ public class SeasonInfo : IExtendedItemInfo {
         if (Plugin.Instance.Configuration.TagSources.HasFlag(TagFilter.TagSource.AllYearlySeasons)) {
             tags.AddRange(seasons);
         }
-        else if (Plugin.Instance.Configuration.TagSources.HasFlag(TagFilter.TagSource.AllYearlySeasons) && seasons.Count > 0) {
+        else if (Plugin.Instance.Configuration.TagSources.HasFlag(TagFilter.TagSource.FirstYearlySeason) && seasons.Count > 0) {
             tags.Add(seasons.First());
         }
         if (Plugin.Instance.Configuration.GenreSources.HasFlag(TagFilter.TagSource.AllYearlySeasons)) {
             genres.AddRange(seasons);
         }
-        else if (Plugin.Instance.Configuration.GenreSources.HasFlag(TagFilter.TagSource.AllYearlySeasons) && seasons.Count > 0) {
+        else if (Plugin.Instance.Configuration.GenreSources.HasFlag(TagFilter.TagSource.FirstYearlySeason) && seasons.Count > 0) {
             genres.Add(seasons.First());
         }
     }
