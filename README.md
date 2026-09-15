@@ -48,7 +48,18 @@ compatible with what.
 | `6.0.0`           | `10.11`           | `5.2.0` — `5.2.5` |
 | `6.0.1` — `6.0.3` | `10.10` — `10.11` | `5.2.0` — `5.3.0` |
 | `6.0.4` — `6.0.5` | `10.10` — `10.11` | `5.2.0` — `5.3.3` |
-| `dev`             | `10.10` — `12`    | `dev`             |
+| `dev`             | `10.10.7`+, `10.11.11`+, `12` | `5.3.3`, `dev` |
+
+> [!WARNING]
+> **Never run a stable Shokofin release with a Shoko Server development build.** That combination is not supported,
+> **ever**, and breaks in different ways as server development moves on.
+>
+> Shokofin development builds are the exception in the other direction: until Shoko Server `6.0.0` is released, they
+> support both the latest stable Shoko Server and its development builds. After that, support for the older stable
+> server may be dropped.
+>
+> The next stable Shokofin release will **probably** not be out until **near** or **after** the next stable Shoko
+> Server release.
 
 ### Official Repository
 
