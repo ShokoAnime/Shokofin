@@ -2471,7 +2471,7 @@ form:not(.advanced-mode) .advanced-only {
                                     <input is="emby-checkbox" type="checkbox" id="SyncUserDataInitialSkipEventCount" />
                                     <span>Lazy Sync Watch-State Events With Shoko</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">Wait about 10 seconds before syncing any watch-state events to Shoko. This will prevent accidental clicks and/or previews from marking a file as watched in Shoko, and will also keep them more in sync with Jellyfin since it's closer to how Jellyfin handles the watch-state internally.</div>
+                                <div class="fieldDescription checkboxFieldDescription">Wait until playback has been running for about a minute, or until you skip ahead, before syncing any watch-state events to Shoko. Stopping playback before that point sends nothing. This will prevent accidental clicks and/or previews from marking a file as watched in Shoko, and will also keep them more in sync with Jellyfin since it's closer to how Jellyfin handles the watch-state internally.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
