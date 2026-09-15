@@ -1352,6 +1352,12 @@ public partial class ShokoApiManager : IDisposable {
                 if (seriesConfig.StructureType is not SeriesStructureType.Shoko_Groups)
                     return (primaryId, extraIds);
 
+                // Merge group links (letters A-D) are explicit, opt-in edges that don't require AniDB relations
+                // or air-date/title matching. A series with any merge group flag only ever merges through group
+                // links below, never through the relation-based logic further down.
+                if (HasAnyMergeGroupFlag(seriesConfig.SeasonMergingBehavior))
+                    return await ResolveMergeGroupChain(series, seriesConfig);
+
                 if (seriesConfig.SeasonMergingBehavior is SeasonMergingBehavior.None && !config.SeasonMerging_SeriesTypes.Contains(seriesConfig.Type))
                     return (primaryId, extraIds);
 
@@ -1383,6 +1389,11 @@ public partial class ShokoApiManager : IDisposable {
                             continue;
 
                         var prequelConfig = await GetSeriesConfiguration(prequelSeries.Id);
+                        // A series with any merge group flag only ever merges through group links, so it's never
+                        // a valid relation-based partner.
+                        if (HasAnyMergeGroupFlag(prequelConfig.SeasonMergingBehavior))
+                            continue;
+
                         if (prequelConfig.SeasonMergingBehavior is SeasonMergingBehavior.NoMerge)
                             continue;
 
@@ -1399,14 +1410,6 @@ public partial class ShokoApiManager : IDisposable {
                             prequelRelation.Type is RelationType.Prequel && (currentConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeBackward) || prequelConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeForward))
                         ) || (
                             prequelRelation.Type is RelationType.MainStory && currentConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeWithMainStory)
-                        ) || (
-                            currentConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupASource) && prequelConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupATarget)
-                        ) || (
-                            currentConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupBSource) && prequelConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupBTarget)
-                        ) || (
-                            currentConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupCSource) && prequelConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupCTarget)
-                        ) || (
-                            currentConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupDSource) && prequelConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupDTarget)
                         );
                         if (!mergeOverride) {
                             if (prequelRelation.Type is RelationType.Prequel && prequelDate > currentDate)
@@ -1490,6 +1493,11 @@ public partial class ShokoApiManager : IDisposable {
                                 continue;
 
                             var sequelConfig = await GetSeriesConfiguration(sequelSeries.Id);
+                            // A series with any merge group flag only ever merges through group links, so it's
+                            // never a valid relation-based partner.
+                            if (HasAnyMergeGroupFlag(sequelConfig.SeasonMergingBehavior))
+                                continue;
+
                             if (sequelConfig.SeasonMergingBehavior is SeasonMergingBehavior.NoMerge)
                                 continue;
 
@@ -1517,14 +1525,6 @@ public partial class ShokoApiManager : IDisposable {
                                 sequelRelation.Type is RelationType.Sequel && (currentConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeForward) || sequelConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeBackward))
                             ) || (
                                 sequelRelation.Type is RelationType.SideStory && sequelConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeWithMainStory)
-                            ) || (
-                                currentConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupATarget) && sequelConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupATarget)
-                            ) || (
-                                currentConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupBTarget) && sequelConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupBTarget)
-                            ) || (
-                                currentConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupCTarget) && sequelConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupCTarget)
-                            ) || (
-                                currentConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupDTarget) && sequelConfig.SeasonMergingBehavior.HasFlag(SeasonMergingBehavior.MergeGroupDTarget)
                             );
                             if (!mergeOverride) {
                                 if (sequelRelation.Type is RelationType.Sequel && sequelDate < currentDate)
@@ -1590,6 +1590,201 @@ public partial class ShokoApiManager : IDisposable {
                 return (primaryId, extraIds);
             }
         );
+
+    /// <summary>
+    /// The merge group target/source flag pairs, in resolution priority order (A, B, C, D).
+    /// </summary>
+    private static readonly (SeasonMergingBehavior Target, SeasonMergingBehavior Source, char Letter)[] MergeGroupLetters = [
+        (SeasonMergingBehavior.MergeGroupATarget, SeasonMergingBehavior.MergeGroupASource, 'A'),
+        (SeasonMergingBehavior.MergeGroupBTarget, SeasonMergingBehavior.MergeGroupBSource, 'B'),
+        (SeasonMergingBehavior.MergeGroupCTarget, SeasonMergingBehavior.MergeGroupCSource, 'C'),
+        (SeasonMergingBehavior.MergeGroupDTarget, SeasonMergingBehavior.MergeGroupDSource, 'D'),
+    ];
+
+    /// <summary>
+    /// Checks if the behavior has any merge group (A-D) target or source flag set.
+    /// </summary>
+    private static bool HasAnyMergeGroupFlag(SeasonMergingBehavior behavior)
+        => MergeGroupLetters.Any(letter => behavior.HasFlag(letter.Target) || behavior.HasFlag(letter.Source));
+
+    /// <summary>
+    /// Resolves the merge group (letters A-D) chain for a series with at least one merge group flag set.
+    /// </summary>
+    /// <remarks>
+    /// Merge groups are explicit, opt-in edges within a single Shoko group: a target of letter X absorbs every
+    /// series in the same Shoko group that is a source of X, and links chain transitively — a series can be the
+    /// source of one letter and the target of another. Unlike the relation-based merging above, this does not
+    /// walk AniDB relations, and doesn't apply the air-date/merge-window/title checks.
+    /// </remarks>
+    private async Task<(string primaryId, List<string> extraIds)> ResolveMergeGroupChain(ShokoSeries series, SeriesConfiguration seriesConfig) {
+        var groupId = series.IDs.ParentGroup;
+        var groupMembers = await ApiClient.GetShokoSeriesInGroup(groupId.ToString());
+
+        // Only series with at least one merge group flag, that otherwise pass the same eligibility checks as the
+        // queried series did above, count as nodes in the group-link graph. Everything else in the Shoko group is
+        // irrelevant to it.
+        var nodes = new Dictionary<string, (ShokoSeries Series, SeriesConfiguration Config)>();
+        foreach (var member in groupMembers) {
+            var memberConfig = member.Id == series.Id ? seriesConfig : await GetSeriesConfiguration(member.Id);
+            if (!HasAnyMergeGroupFlag(memberConfig.SeasonMergingBehavior))
+                continue;
+
+            if (memberConfig.SeasonMergingBehavior is SeasonMergingBehavior.NoMerge)
+                continue;
+
+            if (memberConfig.StructureType is not SeriesStructureType.Shoko_Groups)
+                continue;
+
+            nodes[member.Id] = (member, memberConfig);
+        }
+
+        // The queried series already passed these exact checks above, so it should always be present here, but
+        // fall back to a standalone season if it's somehow missing (e.g. not returned by the group listing).
+        if (!nodes.ContainsKey(series.Id))
+            return (series.Id, []);
+
+        // Pick a single canonical target per letter within this Shoko group. If more than one series claims to
+        // be the same letter's target, pick deterministically (earliest air date, then lowest id) and warn.
+        var canonicalTarget = new Dictionary<char, string>();
+        foreach (var (targetFlag, _, letter) in MergeGroupLetters) {
+            var candidates = nodes.Values.Where(n => n.Config.SeasonMergingBehavior.HasFlag(targetFlag)).ToList();
+            if (candidates.Count is 0)
+                continue;
+
+            if (candidates.Count > 1)
+                Logger.LogWarning(
+                    "Multiple series claim to be the merge group {Letter} target within the same Shoko group. Picking the earliest-aired one deterministically. (Group={GroupId},Candidates={CandidateIds})",
+                    letter,
+                    groupId,
+                    candidates.Select(c => c.Series.Id)
+                );
+
+            canonicalTarget[letter] = candidates
+                .OrderBy(n => n.Series.AniDB.AirDate ?? DateTime.MaxValue)
+                .ThenBy(n => n.Series.Id, StringComparer.Ordinal)
+                .First()
+                .Series.Id;
+        }
+
+        // Assign each node at most one parent — the canonical target for the first (in A, B, C, D order) letter
+        // it's flagged as a source of, provided that letter actually has a canonical target other than itself.
+        var parent = new Dictionary<string, (string TargetId, char Letter)>();
+        foreach (var node in nodes.Values) {
+            foreach (var (_, sourceFlag, letter) in MergeGroupLetters) {
+                if (!node.Config.SeasonMergingBehavior.HasFlag(sourceFlag))
+                    continue;
+
+                if (!canonicalTarget.TryGetValue(letter, out var targetId) || targetId == node.Series.Id)
+                    continue;
+
+                parent[node.Series.Id] = (targetId, letter);
+                break;
+            }
+        }
+
+        // Resolve the root of every node's chain, breaking any cycle deterministically (earliest air date, then
+        // lowest id) so a bad config can never cause an infinite loop, and so the outcome only depends on the
+        // graph itself — never on which series happened to be queried first.
+        var rootOf = new Dictionary<string, string>();
+        var brokenParents = new HashSet<string>();
+        string ResolveRoot(string start) {
+            if (rootOf.TryGetValue(start, out var cachedRoot))
+                return cachedRoot;
+
+            var path = new List<string>();
+            var current = start;
+            while (true) {
+                if (rootOf.TryGetValue(current, out var knownRoot)) {
+                    foreach (var id in path)
+                        rootOf[id] = knownRoot;
+                    return knownRoot;
+                }
+
+                var cycleStart = path.IndexOf(current);
+                if (cycleStart >= 0) {
+                    var cycle = path.Skip(cycleStart).ToList();
+                    var chosenRoot = cycle
+                        .OrderBy(id => nodes[id].Series.AniDB.AirDate ?? DateTime.MaxValue)
+                        .ThenBy(id => id, StringComparer.Ordinal)
+                        .First();
+                    Logger.LogWarning(
+                        "Detected a cycle in the merge group links within Shoko group {GroupId}. Breaking the cycle at series {RootId}, chosen deterministically by earliest air date then id. (Cycle={CycleIds})",
+                        groupId,
+                        chosenRoot,
+                        cycle
+                    );
+                    brokenParents.Add(chosenRoot);
+                    foreach (var id in path)
+                        rootOf[id] = chosenRoot;
+                    return chosenRoot;
+                }
+
+                path.Add(current);
+                if (!parent.TryGetValue(current, out var edge)) {
+                    foreach (var id in path)
+                        rootOf[id] = current;
+                    return current;
+                }
+                current = edge.TargetId;
+            }
+        }
+        foreach (var nodeId in nodes.Keys)
+            ResolveRoot(nodeId);
+
+        // Build the ordered chain for the tree the queried series belongs to: depth-first from the root, each
+        // target immediately followed by its sources (grouped by letter, then ordered by air date, then id).
+        var childrenOf = new Dictionary<string, List<(string ChildId, char Letter)>>();
+        foreach (var (childId, edge) in parent) {
+            // This node's own outgoing edge was cut to break a cycle — it's the root of its own tree instead, so
+            // it must not also appear as a child of the target it used to point to.
+            if (brokenParents.Contains(childId))
+                continue;
+
+            if (!childrenOf.TryGetValue(edge.TargetId, out var children))
+                childrenOf[edge.TargetId] = children = [];
+            children.Add((childId, edge.Letter));
+        }
+
+        var order = new List<string>();
+        var visitedForOrder = new HashSet<string>();
+        void Visit(string id) {
+            if (!visitedForOrder.Add(id))
+                return;
+
+            order.Add(id);
+            if (!childrenOf.TryGetValue(id, out var children))
+                return;
+
+            foreach (var letterGroup in children.GroupBy(child => child.Letter).OrderBy(g => g.Key)) {
+                foreach (var child in letterGroup
+                    .OrderBy(child => nodes[child.ChildId].Series.AniDB.AirDate ?? DateTime.MaxValue)
+                    .ThenBy(child => child.ChildId, StringComparer.Ordinal)
+                ) {
+                    Visit(child.ChildId);
+                }
+            }
+        }
+        Visit(rootOf[series.Id]);
+
+        var primaryId = order[0];
+        var extraIds = order.Skip(1).ToList();
+
+        // Same safety-net as the relation-based logic above — should be unreachable given the construction of
+        // `order` always includes every node reachable from its own resolved root, but keep it as a guard.
+        if (!(primaryId == series.Id || extraIds.Contains(series.Id))) {
+            Logger.LogWarning(
+                "The shoko series was not part of the linked merge group series list. Resetting series. (Series={SeriesId},Primary={PrimaryId},ExtraSeries={ExtraIds})",
+                series.Id,
+                primaryId,
+                extraIds
+            );
+            (primaryId, extraIds) = (series.Id, []);
+        }
+
+        Logger.LogTrace("Resolved merge group chain for series. (Series={SeriesId},Group={GroupId},Primary={PrimaryId},ExtraSeries={ExtraIds})", series.Id, groupId, primaryId, extraIds);
+
+        return (primaryId, extraIds);
+    }
 
     private string? AdjustMainTitle(string title)
         => YearRegex().Match(title) is { Success: true } result
