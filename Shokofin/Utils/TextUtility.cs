@@ -665,7 +665,7 @@ public static partial class TextUtility {
                     title = titleList.FirstOrDefault()?.Value;
             }
             else {
-                title = titles.FirstOrDefault()?.Value;
+                title = titleList.FirstOrDefault()?.Value;
             }
             if (!string.IsNullOrWhiteSpace(title) && !InvalidEpisodeTitleRegex().IsMatch(title))
                 return title;
