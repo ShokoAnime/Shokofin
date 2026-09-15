@@ -92,7 +92,11 @@ public class ShokoIgnoreRule : IResolverIgnoreRule {
             var (mediaFolder, partialPath) = ApiManager.FindMediaFolder(fullPath, parent);
 
             // Ignore any media folders that aren't mapped to shoko.
-            var (libraryConfig, mediaFolderConfig) = await ConfigurationService.GetOrCreateConfigurationForMediaFolder(mediaFolder);
+            var (libraryConfig, mediaFolderConfig, isPending) = await ConfigurationService.GetOrCreateConfigurationForMediaFolder(mediaFolder);
+            if (isPending) {
+                Logger.LogDebug("Library for media folder {Path} is not registered in Jellyfin yet, ignoring for now. It will be set up after the current scan finishes. (MediaFolder={MediaFolderId})", fileInfo.FullName, mediaFolder.Id);
+                return true;
+            }
             if (libraryConfig is null || mediaFolderConfig is null || !mediaFolderConfig.IsMapped) {
                 Logger.LogDebug("Skipped media folder for path {Path} (MediaFolder={MediaFolderId})", fileInfo.FullName, mediaFolder.Id);
                 return false;

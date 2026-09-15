@@ -41,6 +41,8 @@ public class MediaFolderConfigurationService {
 
     private bool ShouldGenerateAllConfigurations = true;
 
+    private bool HasPendingLibraryRegistration = false;
+
     private readonly SemaphoreSlim LockObj = new(1, 1);
 
     public event EventHandler<LibraryConfigurationChangedEventArgs>? LibraryConfigurationAdded;
@@ -93,18 +95,33 @@ public class MediaFolderConfigurationService {
         if (isRunning)
             return;
 
-        Task.Run(() => EditLibraries(true));
+        Task.Run(EditLibraries).ContinueWith(LogFaultedEditLibraries, TaskContinuationOptions.OnlyOnFaulted);
     }
 
     private void OnUsageTrackerStalled(object? sender, EventArgs eventArgs) {
-        Task.Run(() => EditLibraries(false));
+        Task.Run(EditLibraries).ContinueWith(LogFaultedEditLibraries, TaskContinuationOptions.OnlyOnFaulted);
     }
 
-    private async Task EditLibraries(bool shouldScheduleLibraryScan) {
+    private void LogFaultedEditLibraries(Task task) {
+        if (task.Exception is { } exception)
+            Logger.LogError(exception, "Unexpected error while applying queued library edits.");
+    }
+
+    private async Task EditLibraries() {
+        var appliedAnyEdit = false;
         await LockObj.WaitAsync();
         try {
             CachedVirtualFolders = null;
             ShouldGenerateAllConfigurations = true;
+
+            // A resolver ran into a library that Jellyfin hadn't finished registering yet during
+            // the scan that just ended. Now that the scan is over it should be registered, so try
+            // to (re-)generate the configuration for it now to queue up its swap, if any is needed.
+            if (HasPendingLibraryRegistration) {
+                HasPendingLibraryRegistration = false;
+                ShouldGenerateAllConfigurations = false;
+                await GenerateAllConfigurations(GetVirtualFolders());
+            }
 
             if (LibraryEdits.Count is 0)
                 return;
@@ -112,25 +129,60 @@ public class MediaFolderConfigurationService {
             var libraryEdits = LibraryEdits.ToList();
             LibraryEdits.Clear();
             foreach (var (libraryId, (libraryName, add, remove)) in libraryEdits) {
+                var failedAdd = new HashSet<string>();
                 foreach (var vfsPath in add) {
-                    // Before we add the media folder we need to
-                    //   a) make sure it exists so we can add it without Jellyfin throwing a fit, and
-                    //   b) make sure it's not empty to make sure Jellyfin doesn't skip resolving it.
-                    if (!Directory.Exists(vfsPath))
-                        Directory.CreateDirectory(vfsPath);
-                    if (!FileSystem.GetFileSystemEntryPaths(vfsPath).Any())
-                        File.WriteAllText(Path.Join(vfsPath, ".keep"), string.Empty);
+                    try {
+                        // Before we add the media folder we need to
+                        //   a) make sure it exists so we can add it without Jellyfin throwing a fit, and
+                        //   b) make sure it's not empty to make sure Jellyfin doesn't skip resolving it.
+                        if (!Directory.Exists(vfsPath))
+                            Directory.CreateDirectory(vfsPath);
+                        if (!FileSystem.GetFileSystemEntryPaths(vfsPath).Any())
+                            File.WriteAllText(Path.Join(vfsPath, ".keep"), string.Empty);
 
-                    LibraryManager.AddMediaPath(libraryName, new(vfsPath));
+                        LibraryManager.AddMediaPath(libraryName, new(vfsPath));
+                        appliedAnyEdit = true;
+                    }
+                    catch (Exception ex) {
+                        Logger.LogError(ex, "Failed to add media folder {Path} to library {LibraryName}. (Library={LibraryId})", vfsPath, libraryName, libraryId);
+                        failedAdd.Add(vfsPath);
+                    }
                 }
-                foreach (var vfsPath in remove)
-                    LibraryManager.RemoveMediaPath(libraryName, new(vfsPath));
+                var failedRemove = new HashSet<string>();
+                foreach (var vfsPath in remove) {
+                    try {
+                        LibraryManager.RemoveMediaPath(libraryName, new(vfsPath));
+                        appliedAnyEdit = true;
+                    }
+                    catch (Exception ex) {
+                        Logger.LogError(ex, "Failed to remove media folder {Path} from library {LibraryName}. (Library={LibraryId})", vfsPath, libraryName, libraryId);
+                        failedRemove.Add(vfsPath);
+                    }
+                }
+
+                // Re-queue anything that failed so it's retried on the next pass instead of being silently lost.
+                if (failedAdd.Count > 0 || failedRemove.Count > 0) {
+                    if (!LibraryEdits.TryGetValue(libraryId, out var edits))
+                        LibraryEdits[libraryId] = edits = (libraryName, [], []);
+                    edits.add.UnionWith(failedAdd);
+                    edits.remove.UnionWith(failedRemove);
+                }
             }
-            if (shouldScheduleLibraryScan)
-                await LibraryManager.ValidateMediaLibrary(new Progress<double>(), CancellationToken.None);
         }
         finally {
             LockObj.Release();
+        }
+
+        // Schedule the follow-up scan outside the lock. Jellyfin may resolve items while
+        // scheduling/running the scan, and those resolves re-enter this service and need
+        // LockObj themselves, so holding it here could deadlock against the scan.
+        if (appliedAnyEdit && !LibraryManager.IsScanRunning) {
+            try {
+                await LibraryManager.ValidateMediaLibrary(new Progress<double>(), CancellationToken.None);
+            }
+            catch (Exception ex) {
+                Logger.LogError(ex, "Failed to schedule a follow-up library scan after applying queued library edits.");
+            }
         }
     }
 
@@ -197,10 +249,10 @@ public class MediaFolderConfigurationService {
     }
 
     public async Task<(LibraryConfiguration? vfsRootConfig, IReadOnlyList<MediaFolderConfiguration> mediaList, bool skipGeneration)> GetMediaFoldersForLibraryInVFS(Folder mediaFolder, CollectionType? collectionType) {
-        var (libraryConfig, mediaFolderConfig) = await GetOrCreateConfigurationForMediaFolder(mediaFolder, collectionType);
+        var (libraryConfig, mediaFolderConfig, isPending) = await GetOrCreateConfigurationForMediaFolder(mediaFolder, collectionType);
         await LockObj.WaitAsync();
         try {
-            var skipGeneration = LibraryEdits.Count is > 0 && LibraryManager.IsScanRunning;
+            var skipGeneration = isPending || (LibraryEdits.Count is > 0 && LibraryManager.IsScanRunning);
             if (libraryConfig is null || !libraryConfig.IsVirtualFileSystemEnabled || mediaFolderConfig is not null)
                 return (null, [], skipGeneration);
             var mediaFolders = libraryConfig.MediaFolders
@@ -213,15 +265,24 @@ public class MediaFolderConfigurationService {
         }
     }
 
-    public async Task<(LibraryConfiguration? libraryConfiguration, MediaFolderConfiguration? mediaFolderConfiguration)> GetOrCreateConfigurationForMediaFolder(Folder mediaFolder, CollectionType? collectionType = CollectionType.unknown) {
+    public async Task<(LibraryConfiguration? libraryConfiguration, MediaFolderConfiguration? mediaFolderConfiguration, bool isPending)> GetOrCreateConfigurationForMediaFolder(Folder mediaFolder, CollectionType? collectionType = CollectionType.unknown) {
         await LockObj.WaitAsync();
         try {
             var allVirtualFolders = GetVirtualFolders();
-            if (allVirtualFolders.FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path) && (collectionType is CollectionType.unknown || p.CollectionType.ConvertToCollectionType() == collectionType)) is not { } library)
-                throw new Exception($"Unable to find any library to use for media folder \"{mediaFolder.Path}\"");
+            if (allVirtualFolders.FirstOrDefault(p => p.Locations.Contains(mediaFolder.Path) && (collectionType is CollectionType.unknown || p.CollectionType.ConvertToCollectionType() == collectionType)) is not { } library) {
+                // The library may just not be registered with Jellyfin yet (e.g. it was just created
+                // and this is its first scan), so flag it for a retry once the current scan ends
+                // instead of treating it as a permanently unmanaged folder.
+                HasPendingLibraryRegistration = true;
+                Logger.LogDebug("Unable to find any library to use for media folder \"{Path}\" yet. It may not be registered with Jellyfin yet.", mediaFolder.Path);
+                return (null, null, true);
+            }
 
-            if (string.IsNullOrEmpty(library.ItemId) || !Guid.TryParse(library.ItemId, out var libraryId))
-                throw new Exception($"Unable to parse library id for library \"{library.Name}\" to use for media folder \"{mediaFolder.Path}\". This is not a plugin bug, but the media folder is missing from the default view in Jellyfin.");
+            if (string.IsNullOrEmpty(library.ItemId) || !Guid.TryParse(library.ItemId, out var libraryId)) {
+                HasPendingLibraryRegistration = true;
+                Logger.LogDebug("Unable to parse library id for library \"{LibraryName}\" to use for media folder \"{Path}\". This is not a plugin bug, but the media folder is missing from the default view in Jellyfin, or the library was just created and Jellyfin hasn't finished registering it yet.", library.Name, mediaFolder.Path);
+                return (null, null, true);
+            }
 
             if (ShouldGenerateAllConfigurations) {
                 ShouldGenerateAllConfigurations = false;
@@ -229,13 +290,13 @@ public class MediaFolderConfigurationService {
             }
 
             if (Plugin.Instance.Configuration.Libraries.FirstOrDefault(lib => lib.IsVirtualFileSystemEnabled && lib.VirtualRoot == mediaFolder.Path) is { } libraryConfig) {
-                return (libraryConfig, null);
+                return (libraryConfig, null, false);
             }
 
             foreach (var mediaFolderConfig in Plugin.Instance.Configuration.LibraryFolders.Where(mf => mf.Path == mediaFolder.Path).ToList()) {
-                return (mediaFolderConfig.Library, mediaFolderConfig);
+                return (mediaFolderConfig.Library, mediaFolderConfig, false);
             }
-            return (null, null);
+            return (null, null, false);
         }
         finally {
             LockObj.Release();
