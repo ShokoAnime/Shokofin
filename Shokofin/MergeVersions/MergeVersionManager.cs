@@ -585,10 +585,12 @@ public class MergeVersionsManager {
 
     private string GetSelectedSortValue<TVideo>(TVideo video, FileInfo fileInfo, MergeVersionSortSelector selector) where TVideo : Video
         => selector switch {
-            MergeVersionSortSelector.ImportedAt => (fileInfo.Shoko.ImportedAt ?? fileInfo.Shoko.CreatedAt).ToUniversalTime().ToString("O"),
-            MergeVersionSortSelector.CreatedAt => fileInfo.Shoko.CreatedAt.ToString("O"),
+            // Inverted so newly imported/created files sort first in the ascending order used by OrderVideos.
+            MergeVersionSortSelector.ImportedAt => (DateTime.MaxValue.Ticks - (fileInfo.Shoko.ImportedAt ?? fileInfo.Shoko.CreatedAt).ToUniversalTime().Ticks).ToString("D19"),
+            MergeVersionSortSelector.CreatedAt => (DateTime.MaxValue.Ticks - fileInfo.Shoko.CreatedAt.Ticks).ToString("D19"),
+            // Inverted so the highest resolution sorts first in the ascending order used by OrderVideos.
             MergeVersionSortSelector.Resolution => video.GetDefaultVideoStream() is { } videoStream
-                ? ((int)Math.Ceiling(((decimal)(videoStream.Width ?? 1) * (videoStream.Height ?? 1)) / 100)).ToString("00000000")
+                ? (99999999 - (int)Math.Ceiling(((decimal)(videoStream.Width ?? 1) * (videoStream.Height ?? 1)) / 100)).ToString("00000000")
                 : "99999999",
             MergeVersionSortSelector.ReleaseGroupName => fileInfo.Shoko.Release?.Group is { } releaseGroup
                 ? (
