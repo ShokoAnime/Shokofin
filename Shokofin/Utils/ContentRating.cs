@@ -277,22 +277,22 @@ public static class ContentRating {
 
         // Trim input, remove dashes and underscores, and remove optional prefix.
         value = value.ToLowerInvariant().Trim().Replace("-", "").Replace("_", "");
-        if (value.Length > 1 && value[0..1] == "tv")
+        if (value.Length > 1 && value[0..2] == "tv")
             value = value.Length > 2 ? value[2..] : string.Empty;
 
-        // Parse rating.
+        // Parse rating. Longer prefixes are tried first so e.g. "y7" isn't
+        // swallowed by the single-letter "y" check below.
         var offset = 0;
-        if (value.Length > 0) {
-            contentRating = value[0] switch {
-                'y' => TvRating.TvY,
-                'g' => TvRating.TvG,
+        if (contentRating is TvRating.None && value.Length > 2) {
+            contentRating = value[0..3] switch {
+                "xxx" => TvRating.XXX,
                 _ => TvRating.None,
             };
             if (contentRating is not TvRating.None)
-            offset = 1;
+            offset = 3;
         }
         if (contentRating is TvRating.None && value.Length > 1) {
-            contentRating = value[0..1] switch {
+            contentRating = value[0..2] switch {
                 "y7" => TvRating.TvY7,
                 "pg" => TvRating.TvPG,
                 "14" => TvRating.Tv14,
@@ -302,13 +302,14 @@ public static class ContentRating {
             if (contentRating is not TvRating.None)
             offset = 2;
         }
-        if (contentRating is TvRating.None && value.Length > 2) {
-            contentRating = value[0..2] switch {
-                "xxx" => TvRating.XXX,
+        if (contentRating is TvRating.None && value.Length > 0) {
+            contentRating = value[0] switch {
+                'y' => TvRating.TvY,
+                'g' => TvRating.TvG,
                 _ => TvRating.None,
             };
             if (contentRating is not TvRating.None)
-            offset = 3;
+            offset = 1;
         }
         if (contentRating is TvRating.None) {
             contentIndicators = null;
