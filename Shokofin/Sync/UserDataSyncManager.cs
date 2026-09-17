@@ -8,6 +8,11 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
+#if NET9_0_OR_GREATER
+using Jellyfin.Database.Implementations.Entities;
+#else
+using Jellyfin.Data.Entities;
+#endif
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
@@ -18,6 +23,7 @@ using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
+using Shokofin.Database;
 using Shokofin.Extensions;
 using Shokofin.Resolvers;
 
@@ -43,7 +49,9 @@ public class UserDataSyncManager {
 
     private readonly ShokoIdLookup Lookup;
 
-    public UserDataSyncManager(IUserDataManager userDataManager, IUserManager userManager, ILibraryManager libraryManager, ISessionManager sessionManager, ILogger<UserDataSyncManager> logger, VirtualFileSystemService vfsService, ShokoApiClient apiClient, ShokoIdLookup lookup) {
+    private readonly UserDataRepositoryService UserDataRepository;
+
+    public UserDataSyncManager(IUserDataManager userDataManager, IUserManager userManager, ILibraryManager libraryManager, ISessionManager sessionManager, ILogger<UserDataSyncManager> logger, VirtualFileSystemService vfsService, ShokoApiClient apiClient, ShokoIdLookup lookup, UserDataRepositoryService userDataRepository) {
         UserDataManager = userDataManager;
         UserManager = userManager;
         LibraryManager = libraryManager;
@@ -52,6 +60,7 @@ public class UserDataSyncManager {
         VfsService = vfsService;
         ApiClient = apiClient;
         Lookup = lookup;
+        UserDataRepository = userDataRepository;
 
         SessionManager.SessionStarted += OnSessionStarted;
         SessionManager.SessionEnded += OnSessionEnded;
@@ -609,6 +618,21 @@ public class UserDataSyncManager {
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Saves imported user data without leaving duplicate shared-key rows behind.
+    /// Jellyfin's UserDataManager.SaveUserData writes every key from GetUserDataKeys()
+    /// scoped to this item, but the series-derived keys are shared across an episode's
+    /// alternate versions. If the old version still holds them, ReattachUserDataAsync
+    /// will later collide. We drop those rows first so only the primary carries the
+    /// shared keys.
+    /// </summary>
+    private void SaveImportedUserData(User user, Video video, UserItemData data) {
+        foreach (var key in video.GetUserDataKeys())
+            UserDataRepository.DeleteUserDataByKeyExceptItem(key, user, video.Id);
+
+        UserDataManager.SaveUserData(user, video, data, UserDataSaveReason.Import, CancellationToken.None);
+    }
+
     private async Task SyncVideo(Video video, UserConfiguration userConfig, SyncDirection direction, string fileId, string seriesId) {
         try {
             var user = UserManager.GetUserById(userConfig.UserId);
@@ -650,12 +674,12 @@ public class UserDataSyncManager {
                         break;
                     // Create a new local stats entry if there is no local entry.
                     if (localUserStats == null) {
-                        UserDataManager.SaveUserData(user, video, localUserStats = remoteUserStats.ToUserData(video), UserDataSaveReason.Import, CancellationToken.None);
+                        SaveImportedUserData(user, video, localUserStats = remoteUserStats.ToUserData(video));
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, seriesId);
                     }
                     // Else merge the remote stats into the local stats entry.
                     else if (!localUserStats.LastPlayedDate.HasValue || remoteUserStats.LastUpdatedAt > localUserStats.LastPlayedDate.Value) {
-                        UserDataManager.SaveUserData(user, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
+                        SaveImportedUserData(user, video, localUserStats.MergeWithFileUserStats(remoteUserStats));
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, seriesId);
                     }
                     break;
@@ -689,7 +713,7 @@ public class UserDataSyncManager {
                     }
                     // Else import if the remote state is fresher then the local state.
                     else if (localUserStats.LastPlayedDate.Value < remoteUserStats.LastUpdatedAt) {
-                        UserDataManager.SaveUserData(user, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
+                        SaveImportedUserData(user, video, localUserStats.MergeWithFileUserStats(remoteUserStats));
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, seriesId);
                     }
                     break;

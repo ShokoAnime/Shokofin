@@ -177,4 +177,24 @@ public class UserDataRepositoryService
         cmd.ExecuteNonQuery();
 #endif
     }
+
+    /// <summary>
+    /// Removes any UserData row for a given (user, key) that lives on an item OTHER
+    /// than <paramref name="keepItemId"/> — i.e. an alternate version of the same
+    /// episode, or the placeholder. The sync import uses this before saving so that
+    /// Jellyfin's ReattachUserDataAsync does not later move a shared-key row onto an
+    /// item that already holds it, which would violate the composite
+    /// (ItemId, UserId, CustomDataKey) unique constraint.
+    /// </summary>
+    public void DeleteUserDataByKeyExceptItem(string key, User user, Guid keepItemId) {
+#if NET9_0_OR_GREATER
+        using var context = _dbContextFactory.CreateDbContext();
+        context.UserData
+            .Where(e => e.UserId == user.Id && e.CustomDataKey == key && e.ItemId != keepItemId)
+            .ExecuteDelete();
+#else
+        // Jellyfin 10.10's UserDatas schema keys on (key, userId) with no per-item
+        // rows, so cross-item duplication — and this UNIQUE constraint — cannot occur.
+#endif
+    }
 }
