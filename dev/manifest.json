@@ -9,6 +9,30 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.3412",
+                "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.34) for more info.\n\n---\n\n`fix`: **Avoid UserData unique constraint when importing multi-version episodes (#113)**:\n\nWhen dealing with merged/multiple versions of an episode, both share the same user data keys. Jellyfin's ReattachUserDataAsync moves detached placeholder rows onto a surviving item without checking for an existing row, which can violate the (ItemId, UserId, CustomDataKey) unique constraint.\n\nShokofin's sync import now clears any detached placeholder rows for the episode's user data keys before saving, so a later reattachment cannot collide with the row we just wrote.\n\nThis is a best-effort mitigation. The reattachment itself is a blind update on Jellyfin's side and still needs an upstream fix to fully avoid the error.",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.34/shoko_6.0.5.34_for_12.y.z.zip",
+                "checksum": "98c34b92fcc6fc4bb463d37af1581b9c",
+                "timestamp": "2026-09-18T16:45:57Z"
+            },
+            {
+                "version": "6.0.5.3411",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.34) for more info.\n\n---\n\n`fix`: **Avoid UserData unique constraint when importing multi-version episodes (#113)**:\n\nWhen dealing with merged/multiple versions of an episode, both share the same user data keys. Jellyfin's ReattachUserDataAsync moves detached placeholder rows onto a surviving item without checking for an existing row, which can violate the (ItemId, UserId, CustomDataKey) unique constraint.\n\nShokofin's sync import now clears any detached placeholder rows for the episode's user data keys before saving, so a later reattachment cannot collide with the row we just wrote.\n\nThis is a best-effort mitigation. The reattachment itself is a blind update on Jellyfin's side and still needs an upstream fix to fully avoid the error.",
+                "targetAbi": "10.11.11.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.34/shoko_6.0.5.34_for_10.11.z.zip",
+                "checksum": "9e0ad3aa97c5d8310fdb5587ef178605",
+                "timestamp": "2026-09-18T16:46:07Z"
+            },
+            {
+                "version": "6.0.5.3410",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.34) for more info.\n\n---\n\n`fix`: **Avoid UserData unique constraint when importing multi-version episodes (#113)**:\n\nWhen dealing with merged/multiple versions of an episode, both share the same user data keys. Jellyfin's ReattachUserDataAsync moves detached placeholder rows onto a surviving item without checking for an existing row, which can violate the (ItemId, UserId, CustomDataKey) unique constraint.\n\nShokofin's sync import now clears any detached placeholder rows for the episode's user data keys before saving, so a later reattachment cannot collide with the row we just wrote.\n\nThis is a best-effort mitigation. The reattachment itself is a blind update on Jellyfin's side and still needs an upstream fix to fully avoid the error.",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.34/shoko_6.0.5.34_for_10.10.z.zip",
+                "checksum": "83ad667dc163f729c7876c4e28f49d9a",
+                "timestamp": "2026-09-18T16:46:18Z"
+            },
+            {
                 "version": "6.0.5.3312",
                 "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.33) for more info.\n\n---\n\n`fix`: **Set up new vfs libraries without a manual library scan**:\n\nTreat a media folder whose library isn't registered in Jellyfin yet as\npending instead of throwing, ignore its items for the current scan, and\nregenerate the configurations and apply the queued media folder swap\nonce the scan ends or the plugin goes idle. Always schedule a follow-up\nlibrary scan after applying edits, keep failed edits queued for the\nnext pass, and log unexpected errors from the edit tasks.\n\n`misc`: **Correct lazy sync delay in settings description**.\n\n`misc`: **Update version matrix and add compatibility warning to readme**.\n\n`fix`: **Pick the title in the matched language**:\n\nGetTitleForLanguage's non-typed branch returned the first title from\nthe unfiltered list instead of the language-filtered titleList, so it\ncould return a title in the wrong language.\n\n`fix`: **Remove duplicate titles when the setting is enabled**:\n\nJoinTitles was called with the \"Remove Duplicate Titles\" setting\ninverted, so enabling it kept duplicate titles in the alternate title\nand disabling it removed them.\n\n`fix`: **Use the movie title, description and image overrides for movies**:\n\nMovie items were built from the Season title/description/image\noverrides instead of the dedicated Movie / Film overrides, so the\nper-entity-type settings for movies were silently ignored. They now\nfall back to the global default when the movie override isn't\nenabled, same as the other entity types.\n\n`fix`: **Add the first yearly season when selected**:\n\nAddYearlySeasons checked the \"All Yearly Seasons\" tag/genre source\nflag for both branches, so enabling only \"First Yearly Season\" added\nnothing.\n\n`fix`: **Parse all tv content ratings from text**:\n\nTryConvertRatingFromText sliced the normalised rating with off-by-one\nranges (e.g. a 1-char slice compared against \"tv\"), so the TV prefix\nand every multi-character rating code (\"Y7\", \"PG\", \"14\", \"MA\", \"XXX\")\nnever matched. The single-letter checks are now tried last so \"Y7\"\nisn't swallowed by the \"Y\" case.\n\n`fix`: **Merge groups as explicit links within a shoko group**:\n\nReworks the Merge Group A-D behaviour into explicit target/source\nlinks that no longer depend on walking AniDB relations. A target of\nletter X absorbs every series in the same Shoko group that is a\nsource of X, and links chain transitively (a series can be a source\nof one letter and the target of another), ordered depth-first with\nsame-letter siblings sorted by air date.\n\nA series with any merge group flag now only ever merges through group\nlinks, never through the relation-based Merge With Sequel/Prequel,\nMerge With Main Story or automatic title/date merging, whether it's\nthe series being resolved or a candidate partner. Duplicate targets\nfor the same letter and cycles in the links are both resolved\ndeterministically (earliest air date, then lowest id) with a warning\nlogged, instead of merging arbitrarily or looping forever.\n\n`fix`: **Sort multiple versions in the order their labels describe**:\n\nImported At, Created At and Resolution produced sort strings that\nordered ascending in the opposite direction from their labels\n(\"Newly imported/created first\", \"Highest resolution first\"), so the\noldest/lowest-resolution version was picked as the primary one\ninstead. The sort values are now inverted (timestamps via\nDateTime.MaxValue.Ticks minus the date, resolution via a max-minus-\nvalue), keeping the \"no video stream\" fallback sorting last.\n\n`fix`: **Correct the 3d ordering note for multiple versions**:\n\nThe Multiple Versions Sort Selectors description claimed 3D videos\nare hard coded to be prioritized over 2D in Jellyfin, but Jellyfin\nactually orders 2D before 3D (after the queried item's own source and\nplain video files, and before sorting by width).\n\n`fix`: **Respect the per-library metadata events setting**:\n\nMetadata refresh events from SignalR ignored the \"Metadata Events\"\nper-library toggle and always refreshed matching items regardless of\nwhich library they belonged to, unlike file events which already\nfiltered by their own per-library toggle. Refreshes are now scoped to\nthe enabled libraries' top parent (physical folder) ids, and skipped\nentirely when no library has the setting enabled.\n\n`misc`: **Use TheMovieDb in the tmdb structure metadata setting label**.",
                 "targetAbi": "12.0.0.0",
@@ -63,30 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.31/shoko_6.0.5.31_for_12.y.z.zip",
                 "checksum": "1544e2e46c675c04447abe43f5eaee3a",
                 "timestamp": "2026-09-08T02:48:05Z"
-            },
-            {
-                "version": "6.0.5.3111",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.31) for more info.\n\n---\n\n`misc`: **Bump Jellyfin.Controller from 12.0.0-rc5 to 12.0.0**.\n\n`misc`: **Bump Jellyfin.Controller from 12.0.0-rc5 to 12.0.0 (take 2)**.",
-                "targetAbi": "10.11.11.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.31/shoko_6.0.5.31_for_10.11.z.zip",
-                "checksum": "17ddfd8012936028aae187dde5d12988",
-                "timestamp": "2026-09-08T02:48:17Z"
-            },
-            {
-                "version": "6.0.5.3110",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.31) for more info.\n\n---\n\n`misc`: **Bump Jellyfin.Controller from 12.0.0-rc5 to 12.0.0**.\n\n`misc`: **Bump Jellyfin.Controller from 12.0.0-rc5 to 12.0.0 (take 2)**.",
-                "targetAbi": "10.10.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.31/shoko_6.0.5.31_for_10.10.z.zip",
-                "checksum": "247e7915ef69ee8fc74c6321edee4ee6",
-                "timestamp": "2026-09-08T02:48:26Z"
-            },
-            {
-                "version": "6.0.5.3012",
-                "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.30) for more info.\n\n---\n\n`feat`: **Add setting to always use episode title as movie title for TMDB movies**:\n\nAdded a new opt-in _advanced_ setting which, when enabled, uses the episode-level title as-is for Shoko/AniDB \"movies\" that have one or more TMDB movie links, instead of composing the title as \"<series title>: <episode title>\". Also added some deduplication logic for movie titles when the season-level and episode-level titles resolve to the same text, case-insensitively.\n\nIt is not hooked up exactly as suggested in the issue because the \"<series title>: <episode title>\" rule predates the more \"proper\" TMDB title support and was originally meant for when we only had AniDB titles, where the movie title was split across the AniDB anime and AniDB episode. That rule remains the default and still applies for entries without a TMDB movie link, so existing setups are unaffected. The new behavior only kicks in when the setting is enabled and the entry is a movie or entity that carries at least one TMDB movie link; the rest is up to the user, since their title settings need to resolve the episode-level title the way they want it to, e.g. by configuring the Shoko group \"Movie / Film\" title settings.\n\nCloses #112",
-                "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.30/shoko_6.0.5.30_for_12.y.z.zip",
-                "checksum": "e7c17f4072d6625ab0f27d1fef86168a",
-                "timestamp": "2026-09-01T02:05:42Z"
             }
         ]
     }
