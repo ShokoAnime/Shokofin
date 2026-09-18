@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 
@@ -179,22 +180,24 @@ public class UserDataRepositoryService
     }
 
     /// <summary>
-    /// Removes any UserData row for a given (user, key) that lives on an item OTHER
-    /// than <paramref name="keepItemId"/> — i.e. an alternate version of the same
-    /// episode, or the placeholder. The sync import uses this before saving so that
-    /// Jellyfin's ReattachUserDataAsync does not later move a shared-key row onto an
-    /// item that already holds it, which would violate the composite
-    /// (ItemId, UserId, CustomDataKey) unique constraint.
+    /// Removes any detached placeholder UserData row for a given user and key set. The sync
+    /// import calls this before saving so Jellyfin's ReattachUserDataAsync does not later move
+    /// a placeholder row onto an item that already holds the shared key, which would violate
+    /// the composite (ItemId, UserId, CustomDataKey) unique constraint.
     /// </summary>
-    public void DeleteUserDataByKeyExceptItem(string key, User user, Guid keepItemId) {
+    public void DeleteUserDataByKeyForPlaceholder(IEnumerable<string> keys, User user) {
 #if NET9_0_OR_GREATER
+        var keyArray = keys.ToArray();
+        if (keyArray.Length == 0)
+            return;
+
         using var context = _dbContextFactory.CreateDbContext();
         context.UserData
-            .Where(e => e.UserId == user.Id && e.CustomDataKey == key && e.ItemId != keepItemId)
+            .Where(e => e.ItemId == PlaceholderId && e.UserId == user.Id && keyArray.Contains(e.CustomDataKey))
             .ExecuteDelete();
 #else
-        // Jellyfin 10.10's UserDatas schema keys on (key, userId) with no per-item
-        // rows, so cross-item duplication — and this UNIQUE constraint — cannot occur.
+        // Jellyfin 10.10's UserDatas schema keys on (key, userId) with no per-item placeholder
+        // rows, so this UNIQUE constraint cannot occur there.
 #endif
     }
 }
