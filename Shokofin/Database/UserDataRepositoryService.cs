@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 
@@ -175,6 +176,28 @@ public class UserDataRepositoryService
         cmd.Parameters.AddWithValue("@key", key);
         cmd.Parameters.AddWithValue("@userId", user.InternalId);
         cmd.ExecuteNonQuery();
+#endif
+    }
+
+    /// <summary>
+    /// Removes any detached placeholder UserData row for a given user and key set. The sync
+    /// import calls this before saving so Jellyfin's ReattachUserDataAsync does not later move
+    /// a placeholder row onto an item that already holds the shared key, which would violate
+    /// the composite (ItemId, UserId, CustomDataKey) unique constraint.
+    /// </summary>
+    public void DeleteUserDataByKeyForPlaceholder(IEnumerable<string> keys, User user) {
+#if NET9_0_OR_GREATER
+        var keyArray = keys.ToArray();
+        if (keyArray.Length == 0)
+            return;
+
+        using var context = _dbContextFactory.CreateDbContext();
+        context.UserData
+            .Where(e => e.ItemId == PlaceholderId && e.UserId == user.Id && keyArray.Contains(e.CustomDataKey))
+            .ExecuteDelete();
+#else
+        // Jellyfin 10.10's UserDatas schema keys on (key, userId) with no per-item placeholder
+        // rows, so this UNIQUE constraint cannot occur there.
 #endif
     }
 }

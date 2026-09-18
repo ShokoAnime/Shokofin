@@ -18,6 +18,7 @@ using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
+using Shokofin.Database;
 using Shokofin.Extensions;
 using Shokofin.Resolvers;
 
@@ -43,7 +44,9 @@ public class UserDataSyncManager {
 
     private readonly ShokoIdLookup Lookup;
 
-    public UserDataSyncManager(IUserDataManager userDataManager, IUserManager userManager, ILibraryManager libraryManager, ISessionManager sessionManager, ILogger<UserDataSyncManager> logger, VirtualFileSystemService vfsService, ShokoApiClient apiClient, ShokoIdLookup lookup) {
+    private readonly UserDataRepositoryService UserDataRepository;
+
+    public UserDataSyncManager(IUserDataManager userDataManager, IUserManager userManager, ILibraryManager libraryManager, ISessionManager sessionManager, ILogger<UserDataSyncManager> logger, VirtualFileSystemService vfsService, ShokoApiClient apiClient, ShokoIdLookup lookup, UserDataRepositoryService userDataRepository) {
         UserDataManager = userDataManager;
         UserManager = userManager;
         LibraryManager = libraryManager;
@@ -52,6 +55,7 @@ public class UserDataSyncManager {
         VfsService = vfsService;
         ApiClient = apiClient;
         Lookup = lookup;
+        UserDataRepository = userDataRepository;
 
         SessionManager.SessionStarted += OnSessionStarted;
         SessionManager.SessionEnded += OnSessionEnded;
@@ -650,11 +654,13 @@ public class UserDataSyncManager {
                         break;
                     // Create a new local stats entry if there is no local entry.
                     if (localUserStats == null) {
+                        UserDataRepository.DeleteUserDataByKeyForPlaceholder(video.GetUserDataKeys(), user);
                         UserDataManager.SaveUserData(user, video, localUserStats = remoteUserStats.ToUserData(video), UserDataSaveReason.Import, CancellationToken.None);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, seriesId);
                     }
                     // Else merge the remote stats into the local stats entry.
                     else if (!localUserStats.LastPlayedDate.HasValue || remoteUserStats.LastUpdatedAt > localUserStats.LastPlayedDate.Value) {
+                        UserDataRepository.DeleteUserDataByKeyForPlaceholder(video.GetUserDataKeys(), user);
                         UserDataManager.SaveUserData(user, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, seriesId);
                     }
@@ -689,6 +695,7 @@ public class UserDataSyncManager {
                     }
                     // Else import if the remote state is fresher then the local state.
                     else if (localUserStats.LastPlayedDate.Value < remoteUserStats.LastUpdatedAt) {
+                        UserDataRepository.DeleteUserDataByKeyForPlaceholder(video.GetUserDataKeys(), user);
                         UserDataManager.SaveUserData(user, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, seriesId);
                     }
