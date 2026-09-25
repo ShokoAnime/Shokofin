@@ -28,7 +28,7 @@ public class SeriesInfoUpdatedEventArgs : IMetadataUpdatedEventArgs {
     /// <summary>
     /// Shoko series ids affected by this update.
     /// </summary>
-    [JsonInclude, JsonPropertyName("ShokoSeriesIDs")]
+    [JsonInclude, JsonPropertyName("ShokoSeriesIDs"), JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
     public List<int> SeriesIds { get; set; } = [];
 
     #region IMetadataUpdatedEventArgs Impl.
