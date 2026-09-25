@@ -16,7 +16,7 @@ public class SeriesInfoUpdatedEventArgs : IMetadataUpdatedEventArgs {
     /// <summary>
     /// The provider metadata source.
     /// </summary>
-    [JsonInclude, JsonPropertyName("Source")]
+    [JsonInclude, JsonPropertyName("Source"), JsonConverter(typeof(JsonProviderNameConverter))]
     public ProviderName ProviderName { get; set; } = ProviderName.None;
 
     /// <summary>
