@@ -9,6 +9,30 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.0.5.3812",
+                "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.38) for more info.\n\n---\n\n`feat`: **Add a shoko similar items provider for jellyfin 12**:\n\n- Added a remote similar items provider for series and movies on Jellyfin 12, using the series suggestions in Shoko that point at series in the collection\n- Added a probe for the series suggestions endpoint, cached as `HasSuggestionsExposed`, and hid the provider when the server doesn't have it\n- Scored suggestions by their approval rating when the source has one, otherwise by their order",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.38/shoko_6.0.5.38_for_12.y.z.zip",
+                "checksum": "bb1ca34dfe41b4c3b1db83a3e9cc9a52",
+                "timestamp": "2026-10-03T21:53:34Z"
+            },
+            {
+                "version": "6.0.5.3811",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.38) for more info.\n\n---\n\n`feat`: **Add a shoko similar items provider for jellyfin 12**:\n\n- Added a remote similar items provider for series and movies on Jellyfin 12, using the series suggestions in Shoko that point at series in the collection\n- Added a probe for the series suggestions endpoint, cached as `HasSuggestionsExposed`, and hid the provider when the server doesn't have it\n- Scored suggestions by their approval rating when the source has one, otherwise by their order",
+                "targetAbi": "10.11.11.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.38/shoko_6.0.5.38_for_10.11.z.zip",
+                "checksum": "1ed2e6fdc3b38f96912ca8e7618b6eab",
+                "timestamp": "2026-10-03T21:53:47Z"
+            },
+            {
+                "version": "6.0.5.3810",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.38) for more info.\n\n---\n\n`feat`: **Add a shoko similar items provider for jellyfin 12**:\n\n- Added a remote similar items provider for series and movies on Jellyfin 12, using the series suggestions in Shoko that point at series in the collection\n- Added a probe for the series suggestions endpoint, cached as `HasSuggestionsExposed`, and hid the provider when the server doesn't have it\n- Scored suggestions by their approval rating when the source has one, otherwise by their order",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.38/shoko_6.0.5.38_for_10.10.z.zip",
+                "checksum": "6552ab7c0660b56277dd9816286c453b",
+                "timestamp": "2026-10-03T21:53:55Z"
+            },
+            {
                 "version": "6.0.5.3712",
                 "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.37) for more info.\n\n---\n\n`fix`: **Stop creating duplicate playlists on every reconstruction**:\n\n- Embedded `[ShokoPlaylistGroup=<id>]` in the playlist folder name so existing playlists are found again; the display name is reset to the group title\n- Removed the cleanup step that deleted every Shoko playlist before each run\n- Removed legacy playlists identified only by the provider id, and extra playlists per group\n- Built playlists from the top-level group instead of whichever subgroup was looked up first\n- Replaced the playlist items in release order when anything was added, removed or moved\n- Fixed the mixed-content check for groups with series and movies in different subgroups",
                 "targetAbi": "12.0.0.0",
@@ -63,30 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.35/shoko_6.0.5.35_for_12.y.z.zip",
                 "checksum": "a6bedad5025a09e0139231cf79c55083",
                 "timestamp": "2026-09-20T16:12:55Z"
-            },
-            {
-                "version": "6.0.5.3511",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.35) for more info.\n\n---\n\n`fix`: **Avoid foreign key violation when migrating user data (#115)**:\n\nVFS user-data migration computed the destination item id with\n`GetNewItemId` (a pure MD5 hash of the path, no existence check) and\ninserted a `UserData` row for it immediately. Because migration runs\ninside VFS generation before Jellyfin persists the new `BaseItem`,\nthat insert referenced a non-existent item and hit the\n`ItemId -> BaseItems.Id` foreign key on Jellyfin 10.11+/12.x, failing\nthe scan with `SQLite Error 19` and leaving the migration incomplete so\nthe crash repeated on every later scan.\n\nThe fix resolves destination existence once per migration batch and\nroutes rows whose item is not yet persisted to the placeholder id,\nwhere Jellyfin's own `ReattachUserDataAsync` adopts them on the item's\nfirst metadata refresh (after providers set the Shoko id, so the key\nmatches). Rows that are never adopted are purged by\n`CleanupUserDataTask`. It also fixes the migration delete to remove\nsource rows that were already tombstoned to the placeholder.",
-                "targetAbi": "10.11.11.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.35/shoko_6.0.5.35_for_10.11.z.zip",
-                "checksum": "29b08cb0c233577cb9d45f9d11b7690d",
-                "timestamp": "2026-09-20T16:13:06Z"
-            },
-            {
-                "version": "6.0.5.3510",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.35) for more info.\n\n---\n\n`fix`: **Avoid foreign key violation when migrating user data (#115)**:\n\nVFS user-data migration computed the destination item id with\n`GetNewItemId` (a pure MD5 hash of the path, no existence check) and\ninserted a `UserData` row for it immediately. Because migration runs\ninside VFS generation before Jellyfin persists the new `BaseItem`,\nthat insert referenced a non-existent item and hit the\n`ItemId -> BaseItems.Id` foreign key on Jellyfin 10.11+/12.x, failing\nthe scan with `SQLite Error 19` and leaving the migration incomplete so\nthe crash repeated on every later scan.\n\nThe fix resolves destination existence once per migration batch and\nroutes rows whose item is not yet persisted to the placeholder id,\nwhere Jellyfin's own `ReattachUserDataAsync` adopts them on the item's\nfirst metadata refresh (after providers set the Shoko id, so the key\nmatches). Rows that are never adopted are purged by\n`CleanupUserDataTask`. It also fixes the migration delete to remove\nsource rows that were already tombstoned to the placeholder.",
-                "targetAbi": "10.10.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.35/shoko_6.0.5.35_for_10.10.z.zip",
-                "checksum": "11bce2a2cb6d89678362fb6dd68e8600",
-                "timestamp": "2026-09-20T16:13:15Z"
-            },
-            {
-                "version": "6.0.5.3412",
-                "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.34) for more info.\n\n---\n\n`fix`: **Avoid UserData unique constraint when importing multi-version episodes (#113)**:\n\nWhen dealing with merged/multiple versions of an episode, both share the same user data keys. Jellyfin's ReattachUserDataAsync moves detached placeholder rows onto a surviving item without checking for an existing row, which can violate the (ItemId, UserId, CustomDataKey) unique constraint.\n\nShokofin's sync import now clears any detached placeholder rows for the episode's user data keys before saving, so a later reattachment cannot collide with the row we just wrote.\n\nThis is a best-effort mitigation. The reattachment itself is a blind update on Jellyfin's side and still needs an upstream fix to fully avoid the error.",
-                "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.34/shoko_6.0.5.34_for_12.y.z.zip",
-                "checksum": "98c34b92fcc6fc4bb463d37af1581b9c",
-                "timestamp": "2026-09-18T16:45:57Z"
             }
         ]
     }
