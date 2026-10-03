@@ -9,6 +9,7 @@ using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Playlists;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Playlists;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
@@ -52,13 +53,6 @@ public class PlaylistManager(
     private async Task RecreatePlaylists(IProgress<double> progress, CancellationToken cancellationToken) {
         var timeStarted = DateTime.Now;
 
-        _logger.LogTrace("Cleaning up invalid playlists…");
-
-        CleanupOrphanedPlaylists();
-
-        cancellationToken.ThrowIfCancellationRequested();
-        progress.Report(10);
-
         // Get all Jellyfin items with Shoko IDs
         var movies = GetMovies();
         var shows = GetShows();
@@ -78,7 +72,7 @@ public class PlaylistManager(
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        progress.Report(20);
+        progress.Report(10);
 
         // Build series -> ShowInfo map
         var showDict = new Dictionary<Series, ShowInfo>();
@@ -94,7 +88,7 @@ public class PlaylistManager(
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        progress.Report(30);
+        progress.Report(20);
 
         // Build episode -> Jellyfin item lookup
         var episodes = _libraryManager.GetItemList(new() {
@@ -121,7 +115,7 @@ public class PlaylistManager(
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        progress.Report(40);
+        progress.Report(30);
 
         // Collect group IDs from movies and shows
         var groupIds = new HashSet<string>();
@@ -134,59 +128,60 @@ public class PlaylistManager(
                 groupIds.Add(showInfo.CollectionId);
         }
 
-        // Get collection info for each group and determine which qualify
+        // Resolve each group to its top-level group, since that's what the
+        // playlist is generated for, and determine which ones qualify.
+        var seenTopLevelIds = new HashSet<string>();
         var finalGroups = new Dictionary<string, CollectionInfo>();
         foreach (var groupId in groupIds) {
             var collectionInfo = await _apiManager.GetCollectionInfo(groupId);
-            if (collectionInfo == null)
+            if (collectionInfo == null || !seenTopLevelIds.Add(collectionInfo.TopLevelId))
                 continue;
+
+            if (!collectionInfo.IsTopLevel) {
+                collectionInfo = await _apiManager.GetCollectionInfo(collectionInfo.TopLevelId);
+                if (collectionInfo == null)
+                    continue;
+            }
 
             if (!await GroupQualifies(collectionInfo))
                 continue;
 
-            finalGroups.TryAdd(collectionInfo.TopLevelId, collectionInfo);
+            finalGroups.Add(collectionInfo.Id, collectionInfo);
         }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        progress.Report(40);
+
+        // Get existing playlists indexed by group ID. Duplicates and legacy
+        // playlists without the group ID in their path will be removed.
+        var (existingPlaylists, toRemove) = GetGroupPlaylists();
+
+        // Determine what to add, remove, check
+        var toCreate = new List<(string GroupId, CollectionInfo Info, List<BaseItem> Items)>();
+        var toCheck = new List<(Playlist Playlist, CollectionInfo Info, List<BaseItem> Items)>();
+        foreach (var (groupId, info) in finalGroups) {
+            var orderedItems = BuildOrderedItemList(info, movieDict, episodeLookup);
+            if (orderedItems.Count < (Config.MinSizeOfTwo ? 2 : 1))
+                continue;
+
+            if (existingPlaylists.Remove(groupId, out var existingPlaylist))
+                toCheck.Add((existingPlaylist, info, orderedItems));
+            else
+                toCreate.Add((groupId, info, orderedItems));
+        }
+
+        // Remaining playlists have no matching group -> remove
+        toRemove.AddRange(existingPlaylists.Values);
 
         cancellationToken.ThrowIfCancellationRequested();
         progress.Report(50);
 
-        // Get existing playlists indexed by group ID
-        var existingPlaylists = GetGroupPlaylists();
-
-        // Determine what to add, remove, check
-        var toRemove = new Dictionary<Guid, Playlist>();
-        var toCreate = new List<(string GroupId, CollectionInfo Info, List<Guid> Items)>();
-        var toCheck = new Dictionary<string, (Playlist Playlist, CollectionInfo Info, List<Guid> Items)>();
-
-        foreach (var (groupId, info) in finalGroups) {
-            var orderedItems = BuildOrderedItemList(info, movieDict, episodeLookup);
-            if (Config.MinSizeOfTwo && orderedItems.Count < 2)
-                continue;
-
-            if (existingPlaylists.TryGetValue(groupId, out var existingList)) {
-                toCheck.Add(groupId, (existingList, info, orderedItems));
-                existingPlaylists.Remove(groupId);
-            }
-            else {
-                toCreate.Add((groupId, info, orderedItems));
-            }
-        }
-
-        // Remaining playlists have no matching group -> remove
-        foreach (var (_, playlist) in existingPlaylists)
-            toRemove.Add(playlist.Id, playlist);
+        // Remove orphaned playlists
+        foreach (var playlist in toRemove)
+            RemovePlaylist(playlist);
 
         cancellationToken.ThrowIfCancellationRequested();
         progress.Report(60);
-
-        // Remove orphaned playlists
-        foreach (var (id, playlist) in toRemove) {
-            _logger.LogTrace("Removing playlist {PlaylistName} (Id={PlaylistId})", playlist.Name, id);
-            _libraryManager.DeleteItem(playlist, new() { DeleteFileLocation = true, DeleteFromExternalProvider = false });
-        }
-
-        cancellationToken.ThrowIfCancellationRequested();
-        progress.Report(70);
 
         // Create new playlists
         #if NET9_0_OR_GREATER
@@ -202,20 +197,20 @@ public class PlaylistManager(
 
         var created = 0;
         foreach (var (groupId, info, orderedItems) in toCreate) {
+            // The group ID is embedded in the name so it ends up in the path of
+            // the playlist, which is what we use to find the playlist again.
             var result = await _playlist.CreatePlaylist(new PlaylistCreationRequest {
-                Name = info.Title,
-                ItemIdList = orderedItems,
+                Name = $"{info.Title.ForceASCII()} [{ProviderNames.ShokoPlaylistForGroup}={groupId}]",
+                ItemIdList = orderedItems.Select(item => item.Id).ToList(),
                 MediaType = MediaType.Video,
                 UserId = firstUser.Id,
                 Public = true,
             });
 
-            if (Guid.TryParse(result.Id, out var playlistId)) {
-                var playlist = _libraryManager.GetItemById(playlistId) as Playlist;
-                if (playlist != null) {
-                    playlist.ProviderIds[ProviderNames.ShokoPlaylistForGroup] = groupId;
-                    await playlist.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken);
-                }
+            if (Guid.TryParse(result.Id, out var playlistId) && _libraryManager.GetItemById(playlistId) is Playlist playlist) {
+                playlist.Name = info.Title;
+                playlist.ProviderIds[ProviderNames.ShokoPlaylistForGroup] = groupId;
+                await playlist.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken);
             }
 
             created++;
@@ -226,7 +221,7 @@ public class PlaylistManager(
 
         // Update existing playlists
         var updated = 0;
-        foreach (var (groupId, (existingPlaylist, info, orderedItems)) in toCheck) {
+        foreach (var (existingPlaylist, info, orderedItems) in toCheck) {
             var needsUpdate = false;
 
             if (!string.Equals(existingPlaylist.Name, info.Title)) {
@@ -234,40 +229,20 @@ public class PlaylistManager(
                 needsUpdate = true;
             }
 
-            if (needsUpdate)
+            // Replace the items if anything was added, removed or re-ordered.
+            var existingItemIds = existingPlaylist.GetLinkedChildrenInfos()
+                .Select(tuple => tuple.Item2?.Id ?? Guid.Empty)
+                .ToList();
+            if (!existingItemIds.SequenceEqual(orderedItems.Select(item => item.Id))) {
+                existingPlaylist.LinkedChildren = orderedItems.Select(LinkedChild.Create).ToArray();
+                needsUpdate = true;
+            }
+
+            if (needsUpdate) {
+                _logger.LogTrace("Updating playlist {PlaylistName} (Id={PlaylistId})", existingPlaylist.Name, existingPlaylist.Id);
                 await existingPlaylist.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken);
-
-            // Check if items need updating - get current linked children
-            var existingChildren = existingPlaylist.GetLinkedChildrenInfos()
-                .Select(t => t.Item1?.ItemId ?? Guid.Empty)
-                .Where(id => id != Guid.Empty)
-                .ToHashSet();
-            var expectedIds = orderedItems.ToHashSet();
-
-            var toAdd = expectedIds.Except(existingChildren).ToList();
-            var toRemoveFromPlaylist = existingChildren.Except(expectedIds)
-                .Select(existingItemId => existingPlaylist.GetLinkedChildrenInfos()
-                    .FirstOrDefault(t => t.Item1?.ItemId == existingItemId))
-                .Select(t => t?.Item1?.ItemId?.ToString())
-                .Where(id => id is not null)
-                .ToList()!;
-
-            if (toAdd.Count > 0) {
-#if NET10_0_OR_GREATER
-                await _playlist.AddItemToPlaylistAsync(existingPlaylist.Id, toAdd, null, firstUser.Id);
-#else
-                await _playlist.AddItemToPlaylistAsync(existingPlaylist.Id, toAdd, firstUser.Id);
-#endif
-                needsUpdate = true;
-            }
-
-            if (toRemoveFromPlaylist.Count > 0) {
-                await _playlist.RemoveItemFromPlaylistAsync(existingPlaylist.Id.ToString(), toRemoveFromPlaylist!);
-                needsUpdate = true;
-            }
-
-            if (needsUpdate)
                 updated++;
+            }
         }
 
         progress.Report(100);
@@ -353,11 +328,14 @@ public class PlaylistManager(
     /// <summary>
     /// Check if a collection has both TV shows and movies (recursively).
     /// </summary>
-    private static bool HasMixedContent(CollectionInfo info) {
-        var hasShows = info.Shows.Count > 0 || info.SubCollections.Any(sc => HasMixedContent(sc));
-        var hasMovies = info.Movies.Count > 0 || info.SubCollections.Any(sc => HasMixedContent(sc));
-        return hasShows && hasMovies;
-    }
+    private static bool HasMixedContent(CollectionInfo info)
+        => HasShows(info) && HasMovies(info);
+
+    private static bool HasShows(CollectionInfo info)
+        => info.Shows.Count > 0 || info.SubCollections.Any(HasShows);
+
+    private static bool HasMovies(CollectionInfo info)
+        => info.Movies.Count > 0 || info.SubCollections.Any(HasMovies);
 
     /// <summary>
     /// Count total items (movies + episodes from shows) in a collection recursively.
@@ -378,22 +356,22 @@ public class PlaylistManager(
     }
 
     /// <summary>
-    /// Build a flat ordered list of Jellyfin item GUIDs from a collection's shows and movies.
+    /// Build a flat ordered list of Jellyfin items from a collection's shows and movies.
     /// </summary>
-    private List<Guid> BuildOrderedItemList(
+    private List<BaseItem> BuildOrderedItemList(
         CollectionInfo info,
         Dictionary<Movie, (FileInfo fileInfo, SeasonInfo seasonInfo, ShowInfo showInfo)> movieDict,
         Dictionary<string, List<Episode>> episodeLookup
     ) {
-        var items = new List<(Guid Id, DateTime? Date)>();
+        var items = new List<(BaseItem Item, DateTime? Date)>();
 
         CollectItems(info, movieDict, episodeLookup, items);
 
         // Sort by date ascending; items without dates go at the end
         var ordered = items
             .OrderBy(t => t.Date ?? DateTime.MaxValue)
-            .Select(t => t.Id)
-            .Distinct()
+            .Select(t => t.Item)
+            .DistinctBy(item => item.Id)
             .ToList();
 
         return ordered;
@@ -403,7 +381,7 @@ public class PlaylistManager(
         CollectionInfo info,
         Dictionary<Movie, (FileInfo fileInfo, SeasonInfo seasonInfo, ShowInfo showInfo)> movieDict,
         Dictionary<string, List<Episode>> episodeLookup,
-        List<(Guid Id, DateTime? Date)> items
+        List<(BaseItem Item, DateTime? Date)> items
     ) {
         // Process movies
         foreach (var movieShow in info.Movies) {
@@ -412,7 +390,7 @@ public class PlaylistManager(
                 // Find matching Jellyfin movie
                 foreach (var (movie, (fileInfo, _, _)) in movieDict) {
                     if (fileInfo.EpisodeList.Any(e => e.Episode.Id == episodeInfo.Id)) {
-                        items.Add((movie.Id, episodeInfo.AiredAt ?? movieShow.PremiereDate));
+                        items.Add((movie, episodeInfo.AiredAt ?? movieShow.PremiereDate));
                         break;
                     }
                 }
@@ -428,7 +406,7 @@ public class PlaylistManager(
                     var primaryId = episodeInfo.Id;
                     if (episodeLookup.TryGetValue(primaryId, out var episodeList2)) {
                         foreach (var episode in episodeList2) {
-                            items.Add((episode.Id, episodeInfo.AiredAt));
+                            items.Add((episode, episodeInfo.AiredAt));
                         }
                     }
                 }
@@ -461,22 +439,10 @@ public class PlaylistManager(
 
     #region Cleanup Helpers
 
-    private async Task CleanupAll() {
-        var playlists = GetPlaylists();
-        foreach (var playlist in playlists) {
-            _logger.LogTrace("Removing playlist {PlaylistName} (Id={PlaylistId})", playlist.Name, playlist.Id);
-            _libraryManager.DeleteItem(playlist, new() { DeleteFileLocation = true, DeleteFromExternalProvider = false });
-        }
-    }
-
-    private void CleanupOrphanedPlaylists() {
-        var playlists = GetPlaylists();
-        if (playlists.Count == 0)
-            return;
-
-        _logger.LogInformation("Going to remove {Count} orphaned playlist items.", playlists.Count);
-        foreach (var playlist in playlists)
+    private Task CleanupAll() {
+        foreach (var playlist in GetPlaylists())
             RemovePlaylist(playlist);
+        return Task.CompletedTask;
     }
 
     private void RemovePlaylist(Playlist playlist) {
@@ -512,6 +478,10 @@ public class PlaylistManager(
             .Cast<Series>()
             .ToList();
 
+    /// <summary>
+    /// Get all playlists managed by the plugin, including legacy playlists
+    /// which only have the group ID stored as a provider ID.
+    /// </summary>
     private List<Playlist> GetPlaylists()
         => _libraryManager.GetItemList(new() {
             IncludeItemTypes = [BaseItemKind.Playlist],
@@ -519,17 +489,29 @@ public class PlaylistManager(
             IsVirtualItem = false,
             Recursive = true,
         })
-            .Cast<Playlist>()
-            .Where(x => x.Path.TryGetAttributeValue(ProviderNames.ShokoPlaylistForGroup, out _))
+            .OfType<Playlist>()
+            .Where(x =>
+                (!string.IsNullOrEmpty(x.Path) && x.Path.TryGetAttributeValue(ProviderNames.ShokoPlaylistForGroup, out _)) ||
+                x.TryGetProviderId(ProviderNames.ShokoPlaylistForGroup, out _)
+            )
             .ToList();
 
-    private Dictionary<string, Playlist> GetGroupPlaylists()
-        => GetPlaylists()
-            .Select(x => x.Path.TryGetAttributeValue(ProviderNames.ShokoPlaylistForGroup, out var groupId) ? new { GroupId = groupId, Playlist = x } : null)
-            .WhereNotNull()
-            .GroupBy(x => x.GroupId)
-            .Select(g => g.First())
-            .ToDictionary(x => x.GroupId, x => x.Playlist);
+    /// <summary>
+    /// Get the playlist for each group, identified by the group ID in the
+    /// path. Duplicate and legacy playlists are returned separately.
+    /// </summary>
+    private (Dictionary<string, Playlist> Playlists, List<Playlist> Extras) GetGroupPlaylists() {
+        var playlists = new Dictionary<string, Playlist>();
+        var extras = new List<Playlist>();
+        foreach (var playlist in GetPlaylists().OrderBy(x => x.DateCreated)) {
+            if (!string.IsNullOrEmpty(playlist.Path) && playlist.Path.TryGetAttributeValue(ProviderNames.ShokoPlaylistForGroup, out var groupId) && playlists.TryAdd(groupId, playlist))
+                continue;
+
+            extras.Add(playlist);
+        }
+
+        return (playlists, extras);
+    }
 
     #endregion
 }
