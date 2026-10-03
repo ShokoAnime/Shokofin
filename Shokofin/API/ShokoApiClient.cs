@@ -50,6 +50,14 @@ public class ShokoApiClient : IDisposable {
         }
     }
 
+    private static bool HasSuggestionsExposed {
+        get => Plugin.Instance.Configuration.HasSuggestionsExposed;
+        set {
+            Plugin.Instance.Configuration.HasSuggestionsExposed = value;
+            Plugin.Instance.UpdateConfiguration();
+        }
+    }
+
     public ShokoApiClient(ILogger<ShokoApiClient> logger, UsageTracker tracker) {
         var config = Plugin.Instance.Configuration;
 
@@ -97,6 +105,11 @@ public class ShokoApiClient : IDisposable {
                 var hasPluginsExposed = Task.Run(() => CheckIfPluginsExposed()).GetAwaiter().GetResult();
                 if (hasPluginsExposed != HasPluginsExposed) {
                     HasPluginsExposed = hasPluginsExposed;
+                }
+
+                var hasSuggestionsExposed = Task.Run(() => CheckIfSuggestionsExposed()).GetAwaiter().GetResult();
+                if (hasSuggestionsExposed != HasSuggestionsExposed) {
+                    HasSuggestionsExposed = hasSuggestionsExposed;
                 }
             }
         }
@@ -351,6 +364,14 @@ public class ShokoApiClient : IDisposable {
     public async Task<bool> CheckIfPluginsExposed(CancellationToken cancellationToken = default)
         => (await Get($"/api/v3/Plugin", HttpMethod.Get, cancellationToken: cancellationToken)) is { StatusCode: HttpStatusCode.OK };
 
+    /// <summary>
+    /// Check if the series suggestions endpoint exists. Series ID 0 fails the
+    /// endpoint's validation with a 400 when it exists, and the route is not
+    /// found (404) when it doesn't.
+    /// </summary>
+    public async Task<bool> CheckIfSuggestionsExposed(CancellationToken cancellationToken = default)
+        => (await Get($"/api/v3/Series/0/Suggested", HttpMethod.Get, cancellationToken: cancellationToken)) is { StatusCode: HttpStatusCode.BadRequest };
+
     public async Task<string?> GetWebPrefix(CancellationToken cancellationToken = default) {
         try {
             var settingsResponse = await Get("/api/v3/Settings", HttpMethod.Get, cancellationToken: cancellationToken);
@@ -554,6 +575,16 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<IReadOnlyList<Relation>> GetRelationsForShokoSeries(string seriesId)
         => await GetOrNull<IReadOnlyList<Relation>>($"/api/v3/Series/{seriesId}/Relations") ?? [];
+
+    /// <summary>
+    /// Indicates if the Shoko server we are using has series suggestions.
+    /// </summary>
+    public bool HasSuggestions => HasSuggestionsExposed;
+
+    public async Task<IReadOnlyList<SeriesSuggestion>> GetSuggestionsForShokoSeries(string seriesId)
+        => HasSuggestionsExposed
+            ? await GetOrNull<IReadOnlyList<SeriesSuggestion>>($"/api/v3/Series/{seriesId}/Suggested?onlyInCollection=true") ?? []
+            : [];
 
     public async Task<IReadOnlyList<Tag>> GetTagsForShokoSeries(string seriesId)
         => await GetOrNull<IReadOnlyList<Tag>>($"/api/v3/Series/{seriesId}/Tags?filter=0&excludeDescriptions=true") ?? [];

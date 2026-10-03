@@ -83,6 +83,13 @@ public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager
                 updated = true;
             }
 
+            var hasSuggestionsExposed = await _apiClient.CheckIfSuggestionsExposed(cancellationToken);
+            if (Plugin.Instance.Configuration.HasSuggestionsExposed != hasSuggestionsExposed) {
+                _logger.LogDebug("Suggestions API; {hasSuggestionsExposed}", hasSuggestionsExposed);
+                Plugin.Instance.Configuration.HasSuggestionsExposed = hasSuggestionsExposed;
+                updated = true;
+            }
+
             var mediaFolders = Plugin.Instance.Configuration.LibraryFolders.ToList();
             var managedFolderNameMap = await Task
                 .WhenAll(

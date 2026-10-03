@@ -90,6 +90,12 @@ public class PluginConfiguration : BasePluginConfiguration {
     /// </summary>
     public bool HasPluginsExposed { get; set; } = false;
 
+    /// <summary>
+    /// Indicates if the series suggestions endpoints are available on the
+    /// Shoko server we are using.
+    /// </summary>
+    public bool HasSuggestionsExposed { get; set; } = false;
+
     #endregion
 
     #region Plugin Interoperability
