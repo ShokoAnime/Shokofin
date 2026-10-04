@@ -532,7 +532,9 @@ public class MetadataRefreshService {
         var lowerThreshold = config.AutoRefreshRangeInDays > 0 ? DateTime.UtcNow.AddDays(-config.AutoRefreshRangeInDays) : (DateTime?)null;
         var minAge = config.AntiRefreshDeadZoneInHours > 0 ? DateTime.UtcNow.AddHours(-config.AntiRefreshDeadZoneInHours) : (DateTime?)null;
         var outOfSync = config.OutOfSyncInDays > 0 ? DateTime.UtcNow.AddDays(-config.OutOfSyncInDays) : (DateTime?)null;
-        if (outOfSync.HasValue && minAge.HasValue && outOfSync < minAge) {
+        // The dead zone can't be longer than the out-of-sync range, or items
+        // would never be considered out of sync.
+        if (outOfSync.HasValue && minAge.HasValue && outOfSync > minAge) {
             minAge = null;
         }
 
@@ -540,11 +542,16 @@ public class MetadataRefreshService {
             if (minAge is not null && item.DateLastRefreshed > minAge) {
                 return false;
             }
+            if (!_lookup.IsEnabledForItem(item)) {
+                return false;
+            }
+            // Always refresh items that are out of sync, unless they are
+            // unaired and we don't want to update unaired items.
             if (outOfSync is not null && item.DateLastRefreshed < outOfSync) {
-                return !updateUnaired  && !item.IsVirtualItem;
+                return updateUnaired || !item.IsVirtualItem;
             }
 
-            return _lookup.IsEnabledForItem(item) && item.PremiereDate is { } premiereDate && premiereDate > lowerThreshold && (upperThreshold is null || premiereDate < upperThreshold);
+            return item.PremiereDate is { } premiereDate && (lowerThreshold is null || premiereDate > lowerThreshold) && (upperThreshold is null || premiereDate < upperThreshold);
         };
     }
 }
