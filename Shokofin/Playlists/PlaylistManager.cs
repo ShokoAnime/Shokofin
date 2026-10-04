@@ -58,8 +58,10 @@ public class PlaylistManager(
         var shows = GetShows();
         _logger.LogInformation("Reconstructing playlists for {MovieCount} movies and {ShowCount} series.", movies.Count, shows.Count);
 
-        // Build movie -> Shoko data map
+        // Build movie -> Shoko data map, and the episode -> Jellyfin item lookup
+        // for the movies.
         var movieDict = new Dictionary<Movie, (FileInfo fileInfo, SeasonInfo seasonInfo, ShowInfo showInfo)>();
+        var itemLookup = new Dictionary<string, List<BaseItem>>();
         foreach (var movie in movies) {
             if (!_lookup.TryGetEpisodeIdsFor(movie, out var episodeIds))
                 continue;
@@ -69,6 +71,7 @@ public class PlaylistManager(
                 continue;
 
             movieDict.Add(movie, (fileInfo, seasonInfo, showInfo));
+            AddToLookup(itemLookup, episodeIds, movie);
         }
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -90,7 +93,7 @@ public class PlaylistManager(
         cancellationToken.ThrowIfCancellationRequested();
         progress.Report(20);
 
-        // Build episode -> Jellyfin item lookup
+        // Add the episodes to the episode -> Jellyfin item lookup
         var episodes = _libraryManager.GetItemList(new() {
             IncludeItemTypes = [BaseItemKind.Episode],
             SourceTypes = [SourceType.Library],
@@ -102,16 +105,9 @@ public class PlaylistManager(
             .Cast<Episode>()
             .ToList();
 
-        var episodeLookup = new Dictionary<string, List<Episode>>();
         foreach (var episode in episodes) {
-            if (!_lookup.TryGetEpisodeIdsFor(episode, out var episodeIds))
-                continue;
-
-            foreach (var episodeId in episodeIds) {
-                if (!episodeLookup.TryGetValue(episodeId, out var list))
-                    episodeLookup[episodeId] = list = [];
-                list.Add(episode);
-            }
+            if (_lookup.TryGetEpisodeIdsFor(episode, out var episodeIds))
+                AddToLookup(itemLookup, episodeIds, episode);
         }
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -160,7 +156,7 @@ public class PlaylistManager(
         var toCreate = new List<(string GroupId, CollectionInfo Info, List<BaseItem> Items)>();
         var toCheck = new List<(Playlist Playlist, CollectionInfo Info, List<BaseItem> Items)>();
         foreach (var (groupId, info) in finalGroups) {
-            var orderedItems = BuildOrderedItemList(info, movieDict, episodeLookup);
+            var orderedItems = BuildOrderedItemList(info, itemLookup);
             if (orderedItems.Count < (Config.MinSizeOfTwo ? 2 : 1))
                 continue;
 
@@ -355,81 +351,101 @@ public class PlaylistManager(
         return count;
     }
 
+    private static void AddToLookup(Dictionary<string, List<BaseItem>> itemLookup, IEnumerable<string> episodeIds, BaseItem item) {
+        foreach (var episodeId in episodeIds) {
+            if (!itemLookup.TryGetValue(episodeId, out var list))
+                itemLookup[episodeId] = list = [];
+            list.Add(item);
+        }
+    }
+
     /// <summary>
     /// Build a flat ordered list of Jellyfin items from a collection's shows and movies.
     /// </summary>
-    private List<BaseItem> BuildOrderedItemList(
-        CollectionInfo info,
-        Dictionary<Movie, (FileInfo fileInfo, SeasonInfo seasonInfo, ShowInfo showInfo)> movieDict,
-        Dictionary<string, List<Episode>> episodeLookup
-    ) {
-        var items = new List<(BaseItem Item, DateTime? Date)>();
+    private static List<BaseItem> BuildOrderedItemList(CollectionInfo info, Dictionary<string, List<BaseItem>> itemLookup) {
+        var items = new List<BaseItem>();
+        foreach (var season in GetOrderedSeasonList(info)) {
+            foreach (var episodeInfo in GetOrderedEpisodeList(season)) {
+                if (itemLookup.TryGetValue(episodeInfo.Id, out var list))
+                    items.AddRange(list);
+            }
+        }
 
-        CollectItems(info, movieDict, episodeLookup, items);
-
-        // Sort by date ascending; items without dates go at the end
-        var ordered = items
-            .OrderBy(t => t.Date ?? DateTime.MaxValue)
-            .Select(t => t.Item)
+        return items
             .DistinctBy(item => item.Id)
             .ToList();
-
-        return ordered;
-    }
-
-    private void CollectItems(
-        CollectionInfo info,
-        Dictionary<Movie, (FileInfo fileInfo, SeasonInfo seasonInfo, ShowInfo showInfo)> movieDict,
-        Dictionary<string, List<Episode>> episodeLookup,
-        List<(BaseItem Item, DateTime? Date)> items
-    ) {
-        // Process movies
-        foreach (var movieShow in info.Movies) {
-            var season = movieShow.DefaultSeason;
-            foreach (var episodeInfo in season.EpisodeList.Concat(season.AlternateEpisodesList)) {
-                // Find matching Jellyfin movie
-                foreach (var (movie, (fileInfo, _, _)) in movieDict) {
-                    if (fileInfo.EpisodeList.Any(e => e.Episode.Id == episodeInfo.Id)) {
-                        items.Add((movie, episodeInfo.AiredAt ?? movieShow.PremiereDate));
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Process TV shows
-        foreach (var show in info.Shows) {
-            foreach (var season in show.SeasonList) {
-                var episodeList = GetFilteredEpisodeList(season);
-                foreach (var episodeInfo in episodeList) {
-                    // Find matching Jellyfin episode
-                    var primaryId = episodeInfo.Id;
-                    if (episodeLookup.TryGetValue(primaryId, out var episodeList2)) {
-                        foreach (var episode in episodeList2) {
-                            items.Add((episode, episodeInfo.AiredAt));
-                        }
-                    }
-                }
-            }
-        }
-
-        // Process sub-collections recursively
-        foreach (var sub in info.SubCollections)
-            CollectItems(sub, movieDict, episodeLookup, items);
     }
 
     /// <summary>
-    /// Get the filtered episode list based on specials placement config.
+    /// Get the seasons of all shows and movies in the collection, ordered
+    /// based on the playlist ordering config.
     /// </summary>
-    private List<EpisodeInfo> GetFilteredEpisodeList(SeasonInfo season) {
-        var config = Config;
+    private static List<SeasonInfo> GetOrderedSeasonList(CollectionInfo info) {
+        var shows = new List<ShowInfo>();
+        CollectShows(info, shows);
+
+        switch (Config.Ordering) {
+            // Let Shoko decide the order of the seasons within each show, and
+            // order the shows and movies by when they premiered.
+            default:
+                return shows
+                    .OrderBy(show => show.PremiereDate ?? DateTime.MaxValue)
+                    .SelectMany(show => show.SeasonList)
+                    .DistinctBy(season => season.Id)
+                    .ToList();
+
+            case Ordering.OrderType.ReleaseDate:
+                return shows
+                    .SelectMany(show => show.SeasonList)
+                    .DistinctBy(season => season.Id)
+                    .OrderBy(season => season.PremiereDate ?? DateTime.MaxValue)
+                    .ToList();
+
+            case Ordering.OrderType.Chronological:
+            case Ordering.OrderType.ChronologicalIgnoreIndirect:
+                return shows
+                    .SelectMany(show => show.SeasonList)
+                    .DistinctBy(season => season.Id)
+                    .OrderBy(season => season, new SeriesInfoRelationComparer(Config.Ordering is Ordering.OrderType.Chronological))
+                    .ToList();
+        }
+    }
+
+    private static void CollectShows(CollectionInfo info, List<ShowInfo> shows) {
+        shows.AddRange(info.Shows);
+        shows.AddRange(info.Movies);
+        foreach (var sub in info.SubCollections)
+            CollectShows(sub, shows);
+    }
+
+    /// <summary>
+    /// Get the episodes of a season in order, with the specials placed based
+    /// on the playlist specials placement config.
+    /// </summary>
+    private static List<EpisodeInfo> GetOrderedEpisodeList(SeasonInfo season) {
+        var specialsPlacement = Config.SpecialsPlacement;
+        if (specialsPlacement is Ordering.SpecialOrderType.Excluded || season.SpecialsList.Count is 0)
+            return [.. season.EpisodeList, .. season.AlternateEpisodesList];
+
+        if (specialsPlacement is Ordering.SpecialOrderType.AfterSeason)
+            return [.. season.EpisodeList, .. season.SpecialsList, .. season.AlternateEpisodesList];
+
+        var (specialsBeforeEpisodes, specialsAnchors) = season.GetSpecialsPlacement(specialsPlacement);
+        var anchoredSpecials = season.SpecialsList
+            .Where(special => !specialsBeforeEpisodes.Contains(special.Id) && specialsAnchors.ContainsKey(special.Id))
+            .ToLookup(special => specialsAnchors[special.Id].Id);
         var list = new List<EpisodeInfo>();
+        list.AddRange(season.SpecialsList.Where(special => specialsBeforeEpisodes.Contains(special.Id)));
+        foreach (var episode in season.EpisodeList) {
+            list.Add(episode);
+            list.AddRange(anchoredSpecials[episode.Id]);
+        }
 
-        list.AddRange(season.EpisodeList);
-        list.AddRange(season.AlternateEpisodesList);
-
-        if (config.SpecialsPlacement != Ordering.SpecialOrderType.Excluded) {
-            list.AddRange(season.SpecialsList);
+        // Specials we couldn't place go after the season.
+        list.AddRange(season.SpecialsList.Where(special => !specialsBeforeEpisodes.Contains(special.Id) && !specialsAnchors.ContainsKey(special.Id)));
+        foreach (var episode in season.AlternateEpisodesList) {
+            list.Add(episode);
+            list.AddRange(anchoredSpecials[episode.Id]);
         }
 
         return list;
