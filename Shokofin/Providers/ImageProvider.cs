@@ -64,18 +64,23 @@ public class ImageProvider(IHttpClientFactory _httpClientFactory, ILogger<ImageP
                     _logger.LogInformation("Getting {Count} images for series {SeriesName} (MainSeason={MainSeasonId},Language={MetadataLanguage})", list.Count, series.Name, seasonId, metadataLanguage);
                     break;
                 }
-                // Per a user request, we'll allow getting images for the "Specials" season when the client requests them.
-                case Season { IndexNumber: 0 } season when isRequest: {
-                    return await GetImages(season.Series, cancellationToken);
+                // The "Specials" season doesn't have any images of its own, so
+                // use the images of the first season of the show, if it has any.
+                case Season { IndexNumber: 0 } season: {
+                    if (
+                        season.Series is { } series &&
+                        _lookup.TryGetSeasonIdFor(series, out var mainSeasonId) &&
+                        await _apiManager.GetShowInfoBySeasonId(mainSeasonId) is { } showInfo &&
+                        showInfo.SeasonOrderDictionary.TryGetValue(1, out var firstSeasonInfo)
+                    )
+                        list.AddRange(await GetSeasonImages(season, firstSeasonInfo, metadataLanguage, displayMode, cancellationToken));
+                    break;
                 }
                 case Season { IndexNumber: > 0 } season: {
                     if (!_lookup.TryGetSeasonIdFor(season, out var seasonId) || await _apiManager.GetSeasonInfo(seasonId) is not { } seasonInfo)
                         break;
 
-                    var images = await ImageUtility.GetSeasonImages(seasonInfo, metadataLanguage, displayMode, cancellationToken);
-                    list.AddRange(images);
-
-                    _logger.LogInformation("Getting {Count} images for season {SeasonNumber} in {SeriesName} (Season={SeasonId},Language={MetadataLanguage})", list.Count, season.IndexNumber, season.SeriesName, seasonId, metadataLanguage);
+                    list.AddRange(await GetSeasonImages(season, seasonInfo, metadataLanguage, displayMode, cancellationToken));
                     break;
                 }
                 case Movie movie: {
@@ -124,6 +129,12 @@ public class ImageProvider(IHttpClientFactory _httpClientFactory, ILogger<ImageP
         finally {
             Plugin.Instance.Tracker.Remove(trackerId);
         }
+    }
+
+    private async Task<IReadOnlyCollection<RemoteImageInfo>> GetSeasonImages(Season season, API.Info.SeasonInfo seasonInfo, string metadataLanguage, bool displayMode, CancellationToken cancellationToken) {
+        var images = await ImageUtility.GetSeasonImages(seasonInfo, metadataLanguage, displayMode, cancellationToken);
+        _logger.LogInformation("Getting {Count} images for season {SeasonNumber} in {SeriesName} (Season={SeasonId},Language={MetadataLanguage})", images.Count, season.IndexNumber, season.SeriesName, seasonInfo.Id, metadataLanguage);
+        return images;
     }
 
     public IEnumerable<ImageType> GetSupportedImages(BaseItem item)
