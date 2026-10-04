@@ -55,6 +55,13 @@ public class ShokoEpisode {
     public List<CrossReference.EpisodeCrossReferenceIDs> CrossReferences { get; set; } = [];
 
     /// <summary>
+    /// Where each source places the special among the regular episodes of
+    /// its series, AniDB first. Empty for regular episodes, specials no
+    /// source places, and servers without specials placement.
+    /// </summary>
+    public List<EpisodePlacement> Placements { get; set; } = [];
+
+    /// <summary>
     /// When the episode entry was created.
     /// </summary>
     [JsonPropertyName("Created")]
@@ -93,5 +100,23 @@ public class ShokoEpisode {
 #if DEBUG
         public List<int> Show { get; init; } = [];
 #endif
+    }
+
+    /// <summary>
+    /// Where one source places a special among the regular episodes of its
+    /// series.
+    /// </summary>
+    public class EpisodePlacement {
+        /// <summary>
+        /// The Shoko episode it airs right after, or <c>null</c> when it airs
+        /// first.
+        /// </summary>
+        public int? AirsAfterEpisodeID { get; set; }
+
+        /// <summary>
+        /// The Shoko episode it airs right before, or <c>null</c> when it airs
+        /// last.
+        /// </summary>
+        public int? AirsBeforeEpisodeID { get; set; }
     }
 }

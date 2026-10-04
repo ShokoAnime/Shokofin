@@ -117,6 +117,13 @@ public class EpisodeInfo : IExtendedItemInfo {
 
     #endregion
 
+    /// <summary>
+    /// Where Shoko places the special among the regular episodes of its
+    /// series, using the first source that places it. <c>null</c> for regular
+    /// episodes and specials that aren't placed.
+    /// </summary>
+    public ShokoEpisode.EpisodePlacement? Placement { get; init; }
+
     public EpisodeInfo(
         ShokoApiClient client,
         ShokoEpisode episode, 
@@ -149,6 +156,7 @@ public class EpisodeInfo : IExtendedItemInfo {
         _client = client;
         Id = episode.Id;
         SeasonId = episode.IDs.ParentSeries.ToString();
+        Placement = episode.Placements.FirstOrDefault(placement => placement.AirsAfterEpisodeID.HasValue || placement.AirsBeforeEpisodeID.HasValue);
         Type = episode.AniDB.Type;
         IsHidden = episode.IsHidden;
         IsMainEntry = isMainEntry;

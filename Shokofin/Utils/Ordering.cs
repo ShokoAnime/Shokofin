@@ -158,7 +158,8 @@ public class Ordering {
         Default = Excluded,
 
         /// <summary>
-        /// Use a mix of <see cref="InBetweenSeasonByOtherData" /> and <see cref="InBetweenSeasonByAirDate" />.
+        /// Use <see cref="InBetweenSeasonByOtherData" /> for the specials placed
+        /// in Shoko, and <see cref="InBetweenSeasonByAirDate" /> for the rest.
         /// </summary>
         InBetweenSeasonMixed = 3,
 
@@ -168,7 +169,8 @@ public class Ordering {
         InBetweenSeasonByAirDate = 4,
 
         /// <summary>
-        /// Place the specials in-between normal episodes based upon data from TMDB.
+        /// Place the specials in-between normal episodes based upon the
+        /// specials placement in Shoko.
         /// </summary>
         InBetweenSeasonByOtherData = 5,
     }
@@ -235,14 +237,15 @@ public class Ordering {
                 break;
             case SpecialOrderType.InBetweenSeasonMixed:
             case SpecialOrderType.InBetweenSeasonByAirDate:
-                // Reset the order if we come from `SpecialOrderType.InBetweenSeasonMixed`.
-                int? episodeNumber = null;
-                if (seasonInfo.SpecialsBeforeEpisodes.Contains(episodeInfo.Id)) {
+            case SpecialOrderType.InBetweenSeasonByOtherData:
+                var (specialsBeforeEpisodes, specialsAnchors) = seasonInfo.GetSpecialsPlacement(seasonInfo.SpecialsPlacement);
+                if (specialsBeforeEpisodes.Contains(episodeInfo.Id)) {
                     airsBeforeSeasonNumber = seasonNumber;
                     break;
                 }
 
-                if (seasonInfo.SpecialsAnchors.TryGetValue(episodeInfo.Id, out var previousEpisode))
+                int? episodeNumber = null;
+                if (specialsAnchors.TryGetValue(episodeInfo.Id, out var previousEpisode))
                     episodeNumber = GetEpisodeNumber(showInfo, seasonInfo, previousEpisode);
 
                 if (episodeNumber.HasValue && episodeNumber.Value < seasonInfo.EpisodeList.Count) {
@@ -252,8 +255,6 @@ public class Ordering {
                 else {
                     airsAfterSeasonNumber = seasonNumber;
                 }
-                break;
-            case SpecialOrderType.InBetweenSeasonByOtherData:
                 break;
         }
 

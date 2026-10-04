@@ -474,7 +474,7 @@ public class ShokoApiClient : IDisposable {
             async () => {
                 _logger.LogTrace("Trying to get Shoko episode {EpisodeId}", episodeId);
                 var timeStart = DateTime.UtcNow;
-                var episode = await GetOrNull<ShokoEpisode>($"/api/v3/Episode/{episodeId}?includeDataFrom=AniDB&includeXRefs=true", skipCache: true);
+                var episode = await GetOrNull<ShokoEpisode>($"/api/v3/Episode/{episodeId}?includeDataFrom=AniDB&includeXRefs=true&include=Placement", skipCache: true);
                 _logger.LogTrace("Got Shoko episode {EpisodeId} in {Time}", episodeId, DateTime.UtcNow - timeStart);
                 return episode;
             }
@@ -487,7 +487,7 @@ public class ShokoApiClient : IDisposable {
             async () => {
                 _logger.LogTrace("Trying to get Shoko episodes for shoko series {SeriesId}", seriesId);
                 var timeStart = DateTime.UtcNow;
-                var firstPage = await GetOrNull<ListResult<ShokoEpisode>>($"/api/v3/Series/{seriesId}/Episode?pageSize={_pageSize}&includeHidden=true&includeMissing=true&includeUnaired=true&includeDataFrom=AniDB&includeXRefs=true", skipCache: true);
+                var firstPage = await GetOrNull<ListResult<ShokoEpisode>>($"/api/v3/Series/{seriesId}/Episode?pageSize={_pageSize}&includeHidden=true&includeMissing=true&includeUnaired=true&includeDataFrom=AniDB&includeXRefs=true&include=Placement", skipCache: true);
                 if (firstPage is null)
                     return [];
 
@@ -495,7 +495,7 @@ public class ShokoApiClient : IDisposable {
                 if (_pageSize > 0 && firstPage.Total > _pageSize) {
                     var totalPages = (int)Math.Ceiling((float)firstPage.Total / firstPage.List.Count);
                     for (var page = 2; page <= totalPages; page++) {
-                        var pageData = await Get<ListResult<ShokoEpisode>>($"/api/v3/Series/{seriesId}/Episode?pageSize={_pageSize}&includeHidden=true&includeMissing=true&includeUnaired=true&includeDataFrom=AniDB&includeXRefs=true&page={page}", skipCache: true);
+                        var pageData = await Get<ListResult<ShokoEpisode>>($"/api/v3/Series/{seriesId}/Episode?pageSize={_pageSize}&includeHidden=true&includeMissing=true&includeUnaired=true&includeDataFrom=AniDB&includeXRefs=true&include=Placement&page={page}", skipCache: true);
                         pages.Add(pageData.List);
                     }
                 }

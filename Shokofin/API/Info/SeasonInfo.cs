@@ -141,6 +141,51 @@ public class SeasonInfo : IExtendedItemInfo {
     public IReadOnlyDictionary<string, EpisodeInfo> SpecialsAnchors { get; init; }
 
     /// <summary>
+    /// A list of special episodes that come before normal episodes, based on
+    /// the specials placement in Shoko.
+    /// </summary>
+    public IReadOnlySet<string> PlacedSpecialsBeforeEpisodes { get; init; } = new HashSet<string>();
+
+    /// <summary>
+    /// A dictionary holding mappings for the previous normal episode for every
+    /// special episode placed by the specials placement in Shoko.
+    /// </summary>
+    public IReadOnlyDictionary<string, EpisodeInfo> PlacedSpecialsAnchors { get; init; } = new Dictionary<string, EpisodeInfo>();
+
+    /// <summary>
+    /// Get the specials that come before the normal episodes, and the previous
+    /// normal episode for the other specials, for the given specials placement.
+    /// Specials that are in neither are placed after the season.
+    /// </summary>
+    public (IReadOnlySet<string> SpecialsBeforeEpisodes, IReadOnlyDictionary<string, EpisodeInfo> SpecialsAnchors) GetSpecialsPlacement(Ordering.SpecialOrderType specialsPlacement) {
+        switch (specialsPlacement) {
+            default:
+                return (SpecialsBeforeEpisodes, SpecialsAnchors);
+
+            case Ordering.SpecialOrderType.InBetweenSeasonByOtherData:
+                return (PlacedSpecialsBeforeEpisodes, PlacedSpecialsAnchors);
+
+            // Use the placement in Shoko when the special is placed, and the
+            // air date otherwise.
+            case Ordering.SpecialOrderType.InBetweenSeasonMixed: {
+                var specialsBeforeEpisodes = new HashSet<string>(PlacedSpecialsBeforeEpisodes);
+                var specialsAnchors = new Dictionary<string, EpisodeInfo>(PlacedSpecialsAnchors);
+                foreach (var special in SpecialsList) {
+                    if (specialsBeforeEpisodes.Contains(special.Id) || specialsAnchors.ContainsKey(special.Id))
+                        continue;
+
+                    if (SpecialsBeforeEpisodes.Contains(special.Id))
+                        specialsBeforeEpisodes.Add(special.Id);
+                    else if (SpecialsAnchors.TryGetValue(special.Id, out var previousEpisode))
+                        specialsAnchors[special.Id] = previousEpisode;
+                }
+                return (specialsBeforeEpisodes, specialsAnchors);
+            }
+        }
+    }
+
+
+    /// <summary>
     /// Related series data available in Shoko.
     /// </summary>
     public IReadOnlyList<Relation> Relations { get; init; }
@@ -337,6 +382,28 @@ public class SeasonInfo : IExtendedItemInfo {
             }
         }
 
+        // Place the specials using where Shoko places them.
+        var placedSpecialsBeforeEpisodes = new HashSet<string>();
+        var placedSpecialsAnchorDictionary = new Dictionary<string, EpisodeInfo>();
+        foreach (var special in specialsList) {
+            if (special.Placement is not { } placement)
+                continue;
+
+            var airsAfterEpisodeId = placement.AirsAfterEpisodeID?.ToString();
+            if (airsAfterEpisodeId is not null && episodesList.FirstOrDefault(e => e.Id == airsAfterEpisodeId) is { } previousEpisode) {
+                placedSpecialsAnchorDictionary[special.Id] = previousEpisode;
+                continue;
+            }
+
+            var airsBeforeEpisodeId = placement.AirsBeforeEpisodeID?.ToString();
+            if (airsBeforeEpisodeId is not null && episodesList.FindIndex(e => e.Id == airsBeforeEpisodeId) is var nextIndex and > -1) {
+                if (nextIndex is 0)
+                    placedSpecialsBeforeEpisodes.Add(special.Id);
+                else
+                    placedSpecialsAnchorDictionary[special.Id] = episodesList[nextIndex - 1];
+            }
+        }
+
         var genres = episodes.SelectMany(s => s.Genres).ToList();
         var tags = episodes.SelectMany(s => s.Tags).ToList();
         AddYearlySeasons(ref genres, ref tags, series.YearlySeasons);
@@ -419,6 +486,8 @@ public class SeasonInfo : IExtendedItemInfo {
         SpecialsList = specialsList;
         SpecialsBeforeEpisodes = specialsBeforeEpisodes;
         SpecialsAnchors = specialsAnchorDictionary;
+        PlacedSpecialsBeforeEpisodes = placedSpecialsBeforeEpisodes;
+        PlacedSpecialsAnchors = placedSpecialsAnchorDictionary;
         Relations = relations;
         RelationMap = relationMap;
         ShokoSeries = [
