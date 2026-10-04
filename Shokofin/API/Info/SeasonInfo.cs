@@ -234,8 +234,7 @@ public class SeasonInfo : IExtendedItemInfo {
             .ToList();
 
         // Iterate over the episodes once and store some values for later use.
-        int index = 0;
-        int lastNormalEpisode = -1;
+        EpisodeInfo? lastNormalEpisode = null;
         foreach (var episode in episodes) {
             if (episode.IsHidden)
                 continue;
@@ -245,7 +244,7 @@ public class SeasonInfo : IExtendedItemInfo {
             switch (episodeType) {
                 case EpisodeType.Episode:
                     episodesList.Add(episode);
-                    lastNormalEpisode = index;
+                    lastNormalEpisode = episode;
                     break;
                 case EpisodeType.Other:
                     if (episode.ExtraType != null)
@@ -259,24 +258,17 @@ public class SeasonInfo : IExtendedItemInfo {
                     }
                     else if (episodeType is EpisodeType.Special && seriesConfiguration.EpisodeConversion is SeriesEpisodeConversion.SpecialsAsEpisodes) {
                         episodesList.Add(episode);
-                        lastNormalEpisode = index;
+                        lastNormalEpisode = episode;
                     }
                     else if (episodeType is EpisodeType.Special) {
                         specialsList.Add(episode);
-                        if (lastNormalEpisode == -1) {
+                        if (lastNormalEpisode is null)
                             specialsBeforeEpisodes.Add(episode.Id);
-                        }
-                        else {
-                            var previousEpisode = episodes
-                                .GetRange(lastNormalEpisode, index - lastNormalEpisode)
-                                .FirstOrDefault(e => e.Type is EpisodeType.Episode && seriesConfiguration.EpisodeConversion is not SeriesEpisodeConversion.EpisodesAsSpecials);
-                            if (previousEpisode != null)
-                                specialsAnchorDictionary[episode.Id] = previousEpisode;
-                        }
+                        else
+                            specialsAnchorDictionary[episode.Id] = lastNormalEpisode;
                     }
                     break;
             }
-            index++;
         }
 
         // We order the lists after sorting them into buckets because the bucket
@@ -313,27 +305,19 @@ public class SeasonInfo : IExtendedItemInfo {
             altEpisodesList = [];
 
             // Re-create the special anchors because the episode list changed.
-            index = 0;
-            lastNormalEpisode = -1;
+            lastNormalEpisode = null;
             specialsBeforeEpisodes.Clear();
             specialsAnchorDictionary.Clear();
             foreach (var episode in episodes) {
                 if (episodesList.Contains(episode)) {
-                    lastNormalEpisode = index;
+                    lastNormalEpisode = episode;
                 }
                 else if (specialsList.Contains(episode)) {
-                    if (lastNormalEpisode == -1) {
+                    if (lastNormalEpisode is null)
                         specialsBeforeEpisodes.Add(episode.Id);
-                    }
-                    else {
-                        var previousEpisode = episodes
-                            .GetRange(lastNormalEpisode, index - lastNormalEpisode)
-                            .FirstOrDefault(e => episodesList.Contains(e));
-                        if (previousEpisode != null)
-                            specialsAnchorDictionary[episode.Id] = previousEpisode;
-                    }
+                    else
+                        specialsAnchorDictionary[episode.Id] = lastNormalEpisode;
                 }
-                index++;
             }
         }
         // Also switch the type from movie to web if we're hidden the main movies, but the parts are normal episodes.
