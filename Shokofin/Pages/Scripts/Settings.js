@@ -1380,8 +1380,9 @@ function toggleIgnoredMediaFolder(form, libraryId, config, index) {
     const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
     const toToggle = mediaFolders[index];
     toToggle.IsIgnored = !toToggle.IsIgnored;
-    if (toToggle.IsIgnored && !toToggle.NeedsRefresh) {
-        toToggle.NeedsRefresh = false;
+    // Re-detect the mapping when the media folder is no longer ignored.
+    if (!toToggle.IsIgnored) {
+        toToggle.NeedsRefresh = true;
     }
     renderFolderList(form, libraryConfig.LibraryOperationMode !== "VFS", "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
 }

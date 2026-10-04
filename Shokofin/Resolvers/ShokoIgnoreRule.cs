@@ -97,7 +97,7 @@ public class ShokoIgnoreRule : IResolverIgnoreRule {
                 Logger.LogDebug("Library for media folder {Path} is not registered in Jellyfin yet, ignoring for now. It will be set up after the current scan finishes. (MediaFolder={MediaFolderId})", fileInfo.FullName, mediaFolder.Id);
                 return true;
             }
-            if (libraryConfig is null || mediaFolderConfig is null || !mediaFolderConfig.IsMapped) {
+            if (libraryConfig is null || mediaFolderConfig is null || !mediaFolderConfig.IsMapped || mediaFolderConfig.IsIgnored) {
                 Logger.LogDebug("Skipped media folder for path {Path} (MediaFolder={MediaFolderId})", fileInfo.FullName, mediaFolder.Id);
                 return false;
             }

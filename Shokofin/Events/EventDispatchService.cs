@@ -213,7 +213,7 @@ public class EventDispatchService {
             // Something was added or updated.
             var locationsToNotify = new List<string>();
             var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
-            var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => c.Library.IsFileEventsEnabled);
+            var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => !c.IsIgnored && c.Library.IsFileEventsEnabled);
             var (reason, managedFolderId, relativePath, lastEvent) = changes.Last();
             if (reason is not UpdateReason.MetadataRemoved) {
                 Logger.LogTrace("Processing file changed. (File={FileId})", fileId);
@@ -504,7 +504,7 @@ public class EventDispatchService {
     /// real media folders), and for legacy libraries, whose physical folders are the real media folders.
     /// </remarks>
     private async Task<Guid[]> GetTopParentIdsForLibrariesWithRefreshEventsEnabled() {
-        var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => c.Library.IsRefreshEventsEnabled);
+        var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => !c.IsIgnored && c.Library.IsRefreshEventsEnabled);
         return libraries
             .SelectMany(tuple => tuple.mediaList)
             .Select(mediaFolder => mediaFolder.LibraryId)

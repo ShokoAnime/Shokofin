@@ -256,7 +256,7 @@ public class MediaFolderConfigurationService {
             if (libraryConfig is null || !libraryConfig.IsVirtualFileSystemEnabled || mediaFolderConfig is not null)
                 return (null, [], skipGeneration);
             var mediaFolders = libraryConfig.MediaFolders
-                .Where(config => config.IsMapped)
+                .Where(config => config.IsMapped && !config.IsIgnored)
                 .ToList();
             return (libraryConfig, mediaFolders, skipGeneration);
         }
@@ -391,6 +391,11 @@ public class MediaFolderConfigurationService {
                 AddToLibrary(libraryConfig, libraryConfig.VirtualRoot);
             }
             foreach (var mediaFolderConfig in libraryConfig.MediaFolders) {
+                // Ignore the media folder if an ignore file was added after it was mapped.
+                if (!mediaFolderConfig.IsIgnored && File.Exists(Path.Join(mediaFolderConfig.Path, ".shoko-ignore"))) {
+                    mediaFolderConfig.IsIgnored = true;
+                    shouldSaveConfig = true;
+                }
                 if (!libraryConfig.IsVirtualFileSystemEnabled) {
                     // We have disabled the VFS and need to re-add the plugin managed media folders again.
                     var ignoredFolders = libraryConfig.MediaFolders.Where(mf => mf.IsIgnored).Select(mf => mf.Path).ToHashSet();

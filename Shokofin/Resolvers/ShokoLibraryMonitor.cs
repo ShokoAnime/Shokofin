@@ -108,7 +108,8 @@ public class ShokoLibraryMonitor : IHostedService {
             )
                 continue;
 
-            foreach (var mediaConfig in libraryConfig.MediaFolders) 
+            // Ignored media folders are left to Jellyfin's own library monitor.
+            foreach (var mediaConfig in libraryConfig.MediaFolders.Where(mediaConfig => !mediaConfig.IsIgnored))
                 StartWatchingMediaFolder(mediaConfig);
         }
     }
