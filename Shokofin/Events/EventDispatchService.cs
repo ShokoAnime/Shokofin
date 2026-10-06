@@ -8,7 +8,6 @@ using System.Timers;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.API.Info;
@@ -46,8 +45,6 @@ public class EventDispatchService {
 
     private readonly VirtualFileSystemService ResolveManager;
 
-    private readonly IFileSystem FileSystem;
-
     private readonly ILogger<EventDispatchService> Logger;
 
     private readonly UsageTracker UsageTracker;
@@ -60,14 +57,15 @@ public class EventDispatchService {
 
     private readonly Dictionary<int, (DateTime LastUpdated, List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)> List, Guid trackerId)> ChangesPerFile = [];
 
-    private readonly Dictionary<string, (int refCount, DateTime delayEnd)> MediaFolderChangeMonitor = [];
-
-    // It's so magical that it matches the magical value in the library monitor in JF core. 🪄
-    private const int MagicalDelayValue = 45000;
+    private readonly Dictionary<int, (DateTime InsertedAt, DateTime LastChecked, List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)> List, Guid trackerId)> UnresolvedFiles = [];
 
     private readonly ConcurrentDictionary<Guid, bool> RecentlyUpdatedEntitiesDict = new();
 
     private static readonly TimeSpan DetectChangesThreshold = TimeSpan.FromSeconds(5);
+
+    private static readonly TimeSpan UnresolvedFileRecheckInterval = TimeSpan.FromMinutes(5);
+
+    private static readonly TimeSpan UnresolvedFileMaxWait = TimeSpan.FromHours(1);
 
     public EventDispatchService(
         ShokoApiManager apiManager,
@@ -78,7 +76,6 @@ public class EventDispatchService {
         MetadataRefreshService metadataRefreshService,
         MediaFolderConfigurationService configurationService,
         VirtualFileSystemService resolveManager,
-        IFileSystem fileSystem,
         ILogger<EventDispatchService> logger,
         UsageTracker usageTracker
     ) {
@@ -90,7 +87,6 @@ public class EventDispatchService {
         MetadataRefreshService = metadataRefreshService;
         ConfigurationService = configurationService;
         ResolveManager = resolveManager;
-        FileSystem = fileSystem;
         Logger = logger;
         UsageTracker = usageTracker;
         UsageTracker.Stalled += OnStalled;
@@ -123,7 +119,7 @@ public class EventDispatchService {
         var count = --ChangesDetectionSubmitterCount;
         if (count is 0) {
             ChangesDetectionTimer.Stop();
-            if (ChangesPerFile.Count > 0)
+            if (ChangesPerFile.Count > 0 || UnresolvedFiles.Count > 0)
                 ClearFileEvents();
             if (ChangesPerSeries.Count > 0)
                 ClearMetadataUpdatedEvents();
@@ -132,6 +128,7 @@ public class EventDispatchService {
 
     private void OnIntervalElapsed(object? sender, ElapsedEventArgs eventArgs) {
         var filesToProcess = new List<(int, List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)>, Guid trackerId)>();
+        var unresolvedFilesToProcess = new List<(int, List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)>, Guid trackerId, DateTime insertedAt)>();
         var seriesToProcess = new List<(string, List<IMetadataUpdatedEventArgs>, Guid trackerId)>();
         lock (ChangesPerFile) {
             if (ChangesPerFile.Count > 0) {
@@ -143,6 +140,18 @@ public class EventDispatchService {
                 }
                 foreach (var (fileId, _, _) in filesToProcess)
                     ChangesPerFile.Remove(fileId);
+            }
+        }
+        lock (UnresolvedFiles) {
+            if (UnresolvedFiles.Count > 0) {
+                var now = DateTime.Now;
+                foreach (var (fileId, (insertedAt, lastChecked, list, trackerId)) in UnresolvedFiles) {
+                    if (now - lastChecked < UnresolvedFileRecheckInterval)
+                        continue;
+                    unresolvedFilesToProcess.Add((fileId, list, trackerId, insertedAt));
+                }
+                foreach (var (fileId, _, _, _) in unresolvedFilesToProcess)
+                    UnresolvedFiles.Remove(fileId);
             }
         }
         lock (ChangesPerSeries) {
@@ -157,8 +166,12 @@ public class EventDispatchService {
                     ChangesPerSeries.Remove(metadataId);
             }
         }
-        foreach (var (fileId, changes, trackerId) in filesToProcess)
-            Task.Run(() => ProcessFileEvents(fileId, changes, trackerId));
+        foreach (var (fileId, changes, trackerId) in filesToProcess) {
+            var (allChanges, insertedAt) = TakeUnresolvedFile(fileId, changes);
+            Task.Run(() => ProcessFileEvents(fileId, allChanges, trackerId, insertedAt));
+        }
+        foreach (var (fileId, changes, trackerId, insertedAt) in unresolvedFilesToProcess)
+            Task.Run(() => ProcessFileEvents(fileId, changes, trackerId, insertedAt));
         foreach (var (metadataId, changes, trackerId) in seriesToProcess)
             Task.Run(() => ProcessMetadataEvents(metadataId, changes, trackerId));
     }
@@ -171,8 +184,41 @@ public class EventDispatchService {
             }
             ChangesPerFile.Clear();
         }
+        lock (UnresolvedFiles) {
+            foreach (var (fileId, (_, _, list, trackerId)) in UnresolvedFiles) {
+                if (filesToProcess.FindIndex(tuple => tuple.Item1 == fileId) is var index && index is not -1) {
+                    Plugin.Instance.Tracker.Remove(trackerId);
+                    filesToProcess[index] = (fileId, [.. list, .. filesToProcess[index].Item2], filesToProcess[index].trackerId);
+                }
+                else {
+                    filesToProcess.Add((fileId, list, trackerId));
+                }
+            }
+            UnresolvedFiles.Clear();
+        }
         foreach (var (fileId, changes, trackerId) in filesToProcess)
-            Task.Run(() => ProcessFileEvents(fileId, changes, trackerId));
+            Task.Run(() => ProcessFileEvents(fileId, changes, trackerId, skipUnresolvedCheck: true));
+    }
+
+    private (List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)> Changes, DateTime? InsertedAt) TakeUnresolvedFile(int fileId, List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)> changes) {
+        lock (UnresolvedFiles) {
+            if (!UnresolvedFiles.Remove(fileId, out var tuple))
+                return (changes, null);
+            Plugin.Instance.Tracker.Remove(tuple.trackerId);
+            return ([.. tuple.List, .. changes], tuple.InsertedAt);
+        }
+    }
+
+    private void AddUnresolvedFile(int fileId, List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)> changes, Guid trackerId, DateTime insertedAt) {
+        lock (UnresolvedFiles) {
+            if (UnresolvedFiles.Remove(fileId, out var tuple)) {
+                Plugin.Instance.Tracker.Remove(tuple.trackerId);
+                changes = [.. tuple.List, .. changes];
+                if (tuple.InsertedAt < insertedAt)
+                    insertedAt = tuple.InsertedAt;
+            }
+            UnresolvedFiles.Add(fileId, (insertedAt, DateTime.Now, changes, trackerId));
+        }
     }
 
     private void ClearMetadataUpdatedEvents() {
@@ -201,11 +247,27 @@ public class EventDispatchService {
         }
     }
 
-    private async Task ProcessFileEvents(int fileId, List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)> changes, Guid trackerId) {
+    private async Task ProcessFileEvents(int fileId, List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)> changes, Guid trackerId, DateTime? insertedAt = null, bool skipUnresolvedCheck = false) {
+        var keepTracker = false;
         try {
             if (LibraryScanWatcher.IsScanRunning) {
                 Logger.LogInformation("Skipped processing {EventCount} file change events because a library scan is running. (File={FileId})", changes.Count, fileId);
                 return;
+            }
+
+            // Hold back the file until Shoko has created the episodes and
+            // series it's linked to, or until we've waited long enough.
+            if (!skipUnresolvedCheck && changes.Last().Reason is not UpdateReason.MetadataRemoved && await HasUnresolvedCrossReferences(fileId, insertedAt.HasValue ? null : changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences))) {
+                var firstInsertedAt = insertedAt ?? DateTime.Now;
+                var waited = DateTime.Now - firstInsertedAt;
+                if (waited < UnresolvedFileMaxWait) {
+                    Logger.LogDebug("Holding back {EventCount} file change events until the linked episodes and series are available. (File={FileId},Waited={Waited})", changes.Count, fileId, waited);
+                    AddUnresolvedFile(fileId, changes, trackerId, firstInsertedAt);
+                    keepTracker = true;
+                    return;
+                }
+
+                Logger.LogWarning("Processing {EventCount} file change events with unresolved cross-references after waiting {Waited}. (File={FileId})", changes.Count, waited, fileId);
             }
 
             Logger.LogInformation("Processing {EventCount} file change events… (File={FileId})", changes.Count, fileId);
@@ -364,8 +426,21 @@ public class EventDispatchService {
             Logger.LogError(ex, "Error processing {EventCount} file change events. (File={FileId})", changes.Count, fileId);
         }
         finally {
-            Plugin.Instance.Tracker.Remove(trackerId);
+            if (!keepTracker)
+                Plugin.Instance.Tracker.Remove(trackerId);
         }
+    }
+
+    private async Task<bool> HasUnresolvedCrossReferences(int fileId, IFileEventArgs? fileEvent) {
+        if (fileEvent is not null && fileEvent.CrossReferences.All(xref => xref.ShokoSeriesId.HasValue && xref.ShokoEpisodeId.HasValue))
+            return false;
+
+        // Refresh the cache so the processing that follows sees the same cross-references.
+        var file = await ApiClient.GetFile(fileId.ToString(), refreshCache: true);
+        if (file is null)
+            return false;
+
+        return file.CrossReferences.Any(xref => !xref.Series.Shoko.HasValue || xref.Episodes.Any(e => !e.Shoko.HasValue));
     }
 
     private async Task<IReadOnlySet<string>> GetSeriesIdsForFile(int fileId, IFileEventArgs? fileEvent) {
@@ -386,8 +461,6 @@ public class EventDispatchService {
                 .Distinct()
                 .ToHashSet();
         }
-
-        // TODO: Postpone the processing of the file if the episode or series is not available yet.
 
         var filteredSeriesIds = new HashSet<string>();
         foreach (var seriesId in seriesIds) {

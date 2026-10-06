@@ -158,7 +158,7 @@ public class ShokoApiClient : IDisposable {
         }
 
         return await _cache.GetOrCreateAsync(
-            $"apiKey={apiKey ?? "default"},method={method},body=null,url={url},object",
+            GetCacheKey(url, method, apiKey),
             (_) => _logger.LogTrace("Reusing object for {Method} {URL}", method, url),
             async () => {
                 _logger.LogTrace("Creating cached object for {Method} {URL}", method, url);
@@ -309,6 +309,9 @@ public class ShokoApiClient : IDisposable {
         }
     }
 
+    private static string GetCacheKey(string url, HttpMethod method, string? apiKey = null)
+        => $"apiKey={apiKey ?? "default"},method={method},body=null,url={url},object";
+
     #endregion Base Implementation
 
     #region Authentication
@@ -417,10 +420,14 @@ public class ShokoApiClient : IDisposable {
 
     #region File
 
-    public async Task<File?> GetFile(string fileId)
-        => HasPluginsExposed
-            ? await GetOrNull<File>($"/api/v3/File/{fileId}?include=XRefs,ReleaseInfo")
-            :  await GetOrNull<File>($"/api/v3/File/{fileId}?include=XRefs&includeDataFrom=AniDB");
+    public async Task<File?> GetFile(string fileId, bool refreshCache = false) {
+        var url = HasPluginsExposed
+            ? $"/api/v3/File/{fileId}?include=XRefs,ReleaseInfo"
+            : $"/api/v3/File/{fileId}?include=XRefs&includeDataFrom=AniDB";
+        if (refreshCache)
+            _cache.Remove(GetCacheKey(url, HttpMethod.Get));
+        return await GetOrNull<File>(url);
+    }
 
     public Task<File?> GetFileByEd2kAndFileSize(string ed2k, long fileSize)
         => GetOrNull<File>($"/api/v3/File/Hash/ED2K?hash={Uri.EscapeDataString(ed2k)}&size={fileSize}");
