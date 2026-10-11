@@ -1752,8 +1752,15 @@ public class VirtualFileSystemService {
                     skip = true;
                     return true;
                 }
-                CopyDirectory(trickplayDirectory, realPath);
-                Directory.Delete(trickplayDirectory, recursive: true);
+                try {
+                    CopyDirectory(trickplayDirectory, realPath);
+                    Directory.Delete(trickplayDirectory, recursive: true);
+                }
+                catch (Exception) {
+                    Logger.LogDebug("Skipped moving {Directory} to {RealPath} because we don't have permissions.", trickplayDirectory, realPath);
+                    skip = true;
+                    return true;
+                }
             }
         }
         else {
@@ -1775,6 +1782,12 @@ public class VirtualFileSystemService {
             var directoryOfFile = Path.GetDirectoryName(newFile)!;
             if (!Directory.Exists(directoryOfFile))
                 Directory.CreateDirectory(directoryOfFile);
+
+            if (File.Exists(newFile)) {
+                Logger.LogWarning("Overwriting {File}", newFile);
+                File.Delete(newFile);
+            }
+
             File.Copy(file, newFile, true);
         }
     }
