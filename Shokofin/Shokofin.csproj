@@ -63,6 +63,10 @@
         <PackageReference Include="@(CommonPackageReference)" />
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
+    </ItemGroup>
+
     <!-- Code analyzers -->
     <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.302" PrivateAssets="All" />
@@ -77,6 +81,9 @@
     </ItemGroup>
 
     <Target Name="CopyExtraOutputAssembliesToOutputPath" AfterTargets="Build">
+        <ItemGroup>
+            <ExtraOutputAssemblies Include="@(RuntimeCopyLocalItems)" Condition="$([System.String]::Copy('%(RuntimeCopyLocalItems.NuGetPackageId)').StartsWith('Nito.'))" />
+        </ItemGroup>
         <GetPublicPackageReferences NuGetPackageRoot="$(NuGetPackageRoot)" PackageReference="@(CommonPackageReference)">
             <Output TaskParameter="Results" ItemName="ExtraOutputAssemblies" />
         </GetPublicPackageReferences>

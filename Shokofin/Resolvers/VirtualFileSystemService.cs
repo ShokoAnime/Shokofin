@@ -19,6 +19,7 @@ using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Globalization;
 using Microsoft.Extensions.Logging;
+using Nito.AsyncEx;
 using Shokofin.API;
 using Shokofin.API.Models;
 using Shokofin.Configuration;
@@ -62,6 +63,8 @@ public class VirtualFileSystemService {
     private readonly ExternalPathParser ExternalAudioPathParser;
 
     private readonly GuardedMemoryCache DataCache;
+
+    private readonly ConcurrentDictionary<string, AsyncReaderWriterLock> LibraryLocks = new(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 
     // Note: Out of the 14k entries in my test shoko database, then only **348** entries have a title longer than 64 characters.
     private const int NameCutOff = 64;
@@ -204,6 +207,34 @@ public class VirtualFileSystemService {
 
     private const string CachePrefix = "vfs-path:";
 
+    public void InvalidateLibraryGeneration(string vfsPath)
+        => DataCache.Remove(CachePrefix + vfsPath);
+
+    public bool InvalidateLibraryGenerationIfNeeded(string vfsPath, IEnumerable<string> paths) {
+        var folders = paths
+            .Where(path => path.StartsWith(vfsPath + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            .Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()))
+            .ToHashSet();
+        bool needsRootRefresh;
+        if (DataCache.TryGetValue<(HashSet<string>? alteredPaths, bool iterative)>(CachePrefix + vfsPath, out var tuple) && !tuple.iterative)
+            needsRootRefresh = folders.Any(path => tuple.alteredPaths is null || !tuple.alteredPaths.Contains(path));
+        else
+            needsRootRefresh = folders.Any(path => !Directory.Exists(path));
+        if (!needsRootRefresh)
+            return false;
+
+        InvalidateLibraryGeneration(vfsPath);
+        return true;
+    }
+
+    private AsyncReaderWriterLock GetLibraryLock(string vfsPath)
+        => LibraryLocks.GetOrAdd(Path.TrimEndingDirectorySeparator(Path.GetFullPath(vfsPath)), _ => new());
+
+    public async Task<IDisposable> LockFileChangeAsync(string vfsPath, CancellationToken cancellationToken = default) {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await GetLibraryLock(vfsPath).ReaderLockAsync(cancellationToken);
+    }
+
     /// <summary>
     /// Tries to get the current library generation mode. If the library has not
     /// been refreshed recently then it will return false, otherwise it will
@@ -242,38 +273,69 @@ public class VirtualFileSystemService {
     /// </summary>
     /// <param name="mediaFolder">The media folder to generate a structure for.</param>
     /// <param name="path">The file or folder within the media folder to generate a structure for.</param>
-    /// <returns>The VFS path, if it succeeded.</returns>
-    public async Task<(string? vfsPath, bool shouldContinue, bool skipValidation, HashSet<string> alteredPaths)> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path, CancellationToken cancellationToken = default) {
+    /// <returns>The VFS resolution. Dispose the result after resolver validation to release the library lock.</returns>
+    public async Task<VfsResolution> GenerateStructureInVFS(Folder mediaFolder, CollectionType? collectionType, string path, CancellationToken cancellationToken = default, bool validateRoot = false) {
         var (libraryConfig, mediaConfigs, skipGeneration) = await ConfigurationService.GetMediaFoldersForLibraryInVFS(mediaFolder, collectionType);
         if (libraryConfig is null || mediaConfigs.Count is 0)
-            return (null, false, false, []);
+            return new(null, false, false, []);
 
         if (!Plugin.Instance.CanCreateSymbolicLinks)
             throw new Exception("Windows users are required to enable Developer Mode then restart Jellyfin to be able to create symbolic links, a feature required to use the VFS.");
 
         var vfsPath = libraryConfig.VirtualRoot;
         if (!string.Equals(vfsPath, path, StringComparison.Ordinal) && !path.StartsWith(vfsPath + Path.DirectorySeparatorChar, StringComparison.Ordinal))
-            return (vfsPath, false, false, []);
+            return new(vfsPath, false, false, []);
 
+        cancellationToken.ThrowIfCancellationRequested();
+        var libraryLock = GetLibraryLock(vfsPath);
+        IDisposable? access = null;
+        try {
+            if (!validateRoot) {
+                access = await libraryLock.ReaderLockAsync(cancellationToken);
+                if (TryGetGeneratedStructure(vfsPath, path, out var cached))
+                    return new(cached.vfsPath, true, cached.skipValidation, cached.paths) { LibraryLock = access };
+                access.Dispose();
+                access = null;
+            }
+
+            access = await libraryLock.WriterLockAsync(cancellationToken);
+            var (generatedPath, shouldContinue, skipValidation, paths) = await GenerateStructureInVFS(libraryConfig, mediaConfigs, skipGeneration, collectionType, path, cancellationToken);
+            return new(generatedPath, shouldContinue, skipValidation, paths) { LibraryLock = access };
+        }
+        catch {
+            access?.Dispose();
+            throw;
+        }
+    }
+
+    private bool TryGetGeneratedStructure(string vfsPath, string path, out (string? vfsPath, bool skipValidation, HashSet<string> paths) cached) {
         // Skip link generation if we've already generated for the library.
-        if (DataCache.TryGetValue<(HashSet<string>? alteredPaths, bool iterative)>(CachePrefix + vfsPath, out var tuple))
-            return (
-                tuple.alteredPaths is not null ? vfsPath : null,
-                true,
-                tuple.iterative,
-                tuple.alteredPaths ?? []
-            );
+        if (DataCache.TryGetValue<(HashSet<string>? alteredPaths, bool iterative)>(CachePrefix + vfsPath, out var tuple)) {
+            cached = (tuple.alteredPaths is not null ? vfsPath : null, tuple.iterative, tuple.alteredPaths ?? []);
+            return true;
+        }
 
         // Check full path and all parent directories if they have been indexed.
         if (path.StartsWith(vfsPath + Path.DirectorySeparatorChar)) {
             var pathSegments = path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).Prepend(vfsPath).ToArray();
             while (pathSegments.Length > 1) {
                 var subPath = Path.Join(pathSegments);
-                if (DataCache.TryGetValue(CachePrefix + subPath, out tuple))
-                    return (vfsPath, true, false, tuple.alteredPaths ?? []);
+                if (DataCache.TryGetValue(CachePrefix + subPath, out tuple)) {
+                    cached = (vfsPath, false, tuple.alteredPaths ?? []);
+                    return true;
+                }
                 pathSegments = pathSegments.SkipLast(1).ToArray();
             }
         }
+
+        cached = default;
+        return false;
+    }
+
+    private async Task<(string? vfsPath, bool shouldContinue, bool skipValidation, HashSet<string> alteredPaths)> GenerateStructureInVFS(LibraryConfiguration libraryConfig, IReadOnlyList<MediaFolderConfiguration> mediaConfigs, bool skipGeneration, CollectionType? collectionType, string path, CancellationToken cancellationToken) {
+        var vfsPath = libraryConfig.VirtualRoot;
+        if (TryGetGeneratedStructure(vfsPath, path, out var cached))
+            return (cached.vfsPath, true, cached.skipValidation, cached.paths);
 
         // Validate if we can use the media folders.
         if (!TryGetFileCheckerForMediaFolders(libraryConfig, mediaConfigs, out var fileChecker))
@@ -363,7 +425,7 @@ public class VirtualFileSystemService {
             return (vfsPath, true, true, []);
 
         // Only do this once.
-        tuple = await DataCache.GetOrCreateAsync(CachePrefix + path, async (options) => {
+        (HashSet<string>? alteredPaths, bool iterative) tuple = await DataCache.GetOrCreateAsync(CachePrefix + path, async (options) => {
             Logger.LogInformation(
                 "Generating VFS structure for library {LibraryName} at sub-path {Path}. This might take some time depending on your collection size. (Library={LibraryId})",
                 libraryConfig.Name,

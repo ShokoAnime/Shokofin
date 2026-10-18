@@ -20,6 +20,7 @@ using Shokofin.Resolvers.Models;
 using Shokofin.Utils;
 
 using File = System.IO.File;
+using IDirectoryService = MediaBrowser.Controller.Providers.IDirectoryService;
 using Movie = MediaBrowser.Controller.Entities.Movies.Movie;
 using Timer = System.Timers.Timer;
 using TvEpisode = MediaBrowser.Controller.Entities.TV.Episode;
@@ -36,6 +37,8 @@ public class EventDispatchService {
     private readonly ILibraryManager LibraryManager;
 
     private readonly ILibraryMonitor LibraryMonitor;
+
+    private readonly IDirectoryService DirectoryService;
 
     private readonly LibraryScanWatcher LibraryScanWatcher;
 
@@ -72,6 +75,7 @@ public class EventDispatchService {
         ShokoApiClient apiClient,
         ILibraryManager libraryManager,
         ILibraryMonitor libraryMonitor,
+        IDirectoryService directoryService,
         LibraryScanWatcher libraryScanWatcher,
         MetadataRefreshService metadataRefreshService,
         MediaFolderConfigurationService configurationService,
@@ -83,6 +87,7 @@ public class EventDispatchService {
         ApiClient = apiClient;
         LibraryManager = libraryManager;
         LibraryMonitor = libraryMonitor;
+        DirectoryService = directoryService;
         LibraryScanWatcher = libraryScanWatcher;
         MetadataRefreshService = metadataRefreshService;
         ConfigurationService = configurationService;
@@ -166,12 +171,15 @@ public class EventDispatchService {
                     ChangesPerSeries.Remove(metadataId);
             }
         }
+        var affectedFolders = new ConcurrentDictionary<Guid, Folder>();
+        var fileTasks = new List<Task>();
         foreach (var (fileId, changes, trackerId) in filesToProcess) {
             var (allChanges, insertedAt) = TakeUnresolvedFile(fileId, changes);
-            Task.Run(() => ProcessFileEvents(fileId, allChanges, trackerId, insertedAt));
+            fileTasks.Add(Task.Run(() => ProcessFileEvents(fileId, allChanges, trackerId, affectedFolders, insertedAt)));
         }
         foreach (var (fileId, changes, trackerId, insertedAt) in unresolvedFilesToProcess)
-            Task.Run(() => ProcessFileEvents(fileId, changes, trackerId, insertedAt));
+            fileTasks.Add(Task.Run(() => ProcessFileEvents(fileId, changes, trackerId, affectedFolders, insertedAt)));
+        _ = RefreshAffectedFolders(fileTasks, affectedFolders);
         foreach (var (metadataId, changes, trackerId) in seriesToProcess)
             Task.Run(() => ProcessMetadataEvents(metadataId, changes, trackerId));
     }
@@ -196,8 +204,34 @@ public class EventDispatchService {
             }
             UnresolvedFiles.Clear();
         }
+        var affectedFolders = new ConcurrentDictionary<Guid, Folder>();
+        var fileTasks = new List<Task>();
         foreach (var (fileId, changes, trackerId) in filesToProcess)
-            Task.Run(() => ProcessFileEvents(fileId, changes, trackerId, skipUnresolvedCheck: true));
+            fileTasks.Add(Task.Run(() => ProcessFileEvents(fileId, changes, trackerId, affectedFolders, skipUnresolvedCheck: true)));
+        _ = RefreshAffectedFolders(fileTasks, affectedFolders);
+    }
+
+    private async Task RefreshAffectedFolders(List<Task> fileTasks, ConcurrentDictionary<Guid, Folder> affectedFolders) {
+        try {
+            await Task.WhenAll(fileTasks);
+        }
+        catch (Exception ex) {
+            Logger.LogError(ex, "Error processing file events before refreshing VFS folders.");
+        }
+
+        foreach (var folder in affectedFolders.Values) {
+            try {
+                Logger.LogTrace("Notifying Jellyfin about changes to VFS folder {Location}.", folder.Path);
+                if (folder.IsTopParent) {
+                    using var libraryLock = await ResolveManager.LockFileChangeAsync(folder.Path);
+                    ResolveManager.InvalidateLibraryGeneration(folder.Path);
+                }
+                folder.ChangedExternally();
+            }
+            catch (Exception ex) {
+                Logger.LogError(ex, "Error notifying Jellyfin about changes to VFS folder {Location}.", folder.Path);
+            }
+        }
     }
 
     private (List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)> Changes, DateTime? InsertedAt) TakeUnresolvedFile(int fileId, List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)> changes) {
@@ -247,7 +281,7 @@ public class EventDispatchService {
         }
     }
 
-    private async Task ProcessFileEvents(int fileId, List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)> changes, Guid trackerId, DateTime? insertedAt = null, bool skipUnresolvedCheck = false) {
+    private async Task ProcessFileEvents(int fileId, List<(UpdateReason Reason, int ManagedFolderId, string Path, IFileEventArgs Event)> changes, Guid trackerId, ConcurrentDictionary<Guid, Folder> affectedFolders, DateTime? insertedAt = null, bool skipUnresolvedCheck = false) {
         var keepTracker = false;
         try {
             if (LibraryScanWatcher.IsScanRunning) {
@@ -274,6 +308,7 @@ public class EventDispatchService {
 
             // Something was added or updated.
             var locationsToNotify = new List<string>();
+            var foldersToRefresh = new Dictionary<Guid, Folder>();
             var seriesIds = await GetSeriesIdsForFile(fileId, changes.Select(t => t.Event).LastOrDefault(e => e.HasCrossReferences));
             var libraries = await ConfigurationService.GetAvailableMediaFoldersForLibraries(c => !c.IsIgnored && c.Library.IsFileEventsEnabled);
             var (reason, managedFolderId, relativePath, lastEvent) = changes.Last();
@@ -292,11 +327,19 @@ public class EventDispatchService {
                                 break;
                             }
 
+                            using var libraryLock = await ResolveManager.LockFileChangeAsync(vfsPath);
+                            var needsRootRefresh = locationsToNotify.Contains(vfsPath);
                             var result = new LinkGenerationResult();
                             var topFolders = new HashSet<string>();
                             var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(collectionType, vfsPath, sourceLocation, fileId.ToString(), seriesId))))
                                 .Where(tuple => tuple.symbolicLinks.Length > 0 && tuple.importedAt.HasValue)
                                 .ToList();
+                            if (ResolveManager.InvalidateLibraryGenerationIfNeeded(vfsPath, vfsLocations.SelectMany(tuple => tuple.symbolicLinks))) {
+                                needsRootRefresh = true;
+                                locationsToNotify.Add(vfsPath);
+                            }
+                            foreach (var location in vfsLocations.SelectMany(tuple => tuple.symbolicLinks).Distinct())
+                                AddAffectedFolder(needsRootRefresh ? vfsPath : location, vfsPath, foldersToRefresh);
                             foreach (var (symLinks, importDate) in vfsLocations) {
                                 result += ResolveManager.GenerateSymbolicLinks(vfsPath, sourceLocation, symLinks, importDate!.Value);
                                 foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
@@ -323,6 +366,7 @@ public class EventDispatchService {
                                 RemoveSymbolicLink(video.Path);
                                 topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
                                 locationsToNotify.Add(video.Path);
+                                AddAffectedFolder(needsRootRefresh ? vfsPath : video.Path, vfsPath, foldersToRefresh);
                                 result.RemovedVideos++;
                             }
 
@@ -359,6 +403,9 @@ public class EventDispatchService {
                                 break;
                             }
 
+                            using var libraryLock = await ResolveManager.LockFileChangeAsync(vfsPath);
+                            var needsRootRefresh = locationsToNotify.Contains(vfsPath);
+
                             // Check if we can use another location for the file.
                             var result = new LinkGenerationResult();
                             var vfsSymbolicLinks = new HashSet<string>();
@@ -368,6 +415,12 @@ public class EventDispatchService {
                                 var vfsLocations = (await Task.WhenAll(seriesIds.Select(seriesId => ResolveManager.GenerateLocationsForFile(collectionType, vfsPath, newSourceLocation, fileId.ToString(), seriesId))))
                                 .Where(tuple => tuple.symbolicLinks.Length > 0 && tuple.importedAt.HasValue)
                                     .ToList();
+                                if (ResolveManager.InvalidateLibraryGenerationIfNeeded(vfsPath, vfsLocations.SelectMany(tuple => tuple.symbolicLinks))) {
+                                    needsRootRefresh = true;
+                                    locationsToNotify.Add(vfsPath);
+                                }
+                                foreach (var location in vfsLocations.SelectMany(tuple => tuple.symbolicLinks).Distinct())
+                                    AddAffectedFolder(needsRootRefresh ? vfsPath : location, vfsPath, foldersToRefresh);
                                 foreach (var (symLinks, importDate) in vfsLocations) {
                                     result += ResolveManager.GenerateSymbolicLinks(vfsPath, newSourceLocation, symLinks, importDate!.Value);
                                     foreach (var path in symLinks.Select(path => Path.Join(vfsPath, path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First())).Distinct())
@@ -396,6 +449,7 @@ public class EventDispatchService {
                                 RemoveSymbolicLink(video.Path);
                                 topFolders.Add(Path.Join(vfsPath, video.Path[(vfsPath.Length + 1)..].Split(Path.DirectorySeparatorChar).First()));
                                 locationsToNotify.Add(video.Path);
+                                AddAffectedFolder(needsRootRefresh ? vfsPath : video.Path, vfsPath, foldersToRefresh);
                                 result.RemovedVideos++;
                             }
 
@@ -416,10 +470,27 @@ public class EventDispatchService {
 
             // We let jellyfin take it from here.
             Logger.LogDebug("Notifying Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count, fileId.ToString());
-            foreach (var location in locationsToNotify) {
-                Logger.LogTrace("Notifying Jellyfin about changes to {Location}. (File={FileId})", location, fileId.ToString());
-                LibraryMonitor.ReportFileSystemChanged(location);
+            foreach (var location in locationsToNotify.Distinct()) {
+                try {
+                    Logger.LogTrace("Notifying Jellyfin about changes to {Location}. (File={FileId})", location, fileId.ToString());
+                    var vfsPath = libraries.Select(library => library.vfsPath).FirstOrDefault(path =>
+                        string.Equals(location, path, StringComparison.Ordinal) || location.StartsWith(path + Path.DirectorySeparatorChar, StringComparison.Ordinal));
+                    if (vfsPath is null)
+                        LibraryMonitor.ReportFileSystemChanged(location);
+                    else {
+#if NET10_0_OR_GREATER
+                        DirectoryService.Invalidate(location);
+#endif
+                        if (location == vfsPath)
+                            AddAffectedFolder(vfsPath, vfsPath, foldersToRefresh);
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.LogError(ex, "Error notifying Jellyfin about changes to {Location}. (File={FileId})", location, fileId);
+                }
             }
+            foreach (var (folderId, folder) in foldersToRefresh)
+                affectedFolders.TryAdd(folderId, folder);
             Logger.LogDebug("Notified Jellyfin about {LocationCount} changes. (File={FileId})", locationsToNotify.Count, fileId.ToString());
         }
         catch (Exception ex) {
@@ -429,6 +500,19 @@ public class EventDispatchService {
             if (!keepTracker)
                 Plugin.Instance.Tracker.Remove(trackerId);
         }
+    }
+
+    private void AddAffectedFolder(string location, string vfsPath, Dictionary<Guid, Folder> affectedFolders) {
+        var path = Directory.Exists(location) ? location : Path.GetDirectoryName(location);
+        while (path is not null && (string.Equals(path, vfsPath, StringComparison.Ordinal) || path.StartsWith(vfsPath + Path.DirectorySeparatorChar, StringComparison.Ordinal))) {
+            if (LibraryManager.FindByPath(path, true) is Folder folder && folder is not AggregateFolder && Directory.Exists(folder.Path)) {
+                affectedFolders.TryAdd(folder.Id, folder);
+                return;
+            }
+            path = Path.GetDirectoryName(path);
+        }
+
+        Logger.LogWarning("Unable to find an existing VFS folder to refresh for {Location}.", location);
     }
 
     private async Task<bool> HasUnresolvedCrossReferences(int fileId, IFileEventArgs? fileEvent) {
