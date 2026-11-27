@@ -79,7 +79,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve path \"{fileInfo.FullName}\".");
-            var (vfsPath, shouldContinue, _, _) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName, cancellationToken).ConfigureAwait(false);
+            var (vfsPath, shouldContinue, _, _) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName, cancellationToken);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return null;
 
@@ -112,7 +112,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                 return new();
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve children of \"{parent.Path}\". (Children={fileInfoList.Count})");
-            var (vfsPath, shouldContinue, skipValidation, paths) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path, cancellationToken).ConfigureAwait(false);
+            var (vfsPath, shouldContinue, skipValidation, paths) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path, cancellationToken);
             if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
                 return new();
 
@@ -166,7 +166,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                         }
 
                         var season = ApiManager.GetSeasonInfo(seasonId)
-                            .ConfigureAwait(false)
+                            
                             .GetAwaiter()
                             .GetResult();
                         if (season is null) {
@@ -176,7 +176,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
 
                         if (dirInfo.Name.TryGetAttributeValue(ProviderNames.ShokoEpisode, out episodeId)) {
                             var episode = ApiManager.GetEpisodeInfo(episodeId)
-                                .ConfigureAwait(false)
+                                
                                 .GetAwaiter()
                                 .GetResult();
                             if (episode is null || !episode.IsAvailable) {
@@ -207,7 +207,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                                     // This will hopefully just re-use the pre-cached entries from the cache, but it may
                                     // also get it from remote if the cache was emptied for whatever reason.
                                     var file = ApiManager.GetFileInfo(fileId, seriesId)
-                                        .ConfigureAwait(false)
+                                        
                                         .GetAwaiter()
                                         .GetResult();
 
@@ -229,7 +229,7 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                         }
 
                         var show = ApiManager.GetShowInfoBySeasonId(seasonId)
-                            .ConfigureAwait(false)
+                            
                             .GetAwaiter()
                             .GetResult();
                         if (show is null || !show.IsAvailable) {
@@ -310,13 +310,13 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
 
     public BaseItem? ResolvePath(ItemResolveArgs args)
         => ResolveSingle(args.Parent, args.CollectionType, args.FileInfo)
-            .ConfigureAwait(false)
+            
             .GetAwaiter()
             .GetResult();
 
     public BaseItem? ResolvePath(ItemResolveArgs args, CancellationToken cancellationToken)
         => ResolveSingle(args.Parent, args.CollectionType, args.FileInfo, cancellationToken)
-            .ConfigureAwait(false)
+            
             .GetAwaiter()
             .GetResult();
 
@@ -326,13 +326,13 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
 
     public MultiItemResolverResult ResolveMultiple(Folder parent, List<FileSystemMetadata> files, CollectionType? collectionType, IDirectoryService directoryService)
         => ResolveMultiple(parent, collectionType, files)
-            .ConfigureAwait(false)
+            
             .GetAwaiter()
             .GetResult();
 
     public MultiItemResolverResult ResolveMultiple(Folder parent, List<FileSystemMetadata> files, CollectionType? collectionType, IDirectoryService directoryService, CancellationToken cancellationToken)
         => ResolveMultiple(parent, collectionType, files, cancellationToken)
-            .ConfigureAwait(false)
+            
             .GetAwaiter()
             .GetResult();
 

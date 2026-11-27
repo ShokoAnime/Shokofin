@@ -36,7 +36,7 @@ promise.then(({
 //#region Constants
 
 /**
- * @typedef {"Connection" | "Metadata_Title" | "Metadata_Description" | "Metadata_TagGenre" | "Metadata_Image" | "Metadata_Misc" | "Library_Basic" | "Library_Collection" | "Library_MultipleVersions" | "Library_MediaFolder" | "Library_SeasonMerging" | "VFS_Basic" | "VFS_Location" | "User" | "Series" | "SignalR_Connection" | "SignalR_Basic" | "SignalR_Library_New" | "SignalR_Library_Existing" | "Misc" | "Debug" | "Utilities"} SectionType
+ * @typedef {"Connection" | "Metadata_Title" | "Metadata_Description" | "Metadata_TagGenre" | "Metadata_Image" | "Metadata_Misc" | "Library_Basic" | "Library_Collection" | "Library_Playlist" | "Library_MultipleVersions" | "Library_MediaFolder" | "Library_SeasonMerging" | "VFS_Basic" | "VFS_Location" | "User" | "Series" | "SignalR_Connection" | "SignalR_Basic" | "SignalR_Library_New" | "SignalR_Library_Existing" | "Misc" | "Debug" | "Utilities"} SectionType
  */
 
 const MaxDebugPresses = 7;
@@ -53,6 +53,7 @@ const Sections = [
     "Metadata_Misc",
     "Library_Basic",
     "Library_Collection",
+    "Library_Playlist",
     "Library_MultipleVersions",
     "Library_MediaFolder",
     "Library_SeasonMerging",
@@ -494,7 +495,7 @@ async function updateView(view, form, config) {
             break;
 
         case "library":
-            activeSections.push("Library_Basic", "Library_Collection", "Library_MultipleVersions", "Library_MediaFolder", "Library_SeasonMerging");
+            activeSections.push("Library_Basic", "Library_Collection", "Library_Playlist", "Library_MultipleVersions", "Library_MediaFolder", "Library_SeasonMerging");
 
             await applyLibraryConfigToForm(form, form.querySelector("#MediaFolderSelector").value, config);
             break;
@@ -582,6 +583,7 @@ function applyFormToConfig(form, config) {
     switch (State.currentTab) {
         case "metadata": {
             config.MarkSpecialsWhenGrouped = form.querySelector("#MarkSpecialsWhenGrouped").checked;
+            config.AlwaysUseEpisodeTitleForTmdbMovies = form.querySelector("#AlwaysUseEpisodeTitleForTmdbMovies").checked;
             applyTitleFormToConfig(form, config);
 
             config.DescriptionConversionMode = form.querySelector("#DescriptionConversionMode").value;
@@ -611,6 +613,10 @@ function applyFormToConfig(form, config) {
             ([config.ContentRatingList, config.ContentRatingOrder] = retrieveSortableCheckboxList(form, "Metadata_ContentRatingList"));
             ([config.ProductionLocationList, config.ProductionLocationOrder] = retrieveSortableCheckboxList(form, "Metadata_ProductionLocationList"));
             config.ThirdPartyIdProviderList = retrieveCheckboxList(form, "Metadata_ThirdPartyIdProviderList");
+            config.ThirdPartyDisplayLinkList = retrieveCheckboxList(form, "Metadata_ThirdPartyDisplayLinkList");
+            config.AddExtraInfoToLinkName = form.querySelector("#AddExtraInfoToLinkName").checked;
+            config.MaxLinksPerTypeToShow = sanitizeNumber(form.querySelector("#MaxLinksPerTypeToShow").value, 0);
+            form.querySelector("#MaxLinksPerTypeToShow").value = config.MaxLinksPerTypeToShow;
             break;
         }
 
@@ -625,12 +631,20 @@ function applyFormToConfig(form, config) {
             config.SeparateMovies = form.querySelector("#SeparateMovies").checked;
             config.FilterMovieLibraries = !form.querySelector("#DisableFilterMovieLibraries").checked;
             config.DefaultSpecialsPlacement = form.querySelector("#DefaultSpecialsPlacement").value;
+            config.TmdbStructureUseShokoMetadata = form.querySelector("#TmdbStructureUseShokoMetadata").checked;
             config.MovieSpecialsAsExtraFeaturettes = form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked;
             config.AddMissingMetadata = form.querySelector("#AddMissingMetadata").checked;
 
             config.AutoReconstructCollections = form.querySelector("#AutoReconstructCollections").checked;
             config.CollectionGrouping = form.querySelector("#CollectionGrouping").value;
             config.CollectionMinSizeOfTwo = form.querySelector("#CollectionMinSizeOfTwo").checked;
+
+            config.Playlist.AutoReconstruct = form.querySelector("#PlaylistAutoReconstruct").checked;
+            config.Playlist.Grouping = form.querySelector("#PlaylistGrouping").value;
+            config.Playlist.MinSizeOfTwo = form.querySelector("#PlaylistMinSizeOfTwo").checked;
+            config.Playlist.Ordering = form.querySelector("#PlaylistOrdering").value;
+            config.Playlist.SpecialsPlacement = form.querySelector("#PlaylistSpecialsPlacement").value;
+            config.Playlist.TagFilter = form.querySelector("#PlaylistTagFilter").value;
 
             config.AutoMergeVersions = form.querySelector("#AutoMergeVersions").checked;
             ([config.MergeVersionSortSelectorList, config.MergeVersionSortSelectorOrder] = retrieveSortableCheckboxList(form, "MergeVersionSortSelectorList"));
@@ -669,6 +683,7 @@ function applyFormToConfig(form, config) {
             config.AddCreditsAsSpecialFeatures = form.querySelector("#AddCreditsAsSpecialFeatures").checked;
             config.VFS_AddReleaseGroup = form.querySelector("#VFS_AddReleaseGroup").checked;
             config.VFS_AddResolution = form.querySelector("#VFS_AddResolution").checked;
+            config.VFS_UseSourceFileAsVersionIdentifier = form.querySelector("#VFS_UseSourceFileAsVersionIdentifier").checked;
 
             config.VFS_Threads = vfsTreads;
             form.querySelector("#VFS_Threads").value = vfsTreads;
@@ -678,6 +693,7 @@ function applyFormToConfig(form, config) {
             config.VFS_MaxSeriesExceptionsBeforeAbort = vfsMaxSeriesExceptionsBeforeAbort;
             form.querySelector("#VFS_MaxSeriesExceptionsBeforeAbort").value = vfsMaxSeriesExceptionsBeforeAbort;
             config.VFS_UseSemaphore = form.querySelector("#VFS_UseSemaphore").checked;
+            config.VFS_CollectAndSort = form.querySelector("#VFS_CollectAndSort").checked;
             config.VFS_Location = form.querySelector("#VFS_Location").value;
             config.VFS_CustomLocation = form.querySelector("#VFS_CustomLocation").value.trim() || null;
             break;
@@ -846,6 +862,7 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#Title_ConfigureFor_Enabled").checked = config.Title[State.metadata.title].Enabled !== false;
             form.querySelector("#Title_ConfigureFor_Enabled").disabled = config.Title[State.metadata.title].Enabled === undefined;
             form.querySelector("#MarkSpecialsWhenGrouped").checked = config.MarkSpecialsWhenGrouped;
+            form.querySelector("#AlwaysUseEpisodeTitleForTmdbMovies").checked = config.AlwaysUseEpisodeTitleForTmdbMovies;
             form.querySelector("#RemoveDuplicateTitles").checked = config.Title[State.metadata.title].RemoveDuplicates;
             renderSortableCheckboxList(form, "TitleMainList", config.Title[State.metadata.title].MainTitle.List, config.Title[State.metadata.title].MainTitle.Order);
             form.querySelector("#TitleMainAllowAny").checked = config.Title[State.metadata.title].MainTitle.AllowAny;
@@ -890,6 +907,9 @@ async function applyConfigToForm(form, config) {
             renderSortableCheckboxList(form, "Metadata_ContentRatingList", config.ContentRatingList, config.ContentRatingOrder);
             renderSortableCheckboxList(form, "Metadata_ProductionLocationList", config.ProductionLocationList, config.ProductionLocationOrder);
             renderCheckboxList(form, "Metadata_ThirdPartyIdProviderList", config.ThirdPartyIdProviderList.map(s => s.trim()).filter(s => s));
+            renderCheckboxList(form, "Metadata_ThirdPartyDisplayLinkList", (config.ThirdPartyDisplayLinkList || []).map(s => s.trim()).filter(s => s));
+            form.querySelector("#AddExtraInfoToLinkName").checked = config.AddExtraInfoToLinkName;
+            form.querySelector("#MaxLinksPerTypeToShow").value = config.MaxLinksPerTypeToShow;
             break;
         }
 
@@ -899,12 +919,20 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#SeparateMovies").checked = config.SeparateMovies;
             form.querySelector("#DisableFilterMovieLibraries").checked = !config.FilterMovieLibraries;
             form.querySelector("#DefaultSpecialsPlacement").value = config.DefaultSpecialsPlacement === "Default" ? "Excluded" : config.DefaultSpecialsPlacement;
+            form.querySelector("#TmdbStructureUseShokoMetadata").checked = config.TmdbStructureUseShokoMetadata;
             form.querySelector("#MovieSpecialsAsExtraFeaturettes").checked = config.MovieSpecialsAsExtraFeaturettes;
             form.querySelector("#AddMissingMetadata").checked = config.AddMissingMetadata;
 
             form.querySelector("#AutoReconstructCollections").checked = config.AutoReconstructCollections;
             form.querySelector("#CollectionGrouping").value = config.CollectionGrouping;
             form.querySelector("#CollectionMinSizeOfTwo").checked = config.CollectionMinSizeOfTwo;
+
+            form.querySelector("#PlaylistAutoReconstruct").checked = config.Playlist.AutoReconstruct;
+            form.querySelector("#PlaylistGrouping").value = config.Playlist.Grouping;
+            form.querySelector("#PlaylistMinSizeOfTwo").checked = config.Playlist.MinSizeOfTwo;
+            form.querySelector("#PlaylistOrdering").value = config.Playlist.Ordering;
+            form.querySelector("#PlaylistSpecialsPlacement").value = config.Playlist.SpecialsPlacement === "Default" ? "Excluded" : config.Playlist.SpecialsPlacement;
+            form.querySelector("#PlaylistTagFilter").value = config.Playlist.TagFilter;
 
             form.querySelector("#AutoMergeVersions").checked = config.AutoMergeVersions || false;
             renderSortableCheckboxList(form, "MergeVersionSortSelectorList", config.MergeVersionSortSelectorList, config.MergeVersionSortSelectorOrder);
@@ -929,12 +957,14 @@ async function applyConfigToForm(form, config) {
             form.querySelector("#AddCreditsAsSpecialFeatures").checked = config.AddCreditsAsSpecialFeatures;
             form.querySelector("#VFS_AddReleaseGroup").checked = config.VFS_AddReleaseGroup;
             form.querySelector("#VFS_AddResolution").checked = config.VFS_AddResolution;
+            form.querySelector("#VFS_UseSourceFileAsVersionIdentifier").checked = config.VFS_UseSourceFileAsVersionIdentifier;
 
             form.querySelector("#VFS_Threads").value = config.VFS_Threads;
             form.querySelector("#VFS_ResolveLinks").checked = config.VFS_ResolveLinks;
             form.querySelector("#VFS_MaxTotalExceptionsBeforeAbort").value = config.VFS_MaxTotalExceptionsBeforeAbort;
             form.querySelector("#VFS_MaxSeriesExceptionsBeforeAbort").value = config.VFS_MaxSeriesExceptionsBeforeAbort;
             form.querySelector("#VFS_UseSemaphore").checked = config.VFS_UseSemaphore;
+            form.querySelector("#VFS_CollectAndSort").checked = config.VFS_CollectAndSort;
             form.querySelector("#VFS_Location").value = config.VFS_Location;
             form.querySelector("#VFS_CustomLocation").value = config.VFS_CustomLocation || "";
             form.querySelector("#VFS_CustomLocation").disabled = config.VFS_Location !== "Custom";
@@ -1108,6 +1138,7 @@ async function applySeriesConfigToForm(form, seriesId, config = null) {
     renderCheckboxList(form, "SeriesSeasonMergingBehavior", seriesConfig.SeasonMergingBehavior.split(",").map(s => s.trim()).filter(s => s && s !== "None"));
     form.querySelector("#SeriesEpisodeConversion").value = seriesConfig.EpisodeConversion;
     form.querySelector("#SeriesOrderByAirdate").checked = seriesConfig.OrderByAirdate;
+    form.querySelector("#SeriesPlaylistInclude").checked = seriesConfig.PlaylistInclude;
 
     form.querySelector("#SeriesSettingsContainer").removeAttribute("hidden");
 
@@ -1349,8 +1380,9 @@ function toggleIgnoredMediaFolder(form, libraryId, config, index) {
     const mediaFolders = config.LibraryFolders.filter((c) => c.LibraryId === libraryId);
     const toToggle = mediaFolders[index];
     toToggle.IsIgnored = !toToggle.IsIgnored;
-    if (toToggle.IsIgnored && !toToggle.NeedsRefresh) {
-        toToggle.NeedsRefresh = false;
+    // Re-detect the mapping when the media folder is no longer ignored.
+    if (!toToggle.IsIgnored) {
+        toToggle.NeedsRefresh = true;
     }
     renderFolderList(form, libraryConfig.LibraryOperationMode !== "VFS", "MediaFolderManagedFolderMapping", mediaFolders.map(mediaFolderConfigToString));
 }
@@ -1507,6 +1539,7 @@ async function syncSettings(form, config) {
             seriesConfig.SeasonMergingBehavior = retrieveCheckboxList(form, "SeriesSeasonMergingBehavior").join(",") || "None";
             seriesConfig.EpisodeConversion = form.querySelector("#SeriesEpisodeConversion").value;
             seriesConfig.OrderByAirdate = form.querySelector("#SeriesOrderByAirdate").checked;
+            seriesConfig.PlaylistInclude = form.querySelector("#SeriesPlaylistInclude").checked;
 
             await ShokoApiClient.updateSeriesConfiguration(seriesId, seriesConfig);
         }

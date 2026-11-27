@@ -44,7 +44,7 @@ public class ImageHostUrl : IAsyncActionFilter {
 
     private static readonly object LockObj = new();
 
-    private static Regex RemoteImagesRegex = new(@"/Items/(?<itemId>[0-9a-fA-F]{32})/RemoteImages$", RegexOptions.Compiled);
+    private static readonly Regex RemoteImagesRegex = new(@"/Items/(?<itemId>[0-9a-fA-F]{32})/RemoteImages$", RegexOptions.Compiled);
 
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next) {
         var request = context.HttpContext.Request;
@@ -67,7 +67,7 @@ public class ImageHostUrl : IAsyncActionFilter {
         }
 
         try {
-            await next().ConfigureAwait(false);
+            await next();
         }
         finally {
             if (Guid.Empty != itemId && _currentItemId == itemId) {

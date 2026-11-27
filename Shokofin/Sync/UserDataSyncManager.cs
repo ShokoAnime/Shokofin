@@ -18,6 +18,7 @@ using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API;
 using Shokofin.Configuration;
+using Shokofin.Database;
 using Shokofin.Extensions;
 using Shokofin.Resolvers;
 
@@ -43,7 +44,9 @@ public class UserDataSyncManager {
 
     private readonly ShokoIdLookup Lookup;
 
-    public UserDataSyncManager(IUserDataManager userDataManager, IUserManager userManager, ILibraryManager libraryManager, ISessionManager sessionManager, ILogger<UserDataSyncManager> logger, VirtualFileSystemService vfsService, ShokoApiClient apiClient, ShokoIdLookup lookup) {
+    private readonly UserDataRepositoryService UserDataRepository;
+
+    public UserDataSyncManager(IUserDataManager userDataManager, IUserManager userManager, ILibraryManager libraryManager, ISessionManager sessionManager, ILogger<UserDataSyncManager> logger, VirtualFileSystemService vfsService, ShokoApiClient apiClient, ShokoIdLookup lookup, UserDataRepositoryService userDataRepository) {
         UserDataManager = userDataManager;
         UserManager = userManager;
         LibraryManager = libraryManager;
@@ -52,6 +55,7 @@ public class UserDataSyncManager {
         VfsService = vfsService;
         ApiClient = apiClient;
         Lookup = lookup;
+        UserDataRepository = userDataRepository;
 
         SessionManager.SessionStarted += OnSessionStarted;
         SessionManager.SessionEnded += OnSessionEnded;
@@ -244,7 +248,7 @@ public class UserDataSyncManager {
                     userConfig.EnableSynchronization &&
                     (userConfig.SyncRestrictedVideos || e.Item.CustomRating != "XXX") &&
                     Lookup.TryGetFileAndSeriesIdFor(e.Item, out var fileId, out var seriesId) &&
-                    await ApiClient.GetFile(fileId).ConfigureAwait(false) is { } file &&
+                    await ApiClient.GetFile(fileId) is { } file &&
                     file.CrossReferences.FirstOrDefault(xref0 => xref0.Series.Shoko.HasValue && xref0.Series.Shoko.Value.ToString() == seriesId && xref0.Episodes.Any(xref1 => xref1.Shoko.HasValue)) is { } xref
                 ))
                 return;
@@ -275,7 +279,7 @@ public class UserDataSyncManager {
                         Logger.LogInformation("Playback has started. (File={FileId})", fileId);
                         if (sessionMetadata.ShouldSendEvent() && userConfig.SyncUserDataUnderPlayback) {
                             sessionMetadata.SentStartEvent = true;
-                            success = await ApiClient.ScrobbleFile(fileId, episodeId, "play", sessionMetadata.InitialPlaybackTicks, userConfig.Token).ConfigureAwait(false);
+                            success = await ApiClient.ScrobbleFile(fileId, episodeId, "play", sessionMetadata.InitialPlaybackTicks, userConfig.Token);
                         }
                     }
                     else {
@@ -290,7 +294,7 @@ public class UserDataSyncManager {
 
                             Logger.LogInformation("Playback was paused. (File={FileId})", fileId);
                             if (sessionMetadata.ShouldSendEvent(true) && userConfig.SyncUserDataUnderPlayback)
-                                success = await ApiClient.ScrobbleFile(fileId, episodeId, "pause", sessionMetadata.PlaybackTicks, userConfig.Token).ConfigureAwait(false);
+                                success = await ApiClient.ScrobbleFile(fileId, episodeId, "pause", sessionMetadata.PlaybackTicks, userConfig.Token);
                         }
                         // The playback was resumed.
                         else if (sessionMetadata.IsPaused) {
@@ -300,7 +304,7 @@ public class UserDataSyncManager {
 
                             Logger.LogInformation("Playback was resumed. (File={FileId})", fileId);
                             if (sessionMetadata.ShouldSendEvent(true) && userConfig.SyncUserDataUnderPlayback)
-                                success = await ApiClient.ScrobbleFile(fileId, episodeId, "resume", sessionMetadata.PlaybackTicks, userConfig.Token).ConfigureAwait(false);
+                                success = await ApiClient.ScrobbleFile(fileId, episodeId, "resume", sessionMetadata.PlaybackTicks, userConfig.Token);
                         }
                         // Live scrobbling.
                         else  {
@@ -316,10 +320,10 @@ public class UserDataSyncManager {
                             if (sessionMetadata.ShouldSendEvent() && userConfig.SyncUserDataUnderPlayback) {
                                 if (!sessionMetadata.SentStartEvent) {
                                     sessionMetadata.SentStartEvent = true;
-                                    success = await ApiClient.ScrobbleFile(fileId, episodeId, "play", sessionMetadata.InitialPlaybackTicks, userConfig.Token).ConfigureAwait(false);
+                                    success = await ApiClient.ScrobbleFile(fileId, episodeId, "play", sessionMetadata.InitialPlaybackTicks, userConfig.Token);
                                 }
                                 if (userConfig.SyncUserDataUnderPlaybackLive)
-                                    success = await ApiClient.ScrobbleFile(fileId, episodeId, "scrobble", sessionMetadata.PlaybackTicks, userConfig.Token).ConfigureAwait(false);
+                                    success = await ApiClient.ScrobbleFile(fileId, episodeId, "scrobble", sessionMetadata.PlaybackTicks, userConfig.Token);
                             }
                         }
                     }
@@ -346,17 +350,17 @@ public class UserDataSyncManager {
                     Logger.LogInformation("Playback has ended. (File={FileId})", fileId);
                     if (shouldSendEvent)
                         if (!userData.Played && userData.PlaybackPositionTicks > 0)
-                            success = await ApiClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userConfig.Token).ConfigureAwait(false);
+                            success = await ApiClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userConfig.Token);
                         else
-                            success = await ApiClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
+                            success = await ApiClient.ScrobbleFile(fileId, episodeId, "stop", userData.PlaybackPositionTicks, userData.Played, userConfig.Token);
                     break;
                 }
                 case UserDataSaveReason.TogglePlayed:
                     Logger.LogInformation("Scrobbled when toggled. (File={FileId})", fileId);
                     if (!userData.Played && userData.PlaybackPositionTicks > 0)
-                        success = await ApiClient.ScrobbleFile(fileId, episodeId, "user-interaction", userData.PlaybackPositionTicks, userConfig.Token).ConfigureAwait(false);
+                        success = await ApiClient.ScrobbleFile(fileId, episodeId, "user-interaction", userData.PlaybackPositionTicks, userConfig.Token);
                     else
-                        success = await ApiClient.ScrobbleFile(fileId, episodeId, "user-interaction", userData.PlaybackPositionTicks, userData.Played, userConfig.Token).ConfigureAwait(false);
+                        success = await ApiClient.ScrobbleFile(fileId, episodeId, "user-interaction", userData.PlaybackPositionTicks, userData.Played, userConfig.Token);
                     break;
                 default:
                     success = null;
@@ -394,21 +398,21 @@ public class UserDataSyncManager {
                 if (e.Item is not Video video || !Lookup.TryGetEpisodeIdsFor(video, out var episodeIds))
                     return;
 
-                SyncVideo(video, userConfig!, userData, SyncDirection.Export, episodeIds[0]).ConfigureAwait(false);
+                SyncVideo(video, userConfig!, userData, SyncDirection.Export, episodeIds[0]);
                 break;
             }
             case Season season: {
                 if (!Lookup.TryGetSeasonIdFor(season, out var seasonId))
                     return;
 
-                SyncSeason(season, userConfig!, userData, SyncDirection.Export, seasonId).ConfigureAwait(false);
+                SyncSeason(season, userConfig!, userData, SyncDirection.Export, seasonId);
                 break;
             }
             case Series series: {
                 if (!Lookup.TryGetSeasonIdFor(series, out var seasonId))
                     return;
 
-                SyncSeries(series, userConfig!, userData, SyncDirection.Export, seasonId).ConfigureAwait(false);
+                SyncSeries(series, userConfig!, userData, SyncDirection.Export, seasonId);
                 break;
             }
         }
@@ -447,7 +451,7 @@ public class UserDataSyncManager {
                 continue;
 
             foreach (var userConfig in enabledUsers) {
-                await SyncVideo(video, userConfig, direction, fileId, seriesId).ConfigureAwait(false);
+                await SyncVideo(video, userConfig, direction, fileId, seriesId);
 
                 numComplete++;
                 double percent = numComplete;
@@ -481,7 +485,7 @@ public class UserDataSyncManager {
                     if (!userConfig.SyncUserDataOnImport)
                         continue;
 
-                    SyncVideo(video, userConfig, SyncDirection.Import, fileId, seriesId).ConfigureAwait(false);
+                    _ = SyncVideo(video, userConfig, SyncDirection.Import, fileId, seriesId);
                 }
                 break;
             }
@@ -514,7 +518,7 @@ public class UserDataSyncManager {
                     if (!userConfig.SyncUserDataOnImport)
                         continue;
 
-                    SyncSeason(season, userConfig, null, SyncDirection.Import, seasonId).ConfigureAwait(false);
+                    SyncSeason(season, userConfig, null, SyncDirection.Import, seasonId);
                 }
                 break;
             }
@@ -539,7 +543,7 @@ public class UserDataSyncManager {
                     if (!userConfig.SyncUserDataOnImport)
                         continue;
 
-                    SyncSeries(series, userConfig, null, SyncDirection.Import, mainSeasonId).ConfigureAwait(false);
+                    SyncSeries(series, userConfig, null, SyncDirection.Import, mainSeasonId);
                 }
                 break;
             }
@@ -600,7 +604,7 @@ public class UserDataSyncManager {
                 LastPlayedDate = null,
             };
 
-        // var remoteUserData = await APIClient.GetFileUserData(fileId, userConfig.Token).ConfigureAwait(false);
+        // var remoteUserData = await APIClient.GetFileUserData(fileId, userConfig.Token);
         // if (remoteUserData == null)
         //     return;
 
@@ -618,7 +622,7 @@ public class UserDataSyncManager {
             }
 
             var localUserStats = UserDataManager.GetUserData(user, video);
-            var remoteUserStats = await ApiClient.GetFileUserStats(fileId, userConfig.Token).ConfigureAwait(false);
+            var remoteUserStats = await ApiClient.GetFileUserStats(fileId, userConfig.Token);
             bool isInSync = UserDataEqualsFileUserStats(localUserStats, remoteUserStats);
             Logger.LogInformation("{SyncDirection} user data for video {VideoName}. (User={UserId},File={FileId},Series={SeriesId},Local={HaveLocal},Remote={HaveRemote},InSync={IsInSync})", direction.ToString(), video.Name, userConfig.UserId, fileId, seriesId, localUserStats != null, remoteUserStats != null, isInSync);
             if (isInSync)
@@ -635,12 +639,12 @@ public class UserDataSyncManager {
                         // Don't sync if the local state is considered empty and there is no remote state.
                         if (remoteUserStats.IsEmpty)
                             break;
-                        remoteUserStats = await ApiClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token).ConfigureAwait(false);
+                        remoteUserStats = await ApiClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Export.ToString(), video.Name, userConfig.UserId, fileId, seriesId);
                     }
                     else if (localUserStats.LastPlayedDate.HasValue && localUserStats.LastPlayedDate.Value > remoteUserStats.LastUpdatedAt) {
                         remoteUserStats = localUserStats.ToFileUserStats();
-                        remoteUserStats = await ApiClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token).ConfigureAwait(false);
+                        remoteUserStats = await ApiClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Export.ToString(), video.Name, userConfig.UserId, fileId, seriesId);
                     }
                     break;
@@ -650,11 +654,13 @@ public class UserDataSyncManager {
                         break;
                     // Create a new local stats entry if there is no local entry.
                     if (localUserStats == null) {
+                        UserDataRepository.DeleteUserDataByKeyForPlaceholder(video.GetUserDataKeys(), user);
                         UserDataManager.SaveUserData(user, video, localUserStats = remoteUserStats.ToUserData(video), UserDataSaveReason.Import, CancellationToken.None);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, seriesId);
                     }
                     // Else merge the remote stats into the local stats entry.
                     else if (!localUserStats.LastPlayedDate.HasValue || remoteUserStats.LastUpdatedAt > localUserStats.LastPlayedDate.Value) {
+                        UserDataRepository.DeleteUserDataByKeyForPlaceholder(video.GetUserDataKeys(), user);
                         UserDataManager.SaveUserData(user, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, seriesId);
                     }
@@ -684,11 +690,12 @@ public class UserDataSyncManager {
                     // Export if the local state is fresher then the remote state.
                     if (localUserStats.LastPlayedDate.Value > remoteUserStats.LastUpdatedAt) {
                         remoteUserStats = localUserStats.ToFileUserStats();
-                        remoteUserStats = await ApiClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token).ConfigureAwait(false);
+                        remoteUserStats = await ApiClient.PutFileUserStats(fileId, remoteUserStats, userConfig.Token);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Export.ToString(), video.Name, userConfig.UserId, fileId, seriesId);
                     }
                     // Else import if the remote state is fresher then the local state.
                     else if (localUserStats.LastPlayedDate.Value < remoteUserStats.LastUpdatedAt) {
+                        UserDataRepository.DeleteUserDataByKeyForPlaceholder(video.GetUserDataKeys(), user);
                         UserDataManager.SaveUserData(user, video, localUserStats.MergeWithFileUserStats(remoteUserStats), UserDataSaveReason.Import, CancellationToken.None);
                         Logger.LogDebug("{SyncDirection} user data for video {VideoName} successful. (User={UserId},File={FileId},Series={SeriesId})", SyncDirection.Import.ToString(), video.Name, userConfig.UserId, fileId, seriesId);
                     }

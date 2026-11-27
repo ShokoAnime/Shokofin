@@ -24,7 +24,16 @@ namespace Shokofin.Providers;
 /// about how a provider cannot also be a custom provider otherwise it won't
 /// save the metadata.
 /// </remarks>
-public class CustomMovieProvider(ILogger<CustomMovieProvider> _logger, VirtualFileSystemService _vfsService, ILibraryManager _libraryManager, ShokoIdLookup _lookup, ShokoApiManager _apiManager, MergeVersionsManager _mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Movie> {
+public class CustomMovieProvider(
+    ILogger<CustomMovieProvider> _logger,
+    VirtualFileSystemService _vfsService,
+    ILibraryManager _libraryManager,
+    ShokoIdLookup _lookup,
+#if NET9_0_OR_GREATER
+    ShokoApiManager _apiManager,
+#endif
+    MergeVersionsManager 
+_mergeVersionsManager) : IHasItemChangeMonitor, ICustomMetadataProvider<Movie> {
     public string Name => Plugin.MetadataProviderName;
 
     public bool HasChanged(BaseItem item, IDirectoryService directoryService) {
@@ -33,8 +42,15 @@ public class CustomMovieProvider(ILogger<CustomMovieProvider> _logger, VirtualFi
             return false;
 
         // Abort if we're unable to get the shoko episode id.
-        if (!movie.TryGetProviderId(ProviderNames.ShokoEpisode, out var episodeId))
+        if (!_lookup.IsEnabledForItem(movie) || !movie.TryGetProviderId(ProviderNames.ShokoEpisode, out var episodeId))
             return false;
+
+        using (Plugin.Instance.Tracker.Enter($"Checking for custom info for Movie \"{movie.Name}\". (Path=\"{movie.Path}\")")) {
+            if (_vfsService.TryGetCurrentLibraryGenerationMode(movie.ContainingFolderPath, out var iterativeGeneration, out var wasGenerated) && iterativeGeneration && !wasGenerated) {
+                _logger.LogTrace("Skipped movie during iterative generation. (Episode={EpisodeId})", episodeId);
+                return false;
+            }
+        }
 
         return true;
     }
@@ -54,7 +70,7 @@ public class CustomMovieProvider(ILogger<CustomMovieProvider> _logger, VirtualFi
 #if NET9_0_OR_GREATER
             // Since Jellyfin 10.11.1 onwards they've fixed it so the creation date for videos doesn't follow the symlink but instead follows the target location, so to match the older behavior to get the date to match the import date, we now make sure the creation date is set to the import date here.
             if (movie.TryGetFileAndSeriesId(out _, out _, vfsOnly: true)) {
-                if (await _apiManager.GetFileInfo(fileId, seriesId).ConfigureAwait(false) is { } fileInfo) {
+                if (await _apiManager.GetFileInfo(fileId, seriesId) is { } fileInfo) {
                     var createdAt = fileInfo.Shoko.ImportedAt ?? fileInfo.Shoko.CreatedAt;
                     if (movie.DateCreated != createdAt) {
                         movie.DateCreated = createdAt;

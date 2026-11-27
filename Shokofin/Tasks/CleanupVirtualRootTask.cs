@@ -49,7 +49,7 @@ public class CleanupVirtualRootTask(
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         => [
             new() {
-#if NET9_0
+#if NET9_0_OR_GREATER
                 Type = TaskTriggerInfoType.StartupTrigger,
 #else
                 Type = TaskTriggerInfo.TriggerStartup,
@@ -66,7 +66,7 @@ public class CleanupVirtualRootTask(
 
         var id = _usageTracker.Add("Clean up Virtual File System Roots");
         try {
-            var mediaFolders = (await _configurationService.GetAvailableMediaFoldersForLibraries().ConfigureAwait(false))
+            var mediaFolders = (await _configurationService.GetAvailableMediaFoldersForLibraries())
                 .SelectMany(x => x.mediaList)
                 .ToList();
             var start = DateTime.Now;

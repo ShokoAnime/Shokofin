@@ -11,6 +11,8 @@ using MediaBrowser.Model.Entities;
 using Shokofin.API;
 using Shokofin.Extensions;
 
+using DescriptionProvider = Shokofin.Utils.TextUtility.DescriptionProvider;
+
 namespace Shokofin.ExternalIds;
 
 public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvider {
@@ -24,8 +26,7 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
     string IExternalUrlProvider.Name => _nextNames.TryDequeue(out var name) ? name : "Shoko";
 
     /// <inheritdoc/>
-    IEnumerable<string> IExternalUrlProvider.GetExternalUrls(BaseItem item)
-    {
+    IEnumerable<string> IExternalUrlProvider.GetExternalUrls(BaseItem item) {
         if (!lookup.IsEnabledForItem(item))
             yield break;
 
@@ -76,16 +77,14 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
 
     #region Inflate / Deflate
 
-    private static byte[] Deflate(byte[] data)
-    {
+    private static byte[] Deflate(byte[] data) {
         using var ms = new MemoryStream();
         using (var ds = new DeflateStream(ms, CompressionLevel.SmallestSize, true))
             ds.Write(data, 0, data.Length);
         return ms.ToArray();
     }
 
-    private static byte[] Inflate(byte[] compressed)
-    {
+    private static byte[] Inflate(byte[] compressed) {
         using var input = new MemoryStream(compressed);
         using var ds = new DeflateStream(input, CompressionMode.Decompress);
         using var output = new MemoryStream();
@@ -105,24 +104,49 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
             yield break;
         }
 
-        var shokoUrl = Plugin.Instance.Configuration.WebUrl;
+        var config = Plugin.Instance.Configuration;
+        var shokoUrl = config.WebUrl;
+        var counters = new Dictionary<string, int>() {
+            { ProviderNames.Shoko, 0 },
+            { ProviderNames.Anidb, 0 },
+            { ProviderNames.Tmdb, 0 },
+            { ProviderNames.Tvdb, 0 },
+        };
         foreach (var line in data.Split('\n')) {
             var (ns, extra, urlPathname) = line.Split('|');
 
             if (string.IsNullOrWhiteSpace(extra) || string.IsNullOrWhiteSpace(urlPathname))
                 continue;
 
-            var baseUrl = ns switch {
-                ProviderNames.Shoko => shokoUrl,
-                ProviderNames.Anidb => ProviderUrls.Anidb,
-                ProviderNames.Tmdb => ProviderUrls.Tmdb,
-                ProviderNames.Tvdb => ProviderUrls.Tvdb,
-                _ => null,
+            var (baseUrl, shouldShow, count) = ns switch {
+                ProviderNames.Shoko => (
+                    shokoUrl,
+                    config.ThirdPartyDisplayLinkList.Contains(DescriptionProvider.Shoko),
+                    counters[ns]++
+                ),
+                ProviderNames.Anidb => (
+                    ProviderUrls.Anidb,
+                    config.ThirdPartyDisplayLinkList.Contains(DescriptionProvider.AniDB),
+                    counters[ns]++
+                ),
+                ProviderNames.Tmdb => (
+                    ProviderUrls.Tmdb,
+                    config.ThirdPartyDisplayLinkList.Contains(DescriptionProvider.TMDB),
+                    counters[ns]++
+                    ),
+                ProviderNames.Tvdb => (
+                    ProviderUrls.Tvdb,
+                    config.ThirdPartyDisplayLinkList.Contains(DescriptionProvider.TvDB),
+                    counters[ns]++
+                ),
+                _ => (null, false, 0),
             };
-            if (baseUrl is null)
+            if (baseUrl is null || !shouldShow || (config.MaxLinksPerTypeToShow > 0 && count >= config.MaxLinksPerTypeToShow))
                 continue;
 
-            extra = string.IsNullOrEmpty(extra) ? ns : $"{ns} {extra}";
+            extra = config.AddExtraInfoToLinkName  && !string.IsNullOrEmpty(extra)
+                ? $"{ns} {extra}"
+                : ns;
             yield return (extra, baseUrl + urlPathname);
         }
     }
@@ -150,8 +174,7 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
     }
 
     public static string GetFileInfoUrls(API.Info.FileInfo fileInfo) {
-        var result = new List<(string ProviderName, string Extras, string UrlPathname)>
-        {
+        var result = new List<(string ProviderName, string Extras, string UrlPathname)> {
             (
                 ProviderNames.Shoko,
                 $"(f{fileInfo.Id}) (s{fileInfo.SeriesId})",

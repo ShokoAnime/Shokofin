@@ -203,62 +203,70 @@ export const LibraryMenu = globalThis.LibraryMenu;
 /**
  * @typedef {{
  *   IsUsable: boolean;
-*   IsActive: boolean;
-*   State: "Disconnected" | "Connected" | "Connecting" | "Reconnecting";
-* }} SignalRStatus
-*/
+ *   IsActive: boolean;
+ *   State: "Disconnected" | "Connected" | "Connecting" | "Reconnecting";
+ * }} SignalRStatus
+ */
 
 /**
-* @typedef {"Shoko" | "AniDB" | "TMDB"} GenericProvider
-*/
+ * @typedef {"Shoko" | "AniDB" | "TMDB"} GenericProvider
+ */
 
 /**
-* @typedef {"Shoko" | "AniDB" | "TvDB" | "TMDB"} DescriptionProvider
-*/
+ * @typedef {"Shoko" | "AniDB" | "TvDB" | "TMDB"} DescriptionProvider
+ */
 
 /**
-* @typedef {"Disabled" | "PlainText" | "Markdown"} DescriptionConversionMode
-*/
+ * @typedef {"Disabled" | "PlainText" | "Markdown"} DescriptionConversionMode
+ */
 
 /**
-* @typedef {"Shoko_Default" | "AniDB_Default" | "AniDB_LibraryLanguage" | "AniDB_CountryOfOrigin" | "TMDB_Default" | "TMDB_LibraryLanguage" | "TMDB_CountryOfOrigin"} TitleProvider
-*/
+ * @typedef {"Shoko_Default" | "AniDB_Default" | "AniDB_LibraryLanguage" | "AniDB_CountryOfOrigin" | "TMDB_Default" | "TMDB_LibraryLanguage" | "TMDB_CountryOfOrigin"} TitleProvider
+ */
 
 /**
-* @typedef {"ContentIndicators" | "Dynamic" | "DynamicCast" | "DynamicEnding" | "Elements" | "ElementsPornographyAndSexualAbuse" | "ElementsTropesAndMotifs" | "Fetishes" | "OriginProduction" | "OriginDevelopment" | "SettingPlace" | "SettingTimePeriod" | "SettingTimeSeason" | "SourceMaterial" | "TargetAudience" | "TechnicalAspects" | "TechnicalAspectsAdaptions" | "TechnicalAspectsAwards" | "TechnicalAspectsMultiAnimeProjects" | "Themes" | "ThemesDeath" | "ThemesTales" | "Ungrouped" | "Unsorted" | "CustomTags"} TagSource
-*/
+ * @typedef {"ContentIndicators" | "Dynamic" | "DynamicCast" | "DynamicEnding" | "Elements" | "ElementsPornographyAndSexualAbuse" | "ElementsTropesAndMotifs" | "Fetishes" | "OriginProduction" | "OriginDevelopment" | "SettingPlace" | "SettingTimePeriod" | "SettingTimeSeason" | "SourceMaterial" | "TargetAudience" | "TechnicalAspects" | "TechnicalAspectsAdaptions" | "TechnicalAspectsAwards" | "TechnicalAspectsMultiAnimeProjects" | "Themes" | "ThemesDeath" | "ThemesTales" | "Ungrouped" | "Unsorted" | "CustomTags"} TagSource
+ */
 
 /**
-* @typedef {"Parent" | "Child" | "Abstract" | "Weightless" | "Weighted" | "GlobalSpoiler" | "LocalSpoiler"} TagIncludeFilter
-*/
+ * @typedef {"Parent" | "Child" | "Abstract" | "Weightless" | "Weighted" | "GlobalSpoiler" | "LocalSpoiler"} TagIncludeFilter
+ */
 
 /**
-* @typedef {"Weightless" | "One" | "Two" | "Three" | "Four" | "Five" | "Six"} TagWeight
-*/
+ * @typedef {"Weightless" | "One" | "Two" | "Three" | "Four" | "Five" | "Six"} TagWeight
+ */
 
 /**
-* @typedef {0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10} TagDepth
-*/
+ * @typedef {0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10} TagDepth
+ */
 
 /**
-* @typedef {"None" | "Movies" | "Shared"} CollectionCreationType
-*/
+ * @typedef {"None" | "Movies" | "Shared"} CollectionCreationType
+ */
 
 /**
-* @typedef {"Default" | "ReleaseDate" | "Chronological" | "ChronologicalIgnoreIndirect"} SeasonOrderType
-*/
+ * @typedef {"None" | "GroupWithMixedContent" | "Grouped"} PlaylistCreationType
+ */
 
 /**
-* @typedef {"Default" | "Excluded" | "AfterSeason" | "InBetweenSeasonByAirDate" | "InBetweenSeasonByOtherData" | "InBetweenSeasonMixed"} SpecialOrderType
-*/
+ * @typedef {"None" | "AnySeriesTagged" | "AllSeriesTagged"} PlaylistTagFilter
+ */
 
 /**
-* @typedef {"Default" | "Cache" | "Custom"} VirtualRootLocation
-*/
+ * @typedef {"Default" | "ReleaseDate" | "Chronological" | "ChronologicalIgnoreIndirect"} SeasonOrderType
+ */
 
 /**
-* @typedef {"VFS" | "Strict" | "Lax"} LibraryOperationMode
-*/
+ * @typedef {"Default" | "Excluded" | "AfterSeason" | "InBetweenSeasonByAirDate" | "InBetweenSeasonByOtherData" | "InBetweenSeasonMixed"} SpecialOrderType
+ */
+
+/**
+ * @typedef {"Default" | "Cache" | "Custom"} VirtualRootLocation
+ */
+
+/**
+ * @typedef {"VFS" | "Strict" | "Lax"} LibraryOperationMode
+ */
 
 /**
  * @typedef {"ImportedAt" | "CreatedAt" | "Resolution" | "ReleaseGroupName" | "FileSource" | "FileVersion" | "RelativeDepth" | "NoVariation"} MergeVersionSortSelector
@@ -289,21 +297,21 @@ export const LibraryMenu = globalThis.LibraryMenu;
  */
 
 /**
-* @typedef {{
-*   UserId: string;
-*   EnableSynchronization: boolean;
-*   SyncUserDataAfterPlayback: boolean;
-*   SyncUserDataUnderPlayback: boolean;
-*   SyncUserDataUnderPlaybackLive: boolean;
-*   SyncUserDataInitialSkipEventCount: number;
-*   SyncUserDataUnderPlaybackAtEveryXTicks: number;
-*   SyncUserDataUnderPlaybackLiveThreshold: number;
-*   SyncUserDataOnImport: boolean;
-*   SyncRestrictedVideos: boolean;
-*   Username: string;
-*   Token: string;
-* }} UserConfig
-*/
+ * @typedef {{
+ *   UserId: string;
+ *   EnableSynchronization: boolean;
+ *   SyncUserDataAfterPlayback: boolean;
+ *   SyncUserDataUnderPlayback: boolean;
+ *   SyncUserDataUnderPlaybackLive: boolean;
+ *   SyncUserDataInitialSkipEventCount: number;
+ *   SyncUserDataUnderPlaybackAtEveryXTicks: number;
+ *   SyncUserDataUnderPlaybackLiveThreshold: number;
+ *   SyncUserDataOnImport: boolean;
+ *   SyncRestrictedVideos: boolean;
+ *   Username: string;
+ *   Token: string;
+ * }} UserConfig
+ */
 
 /**
  * @typedef {{
@@ -393,6 +401,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   SeasonMergingBehavior: SeasonMergingBehavior;
  *   EpisodeConversion: SeriesEpisodeConversion;
  *   OrderByAirdate: boolean;
+ *   PlaylistInclude: boolean;
  * }} SeriesConfiguration
  */
 
@@ -486,6 +495,17 @@ export const LibraryMenu = globalThis.LibraryMenu;
 
 /**
  * @typedef {{
+ *   AutoReconstruct: boolean;
+ *   Grouping: PlaylistCreationType;
+ *   MinSizeOfTwo: boolean;
+ *   Ordering: SeasonOrderType;
+ *   SpecialsPlacement: SpecialOrderType;
+ *   TagFilter: PlaylistTagFilter;
+ * }} PlaylistConfiguration
+ */
+
+/**
+ * @typedef {{
  *   CanCreateSymbolicLinks: boolean;
  *   Url: string;
  *   PublicUrl: string;
@@ -493,9 +513,13 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   ServerVersion: ServerInformation | null;
  *   Username: string;
  *   ApiKey: string;
+ *   AddExtraInfoToLinkName: boolean;
+ *   MaxLinksPerTypeToShow: number;
+ *   ThirdPartyDisplayLinkList: DescriptionProvider[];
  *   ThirdPartyIdProviderList: Except<DescriptionProvider, "Shoko">[];
  *   Title: AllTitlesConfiguration;
  *   MarkSpecialsWhenGrouped: boolean;
+ *   AlwaysUseEpisodeTitleForTmdbMovies: boolean;
  *   DescriptionConversionMode: DescriptionConversionMode;
  *   Description: AllDescriptionsConfiguration;
  *   TagSources: TagSource[];
@@ -522,6 +546,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   UseGroupsForShows: boolean;
  *   SeparateMovies: boolean;
  *   FilterMovieLibraries: boolean;
+ *   TmdbStructureUseShokoMetadata: boolean;
  *   MovieSpecialsAsExtraFeaturettes: boolean;
  *   AddTrailers: boolean;
  *   AddCreditsAsThemeVideos: boolean;
@@ -539,9 +564,11 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   VFS_AddReleaseGroup: boolean;
  *   VFS_AddResolution: boolean;
  *   VFS_ResolveLinks: boolean;
+ *   VFS_UseSourceFileAsVersionIdentifier: boolean;
  *   VFS_MaxTotalExceptionsBeforeAbort: number;
  *   VFS_MaxSeriesExceptionsBeforeAbort: number;
  *   VFS_UseSemaphore: boolean;
+ *   VFS_CollectAndSort: boolean;
  *   VFS_Location: VirtualRootLocation;
  *   VFS_CustomLocation: string;
  *   VFS_IterativeGenerationEnabled: boolean;
@@ -557,6 +584,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   SeasonMerging_DefaultBehavior: SeasonMergingBehavior;
  *   SeasonMerging_SeriesTypes: SeriesType[];
  *   SeasonMerging_MergeWindowInDays: number;
+ *   Playlist: PlaylistConfiguration;
  *   Misc_ShowInMenu: boolean;
  *   AdvancedMode: boolean;
  *   Debug: DebugConfiguration;
@@ -573,8 +601,8 @@ export const LibraryMenu = globalThis.LibraryMenu;
  */
 
 /**
-* Shoko API client.
-*/
+ * Shoko API client.
+ */
 export const ShokoApiClient = {
     /**
      * The plugin ID.

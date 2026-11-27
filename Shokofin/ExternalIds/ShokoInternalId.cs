@@ -26,7 +26,7 @@ public class ShokoInternalId : IExternalId {
 
     bool IExternalId.Supports(IHasProviderIds item) => item is BoxSet or Series or Season or Video;
 
-#if NET9_0
+#if NET9_0_OR_GREATER
 #else
     string? IExternalId.UrlFormatString => null;
 #endif 

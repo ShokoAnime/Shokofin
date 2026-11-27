@@ -40,7 +40,7 @@ public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager
     public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
         => [
             new() {
-#if NET9_0
+#if NET9_0_OR_GREATER
                 Type = TaskTriggerInfoType.StartupTrigger,
 #else
                 Type = TaskTriggerInfo.TriggerStartup,
@@ -52,7 +52,7 @@ public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) {
         try {
             var updated = false;
-            var version = await _apiClient.GetVersion().ConfigureAwait(false);
+            var version = await _apiClient.GetVersion();
             if (version != null && (
                 Plugin.Instance.Configuration.ServerVersion == null ||
                 !string.Equals(version.ToString(), Plugin.Instance.Configuration.ServerVersion.ToString())
@@ -66,7 +66,7 @@ public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager
                 return;
 
 
-            var prefix = await _apiClient.GetWebPrefix().ConfigureAwait(false);
+            var prefix = await _apiClient.GetWebPrefix();
             if (prefix != null && (
                 Plugin.Instance.Configuration.WebPrefix == null ||
                 !string.Equals(prefix, Plugin.Instance.Configuration.WebPrefix)
@@ -76,10 +76,17 @@ public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager
                 updated = true;
             }
 
-            var hasPluginsExposed = await _apiClient.CheckIfPluginsExposed(cancellationToken).ConfigureAwait(false);
+            var hasPluginsExposed = await _apiClient.CheckIfPluginsExposed(cancellationToken);
             if (Plugin.Instance.Configuration.HasPluginsExposed != hasPluginsExposed) {
                 _logger.LogDebug("Plugin based API; {hasPluginsExposed}", hasPluginsExposed);
                 Plugin.Instance.Configuration.HasPluginsExposed = hasPluginsExposed;
+                updated = true;
+            }
+
+            var hasSuggestionsExposed = await _apiClient.CheckIfSuggestionsExposed(cancellationToken);
+            if (Plugin.Instance.Configuration.HasSuggestionsExposed != hasSuggestionsExposed) {
+                _logger.LogDebug("Suggestions API; {hasSuggestionsExposed}", hasSuggestionsExposed);
+                Plugin.Instance.Configuration.HasSuggestionsExposed = hasSuggestionsExposed;
                 updated = true;
             }
 
@@ -94,7 +101,7 @@ public class VersionCheckTask(ILogger<VersionCheckTask> _logger, ILibraryManager
                         .ToList()
                 )
                 .ContinueWith(task => task.Result.WhereNotNull().ToDictionary(i => i.Id, i => i.Name))
-                .ConfigureAwait(false);
+                ;
             foreach (var mediaFolderConfig in mediaFolders) {
                 if (!managedFolderNameMap.TryGetValue(mediaFolderConfig.ManagedFolderId, out var managedFolderName))
                     managedFolderName = null;

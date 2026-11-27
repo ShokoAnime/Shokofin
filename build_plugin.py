@@ -4,6 +4,7 @@ import json
 import yaml
 import argparse
 import re
+import subprocess
 
 def extract_target_framework(csproj_path):
     with open(csproj_path, "r") as file:
@@ -26,7 +27,7 @@ def extract_packages_to_output(csproj_path, framework):
         rf'TargetFramework="{re.escape(framework)}"\s*/>'
     )
     matches = [match.group(1) + ".dll" for match in pattern.finditer(content)]
-    return list(set(matches))
+    return list(dict.fromkeys(matches))
 
 def extract_target_abi(csproj_path, framework):
     with open(csproj_path, "r") as file:
@@ -42,21 +43,22 @@ def extract_target_abi(csproj_path, framework):
         raise Exception(
             f"Jellyfin.Controller not found for framework '{framework}' in {os.path.basename(csproj_path)}"
         )
-    return match.group(1)
+    return match.group(1).split("-")[0]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--repo", required=True)
 parser.add_argument("--version", required=True)
 parser.add_argument("--tag", required=True)
-parser.add_argument("--prerelease", default=False)
+parser.add_argument("--prerelease", action="store_true")
 opts = parser.parse_args()
 
 project_file = "./Shokofin/Shokofin.csproj"
 version = opts.version
 tag = opts.tag
-prerelease = bool(opts.prerelease)
-short_version = ".".join(version.split(".")[:3])
-build_number = int(version.split(".")[-1])
+prerelease = opts.prerelease
+version_parts = version.split(".")
+short_version = ".".join(version_parts[:3])
+build_number = int(version_parts[3]) if len(version_parts) > 3 else 0
 
 artifact_dir = os.path.join(os.getcwd(), "artifacts")
 if not os.path.exists(artifact_dir):
@@ -83,26 +85,48 @@ changelog = data["changelog"]
 try:
     for framework in extract_target_framework(project_file):
         target_abi = extract_target_abi(project_file, framework)
-        target_abi_high = ".".join(target_abi.split(".")[:-1])
-        target_abi_low = target_abi.split(".")[1]
+        target_abi_parts = target_abi.split(".")
+        if target_abi_parts[0] == "10":
+            target_abi_high = ".".join(target_abi_parts[:2]) + ".z"
+            target_abi_low = target_abi_parts[1]
+        else:
+            target_abi_high = target_abi_parts[0] + ".y.z"
+            target_abi_low = target_abi_parts[0]
         artifacts = extract_packages_to_output(project_file, framework)
 
-        if build_number != "0":
+        if build_number != 0:
             generated_version = f"{short_version}.{build_number}{target_abi_low}"
         else:
             generated_version = f"{short_version}.{target_abi_low}"
-        generated_changelog = f"Only compatible with **{target_abi_high}.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/{tag}) for more info."
+        generated_changelog = f"Only compatible with **{target_abi_high}**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/{tag}) for more info."
         if changelog:
             generated_changelog += f"\n\n---\n\n{changelog}"
 
         data = yaml.safe_load(build_file_contents)
         data["changelog"] = generated_changelog
-        data["artifacts"] = list(set(data["artifacts"] + artifacts))
+        data["artifacts"] = list(dict.fromkeys(data["artifacts"] + artifacts))
         data["targetAbi"] = target_abi + ".0"
         with open(build_file, "w") as file:
             yaml.dump(data, file, sort_keys=False)
 
-        zipfile=os.popen("jprm --verbosity=debug plugin build \".\" --output=\"%s\" --version=\"%s\" --dotnet-framework=\"%s\"" % (artifact_dir, generated_version, framework)).read().strip()
+        result = subprocess.run(
+            [
+                "jprm",
+                "--verbosity=debug",
+                "plugin",
+                "build",
+                ".",
+                f"--output={artifact_dir}",
+                f"--version={generated_version}",
+                f"--dotnet-framework={framework}",
+            ],
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+        zipfile = result.stdout.strip()
+        if not zipfile:
+            raise RuntimeError(f"JPRM did not return a package path for framework '{framework}'")
 
         # read the checksum file jprm wrote
         checksum = open(zipfile + ".md5sum", "r").read().strip()[:32]
@@ -113,7 +137,17 @@ try:
         os.remove(zipfile + ".meta.json")
 
         jellyfin_plugin_release_url=f"{jellyfin_repo_url}/{tag}/shoko_{version}_for_{target_abi_high}.zip"
-        os.system("jprm repo add --plugin-url=%s %s %s" % (jellyfin_plugin_release_url, jellyfin_repo_file, new_zipfile))
+        subprocess.run(
+            [
+                "jprm",
+                "repo",
+                "add",
+                f"--plugin-url={jellyfin_plugin_release_url}",
+                jellyfin_repo_file,
+                new_zipfile,
+            ],
+            check=True,
+        )
 finally:
     # Restore the original build.yaml after we're done
     with open(build_file, "w") as file:

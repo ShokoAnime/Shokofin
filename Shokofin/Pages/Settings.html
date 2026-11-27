@@ -105,6 +105,13 @@ form:not(.advanced-mode) .advanced-only {
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Adds the type and number to the title of non-standard episodes such as specials. (e.g. S1)</div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AlwaysUseEpisodeTitleForTmdbMovies" />
+                                <span>Always Use Episode Title for TheMovieDb Movies</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">When enabled, entries with a linked TheMovieDb movie use the episode title as-is instead of composing the title as &quot;Series: Episode&quot;. The title settings may need to be tweaked accordingly for this to function properly; you can configure the Shoko group &quot;Movie / Film&quot; title settings when advanced mode is enabled.</div>
+                        </div>
                         <hr class="advanced-only" />
                         <div class="selectContainer selectContainer-withDescription advanced-only">
                             <label class="selectLabel" for="Title_ConfigureFor">Configure settings for</label>
@@ -1565,6 +1572,59 @@ form:not(.advanced-mode) .advanced-only {
                             </div>
                             <div class="fieldDescription">Enable which third party IDs to provide for other plugins to consume with supported media items.</div>
                         </div>
+                        <div id="Metadata_ThirdPartyDisplayLinkList" is="checkbox-list" style="margin-bottom: 2em;">
+                            <h3 class="checkboxListLabel">Enabled Display Providers for Third Party Links</h3>
+                            <div class="checkboxList paperList checkboxList-paperList">
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="Shoko">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">Shoko</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="AniDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">AniDB</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TMDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TheMovieDb</h3>
+                                    </div>
+                                </div>
+                                <div class="listItem">
+                                    <label class="listItemCheckboxContainer">
+                                        <input is="emby-checkbox" type="checkbox" data-option="TvDB">
+                                        <span></span>
+                                    </label>
+                                    <div class="listItemBody">
+                                        <h3 class="listItemBodyText">TvDB</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fieldDescription">Which third party display providers to show links for in the UI.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="AddExtraInfoToLinkName" />
+                                <span>Add Extra Info to Link Name</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Add extra info such as the series id to the link name for the external links shown in the UI.</div>
+                        </div>
+                        <div class="inputContainer inputContainer-withDescription">
+                            <input is="emby-input" type="number" id="MaxLinksPerTypeToShow" label="Max Links Per Type to Show" placeholder="0" type="number" pattern="[0-9]*" min="0" step="1" />
+                            <div class="fieldDescription">Maximum number of links to show per provider type. Set to 0 to show all links.</div>
+                        </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>${Save}</span>
                         </button>
@@ -1586,11 +1646,11 @@ form:not(.advanced-mode) .advanced-only {
                                 </div>
                                 <details style="margin-top: 0.5em">
                                     <summary style="margin-bottom: 0.25em">Pre-requirements for using <strong>Shoko Group structure</strong>.</summary>
-                                    To make the most out of this feature you first need to configure your groups in Shoko. You can either enable auto-grouping in the settings, manually craft your own group structure, or a mix of the two where you have auto-grouping enabled but override the placement if you feel it should belong elsewhere instead. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/group-management">Shoko docs</a> on how to manage your groups.
+                                    To make the most out of this feature you first need to configure your groups in Shoko. You can either enable auto-grouping in the settings, manually craft your own group structure, or a mix of the two where you have auto-grouping enabled but override the placement if you feel it should belong elsewhere instead. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/collection#group-page" target="_blank">Shoko docs</a> on how to manage your groups.
                                 </details>
                                 <details style="margin-top: 0.5em">
                                     <summary style="margin-bottom: 0.25em">Can I use this with collections?</summary>
-                                    Yes! You can use this with collections enabled, but that entails most of the time that you've configured a multi-layered structure for your groups because the deepest layer will be used for the shows while all the layers above will be used for collections. The exception to this is if you have a group which contains both movies and shows and you've enabled the option to separate movies from shows. In which case the deepest layer of groups will also be used to generate a collection for your movie(s) and show within the layer. Also note that enabling auto-grouping only gives you a single layer, and you need to use Shoko Desktop (or in the future, the Web UI) to create your nested structure. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/group-management">Shoko docs</a> on how to manage your groups.
+                                    Yes! You can use this with collections enabled, but that entails most of the time that you've configured a multi-layered structure for your groups because the deepest layer will be used for the shows while all the layers above will be used for collections. The exception to this is if you have a group which contains both movies and shows and you've enabled the option to separate movies from shows. In which case the deepest layer of groups will also be used to generate a collection for your movie(s) and show within the layer. Also note that enabling auto-grouping only gives you a single layer, and you need to use Shoko Desktop (or in the future, the Web UI) to create your nested structure. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/collection#group-page" target="_blank">Shoko docs</a> on how to manage your groups.
                                 </details>
                             </div>
                         </div>
@@ -1610,8 +1670,8 @@ form:not(.advanced-mode) .advanced-only {
                                 <option value="Excluded" selected>Exclude specials from the seasons (Default)</option>
                                 <option value="AfterSeason">Always place specials after the normal episodes</option>
                                 <option value="InBetweenSeasonByAirDate">Use release dates to place specials</option>
-                                <option value="InBetweenSeasonByOtherData">Loosely use the TheMovieDb data available in Shoko to place specials</option>
-                                <option value="InBetweenSeasonMixed">Either loosely use the TheMovieDb data available in Shoko or fallback to using release dates to place specials</option>
+                                <option value="InBetweenSeasonByOtherData">Use the specials placement in Shoko to place specials</option>
+                                <option value="InBetweenSeasonMixed">Use the specials placement in Shoko, or release dates for the rest, to place specials</option>
                             </select>
                             <div class="fieldDescription selectFieldDescription">Determines how specials are placed within seasons. <strong>Warning:</strong> Modifying this setting requires a recreation (read as; delete existing then create a new) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
                         </div>
@@ -1635,6 +1695,13 @@ form:not(.advanced-mode) .advanced-only {
                                 <span>Disable Movie Library Filtering</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">By default we filter out anything that is not a movie in movie libraries. Enable this if you want everything to show up as movies in your movie libraries instead.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="TmdbStructureUseShokoMetadata" />
+                                <span>Use Shoko Series Titles/Images with TheMovieDb Structure</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Using 'TheMovieDb Shows &amp; Movie Structure' normally forces the plugin to use TheMovieDb as the source for all series metadata. Enable this setting to use Shoko as the source of series titles and images. This option only applies to the top level series displayed in your library. Season and episode titles/images are still sourced from TheMovieDb. This setting has no effect on any series not using TheMovieDb structure.</div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
                             <label class="emby-checkbox-label">
@@ -1697,6 +1764,67 @@ form:not(.advanced-mode) .advanced-only {
                                 <span>Require Two Entries for a Collection</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">If collections are enabled, only create a collection when the collection will contain at least two items.</div>
+                        </div>
+                        <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
+                            <span>${Save}</span>
+                        </button>
+                    </fieldset>
+                    <fieldset id="Library_Playlist_Section" class="verticalSection verticalSection-extrabottompadding" hidden>
+                        <legend>
+                            <h3>Playlist Settings</h3>
+                        </legend>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="PlaylistAutoReconstruct" />
+                                <span>Automatically Reconstruct Playlists</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Automatically reconstruct playlists after a library scan.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="PlaylistGrouping">Playlists</label>
+                            <select is="emby-select" id="PlaylistGrouping" name="PlaylistGrouping" class="emby-select-withcolor emby-select">
+                                <option value="None">Do not create playlists</option>
+                                <option value="GroupWithMixedContent" selected>Create playlists for groups with mixed content (series & movies)</option>
+                                <option value="Grouped">Create playlists for all groups</option>
+                            </select>
+                            <div class="fieldDescription">Determines what Shoko groups to create native Jellyfin playlists for.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="PlaylistMinSizeOfTwo" />
+                                <span>Require Two Entries for a Playlist</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">If playlists are enabled, only create a playlist when it will contain at least two items.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="PlaylistTagFilter">Per-Series Tag Filter</label>
+                            <select is="emby-select" id="PlaylistTagFilter" name="PlaylistTagFilter" class="emby-select-withcolor emby-select">
+                                <option value="None" selected>Ignore per-series tags (Default)</option>
+                                <option value="AnySeriesTagged">Require at least one tagged series per group</option>
+                                <option value="AllSeriesTagged">Require all series in a group to be tagged</option>
+                            </select>
+                            <div class="fieldDescription">When set, only groups meeting the tag requirement will get a playlist. Tag series in the Series Settings tab.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="PlaylistOrdering">Playlist Ordering</label>
+                            <select is="emby-select" id="PlaylistOrdering" name="PlaylistOrdering" class="emby-select-withcolor emby-select">
+                                <option value="Default">Let Shoko decide</option>
+                                <option value="ReleaseDate" selected>Order by release date (Default)</option>
+                                <option value="Chronological" class="advanced-only">Order in chronological order (use indirect relations) (EXPERIMENTAL)</option>
+                                <option value="ChronologicalIgnoreIndirect" class="advanced-only">Order in chronological order (ignore indirect relations) (EXPERIMENTAL)</option>
+                            </select>
+                            <div class="fieldDescription">Determines how to order items within playlists.</div>
+                        </div>
+                        <div class="selectContainer selectContainer-withDescription">
+                            <label class="selectLabel" for="PlaylistSpecialsPlacement">Playlist Specials Placement</label>
+                            <select is="emby-select" id="PlaylistSpecialsPlacement" name="PlaylistSpecialsPlacement" class="emby-select-withcolor emby-select">
+                                <option value="Excluded" selected>Exclude specials from the playlist</option>
+                                <option value="AfterSeason">Always place specials after the normal episodes</option>
+                                <option value="InBetweenSeasonByAirDate">Use release dates to place specials</option>
+                                <option value="InBetweenSeasonByOtherData">Use the specials placement in Shoko to place specials</option>
+                                <option value="InBetweenSeasonMixed">Use the specials placement in Shoko, or release dates for the rest, to place specials</option>
+                            </select>
+                            <div class="fieldDescription">Determines how specials are placed within playlists.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>${Save}</span>
@@ -1929,7 +2057,7 @@ form:not(.advanced-mode) .advanced-only {
                                     </button>
                                 </div>
                             </div>
-                            <div class="fieldDescription">The selectors to use to sort the multiple versions of the same video in priority order when all videos are the same width. 3D videos will be prioritized over 2D videos regardless of this setting, as it is hard coded in Jellyfin to prefer 3D over 2D. And Jellyfin also sorts by video width before using the order we specify.</div>
+                            <div class="fieldDescription">The selectors to use to sort the multiple versions of the same video in priority order when all videos are the same width. Jellyfin has some hard coded sorting of its own that takes priority over this setting: the queried item's own source is always first, plain video files are prioritized over other video types, 2D videos are prioritized over 3D videos, and wider videos are prioritized over narrower ones.</div>
                         </div>
                         <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                             <span>${Save}</span>
@@ -2081,6 +2209,13 @@ form:not(.advanced-mode) .advanced-only {
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Add the full or short release group name to all automatically linked files in the VFS. "No Group" will be used for all manually linked files. <strong>Warning</strong>: The release group in the file name may change if the release group info is incomplete, unavailable, or otherwise updated in Shoko at a later date, and thus may cause episode/movie entries to be "removed" and "added" as new entries when that happens. <strong>Use at your own risk.</strong></div>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription advanced-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_UseSourceFileAsVersionIdentifier" />
+                                <span>Use Source File As Version Identifier</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Use the source file name as the version identifier.</div>
+                        </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input is="emby-checkbox" type="checkbox" id="VFS_AddResolution" />
@@ -2124,6 +2259,13 @@ form:not(.advanced-mode) .advanced-only {
                                 <span>Use Semaphore to Limit Concurrency</span>
                             </label>
                             <div class="fieldDescription checkboxFieldDescription">Use a semaphore instead of an action block to limit concurrency during VFS generation.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription debug-only">
+                            <label class="emby-checkbox-label">
+                                <input is="emby-checkbox" type="checkbox" id="VFS_CollectAndSort" />
+                                <span>Collect And Sort Files</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">Collect all files and sort them before processing them during VFS generation. This should make the overall VFS generation faster, but will introduce a longer startup time before it starts processing the VFS entries.</div>
                         </div>
                         <div class="selectContainer selectContainer-withDescription advanced-only">
                             <label class="selectLabel" for="VFS_Location">VFS Location</label>
@@ -2301,7 +2443,7 @@ form:not(.advanced-mode) .advanced-only {
                                     <input is="emby-checkbox" type="checkbox" id="SyncUserDataOnImport" />
                                     <span>Sync Watch-State on Import or Refresh</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">When media gets scanned into your library or when a library's metadata gets refreshed, sync watch-state between Jellyfin and Shoko.</div>
+                                <div class="fieldDescription checkboxFieldDescription">When videos get scanned into your library or when a library's metadata gets refreshed, import their watch-state from Shoko into Jellyfin.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
@@ -2322,14 +2464,14 @@ form:not(.advanced-mode) .advanced-only {
                                     <input is="emby-checkbox" type="checkbox" id="SyncUserDataUnderPlaybackLive" />
                                     <span>Sync Watch-State Live During Playback</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">Sync watch-state to Shoko at a regular interval during media playback.</div>
+                                <div class="fieldDescription checkboxFieldDescription">Sync watch-state to Shoko at a regular interval during media playback. Requires "Sync Watch-State Events During Playback" to be enabled.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
                                     <input is="emby-checkbox" type="checkbox" id="SyncUserDataInitialSkipEventCount" />
                                     <span>Lazy Sync Watch-State Events With Shoko</span>
                                 </label>
-                                <div class="fieldDescription checkboxFieldDescription">Wait about 10 seconds before syncing any watch-state events to Shoko. This will prevent accidental clicks and/or previews from marking a file as watched in Shoko, and will also keep them more in sync with Jellyfin since it's closer to how Jellyfin handles the watch-state internally.</div>
+                                <div class="fieldDescription checkboxFieldDescription">Wait until playback has been running for about a minute, or until you skip ahead, before syncing any watch-state events to Shoko. Stopping playback before that point sends nothing. This will prevent accidental clicks and/or previews from marking a file as watched in Shoko, and will also keep them more in sync with Jellyfin since it's closer to how Jellyfin handles the watch-state internally.</div>
                             </div>
                             <div class="checkboxContainer checkboxContainer-withDescription">
                                 <label class="emby-checkbox-label">
@@ -2404,11 +2546,11 @@ form:not(.advanced-mode) .advanced-only {
                                     </div>
                                     <details style="margin-top: 0.5em">
                                         <summary style="margin-bottom: 0.25em">Pre-requirements for using <strong>Shoko Group Structure</strong>.</summary>
-                                        To make the most out of this feature you first need to configure your groups in Shoko. You can either enable auto-grouping in the settings, manually craft your own group structure, or a mix of the two where you have auto-grouping enabled but override the placement if you feel it should belong elsewhere instead. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/group-management">Shoko docs</a> on how to manage your groups.
+                                        To make the most out of this feature you first need to configure your groups in Shoko. You can either enable auto-grouping in the settings, manually craft your own group structure, or a mix of the two where you have auto-grouping enabled but override the placement if you feel it should belong elsewhere instead. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/collection#group-page" target="_blank">Shoko docs</a> on how to manage your groups.
                                     </details>
                                     <details style="margin-top: 0.5em">
                                         <summary style="margin-bottom: 0.25em">Can I use this with collections?</summary>
-                                        Yes! You can use this with collections enabled, but that entails most of the time that you've configured a multi-layered structure for your groups because the deepest layer will be used for the shows while all the layers above will be used for collections. The exception to this is if you have a group which contains both movies and shows and you've enabled the option to separate movies from shows. In which case the deepest layer of groups will also be used to generate a collection for your movie(s) and show within the layer. Also note that enabling auto-grouping only gives you a single layer, and you need to use Shoko Desktop (or in the future, the Web UI) to create your nested structure. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/group-management">Shoko docs</a> on how to manage your groups.
+                                        Yes! You can use this with collections enabled, but that entails most of the time that you've configured a multi-layered structure for your groups because the deepest layer will be used for the shows while all the layers above will be used for collections. The exception to this is if you have a group which contains both movies and shows and you've enabled the option to separate movies from shows. In which case the deepest layer of groups will also be used to generate a collection for your movie(s) and show within the layer. Also note that enabling auto-grouping only gives you a single layer, and you need to use Shoko Desktop (or in the future, the Web UI) to create your nested structure. For more information look up the <a href="https://docs.shokoanime.com/shoko-server/collection#group-page" target="_blank">Shoko docs</a> on how to manage your groups.
                                     </details>
                                 </div>
                             </div>
@@ -2430,8 +2572,8 @@ form:not(.advanced-mode) .advanced-only {
                                     <option value="Excluded">Exclude specials from the seasons</option>
                                     <option value="AfterSeason">Always place specials after the normal episodes</option>
                                     <option value="InBetweenSeasonByAirDate">Use release dates to place specials</option>
-                                    <option value="InBetweenSeasonByOtherData">Loosely use the TheMovieDb data available in Shoko to place specials</option>
-                                    <option value="InBetweenSeasonMixed">Either loosely use the TheMovieDb data available in Shoko or fallback to using release dates to place specials</option>
+                                    <option value="InBetweenSeasonByOtherData">Use the specials placement in Shoko to place specials</option>
+                                    <option value="InBetweenSeasonMixed">Use the specials placement in Shoko, or release dates for the rest, to place specials</option>
                                 </select>
                                 <div class="fieldDescription selectFieldDescription">Determines how specials are placed within seasons. <strong>Warning:</strong> Modifying this setting requires a recreation (read as; delete existing then create a new) of any libraries using this plugin — otherwise you <strong>will</strong> have mixed metadata.</div>
                             </div>
@@ -2571,6 +2713,13 @@ form:not(.advanced-mode) .advanced-only {
                                 <div class="fieldDescription checkboxFieldDescription">
                                     Order episodes by their airdate instead of by their original episode number. <strong>Warning</strong>: Only applied to <strong>AniDB Anime Structure</strong> and <strong>Shoko Group Structure</strong>.
                                 </div>
+                            </div>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input is="emby-checkbox" type="checkbox" id="SeriesPlaylistInclude" />
+                                    <span>Include in Playlists</span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription">Always include this series in automatic playlist generation.</div>
                             </div>
                             <button is="emby-button" type="submit" name="settings" class="raised button-submit block emby-button">
                                 <span>${Save}</span>

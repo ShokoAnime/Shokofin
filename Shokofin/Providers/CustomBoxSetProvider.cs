@@ -51,27 +51,27 @@ public class CustomBoxSetProvider(ILogger<CustomBoxSetProvider> _logger, ShokoAp
 
     public async Task<ItemUpdateType> FetchAsync(BoxSet collection, MetadataRefreshOptions options, CancellationToken cancellationToken) {
         // Abort if the collection root is not made yet (which should never happen).
-        var collectionRoot = await _collectionManager.GetCollectionsFolder(false).ConfigureAwait(false);
+        var collectionRoot = await _collectionManager.GetCollectionsFolder(false);
         if (collectionRoot is null)
             return ItemUpdateType.None;
 
         // Try to read the shoko group id.
         if (collection.TryGetProviderId(ProviderNames.ShokoCollectionForGroup, out var collectionId) || collection.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForGroup, out collectionId))
             using (Plugin.Instance.Tracker.Enter($"Providing custom info for Collection \"{collection.Name}\". (Path=\"{collection.Path}\",Collection=\"{collectionId}\")"))
-                if (await EnsureGroupCollectionIsCorrect(collectionRoot, collection, collectionId, cancellationToken).ConfigureAwait(false))
+                if (await EnsureGroupCollectionIsCorrect(collectionRoot, collection, collectionId, cancellationToken))
                     return ItemUpdateType.MetadataEdit;
 
         // Try to read the shoko series id.
         if (collection.TryGetProviderId(ProviderNames.ShokoCollectionForSeries, out var seasonId) || collection.Path.TryGetAttributeValue(ProviderNames.ShokoCollectionForSeries, out seasonId))
             using (Plugin.Instance.Tracker.Enter($"Providing custom info for Collection \"{collection.Name}\". (Path=\"{collection.Path}\",Season=\"{seasonId}\")"))
-                if (await EnsureSeriesCollectionIsCorrect(collection, seasonId, cancellationToken).ConfigureAwait(false))
+                if (await EnsureSeriesCollectionIsCorrect(collection, seasonId, cancellationToken))
                     return ItemUpdateType.MetadataEdit;
 
         return ItemUpdateType.None;
     }
 
     private async Task<bool> EnsureSeriesCollectionIsCorrect(BoxSet collection, string seasonId, CancellationToken cancellationToken) {
-        var seasonInfo = await _apiManager.GetSeasonInfo(seasonId).ConfigureAwait(false);
+        var seasonInfo = await _apiManager.GetSeasonInfo(seasonId);
         if (seasonInfo is null)
             return false;
 
@@ -88,7 +88,7 @@ public class CustomBoxSetProvider(ILogger<CustomBoxSetProvider> _logger, ShokoAp
         }
 
         if (updated) {
-            await collection.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken).ConfigureAwait(false);
+            await collection.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken);
             _logger.LogDebug("Fixed collection {CollectionName} (Season={SeasonId})", collection.Name, seasonId);
         }
 
@@ -96,12 +96,12 @@ public class CustomBoxSetProvider(ILogger<CustomBoxSetProvider> _logger, ShokoAp
     }
 
     private async Task<bool> EnsureGroupCollectionIsCorrect(Folder collectionRoot, BoxSet collection, string collectionId, CancellationToken cancellationToken) {
-        var collectionInfo = await _apiManager.GetCollectionInfo(collectionId).ConfigureAwait(false);
+        var collectionInfo = await _apiManager.GetCollectionInfo(collectionId);
         if (collectionInfo is null)
             return false;
 
         var updated = EnsureNoTmdbIdIsSet(collection);
-        var parent = collectionInfo.IsTopLevel ? collectionRoot : await GetCollectionByCollectionId(collectionRoot, collectionInfo.ParentId).ConfigureAwait(false);
+        var parent = collectionInfo.IsTopLevel ? collectionRoot : await GetCollectionByCollectionId(collectionRoot, collectionInfo.ParentId);
         var (displayTitle, alternateTitle) = TextUtility.GetCollectionTitles(collectionInfo, collection.GetPreferredMetadataLanguage());
         displayTitle ??= collectionInfo.Title;
         if (collection.ParentId != parent.Id) {
@@ -117,7 +117,7 @@ public class CustomBoxSetProvider(ILogger<CustomBoxSetProvider> _logger, ShokoAp
             updated = true;
         }
         if (updated) {
-            await collection.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken).ConfigureAwait(false);
+            await collection.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken);
             _logger.LogDebug("Fixed collection {CollectionName} (Collection={CollectionId})", collection.Name, collectionId);
         }
 
@@ -128,7 +128,7 @@ public class CustomBoxSetProvider(ILogger<CustomBoxSetProvider> _logger, ShokoAp
         if (string.IsNullOrEmpty(collectionId))
             throw new ArgumentNullException(nameof(collectionId));
 
-        var collectionInfo = await _apiManager.GetCollectionInfo(collectionId).ConfigureAwait(false) ??
+        var collectionInfo = await _apiManager.GetCollectionInfo(collectionId) ??
             throw new Exception($"Unable to find collection info for the parent collection with id \"{collectionId}\"");
 
         var collection = GetCollectionByPath(collectionRoot, collectionInfo);

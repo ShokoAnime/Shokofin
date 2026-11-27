@@ -23,7 +23,7 @@ public class PropertyWatcher<T> {
         Value = _valueGetter();
         Task.Run(async () => {
             while (_continueMonitoring) {
-                await Task.Delay(delayInMilliseconds).ConfigureAwait(false);
+                await Task.Delay(delayInMilliseconds);
                 CheckForChange();
             }
         });

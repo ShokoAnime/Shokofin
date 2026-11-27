@@ -52,7 +52,7 @@ public class SeasonProvider(IHttpClientFactory _httpClientFactory, ILogger<Seaso
         var seasonNumber = info.IndexNumber.Value;
         var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Season \"{info.Name}\". (Path=\"{info.Path}\",Series=\"{seasonId}\",Season={seasonNumber})");
         try {
-            var showInfo = await _apiManager.GetShowInfoBySeasonId(seasonId).ConfigureAwait(false);
+            var showInfo = await _apiManager.GetShowInfoBySeasonId(seasonId);
             if (showInfo == null) {
                 _logger.LogWarning("Unable to find show info for Season {SeasonNumber}. (MainSeason={MainSeasonId})", seasonNumber, seasonId);
                 return result;
@@ -157,7 +157,7 @@ public class SeasonProvider(IHttpClientFactory _httpClientFactory, ILogger<Seaso
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeasonInfo searchInfo, CancellationToken cancellationToken)
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
-    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
+        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }
 

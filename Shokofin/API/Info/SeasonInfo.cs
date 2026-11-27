@@ -141,6 +141,51 @@ public class SeasonInfo : IExtendedItemInfo {
     public IReadOnlyDictionary<string, EpisodeInfo> SpecialsAnchors { get; init; }
 
     /// <summary>
+    /// A list of special episodes that come before normal episodes, based on
+    /// the specials placement in Shoko.
+    /// </summary>
+    public IReadOnlySet<string> PlacedSpecialsBeforeEpisodes { get; init; } = new HashSet<string>();
+
+    /// <summary>
+    /// A dictionary holding mappings for the previous normal episode for every
+    /// special episode placed by the specials placement in Shoko.
+    /// </summary>
+    public IReadOnlyDictionary<string, EpisodeInfo> PlacedSpecialsAnchors { get; init; } = new Dictionary<string, EpisodeInfo>();
+
+    /// <summary>
+    /// Get the specials that come before the normal episodes, and the previous
+    /// normal episode for the other specials, for the given specials placement.
+    /// Specials that are in neither are placed after the season.
+    /// </summary>
+    public (IReadOnlySet<string> SpecialsBeforeEpisodes, IReadOnlyDictionary<string, EpisodeInfo> SpecialsAnchors) GetSpecialsPlacement(Ordering.SpecialOrderType specialsPlacement) {
+        switch (specialsPlacement) {
+            default:
+                return (SpecialsBeforeEpisodes, SpecialsAnchors);
+
+            case Ordering.SpecialOrderType.InBetweenSeasonByOtherData:
+                return (PlacedSpecialsBeforeEpisodes, PlacedSpecialsAnchors);
+
+            // Use the placement in Shoko when the special is placed, and the
+            // air date otherwise.
+            case Ordering.SpecialOrderType.InBetweenSeasonMixed: {
+                var specialsBeforeEpisodes = new HashSet<string>(PlacedSpecialsBeforeEpisodes);
+                var specialsAnchors = new Dictionary<string, EpisodeInfo>(PlacedSpecialsAnchors);
+                foreach (var special in SpecialsList) {
+                    if (specialsBeforeEpisodes.Contains(special.Id) || specialsAnchors.ContainsKey(special.Id))
+                        continue;
+
+                    if (SpecialsBeforeEpisodes.Contains(special.Id))
+                        specialsBeforeEpisodes.Add(special.Id);
+                    else if (SpecialsAnchors.TryGetValue(special.Id, out var previousEpisode))
+                        specialsAnchors[special.Id] = previousEpisode;
+                }
+                return (specialsBeforeEpisodes, specialsAnchors);
+            }
+        }
+    }
+
+
+    /// <summary>
     /// Related series data available in Shoko.
     /// </summary>
     public IReadOnlyList<Relation> Relations { get; init; }
@@ -234,8 +279,7 @@ public class SeasonInfo : IExtendedItemInfo {
             .ToList();
 
         // Iterate over the episodes once and store some values for later use.
-        int index = 0;
-        int lastNormalEpisode = -1;
+        EpisodeInfo? lastNormalEpisode = null;
         foreach (var episode in episodes) {
             if (episode.IsHidden)
                 continue;
@@ -245,7 +289,7 @@ public class SeasonInfo : IExtendedItemInfo {
             switch (episodeType) {
                 case EpisodeType.Episode:
                     episodesList.Add(episode);
-                    lastNormalEpisode = index;
+                    lastNormalEpisode = episode;
                     break;
                 case EpisodeType.Other:
                     if (episode.ExtraType != null)
@@ -259,24 +303,17 @@ public class SeasonInfo : IExtendedItemInfo {
                     }
                     else if (episodeType is EpisodeType.Special && seriesConfiguration.EpisodeConversion is SeriesEpisodeConversion.SpecialsAsEpisodes) {
                         episodesList.Add(episode);
-                        lastNormalEpisode = index;
+                        lastNormalEpisode = episode;
                     }
                     else if (episodeType is EpisodeType.Special) {
                         specialsList.Add(episode);
-                        if (lastNormalEpisode == -1) {
+                        if (lastNormalEpisode is null)
                             specialsBeforeEpisodes.Add(episode.Id);
-                        }
-                        else {
-                            var previousEpisode = episodes
-                                .GetRange(lastNormalEpisode, index - lastNormalEpisode)
-                                .FirstOrDefault(e => e.Type is EpisodeType.Episode && seriesConfiguration.EpisodeConversion is not SeriesEpisodeConversion.EpisodesAsSpecials);
-                            if (previousEpisode != null)
-                                specialsAnchorDictionary[episode.Id] = previousEpisode;
-                        }
+                        else
+                            specialsAnchorDictionary[episode.Id] = lastNormalEpisode;
                     }
                     break;
             }
-            index++;
         }
 
         // We order the lists after sorting them into buckets because the bucket
@@ -313,27 +350,19 @@ public class SeasonInfo : IExtendedItemInfo {
             altEpisodesList = [];
 
             // Re-create the special anchors because the episode list changed.
-            index = 0;
-            lastNormalEpisode = -1;
+            lastNormalEpisode = null;
             specialsBeforeEpisodes.Clear();
             specialsAnchorDictionary.Clear();
             foreach (var episode in episodes) {
                 if (episodesList.Contains(episode)) {
-                    lastNormalEpisode = index;
+                    lastNormalEpisode = episode;
                 }
                 else if (specialsList.Contains(episode)) {
-                    if (lastNormalEpisode == -1) {
+                    if (lastNormalEpisode is null)
                         specialsBeforeEpisodes.Add(episode.Id);
-                    }
-                    else {
-                        var previousEpisode = episodes
-                            .GetRange(lastNormalEpisode, index - lastNormalEpisode)
-                            .FirstOrDefault(e => episodesList.Contains(e));
-                        if (previousEpisode != null)
-                            specialsAnchorDictionary[episode.Id] = previousEpisode;
-                    }
+                    else
+                        specialsAnchorDictionary[episode.Id] = lastNormalEpisode;
                 }
-                index++;
             }
         }
         // Also switch the type from movie to web if we're hidden the main movies, but the parts are normal episodes.
@@ -350,6 +379,28 @@ public class SeasonInfo : IExtendedItemInfo {
             if (altEpisodesList.Count > 0) {
                 extrasList.AddRange(altEpisodesList);
                 altEpisodesList = [];
+            }
+        }
+
+        // Place the specials using where Shoko places them.
+        var placedSpecialsBeforeEpisodes = new HashSet<string>();
+        var placedSpecialsAnchorDictionary = new Dictionary<string, EpisodeInfo>();
+        foreach (var special in specialsList) {
+            if (special.Placement is not { } placement)
+                continue;
+
+            var airsAfterEpisodeId = placement.AirsAfterEpisodeID?.ToString();
+            if (airsAfterEpisodeId is not null && episodesList.FirstOrDefault(e => e.Id == airsAfterEpisodeId) is { } previousEpisode) {
+                placedSpecialsAnchorDictionary[special.Id] = previousEpisode;
+                continue;
+            }
+
+            var airsBeforeEpisodeId = placement.AirsBeforeEpisodeID?.ToString();
+            if (airsBeforeEpisodeId is not null && episodesList.FindIndex(e => e.Id == airsBeforeEpisodeId) is var nextIndex and > -1) {
+                if (nextIndex is 0)
+                    placedSpecialsBeforeEpisodes.Add(special.Id);
+                else
+                    placedSpecialsAnchorDictionary[special.Id] = episodesList[nextIndex - 1];
             }
         }
 
@@ -435,6 +486,8 @@ public class SeasonInfo : IExtendedItemInfo {
         SpecialsList = specialsList;
         SpecialsBeforeEpisodes = specialsBeforeEpisodes;
         SpecialsAnchors = specialsAnchorDictionary;
+        PlacedSpecialsBeforeEpisodes = placedSpecialsBeforeEpisodes;
+        PlacedSpecialsAnchors = placedSpecialsAnchorDictionary;
         Relations = relations;
         RelationMap = relationMap;
         ShokoSeries = [
@@ -640,13 +693,13 @@ public class SeasonInfo : IExtendedItemInfo {
         if (Plugin.Instance.Configuration.TagSources.HasFlag(TagFilter.TagSource.AllYearlySeasons)) {
             tags.AddRange(seasons);
         }
-        else if (Plugin.Instance.Configuration.TagSources.HasFlag(TagFilter.TagSource.AllYearlySeasons) && seasons.Count > 0) {
+        else if (Plugin.Instance.Configuration.TagSources.HasFlag(TagFilter.TagSource.FirstYearlySeason) && seasons.Count > 0) {
             tags.Add(seasons.First());
         }
         if (Plugin.Instance.Configuration.GenreSources.HasFlag(TagFilter.TagSource.AllYearlySeasons)) {
             genres.AddRange(seasons);
         }
-        else if (Plugin.Instance.Configuration.GenreSources.HasFlag(TagFilter.TagSource.AllYearlySeasons) && seasons.Count > 0) {
+        else if (Plugin.Instance.Configuration.GenreSources.HasFlag(TagFilter.TagSource.FirstYearlySeason) && seasons.Count > 0) {
             genres.Add(seasons.First());
         }
     }
@@ -655,10 +708,10 @@ public class SeasonInfo : IExtendedItemInfo {
         var list = new List<(File file, string seriesId, HashSet<string> episodeIds)>();
         if (StructureType is SeriesStructureType.TMDB_SeriesAndMovies) {
             if (Id[0] is IdPrefix.TmdbShow) {
-                var episodes = (await _client.GetTmdbEpisodesInTmdbSeason(Id[1..]).ConfigureAwait(false))
+                var episodes = (await _client.GetTmdbEpisodesInTmdbSeason(Id[1..]))
                     .Select(e => e.Id)
                     .ToHashSet();
-                var files = await _client.GetFilesForTmdbSeason(Id[1..]).ConfigureAwait(false);
+                var files = await _client.GetFilesForTmdbSeason(Id[1..]);
                 foreach (var file in files) {
                     if (file.CrossReferences.Where(x => x.Series.Shoko.HasValue && x.Episodes.Any(e => e.Shoko.HasValue && episodes.Overlaps(e.TMDB.Episode))).ToList() is not { Count: > 0 } xrefList)
                         continue;
@@ -675,7 +728,7 @@ public class SeasonInfo : IExtendedItemInfo {
                 }
             }
             else if (Id[0] is IdPrefix.TmdbMovie) {
-                var files = await _client.GetFilesForTmdbMovie(Id[1..]).ConfigureAwait(false);
+                var files = await _client.GetFilesForTmdbMovie(Id[1..]);
                 var movieId = int.Parse(Id[1..]);
                 foreach (var file in files) {
                     if (file.CrossReferences.FirstOrDefault(x => x.Series.Shoko.HasValue && x.Episodes.Any(e => e.Shoko.HasValue && e.TMDB.Movie.Contains(movieId))) is not { } xref)
@@ -685,11 +738,11 @@ public class SeasonInfo : IExtendedItemInfo {
                 }
             }
             else if (Id[0] is IdPrefix.TmdbMovieCollection) {
-                var movies = (await _client.GetTmdbMoviesInMovieCollection(Id[1..]).ConfigureAwait(false))
+                var movies = (await _client.GetTmdbMoviesInMovieCollection(Id[1..]))
                     .Select(m => m.Id)
                     .ToHashSet();
                 foreach (var episodeInfo in EpisodeList) {
-                    var episodeFiles = await _client.GetFilesForTmdbMovie(episodeInfo.Id[1..]).ConfigureAwait(false);
+                    var episodeFiles = await _client.GetFilesForTmdbMovie(episodeInfo.Id[1..]);
                     var movieId = int.Parse(episodeInfo.Id[1..]);
                     foreach (var file in episodeFiles) {
                         if (file.CrossReferences.FirstOrDefault(x => x.Series.Shoko.HasValue && x.Episodes.Any(e => e.Shoko.HasValue && e.TMDB.Movie.Contains(movieId))) is not { } xref)
@@ -702,7 +755,7 @@ public class SeasonInfo : IExtendedItemInfo {
         }
         else {
             list.AddRange(
-                (await _client.GetFilesForShokoSeries(Id).ConfigureAwait(false))
+                (await _client.GetFilesForShokoSeries(Id))
                     .Select(file => (
                         file,
                         Id,
@@ -711,7 +764,7 @@ public class SeasonInfo : IExtendedItemInfo {
             );
             foreach (var extraId in ExtraIds)
                 list.AddRange(
-                    (await _client.GetFilesForShokoSeries(extraId).ConfigureAwait(false))
+                    (await _client.GetFilesForShokoSeries(extraId))
                         .Select(file => (
                             file,
                             extraId,
@@ -725,10 +778,10 @@ public class SeasonInfo : IExtendedItemInfo {
 
     public async Task<Images> GetImages(CancellationToken cancellationToken)
         => Id[0] switch {
-                IdPrefix.TmdbShow => await _client.GetImagesForTmdbSeason(Id[1..], cancellationToken).ConfigureAwait(false),
-                IdPrefix.TmdbMovie => await _client.GetImagesForTmdbMovie(Id[1..], cancellationToken).ConfigureAwait(false),
-                IdPrefix.TmdbMovieCollection => await _client.GetImagesForTmdbMovieCollection(Id[1..], cancellationToken).ConfigureAwait(false),
-                _ => await _client.GetImagesForShokoSeries(Id, cancellationToken).ConfigureAwait(false),
+                IdPrefix.TmdbShow => await _client.GetImagesForTmdbSeason(Id[1..], cancellationToken),
+                IdPrefix.TmdbMovie => await _client.GetImagesForTmdbMovie(Id[1..], cancellationToken),
+                IdPrefix.TmdbMovieCollection => await _client.GetImagesForTmdbMovieCollection(Id[1..], cancellationToken),
+                _ => await _client.GetImagesForShokoSeries(Id, cancellationToken),
             } ?? new();
 
     public bool IsExtraEpisode(EpisodeInfo? episodeInfo)

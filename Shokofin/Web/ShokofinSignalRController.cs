@@ -44,7 +44,7 @@ public class ShokofinSignalRController(ILogger<ShokofinSignalRController> logger
     [HttpPost("Connect")]
     public async Task<ActionResult> ConnectAsync() {
         try {
-            await ConnectionManager.ResetConnectionAsync().ConfigureAwait(false);
+            await ConnectionManager.ResetConnectionAsync();
             return Ok();
         }
         catch (Exception ex) {
@@ -59,7 +59,7 @@ public class ShokofinSignalRController(ILogger<ShokofinSignalRController> logger
     [HttpPost("Disconnect")]
     public async Task<ActionResult> DisconnectAsync() {
         try {
-            await ConnectionManager.DisconnectAsync().ConfigureAwait(false);
+            await ConnectionManager.DisconnectAsync();
             return Ok();
         }
         catch (Exception ex) {

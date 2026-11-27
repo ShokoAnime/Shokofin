@@ -16,7 +16,7 @@ public class SeriesInfoUpdatedEventArgs : IMetadataUpdatedEventArgs {
     /// <summary>
     /// The provider metadata source.
     /// </summary>
-    [JsonInclude, JsonPropertyName("Source")]
+    [JsonInclude, JsonPropertyName("Source"), JsonConverter(typeof(JsonProviderNameConverter))]
     public ProviderName ProviderName { get; set; } = ProviderName.None;
 
     /// <summary>
@@ -28,7 +28,7 @@ public class SeriesInfoUpdatedEventArgs : IMetadataUpdatedEventArgs {
     /// <summary>
     /// Shoko series ids affected by this update.
     /// </summary>
-    [JsonInclude, JsonPropertyName("ShokoSeriesIDs")]
+    [JsonInclude, JsonPropertyName("ShokoSeriesIDs"), JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
     public List<int> SeriesIds { get; set; } = [];
 
     #region IMetadataUpdatedEventArgs Impl.

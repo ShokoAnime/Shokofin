@@ -39,7 +39,7 @@ public class ReconstructCollectionsTask(CollectionManager _collectionManager) : 
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) {
         using (Plugin.Instance.Tracker.Enter("Reconstruct Collections Task")) {
-            await _collectionManager.ReconstructCollections(progress, cancellationToken).ConfigureAwait(false);
+            await _collectionManager.ReconstructCollections(progress, cancellationToken);
         }
     }
 }

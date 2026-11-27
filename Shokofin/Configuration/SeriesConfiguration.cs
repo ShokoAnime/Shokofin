@@ -43,6 +43,11 @@ public class SeriesConfiguration {
     /// Whether to order episodes by airdate instead of episode number.
     /// </summary>
     public bool OrderByAirdate { get; set; }
+
+    /// <summary>
+    /// Whether to include the series in automatic playlist generation.
+    /// </summary>
+    public bool PlaylistInclude { get; set; }
 }
 
 /// <summary>
@@ -84,4 +89,9 @@ public class NullableSeriesConfiguration {
     /// Whether to order episodes by airdate instead of episode number.
     /// </summary>
     public bool? OrderByAirdate { get; set; }
+
+    /// <summary>
+    /// Whether to include the series in automatic playlist generation.
+    /// </summary>
+    public bool? PlaylistInclude { get; set; }
 }

@@ -12,9 +12,12 @@ public class PostScanTask(ITaskManager taskManager) : ILibraryPostScanTask {
         if (Plugin.Instance.Configuration.AutoReconstructCollections) {
             taskManager.CancelIfRunningAndQueue<ReconstructCollectionsTask>();
         }
+        if (Plugin.Instance.Configuration.Playlist.AutoReconstruct) {
+            taskManager.CancelIfRunningAndQueue<ReconstructPlaylistsTask>();
+        }
         if (Plugin.Instance.Configuration.AutoMergeVersions) {
-            taskManager.CancelIfRunningAndQueue<MergeMoviesTask>();
-            taskManager.CancelIfRunningAndQueue<MergeEpisodesTask>();
+            taskManager.CancelIfRunningAndQueue<MergeQueuedMoviesTask>();
+            taskManager.CancelIfRunningAndQueue<MergeQueuedEpisodesTask>();
         }
         return Task.CompletedTask;
     }

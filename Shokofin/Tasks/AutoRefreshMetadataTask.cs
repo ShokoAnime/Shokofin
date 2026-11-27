@@ -43,7 +43,7 @@ public class AutoRefreshMetadataTask(MetadataRefreshService _metadataRefreshServ
             return;
 
         using (Plugin.Instance.Tracker.Enter("Auto-Refresh Metadata Task")) {
-            await _metadataRefreshService.AutoRefresh(progress, cancellationToken).ConfigureAwait(false);
+            await _metadataRefreshService.AutoRefresh(progress, cancellationToken);
         }
     }
 }

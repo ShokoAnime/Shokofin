@@ -39,7 +39,7 @@ public class MergeEpisodesTask(MergeVersionsManager _mergeVersionsManager) : ISc
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken) {
         using (Plugin.Instance.Tracker.Enter("Merge Episodes Task")) {
-            await _mergeVersionsManager.SplitAndMergeAllEpisodes(progress, cancellationToken).ConfigureAwait(false);
+            await _mergeVersionsManager.SplitAndMergeAllEpisodes(progress, cancellationToken);
         }
     }
 }

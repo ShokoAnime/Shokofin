@@ -90,6 +90,12 @@ public class PluginConfiguration : BasePluginConfiguration {
     /// </summary>
     public bool HasPluginsExposed { get; set; } = false;
 
+    /// <summary>
+    /// Indicates if the series suggestions endpoints are available on the
+    /// Shoko server we are using.
+    /// </summary>
+    public bool HasSuggestionsExposed { get; set; } = false;
+
     #endregion
 
     #region Plugin Interoperability
@@ -139,6 +145,29 @@ public class PluginConfiguration : BasePluginConfiguration {
     /// </summary>
     [JsonIgnore]
     public bool AddTvDBId { get; set; }
+
+    /// <summary>
+    /// Add extra info such as the series id to the link name for the external
+    /// links shown in the UI.
+    /// </summary>
+    public bool AddExtraInfoToLinkName { get; set; } = true;
+
+    /// <summary>
+    /// Maximum number of links to show per provider type. Set to 0 to show all
+    /// links.
+    /// </summary>
+    [Range(0, int.MaxValue, ErrorMessage = "Must be a positive number")]
+    public int MaxLinksPerTypeToShow { get; set; } = 0;
+
+    /// <summary>
+    /// Which third party display providers to show links for in the UI.
+    /// </summary>
+    public DescriptionProvider[] ThirdPartyDisplayLinkList { get; set; } = [
+        DescriptionProvider.Shoko,
+        DescriptionProvider.AniDB,
+        DescriptionProvider.TvDB,
+        DescriptionProvider.TMDB,
+    ];
 
     #endregion
 
@@ -199,6 +228,12 @@ public class PluginConfiguration : BasePluginConfiguration {
     /// prefix and number.
     /// </summary>
     public bool MarkSpecialsWhenGrouped { get; set; }
+
+    /// <summary>
+    /// Use the episode title as-is for the movie title when the entry has a
+    /// linked TMDB movie, instead of composing the title as "Series: Episode".
+    /// </summary>
+    public bool AlwaysUseEpisodeTitleForTmdbMovies { get; set; }
 
     /// <summary>
     /// The new description configuration.
@@ -475,6 +510,12 @@ public class PluginConfiguration : BasePluginConfiguration {
     public bool FilterMovieLibraries { get; set; }
 
     /// <summary>
+    /// Use Shoko titles and images for top level series when
+    /// using TMDB series structure.
+    /// </summary>
+    public bool TmdbStructureUseShokoMetadata { get; set; }
+
+    /// <summary>
     /// Append all specials in AniDB movie series as special features for
     /// the movies.
     /// </summary>
@@ -553,6 +594,15 @@ public class PluginConfiguration : BasePluginConfiguration {
 
     #endregion
 
+    #region Playlist
+
+    /// <summary>
+    /// All playlist related configuration.
+    /// </summary>
+    public PlaylistConfiguration Playlist { get; set; } = new();
+
+    #endregion
+
     #region Virtual File System (VFS)
 
     /// <summary>
@@ -594,6 +644,12 @@ public class PluginConfiguration : BasePluginConfiguration {
     public bool VFS_ResolveLinks { get; set; }
 
     /// <summary>
+    /// Use the file name of the source file as the version identifier in the
+    /// UI.
+    /// </summary>
+    public bool VFS_UseSourceFileAsVersionIdentifier { get; set; } = false;
+
+    /// <summary>
     /// Maximum number of exceptions before aborting the VFS generation. Set to
     /// 0 to disable limit.
     /// </summary>
@@ -612,6 +668,14 @@ public class PluginConfiguration : BasePluginConfiguration {
     /// VFS generation.
     /// </summary>
     public bool VFS_UseSemaphore { get; set; } = true;
+
+    /// <summary>
+    ///   Collect and sort the file entries before emitting them, so the
+    ///   smallest series will be emitted first, and the biggest last. And every
+    ///   file for the same series will be emitted in one go, instead of
+    ///   scattered across the emitted range.
+    /// </summary>
+    public bool VFS_CollectAndSort { get; set; } = false;
 
     /// <summary>
     /// Places the VFS in the cache directory instead of the config directory.

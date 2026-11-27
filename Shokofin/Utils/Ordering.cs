@@ -63,6 +63,49 @@ public class Ordering {
     }
 
     /// <summary>
+    /// Helps determine what the user wants to group into playlists.
+    /// </summary>
+    public enum PlaylistCreationType {
+        /// <summary>
+        /// No grouping. No playlists will be created.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// Only create playlists for groups that contain both series and movies.
+        /// </summary>
+        GroupWithMixedContent = 1,
+
+        /// <summary>
+        /// Create playlists for all groups.
+        /// </summary>
+        Grouped = 2,
+    }
+
+    /// <summary>
+    /// Determines how per-series playlist tags are evaluated when deciding
+    /// whether to create a playlist for a group.
+    /// </summary>
+    public enum PlaylistTagFilter {
+        /// <summary>
+        /// Ignore per-series tags. Use the global grouping config as-is.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// Only create a playlist for a group if at least one series in
+        /// the group has the playlist include tag set.
+        /// </summary>
+        AnySeriesTagged = 1,
+
+        /// <summary>
+        /// Only create a playlist for a group if all series in the group
+        /// have the playlist include tag set.
+        /// </summary>
+        AllSeriesTagged = 2,
+    }
+
+    /// <summary>
     /// Season or movie ordering when grouping series/box-sets using Shoko's groups.
     /// </summary>
     public enum OrderType {
@@ -115,7 +158,8 @@ public class Ordering {
         Default = Excluded,
 
         /// <summary>
-        /// Use a mix of <see cref="InBetweenSeasonByOtherData" /> and <see cref="InBetweenSeasonByAirDate" />.
+        /// Use <see cref="InBetweenSeasonByOtherData" /> for the specials placed
+        /// in Shoko, and <see cref="InBetweenSeasonByAirDate" /> for the rest.
         /// </summary>
         InBetweenSeasonMixed = 3,
 
@@ -125,7 +169,8 @@ public class Ordering {
         InBetweenSeasonByAirDate = 4,
 
         /// <summary>
-        /// Place the specials in-between normal episodes based upon data from TMDB.
+        /// Place the specials in-between normal episodes based upon the
+        /// specials placement in Shoko.
         /// </summary>
         InBetweenSeasonByOtherData = 5,
     }
@@ -192,14 +237,15 @@ public class Ordering {
                 break;
             case SpecialOrderType.InBetweenSeasonMixed:
             case SpecialOrderType.InBetweenSeasonByAirDate:
-                // Reset the order if we come from `SpecialOrderType.InBetweenSeasonMixed`.
-                int? episodeNumber = null;
-                if (seasonInfo.SpecialsBeforeEpisodes.Contains(episodeInfo.Id)) {
+            case SpecialOrderType.InBetweenSeasonByOtherData:
+                var (specialsBeforeEpisodes, specialsAnchors) = seasonInfo.GetSpecialsPlacement(seasonInfo.SpecialsPlacement);
+                if (specialsBeforeEpisodes.Contains(episodeInfo.Id)) {
                     airsBeforeSeasonNumber = seasonNumber;
                     break;
                 }
 
-                if (seasonInfo.SpecialsAnchors.TryGetValue(episodeInfo.Id, out var previousEpisode))
+                int? episodeNumber = null;
+                if (specialsAnchors.TryGetValue(episodeInfo.Id, out var previousEpisode))
                     episodeNumber = GetEpisodeNumber(showInfo, seasonInfo, previousEpisode);
 
                 if (episodeNumber.HasValue && episodeNumber.Value < seasonInfo.EpisodeList.Count) {
@@ -209,8 +255,6 @@ public class Ordering {
                 else {
                     airsAfterSeasonNumber = seasonNumber;
                 }
-                break;
-            case SpecialOrderType.InBetweenSeasonByOtherData:
                 break;
         }
 

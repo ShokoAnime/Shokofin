@@ -26,13 +26,13 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
         var trackerId = Plugin.Instance.Tracker.Add($"Providing info for Series \"{info.Name}\". (Path=\"{info.Path}\")");
         try {
             var result = new MetadataResult<Series>();
-            var showInfo = await _apiManager.GetShowInfoByPath(info.Path).ConfigureAwait(false);
+            var showInfo = await _apiManager.GetShowInfoByPath(info.Path);
             if (showInfo == null) {
                 try {
                     // Look for the "season" directories to probe for the group information
                     var entries = _fileSystem.GetDirectories(info.Path, false);
                     foreach (var entry in entries) {
-                        showInfo = await _apiManager.GetShowInfoByPath(entry.FullName).ConfigureAwait(false);
+                        showInfo = await _apiManager.GetShowInfoByPath(entry.FullName);
                         if (showInfo is not null)
                             break;
                     }
@@ -46,7 +46,17 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
                 }
             }
 
-            var (displayTitle, alternateTitle) = TextUtility.GetShowTitles(showInfo, info.MetadataLanguage);
+            // If using Shoko titles/images for TMDB structure is enabled,
+            // find the main shoko series for this show and use it to generate titles.
+            API.Info.ShowInfo? titleOverrideShowInfo = null;
+            if (
+                showInfo.DefaultSeason.StructureType is Configuration.SeriesStructureType.TMDB_SeriesAndMovies &&
+                Plugin.Instance.Configuration.TmdbStructureUseShokoMetadata
+            ) {
+                titleOverrideShowInfo = await _apiManager.GetMainShokoSeriesShowInfo(showInfo.ShokoSeriesId);
+            }
+
+            var (displayTitle, alternateTitle) = TextUtility.GetShowTitles(titleOverrideShowInfo ?? showInfo, info.MetadataLanguage);
             if (string.IsNullOrEmpty(displayTitle))
                 displayTitle = showInfo.Title;
 
@@ -84,7 +94,7 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
             if (config.AddAniDBId && showInfo.AnidbAnimeId is { Length: > 0 } anidbAnimeId)
                 result.Item.SetProviderId(ProviderNames.Anidb, anidbAnimeId);
             if (config.AddTMDBId && showInfo.TmdbShowId is { Length: > 0 } tmdbShowId)
-                result.Item.SetProviderId(ProviderNames.Tmdb, tmdbShowId);
+                result.Item.SetProviderId(MetadataProvider.Tmdb, tmdbShowId);
             if (config.AddTvDBId && showInfo.TvdbShowId is { Length: > 0 } tvdbShowId)
                 result.Item.SetProviderId(MetadataProvider.Tvdb, tvdbShowId);
 
@@ -104,6 +114,6 @@ public class SeriesProvider(IHttpClientFactory _httpClientFactory, ILogger<Serie
     public Task<IEnumerable<RemoteSearchResult>> GetSearchResults(SeriesInfo info, CancellationToken cancellationToken)
         => Task.FromResult<IEnumerable<RemoteSearchResult>>([]);
 
-    public Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
-        => _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
+    public async Task<HttpResponseMessage> GetImageResponse(string url, CancellationToken cancellationToken)
+        => await _httpClientFactory.CreateClient().GetAsync(url, cancellationToken);
 }

@@ -50,6 +50,14 @@ public class ShokoApiClient : IDisposable {
         }
     }
 
+    private static bool HasSuggestionsExposed {
+        get => Plugin.Instance.Configuration.HasSuggestionsExposed;
+        set {
+            Plugin.Instance.Configuration.HasSuggestionsExposed = value;
+            Plugin.Instance.UpdateConfiguration();
+        }
+    }
+
     public ShokoApiClient(ILogger<ShokoApiClient> logger, UsageTracker tracker) {
         var config = Plugin.Instance.Configuration;
 
@@ -94,9 +102,14 @@ public class ShokoApiClient : IDisposable {
         if (_connectionUsable != connectionUsable) {
             _connectionUsable = connectionUsable;
             if (connectionUsable) {
-                var hasPluginsExposed = CheckIfPluginsExposed().ConfigureAwait(false).GetAwaiter().GetResult();
+                var hasPluginsExposed = Task.Run(() => CheckIfPluginsExposed()).GetAwaiter().GetResult();
                 if (hasPluginsExposed != HasPluginsExposed) {
                     HasPluginsExposed = hasPluginsExposed;
+                }
+
+                var hasSuggestionsExposed = Task.Run(() => CheckIfSuggestionsExposed()).GetAwaiter().GetResult();
+                if (hasSuggestionsExposed != HasSuggestionsExposed) {
+                    HasSuggestionsExposed = hasSuggestionsExposed;
                 }
             }
         }
@@ -122,7 +135,7 @@ public class ShokoApiClient : IDisposable {
 
     private async Task<ReturnType?> GetOrNull<ReturnType>(string url, string? apiKey = null, bool skipCache = false, CancellationToken cancellationToken = default) {
         try {
-            return await Get<ReturnType>(url, HttpMethod.Get, apiKey, skipCache, cancellationToken).ConfigureAwait(false);
+            return await Get<ReturnType>(url, HttpMethod.Get, apiKey, skipCache, cancellationToken);
         }
         catch (ApiException e) when (e.StatusCode == HttpStatusCode.NotFound) {
             return default;
@@ -135,29 +148,29 @@ public class ShokoApiClient : IDisposable {
     private async Task<ReturnType> Get<ReturnType>(string url, HttpMethod method, string? apiKey = null, bool skipCache = false, CancellationToken cancellationToken = default) {
         if (skipCache) {
             _logger.LogTrace("Creating raw object for {Method} {URL}", method, url);
-            var response = await Get(url, method, apiKey, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var response = await Get(url, method, apiKey, cancellationToken: cancellationToken);
             if (response.StatusCode != HttpStatusCode.OK)
                 throw ApiException.FromResponse(response);
-            var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false) ??
+            var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream, cancellationToken: cancellationToken) ??
                 throw new ApiException(response.StatusCode, nameof(ShokoApiClient), "Unexpected null return value.");
             return value;
         }
 
         return await _cache.GetOrCreateAsync(
-            $"apiKey={apiKey ?? "default"},method={method},body=null,url={url},object",
+            GetCacheKey(url, method, apiKey),
             (_) => _logger.LogTrace("Reusing object for {Method} {URL}", method, url),
             async () => {
                 _logger.LogTrace("Creating cached object for {Method} {URL}", method, url);
-                var response = await Get(url, method, apiKey).ConfigureAwait(false);
+                var response = await Get(url, method, apiKey);
                 if (response.StatusCode != HttpStatusCode.OK)
                     throw ApiException.FromResponse(response);
-                var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-                var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false) ??
+                var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream, cancellationToken: cancellationToken) ??
                     throw new ApiException(response.StatusCode, nameof(ShokoApiClient), "Unexpected null return value.");
                 return value;
             }
-        ).ConfigureAwait(false);
+        );
     }
 
     private async Task<HttpResponseMessage> Get(string url, HttpMethod method, string? apiKey = null, bool skipApiKey = false, CancellationToken cancellationToken = default) {
@@ -170,17 +183,17 @@ public class ShokoApiClient : IDisposable {
 
         var version = Plugin.Instance.Configuration.ServerVersion;
         if (version == null) {
-            version = await GetVersion().ConfigureAwait(false)
+            version = await GetVersion()
                 ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
             Plugin.Instance.Configuration.ServerVersion = version;
             Plugin.Instance.UpdateConfiguration();
         }
 
-        var result = await _requestLimiter.WaitAsync(_requestWaitLogThreshold, cancellationToken).ConfigureAwait(false);
+        var result = await _requestLimiter.WaitAsync(_requestWaitLogThreshold, cancellationToken);
         if (!result) {
             _logger.LogTrace("Waiting for our turn to try {Method} {URL}", method, url);
-            await _requestLimiter.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await _requestLimiter.WaitAsync(cancellationToken);
             _logger.LogTrace("Got our turn to try {Method} {URL}", method, url);
         }
         cancellationToken.ThrowIfCancellationRequested();
@@ -193,7 +206,7 @@ public class ShokoApiClient : IDisposable {
             if (!string.IsNullOrEmpty(apiKey))
                 requestMessage.Headers.Add("apikey", apiKey);
             var timeStart = DateTime.UtcNow;
-            var response = await _httpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+            var response = await _httpClient.SendAsync(requestMessage, cancellationToken);
             if (response.StatusCode == HttpStatusCode.Unauthorized)
                 throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection or deleting and re-adding the user in the plugin settings.", null, HttpStatusCode.Unauthorized);
             _logger.LogTrace("API returned response with status code {StatusCode} for {Method} {URL} in {Elapsed}", response.StatusCode, method, url, DateTime.UtcNow - timeStart);
@@ -215,11 +228,11 @@ public class ShokoApiClient : IDisposable {
         var bodyHash = Convert.ToHexString(MD5.HashData(JsonSerializer.SerializeToUtf8Bytes(body)));
         if (skipCache) {
             _logger.LogTrace("Creating raw object for {Method} {URL} ({Hash})", method, url, bodyHash);
-            var response = await Post(url, method, body, bodyHash, apiKey, cancellationToken).ConfigureAwait(false);
+            var response = await Post(url, method, body, bodyHash, apiKey, cancellationToken);
             if (response.StatusCode != HttpStatusCode.OK)
                 throw ApiException.FromResponse(response);
-            var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false) ??
+            var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream, cancellationToken: cancellationToken) ??
                 throw new ApiException(response.StatusCode, nameof(ShokoApiClient), "Unexpected null return value.");
             return value;
         }
@@ -229,15 +242,15 @@ public class ShokoApiClient : IDisposable {
             (_) => _logger.LogTrace("Reusing object for {Method} {URL} ({Hash})", method, url, bodyHash),
             async () => {
                 _logger.LogTrace("Creating cached object for {Method} {URL} ({Hash})", method, url, bodyHash);
-                var response = await Post(url, method, body, bodyHash, apiKey, cancellationToken).ConfigureAwait(false);
+                var response = await Post(url, method, body, bodyHash, apiKey, cancellationToken);
                 if (response.StatusCode != HttpStatusCode.OK)
                     throw ApiException.FromResponse(response);
-                var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-                var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream, cancellationToken: cancellationToken).ConfigureAwait(false) ??
+                var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                var value = await JsonSerializer.DeserializeAsync<ReturnType>(responseStream, cancellationToken: cancellationToken) ??
                     throw new ApiException(response.StatusCode, nameof(ShokoApiClient), "Unexpected null return value.");
                 return value;
             }
-        ).ConfigureAwait(false);
+        );
     }
 
     private async Task<HttpResponseMessage> Post<Type>(string url, HttpMethod method, Type body, string? bodyHash = null, string? apiKey = null, CancellationToken cancellationToken = default) {
@@ -253,17 +266,17 @@ public class ShokoApiClient : IDisposable {
 
         var version = Plugin.Instance.Configuration.ServerVersion;
         if (version == null) {
-            version = await GetVersion().ConfigureAwait(false)
+            version = await GetVersion()
                 ?? throw new HttpRequestException("Unable to call the API before an connection is established to Shoko Server!", null, HttpStatusCode.BadRequest);
 
             Plugin.Instance.Configuration.ServerVersion = version;
             Plugin.Instance.UpdateConfiguration();
         }
 
-        var result = await _requestLimiter.WaitAsync(_requestWaitLogThreshold, cancellationToken).ConfigureAwait(false);
+        var result = await _requestLimiter.WaitAsync(_requestWaitLogThreshold, cancellationToken);
         if (!result) {
             _logger.LogTrace("Waiting for our turn to try {Method} {URL} with body {HashCode}", method, url, bodyHash);
-            await _requestLimiter.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await _requestLimiter.WaitAsync(cancellationToken);
             _logger.LogTrace("Got our turn to try {Method} {URL} with body {HashCode}", method, url, bodyHash);
         }
         cancellationToken.ThrowIfCancellationRequested();
@@ -281,7 +294,7 @@ public class ShokoApiClient : IDisposable {
             requestMessage.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
             requestMessage.Headers.Add("apikey", apiKey);
             var timeStart = DateTime.UtcNow;
-            var response = await _httpClient.SendAsync(requestMessage, cancellationToken).ConfigureAwait(false);
+            var response = await _httpClient.SendAsync(requestMessage, cancellationToken);
             if (response.StatusCode == HttpStatusCode.Unauthorized)
                 throw new HttpRequestException("Invalid or expired API Token. Please reconnect the plugin to Shoko Server by resetting the connection or deleting and re-adding the user in the plugin settings.", null, HttpStatusCode.Unauthorized);
             _logger.LogTrace("API returned response with status code {StatusCode} for {Method} {URL} with body {HashCode} in {Elapsed}", response.StatusCode, method, url, bodyHash, DateTime.UtcNow - timeStart);
@@ -296,6 +309,9 @@ public class ShokoApiClient : IDisposable {
         }
     }
 
+    private static string GetCacheKey(string url, HttpMethod method, string? apiKey = null)
+        => $"apiKey={apiKey ?? "default"},method={method},body=null,url={url},object";
+
     #endregion Base Implementation
 
     #region Authentication
@@ -303,7 +319,7 @@ public class ShokoApiClient : IDisposable {
     public async Task<ApiKey?> GetApiKey(string username, string password, bool forUser = false) {
         var version = Plugin.Instance.Configuration.ServerVersion;
         if (version == null) {
-            version = await GetVersion().ConfigureAwait(false)
+            version = await GetVersion()
                 ?? throw new HttpRequestException("Unable to connect to Shoko Server to read the version.", null, HttpStatusCode.BadGateway);
 
             Plugin.Instance.Configuration.ServerVersion = version;
@@ -316,11 +332,12 @@ public class ShokoApiClient : IDisposable {
             {"device", forUser ? "Shoko Jellyfin Plugin (Shokofin) - User Key" : "Shoko Jellyfin Plugin (Shokofin)"},
         });
         var apiBaseUrl = Plugin.Instance.Configuration.Url;
-        var response = await _httpClient.PostAsync($"{apiBaseUrl}/api/auth", new StringContent(postData, Encoding.UTF8, "application/json")).ConfigureAwait(false);
+        var response = await _httpClient.PostAsync($"{apiBaseUrl}/api/auth", new StringContent(postData, Encoding.UTF8, "application/json"));
         if (response.StatusCode != HttpStatusCode.OK)
             return null;
 
-        var result = await JsonSerializer.DeserializeAsync<ApiKey>(response.Content.ReadAsStreamAsync().Result).ConfigureAwait(false);
+        await using var stream = await response.Content.ReadAsStreamAsync();
+        var result = await JsonSerializer.DeserializeAsync<ApiKey>(stream);
         return result;
     }
 
@@ -332,9 +349,10 @@ public class ShokoApiClient : IDisposable {
         try {
             var apiBaseUrl = Plugin.Instance.Configuration.Url;
             var source = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-            var response = await _httpClient.GetAsync($"{apiBaseUrl}/api/v3/Init/Version", source.Token).ConfigureAwait(false);
+            var response = await _httpClient.GetAsync($"{apiBaseUrl}/api/v3/Init/Version", source.Token);
             if (response.StatusCode == HttpStatusCode.OK) {
-                var componentVersionSet = await JsonSerializer.DeserializeAsync<ComponentVersionSet>(response.Content.ReadAsStreamAsync().Result).ConfigureAwait(false);
+                await using var stream = await response.Content.ReadAsStreamAsync();
+                var componentVersionSet = await JsonSerializer.DeserializeAsync<ComponentVersionSet>(stream);
                 return componentVersionSet?.Server;
             }
         }
@@ -347,15 +365,23 @@ public class ShokoApiClient : IDisposable {
     }
 
     public async Task<bool> CheckIfPluginsExposed(CancellationToken cancellationToken = default)
-        => (await Get($"/api/v3/Plugin", HttpMethod.Get, cancellationToken: cancellationToken).ConfigureAwait(false)) is { StatusCode: HttpStatusCode.OK };
+        => (await Get($"/api/v3/Plugin", HttpMethod.Get, cancellationToken: cancellationToken)) is { StatusCode: HttpStatusCode.OK };
 
-    public async Task<string?> GetWebPrefix(CancellationToken cancellationToken = default)
-    {
+    /// <summary>
+    /// Check if the series suggestions endpoint exists. Series ID 0 fails the
+    /// endpoint's validation with a 400 when it exists, and the route is not
+    /// found (404) when it doesn't.
+    /// </summary>
+    public async Task<bool> CheckIfSuggestionsExposed(CancellationToken cancellationToken = default)
+        => (await Get($"/api/v3/Series/0/Suggested", HttpMethod.Get, cancellationToken: cancellationToken)) is { StatusCode: HttpStatusCode.BadRequest };
+
+    public async Task<string?> GetWebPrefix(CancellationToken cancellationToken = default) {
         try {
-            var settingsResponse = await Get("/api/v3/Settings", HttpMethod.Get, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var settingsResponse = await Get("/api/v3/Settings", HttpMethod.Get, cancellationToken: cancellationToken);
             if (settingsResponse.StatusCode != HttpStatusCode.OK)
                 return null;
-            var settings = JsonNode.Parse(settingsResponse.Content.ReadAsStringAsync(cancellationToken).Result)!;
+            var settingsJson = await settingsResponse.Content.ReadAsStringAsync(cancellationToken);
+            var settings = JsonNode.Parse(settingsJson)!;
             var value = settings["Web"]?["WebUIPrefix"]?.GetValue<string>();
             if (value is null)
                 return "webui";
@@ -370,8 +396,11 @@ public class ShokoApiClient : IDisposable {
 
     #region Image
 
-    public Task<HttpResponseMessage> GetImageAsync(ImageSource imageSource, ShokoImageType imageType, int imageId)
+    public Task<HttpResponseMessage> GetImageAsync(string imageSource, string imageType, int imageId)
         => Get($"/api/v3/Image/{imageSource}/{imageType}/{imageId}", HttpMethod.Get, null, true);
+
+    public Task<HttpResponseMessage> GetImageAsync(Guid imageId)
+        => Get($"/api/v3/Image/{imageId}", HttpMethod.Get, null, true);
 
     #endregion
 
@@ -379,36 +408,40 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<ManagedFolder?> GetManagedFolder(int managedFolderId)
         => HasPluginsExposed
-            ? await GetOrNull<ManagedFolder>($"/api/v3/ManagedFolder/{managedFolderId}").ConfigureAwait(false)
-            : await GetOrNull<ManagedFolder>($"/api/v3/ImportFolder/{managedFolderId}").ConfigureAwait(false);
+            ? await GetOrNull<ManagedFolder>($"/api/v3/ManagedFolder/{managedFolderId}")
+            : await GetOrNull<ManagedFolder>($"/api/v3/ImportFolder/{managedFolderId}");
 
     public async Task<ListResult<File>> GetFilesInManagedFolder(int managedFolderId, string subPath, int page = 1)
         => HasPluginsExposed
-            ? await GetOrNull<ListResult<File>>($"/api/v3/ManagedFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}").ConfigureAwait(false) ?? new()
-            : await GetOrNull<ListResult<File>>($"/api/v3/ImportFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}").ConfigureAwait(false) ?? new();
+            ? await GetOrNull<ListResult<File>>($"/api/v3/ManagedFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}") ?? new()
+            : await GetOrNull<ListResult<File>>($"/api/v3/ImportFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}") ?? new();
 
     #endregion
 
     #region File
 
-    public async Task<File?> GetFile(string fileId)
-        => HasPluginsExposed
-            ? await GetOrNull<File>($"/api/v3/File/{fileId}?include=XRefs,ReleaseInfo").ConfigureAwait(false)
-            :  await GetOrNull<File>($"/api/v3/File/{fileId}?include=XRefs&includeDataFrom=AniDB").ConfigureAwait(false);
+    public async Task<File?> GetFile(string fileId, bool refreshCache = false) {
+        var url = HasPluginsExposed
+            ? $"/api/v3/File/{fileId}?include=XRefs,ReleaseInfo"
+            : $"/api/v3/File/{fileId}?include=XRefs&includeDataFrom=AniDB";
+        if (refreshCache)
+            _cache.Remove(GetCacheKey(url, HttpMethod.Get));
+        return await GetOrNull<File>(url);
+    }
 
     public Task<File?> GetFileByEd2kAndFileSize(string ed2k, long fileSize)
         => GetOrNull<File>($"/api/v3/File/Hash/ED2K?hash={Uri.EscapeDataString(ed2k)}&size={fileSize}");
 
     public async Task<IReadOnlyList<File>> GetFileByPath(string relativePath)
         => HasPluginsExposed
-            ? await Get<IReadOnlyList<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(relativePath)}&include=XRefs,ReleaseInfo&limit=10").ConfigureAwait(false)
-            : await Get<IReadOnlyList<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(relativePath)}&include=XRefs&includeDataFrom=AniDB&limit=10").ConfigureAwait(false);
+            ? await Get<IReadOnlyList<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(relativePath)}&include=XRefs,ReleaseInfo&limit=10")
+            : await Get<IReadOnlyList<File>>($"/api/v3/File/PathEndsWith?path={Uri.EscapeDataString(relativePath)}&include=XRefs&includeDataFrom=AniDB&limit=10");
 
     #region File User Stats
 
     public async Task<File.UserStats?> GetFileUserStats(string fileId, string? apiKey = null) {
         try {
-            return await Get<File.UserStats>($"/api/v3/File/{fileId}/UserStats", apiKey, true).ConfigureAwait(false);
+            return await Get<File.UserStats>($"/api/v3/File/{fileId}/UserStats", apiKey, true);
         }
         catch (ApiException e) when (e.StatusCode is HttpStatusCode.NotFound) {
             // File user stats were not found.
@@ -422,18 +455,18 @@ public class ShokoApiClient : IDisposable {
         => Post<File.UserStats, File.UserStats>($"/api/v3/File/{fileId}/UserStats", HttpMethod.Put, userStats, apiKey);
 
     public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, bool watched, string apiKey)
-        => await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&watched={watched}", HttpMethod.Patch, apiKey).ConfigureAwait(false) is { } response &&
-            response.StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
+        => await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&watched={watched}", HttpMethod.Patch, apiKey) is { } response &&
+            response.StatusCode is HttpStatusCode.OK or HttpStatusCode.Accepted or HttpStatusCode.NoContent;
 
     public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, long progress, string apiKey)
-        => await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={progress}", HttpMethod.Patch, apiKey).ConfigureAwait(false) is { } response &&
-            response.StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
+        => await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={progress}", HttpMethod.Patch, apiKey) is { } response &&
+            response.StatusCode is HttpStatusCode.OK or HttpStatusCode.Accepted or HttpStatusCode.NoContent;
 
     public async Task<bool> ScrobbleFile(string fileId, string episodeId, string eventName, long? progress, bool watched, string apiKey)
         => !progress.HasValue
-            ? await ScrobbleFile(fileId, episodeId, eventName, watched, apiKey).ConfigureAwait(false)
-            : await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={progress.Value}&watched={watched}", HttpMethod.Patch, apiKey).ConfigureAwait(false) is { } response &&
-                response.StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
+            ? await ScrobbleFile(fileId, episodeId, eventName, watched, apiKey)
+            : await Get($"/api/v3/File/{fileId}/Scrobble?event={eventName}&episodeID={episodeId}&resumePosition={progress.Value}&watched={watched}", HttpMethod.Patch, apiKey) is { } response &&
+                response.StatusCode is HttpStatusCode.OK or HttpStatusCode.Accepted or HttpStatusCode.NoContent;
 
     #endregion
 
@@ -448,7 +481,7 @@ public class ShokoApiClient : IDisposable {
             async () => {
                 _logger.LogTrace("Trying to get Shoko episode {EpisodeId}", episodeId);
                 var timeStart = DateTime.UtcNow;
-                var episode = await GetOrNull<ShokoEpisode>($"/api/v3/Episode/{episodeId}?includeDataFrom=AniDB&includeXRefs=true", skipCache: true).ConfigureAwait(false);
+                var episode = await GetOrNull<ShokoEpisode>($"/api/v3/Episode/{episodeId}?includeDataFrom=AniDB&includeXRefs=true&include=Placement", skipCache: true);
                 _logger.LogTrace("Got Shoko episode {EpisodeId} in {Time}", episodeId, DateTime.UtcNow - timeStart);
                 return episode;
             }
@@ -461,7 +494,7 @@ public class ShokoApiClient : IDisposable {
             async () => {
                 _logger.LogTrace("Trying to get Shoko episodes for shoko series {SeriesId}", seriesId);
                 var timeStart = DateTime.UtcNow;
-                var firstPage = await GetOrNull<ListResult<ShokoEpisode>>($"/api/v3/Series/{seriesId}/Episode?pageSize={_pageSize}&includeHidden=true&includeMissing=true&includeUnaired=true&includeDataFrom=AniDB&includeXRefs=true", skipCache: true).ConfigureAwait(false);
+                var firstPage = await GetOrNull<ListResult<ShokoEpisode>>($"/api/v3/Series/{seriesId}/Episode?pageSize={_pageSize}&includeHidden=true&includeMissing=true&includeUnaired=true&includeDataFrom=AniDB&includeXRefs=true&include=Placement", skipCache: true);
                 if (firstPage is null)
                     return [];
 
@@ -469,7 +502,7 @@ public class ShokoApiClient : IDisposable {
                 if (_pageSize > 0 && firstPage.Total > _pageSize) {
                     var totalPages = (int)Math.Ceiling((float)firstPage.Total / firstPage.List.Count);
                     for (var page = 2; page <= totalPages; page++) {
-                        var pageData = await Get<ListResult<ShokoEpisode>>($"/api/v3/Series/{seriesId}/Episode?pageSize={_pageSize}&includeHidden=true&includeMissing=true&includeUnaired=true&includeDataFrom=AniDB&includeXRefs=true&page={page}", skipCache: true).ConfigureAwait(false);
+                        var pageData = await Get<ListResult<ShokoEpisode>>($"/api/v3/Series/{seriesId}/Episode?pageSize={_pageSize}&includeHidden=true&includeMissing=true&includeUnaired=true&includeDataFrom=AniDB&includeXRefs=true&include=Placement&page={page}", skipCache: true);
                         pages.Add(pageData.List);
                     }
                 }
@@ -486,20 +519,26 @@ public class ShokoApiClient : IDisposable {
         );
 
     public async Task<IReadOnlyList<ShokoEpisode>> GetShokoEpisodesForTmdbEpisode(string tmdbEpisodeId)
-        => await GetOrNull<IReadOnlyList<ShokoEpisode>>($"/api/v3/TMDB/Episode/{tmdbEpisodeId}/Shoko/Episode?includeDataFrom=AniDB&includeXRefs=true").ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<ShokoEpisode>>($"/api/v3/TMDB/Episode/{tmdbEpisodeId}/Shoko/Episode?includeDataFrom=AniDB&includeXRefs=true") ?? [];
 
     public async Task<IReadOnlyList<ShokoEpisode>> GetShokoEpisodesForTmdbMovie(string tmdbMovieId)
-        => await GetOrNull<IReadOnlyList<ShokoEpisode>>($"/api/v3/TMDB/Movie/{tmdbMovieId}/Shoko/Episode?includeDataFrom=AniDB&includeXRefs=true").ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<ShokoEpisode>>($"/api/v3/TMDB/Movie/{tmdbMovieId}/Shoko/Episode?includeDataFrom=AniDB&includeXRefs=true") ?? [];
 
     public async Task<EpisodeImages?> GetImagesForShokoEpisode(string episodeId, CancellationToken cancellationToken = default) {
-        var episodeImages = await GetOrNull<EpisodeImages>($"/api/v3/Episode/{episodeId}/Images", cancellationToken: cancellationToken).ConfigureAwait(false);
+        var episodeImages = await GetOrNull<EpisodeImages>($"/api/v3/Episode/{episodeId}/Images", cancellationToken: cancellationToken);
         if (episodeImages is null)
             return null;
 
         // If the episode has no 'movie' images, get the series images to compensate.
         if (episodeImages.Posters.Count is 0) {
-            var episode1 = await GetShokoEpisode(episodeId).ConfigureAwait(false);
-            var seriesImages1 = await GetImagesForShokoSeries(episode1!.IDs.ParentSeries.ToString(), cancellationToken: cancellationToken).ConfigureAwait(false) ?? new();
+            // Separate 'episode' thumbnails from series images if there are any.
+            if (episodeImages is { Backdrops.Count: > 0, Thumbnails.Count: 0 }) {
+                episodeImages.Thumbnails = episodeImages.Backdrops;
+                episodeImages.Backdrops = [];
+            }
+
+            var episode1 = await GetShokoEpisode(episodeId);
+            var seriesImages1 = await GetImagesForShokoSeries(episode1!.IDs.ParentSeries.ToString(), cancellationToken: cancellationToken) ?? new();
 
             episodeImages.Posters = seriesImages1.Posters;
             episodeImages.Logos = seriesImages1.Logos;
@@ -527,36 +566,46 @@ public class ShokoApiClient : IDisposable {
         => GetOrNull<ShokoSeries>($"/api/v3/Episode/{episodeId}/Series?includeDataFrom=AniDB");
 
     public async Task<IReadOnlyList<ShokoSeries>> GetShokoSeriesForDirectory(string directoryName)
-        => await GetOrNull<IReadOnlyList<ShokoSeries>>($"/api/v3/Series/PathEndsWith/{Uri.EscapeDataString(directoryName)}").ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<ShokoSeries>>($"/api/v3/Series/PathEndsWith/{Uri.EscapeDataString(directoryName)}") ?? [];
 
     public async Task<IReadOnlyList<ShokoSeries>> GetShokoSeriesForTmdbMovie(string movieId)
-        => await GetOrNull<IReadOnlyList<ShokoSeries>>($"/api/v3/TMDB/Movie/{movieId}/Shoko/Series?includeDataFrom=AniDB").ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<ShokoSeries>>($"/api/v3/TMDB/Movie/{movieId}/Shoko/Series?includeDataFrom=AniDB") ?? [];
 
     public async Task<IReadOnlyList<ShokoSeries>> GetShokoSeriesForTmdbShow(string showId)
-        => await GetOrNull<IReadOnlyList<ShokoSeries>>($"/api/v3/TMDB/Show/{showId}/Shoko/Series?includeDataFrom=AniDB").ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<ShokoSeries>>($"/api/v3/TMDB/Show/{showId}/Shoko/Series?includeDataFrom=AniDB") ?? [];
 
     public async Task<IReadOnlyList<ShokoSeries>> GetShokoSeriesInGroup(string groupId, int filterId = 0, bool recursive = false)
-        => await GetOrNull<IReadOnlyList<ShokoSeries>>($"/api/v3/Filter/{filterId}/Group/{groupId}/Series?recursive={recursive}&includeMissing=true&includeIgnored=false&includeDataFrom=AniDB").ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<ShokoSeries>>($"/api/v3/Filter/{filterId}/Group/{groupId}/Series?recursive={recursive}&includeMissing=true&includeIgnored=false&includeDataFrom=AniDB") ?? [];
 
     public async Task<IReadOnlyList<Role>> GetCastForShokoSeries(string seriesId)
-        => await GetOrNull<IReadOnlyList<Role>>($"/api/v3/Series/{seriesId}/Cast?includeDataFrom=AniDB").ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<Role>>($"/api/v3/Series/{seriesId}/Cast?includeDataFrom=AniDB") ?? [];
 
     public async Task<IReadOnlyList<Relation>> GetRelationsForShokoSeries(string seriesId)
-        => await GetOrNull<IReadOnlyList<Relation>>($"/api/v3/Series/{seriesId}/Relations").ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<Relation>>($"/api/v3/Series/{seriesId}/Relations") ?? [];
+
+    /// <summary>
+    /// Indicates if the Shoko server we are using has series suggestions.
+    /// </summary>
+    public bool HasSuggestions => HasSuggestionsExposed;
+
+    public async Task<IReadOnlyList<SeriesSuggestion>> GetSuggestionsForShokoSeries(string seriesId)
+        => HasSuggestionsExposed
+            ? await GetOrNull<IReadOnlyList<SeriesSuggestion>>($"/api/v3/Series/{seriesId}/Suggested?onlyInCollection=true") ?? []
+            : [];
 
     public async Task<IReadOnlyList<Tag>> GetTagsForShokoSeries(string seriesId)
-        => await GetOrNull<IReadOnlyList<Tag>>($"/api/v3/Series/{seriesId}/Tags?filter=0&excludeDescriptions=true").ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<Tag>>($"/api/v3/Series/{seriesId}/Tags?filter=0&excludeDescriptions=true") ?? [];
 
     public Task<Images?> GetImagesForShokoSeries(string seriesId, CancellationToken cancellationToken = default)
         => GetOrNull<Images>($"/api/v3/Series/{seriesId}/Images", cancellationToken: cancellationToken);
 
     public async Task<IReadOnlyList<File>> GetFilesForShokoSeries(string seriesId)
         => HasPluginsExposed
-            ? (await GetOrNull<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs,ReleaseInfo", skipCache: true).ConfigureAwait(false))?.List ?? []
-            : (await GetOrNull<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB", skipCache: true).ConfigureAwait(false))?.List ?? [];
+            ? (await GetOrNull<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs,ReleaseInfo", skipCache: true))?.List ?? []
+            : (await GetOrNull<ListResult<File>>($"/api/v3/Series/{seriesId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB", skipCache: true))?.List ?? [];
 
     public async Task<IReadOnlyList<TmdbEpisodeCrossReference>> GetTmdbCrossReferencesForShokoSeries(string seriesId)
-        => (await GetOrNull<ListResult<TmdbEpisodeCrossReference>>($"/api/v3/Series/{seriesId}/TMDB/Show/CrossReferences/Episode?pageSize=0").ConfigureAwait(false))?.List ?? [];
+        => (await GetOrNull<ListResult<TmdbEpisodeCrossReference>>($"/api/v3/Series/{seriesId}/TMDB/Show/CrossReferences/Episode?pageSize=0"))?.List ?? [];
 
     #endregion
 
@@ -569,7 +618,7 @@ public class ShokoApiClient : IDisposable {
         => GetOrNull<ShokoGroup>($"/api/v3/Series/{seriesId}/Group");
 
     public async Task<IReadOnlyList<ShokoGroup>> GetShokoGroupsInShokoGroup(string groupId)
-        => await GetOrNull<IReadOnlyList<ShokoGroup>>($"/api/v3/Group/{groupId}/Group?includeEmpty=true").ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<ShokoGroup>>($"/api/v3/Group/{groupId}/Group?includeEmpty=true") ?? [];
 
     #endregion
 
@@ -602,7 +651,7 @@ public class ShokoApiClient : IDisposable {
             async () => {
                 _logger.LogTrace("Trying to get TMDB episodes for season {SeasonId}", seasonId);
                 var timeStart = DateTime.UtcNow;
-                var firstPage = await GetOrNull<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Season/{seasonId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences", skipCache: true).ConfigureAwait(false);
+                var firstPage = await GetOrNull<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Season/{seasonId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences", skipCache: true);
                 if (firstPage is null)
                     return [];
 
@@ -610,7 +659,7 @@ public class ShokoApiClient : IDisposable {
                 if (_pageSize > 0 && firstPage.Total > _pageSize) {
                     var totalPages = (int)Math.Ceiling((float)firstPage.Total / firstPage.List.Count);
                     for (var page = 2; page <= totalPages; page++) {
-                        var pageData = await Get<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Season/{seasonId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences&page={page}", skipCache: true).ConfigureAwait(false);
+                        var pageData = await Get<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Season/{seasonId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences&page={page}", skipCache: true);
                         pages.Add(pageData.List);
                     }
                 }
@@ -633,7 +682,7 @@ public class ShokoApiClient : IDisposable {
             async () => {
                 _logger.LogTrace("Trying to get TMDB episodes for show {ShowId}", showId);
                 var timeStart = DateTime.UtcNow;
-                var firstPage = await GetOrNull<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Show/{showId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences", skipCache: true).ConfigureAwait(false);
+                var firstPage = await GetOrNull<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Show/{showId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences", skipCache: true);
                 if (firstPage is null)
                     return [];
 
@@ -641,7 +690,7 @@ public class ShokoApiClient : IDisposable {
                 if (_pageSize > 0 && firstPage.Total > _pageSize) {
                     var totalPages = (int)Math.Ceiling((float)firstPage.Total / firstPage.List.Count);
                     for (var page = 2; page <= totalPages; page++) {
-                        var pageData = await Get<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Show/{showId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences&page={page}", skipCache: true).ConfigureAwait(false);
+                        var pageData = await Get<ListResult<TmdbEpisode>>($"/api/v3/TMDB/Show/{showId}/Episode?pageSize={_pageSize}&include=Titles,Overviews,Cast,Crew,Ordering,FileCrossReferences&page={page}", skipCache: true);
                         pages.Add(pageData.List);
                     }
                 }
@@ -671,15 +720,15 @@ public class ShokoApiClient : IDisposable {
         => GetOrNull<TmdbSeason>($"/api/v3/TMDB/Season/{seasonId}?include=Titles,Overviews,YearlySeasons");
 
     public async Task<IReadOnlyList<TmdbSeason>> GetTmdbSeasonsInTmdbShow(string showId)
-        => (await GetOrNull<ListResult<TmdbSeason>>($"/api/v3/TMDB/Show/{showId}/Season?pageSize=0&include=Titles,Overviews").ConfigureAwait(false))?.List ?? [];
+        => (await GetOrNull<ListResult<TmdbSeason>>($"/api/v3/TMDB/Show/{showId}/Season?pageSize=0&include=Titles,Overviews"))?.List ?? [];
 
     public Task<Images?> GetImagesForTmdbSeason(string seasonId, CancellationToken cancellationToken = default)
         => GetOrNull<Images>($"/api/v3/TMDB/Season/{seasonId}/Images", cancellationToken: cancellationToken);
 
     public async Task<IReadOnlyList<File>> GetFilesForTmdbSeason(string seasonId)
         => HasPluginsExposed
-            ? (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/File?pageSize=0&include=XRefs,ReleaseInfo", skipCache: true).ConfigureAwait(false))?.List ?? []
-            : (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB", skipCache: true).ConfigureAwait(false))?.List ?? [];
+            ? (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/Shoko/File?pageSize=0&include=XRefs,ReleaseInfo", skipCache: true))?.List ?? []
+            : (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Season/{seasonId}/Shoko/File?pageSize=0&include=XRefs&includeDataFrom=AniDB", skipCache: true))?.List ?? [];
 
     #endregion
 
@@ -692,7 +741,7 @@ public class ShokoApiClient : IDisposable {
         => GetOrNull<Images>($"/api/v3/TMDB/Show/{showId}/Images", cancellationToken: cancellationToken);
 
     public async Task<IReadOnlyList<TmdbEpisodeCrossReference>> GetTmdbCrossReferencesForTmdbShow(string showId)
-        => (await GetOrNull<ListResult<TmdbEpisodeCrossReference>>($"/api/v3/TMDB/Show/{showId}/Episode/CrossReferences?pageSize=0").ConfigureAwait(false))?.List ?? [];
+        => (await GetOrNull<ListResult<TmdbEpisodeCrossReference>>($"/api/v3/TMDB/Show/{showId}/Episode/CrossReferences?pageSize=0"))?.List ?? [];
 
     #endregion
 
@@ -702,18 +751,18 @@ public class ShokoApiClient : IDisposable {
         => GetOrNull<TmdbMovie>($"/api/v3/TMDB/Movie/{movieId}?include=Titles,Overviews,Keywords,Studios,ContentRatings,ProductionCountries,Cast,Crew,FileCrossReferences,YearlySeasons");
 
     public async Task<IReadOnlyList<TmdbMovie>> GetTmdbMoviesInMovieCollection(string collectionId)
-        => await GetOrNull<IReadOnlyList<TmdbMovie>>($"/api/v3/TMDB/Movie/Collection/{collectionId}/Movie?include=Titles,Overviews,Keywords,Studios,ContentRatings,ProductionCountries,Cast,Crew,FileCrossReferences,YearlySeasons").ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<TmdbMovie>>($"/api/v3/TMDB/Movie/Collection/{collectionId}/Movie?include=Titles,Overviews,Keywords,Studios,ContentRatings,ProductionCountries,Cast,Crew,FileCrossReferences,YearlySeasons") ?? [];
 
     public Task<EpisodeImages?> GetImagesForTmdbMovie(string movieId, CancellationToken cancellationToken = default)
         => GetOrNull<EpisodeImages>($"/api/v3/TMDB/Movie/{movieId}/Images", cancellationToken: cancellationToken);
 
     public async Task<IReadOnlyList<File>> GetFilesForTmdbMovie(string movieId)
         => HasPluginsExposed
-            ? (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/File?pageSize=0&include=XRefs,ReleaseInfo", skipCache: true).ConfigureAwait(false))?.List ?? []
-            : (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/File?pageSize=0&include=XRefs&includeDataFrom=AniDB", skipCache: true).ConfigureAwait(false))?.List ?? [];
+            ? (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/Shoko/File?pageSize=0&include=XRefs,ReleaseInfo", skipCache: true))?.List ?? []
+            : (await GetOrNull<ListResult<File>>($"/api/v3/TMDB/Movie/{movieId}/Shoko/File?pageSize=0&include=XRefs&includeDataFrom=AniDB", skipCache: true))?.List ?? [];
 
     public async Task<IReadOnlyList<TmdbMovieCrossReference>> GetTmdbCrossReferencesForTmdbMovie(string showId)
-        => await GetOrNull<IReadOnlyList<TmdbMovieCrossReference>>($"/api/v3/TMDB/Movie/{showId}/CrossReferences").ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<TmdbMovieCrossReference>>($"/api/v3/TMDB/Movie/{showId}/CrossReferences") ?? [];
 
     #endregion
 
@@ -734,7 +783,7 @@ public class ShokoApiClient : IDisposable {
     /// </summary>
     /// <returns>A list of custom tags.</returns>
     public async Task<IReadOnlyList<Tag>> GetCustomTags()
-        => (await Get<ListResult<Tag>>($"/api/v3/Tag/User?pageSize=0").ConfigureAwait(false))?.List ?? [];
+        => (await Get<ListResult<Tag>>($"/api/v3/Tag/User?pageSize=0"))?.List ?? [];
 
     private const string CustomTagByIdFilter = """
         {
@@ -748,7 +797,7 @@ public class ShokoApiClient : IDisposable {
     """;
 
     public async Task<IReadOnlyList<int>> GetSeriesIdsWithCustomTag(IEnumerable<int> tagIds)
-        => tagIds.Select(x => x.ToString()).ToList() is { Count: > 0 } tagIdList ? await GetShokoSeriesIdsForFilter(CustomTagByIdFilter.Replace("%tagIds%", $"\"{tagIdList.Join("\", \"")}\"")).ConfigureAwait(false) : [];
+        => tagIds.Select(x => x.ToString()).ToList() is { Count: > 0 } tagIdList ? await GetShokoSeriesIdsForFilter(CustomTagByIdFilter.Replace("%tagIds%", $"\"{tagIdList.Join("\", \"")}\"")) : [];
 
     /// <summary>
     /// Creates a custom tag in Shoko.
@@ -775,7 +824,7 @@ public class ShokoApiClient : IDisposable {
     /// <param name="tagId">The ID of the tag to remove.</param>
     /// <returns><c>true</c> if the tag was removed; <c>false</c> otherwise.</returns>
     public async Task<bool> RemoveCustomTag(int tagId)
-        => (await Get($"/api/v3/Tag/User/{tagId}", HttpMethod.Delete).ConfigureAwait(false)).StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
+        => (await Get($"/api/v3/Tag/User/{tagId}", HttpMethod.Delete)).StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
 
     #region Custom Tags on Series
 
@@ -785,7 +834,7 @@ public class ShokoApiClient : IDisposable {
     /// <param name="seriesId">The ID of the Shoko Series.</param>
     /// <returns>A list of custom tags.</returns>
     public async Task<IReadOnlyList<Tag>> GetCustomTagsForShokoSeries(int seriesId)
-        => await GetOrNull<IReadOnlyList<Tag>>($"/api/v3/Series/{seriesId}/Tags/User?excludeDescriptions=true", skipCache: true).ConfigureAwait(false) ?? [];
+        => await GetOrNull<IReadOnlyList<Tag>>($"/api/v3/Series/{seriesId}/Tags/User?excludeDescriptions=true", skipCache: true) ?? [];
 
     /// <summary>
     /// Adds a custom tag to a Shoko Series.
@@ -794,7 +843,7 @@ public class ShokoApiClient : IDisposable {
     /// <param name="tagId">The ID of the custom tag to add.</param>
     /// <returns><c>true</c> if the tag was added; <c>false</c> otherwise.</returns>
     public async Task<bool> AddCustomTagToShokoSeries(int seriesId, int tagId)
-        => (await Post($"/api/v3/Series/{seriesId}/Tags/User", HttpMethod.Post, new Dictionary<string, int[]> { { "IDs", [tagId] } }).ConfigureAwait(false)).StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
+        => (await Post($"/api/v3/Series/{seriesId}/Tags/User", HttpMethod.Post, new Dictionary<string, int[]> { { "IDs", [tagId] } })).StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
 
     /// <summary>
     /// Removes a custom tag from a Shoko Series.
@@ -803,7 +852,7 @@ public class ShokoApiClient : IDisposable {
     /// <param name="tagId">The ID of the custom tag to remove.</param>
     /// <returns><c>true</c> if the tag was removed; <c>false</c> otherwise.</returns>
     public async Task<bool> RemoveCustomTagFromShokoSeries(int seriesId, int tagId)
-        => (await Post($"/api/v3/Series/{seriesId}/Tags/User", HttpMethod.Delete, new Dictionary<string, int[]> { { "IDs", [tagId] } }).ConfigureAwait(false)).StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
+        => (await Post($"/api/v3/Series/{seriesId}/Tags/User", HttpMethod.Delete, new Dictionary<string, int[]> { { "IDs", [tagId] } })).StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent;
 
     #endregion
 

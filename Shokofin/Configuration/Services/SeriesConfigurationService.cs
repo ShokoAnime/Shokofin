@@ -191,11 +191,16 @@ public class SeriesConfigurationService(ILogger<SeriesConfigurationService> logg
             Name = "Shokofin/Order by AirDate",
             Description = $"Order episodes by air date instead of episode number in Jellyfin. {ManagedBy}",
         },
+
+        new() {
+            Name = "Shokofin/Include in Playlists",
+            Description = $"Always include this series in automatic playlist generation in Jellyfin. {ManagedBy}",
+        },
     ];
 
     private Task<IReadOnlyDictionary<string, int>> CreatOrGetRequiredTags()
         => _cache.GetOrCreateAsync<IReadOnlyDictionary<string, int>>("tags", async () => {
-            var allCustomTags = await apiClient.GetCustomTags().ConfigureAwait(false);
+            var allCustomTags = await apiClient.GetCustomTags();
             var outputDict = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             foreach (var simpleTag in _simpleTags) {
                 var localTags = allCustomTags
@@ -205,7 +210,7 @@ public class SeriesConfigurationService(ILogger<SeriesConfigurationService> logg
                     )
                     .ToList();
                 if (localTags.Count == 0) {
-                    var newTag = await apiClient.CreateCustomTag(simpleTag.Name, simpleTag.Description).ConfigureAwait(false);
+                    var newTag = await apiClient.CreateCustomTag(simpleTag.Name, simpleTag.Description);
                     outputDict[simpleTag.Key] = newTag.Id;
                     continue;
                 }
@@ -215,16 +220,16 @@ public class SeriesConfigurationService(ILogger<SeriesConfigurationService> logg
                     !string.Equals(simpleTag.Name, existingTag.Name, StringComparison.Ordinal) ||
                     !string.Equals(simpleTag.Description, existingTag.Description, StringComparison.Ordinal)
                 ) {
-                    existingTag = await apiClient.UpdateCustomTag(existingTag.Id, simpleTag.Name, simpleTag.Description).ConfigureAwait(false);
+                    existingTag = await apiClient.UpdateCustomTag(existingTag.Id, simpleTag.Name, simpleTag.Description);
                 }
 
                 if (localTags.Skip(1).ToList() is { Count: > 0 } otherTags) {
-                    var seriesIds = await apiClient.GetSeriesIdsWithCustomTag(otherTags.Select(x => x.Id)).ConfigureAwait(false);
+                    var seriesIds = await apiClient.GetSeriesIdsWithCustomTag(otherTags.Select(x => x.Id));
                     foreach (var otherTag in otherTags) {
-                        await apiClient.RemoveCustomTag(otherTag.Id).ConfigureAwait(false);
+                        await apiClient.RemoveCustomTag(otherTag.Id);
                     }
                     foreach (var seriesId in seriesIds) {
-                        await apiClient.AddCustomTagToShokoSeries(seriesId, existingTag.Id).ConfigureAwait(false);
+                        await apiClient.AddCustomTagToShokoSeries(seriesId, existingTag.Id);
                     }
                 }
 
@@ -234,14 +239,14 @@ public class SeriesConfigurationService(ILogger<SeriesConfigurationService> logg
         });
 
     public async Task<SeriesConfiguration?> GetSeriesConfigurationForId(int shokoSeriesId) {
-        if (await apiClient.GetShokoSeries(shokoSeriesId.ToString()).ConfigureAwait(false) is not { })
+        if (await apiClient.GetShokoSeries(shokoSeriesId.ToString()) is not { })
             return null;
 
         return await apiManager.GetInternalSeriesConfiguration(shokoSeriesId.ToString());
     }
 
     public async Task<SeriesConfiguration> UpdateSeriesConfigurationForId(int shokoSeriesId, NullableSeriesConfiguration seriesConfiguration) {
-        var config = await GetSeriesConfigurationForId(shokoSeriesId).ConfigureAwait(false) ??
+        var config = await GetSeriesConfigurationForId(shokoSeriesId) ??
             throw new InvalidOperationException("Series not found.");
 
         if (seriesConfiguration.Type is not null)
@@ -258,20 +263,22 @@ public class SeriesConfigurationService(ILogger<SeriesConfigurationService> logg
             config.EpisodeConversion = seriesConfiguration.EpisodeConversion.Value;
         if (seriesConfiguration.OrderByAirdate is not null)
             config.OrderByAirdate = seriesConfiguration.OrderByAirdate.Value;
+        if (seriesConfiguration.PlaylistInclude is not null)
+            config.PlaylistInclude = seriesConfiguration.PlaylistInclude.Value;
 
-        return await UpdateSeriesConfigurationForId(shokoSeriesId, config).ConfigureAwait(false);
+        return await UpdateSeriesConfigurationForId(shokoSeriesId, config);
     }
 
     public async Task<SeriesConfiguration> UpdateSeriesConfigurationForId(int shokoSeriesId, SeriesConfiguration seriesConfiguration) {
-        if (await apiClient.GetShokoSeries(shokoSeriesId.ToString()).ConfigureAwait(false) is not { } series)
+        if (await apiClient.GetShokoSeries(shokoSeriesId.ToString()) is not { } series)
             throw new InvalidOperationException("Series not found.");
 
         var toAddSet = new HashSet<int>();
         var toRemoveSet = new HashSet<int>();
-        var knownTagDict = await CreatOrGetRequiredTags().ConfigureAwait(false);
+        var knownTagDict = await CreatOrGetRequiredTags();
         var currentTagSet = await apiClient.GetCustomTagsForShokoSeries(shokoSeriesId)
             .ContinueWith(x => x.Result.Select(x => x.Id).ToHashSet())
-            .ConfigureAwait(false);
+            ;
 
         var seriesTypes = knownTagDict.Where(x => x.Key.StartsWith("/series type/")).ToDictionary(x => x.Key, x => x.Value);
         foreach (var (_, id) in seriesTypes)
@@ -447,13 +454,20 @@ public class SeriesConfigurationService(ILogger<SeriesConfigurationService> logg
             toRemoveSet.Add(knownTagDict["/shokofin/order by airdate"]);
         }
 
+        if (seriesConfiguration.PlaylistInclude) {
+            toAddSet.Add(knownTagDict["/shokofin/include in playlists"]);
+        }
+        else {
+            toRemoveSet.Add(knownTagDict["/shokofin/include in playlists"]);
+        }
+
         toAddSet.ExceptWith(currentTagSet);
         toRemoveSet.IntersectWith(currentTagSet);
 
         foreach (var tagToRemove in toRemoveSet)
-            await apiClient.RemoveCustomTagFromShokoSeries(shokoSeriesId, tagToRemove).ConfigureAwait(false);
+            await apiClient.RemoveCustomTagFromShokoSeries(shokoSeriesId, tagToRemove);
         foreach (var tagToAdd in toAddSet)
-            await apiClient.AddCustomTagToShokoSeries(shokoSeriesId, tagToAdd).ConfigureAwait(false);
+            await apiClient.AddCustomTagToShokoSeries(shokoSeriesId, tagToAdd);
 
         return seriesConfiguration;
     }

@@ -18,10 +18,13 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator {
         serviceCollection.AddSingleton<Sync.UserDataSyncManager>();
         serviceCollection.AddSingleton<MergeVersions.MergeVersionsManager>();
         serviceCollection.AddSingleton<Collections.CollectionManager>();
+        serviceCollection.AddSingleton<Playlists.PlaylistManager>();
         serviceCollection.AddSingleton<Resolvers.VirtualFileSystemService>();
         serviceCollection.AddSingleton<Events.MetadataRefreshService>();
         serviceCollection.AddSingleton<Events.EventDispatchService>();
         serviceCollection.AddSingleton<SignalR.SignalRConnectionManager>();
+        serviceCollection.AddSingleton<Database.UserDataRepositoryService>();
+        serviceCollection.AddSingleton<Database.UserDataMigrationService>();
         serviceCollection.AddHostedService<SignalR.SignalREntryPoint>();
         serviceCollection.AddHostedService<Resolvers.ShokoLibraryMonitor>();
         serviceCollection.AddControllers(options => {
