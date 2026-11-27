@@ -9,6 +9,30 @@
         "imageUrl": "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/banner.png",
         "versions": [
             {
+                "version": "6.1.0.112",
+                "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.1.0-dev.1) for more info.\n\n---\n\n`repo`: **Synchronize 'dev' branch with 'stable' branch**.",
+                "targetAbi": "12.0.0.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.1.0-dev.1/shoko_6.1.0.1_for_12.y.z.zip",
+                "checksum": "6a3d84b77eb65e3ec0b2c594e0c51a81",
+                "timestamp": "2026-11-27T19:44:01Z"
+            },
+            {
+                "version": "6.1.0.111",
+                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.1.0-dev.1) for more info.\n\n---\n\n`repo`: **Synchronize 'dev' branch with 'stable' branch**.",
+                "targetAbi": "10.11.11.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.1.0-dev.1/shoko_6.1.0.1_for_10.11.z.zip",
+                "checksum": "454cb6a9f5b39e69dbe4f0815c120650",
+                "timestamp": "2026-11-27T19:44:08Z"
+            },
+            {
+                "version": "6.1.0.110",
+                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.1.0-dev.1) for more info.\n\n---\n\n`repo`: **Synchronize 'dev' branch with 'stable' branch**.",
+                "targetAbi": "10.10.7.0",
+                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.1.0-dev.1/shoko_6.1.0.1_for_10.10.z.zip",
+                "checksum": "60452f6829aaaed1009819e6b657ad7d",
+                "timestamp": "2026-11-27T19:44:14Z"
+            },
+            {
                 "version": "6.0.5.4012",
                 "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.40) for more info.\n\n---\n\n`fix`: **Better logging and delete existing files**:\n\nBetter logging and delete the existing files when moving `.trickplay` directories into the underlying library",
                 "targetAbi": "12.0.0.0",
@@ -63,30 +87,6 @@
                 "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.38/shoko_6.0.5.38_for_12.y.z.zip",
                 "checksum": "bb1ca34dfe41b4c3b1db83a3e9cc9a52",
                 "timestamp": "2026-10-03T21:53:34Z"
-            },
-            {
-                "version": "6.0.5.3811",
-                "changelog": "Only compatible with **10.11.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.38) for more info.\n\n---\n\n`feat`: **Add a shoko similar items provider for jellyfin 12**:\n\n- Added a remote similar items provider for series and movies on Jellyfin 12, using the series suggestions in Shoko that point at series in the collection\n- Added a probe for the series suggestions endpoint, cached as `HasSuggestionsExposed`, and hid the provider when the server doesn't have it\n- Scored suggestions by their approval rating when the source has one, otherwise by their order",
-                "targetAbi": "10.11.11.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.38/shoko_6.0.5.38_for_10.11.z.zip",
-                "checksum": "1ed2e6fdc3b38f96912ca8e7618b6eab",
-                "timestamp": "2026-10-03T21:53:47Z"
-            },
-            {
-                "version": "6.0.5.3810",
-                "changelog": "Only compatible with **10.10.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.38) for more info.\n\n---\n\n`feat`: **Add a shoko similar items provider for jellyfin 12**:\n\n- Added a remote similar items provider for series and movies on Jellyfin 12, using the series suggestions in Shoko that point at series in the collection\n- Added a probe for the series suggestions endpoint, cached as `HasSuggestionsExposed`, and hid the provider when the server doesn't have it\n- Scored suggestions by their approval rating when the source has one, otherwise by their order",
-                "targetAbi": "10.10.7.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.38/shoko_6.0.5.38_for_10.10.z.zip",
-                "checksum": "6552ab7c0660b56277dd9816286c453b",
-                "timestamp": "2026-10-03T21:53:55Z"
-            },
-            {
-                "version": "6.0.5.3712",
-                "changelog": "Only compatible with **12.y.z**.\n\nSee the [release notes](https://github.com/ShokoAnime/Shokofin/releases/tag/v6.0.5-dev.37) for more info.\n\n---\n\n`fix`: **Stop creating duplicate playlists on every reconstruction**:\n\n- Embedded `[ShokoPlaylistGroup=<id>]` in the playlist folder name so existing playlists are found again; the display name is reset to the group title\n- Removed the cleanup step that deleted every Shoko playlist before each run\n- Removed legacy playlists identified only by the provider id, and extra playlists per group\n- Built playlists from the top-level group instead of whichever subgroup was looked up first\n- Replaced the playlist items in release order when anything was added, removed or moved\n- Fixed the mixed-content check for groups with series and movies in different subgroups",
-                "targetAbi": "12.0.0.0",
-                "sourceUrl": "https://github.com/ShokoAnime/Shokofin/releases/download/v6.0.5-dev.37/shoko_6.0.5.37_for_12.y.z.zip",
-                "checksum": "f1c45bd868e6e496a9f30e1c5aa7623e",
-                "timestamp": "2026-10-03T15:55:55Z"
             }
         ]
     }
