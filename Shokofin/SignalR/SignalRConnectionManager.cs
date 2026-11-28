@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Sockets;
@@ -28,6 +29,10 @@ public class SignalRConnectionManager {
     private readonly EventDispatchService Events;
 
     private readonly LibraryScanWatcher LibraryScanWatcher;
+
+    private readonly Queue<Action> DeferredEvents = new();
+
+    private bool IsRunning = false;
 
     private IDisposable? EventSubmitterLease = null;
 
@@ -109,13 +114,17 @@ public class SignalRConnectionManager {
             connection.On<FileRenamedEventArgs>("ShokoEvent:FileRenamed", OnFileRelocated);
         }
 
-        EventSubmitterLease = Events.RegisterEventSubmitter();
+        lock (DeferredEvents)
+            EventSubmitterLease = Events.RegisterEventSubmitter();
         try {
             Logger.LogInformation("Connecting to Shoko Server.");
 
             await connection.StartAsync();
 
             Logger.LogInformation("Connected to Shoko Server.");
+
+            if (!LibraryScanWatcher.IsScanRunning)
+                _ = ReplayDeferredEventsAsync();
         }
         catch (HttpRequestException ex) when (ex is { HttpRequestError: HttpRequestError.ConnectionError, InnerException: SocketException { SocketErrorCode: SocketError.ConnectionRefused } }) {
             Logger.LogWarning("Unable to connect to Shoko Server due to a connection error. Please reconnect manually.");
@@ -158,9 +167,11 @@ public class SignalRConnectionManager {
 
         await connection.DisposeAsync();
 
-        if (EventSubmitterLease is not null) {
-            EventSubmitterLease.Dispose();
-            EventSubmitterLease = null;
+        lock (DeferredEvents) {
+            if (EventSubmitterLease is not null) {
+                EventSubmitterLease.Dispose();
+                EventSubmitterLease = null;
+            }
         }
     }
 
@@ -177,15 +188,24 @@ public class SignalRConnectionManager {
     }
 
     public async Task RunAsync() {
+        lock (DeferredEvents)
+            IsRunning = true;
+
         var config = Plugin.Instance.Configuration;
         CachedKey = ConstructKey(config);
         Plugin.Instance.ConfigurationChanged += OnConfigurationChanged;
+        LibraryScanWatcher.ValueChanged += OnLibraryScanRunningChanged;
 
         await ResetConnectionAsync(config, config.SignalR_AutoConnectEnabled);
     }
 
     public async Task StopAsync() {
         Plugin.Instance.ConfigurationChanged -= OnConfigurationChanged;
+        LibraryScanWatcher.ValueChanged -= OnLibraryScanRunningChanged;
+        lock (DeferredEvents) {
+            IsRunning = false;
+            DeferredEvents.Clear();
+        }
         await DisconnectAsync();
     }
 
@@ -208,6 +228,55 @@ public class SignalRConnectionManager {
 
     #region Events
 
+    private bool DispatchOrDefer(Action dispatch) {
+        lock (DeferredEvents) {
+            if (!IsRunning)
+                return false;
+
+            if (LibraryScanWatcher.IsScanRunning || DeferredEvents.Count > 0 || EventSubmitterLease is null) {
+                DeferredEvents.Enqueue(dispatch);
+                return true;
+            }
+
+            dispatch();
+            return false;
+        }
+    }
+
+    private void OnLibraryScanRunningChanged(object? sender, bool isScanRunning) {
+        if (!isScanRunning)
+            _ = ReplayDeferredEventsAsync();
+    }
+
+    private async Task ReplayDeferredEventsAsync() {
+        while (true) {
+            lock (DeferredEvents) {
+                if (!IsRunning || EventSubmitterLease is null)
+                    return;
+
+                if (!LibraryScanWatcher.IsScanRunning) {
+                    var count = 0;
+                    while (!LibraryScanWatcher.IsScanRunning && DeferredEvents.TryDequeue(out var dispatch)) {
+                        try {
+                            dispatch();
+                            count++;
+                        }
+                        catch (Exception ex) {
+                            Logger.LogError(ex, "Error replaying a deferred event.");
+                        }
+                    }
+
+                    if (count > 0)
+                        Logger.LogInformation("Replayed {EventCount} deferred events after the library scan.", count);
+                    return;
+                }
+            }
+
+            // ValueChanged fires before IsScanRunning is updated.
+            await Task.Delay(100);
+        }
+    }
+
     #region File Events
 
     private void OnFileMatched(IFileEventArgs eventArgs) {
@@ -220,16 +289,13 @@ public class SignalRConnectionManager {
             eventArgs.HasCrossReferences
         );
 
-        if (LibraryScanWatcher.IsScanRunning) {
+        if (DispatchOrDefer(() => Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataUpdated, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs))) {
             Logger.LogTrace(
-                "Library scan is running. Skipping emit of file event. (File={FileId},Location={LocationId})",
+                "Deferring file event until the library scan completes. (File={FileId},Location={LocationId})",
                 eventArgs.FileId,
                 eventArgs.FileLocationId
             );
-            return;
         }
-
-        Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataUpdated, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     private async Task OnReleaseSaved(IReleaseSavedEventArgs eventArgs0) {
@@ -253,16 +319,13 @@ public class SignalRConnectionManager {
             eventArgs.HasCrossReferences
         );
 
-        if (LibraryScanWatcher.IsScanRunning) {
+        if (DispatchOrDefer(() => Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataUpdated, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs))) {
             Logger.LogTrace(
-                "Library scan is running. Skipping emit of file event. (File={FileId},Location={LocationId})",
+                "Deferring file event until the library scan completes. (File={FileId},Location={LocationId})",
                 eventArgs.FileId,
                 eventArgs.FileLocationId
             );
-            return;
         }
-
-        Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataUpdated, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     private void OnFileRelocated(IFileRelocationEventArgs eventArgs) {
@@ -277,17 +340,16 @@ public class SignalRConnectionManager {
             eventArgs.HasCrossReferences
         );
 
-        if (LibraryScanWatcher.IsScanRunning) {
+        if (DispatchOrDefer(() => {
+            Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataRemoved, eventArgs.PreviousManagedFolderId, eventArgs.PreviousRelativePath, eventArgs);
+            Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataAdded, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
+        })) {
             Logger.LogTrace(
-                "Library scan is running. Skipping emit of file event. (File={FileId},Location={LocationId})",
+                "Deferring file event until the library scan completes. (File={FileId},Location={LocationId})",
                 eventArgs.FileId,
                 eventArgs.FileLocationId
             );
-            return;
         }
-
-        Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataRemoved, eventArgs.PreviousManagedFolderId, eventArgs.PreviousRelativePath, eventArgs);
-        Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataAdded, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     private void OnFileDeleted(IFileEventArgs eventArgs) {
@@ -300,16 +362,13 @@ public class SignalRConnectionManager {
             eventArgs.HasCrossReferences
         );
 
-        if (LibraryScanWatcher.IsScanRunning) {
+        if (DispatchOrDefer(() => Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataRemoved, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs))) {
             Logger.LogTrace(
-                "Library scan is running. Skipping emit of file event. (File={FileId},Location={LocationId})",
+                "Deferring file event until the library scan completes. (File={FileId},Location={LocationId})",
                 eventArgs.FileId,
                 eventArgs.FileLocationId
             );
-            return;
         }
-
-        Events.AddFileEvent(eventArgs.FileId, UpdateReason.MetadataRemoved, eventArgs.ManagedFolderId, eventArgs.RelativePath, eventArgs);
     }
 
     #endregion
@@ -356,17 +415,16 @@ public class SignalRConnectionManager {
             eventArgs.SeriesIds
         );
 
-        if (LibraryScanWatcher.IsScanRunning) {
+        if (eventArgs.Kind is not (BaseItemKind.Episode or BaseItemKind.Series or BaseItemKind.Movie))
+            return;
+
+        if (DispatchOrDefer(() => Events.AddSeriesEvent(eventArgs.ProviderParentUId ?? eventArgs.ProviderUId, eventArgs))) {
             Logger.LogTrace(
-                "Library scan is running. Skipping emit of refresh event. (Episode={EpisodeId},Series={SeriesId})",
+                "Deferring metadata event until the library scan completes. (Episode={EpisodeId},Series={SeriesId})",
                 eventArgs.EpisodeIds,
                 eventArgs.SeriesIds
             );
-            return;
         }
-
-        if (eventArgs.Kind is BaseItemKind.Episode or BaseItemKind.Series or BaseItemKind.Movie)
-            Events.AddSeriesEvent(eventArgs.ProviderParentUId ?? eventArgs.ProviderUId, eventArgs);
     }
 
     #endregion

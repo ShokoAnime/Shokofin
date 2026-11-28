@@ -79,8 +79,9 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                 return null;
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve path \"{fileInfo.FullName}\".");
-            var (vfsPath, shouldContinue, _, _) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName, cancellationToken);
-            if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
+            using var resolution = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, fileInfo.FullName, cancellationToken);
+            var vfsPath = resolution.VfsPath;
+            if (string.IsNullOrEmpty(vfsPath) || !resolution.ShouldContinue)
                 return null;
 
             return null;
@@ -112,9 +113,13 @@ public class ShokoResolver : IItemResolver, IMultiItemResolver {
                 return new();
 
             trackerId = Plugin.Instance.Tracker.Add($"Resolve children of \"{parent.Path}\". (Children={fileInfoList.Count})");
-            var (vfsPath, shouldContinue, skipValidation, paths) = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path, cancellationToken);
-            if (string.IsNullOrEmpty(vfsPath) || !shouldContinue)
+            using var resolution = await ResolveManager.GenerateStructureInVFS(mediaFolder, collectionType, parent.Path, cancellationToken, validateRoot: parent.IsTopParent);
+            var vfsPath = resolution.VfsPath;
+            if (string.IsNullOrEmpty(vfsPath) || !resolution.ShouldContinue)
                 return new();
+
+            var skipValidation = resolution.SkipValidation;
+            var paths = resolution.Paths;
 
             // Redirect children of a VFS managed media folder to the VFS.
             if (parent.IsTopParent) {

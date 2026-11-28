@@ -413,8 +413,8 @@ public class ShokoApiClient : IDisposable {
 
     public async Task<ListResult<File>> GetFilesInManagedFolder(int managedFolderId, string subPath, int page = 1)
         => HasPluginsExposed
-            ? await GetOrNull<ListResult<File>>($"/api/v3/ManagedFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}") ?? new()
-            : await GetOrNull<ListResult<File>>($"/api/v3/ImportFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}") ?? new();
+            ? await GetOrNull<ListResult<File>>($"/api/v3/ManagedFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}", skipCache: true) ?? new()
+            : await GetOrNull<ListResult<File>>($"/api/v3/ImportFolder/{managedFolderId}/File?pageSize=1000&page={page}&include=XRefs&folderPath={Uri.EscapeDataString(subPath)}", skipCache: true) ?? new();
 
     #endregion
 
