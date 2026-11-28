@@ -629,6 +629,20 @@ public class ShokoApiClient : IDisposable {
 
     #endregion
 
+    #region AniList Anime
+
+    public async Task<IReadOnlyList<MetadataTag>> GetTagsForAnilistAnime(string anilistId, MetadataTagKind kind)
+        => HasPluginsExposed
+            ? await GetOrNull<IReadOnlyList<MetadataTag>>($"/api/v3/Metadata/AniList/Series/{Uri.EscapeDataString(anilistId)}/Tags?kind={kind}&excludeOverviews=true") ?? []
+            : [];
+
+    public async Task<IReadOnlyList<Text>> GetOverviewsForAnilistAnime(string anilistId)
+        => HasPluginsExposed
+            ? await GetOrNull<IReadOnlyList<Text>>($"/api/v3/Metadata/AniList/Series/{Uri.EscapeDataString(anilistId)}/Overviews") ?? []
+            : [];
+
+    #endregion
+
     #region TMDB Episode
 
     public Task<TmdbEpisode?> GetTmdbEpisode(string episodeId, bool useDefaultOrdering = false)

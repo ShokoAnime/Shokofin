@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 using DescriptionProvider = Shokofin.Utils.TextUtility.DescriptionProvider;
 
@@ -84,4 +87,26 @@ public class AllDescriptionsConfiguration {
     /// Description settings for TMDb episodes.
     /// </summary>
     public ToggleDescriptionConfiguration TmdbEpisode { get; set; } = new();
+
+    /// <summary>
+    /// All public description configuration properties on this class.
+    /// </summary>
+    private static readonly PropertyInfo[] _descriptionProperties = typeof(AllDescriptionsConfiguration)
+        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .Where(property => typeof(DescriptionConfiguration).IsAssignableFrom(property.PropertyType))
+        .ToArray();
+
+    /// <summary>
+    /// Get all description configurations, in no particular order.
+    /// </summary>
+    private IEnumerable<DescriptionConfiguration> GetAll()
+        => _descriptionProperties
+            .Select(property => property.GetValue(this))
+            .OfType<DescriptionConfiguration>();
+
+    /// <summary>
+    /// Check if the given provider is enabled in any description configuration.
+    /// </summary>
+    public bool IsProviderEnabled(DescriptionProvider provider)
+        => GetAll().Any(config => config.List.Contains(provider));
 }

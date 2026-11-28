@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities;
 using Microsoft.Extensions.Logging;
 using Shokofin.API.Info.AniDB;
+using Shokofin.API.Info.AniList;
+using Shokofin.API.Info.MAL;
 using Shokofin.API.Info.Shoko;
 using Shokofin.API.Info.TMDB;
 using Shokofin.API.Models;
@@ -198,6 +200,20 @@ public class ShowInfo : IExtendedItemInfo {
 
     #endregion
 
+    #region AniList & MyAnimeList Metadata
+
+    /// <summary>
+    /// All AniList anime linked to the show info.
+    /// </summary>
+    public AnilistAnimeInfo[] AnilistAnime { get; init; }
+
+    /// <summary>
+    /// All MyAnimeList anime linked to the show info.
+    /// </summary>
+    public MalAnimeInfo[] MalAnime { get; init; }
+
+    #endregion
+
     #region TMDB Show Metadata
 
     /// <summary>
@@ -279,6 +295,8 @@ public class ShowInfo : IExtendedItemInfo {
         DefaultSeason = seasonInfo;
         EpisodePadding = Math.Max(2, (new int[] { seasonInfo.EpisodeList.Count, seasonInfo.AlternateEpisodesList.Count, seasonInfo.SpecialsList.Count }).Max().ToString().Length);
         AnidbAnime = seasonInfo.AnidbAnime;
+        AnilistAnime = seasonInfo.AnilistAnime;
+        MalAnime = seasonInfo.MalAnime;
         ShokoSeries = seasonInfo.ShokoSeries;
         TmdbShows = [..seasonInfo.TmdbSeasons.Select(tmdbSeason => tmdbSeason.ToShowInfo()).Distinct()];
         TmdbMovies = seasonInfo.TmdbMovies;
@@ -364,7 +382,7 @@ public class ShowInfo : IExtendedItemInfo {
             ? TextUtility.SanitizeAnidbDescription(group.Description)
             : group.Description;
         Overviews = [
-            ..defaultSeason.Overviews.Where(t => t.Source is "AniDB"),
+            ..defaultSeason.Overviews.Where(t => t.Source is "AniDB" or "AniList"),
             ..(tmdbEntity?.Overviews ?? []),
         ];
         Notes = defaultSeason.Notes;
@@ -397,6 +415,8 @@ public class ShowInfo : IExtendedItemInfo {
         DefaultSeason = defaultSeason;
         EpisodePadding = Math.Max(2, seasonList.SelectMany(s => new int[] { s.EpisodeList.Count, s.AlternateEpisodesList.Count }).Append(specialsSet.Count).Max().ToString().Length);
         AnidbAnime = [..defaultSeason.AnidbAnime.Concat(seasonList.Except([defaultSeason]).SelectMany(s => s.AnidbAnime)).Distinct()];
+        AnilistAnime = [..defaultSeason.AnilistAnime.Concat(seasonList.Except([defaultSeason]).SelectMany(s => s.AnilistAnime)).DistinctBy(a => a.AnilistAnimeId)];
+        MalAnime = [..defaultSeason.MalAnime.Concat(seasonList.Except([defaultSeason]).SelectMany(s => s.MalAnime)).DistinctBy(a => a.MalAnimeId)];
         ShokoSeries = [..defaultSeason.ShokoSeries.Concat(seasonList.Except([defaultSeason]).SelectMany(s => s.ShokoSeries)).Distinct()];
         TmdbShows = [
             ..(tmdbEntity is TmdbShow tmdbShow ? (
@@ -481,6 +501,8 @@ public class ShowInfo : IExtendedItemInfo {
         DefaultSeason = defaultSeason;
         EpisodePadding = Math.Max(2, seasonList.SelectMany(s => new int[] { s.EpisodeList.Count, s.AlternateEpisodesList.Count }).Append(specialsSet.Count).Max().ToString().Length);
         AnidbAnime = [..seasonList.SelectMany(s => s.AnidbAnime).Distinct()];
+        AnilistAnime = [..seasonList.SelectMany(s => s.AnilistAnime).DistinctBy(a => a.AnilistAnimeId)];
+        MalAnime = [..seasonList.SelectMany(s => s.MalAnime).DistinctBy(a => a.MalAnimeId)];
         ShokoSeries = [..seasonList.SelectMany(s => s.ShokoSeries).Distinct()];
         TmdbShows = [tmdbShow.ToInfo()];
         TmdbMovies = [];
@@ -519,6 +541,8 @@ public class ShowInfo : IExtendedItemInfo {
         DefaultSeason = seasonInfo;
         EpisodePadding = Math.Max(2, (new int[] { seasonInfo.EpisodeList.Count, seasonInfo.AlternateEpisodesList.Count, seasonInfo.SpecialsList.Count }).Max().ToString().Length);
         AnidbAnime = seasonInfo.AnidbAnime;
+        AnilistAnime = seasonInfo.AnilistAnime;
+        MalAnime = seasonInfo.MalAnime;
         ShokoSeries = seasonInfo.ShokoSeries;
         TmdbShows = [..seasonInfo.TmdbSeasons.Select(tmdbSeason => tmdbSeason.ToShowInfo()).Distinct()];
         TmdbMovies = seasonInfo.TmdbMovies;
@@ -601,6 +625,8 @@ public class ShowInfo : IExtendedItemInfo {
         DefaultSeason = defaultSeason;
         EpisodePadding = Math.Max(2, seasonList.SelectMany(s => new int[] { s.EpisodeList.Count, s.AlternateEpisodesList.Count }).Append(specialsSet.Count).Max().ToString().Length);
         AnidbAnime = [..seasonList.SelectMany(s => s.AnidbAnime).Distinct()];
+        AnilistAnime = [..seasonList.SelectMany(s => s.AnilistAnime).DistinctBy(a => a.AnilistAnimeId)];
+        MalAnime = [..seasonList.SelectMany(s => s.MalAnime).DistinctBy(a => a.MalAnimeId)];
         ShokoSeries = [..seasonList.SelectMany(s => s.ShokoSeries).Distinct()];
         TmdbShows = [];
         TmdbMovies = [..seasonList.SelectMany(s => s.TmdbMovies).Distinct()];

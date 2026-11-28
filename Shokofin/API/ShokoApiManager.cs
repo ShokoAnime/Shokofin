@@ -9,6 +9,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Shokofin.API.Info;
 using Shokofin.API.Info.AniDB;
+using Shokofin.API.Info.AniList;
+using Shokofin.API.Info.MAL;
 using Shokofin.API.Info.Shoko;
 using Shokofin.API.Info.TMDB;
 using Shokofin.API.Models;
@@ -410,13 +412,55 @@ public partial class ShokoApiManager : IDisposable {
         );
 
     private async Task<string[]> GetTagsForSeries(string seriesId) {
+        var sources = Plugin.Instance.Configuration.TagSources;
         var tags = await GetNamespacedTagsForSeries(seriesId);
-        return TagFilter.FilterTags(tags);
+        var anilistTags = new List<MetadataTag>();
+        if (sources.HasFlag(TagFilter.TagSource.AnilistGenres))
+            anilistTags.AddRange(await GetAnilistTagsForSeries(seriesId, MetadataTagKind.Genre));
+        if (sources.HasFlag(TagFilter.TagSource.AnilistTags) || sources.HasFlag(TagFilter.TagSource.AnilistAdultTags))
+            anilistTags.AddRange(await GetAnilistTagsForSeries(seriesId, MetadataTagKind.Tag));
+        return TagFilter.FilterTags(tags, anilistTags);
     }
 
     private async Task<string[]> GetGenresForSeries(string seriesId) {
+        var sources = Plugin.Instance.Configuration.GenreSources;
         var tags = await GetNamespacedTagsForSeries(seriesId);
-        return TagFilter.FilterGenres(tags);
+        var anilistTags = new List<MetadataTag>();
+        if (sources.HasFlag(TagFilter.TagSource.AnilistGenres))
+            anilistTags.AddRange(await GetAnilistTagsForSeries(seriesId, MetadataTagKind.Genre));
+        if (sources.HasFlag(TagFilter.TagSource.AnilistTags) || sources.HasFlag(TagFilter.TagSource.AnilistAdultTags))
+            anilistTags.AddRange(await GetAnilistTagsForSeries(seriesId, MetadataTagKind.Tag));
+        return TagFilter.FilterGenres(tags, anilistTags);
+    }
+
+    private Task<IReadOnlyList<MetadataTag>> GetAnilistTagsForSeries(string seriesId, MetadataTagKind kind)
+        => DataCache.GetOrCreateAsync<IReadOnlyList<MetadataTag>>(
+            $"series-anilist-tags:{seriesId}:{kind}",
+            async () => {
+                if (await ApiClient.GetShokoSeries(seriesId) is not { } series)
+                    return [];
+
+                var list = new List<MetadataTag>();
+                foreach (var anilistId in series.IDs.AniList.Distinct())
+                    list.AddRange(await ApiClient.GetTagsForAnilistAnime(anilistId, kind));
+                Logger.LogTrace("Found {Count} AniList {Kind} tags for series {SeriesId}. (AniList={AnilistIds})", list.Count, kind, seriesId, string.Join(",", series.IDs.AniList));
+                return list;
+            }
+        );
+
+    /// <summary>
+    /// Get the AniList overviews for all AniList anime linked to the Shoko
+    /// series, but only if AniList is enabled as a description provider.
+    /// </summary>
+    private async Task<IReadOnlyList<Text>> GetAnilistOverviewsForSeries(ShokoSeries series) {
+        if (series.IDs.AniList.Count is 0 || !Plugin.Instance.Configuration.Description.IsProviderEnabled(TextUtility.DescriptionProvider.AniList))
+            return [];
+
+        var list = new List<Text>();
+        foreach (var anilistId in series.IDs.AniList.Distinct())
+            list.AddRange(await ApiClient.GetOverviewsForAnilistAnime(anilistId));
+        Logger.LogTrace("Found {Count} AniList overviews for series {SeriesId}. (AniList={AnilistIds})", list.Count, series.Id, string.Join(",", series.IDs.AniList));
+        return list;
     }
 
     private async Task<string[]> GetProductionLocations(string seriesId) {
@@ -1085,8 +1129,8 @@ public partial class ShokoApiManager : IDisposable {
                     .Select(x => x.Key)
                     .Except([0])
                     .ToList();
-                var (topLevelShokoGroupId, anidbAnime, shokoSeries) = await GetGroupIdsForAnidbAnime(animeIds, $"TMDB movie \"{tmdbMovie.Title}\"", $"Movie=\"{tmdbMovie.Id}\"");
-                return new SeasonInfo(ApiClient, tmdbMovie, episodeInfo, topLevelShokoGroupId, anidbAnime, shokoSeries);
+                var (topLevelShokoGroupId, anidbAnime, shokoSeries, anilistAnime, malAnime) = await GetGroupIdsForAnidbAnime(animeIds, $"TMDB movie \"{tmdbMovie.Title}\"", $"Movie=\"{tmdbMovie.Id}\"");
+                return new SeasonInfo(ApiClient, tmdbMovie, episodeInfo, topLevelShokoGroupId, anidbAnime, shokoSeries, anilistAnime, malAnime);
             });
 
     private Task<SeasonInfo> CreateSeasonInfo(TmdbMovieCollection tmdbMovieCollection)
@@ -1105,8 +1149,8 @@ public partial class ShokoApiManager : IDisposable {
                     .Select(x => x.Key)
                     .Except([0])
                     .ToList();
-                var (topLevelShokoGroupId, anidbAnime, shokoSeries) = await GetGroupIdsForAnidbAnime(animeIds, $"TMDB movie collection \"{tmdbMovieCollection.Title}\"", $"MovieCollection=\"{tmdbMovieCollection.Id}\"");
-                return new SeasonInfo(ApiClient, tmdbMovieCollection, moviesInCollection, episodeInfos, topLevelShokoGroupId, anidbAnime, shokoSeries);
+                var (topLevelShokoGroupId, anidbAnime, shokoSeries, anilistAnime, malAnime) = await GetGroupIdsForAnidbAnime(animeIds, $"TMDB movie collection \"{tmdbMovieCollection.Title}\"", $"MovieCollection=\"{tmdbMovieCollection.Id}\"");
+                return new SeasonInfo(ApiClient, tmdbMovieCollection, moviesInCollection, episodeInfos, topLevelShokoGroupId, anidbAnime, shokoSeries, anilistAnime, malAnime);
             });
 
     private Task<SeasonInfo> CreateSeasonInfo(TmdbSeason tmdbSeason, TmdbShow tmdbShow)
@@ -1126,20 +1170,22 @@ public partial class ShokoApiManager : IDisposable {
                     .Select(x => x.Key)
                     .Except([0])
                     .ToList();
-                var (topLevelShokoGroupId, anidbAnime, shokoSeries) = await GetGroupIdsForAnidbAnime(animeIds, $"season {tmdbSeason.SeasonNumber} in TMDB show \"{tmdbShow.Title}\"", $"Season=\"{tmdbSeason.Id}\",Show=\"{tmdbSeason.ShowId}\"");
-                return new SeasonInfo(ApiClient, tmdbSeason, tmdbShow, episodeInfos, topLevelShokoGroupId, anidbAnime, shokoSeries);
+                var (topLevelShokoGroupId, anidbAnime, shokoSeries, anilistAnime, malAnime) = await GetGroupIdsForAnidbAnime(animeIds, $"season {tmdbSeason.SeasonNumber} in TMDB show \"{tmdbShow.Title}\"", $"Season=\"{tmdbSeason.Id}\",Show=\"{tmdbSeason.ShowId}\"");
+                return new SeasonInfo(ApiClient, tmdbSeason, tmdbShow, episodeInfos, topLevelShokoGroupId, anidbAnime, shokoSeries, anilistAnime, malAnime);
             });
 
 #pragma warning disable CA2254 // Template should be a static method
-    private async Task<(string? topLevelShokoGroupId, AnidbAnimeInfo[] anidbAnime, ShokoSeriesInfo[] shokoSeries)> GetGroupIdsForAnidbAnime(IReadOnlyList<int> animeIds, string entryName, string entryId) {
+    private async Task<(string? topLevelShokoGroupId, AnidbAnimeInfo[] anidbAnime, ShokoSeriesInfo[] shokoSeries, AnilistAnimeInfo[] anilistAnime, MalAnimeInfo[] malAnime)> GetGroupIdsForAnidbAnime(IReadOnlyList<int> animeIds, string entryName, string entryId) {
         Logger.LogTrace($"Found {{AnidbAnimeCount}} AniDB anime for {entryName} to pick a Shoko Group to use. (Anime={{AnimeIds}},{entryId})", animeIds.Count, animeIds);
 
         if (animeIds.Count is 0)
-            return (null, [], []);
+            return (null, [], [], [], []);
 
         string? topLevelShokoGroupId = null;
         var anidbAnimeList = new List<AnidbAnimeInfo>();
         var shokoSeriesList = new List<ShokoSeriesInfo>();
+        var anilistAnimeList = new List<AnilistAnimeInfo>();
+        var malAnimeList = new List<MalAnimeInfo>();
         foreach (var animeId in animeIds) {
             if (await ApiClient.GetShokoSeriesForAnidbAnime(animeId.ToString()) is not { } shokoSeries)
                 continue;
@@ -1153,6 +1199,9 @@ public partial class ShokoApiManager : IDisposable {
                 ShokoGroupId = shokoSeries.IDs.ParentGroup.ToString(),
                 TopLevelShokoGroupId = shokoSeries.IDs.TopLevelGroup.ToString(),
             });
+
+            anilistAnimeList.AddRange(shokoSeries.IDs.AniList.Select(id => new AnilistAnimeInfo { AnilistAnimeId = id }));
+            malAnimeList.AddRange(shokoSeries.IDs.MyAnimeList.Select(id => new MalAnimeInfo { MalAnimeId = id }));
 
             Logger.LogTrace($"Found Shoko series to use for {entryName}. (Anime={{AnimeId}},Series={{SeriesId}},Group={{GroupId}},{entryId})", animeId, shokoSeries.Id, shokoSeries.IDs.ParentGroup.ToString());
         }
@@ -1173,7 +1222,7 @@ public partial class ShokoApiManager : IDisposable {
             Logger.LogDebug($"Could not find Shoko group for {entryName}. ({entryId})");
         }
 
-        return (topLevelShokoGroupId, [..anidbAnimeList], [..shokoSeriesList]);
+        return (topLevelShokoGroupId, [..anidbAnimeList], [..shokoSeriesList], [..anilistAnimeList.DistinctBy(a => a.AnilistAnimeId)], [..malAnimeList.DistinctBy(a => a.MalAnimeId)]);
     }
 #pragma warning restore CA2254 // Template should be a static method
 
@@ -1280,6 +1329,8 @@ public partial class ShokoApiManager : IDisposable {
                         Logger.LogTrace("Could not find TMDB entity to use for Shoko Series {SeriesTitle}. (Series={SeriesId})", series.Name, primaryId);
                 }
 
+                var anilistOverviews = await GetAnilistOverviewsForSeries(series);
+
                 SeasonInfo seasonInfo;
                 if (extraIds.Count > 0) {
                     var detailsIds = extraIds.Prepend(primaryId).ToList();
@@ -1298,13 +1349,13 @@ public partial class ShokoApiManager : IDisposable {
                         .ToDictionary(t => detailsIds[t.i], (t) => t.t);
 
                     // Create the season info using the merged details.
-                    seasonInfo = new SeasonInfo(ApiClient, series, extraIds, episodes, relations, tmdbEntity, seriesConfigurations, [.. tmdbSeasons]);
+                    seasonInfo = new SeasonInfo(ApiClient, series, extraIds, episodes, relations, tmdbEntity, seriesConfigurations, [.. tmdbSeasons], anilistOverviews);
                 }
                 else {
                     var relations = await ApiClient.GetRelationsForShokoSeries(primaryId);
                     var seriesConfigurations = new Dictionary<string, SeriesConfiguration>() { { primaryId, await GetSeriesConfiguration(primaryId) },
                     };
-                    seasonInfo = new SeasonInfo(ApiClient, series, extraIds, episodes, relations, tmdbEntity, seriesConfigurations, [.. tmdbSeasons]);
+                    seasonInfo = new SeasonInfo(ApiClient, series, extraIds, episodes, relations, tmdbEntity, seriesConfigurations, [.. tmdbSeasons], anilistOverviews);
                 }
 
                 foreach (var episode in episodes)

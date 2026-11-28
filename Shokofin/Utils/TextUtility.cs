@@ -84,6 +84,7 @@ public static partial class TextUtility {
     private static readonly Regex SynopsisRemoveEmptyBrackets = new(@"\[\s*\]|\(\s*\)|\{\s*\}", RegexOptions.Singleline | RegexOptions.Compiled);
     private static readonly Regex SynopsisConvertNewLines = new(@"\r\n|\r", RegexOptions.Singleline | RegexOptions.Compiled);
     private static readonly Regex SynopsisCleanMultiEmptyLines = new(@"\n{2,}", RegexOptions.Singleline | RegexOptions.Compiled);
+    private static readonly Regex AnilistSynopsisRemoveSource = new(@"[ \t]*[\(\[][ \t]*(?:Sources?[ \t]*:|Written by )[^\(\)\[\]\r\n]*[\)\]][ \t]*$", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
 
     [GeneratedRegex(@"^(?:Special|Episode|Volume|OVA|OAD|Web) \d+$|^Part \d+ of \d+$|^Episode [COPRST]\d+$|^(?:OVA|OAD|Movie|Complete Movie|Short Movie|TV Special|Music Video|Web|Volume)$", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
     private static partial Regex InvalidEpisodeTitleRegex();
@@ -118,7 +119,12 @@ public static partial class TextUtility {
         /// <summary>
         /// Provide the description from TMDB.
         /// </summary>
-        TMDB = 4
+        TMDB = 4,
+
+        /// <summary>
+        /// Provide the description from AniList.
+        /// </summary>
+        AniList = 5,
     }
 
     /// <summary>
@@ -343,6 +349,8 @@ public static partial class TextUtility {
                     baseInfo.Overviews.Where(o => o.Source is "AniDB" && string.Equals(o.LanguageCode, metadataLanguage, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault()?.Value,
                 DescriptionProvider.TMDB =>
                     baseInfo.Overviews.Where(o => o.Source is "TMDB" && string.Equals(o.LanguageCode, metadataLanguage, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault()?.Value,
+                DescriptionProvider.AniList =>
+                    baseInfo.Overviews.Where(o => o.Source is "AniList" && string.Equals(o.LanguageCode, metadataLanguage, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault()?.Value,
                 _ => null
             };
             if (!string.IsNullOrEmpty(overview))
@@ -438,6 +446,28 @@ public static partial class TextUtility {
 
             noteList.Add(noteText);
         }
+
+        return summary.Trim();
+    }
+
+    /// <summary>
+    /// Sanitize the AniList entry description to something usable by Jellyfin.
+    /// </summary>
+    /// <param name="summary">The AniList description from Shoko Server.</param>
+    /// <returns>The sanitized AniList description.</returns>
+    public static string SanitizeAnilistDescription(string summary) {
+        if (string.IsNullOrWhiteSpace(summary))
+            return string.Empty;
+
+        var config = Plugin.Instance.Configuration;
+        if (config.SynopsisRemoveSummary)
+            summary = summary
+                .Replace(AnilistSynopsisRemoveSource, string.Empty);
+
+        if (config.SynopsisCleanMultiEmptyLines)
+            summary = summary
+                .Replace(SynopsisConvertNewLines, "\n")
+                .Replace(SynopsisCleanMultiEmptyLines, "\n");
 
         return summary.Trim();
     }
