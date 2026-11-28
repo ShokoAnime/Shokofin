@@ -162,11 +162,16 @@ public class PluginConfiguration : BasePluginConfiguration {
     /// <summary>
     /// Which third party display providers to show links for in the UI.
     /// </summary>
-    public DescriptionProvider[] ThirdPartyDisplayLinkList { get; set; } = [
-        DescriptionProvider.Shoko,
-        DescriptionProvider.AniDB,
-        DescriptionProvider.TvDB,
-        DescriptionProvider.TMDB,
+    /// <remarks>
+    /// The item element name is pinned to the previous element type name to
+    /// stay compatible with existing configuration files.
+    /// </remarks>
+    [XmlArrayItem("DescriptionProvider")]
+    public ThirdPartyLinkProvider[] ThirdPartyDisplayLinkList { get; set; } = [
+        ThirdPartyLinkProvider.Shoko,
+        ThirdPartyLinkProvider.AniDB,
+        ThirdPartyLinkProvider.TvDB,
+        ThirdPartyLinkProvider.TMDB,
     ];
 
     #endregion
@@ -309,14 +314,15 @@ public class PluginConfiguration : BasePluginConfiguration {
     public bool SynopsisCleanMiscLines { get; set; }
 
     /// <summary>
-    /// Remove the "summary" preface text in the AniDB description for entries.
+    /// Remove the "summary" preface text in the AniDB description, and the
+    /// source credit in the AniDB and AniList descriptions for entries.
     /// </summary>
     [JsonIgnore]
     public bool SynopsisRemoveSummary { get; set; }
 
     /// <summary>
-    /// Collapse up multiple empty lines into a single line in the AniDB
-    /// description for entries.
+    /// Collapse up multiple empty lines into a single line in the AniDB and
+    /// AniList descriptions for entries.
     /// </summary>
     [JsonIgnore]
     public bool SynopsisCleanMultiEmptyLines { get; set; }

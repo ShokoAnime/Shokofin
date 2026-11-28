@@ -24,6 +24,7 @@ public class DescriptionConfiguration {
         DescriptionProvider.Shoko,
         DescriptionProvider.AniDB,
         DescriptionProvider.TMDB,
+        DescriptionProvider.AniList,
     ];
 
     /// <summary>

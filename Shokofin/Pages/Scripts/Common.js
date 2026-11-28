@@ -213,7 +213,11 @@ export const LibraryMenu = globalThis.LibraryMenu;
  */
 
 /**
- * @typedef {"Shoko" | "AniDB" | "TvDB" | "TMDB"} DescriptionProvider
+ * @typedef {"Shoko" | "AniDB" | "TvDB" | "TMDB" | "AniList"} DescriptionProvider
+ */
+
+/**
+ * @typedef {"Shoko" | "AniDB" | "TvDB" | "TMDB" | "AniList" | "MAL"} ThirdPartyLinkProvider
  */
 
 /**
@@ -225,7 +229,7 @@ export const LibraryMenu = globalThis.LibraryMenu;
  */
 
 /**
- * @typedef {"ContentIndicators" | "Dynamic" | "DynamicCast" | "DynamicEnding" | "Elements" | "ElementsPornographyAndSexualAbuse" | "ElementsTropesAndMotifs" | "Fetishes" | "OriginProduction" | "OriginDevelopment" | "SettingPlace" | "SettingTimePeriod" | "SettingTimeSeason" | "SourceMaterial" | "TargetAudience" | "TechnicalAspects" | "TechnicalAspectsAdaptions" | "TechnicalAspectsAwards" | "TechnicalAspectsMultiAnimeProjects" | "Themes" | "ThemesDeath" | "ThemesTales" | "Ungrouped" | "Unsorted" | "CustomTags"} TagSource
+ * @typedef {"ContentIndicators" | "Dynamic" | "DynamicCast" | "DynamicEnding" | "Elements" | "ElementsPornographyAndSexualAbuse" | "ElementsTropesAndMotifs" | "Fetishes" | "OriginProduction" | "OriginDevelopment" | "SettingPlace" | "SettingTimePeriod" | "SettingTimeSeason" | "SourceMaterial" | "TargetAudience" | "TechnicalAspects" | "TechnicalAspectsAdaptions" | "TechnicalAspectsAwards" | "TechnicalAspectsMultiAnimeProjects" | "Themes" | "ThemesDeath" | "ThemesTales" | "Ungrouped" | "Unsorted" | "CustomTags" | "TmdbKeywords" | "TmdbGenres" | "FirstYearlySeason" | "AllYearlySeasons" | "AnilistGenres" | "AnilistTags" | "AnilistAdultTags"} TagSource
  */
 
 /**
@@ -515,8 +519,8 @@ export const LibraryMenu = globalThis.LibraryMenu;
  *   ApiKey: string;
  *   AddExtraInfoToLinkName: boolean;
  *   MaxLinksPerTypeToShow: number;
- *   ThirdPartyDisplayLinkList: DescriptionProvider[];
- *   ThirdPartyIdProviderList: Except<DescriptionProvider, "Shoko">[];
+ *   ThirdPartyDisplayLinkList: ThirdPartyLinkProvider[];
+ *   ThirdPartyIdProviderList: Except<DescriptionProvider, "Shoko" | "AniList">[];
  *   Title: AllTitlesConfiguration;
  *   MarkSpecialsWhenGrouped: boolean;
  *   AlwaysUseEpisodeTitleForTmdbMovies: boolean;
@@ -1451,9 +1455,10 @@ export function renderSortableCheckboxList(form, name, enabled, order) {
             isSortable,
             option: checkbox.dataset.option,
         }));
-    if (order.length === 0) {
-        order = listItems.map((item) => item.option);
-    }
+    // Append any options missing from the saved order (e.g. newly added
+    // providers, or ones dropped by a save from a stale tab) so they
+    // stay visible and can be enabled.
+    order = [...new Set([...order, ...listItems.map((item) => item.option)])];
     list.innerHTML = "";
     for (const option of order) {
         const { item, checkbox, isSortable } = listItems.find((item) => item.option === option) || {};

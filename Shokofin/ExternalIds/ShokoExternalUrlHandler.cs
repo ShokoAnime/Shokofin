@@ -9,9 +9,8 @@ using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using Shokofin.API;
+using Shokofin.Configuration;
 using Shokofin.Extensions;
-
-using DescriptionProvider = Shokofin.Utils.TextUtility.DescriptionProvider;
 
 namespace Shokofin.ExternalIds;
 
@@ -111,6 +110,8 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
             { ProviderNames.Anidb, 0 },
             { ProviderNames.Tmdb, 0 },
             { ProviderNames.Tvdb, 0 },
+            { ProviderNames.Anilist, 0 },
+            { ProviderNames.MyAnimeList, 0 },
         };
         foreach (var line in data.Split('\n')) {
             var (ns, extra, urlPathname) = line.Split('|');
@@ -121,22 +122,32 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
             var (baseUrl, shouldShow, count) = ns switch {
                 ProviderNames.Shoko => (
                     shokoUrl,
-                    config.ThirdPartyDisplayLinkList.Contains(DescriptionProvider.Shoko),
+                    config.ThirdPartyDisplayLinkList.Contains(ThirdPartyLinkProvider.Shoko),
                     counters[ns]++
                 ),
                 ProviderNames.Anidb => (
                     ProviderUrls.Anidb,
-                    config.ThirdPartyDisplayLinkList.Contains(DescriptionProvider.AniDB),
+                    config.ThirdPartyDisplayLinkList.Contains(ThirdPartyLinkProvider.AniDB),
                     counters[ns]++
                 ),
                 ProviderNames.Tmdb => (
                     ProviderUrls.Tmdb,
-                    config.ThirdPartyDisplayLinkList.Contains(DescriptionProvider.TMDB),
+                    config.ThirdPartyDisplayLinkList.Contains(ThirdPartyLinkProvider.TMDB),
                     counters[ns]++
                     ),
                 ProviderNames.Tvdb => (
                     ProviderUrls.Tvdb,
-                    config.ThirdPartyDisplayLinkList.Contains(DescriptionProvider.TvDB),
+                    config.ThirdPartyDisplayLinkList.Contains(ThirdPartyLinkProvider.TvDB),
+                    counters[ns]++
+                ),
+                ProviderNames.Anilist => (
+                    ProviderUrls.Anilist,
+                    config.ThirdPartyDisplayLinkList.Contains(ThirdPartyLinkProvider.AniList),
+                    counters[ns]++
+                ),
+                ProviderNames.MyAnimeList => (
+                    ProviderUrls.MyAnimeList,
+                    config.ThirdPartyDisplayLinkList.Contains(ThirdPartyLinkProvider.MAL),
                     counters[ns]++
                 ),
                 _ => (null, false, 0),
@@ -205,6 +216,20 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
                 $"/anime/{anidbInfo.AnidbAnimeId}"
             ));
 
+        foreach (var anilistInfo in showInfo.AnilistAnime)
+            result.Add((
+                ProviderNames.Anilist,
+                $"(a{anilistInfo.AnilistAnimeId})",
+                $"/anime/{anilistInfo.AnilistAnimeId}"
+            ));
+
+        foreach (var malInfo in showInfo.MalAnime)
+            result.Add((
+                ProviderNames.MyAnimeList,
+                $"(a{malInfo.MalAnimeId})",
+                $"/anime/{malInfo.MalAnimeId}"
+            ));
+
         foreach (var tmdbInfo in showInfo.TmdbShows) {
             if (tmdbInfo.UsesAlternateOrdering)
                 result.Add((
@@ -254,6 +279,20 @@ public class ShokoExternalUrlHandler(ShokoIdLookup lookup) : IExternalUrlProvide
                 ProviderNames.Anidb,
                 $"(a{anidbInfo.AnidbAnimeId})",
                 $"/anime/{anidbInfo.AnidbAnimeId}"
+            ));
+
+        foreach (var anilistInfo in seasonInfo.AnilistAnime)
+            result.Add((
+                ProviderNames.Anilist,
+                $"(a{anilistInfo.AnilistAnimeId})",
+                $"/anime/{anilistInfo.AnilistAnimeId}"
+            ));
+
+        foreach (var malInfo in seasonInfo.MalAnime)
+            result.Add((
+                ProviderNames.MyAnimeList,
+                $"(a{malInfo.MalAnimeId})",
+                $"/anime/{malInfo.MalAnimeId}"
             ));
 
         foreach (var tmdbInfo in seasonInfo.TmdbSeasons) {

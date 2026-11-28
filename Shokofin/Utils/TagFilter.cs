@@ -306,6 +306,22 @@ public static class TagFilter {
         /// Spring 2012, etc..
         /// </summary>
         AllYearlySeasons = 1L << 32,
+
+        /// <summary>
+        /// AniList Genres.
+        /// </summary>
+        AnilistGenres = 1L << 33,
+
+        /// <summary>
+        /// AniList Tags, excluding those marked as adult content.
+        /// </summary>
+        AnilistTags = 1L << 34,
+
+        /// <summary>
+        /// AniList Tags marked as adult content, e.g. the "Sexual Content"
+        /// category.
+        /// </summary>
+        AnilistAdultTags = 1L << 35,
     }
 
     [Flags]
@@ -342,14 +358,95 @@ public static class TagFilter {
         return [];
     }
 
-    public static string[] FilterTags(IReadOnlyDictionary<string, ResolvedTag> tags) {
+    public static string[] FilterTags(IReadOnlyDictionary<string, ResolvedTag> tags, IReadOnlyList<MetadataTag>? anilistTags = null) {
         var config = Plugin.Instance.Configuration;
-        return FilterInternal(tags, config.TagSources, config.TagIncludeFilters, config.TagMinimumWeight, config.TagMaximumDepth, config.TagExcludeList);
+        return MergeTags(
+            FilterInternal(tags, config.TagSources, config.TagIncludeFilters, config.TagMinimumWeight, config.TagMaximumDepth, config.TagExcludeList),
+            FilterAnilistTags(anilistTags ?? [], config.TagSources, config.TagIncludeFilters, config.TagMinimumWeight, config.TagExcludeList)
+        );
     }
 
-    public static string[] FilterGenres(IReadOnlyDictionary<string, ResolvedTag> tags) {
+    public static string[] FilterGenres(IReadOnlyDictionary<string, ResolvedTag> tags, IReadOnlyList<MetadataTag>? anilistTags = null) {
         var config = Plugin.Instance.Configuration;
-        return FilterInternal(tags, config.GenreSources, config.GenreIncludeFilters, config.GenreMinimumWeight, config.GenreMaximumDepth, config.GenreExcludeList);
+        return MergeTags(
+            FilterInternal(tags, config.GenreSources, config.GenreIncludeFilters, config.GenreMinimumWeight, config.GenreMaximumDepth, config.GenreExcludeList),
+            FilterAnilistTags(anilistTags ?? [], config.GenreSources, config.GenreIncludeFilters, config.GenreMinimumWeight, config.GenreExcludeList)
+        );
+    }
+
+    /// <summary>
+    /// Merge the extra tags into the existing tags, skipping any tag already
+    /// present regardless of casing.
+    /// </summary>
+    private static string[] MergeTags(string[] tags, IReadOnlyCollection<string> extraTags) {
+        if (extraTags.Count is 0)
+            return tags;
+
+        var existingTags = new HashSet<string>(tags, StringComparer.OrdinalIgnoreCase);
+        return tags
+            .Concat(extraTags.Where(existingTags.Add))
+            .OrderBy(a => a)
+            .ToArray();
+    }
+
+    /// <summary>
+    /// Multiplier to map the AniList tag rank (0-100) onto the AniDB tag weight
+    /// scale (0-600).
+    /// </summary>
+    private const int AnilistRankToWeightScale = (int)TagWeight.Six / 100;
+
+    /// <summary>
+    /// Filter the AniList genres and tags for the given sources.
+    /// </summary>
+    /// <remarks>
+    /// The AniList tag rank (0-100) is mapped onto the AniDB tag weight scale
+    /// (0-600) when checking the minimum weight, ranked tags follow the weighted
+    /// include filter, and the AniList spoiler flags are mapped onto the global
+    /// and local spoiler include filters. AniList tags are flat, so the parent,
+    /// child, abstract and depth filters do not apply to them. Tags marked
+    /// as adult content belong to <see cref="TagSource.AnilistAdultTags"/>, and
+    /// all other tags to <see cref="TagSource.AnilistTags"/>. Genres are
+    /// not ranked nor marked as spoilers, so only the exclude list applies to
+    /// them.
+    /// </remarks>
+    private static IReadOnlyCollection<string> FilterAnilistTags(IReadOnlyList<MetadataTag> anilistTags, TagSource source, TagIncludeFilter includeFilter, TagWeight minWeight, IReadOnlyCollection<string>? excludedTags) {
+        if (anilistTags.Count is 0 || !source.HasAnyFlags(TagSource.AnilistGenres, TagSource.AnilistTags, TagSource.AnilistAdultTags))
+            return [];
+
+        var excludedSet = new HashSet<string>(excludedTags ?? [], StringComparer.OrdinalIgnoreCase);
+        var tagSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var tag in anilistTags) {
+            if (string.IsNullOrWhiteSpace(tag.Name))
+                continue;
+
+            if (tag.Kind is MetadataTagKind.Genre) {
+                if (!source.HasFlag(TagSource.AnilistGenres))
+                    continue;
+            }
+            else if (tag.Kind is MetadataTagKind.Tag) {
+                if (!source.HasFlag(tag.IsRestricted is true ? TagSource.AnilistAdultTags : TagSource.AnilistTags))
+                    continue;
+                if (tag.IsSpoiler is true && !includeFilter.HasFlag(TagIncludeFilter.GlobalSpoiler))
+                    continue;
+                if (tag.IsLocalSpoiler is true && !includeFilter.HasFlag(TagIncludeFilter.LocalSpoiler))
+                    continue;
+                if (tag.Weight is null ? !includeFilter.HasFlag(TagIncludeFilter.Weightless) : !includeFilter.HasFlag(TagIncludeFilter.Weighted))
+                    continue;
+                if (minWeight is > TagWeight.Weightless && tag.Weight is { } rank && rank * AnilistRankToWeightScale < (int)minWeight)
+                    continue;
+            }
+            else {
+                continue;
+            }
+
+            var name = SelectTagName(tag.Name.Trim());
+            if (excludedSet.Contains(name) || excludedSet.Contains(tag.Name))
+                continue;
+
+            tagSet.Add(name);
+        }
+
+        return tagSet;
     }
 
     private static readonly HashSet<TagSource> AllFlagsToUse = Enum.GetValues<TagSource>().Except([TagSource.CustomTags]).ToHashSet();
@@ -500,7 +597,13 @@ public static class TagFilter {
     }
 
     private static string SelectTagName(ResolvedTag tag)
-        => System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(tag.DisplayName);
+        => SelectTagName(tag.DisplayName);
+
+    /// <summary>
+    /// Convert a tag name from any source to the title cased display name.
+    /// </summary>
+    private static string SelectTagName(string name)
+        => System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(name);
 
     private static bool HasAnyFlags(this Enum value, params Enum[] candidates)
         => candidates.Any(value.HasFlag);

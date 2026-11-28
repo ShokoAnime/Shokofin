@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using Shokofin.API.Models.AniDB;
 
@@ -84,6 +85,32 @@ public class ShokoSeries {
         /// The Movie Database (TMDB) IDs.
         /// </summary>
         public TmdbSeriesIDs TMDB { get; set; } = new();
+
+        /// <summary>
+        /// The MyAnimeList (MAL) IDs.
+        /// </summary>
+        public List<int> MAL { get; set; } = [];
+
+        /// <summary>
+        /// IDs provided by other metadata sources linked to the series, keyed
+        /// by the source name, e.g. "AniList".
+        /// </summary>
+        /// <remarks>
+        /// Keep the initializer; older servers omit this field.
+        /// </remarks>
+        public Dictionary<string, List<string>> Linked { get; set; } = [];
+
+        /// <summary>
+        /// The AniList IDs.
+        /// </summary>
+        [JsonIgnore]
+        public IReadOnlyList<string> AniList => Linked.TryGetValue("AniList", out var ids) ? ids : [];
+
+        /// <summary>
+        /// The MyAnimeList (MAL) IDs, as strings.
+        /// </summary>
+        [JsonIgnore]
+        public IReadOnlyList<string> MyAnimeList => MAL.Select(id => id.ToString()).ToArray();
     }
 
     public class TmdbSeriesIDs {

@@ -4,6 +4,10 @@ namespace Shokofin.ExternalIds;
 public struct ProviderNames {
     public const string Anidb = "AniDB";
 
+    public const string Anilist = "AniList";
+
+    public const string MyAnimeList = "MyAnimeList";
+
     public const string Tmdb = "TheMovieDb";
     
     public const string Tvdb = "TheTVDB";
